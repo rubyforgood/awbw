@@ -1,0 +1,10 @@
+en:
+  admin:
+    actions:
+      duplicate:
+        menu: 'Duplicate'
+        title: Duplicate
+  devise:
+    passwords:
+      user:
+        password_updated: 'Your password has been successfully changed. Please sign in with your new password.'

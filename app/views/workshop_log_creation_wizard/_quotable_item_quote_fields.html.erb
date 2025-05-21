@@ -1,0 +1,7 @@
+<%= f.fields_for :quotable_item_quotes do |quotable_item_form| %>
+  <div class="form-group">
+    <%= quotable_item_form.fields_for :quotes do |quote| %>
+      <%= render 'quote_fields', f: quote %>
+    <% end %>
+  </div>
+<% end %> 

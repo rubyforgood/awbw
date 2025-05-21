@@ -1,0 +1,9 @@
+<hr>
+<ul class="errors">
+  <% resource.errors.full_messages.each do |msg| %>
+    <li class="error">
+      <%= msg %>
+    </li>
+  <% end %>
+</ul>
+<hr> 

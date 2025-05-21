@@ -1,0 +1,31 @@
+name: Stale Pull Request Reminder
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  remind-stale-prs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Post reminder on stale PRs
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Posting reminders on stale pull requests..."
+        curl -H "Authorization: token $GITHUB_TOKEN" \
+             -H "Accept: application/vnd.github.v3+json" \
+             https://api.github.com/repos/${{ github.repository }}/pulls \
+             | jq -r '.[] | select(.updated_at < (now - 2592000 | todate)) | .number' \
+             | while read -r pr_number; do
+                 echo "Commenting on PR #$pr_number..."
+                 curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      https://api.github.com/repos/${{ github.repository }}/issues/$pr_number/comments \
+                      -d '{"body": "This pull request has been inactive for 30 days. Please update it or let us know if it is still relevant."}'
+               done

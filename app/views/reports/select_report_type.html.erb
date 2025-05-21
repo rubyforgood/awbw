@@ -1,0 +1,56 @@
+<h2 class="normal">Submit a Workshop Log</h2>
+<div class="section-header">
+Please submit a workshop log after each workshop you lead. Select your workshop title from the appropriate dropdown menu. If you don't see your workshop title in the dropdown because you led an original workshop or a variation, choose NEW WORKSHOP.
+</div>
+
+<h3 class="normal">Adult Workshop Log</h3>
+<select name="Workshop name" id="workshop1">
+  <option value="0">Select a workshop from the drop down menu</option>
+  <option value="1">NEW WORKSHOP</option>
+  <% @adult_workshops.each do |workshop| %>
+    <option value="<%= workshop[:id] %>"><%= workshop[:name] %></option>
+  <% end %>
+</select>
+
+<h3 class="normal">Children's Workshop Log</h3>
+<select name="Workshop name" id="workshop2">
+  <option value="0">Select a workshop from the drop down menu</option>
+  <option value="1">NEW WORKSHOP</option>
+  <% @childrens_workshops.each do |workshop| %>
+    <option value="<%= workshop[:id] %>"><%= workshop[:name] %></option>
+  <% end %>
+</select>
+
+<h3 class="normal">Family / Combined Ages Workshop Log</h3>
+<%= link_to "fill_out_form?form_builder_id=5" do %>
+  <h6><%= "FAMILY/COMBINED AGES WORKSHOP LOG" %></h6>
+<% end %>
+<br>
+<br>
+<h2 class="normal">Submit a Monthly Report</h2>
+<div class="section-header">
+This report is used to report on the overall month of your Windows Workshops and is submitted by the Program Liaison no later than the 10th of the following month.
+</div>
+<div>
+  <% @form_builders.each do |form_builder| %>
+    <%= link_to form_builder.new_report_url do %>
+      <h6><%= form_builder.name %></h6>
+      <br>
+    <% end %>
+  <% end %>
+</div>
+
+<script type="text/javascript">
+  $(function() {
+  $('#workshop1').on('change', function() {
+  var id = $('#workshop1 option:selected').attr('value');
+  if (id > 1) window.location = '../workshop_log_creation_wizard/fill_out_form?workshop_id=' + id;
+  if (id == 1) window.location = '../workshop_log_creation_wizard/fill_out_form?windows_type_id=1'
+  });
+  $('#workshop2').on('change', function() {
+  var id = $('#workshop2 option:selected').attr('value');
+  if (id > 1) window.location = '../workshop_log_creation_wizard/fill_out_form?workshop_id=' + id;
+  if (id == 1) window.location = '../workshop_log_creation_wizard/fill_out_form?windows_type_id=2'
+  });
+  })
+</script> 

@@ -1,0 +1,11 @@
+<% @stories.each do |r| %>
+  $('#stories-list').append('<%= j render 'story', resource: r %>');
+<% end %>
+
+<% if @stories.next_page %>
+  $('.pagination').replaceWith('<%= j  will_paginate @stories %>');
+<% else %>
+  $(window).off('scroll');
+  $('.pagination').remove();
+  $('#load_more').hide();
+<% end %>

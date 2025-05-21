@@ -1,0 +1,105 @@
+<div class="row">
+  <div class="col-sm-12 col-md-8">
+
+ <%= form_for workshop, url: url do |f| %>
+    <div class="errors">
+      <%= render 'shared/errors', resource: workshop if workshop.errors.any? %>
+    </div>
+    <div class="form-group">
+      <label>Workshop Title</label>
+      <%= f.text_field :title, class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <label>Author's First & Last Name</label>
+      <%= f.text_field :full_name , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <label>Workshop Objective</label>
+      <%= f.text_area :objective, placeholder: 'Indicate goals of the workshop.' , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <label>Materials Needed</label>
+      <%= f.text_area :materials, placeholder: 'List all materials needed to create the workshop.' , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <label>Timeframe</label>
+      <div class="row">
+        <div class="col-md-12 form-item-dropdown">
+          <select id="workshop_log_hour" class="selectpicker form-control form-control-custom" name="workshop[time_hours]">
+            <option value="" selected disabled>Hour</option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="col-md-12 form-item-dropdown">
+          <select id="workshop_log_minutes" class="selectpicker form-control form-control-custom" name="workshop[time_minutes]">
+            <option value="" selected disabled>Minutes</option>
+            <option value="0">0</option>
+            <option value="15">15</option>
+            <option value="30">30</option>
+            <option value="45">45</option>
+          </select>
+        </div>
+        <div class="col-md-8"></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Set Up Instructions</label>
+      <%= f.text_area :setup, placeholder: 'Include any tips needed to prep the workshop.' , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <%= f.label 'Demonstration Instructions' %>
+      <%= f.text_area :demonstration, placeholder: 'Include a description of a demonstration of the activity.' , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <label>Warm-up/relaxation/meditation</label>
+      <%= f.text_area :warm_up, placeholder: 'Include a description of a warm-up of relaxation activity related to the workshop.' , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <%= f.label 'Creation' %>
+      <%= f.text_area :creation, placeholder: 'Step by step how to create the workshop' , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <%= f.label 'Closing' %>
+      <%= f.text_area :closing, placeholder: 'Step by step how to close the workshop' , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <%= f.label 'Notes' %>
+      <%= f.text_area :notes, placeholder: 'Anything else you\'d like us to know.' , class: "form-control form-control-workshop" %>
+    </div>
+    <div class="form-group">
+      <%= f.label 'Tips' %>
+      <%= f.text_area :notes, placeholder: 'Any tips on how to make this workshop a success.' , class: "form-control form-control-workshop" %>
+    </div>
+
+    <%= f.hidden_field :windows_type_id, value: params[:windows_type] %>
+
+    <div class="form-group image-fields-wrapper">
+      <%= f.fields_for :images do |img_fields| %>
+        <%= render 'image_fields', :f => img_fields %>
+
+        <div class="links small">
+          <%= link_to_add_association 'Add Another Image', f, :images, partial: 'image_fields', class:'btn-underline' %>
+        </div>
+      <% end %>
+      <br/>
+    </div>
+
+    <div class="btn-container">
+      <%= link_to 'Cancel', root_path, class: 'btn btn-primary btn-blue' %>
+      <%= f.submit 'Submit', class: 'btn btn-primary btn-blue' %>
+    </div>
+  <% end %>
+  </div>
+   <div class="col-md-6"></div>
+</div>
+<script>
+  <% if @workshop.timeframe %>
+    $("#workshop_log_hour").val("<%=@workshop.timeframe.split(":")[0]%>").change();
+    $("#workshop_log_minutes").val("<%=@workshop.timeframe.split(":")[1]%>").change();
+  <% end %>
+</script>

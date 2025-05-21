@@ -1,0 +1,88 @@
+<div class="container-fluid search-curriculum-page resources-page">
+  <div class="row">
+    <div class="col-md-12 col-lg-8 width">
+      <div class="entry-content">
+        <% if params[:kind] == "Scholarship" %>
+          <h2 class="normal">Scholarship</h2>
+        <% else %>
+          <h2 class="normal">Resources</h2>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  <div class="row search-row">
+    <div class="col-md-12 col-lg-12">
+       <%= form_tag resources_path, method: 'get' do |f| %>
+        <div class="search-wrapper">
+          <div class="search-field-row" >
+            <% if params[:kind] == "Scholarship" %>
+              <input type="hidden" name="kind" value="<%= params[:kind] %>" />
+            <% end %>
+
+            <%= text_field_tag :query, params[:query], class: 'search',
+                                      placeholder: ' Enter keywords here...' %>
+            <div class="btn btn-primary btn-search-wrapper" id="submit-div">
+              <i class='fa fa-search'></i>
+            </div>
+          </div>
+        </div>
+        <% if params[:kind] != "Scholarship" %>
+          <div class="clear-lnk">
+            <%= link_to 'Clear All', resources_path %>
+          </div>
+       <% end %>
+
+    </div>
+  </div><!-- search row -->
+
+  <div class="row">
+    <div class="col-md-12 col-lg-12">
+      <div class="filter-wrapper">
+        <% if params[:kind] != "Scholarship" %>
+          <div class="small-gray-title">Filter By:</div>
+            <%= render 'shared/sortable_fields_btn', sortable_fields: @sortable_fields %>
+          </div>
+        <% end %>
+    </div>
+    <% end %><!-- filter_by row -->
+  </div>
+
+  <div class="col-md-12 col-lg-8 width result-title">
+    <h2 class="normal title-spacing">Results</h2>
+  </div><!-- result title-->
+
+  <div class="row">
+    <div class="col-md-12 col-lg-12 width" >
+      <% if @resources.any? %>
+        <table width="80%" class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="resources-list">
+            <% @resources.each do |r| %>
+              <%= render 'resource', resource: r %>
+              <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        There are no resources that match your search.  Please try again.
+      <% end %>
+    </div>
+
+    <div class="text-center">
+      <%= will_paginate @resources, :previous_label => '<<', :next_label => '>>', :inner_window => 2 %>
+    </div>
+
+  </div><!-- result row -->
+
+</div><!-- container-fluid -->
+
+<script>
+  $('#submit-div').click(function() {
+   $('form').submit();
+  });
+</script>
+

@@ -1,0 +1,26 @@
+<div class="nested-fields image-upload-field">
+  <div class="input-upload-description" >
+    <%= f.label "Upload images and/or media releases" %>
+    <span class="smaller">
+    </span>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :file, class: "btn btn-primary btn--small" do %>
+      <%= f.file_field :file, class: ''%>
+        Choose File
+   <% end %>
+
+     <div class="row">
+       <div class="col-xs-2">
+         <% unless f.object.id.nil? %>
+           <img src="<%= f.object.file.url %>" class="portrait-img"/>
+         <% end %>
+       </div>
+     </div>
+  </div>
+
+  <div class="inline-block small">
+    <%= link_to_remove_association "Remove Media File", f , class:"btn-underline"%>
+  </div>
+</div>

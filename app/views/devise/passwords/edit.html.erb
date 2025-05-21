@@ -1,0 +1,34 @@
+<div class="printable-area">
+  <div class="row" style="min-height:460px;">
+    <div class="col-sm-12 col-md-12">
+
+      <h2>Reset your password</h2>
+      <div class="row">
+        <div class="col-sm-12 col-md-12">
+
+          <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
+            <%= devise_error_messages! %>
+            <%= f.hidden_field :reset_password_token %>
+
+            <div class="form-group password-container">
+              <%= f.label :password, "New password" %>
+              <%= f.password_field :password, autofocus: true, autocomplete: "off", class:"form-control form-input password-field"  %>
+              <span id="new-password-container" class="toggle-password"><i class='fa fa-eye-slash'></i></span>
+            </div>
+
+            <div class="form-group password-container">
+              <%= f.label :password_confirmation, "Confirm new password" %>
+              <%= f.password_field :password_confirmation, autocomplete: "off", class:"form-control password-field" %>
+              <span id="password-confirmation-container" class="toggle-password"><i class='fa fa-eye-slash'></i></span>
+            </div>
+
+            <div class="actions" style="margin-bottom: 20px">
+              <%= f.submit "Reset my password", class: "btn btn-primary btn-blue" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      <%= render "devise/shared/links" %>
+    </div>
+  </div>
+</div>

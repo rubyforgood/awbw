@@ -1,0 +1,260 @@
+<p class='alert'>
+A monthly report has already been submitted for this month. Please contact your AWBW program manager.
+</p>
+<%= form_for @report, as: :report, url: report_path( @report ), method: :put do |f| %>
+  <hr>
+ <% unless params[:form_builder_id] == "7" %>
+   <h4>Report Type</h4>
+  </hr>
+
+  <!-- ######### row 1 ##### -->
+  <div class="row">
+    <div class="col-md-8 form-group">
+      <div class='btn-container windows-type'>
+        <h2 class="normal">
+          <%= @report.windows_type.label %>
+        </h2>
+      </div>
+    </div>
+
+    <div class='col-md-8'>
+      <%= label_tag 'Reporting for the Month Of' %>
+      <!-- date select -->
+      <%= f.date_select :date,
+          { discard_day: true, selected: Date.new( @year.to_i, @month.to_i ), use_hidden: true }, {:onchange => "" } %>
+
+
+      <%= f.select(:date, {}, {:include_blank => false}, {:class => "form-control form-control-custom"}) %>
+
+      <%= render 'workshop_log_summary', f: f, workshop_logs: @workshop_logs %>
+      <%= render 'combined_workshop_log_summary', f: f, workshop_logs: @combined_workshop_logs %>
+      <hr />
+    </div>
+  </div>
+<% end %>
+
+ <!-- ######### row 2 ########## -->
+  <div class='row'>
+    <div class='col-md-8'>
+      <%= render 'shared/errors', resource: @report if @report.errors.any? %>
+      <!-- ######### form fields ####### -->
+      <div class='form-group'>
+        <%= f.label 'Facilitator' %>
+        <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
+        <%= f.hidden_field :user_id, value: current_user.id %>
+        <%= f.hidden_field :type %>
+        <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
+        <%= f.hidden_field :id, value: @report.id %>
+        <br>
+      </div>
+
+      <div class='form-group'>
+        <div class="label-plus-comment">
+          <%= f.label 'Agency' %>
+          <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
+        </div>
+        <% agency = @agency_id %>
+        <%= f.collection_select :project_id, @agencies, :id, :name,
+        { selected: agency, class: 'js-agency-select' },
+        class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewProject()' %>
+      </div>
+
+      <%= render 'sectorable_items' %>
+
+      <div class="row hide" id="other_sector_description_content">
+        <div class="col-md-8 col-lg-8">
+         <div class="form-group text-form-group">
+           <input type="text" name="workshop_log[other_description]" id="other_description" class="form-control" placeholder='Enter other population(s) served'>
+           </input>
+         </div>
+        </div>
+      </div>
+
+      <% @count = 1 %>
+
+      <% @report.log_fields.each do |field| %>
+
+        <%= render 'shared/form_field', :field => field, :report => @report %>
+
+        <script>
+          $("#Total--On-going-Participants").prop("readonly", true);
+          $("#Total--First-Time-Participants").prop("readonly", true);
+        </script>
+
+        <% if field.question == 'Share challenges for this month' ||
+      (field.question == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2)%>
+          <!-- QUOTES -->
+
+          <script>
+            window.quotesIndex = 0;
+          </script>
+
+          <div id="quotes">
+            <% if @report %>
+              <% @report.quotes.each_with_index do |q, i| %>
+                <%= render 'quote', q: q, index: i %>
+                <script>window.quotesIndex += 1;</script>
+              <% end %>
+            <% else %>
+              <%= render 'quote', index: 0, q: Quote.new %>
+            <% end %>
+          </div>
+
+          <div>
+            <a class="btn-underline" href="javascript:addQuote();">Add another Quote</a>
+          </div>
+          <br />
+
+        <% end %>
+
+      <% end %>
+
+      <!-- ######## uploads sectors ####### -->
+      <div class="image-fields-wrapper">
+        <div class="image-upload-field form-group">
+          <div class="input-upload-description" >
+            <%= f.label "Upload Images" %>
+            <span class="smaller">
+              If the image includes the client or client artwork fill out
+              Art/Media Release Form
+              <%= link_to "here", "http://dashboard.awbw.org/resources/859" %>
+            </span>
+          </div><!-- bold -->
+
+          <% if @report.media_files.any? %>
+            <% @report.media_files.each do |mf| %>
+              <div class="row">
+                <div class="col-xs-8">
+                 File: <a href="<%= mf.file.url %>">
+                  <%= mf.file_file_name %>
+                 </a>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+
+          <% if @report.image %>
+            <div class="form-group">
+              <%= f.label :image, class: "btn btn-primary btn--small" do %>
+                <input type="file" id="report_image" name="image" >
+                Choose File
+              <% end %>
+
+              <div class="row">
+                <div class="col-xs-2">
+                  <img src="<%= @report.image.file.url %>" class="portrait-img"/>
+                  </div>
+               </div>
+            </div>
+         <% end %>
+
+        </div>
+
+    <% unless @report.form_file.url =~ /missing.png/ %>
+        <div class="image-upload-field">
+          <div class="input-upload-description" >
+            <%= f.label "Upload Form Files" %>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :form_file, class: "btn btn-primary btn--small" do %>
+              <%= f.file_field :form_file, class: '', id: 'report_form_file'%>
+              Choose File
+            <% end %>
+
+
+              <div class="row">
+                <div class="col-xs-2">
+                 <a href="<%= @report.form_file.url %>">
+                  <%= @report.form_file_file_name %>
+                 </a>
+                </div>
+              </div>
+
+          </div> <!-- END Form group -->
+        </div>   <!-- END image-upload-field -->
+     <% end %>
+
+      </div>
+    </div>
+  </div>
+  <!-- ######### row 3 ########## -->
+  <div class="row">
+    <div class="col-md-8 align-right">
+      <%= f.submit 'Submit', class: "btn btn-primary btn-blue btn-filled" %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  function addQuote() {
+    window.quotesIndex += 1;
+    $("#quotes").append('<%= j render 'quote', :index => "last-quotes",:q => Quote.new %>');
+
+    contentQuotes = document.getElementById("quote-last-quotes").innerHTML.replace(/last-quotes/g, window.quotesIndex);
+    document.getElementById("quote-last-quotes").innerHTML = contentQuotes;
+    newId = "quote-" + window.quotesIndex;
+    $('#quote-last-quotes').attr( 'id' , newId );
+  }
+
+  function delQuote(quoteId) {
+    $( quoteId ).remove();
+  }
+
+
+
+  $.urlParam = function(name) {
+  var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+  if (results==null) return null;
+  else return results[1] || 0;
+  }
+
+
+  function fillOutDates() {
+      var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var select = document.getElementById('report_date');
+      var d = new Date();
+      var current_month = d.getMonth(); //parseInt($.urlParam('month'));
+      var current_year = d.getFullYear(); //parseInt($.urlParam('year'));
+      for (var i = 0; i<=12; i++) {
+      var opt = document.createElement('option');
+        if (current_month < 0) { current_month = 11; current_year -= 1}
+        opt.value = current_year+'-'+(current_month+1);
+        opt.innerHTML = months[current_month] + ' ' + current_year;
+        if (parseInt($.urlParam('month'))-1 == current_month && parseInt($.urlParam('year')) == current_year) {
+          opt.selected = true;
+        }
+        if (select) select.appendChild(opt);
+        current_month -= 1;
+      }
+
+  }
+  $('#report_date').on("change", function(){
+    var date = this.value;
+    var year = date.split("-")[0];
+    var month = date.split("-")[1];
+    var new_url = "/reports/monthly?form_builder_id=<%= params[:form_builder_id]%>&month=" + month + "&year=" + year;
+    window.location = new_url;
+
+  });
+
+    $('#report_project_id').on("change", function(){
+    var agency_id = this.value;
+    var year = <%= @year %>;
+    var month = <%= @month %>;
+    var new_url = "/reports/monthly?form_builder_id=<%= params[:form_builder_id]%>&month=" + month + "&year=" + year + "&agency_id=" + agency_id;
+     window.location = new_url;
+
+  });
+
+  $("#edit_report :input").attr("disabled", true);
+  $("#report_project_id").attr("disabled", false);
+  $("#report_date").attr("disabled", false);
+
+  fillOutDates();
+
+  <% unless @report.other_description.blank?  %>
+    $('#other_sector_description_content').removeClass('hide');
+    $('#other_description').val("<%= @report.other_description%>")
+  <% end %>
+</script>

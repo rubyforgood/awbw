@@ -1,0 +1,6 @@
+.star {
+  display: inline-block;
+  &.full {
+    color: $color-gold;
+  }
+}

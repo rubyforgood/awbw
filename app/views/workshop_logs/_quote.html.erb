@@ -1,0 +1,21 @@
+<div class="single-quote quote-added" id="quote-<%= index %>">
+
+  <div class="form-group">
+    <div class="label-plus-comment">
+      <label>Qoutes from participant:</label>
+      <div class="custom-smaller">What did your participants share about their experience? Please write quotes in first person. For confidentiality, do not disclose names.</div>
+    </div>
+    <textarea name="quotes[<%= index %>][quote]" class="form-control" placeholder='Ex., "Coming here makes me feel happy!"'><%= q.quote if q.quote %></textarea>
+  </div>
+
+  <div class="form-group">
+    <label>Age of the speaker</label>
+    <div class="custom-smaller">If you do not know the age, please type child, teen, or adult.</div>
+    <input type="text" name="quotes[<%= index %>][age]" class="form-control" value="<%= q.age %>">
+  </div>
+
+  <div>
+    <a class="btn-underline" href="javascript:delQuote('#quote-<%= index %>');" >Remove Quote</a>
+  </div>
+
+</div>

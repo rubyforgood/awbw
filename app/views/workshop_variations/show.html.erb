@@ -1,0 +1,20 @@
+<div class="curriculum-detail">
+  <div class="row">
+    <div class="col-md-10 col-lg-8">
+      <div class="bc">
+        <%= @workshop_variation.breadcrumbs %>
+      </div>
+      <br/>
+      <h2 class="normal inline-block no-margin">
+        <%= @workshop_variation.name %>
+      </h2>
+      <div class="back-to-worshop">
+        <br/>
+        <%= link_to '<- Back to Workshop', workshop_path(@workshop), class: 'underline' %>
+      </div>
+      <div class="wysiwyg-content wysiwyg-content--lists-fixed">
+        <%= @workshop_variation.display_code.html_safe %>
+      </div>
+    </div>
+  </div>
+</div>

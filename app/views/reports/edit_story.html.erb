@@ -1,0 +1,82 @@
+<% @count = 1 %>
+<%= form_for @report, as: :report, url: reports_update_story_path( @report ), method: :put do |f| %>
+  <h2 class="normal">Edit - Share a Story</h2>
+  <hr>
+
+  <!-- ######### row 2 ########## -->
+  <div class='row'>
+    <div class='col-md-8'>
+      <%= render 'shared/errors', resource: @report if @report.errors.any? %>
+      <!-- ######### form fields ####### -->
+      <div class='form-group'>
+        <%= f.label 'Facilitator' %>
+        <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
+        <%= f.hidden_field :user_id, value: current_user.id %>
+        <%= f.hidden_field :type %>
+        <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
+        <%= f.hidden_field :id, value: @report.id %>
+        <br>
+      </div>
+
+      <div class='form-group'>
+        <div class="label-plus-comment">
+          <%= f.label 'Agency' %>
+          <div class="custom-smaller">
+            Please contact AWBW if your agency is not listed.
+          </div>
+        </div>
+        <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
+        <%= f.collection_select :project_id, @agencies, :id, :name,
+{ selected: agency ? agency.id : nil,class: 'js-agency-select' },
+  class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewProject()' %>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12 col-lg-8">
+          <label class="label-select" for="select-workshop" >
+            Select Workshop from dropdown
+          </label>
+          <div id="select_workshop">
+            <%= collection_select(
+                  :report,
+                  :workshop_id,
+                  @workshop_list,
+                    :id,
+                    :log_title, { :selected => @report.workshop_id,
+                    :prompt => "Select a workshop" },
+{
+:class  =>  "form-control form-control-custom",
+:id     => 'select-workshop'
+})
+%>
+          </div>
+        </div>
+      </div>
+      <script type="text/javascript">
+        $('#select-workshop').select2();
+      </script>
+     <br/>
+
+     <div class="row">
+       <div class="col-md-12 col-lg-12">
+         <% @report.log_fields.each do |field| %>
+           <%= render 'shared/form_field', :field => field, :report => @report %>
+         <% end %>
+         <script>
+           $("#Total--On-going-Participants").prop("readonly", true);
+           $("#Total--First-Time-Participants").prop("readonly", true);
+         </script>
+       </div>
+     </div>
+
+    </div>
+  </div>
+
+  <!-- ######### row 3 ########## -->
+  <div class="row">
+    <div class="col-md-8 align-right">
+      <%= f.submit 'Submit', class: "btn btn-primary btn-blue btn-filled" %>
+    </div>
+  </div>
+<% end %>
+

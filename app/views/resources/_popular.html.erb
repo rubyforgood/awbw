@@ -1,0 +1,40 @@
+<div class='row' style='padding:0px;background-color:#eee;'>
+  <div class='col-xs-12' style='padding-top:20px;'>
+    <section>
+      <h2 class='no-margin-top section-title normal'><%= title %></h2>
+      <% if resources.any? %>
+        <ul class='list-group'>
+          <% resources.each do |r| %>
+            <li class='list-group-item list-group-item-custom'>
+              <div class='row'>
+                <div class='col-xs-6 content-img-popular'>
+
+                  <%= link_to r.featured_url, target: :blank do %>
+                    <figure class="portrait-img content-img-popular popular-img"
+                            style="background-image: url(<%= r.main_image %>);">
+                    </figure>
+                  <% end %>
+
+                </div>
+                <div class='col-xs-6 content-heading span'>
+                  <h3><%= r.title %></h3>
+                </div>
+              </div>
+            </li>
+          <% end %>
+          <li class='list-group-item list-group-item-custom'>
+            <div class='row'>
+              <div class='col-xs-12 text-right'>
+                <a href="/resources/" class="btn btn-primary btn--small outline">
+                   SEE ALL
+                 </a>
+              </div>
+            </div>
+          </li>
+        </ul>
+      <% else %>
+        <%= "There are no resources." %>
+      <% end %>
+    </section>
+  </div>
+</div>

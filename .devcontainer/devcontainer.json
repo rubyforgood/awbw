@@ -1,0 +1,15 @@
+{
+    "name": "Ruby",
+    "build": {"dockerfile": "Dockerfile"},
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
+    "postCreateCommand": "bash scripts/setup_dependencies.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    }
+}

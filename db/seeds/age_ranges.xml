@@ -1,0 +1,42 @@
+<workshop_age_range>
+<Row>
+<id>
+<![CDATA[ 1 ]]>
+</id>
+<str_name>
+<![CDATA[ 3-5 ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 2 ]]>
+</id>
+<str_name>
+<![CDATA[ 6-12 ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 3 ]]>
+</id>
+<str_name>
+<![CDATA[ Teen ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 7 ]]>
+</id>
+<str_name>
+<![CDATA[ Family Windows ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 6 ]]>
+</id>
+<str_name>
+<![CDATA[ Mixed-age groups ]]>
+</str_name>
+</Row>
+</workshop_age_range>

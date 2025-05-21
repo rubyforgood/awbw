@@ -1,0 +1,11 @@
+<% @bookmarks.each do |b| %>
+  $('#bookmarks-list').append('<%= j render 'bookmarks/flex', workshop: b.bookmarkable.decorate, breadcrumb: 'My Bookmarks', link_route: workshop_path(b.bookmarkable_id) %>');
+<% end %>
+
+<% if @bookmarks.next_page %>
+  $('.pagination').replaceWith('<%= j  will_paginate @bookmarks %>');
+<% else %>
+  $(window).off('scroll');
+  $('.pagination').remove();
+  $('#load_more').hide();
+<% end %>

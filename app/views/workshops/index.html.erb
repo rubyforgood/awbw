@@ -1,0 +1,79 @@
+<div class='width search-curriculum-page'>
+  <!-- %br -->
+  <div class='entry-content'>
+    <h2 class='normal'>Search Curriculum</h2>
+    <p>
+      Search by emotional theme, materials needed, ease of set-up and clean-up and more. We always encourage the creativity and innovation of each Windows Facilitator; if you adapt and improve workshops, please be sure to share your ideas with us!
+    </p>
+  </div>
+  <div class="inner-container">
+    <div class='small-gray-title'>
+      Filter By
+    </div>
+    <div class='instructions'>
+      Click on categories below to expand
+    </div>
+      <%= form_tag('/workshops', method: :get) do %>
+      <div class='width checkbox-area'>
+        <div class='btn-wrapper'>
+          <button class='btn btn-primary btn--small outline'>
+            Apply filters
+          </button>
+          <div class='clear-all'>
+            <%= link_to 'Clear All', workshops_path %>
+          </div>
+        </div>
+        <%= render 'shared/categories_fields', metadata: @metadata %>
+        <%= render 'sectors_fields', sectors: @sectors %>
+      </div>
+      <div class='search-wrapper'>
+        <div class='search-field-row'>
+          <%= text_field_tag :query, params[:query], class: 'search',
+                                           placeholder: ' Enter keywords here...' %>
+
+          <div class='btn btn-primary btn-search-wrapper' id="submit-div">
+            <i class='fa fa-search'></i>
+          </div>
+        </div>
+        <div class='apply-all'>
+          <%= link_to 'See All Workshops', workshops_path, class: 'js-view-all underline' %>
+        </div>
+        <div class='small-gray-title'>
+          Last Search Results
+        </div>
+        <div class='hide-labels medium search-filters clearfix'>
+          <div class='sortable-label'>
+            <b>Sort By:</b>
+          </div>
+          <div class='sortable-group'>
+            <%= render 'sortable_fields', sortable_fields: @sortable_fields %>
+          </div>
+        </div>
+        <div class='list-group'>
+          <% if @workshops.any? %>
+            <div id="workshops-list">
+              <% @workshops.each do |workshop| %>
+              <%= render 'workshops/flex', workshop: workshop.decorate, breadcrumb: 'Search Curriculum', link_route: workshop_path(workshop) %>
+            <% end %>
+            </div>
+
+            <div class='paginate-container'>
+              <!-- ##### Will Paginate #### -->
+              <%= will_paginate @workshops, :previous_label => '<<', :next_label => '>>', :inner_window => 2 %>
+            </div>
+          <% else %>
+            Your search returned no results.  Please try again.
+          <% end %>
+        </div>
+
+
+      </div>
+    <% end %>
+  </div>
+
+</div>
+<script>
+  $('#submit-div').click(function() {
+   $('form').submit();
+  });
+</script>

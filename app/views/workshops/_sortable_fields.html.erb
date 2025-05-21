@@ -1,0 +1,21 @@
+<% sortable_fields.each do |sortable_field| %>
+  <div class="input-group">
+    <%= radio_button_tag :type, sortable_field.id,
+          sortable_field.id.to_s == params[:type],
+          onclick: ("$('form').submit();") %>
+
+    <span class="small">
+      <%= sortable_field.name.titleize.gsub("Log", "").gsub("Children", "Children's") %>
+    </span>
+  </div>
+<% end %>
+
+<div class="input-group">
+    <%= radio_button_tag :type, "created",
+          params[:type] == "created",
+          onclick: ("$('form').submit();") %>
+
+    <span class="small">
+      Date
+    </span>
+</div>

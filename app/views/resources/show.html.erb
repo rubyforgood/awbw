@@ -1,0 +1,42 @@
+<div class="curriculum-detail">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-10 col-lg-8">
+        <h2 class="normal">
+          <%= @resource.display_title %>
+        </h2>
+        <div class="flex-subtitle detail">
+          <% unless @resource.toolkit_and_form? %>
+            <span>
+              <%= @resource.author %>
+            </span>
+             <span class="no-border slight-margin-left">
+              <%= @resource.display_date unless @resource.story? %>
+            </span>
+          <% end %>
+        </div>
+        <div class="resource-image">
+          <% if @resource.main_image %>
+            <% if @resource.kind == 'LeaderSpotlight' %>
+              <%= image_tag @resource.main_image, class: 'resource-image__large' %>
+              <br/>
+            <% else %>
+                <%= image_tag @resource.main_image %>
+            <% end %>
+          <% end %>
+        </div>
+        <div>
+          <%= @resource.display_text %>
+        </div>
+        <% if @resource.attachments.any? %>
+          <div>
+            Attachments:
+            <% @resource.attachments.each do |attachment| %>
+              <%= link_to attachment.file_file_name, attachment.file.url, target: :_blank, class: 'block' %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

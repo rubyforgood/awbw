@@ -1,0 +1,27 @@
+<%= form_for workshop, url: wizard_path(step), method: :put do |f| %>
+  <%= render 'shared/errors', resource: workshop if workshop.errors.any? %>
+  <% if workshop.title %>
+    <h3 class="normal no-margin-bottom"><%= "#{workshop.title} - #{workshop.windows_type_name}" %></h3>
+  <% else %>
+    <%= f.text_field :title, placeholder: 'enter a workshop title', disabled: workshop.disable_title_field?, required: true %>
+  <% end %>
+
+  <%= f.hidden_field :id %>
+  <%= f.hidden_field :log_id, value: @old_report ? @old_report.id : nil %>
+  <% if @windows_types && !workshop.id %>
+    <%= f.label 'New Workshop Windows Type', class: 'bold' %>
+    <%= f.select :windows_type_id, @windows_types.map { |wtype| [wtype.name, wtype.id]} %>
+  <% end %>
+  <br>
+  <%= f.fields_for :workshop_logs do |workshop_log| %>
+    <% unless workshop_log.object.id %>
+      <%= render 'workshop_log_fields', f: workshop_log, agencies: agencies, parent_form: f, workshop: workshop, windows_type: windows_type %>
+    <% end %>
+  <% end %>
+  <br>
+  <%= render 'comments_fields', f: f, report: @report %>
+  <div class="btn-container">
+    <%= link_to 'Cancel', root_path, class: 'btn btn-submit cancel-btn' %>
+    <%= f.submit 'Submit' %>
+  </div>
+<% end %> 

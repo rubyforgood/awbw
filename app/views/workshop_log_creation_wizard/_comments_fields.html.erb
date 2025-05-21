@@ -1,0 +1,13 @@
+<label class="bold">Quotes & comments</label>
+<%= f.fields_for :quotes do |quote| %>
+  <% unless quote.object.id %>
+    <div class="form-group">
+      <%= render 'quote_fields', f: quote %>
+    </div>
+  <% end %>
+<% end %>
+<div class="small">
+  <%= link_to_add_association 'Add Another Quote', f, :quotes %>
+  <br>
+</div>
+<br> 

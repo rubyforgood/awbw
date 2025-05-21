@@ -1,0 +1,51 @@
+<%= display_banner %>
+<nav class="navbar navbar-light header container">
+  <i class="fa fa-bars pull-left navbar-toggler hidden-md hidden-lg" data-toggle="collapse" datar-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation"></i>
+
+  <%= link_to root_path, class: "navbar-brand visible-xs-inline" do %>
+    <%= image_tag("awbw-mobile.png", class:"img-responsive") %>
+  <% end %>
+
+  <%= link_to root_path, class: 'navbar-brand hidden-xs' do %>
+    <%= image_tag("logo.png") %>
+    <%= image_tag("logo-color.png", class:"colored-logo") %>
+  <% end %>
+
+  <% if user_signed_in? %>
+    <div class="navbar-text pull-right container-fluid">
+      <div class="dropdown">
+        <div class="dropdown-compoments pull-right">
+          <a class="dropdown-toggle" role="button" data-toggle="dropdown">
+            <div class="col-xs-2 avatar">
+              <%= image_tag current_user.avatar.url(:thumb), class: 'img-circle avatar' %>
+            </div>
+            <div class="col-xs-4 visible-xs-block mobile-name">
+              <p>
+                <%= current_user.decorate.first_name %>
+              </p>
+            </div>
+            <div class="col-xs-8 hidden-xs name">
+              <p>
+                Welcome back,
+                <span>
+                  <%= current_user.decorate.full_name %>
+                </span>
+              </p>
+            </div>
+            <div class="col-xs-1 carot hidden-xs">
+              <i class="fa fa-angle-down"></i>
+            </div>
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <%= link_to "Profile", user_path(current_user) %>
+            </li>
+            <li>
+              <%= link_to("Logout", destroy_user_session_path, :method => :delete) %>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</nav>

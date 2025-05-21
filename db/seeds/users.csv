@@ -1,0 +1,1 @@
+id,str_email,str_password,str_firstname,str_lastname,str_phone,str_phone2,str_phone3,str_best_time_to_call,str_address1,str_city,str_state,str_zip,str_address2,str_city2,str_state2,str_zip2,dte_birthday,str_subscribecode,bln_inactive,bln_confirmed,int_bouncecount,ts_create,ts_modify,bln_html,str_user_comment,txt_notes,num_primaryaddress

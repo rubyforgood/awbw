@@ -1,0 +1,25 @@
+<br>
+<h2 class='normal'><%= "#{@form_builder.name}" %></h2>
+<%= render 'form', form_fields: @form_builder.form_fields, agencies: current_user.projects %>
+<script>
+  //<![CDATA[
+    $(function() {
+      var date;
+      var regex = /^[0-9]{2}-[0-9]{2}-[0-9]{4}$/;
+      $.urlParam = function(name) {
+        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        if (results==null) return null;
+        else return results[1] || 0;
+      }
+      if ($.urlParam('form_builder_id') == '5') {
+        var date = $( "#report_report_form_field_answers_attributes_0_answer" );
+        date.datepicker({dateFormat: 'mm-dd-yy'});
+        date.on('change', function(){
+          if(!regex.test(this.value)){
+           alert(this.value + " is an invalid date format. Please enter the date as MM-DD-YYYY");
+          }
+        });
+      }
+    });
+  //]]>
+</script>

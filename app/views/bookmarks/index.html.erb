@@ -1,0 +1,56 @@
+<div class="container-fluid width search-curriculum-page">
+  <div class="row">
+    <div class="col-md-12 col-lg-8 width">
+      <div class="entry-content">
+        <h2 class="normal">My bookmarks</h2><br/>
+      </div>
+    </div>
+  </div>
+  <!-- ####### Filter Section ####### -->
+  <div class="row">
+    <div class="col-md-12 col-lg-8">
+      <div class="hide-labels medium search-filters">
+        <div class="sortable-label">
+          <b>Sort By:</b>
+        </div>
+        <div class="sortable-group" style="width:auto">
+          <%= render 'sortable_fields', sortable_fields: @sortable_fields %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+     <div class="col-md-12 col-lg-12 width" >
+
+       <div class='list-group'>
+         <% if @bookmarks.any? %>
+           <div id="bookmarks-list">
+             <% @bookmarks.each do |bookmark| %>
+               <%= render 'bookmarks/flex',workshop: bookmark.bookmarkable.decorate, breadcrumb: 'My Bookmarks', link_route: workshop_path(bookmark.bookmarkable_id), new_bookamrk: @new_bookmark %>
+             <% end %>
+           </div>
+
+           <div class='btn-container'>
+             <!-- ##### Will Paginate #### -->
+             <div id="infinite-scrolling" class="hide">
+               <%= will_paginate @bookmarks%>
+             </div>
+
+             <% if @bookmarks.next_page %>
+               <div class="btn_container"><br/>
+                 <div id="load_more" class="btn btn-primary btn--small">
+                   Load More
+                 </div>
+               </div>
+             <% end %>
+           </div>
+         <% else %>
+           Your search returned no results.  Please try again.
+         <% end %>
+
+       </div>
+
+     </div>
+   </div>
+</div>

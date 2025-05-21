@@ -1,0 +1,35 @@
+<hr>
+<div>
+  <h4 class='normal light js-workshop-logs' <%= tag_options({'data-workshop-logs' => workshop_logs}, false) %>>
+
+    <div class="row">
+      <div class="col-md-12 label-plus-comment">Adult and Children's Combined (Family) Log Summary</div>
+      <div class="custom-smaller">Please note: If you submitted Combined/Family numbers, they will not automatically populate into your Monthly Report total. However, they will still count towards your monthly numbers. An AWBW staff member will input them separately once the Monthly Report is submitted.</div>
+    </div>
+    <table class='table table-striped'>
+      <th class='bold small'>Date</th>
+      <th class='bold small'>Facilitator/Workshop</th>
+      <th class='bold small'># on-going adults</th>
+      <th class='bold small'># on-going children</th>
+      <th class='bold small'># first-time adults</th>
+      <th class='bold small'># first-time children</th>
+
+      <% if workshop_logs && workshop_logs.any? %>
+        <% monthly_logs = workshop_logs.values.flatten.select do |log |
+               log.date && log.date.month == @month.to_i && \
+               log.date.year == @year.to_i
+           end %>
+        <% monthly_logs.each do |log| %>
+          <tr>
+            <td class='small'><%= link_to log.date_label, edit_workshop_log_path(log.id) , target: :blank %></td>
+            <td class='small'><%= log.name %></td>
+            <td class='small' <%= tag_options({class: "js-on-going-adult-count"}, false) %>><%= log.combined_num_ongoing('Adult') %></td>
+	    <td class='small' <%= tag_options({class: "js-on-going-children-count"}, false) %>><%= log.combined_num_ongoing('Children') %></td>
+            <td class='small' <%= tag_options({class: "js-first-time-adult-count"}, false) %>><%= log.combined_num_first_time('Adult') %></td>
+	    <td class='small' <%= tag_options({class: "js-first-time-children-count"}, false) %>><%= log.combined_num_first_time('Children') %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    </table>
+  </h4>
+</div>

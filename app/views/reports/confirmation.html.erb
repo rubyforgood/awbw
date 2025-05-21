@@ -1,0 +1,9 @@
+<h2 class="normal">
+  <%= "Thank you for submitting your #{@report.type.titleize}." %>
+</h2>
+<h5>
+  <div class="underline inline">
+    <%= link_to 'Click Here', report_path(:select_report_type) %>
+  </div>
+  to submit another report.
+</h5> 
