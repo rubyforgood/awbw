@@ -1,4 +1,4 @@
-class SetShareStoryOrderingFields < ActiveRecord::Migration
+class SetShareStoryOrderingFields < ActiveRecord::Migration[4.2]
   def change
     form = FormBuilder.find_by(name: 'Share a Story')
 

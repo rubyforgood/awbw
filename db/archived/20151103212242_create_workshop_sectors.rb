@@ -1,4 +1,4 @@
-class CreateWorkshopSectors < ActiveRecord::Migration
+class CreateWorkshopSectors < ActiveRecord::Migration[4.2]
   def change
     create_table :workshop_sectors do |t|
       t.references :workshop, index: true

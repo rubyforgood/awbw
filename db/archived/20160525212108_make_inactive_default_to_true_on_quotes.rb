@@ -1,4 +1,4 @@
-class MakeInactiveDefaultToTrueOnQuotes < ActiveRecord::Migration
+class MakeInactiveDefaultToTrueOnQuotes < ActiveRecord::Migration[4.2]
   def up
     change_column :quotes, :inactive, :boolean, default: true
   end

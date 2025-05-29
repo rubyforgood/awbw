@@ -1,4 +1,4 @@
-class ChangeFieldsOrderingCombinedWorkshopLog < ActiveRecord::Migration
+class ChangeFieldsOrderingCombinedWorkshopLog < ActiveRecord::Migration[4.2]
   def change
     form = FormBuilder.where('name LIKE ?', '%Family Workshop Log%').first
 

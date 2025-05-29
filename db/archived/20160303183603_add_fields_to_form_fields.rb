@@ -1,4 +1,4 @@
-class AddFieldsToFormFields < ActiveRecord::Migration
+class AddFieldsToFormFields < ActiveRecord::Migration[4.2]
   def change
     add_column :form_fields, :status, :boolean, default: true
     add_column :form_fields, :instructional_hint, :string

@@ -1,7 +1,7 @@
 class ReportFormFieldAnswer < ApplicationRecord
   belongs_to :report
   belongs_to :form_field
-  belongs_to :answer_option
+  belongs_to :answer_option, optional: true
   attr_accessor :_create
 
   def name

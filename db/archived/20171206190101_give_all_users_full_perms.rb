@@ -1,4 +1,4 @@
-class GiveAllUsersFullPerms < ActiveRecord::Migration
+class GiveAllUsersFullPerms < ActiveRecord::Migration[4.2]
   def change
     puts
 

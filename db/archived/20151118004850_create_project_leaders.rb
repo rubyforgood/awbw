@@ -1,4 +1,4 @@
-class CreateProjectLeaders < ActiveRecord::Migration
+class CreateProjectLeaders < ActiveRecord::Migration[4.2]
   def change
     create_table :project_leaders do |t|
       t.references :agency, index: true

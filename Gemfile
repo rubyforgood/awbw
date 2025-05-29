@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 ruby "2.7.8"
 
-gem 'rails', '5.0.7.2'
+gem 'rails', '~> 5.2.0'
 
 gem 'sprockets-rails', '~> 3.2.2'
 gem 'mysql2', '~> 0.5.0'
@@ -22,7 +22,7 @@ gem 'bourbon', '~> 4.2.2'
 gem 'draper'
 gem 'paperclip', '~> 6.0.0'
 gem 'aws-sdk-s3', '~> 1.98.0'
-gem 'rails_admin','~> 1.1.1'
+gem 'rails_admin','~> 1.4.0'
 # gem 'rails_admin', git: 'https://github.com/enmand/rails_admin.git'
 # rails_admin 1.1.1 has a transitive dependency on haml (~> 4.0). haml 4.0.7 in
 # turn has a transitive dependency on tile and does not specify a version range.
@@ -47,7 +47,7 @@ gem 'httparty', '~> 0.13.7'
 gem 'will_paginate', '~> 3.1.7'
 gem 'bootstrap-will_paginate'
 gem 'aws-sdk-v1', '~> 1.64.0'
-gem 'apipie-rails', '~> 0.3.5'
+gem 'apipie-rails', '~> 0.5.0'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'ckeditor', '~> 4.1.6'
 gem "binding_of_caller"

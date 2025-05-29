@@ -2,7 +2,7 @@ class WorkshopLogCreationWizardController < ApplicationController
   include Wicked::Wizard
 
   steps :choose_method, :fill_out_form, :confirmation
-  before_filter :set_breadcrumb
+  before_action :set_breadcrumb
 
   def show
     @user = current_user

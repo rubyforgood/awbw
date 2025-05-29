@@ -1,4 +1,4 @@
-class UpdateWindowsType < ActiveRecord::Migration
+class UpdateWindowsType < ActiveRecord::Migration[4.2]
   def change
     wt = WindowsType.find_by(name: "Adult Windows")
     wt.update(name: "ADULT WORKSHOP LOG")

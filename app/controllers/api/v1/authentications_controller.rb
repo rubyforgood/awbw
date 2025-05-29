@@ -1,5 +1,5 @@
 class Api::V1::AuthenticationsController < Api::V1::ApiController
-  skip_before_filter :authenticate_api_user!
+  skip_before_action :authenticate_api_user!
   api :POST, '/v1/authentications'
   param :email, String, 'User\'s email', required: true
   param :password, String, 'User\'s password', required: true

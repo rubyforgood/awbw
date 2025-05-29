@@ -1,4 +1,4 @@
-class CreateUserForms < ActiveRecord::Migration
+class CreateUserForms < ActiveRecord::Migration[4.2]
   def change
     create_table :user_forms do |t|
       t.references :user, index: true

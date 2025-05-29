@@ -1,4 +1,4 @@
-class AddPolymorphicFieldsToNotification < ActiveRecord::Migration
+class AddPolymorphicFieldsToNotification < ActiveRecord::Migration[4.2]
   def change
     add_column :notifications, :notification_type, :integer
     add_column :notifications, :noticeable_type, :string

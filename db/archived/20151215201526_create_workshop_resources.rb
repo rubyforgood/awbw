@@ -1,4 +1,4 @@
-class CreateWorkshopResources < ActiveRecord::Migration
+class CreateWorkshopResources < ActiveRecord::Migration[4.2]
   def change
     create_table :workshop_resources do |t|
       t.references :workshop, index: true
