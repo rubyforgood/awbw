@@ -1,4 +1,4 @@
-class ChangeExtraFieldDataType < ActiveRecord::Migration
+class ChangeExtraFieldDataType < ActiveRecord::Migration[4.2]
   def self.up
     change_column :workshops, :extra_field, :text
     change_column :workshops, :extra_field_spanish, :text

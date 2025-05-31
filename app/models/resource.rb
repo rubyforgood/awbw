@@ -1,7 +1,7 @@
 class Resource < ApplicationRecord
   # Associations
   belongs_to :user
-  belongs_to :workshop
+  belongs_to :workshop, optional: true
   belongs_to :windows_type
   has_many :images, as: :owner, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable

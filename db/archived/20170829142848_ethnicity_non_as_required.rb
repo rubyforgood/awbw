@@ -1,4 +1,4 @@
-class EthnicityNonAsRequired < ActiveRecord::Migration
+class EthnicityNonAsRequired < ActiveRecord::Migration[4.2]
   def change
     forms = FormBuilder.where('name LIKE ?', '%Workshop Log%')
 

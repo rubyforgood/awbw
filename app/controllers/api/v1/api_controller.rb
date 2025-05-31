@@ -2,7 +2,7 @@ class Api::V1::ApiController < ActionController::Base
   protect_from_forgery with: :null_session, :if => Proc.new { |c| c.request.format.json? }
 
   rescue_from AuthenticationFailed, with: :authentication_failed
-  before_filter :authenticate_api_user!
+  before_action :authenticate_api_user!
 
   def authenticate_api_user!
     raise AuthenticationFailed unless current_api_user.present?

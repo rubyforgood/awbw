@@ -1,4 +1,4 @@
-class CreateFormFieldAnswerOptions < ActiveRecord::Migration
+class CreateFormFieldAnswerOptions < ActiveRecord::Migration[4.2]
   def change
     create_table :form_field_answer_options do |t|
       t.references :form_field, index: true

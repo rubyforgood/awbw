@@ -1,4 +1,4 @@
-class AddProjectIdToProjectLeaders < ActiveRecord::Migration
+class AddProjectIdToProjectLeaders < ActiveRecord::Migration[4.2]
   def change
     add_reference :project_leaders, :project, index: true
     add_foreign_key :project_leaders, :projects

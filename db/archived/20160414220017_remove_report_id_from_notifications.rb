@@ -1,4 +1,4 @@
-class RemoveReportIdFromNotifications < ActiveRecord::Migration
+class RemoveReportIdFromNotifications < ActiveRecord::Migration[4.2]
   def up
     remove_foreign_key :notifications, :reports
     remove_column :notifications, :report_id

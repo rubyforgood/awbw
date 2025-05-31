@@ -1,6 +1,6 @@
 class ImpersonateUsersController < ApplicationController
 
-  before_filter :check_current_user_is_super_user
+  before_action :check_current_user_is_super_user
 
   def index
     if params[:q]

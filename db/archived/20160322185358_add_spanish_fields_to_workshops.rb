@@ -1,4 +1,4 @@
-class AddSpanishFieldsToWorkshops < ActiveRecord::Migration
+class AddSpanishFieldsToWorkshops < ActiveRecord::Migration[4.2]
   def change
     add_column :workshops, :objective_spanish, :text
     add_column :workshops, :materials_spanish, :text

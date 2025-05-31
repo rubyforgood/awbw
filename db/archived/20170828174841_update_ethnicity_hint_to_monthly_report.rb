@@ -1,4 +1,4 @@
-class UpdateEthnicityHintToMonthlyReport < ActiveRecord::Migration
+class UpdateEthnicityHintToMonthlyReport < ActiveRecord::Migration[4.2]
   def change
     forms = FormBuilder.where('name LIKE ?', '%Workshop Log%')
 

@@ -85,23 +85,23 @@ class UsersController < ApplicationController
     @user == current_user || current_user.liaison_in_projects?(@user.projects)
   end
 
-  # def user_params
-  #   params.require(:user).permit(
-  #     :email, :first_name, :last_name,
-  #     :phone, :phone2, :phone3, :best_time_to_call,
-  #     :birthday, :address, :city, :state, :zip, :address2,
-  #     :city2, :state2, :zip2, :primary_address, :notes, :avatar,
-  #     project_users_attributes: [:project_id, :position, :_destroy, :id]
-  #   )
-  # end
+  def user_params
+    params.require(:user).permit(
+      :email, :first_name, :last_name,
+      :phone, :phone2, :phone3, :best_time_to_call,
+      :birthday, :address, :city, :state, :zip, :address2,
+      :city2, :state2, :zip2, :primary_address, :notes, :avatar,
+      project_users_attributes: [:project_id, :position, :_destroy, :id]
+    )
+  end
 
-  # def id_param
-  #   params[:id]
-  # end
+  def id_param
+    params[:id]
+  end
 
-  # def password_param
-  #   params[:user][:password]
-  # end
+  def password_param
+    params[:user][:password]
+  end
 
   def pass_params
     # NOTE: Using `strong_parameters` gem
