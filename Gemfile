@@ -49,7 +49,7 @@ gem 'bootstrap-will_paginate'
 gem 'aws-sdk-v1', '~> 1.64.0'
 gem 'apipie-rails', '~> 0.5.0'
 gem 'rack-cors', :require => 'rack/cors'
-gem 'ckeditor', '~> 4.2.0'
+gem 'ckeditor', '~> 4.3.0'
 gem "binding_of_caller"
 gem 'image_processing'
 gem 'foundation_emails'
