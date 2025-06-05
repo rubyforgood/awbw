@@ -1,4 +1,4 @@
-class FixWorkshopLogFieldAdultAge < ActiveRecord::Migration
+class FixWorkshopLogFieldAdultAge < ActiveRecord::Migration[4.2]
   def change
     forms = FormBuilder.where('name LIKE ?', '%Workshop Log%')
 

@@ -1,5 +1,5 @@
 # coding: utf-8
-class SetWorkshopLogRequiredFields < ActiveRecord::Migration
+class SetWorkshopLogRequiredFields < ActiveRecord::Migration[4.2]
     def change
       questions = ["Total # On-going Participants",
                    "Total # First-Time Participants",

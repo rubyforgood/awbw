@@ -12,7 +12,7 @@ RSpec.describe Workshop do
     # Need create for association tests to work correctly with callbacks/scopes
     subject { create(:workshop) } # Assumes functional factory
 
-    it { should belong_to(:user) }
+    it { should belong_to(:user).optional }
     it { should belong_to(:windows_type) }
 
     it { should have_many(:sectorable_items).dependent(:destroy).inverse_of(:sectorable) }

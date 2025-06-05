@@ -1,4 +1,4 @@
-class AddFieldsToAgencies < ActiveRecord::Migration
+class AddFieldsToAgencies < ActiveRecord::Migration[4.2]
   def change
     add_reference :agencies, :windows_type, index: true
     add_foreign_key :agencies, :windows_types

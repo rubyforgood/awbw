@@ -5,7 +5,7 @@ class Workshop < ApplicationRecord
   default_scope { where(inactive: false) }
 
   # Associations
-  belongs_to :user
+  belongs_to :user, optional: true
   before_save :set_time_frame
 
   has_many :sectorable_items, dependent: :destroy,

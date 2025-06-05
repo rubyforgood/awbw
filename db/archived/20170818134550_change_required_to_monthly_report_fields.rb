@@ -1,4 +1,4 @@
-class ChangeRequiredToMonthlyReportFields < ActiveRecord::Migration
+class ChangeRequiredToMonthlyReportFields < ActiveRecord::Migration[4.2]
   def change
     questions = ["Share challenges for this month",
                  "Share a highlight for this month",

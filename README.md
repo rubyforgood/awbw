@@ -5,7 +5,7 @@ offers a place for workshop leaders to provide input and information about works
 
 # Prerequisits
 
-- Ruby 2.3+
+- Ruby 2.7+
 - Rubygems
 
 # Getting Started
@@ -140,7 +140,7 @@ This ticket will be tested and approved by QA.
 
 5) Once the ticket is approved it will be merged to production
 by clickling in *merge* button on Github, then changes will be live in the next deploy to production env:
-This las step should be done by the deploy admin (Gastón).
+This last step should be done by the deploy admin (Gastón).
 
 When the ticket is not approved:
 ================================
@@ -148,6 +148,3 @@ When the ticket is not approved:
 If the ticket requires some changes to be approved, you should
 work on the feature branch, update the PR and re-start the same flow
 described above.
-
-
-

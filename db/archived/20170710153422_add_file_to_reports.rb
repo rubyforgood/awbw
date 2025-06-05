@@ -1,4 +1,4 @@
-class AddFileToReports < ActiveRecord::Migration
+class AddFileToReports < ActiveRecord::Migration[4.2]
   def up
     add_attachment :reports, :form_file
   end

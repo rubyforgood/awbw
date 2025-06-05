@@ -3,7 +3,7 @@ class Report < ApplicationRecord
   belongs_to :project
   belongs_to :windows_type
 
-  belongs_to :owner, polymorphic: true
+  belongs_to :owner, polymorphic: true, optional: true
   has_one  :form, as: :owner
   has_one  :image
   validate :image_valid?

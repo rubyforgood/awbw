@@ -1,7 +1,7 @@
 class MediaFile < ApplicationRecord
-  belongs_to :report
-  belongs_to :workshop
-  belongs_to :workshop_log
+  belongs_to :report, optional: true
+  belongs_to :workshop, optional: true
+  belongs_to :workshop_log, optional: true
 
   has_attached_file :file
 
