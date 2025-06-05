@@ -1,4 +1,4 @@
-class AddParticipantsToReports < ActiveRecord::Migration[4.2]
+class AddParticipantsToReports < ActiveRecord::Migration
   def change
     add_column :reports, :children_first_time, :integer, :default => 0
     add_column :reports, :children_ongoing, :integer, :default => 0

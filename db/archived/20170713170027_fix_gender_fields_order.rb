@@ -1,4 +1,4 @@
-class FixGenderFieldsOrder < ActiveRecord::Migration[4.2]
+class FixGenderFieldsOrder < ActiveRecord::Migration
   def change
     forms = FormBuilder.where('name LIKE ?', '%Workshop Log%')
 

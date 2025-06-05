@@ -1,4 +1,4 @@
-class ChangeTextGenderIdentity < ActiveRecord::Migration[4.2]
+class ChangeTextGenderIdentity < ActiveRecord::Migration
   def change
     form = FormBuilder.where('name LIKE ?', '%Family Workshop Log%').first
     field = form.form_fields.find_by(question: "Gender Identity")

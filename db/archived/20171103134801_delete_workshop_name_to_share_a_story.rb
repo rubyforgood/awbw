@@ -1,4 +1,4 @@
-class DeleteWorkshopNameToShareAStory < ActiveRecord::Migration[4.2]
+class DeleteWorkshopNameToShareAStory < ActiveRecord::Migration
   def change
     form = FormBuilder.find_by(name: "Share a Story")
     field = form.form_fields.find_by(question: "Workshop Name")

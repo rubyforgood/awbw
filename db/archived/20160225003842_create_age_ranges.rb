@@ -1,4 +1,4 @@
-class CreateAgeRanges < ActiveRecord::Migration[4.2]
+class CreateAgeRanges < ActiveRecord::Migration
   def change
     create_table :age_ranges do |t|
       t.string :name

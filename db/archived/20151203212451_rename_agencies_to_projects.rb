@@ -1,4 +1,4 @@
-class RenameAgenciesToProjects < ActiveRecord::Migration[4.2]
+class RenameAgenciesToProjects < ActiveRecord::Migration
   def change
     rename_table :agencies, :projects
   end

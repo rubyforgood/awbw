@@ -1,4 +1,4 @@
-class OtherDescriptionToWorkshopLogs < ActiveRecord::Migration[4.2]
+class OtherDescriptionToWorkshopLogs < ActiveRecord::Migration
   def change
     add_column :reports, :other_description, :string
   end

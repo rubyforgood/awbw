@@ -1,4 +1,4 @@
-class RenameProjectLeadersToProjectUsers < ActiveRecord::Migration[4.2]
+class RenameProjectLeadersToProjectUsers < ActiveRecord::Migration
   def change
     rename_table :project_leaders, :project_users
   end

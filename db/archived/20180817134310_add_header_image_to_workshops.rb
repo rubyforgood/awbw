@@ -1,4 +1,4 @@
-class AddHeaderImageToWorkshops < ActiveRecord::Migration[4.2]
+class AddHeaderImageToWorkshops < ActiveRecord::Migration
   def up
     add_attachment :workshops, :header
   end

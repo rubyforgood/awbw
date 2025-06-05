@@ -1,4 +1,4 @@
-class AddOrderingToWorkshopVariations < ActiveRecord::Migration[4.2]
+class AddOrderingToWorkshopVariations < ActiveRecord::Migration
   def change
     add_column :workshop_variations, :ordering, :integer
   end

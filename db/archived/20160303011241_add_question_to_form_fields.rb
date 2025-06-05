@@ -1,4 +1,4 @@
-class AddQuestionToFormFields < ActiveRecord::Migration[4.2]
+class AddQuestionToFormFields < ActiveRecord::Migration
   def change
     add_column :form_fields, :question, :string
   end

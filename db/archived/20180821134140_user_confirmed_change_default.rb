@@ -1,4 +1,4 @@
-class UserConfirmedChangeDefault < ActiveRecord::Migration[4.2]
+class UserConfirmedChangeDefault < ActiveRecord::Migration
   def change
     change_column_default(:users, :confirmed, true)
   end

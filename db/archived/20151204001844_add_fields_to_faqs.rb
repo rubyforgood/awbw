@@ -1,4 +1,4 @@
-class AddFieldsToFaqs < ActiveRecord::Migration[4.2]
+class AddFieldsToFaqs < ActiveRecord::Migration
   def change
     add_column :faqs, :inactive, :boolean
     add_column :faqs, :ordering, :integer

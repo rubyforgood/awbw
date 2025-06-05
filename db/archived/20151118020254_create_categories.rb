@@ -1,4 +1,4 @@
-class CreateCategories < ActiveRecord::Migration[4.2]
+class CreateCategories < ActiveRecord::Migration
   def change
     create_table :categories do |t|
       t.references :metadatum, index: true

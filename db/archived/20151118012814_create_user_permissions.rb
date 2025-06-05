@@ -1,4 +1,4 @@
-class CreateUserPermissions < ActiveRecord::Migration[4.2]
+class CreateUserPermissions < ActiveRecord::Migration
   def change
     create_table :user_permissions do |t|
       t.references :user, index: true

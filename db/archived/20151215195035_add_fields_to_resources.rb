@@ -1,4 +1,4 @@
-class AddFieldsToResources < ActiveRecord::Migration[4.2]
+class AddFieldsToResources < ActiveRecord::Migration
   def change
     add_column :resources, :agency, :string
     add_column :resources, :legacy, :boolean

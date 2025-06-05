@@ -1,4 +1,4 @@
-class InactiveWorkshopLedFieldToCombinedLog < ActiveRecord::Migration[4.2]
+class InactiveWorkshopLedFieldToCombinedLog < ActiveRecord::Migration
   def change
     form = FormBuilder.where('name LIKE ?', '%Family Workshop Log%').first
     field = form.form_fields.find_by(question: "Workshop Led")

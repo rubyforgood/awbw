@@ -1,4 +1,4 @@
-class CreateProjectObligations < ActiveRecord::Migration[4.2]
+class CreateProjectObligations < ActiveRecord::Migration
   def change
     create_table :project_obligations do |t|
       t.string :name

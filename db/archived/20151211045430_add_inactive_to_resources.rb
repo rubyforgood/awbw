@@ -1,4 +1,4 @@
-class AddInactiveToResources < ActiveRecord::Migration[4.2]
+class AddInactiveToResources < ActiveRecord::Migration
   def change
     add_column :resources, :inactive, :boolean, default: true
   end

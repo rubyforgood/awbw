@@ -1,4 +1,4 @@
-class ReorderMonthlyReportFields < ActiveRecord::Migration[4.2]
+class ReorderMonthlyReportFields < ActiveRecord::Migration
   def change
     questions = ["If this is a quote or story from a participant please indicate the following", "Age", "Gender Identity", "Service Population"]
 

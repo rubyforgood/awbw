@@ -1,4 +1,4 @@
-class FixUserPerms < ActiveRecord::Migration[4.2]
+class FixUserPerms < ActiveRecord::Migration
   def change
     UserPermission.delete_all
     Permission.delete_all

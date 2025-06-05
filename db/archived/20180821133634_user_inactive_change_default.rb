@@ -1,4 +1,4 @@
-class UserInactiveChangeDefault < ActiveRecord::Migration[4.2]
+class UserInactiveChangeDefault < ActiveRecord::Migration
   def change
     change_column_default(:users, :inactive, false)
   end

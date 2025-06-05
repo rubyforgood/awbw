@@ -1,4 +1,4 @@
-class AddUrlToResources < ActiveRecord::Migration[4.2]
+class AddUrlToResources < ActiveRecord::Migration
   def change
     add_column :resources, :url, :string
   end

@@ -1,4 +1,4 @@
-class AddAgeToQuotes < ActiveRecord::Migration[4.2]
+class AddAgeToQuotes < ActiveRecord::Migration
   def change
     add_column :quotes, :age, :string
   end

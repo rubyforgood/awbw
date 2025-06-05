@@ -1,4 +1,4 @@
-class RemoveWorkshopSectors < ActiveRecord::Migration[4.2]
+class RemoveWorkshopSectors < ActiveRecord::Migration
   def change
     drop_table :workshop_sectors
   end

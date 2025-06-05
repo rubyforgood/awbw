@@ -1,4 +1,4 @@
-class AddDateToReports < ActiveRecord::Migration[4.2]
+class AddDateToReports < ActiveRecord::Migration
   def change
     add_column :reports, :date, :date
   end

@@ -1,4 +1,4 @@
-class CreateUserFormFormFields < ActiveRecord::Migration[4.2]
+class CreateUserFormFormFields < ActiveRecord::Migration
   def change
     create_table :user_form_form_fields do |t|
       t.references :form_field, index: true

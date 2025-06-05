@@ -1,4 +1,4 @@
-class CreateQuotableItemQuotes < ActiveRecord::Migration[4.2]
+class CreateQuotableItemQuotes < ActiveRecord::Migration
   def change
     create_table :quotable_item_quotes do |t|
       t.string :quotable_type

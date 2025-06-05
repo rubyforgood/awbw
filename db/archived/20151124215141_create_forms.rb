@@ -1,4 +1,4 @@
-class CreateForms < ActiveRecord::Migration[4.2]
+class CreateForms < ActiveRecord::Migration
   def change
     create_table :forms do |t|
       t.string :owner_type

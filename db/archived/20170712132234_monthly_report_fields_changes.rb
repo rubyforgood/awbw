@@ -1,4 +1,4 @@
-class MonthlyReportFieldsChanges < ActiveRecord::Migration[4.2]
+class MonthlyReportFieldsChanges < ActiveRecord::Migration
   def change
     forms = FormBuilder.where('name LIKE ?', '%Monthly Report%')
 

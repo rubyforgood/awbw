@@ -1,4 +1,4 @@
-class CreateFormBuilders < ActiveRecord::Migration[4.2]
+class CreateFormBuilders < ActiveRecord::Migration
   def change
     create_table :form_builders do |t|
       t.string :name

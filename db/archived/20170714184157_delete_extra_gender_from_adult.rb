@@ -1,4 +1,4 @@
-class DeleteExtraGenderFromAdult < ActiveRecord::Migration[4.2]
+class DeleteExtraGenderFromAdult < ActiveRecord::Migration
   def change
     form = FormBuilder.where('name LIKE ?', '%Adult Workshop Log%').first
     field = form.form_fields.find_by(question: "Gender",
