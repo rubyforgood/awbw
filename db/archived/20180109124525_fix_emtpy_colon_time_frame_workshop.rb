@@ -1,4 +1,4 @@
-class FixEmtpyColonTimeFrameWorkshop < ActiveRecord::Migration[4.2]
+class FixEmtpyColonTimeFrameWorkshop < ActiveRecord::Migration
   def change
     Workshop.where(timeframe: ":").update_all(timeframe: nil)
   end

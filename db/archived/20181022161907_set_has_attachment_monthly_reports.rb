@@ -1,4 +1,4 @@
-class SetHasAttachmentMonthlyReports < ActiveRecord::Migration[4.2]
+class SetHasAttachmentMonthlyReports < ActiveRecord::Migration
   def change
     MonthlyReport.find_each do |mr|
       mr.send :set_has_attachament

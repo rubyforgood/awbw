@@ -1,4 +1,4 @@
-class CreateBanners < ActiveRecord::Migration[4.2]
+class CreateBanners < ActiveRecord::Migration
   def change
     create_table :banners do |t|
       t.text :content

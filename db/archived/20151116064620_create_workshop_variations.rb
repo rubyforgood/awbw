@@ -1,4 +1,4 @@
-class CreateWorkshopVariations < ActiveRecord::Migration[4.2]
+class CreateWorkshopVariations < ActiveRecord::Migration
   def change
     create_table :workshop_variations do |t|
       t.references :workshop, index: true

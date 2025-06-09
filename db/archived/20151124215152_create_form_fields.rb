@@ -1,4 +1,4 @@
-class CreateFormFields < ActiveRecord::Migration[4.2]
+class CreateFormFields < ActiveRecord::Migration
   def change
     create_table :form_fields do |t|
       t.string :label

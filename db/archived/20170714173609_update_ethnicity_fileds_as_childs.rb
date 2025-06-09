@@ -1,4 +1,4 @@
-class UpdateEthnicityFiledsAsChilds < ActiveRecord::Migration[4.2]
+class UpdateEthnicityFiledsAsChilds < ActiveRecord::Migration
   def change
     forms = FormBuilder.where('name LIKE ?', '%Workshop Log%')
 

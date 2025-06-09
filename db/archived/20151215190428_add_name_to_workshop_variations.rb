@@ -1,4 +1,4 @@
-class AddNameToWorkshopVariations < ActiveRecord::Migration[4.2]
+class AddNameToWorkshopVariations < ActiveRecord::Migration
   def change
     add_column :workshop_variations, :name, :string
   end

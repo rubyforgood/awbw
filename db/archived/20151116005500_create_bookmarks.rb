@@ -1,4 +1,4 @@
-class CreateBookmarks < ActiveRecord::Migration[4.2]
+class CreateBookmarks < ActiveRecord::Migration
   def change
     create_table :bookmarks do |t|
       t.references :user, index: true

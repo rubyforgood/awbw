@@ -1,4 +1,4 @@
-class CreateSectorableItems < ActiveRecord::Migration[4.2]
+class CreateSectorableItems < ActiveRecord::Migration
   def change
     create_table :sectorable_items do |t|
       t.integer :sectorable_id

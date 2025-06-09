@@ -1,4 +1,4 @@
-class CreateReportFormFieldAnswers < ActiveRecord::Migration[4.2]
+class CreateReportFormFieldAnswers < ActiveRecord::Migration
   def change
     create_table :report_form_field_answers do |t|
       t.references :report, index: true

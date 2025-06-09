@@ -1,4 +1,4 @@
-class CreateSectors < ActiveRecord::Migration[4.2]
+class CreateSectors < ActiveRecord::Migration
   def change
     create_table :sectors do |t|
       t.string :name

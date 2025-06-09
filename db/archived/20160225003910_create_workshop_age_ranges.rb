@@ -1,4 +1,4 @@
-class CreateWorkshopAgeRanges < ActiveRecord::Migration[4.2]
+class CreateWorkshopAgeRanges < ActiveRecord::Migration
   def change
     create_table :workshop_age_ranges do |t|
       t.references :workshop, index: true

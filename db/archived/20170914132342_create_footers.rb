@@ -1,4 +1,4 @@
-class CreateFooters < ActiveRecord::Migration[4.2]
+class CreateFooters < ActiveRecord::Migration
   def change
     create_table :footers do |t|
       t.string :phone

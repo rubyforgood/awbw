@@ -1,4 +1,4 @@
-class CreatePermissions < ActiveRecord::Migration[4.2]
+class CreatePermissions < ActiveRecord::Migration
   def change
     create_table :permissions do |t|
       t.string :security_cat

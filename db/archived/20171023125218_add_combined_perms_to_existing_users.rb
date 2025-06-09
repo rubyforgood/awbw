@@ -1,4 +1,4 @@
-class AddCombinedPermsToExistingUsers < ActiveRecord::Migration[4.2]
+class AddCombinedPermsToExistingUsers < ActiveRecord::Migration
   def change
     User.find_in_batches do |group|
       group.each do |user|

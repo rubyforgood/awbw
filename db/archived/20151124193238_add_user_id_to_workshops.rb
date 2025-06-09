@@ -1,4 +1,4 @@
-class AddUserIdToWorkshops < ActiveRecord::Migration[4.2]
+class AddUserIdToWorkshops < ActiveRecord::Migration
   def change
     add_reference :workshops, :user, index: true
     add_foreign_key :workshops, :users

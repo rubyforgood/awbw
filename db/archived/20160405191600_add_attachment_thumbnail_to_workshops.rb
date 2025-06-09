@@ -1,4 +1,4 @@
-class AddAttachmentThumbnailToWorkshops < ActiveRecord::Migration[4.2]
+class AddAttachmentThumbnailToWorkshops < ActiveRecord::Migration
   def self.up
     change_table :workshops do |t|
       t.attachment :thumbnail

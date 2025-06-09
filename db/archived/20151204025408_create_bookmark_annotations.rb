@@ -1,4 +1,4 @@
-class CreateBookmarkAnnotations < ActiveRecord::Migration[4.2]
+class CreateBookmarkAnnotations < ActiveRecord::Migration
   def change
     create_table :bookmark_annotations do |t|
       t.references :bookmark, index: true

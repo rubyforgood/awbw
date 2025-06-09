@@ -1,4 +1,4 @@
-class AddFieldsTimeFrameToWorkshops < ActiveRecord::Migration[4.2]
+class AddFieldsTimeFrameToWorkshops < ActiveRecord::Migration
   def change
     add_column :workshops, :time_intro, :integer
     add_column :workshops, :time_demonstration, :integer

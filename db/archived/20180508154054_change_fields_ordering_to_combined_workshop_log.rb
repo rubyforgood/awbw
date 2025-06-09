@@ -1,5 +1,5 @@
 # coding: utf-8
-class ChangeFieldsOrderingToCombinedWorkshopLog < ActiveRecord::Migration[4.2]
+class ChangeFieldsOrderingToCombinedWorkshopLog < ActiveRecord::Migration
   def change
     form = FormBuilder.where('name LIKE ?', '%Family Workshop Log%').first
 

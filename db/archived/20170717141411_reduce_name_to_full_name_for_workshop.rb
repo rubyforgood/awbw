@@ -1,4 +1,4 @@
-class ReduceNameToFullNameForWorkshop < ActiveRecord::Migration[4.2]
+class ReduceNameToFullNameForWorkshop < ActiveRecord::Migration
   def change
     Workshop.find_each do |w|
       w.update(author_first_name: "#{w.author_first_name} #{w.author_last_name}")

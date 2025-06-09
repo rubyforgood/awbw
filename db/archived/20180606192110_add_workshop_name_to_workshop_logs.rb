@@ -1,4 +1,4 @@
-class AddWorkshopNameToWorkshopLogs < ActiveRecord::Migration[4.2]
+class AddWorkshopNameToWorkshopLogs < ActiveRecord::Migration
   def change
     add_column :reports, :workshop_name, :string
   end

@@ -1,4 +1,4 @@
-class AddLogsCountToWorkshops < ActiveRecord::Migration[4.2]
+class AddLogsCountToWorkshops < ActiveRecord::Migration
   def change
     add_column :workshops, :led_count, :integer, default: 0
   end

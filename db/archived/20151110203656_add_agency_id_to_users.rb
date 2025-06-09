@@ -1,4 +1,4 @@
-class AddAgencyIdToUsers < ActiveRecord::Migration[4.2]
+class AddAgencyIdToUsers < ActiveRecord::Migration
   def change
     add_reference :users, :agency, index: true
     add_foreign_key :users, :agencies

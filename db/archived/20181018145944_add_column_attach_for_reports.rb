@@ -1,4 +1,4 @@
-class AddColumnAttachForReports < ActiveRecord::Migration[4.2]
+class AddColumnAttachForReports < ActiveRecord::Migration
   def change
     add_column :reports, :has_attachment, :boolean, default: false
   end

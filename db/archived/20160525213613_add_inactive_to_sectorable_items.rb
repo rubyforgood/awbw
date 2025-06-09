@@ -1,4 +1,4 @@
-class AddInactiveToSectorableItems < ActiveRecord::Migration[4.2]
+class AddInactiveToSectorableItems < ActiveRecord::Migration
   def change
     add_column :sectorable_items, :inactive, :boolean, default: true
   end

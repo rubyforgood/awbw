@@ -1,4 +1,3 @@
-# encoding: UTF-8
 # This file is auto-generated from the current state of the database. Instead
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
@@ -11,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20250407002246) do
+ActiveRecord::Schema.define(version: 2025_04_07_002246) do
 
-  create_table "admins", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "admins", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name", default: "", null: false
@@ -32,82 +31,82 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
-  create_table "age_ranges", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "age_ranges", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "windows_type_id"
+    t.integer "windows_type_id"
     t.index ["windows_type_id"], name: "index_age_ranges_on_windows_type_id"
   end
 
-  create_table "answer_options", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "answer_options", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
     t.integer "order"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  create_table "attachments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "owner_id"
+  create_table "attachments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "owner_id"
     t.string "owner_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "file_file_name"
     t.string "file_content_type"
-    t.bigint "file_file_size"
+    t.integer "file_file_size"
     t.datetime "file_updated_at"
   end
 
-  create_table "banners", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "banners", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.text "content"
     t.boolean "show"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  create_table "bookmark_annotations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "bookmark_id"
-    t.text "annotation", size: :medium
+  create_table "bookmark_annotations", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "bookmark_id"
+    t.text "annotation", limit: 16777215
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["bookmark_id"], name: "index_bookmark_annotations_on_bookmark_id"
   end
 
-  create_table "bookmarks", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "user_id"
+  create_table "bookmarks", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "user_id"
     t.string "bookmarkable_type"
-    t.bigint "bookmarkable_id"
+    t.integer "bookmarkable_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
-  create_table "categories", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "metadatum_id"
+  create_table "categories", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "metadatum_id"
     t.string "name"
-    t.bigint "legacy_id"
+    t.integer "legacy_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "published", default: false
     t.index ["metadatum_id"], name: "index_categories_on_metadatum_id"
   end
 
-  create_table "categorizable_items", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "categorizable_id"
+  create_table "categorizable_items", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "categorizable_id"
     t.string "categorizable_type"
-    t.bigint "category_id"
-    t.bigint "legacy_id"
+    t.integer "category_id"
+    t.integer "legacy_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "inactive", default: true
     t.index ["category_id"], name: "index_categorizable_items_on_category_id"
   end
 
-  create_table "ckeditor_assets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "ckeditor_assets", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "data_file_name", null: false
     t.string "data_content_type"
-    t.bigint "data_file_size"
-    t.bigint "assetable_id"
+    t.integer "data_file_size"
+    t.integer "assetable_id"
     t.string "assetable_type", limit: 30
     t.string "type", limit: 30
     t.integer "width"
@@ -119,16 +118,16 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.index ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type"
   end
 
-  create_table "faqs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "faqs", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "question"
-    t.text "answer", size: :medium
+    t.text "answer", limit: 16777215
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "inactive"
     t.integer "ordering"
   end
 
-  create_table "footers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "footers", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "phone"
     t.string "children_program"
     t.string "adult_program"
@@ -137,27 +136,27 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "form_builders", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "form_builders", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
     t.integer "owner_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.text "description", size: :medium
-    t.bigint "windows_type_id"
+    t.text "description", limit: 16777215
+    t.integer "windows_type_id"
     t.index ["windows_type_id"], name: "index_form_builders_on_windows_type_id"
   end
 
-  create_table "form_field_answer_options", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "form_field_id"
-    t.bigint "answer_option_id"
+  create_table "form_field_answer_options", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "form_field_id"
+    t.integer "answer_option_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["answer_option_id"], name: "index_form_field_answer_options_on_answer_option_id"
     t.index ["form_field_id"], name: "index_form_field_answer_options_on_form_field_id"
   end
 
-  create_table "form_fields", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "form_id"
+  create_table "form_fields", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "form_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "question"
@@ -167,33 +166,33 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.integer "ordering"
     t.boolean "is_required", default: true
     t.integer "status", default: 1
-    t.bigint "parent_id"
+    t.integer "parent_id"
     t.index ["form_id"], name: "index_form_fields_on_form_id"
   end
 
-  create_table "forms", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "forms", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "owner_type"
-    t.bigint "owner_id"
+    t.integer "owner_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "form_builder_id"
+    t.integer "form_builder_id"
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
   end
 
-  create_table "images", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "owner_id"
+  create_table "images", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "owner_id"
     t.string "owner_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "file_file_name"
     t.string "file_content_type"
-    t.bigint "file_file_size"
+    t.integer "file_file_size"
     t.datetime "file_updated_at"
-    t.bigint "report_id"
+    t.integer "report_id"
     t.index ["owner_id"], name: "index_images_on_owner_id"
   end
 
-  create_table "locations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "locations", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "city"
     t.string "state"
     t.string "country"
@@ -201,16 +200,16 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "media_files", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "media_files", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "file_file_name"
     t.string "file_content_type"
-    t.bigint "file_file_size"
+    t.integer "file_file_size"
     t.datetime "file_updated_at"
-    t.bigint "report_id"
-    t.bigint "workshop_log_id"
+    t.integer "report_id"
+    t.integer "workshop_log_id"
   end
 
-  create_table "metadata", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "metadata", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
     t.string "legacy_id"
     t.datetime "created_at", null: false
@@ -218,20 +217,20 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.boolean "published", default: false
   end
 
-  create_table "monthly_reports", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "monthly_reports", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "month"
-    t.bigint "project_id"
-    t.bigint "project_user_id"
+    t.integer "project_id"
+    t.integer "project_user_id"
     t.string "name"
     t.string "position"
     t.boolean "mail_evaluations"
     t.string "num_ongoing_participants"
     t.string "num_new_participants"
-    t.text "most_effective", size: :medium
-    t.text "most_challenging", size: :medium
-    t.text "goals_reached", size: :medium
-    t.text "goals", size: :medium
-    t.text "comments", size: :medium
+    t.text "most_effective", limit: 16777215
+    t.text "most_challenging", limit: 16777215
+    t.text "goals_reached", limit: 16777215
+    t.text "goals", limit: 16777215
+    t.text "comments", limit: 16777215
     t.boolean "call_requested"
     t.string "best_call_time"
     t.string "phone"
@@ -241,120 +240,120 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.index ["project_user_id"], name: "index_monthly_reports_on_project_user_id"
   end
 
-  create_table "notifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "notifications", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "notification_type"
     t.string "noticeable_type"
-    t.bigint "noticeable_id"
+    t.integer "noticeable_id"
   end
 
-  create_table "permissions", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "permissions", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "security_cat"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "legacy_id"
+    t.integer "legacy_id"
   end
 
-  create_table "project_obligations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "project_obligations", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  create_table "project_statuses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "project_statuses", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  create_table "project_users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "agency_id"
-    t.bigint "user_id"
+  create_table "project_users", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "agency_id"
+    t.integer "user_id"
     t.integer "position"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "project_id"
+    t.integer "project_id"
     t.string "filemaker_code"
     t.index ["agency_id"], name: "index_project_users_on_agency_id"
     t.index ["project_id"], name: "index_project_users_on_project_id"
     t.index ["user_id"], name: "index_project_users_on_user_id"
   end
 
-  create_table "projects", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "projects", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
-    t.bigint "location_id"
+    t.integer "location_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "windows_type_id"
+    t.integer "windows_type_id"
     t.string "district"
     t.date "start_date"
     t.date "end_date"
     t.string "locality"
-    t.text "description", size: :medium
-    t.text "notes", size: :medium
+    t.text "description", limit: 16777215
+    t.text "notes", limit: 16777215
     t.string "filemaker_code"
     t.boolean "inactive", default: false
-    t.bigint "legacy_id"
+    t.integer "legacy_id"
     t.boolean "legacy", default: false
-    t.bigint "project_status_id"
+    t.integer "project_status_id"
     t.index ["location_id"], name: "index_projects_on_location_id"
     t.index ["project_status_id"], name: "index_projects_on_project_status_id"
     t.index ["windows_type_id"], name: "index_projects_on_windows_type_id"
   end
 
-  create_table "quotable_item_quotes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "quotable_item_quotes", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "quotable_type"
-    t.bigint "quotable_id"
-    t.bigint "legacy_id"
-    t.bigint "quote_id"
+    t.integer "quotable_id"
+    t.integer "legacy_id"
+    t.integer "quote_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["quote_id"], name: "index_quotable_item_quotes_on_quote_id"
   end
 
-  create_table "quotes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.text "quote", size: :medium
+  create_table "quotes", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.text "quote", limit: 16777215
     t.boolean "inactive", default: true
-    t.bigint "legacy_id"
+    t.integer "legacy_id"
     t.boolean "legacy", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "workshop_id"
+    t.integer "workshop_id"
     t.string "age"
     t.string "gender", limit: 1
     t.string "speaker_name"
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
   end
 
-  create_table "report_form_field_answers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "report_id"
-    t.bigint "form_field_id"
-    t.text "answer", size: :medium
+  create_table "report_form_field_answers", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "report_id"
+    t.integer "form_field_id"
+    t.text "answer", limit: 16777215
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.bigint "answer_option_id"
+    t.integer "answer_option_id"
     t.index ["answer_option_id"], name: "index_report_form_field_answers_on_answer_option_id"
     t.index ["form_field_id"], name: "index_report_form_field_answers_on_form_field_id"
     t.index ["report_id"], name: "index_report_form_field_answers_on_report_id"
   end
 
-  create_table "reports", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "reports", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "type"
-    t.bigint "owner_id"
+    t.integer "owner_id"
     t.string "owner_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "user_id"
-    t.bigint "project_id"
+    t.integer "user_id"
+    t.integer "project_id"
     t.date "date"
     t.integer "rating", default: 0
-    t.bigint "windows_type_id"
+    t.integer "windows_type_id"
     t.string "form_file_file_name"
     t.string "form_file_content_type"
-    t.bigint "form_file_file_size"
+    t.integer "form_file_file_size"
     t.datetime "form_file_updated_at"
-    t.bigint "workshop_id"
+    t.integer "workshop_id"
     t.string "workshop_name"
     t.string "other_description"
     t.boolean "has_attachment", default: false
@@ -369,77 +368,77 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.index ["windows_type_id"], name: "index_reports_on_windows_type_id"
   end
 
-  create_table "resources", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "resources", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "title"
     t.string "author"
-    t.bigint "user_id"
-    t.text "text", size: :medium
+    t.integer "user_id"
+    t.text "text", limit: 16777215
     t.boolean "featured", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "kind"
-    t.bigint "workshop_id"
+    t.integer "workshop_id"
     t.boolean "male", default: false
     t.boolean "female", default: false
     t.string "url"
     t.boolean "inactive", default: true
     t.string "agency"
     t.boolean "legacy"
-    t.bigint "windows_type_id"
+    t.integer "windows_type_id"
     t.string "filemaker_code"
     t.integer "ordering"
-    t.bigint "legacy_id"
+    t.integer "legacy_id"
     t.index ["user_id"], name: "index_resources_on_user_id"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
   end
 
-  create_table "sectorable_items", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "sectorable_id"
+  create_table "sectorable_items", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "sectorable_id"
     t.string "sectorable_type"
-    t.bigint "sector_id"
+    t.integer "sector_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "inactive", default: true
     t.index ["sector_id"], name: "index_sectorable_items_on_sector_id"
   end
 
-  create_table "sectors", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "sectors", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "published", default: false
   end
 
-  create_table "user_form_form_fields", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "form_field_id"
-    t.bigint "user_form_id"
-    t.text "text", size: :medium
+  create_table "user_form_form_fields", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "form_field_id"
+    t.integer "user_form_id"
+    t.text "text", limit: 16777215
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["form_field_id"], name: "index_user_form_form_fields_on_form_field_id"
     t.index ["user_form_id"], name: "index_user_form_form_fields_on_user_form_id"
   end
 
-  create_table "user_forms", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "user_id"
-    t.bigint "form_id"
+  create_table "user_forms", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "form_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["form_id"], name: "index_user_forms_on_form_id"
     t.index ["user_id"], name: "index_user_forms_on_user_id"
   end
 
-  create_table "user_permissions", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "user_id"
-    t.bigint "permission_id"
+  create_table "user_permissions", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "permission_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["permission_id"], name: "index_user_permissions_on_permission_id"
     t.index ["user_id"], name: "index_user_permissions_on_user_id"
   end
 
-  create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "users", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name", default: ""
@@ -454,7 +453,7 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.string "last_sign_in_ip"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.bigint "agency_id"
+    t.integer "agency_id"
     t.string "phone"
     t.string "address"
     t.string "city"
@@ -462,12 +461,12 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.string "zip"
     t.date "birthday"
     t.string "subscribecode"
-    t.text "comment", size: :medium
-    t.text "notes", size: :medium
+    t.text "comment", limit: 16777215
+    t.text "notes", limit: 16777215
     t.boolean "legacy", default: false
     t.boolean "inactive", default: false
     t.boolean "confirmed", default: true
-    t.bigint "legacy_id"
+    t.integer "legacy_id"
     t.string "phone2"
     t.string "phone3"
     t.string "best_time_to_call"
@@ -478,7 +477,7 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.integer "primary_address"
     t.string "avatar_file_name"
     t.string "avatar_content_type"
-    t.bigint "avatar_file_size"
+    t.integer "avatar_file_size"
     t.datetime "avatar_updated_at"
     t.boolean "super_user", default: false
     t.index ["agency_id"], name: "index_users_on_agency_id"
@@ -486,40 +485,40 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  create_table "windows_types", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "windows_types", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "legacy_id"
+    t.integer "legacy_id"
     t.string "short_name"
   end
 
-  create_table "workshop_age_ranges", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "workshop_id"
-    t.bigint "age_range_id"
+  create_table "workshop_age_ranges", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "workshop_id"
+    t.integer "age_range_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["age_range_id"], name: "index_workshop_age_ranges_on_age_range_id"
     t.index ["workshop_id"], name: "index_workshop_age_ranges_on_workshop_id"
   end
 
-  create_table "workshop_logs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "workshop_id"
-    t.bigint "user_id"
+  create_table "workshop_logs", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "workshop_id"
+    t.integer "user_id"
     t.date "date"
     t.integer "rating", default: 0
-    t.text "reaction", size: :medium
-    t.text "successes", size: :medium
-    t.text "challenges", size: :medium
-    t.text "suggestions", size: :medium
-    t.text "questions", size: :medium
+    t.text "reaction", limit: 16777215
+    t.text "successes", limit: 16777215
+    t.text "challenges", limit: 16777215
+    t.text "suggestions", limit: 16777215
+    t.text "questions", limit: 16777215
     t.boolean "lead_similar"
-    t.text "similarities", size: :medium
-    t.text "differences", size: :medium
-    t.text "comments", size: :medium
+    t.text "similarities", limit: 16777215
+    t.text "differences", limit: 16777215
+    t.text "comments", limit: 16777215
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "project_id"
+    t.integer "project_id"
     t.boolean "is_embodied_art_workshop", default: false
     t.integer "num_participants_on_going", default: 0
     t.integer "num_participants_first_time", default: 0
@@ -528,49 +527,49 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.index ["workshop_id"], name: "index_workshop_logs_on_workshop_id"
   end
 
-  create_table "workshop_resources", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "workshop_id"
-    t.bigint "resource_id"
+  create_table "workshop_resources", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "workshop_id"
+    t.integer "resource_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["resource_id"], name: "index_workshop_resources_on_resource_id"
     t.index ["workshop_id"], name: "index_workshop_resources_on_workshop_id"
   end
 
-  create_table "workshop_variations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
-    t.bigint "workshop_id"
+  create_table "workshop_variations", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "workshop_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.text "code", size: :medium
+    t.text "code", limit: 16777215
     t.boolean "inactive", default: true
     t.integer "ordering"
     t.string "name"
     t.boolean "legacy", default: false
-    t.bigint "variation_id"
+    t.integer "variation_id"
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
   end
 
-  create_table "workshops", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "workshops", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "title"
     t.string "full_name"
     t.string "author_location"
     t.integer "month"
     t.integer "year"
-    t.text "objective", size: :medium
-    t.text "materials", size: :medium
-    t.text "timeframe", size: :medium
-    t.text "age_range", size: :medium
-    t.text "setup", size: :medium
-    t.text "instructions", size: :medium
-    t.text "warm_up", size: :medium
-    t.text "creation", size: :medium
-    t.text "closing", size: :medium
-    t.text "misc_instructions", size: :medium
-    t.text "project", size: :medium
-    t.text "description", size: :medium
-    t.text "notes", size: :medium
-    t.text "timestamps", size: :medium
-    t.text "tips", size: :medium
+    t.text "objective", limit: 16777215
+    t.text "materials", limit: 16777215
+    t.text "timeframe", limit: 16777215
+    t.text "age_range", limit: 16777215
+    t.text "setup", limit: 16777215
+    t.text "instructions", limit: 16777215
+    t.text "warm_up", limit: 16777215
+    t.text "creation", limit: 16777215
+    t.text "closing", limit: 16777215
+    t.text "misc_instructions", limit: 16777215
+    t.text "project", limit: 16777215
+    t.text "description", limit: 16777215
+    t.text "notes", limit: 16777215
+    t.text "timestamps", limit: 16777215
+    t.text "tips", limit: 16777215
     t.string "pub_issue"
     t.string "misc1"
     t.string "misc2"
@@ -582,40 +581,40 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "legacy", default: false
-    t.bigint "legacy_id"
-    t.bigint "windows_type_id"
-    t.bigint "user_id"
+    t.integer "legacy_id"
+    t.integer "windows_type_id"
+    t.integer "user_id"
     t.integer "led_count", default: 0
-    t.text "objective_spanish", size: :medium
-    t.text "materials_spanish", size: :medium
-    t.text "timeframe_spanish", size: :medium
-    t.text "age_range_spanish", size: :medium
-    t.text "setup_spanish", size: :medium
-    t.text "instructions_spanish", size: :medium
-    t.text "project_spanish", size: :medium
-    t.text "warm_up_spanish", size: :medium
-    t.text "creation_spanish", size: :medium
-    t.text "closing_spanish", size: :medium
-    t.text "misc_instructions_spanish", size: :medium
-    t.text "description_spanish", size: :medium
-    t.text "notes_spanish", size: :medium
-    t.text "tips_spanish", size: :medium
+    t.text "objective_spanish", limit: 16777215
+    t.text "materials_spanish", limit: 16777215
+    t.text "timeframe_spanish", limit: 16777215
+    t.text "age_range_spanish", limit: 16777215
+    t.text "setup_spanish", limit: 16777215
+    t.text "instructions_spanish", limit: 16777215
+    t.text "project_spanish", limit: 16777215
+    t.text "warm_up_spanish", limit: 16777215
+    t.text "creation_spanish", limit: 16777215
+    t.text "closing_spanish", limit: 16777215
+    t.text "misc_instructions_spanish", limit: 16777215
+    t.text "description_spanish", limit: 16777215
+    t.text "notes_spanish", limit: 16777215
+    t.text "tips_spanish", limit: 16777215
     t.string "thumbnail_file_name"
     t.string "thumbnail_content_type"
-    t.bigint "thumbnail_file_size"
+    t.integer "thumbnail_file_size"
     t.datetime "thumbnail_updated_at"
-    t.text "optional_materials", size: :medium
-    t.text "optional_materials_spanish", size: :medium
-    t.text "introduction", size: :medium
-    t.text "introduction_spanish", size: :medium
-    t.text "demonstration", size: :medium
-    t.text "demonstration_spanish", size: :medium
-    t.text "opening_circle", size: :medium
-    t.text "opening_circle_spanish", size: :medium
-    t.text "visualization", size: :medium
-    t.text "visualization_spanish", size: :medium
-    t.text "misc1_spanish", size: :medium
-    t.text "misc2_spanish", size: :medium
+    t.text "optional_materials", limit: 16777215
+    t.text "optional_materials_spanish", limit: 16777215
+    t.text "introduction", limit: 16777215
+    t.text "introduction_spanish", limit: 16777215
+    t.text "demonstration", limit: 16777215
+    t.text "demonstration_spanish", limit: 16777215
+    t.text "opening_circle", limit: 16777215
+    t.text "opening_circle_spanish", limit: 16777215
+    t.text "visualization", limit: 16777215
+    t.text "visualization_spanish", limit: 16777215
+    t.text "misc1_spanish", limit: 16777215
+    t.text "misc2_spanish", limit: 16777215
     t.integer "time_intro"
     t.integer "time_demonstration"
     t.integer "time_warm_up"
@@ -624,7 +623,7 @@ ActiveRecord::Schema.define(version: 20250407002246) do
     t.integer "time_opening"
     t.string "header_file_name"
     t.string "header_content_type"
-    t.bigint "header_file_size"
+    t.integer "header_file_size"
     t.datetime "header_updated_at"
     t.text "extra_field"
     t.text "extra_field_spanish"

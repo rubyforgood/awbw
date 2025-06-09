@@ -1,4 +1,4 @@
-class RemoveLeaderIdFromAgencies < ActiveRecord::Migration[4.2]
+class RemoveLeaderIdFromAgencies < ActiveRecord::Migration
   def change
     remove_column :agencies, :leader_id
   end

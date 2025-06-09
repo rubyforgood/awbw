@@ -1,4 +1,4 @@
-class FixShareStoryOwnerType < ActiveRecord::Migration[4.2]
+class FixShareStoryOwnerType < ActiveRecord::Migration
   def up
     @reports = Report.where(owner_type: "Report", owner_id: 7)
     @reports.update_all(owner_type: "FormBuilder")

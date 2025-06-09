@@ -1,4 +1,4 @@
-class AddLegacyToWorkshopVariations < ActiveRecord::Migration[4.2]
+class AddLegacyToWorkshopVariations < ActiveRecord::Migration
   def change
     add_column :workshop_variations, :legacy, :boolean, default: false
   end

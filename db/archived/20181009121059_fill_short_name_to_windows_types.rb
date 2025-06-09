@@ -1,4 +1,4 @@
-class FillShortNameToWindowsTypes < ActiveRecord::Migration[4.2]
+class FillShortNameToWindowsTypes < ActiveRecord::Migration
   def change
     WindowsType.all.each do |w|
       if w.name.include? 'COMBINED'

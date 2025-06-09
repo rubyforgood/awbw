@@ -1,4 +1,4 @@
-class CreateCategorizableItems < ActiveRecord::Migration[4.2]
+class CreateCategorizableItems < ActiveRecord::Migration
   def change
     create_table :categorizable_items do |t|
       t.integer :categorizable_id

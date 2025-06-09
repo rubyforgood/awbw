@@ -1,4 +1,4 @@
-class CreateAnswerOptions < ActiveRecord::Migration[4.2]
+class CreateAnswerOptions < ActiveRecord::Migration
   def change
     create_table :answer_options do |t|
       t.string :name

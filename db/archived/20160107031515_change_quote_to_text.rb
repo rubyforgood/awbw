@@ -1,4 +1,4 @@
-class ChangeQuoteToText < ActiveRecord::Migration[4.2]
+class ChangeQuoteToText < ActiveRecord::Migration
   def up
     change_column :quotes, :quote, :text
   end

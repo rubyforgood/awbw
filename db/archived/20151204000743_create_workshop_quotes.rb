@@ -1,4 +1,4 @@
-class CreateWorkshopQuotes < ActiveRecord::Migration[4.2]
+class CreateWorkshopQuotes < ActiveRecord::Migration
   def change
     create_table :workshop_quotes do |t|
       t.string :quote

@@ -1,4 +1,4 @@
-class CreateUserForOrphanedReports < ActiveRecord::Migration[4.2]
+class CreateUserForOrphanedReports < ActiveRecord::Migration
   def up
     user = User.new(first_name: "Orphaned", last_name: "Reports", email: "orphaned_reports@awbw.org", password: "awbworphaned")
     user.save!

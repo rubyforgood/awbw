@@ -1,4 +1,4 @@
-class MigrateResourceTypes < ActiveRecord::Migration[4.2]
+class MigrateResourceTypes < ActiveRecord::Migration
   def change
     Resource.where(type: "TemplateAndHandout").update_all(type: "Template")
     Resource.where(type: "ToolkitAndForm").update_all(type: "Form")
