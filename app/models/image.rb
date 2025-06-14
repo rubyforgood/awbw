@@ -1,6 +1,6 @@
 class Image < ApplicationRecord
   belongs_to :owner, polymorphic: true
-  belongs_to :report
+  belongs_to :report, optional: true
 
   has_attached_file :file,
                     styles: { medium: '300x300>', thumb: '100x100>' },

@@ -1,5 +1,5 @@
 class BookmarksController < ApplicationController
-  before_filter :set_breadcrumb
+  before_action :set_breadcrumb
 
   def index
     @bookmarks = Bookmark.search(params, current_user).paginate(page: params[:page], per_page: 3)

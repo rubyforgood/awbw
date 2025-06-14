@@ -1,4 +1,4 @@
-class CreateDatabase < ActiveRecord::Migration
+class CreateDatabase < ActiveRecord::Migration[4.2]
   # sure we could just run raw sql, but at this point I am not even 100% sure 
   # what DB we will be using in a two weeks.
   class SchemaMigration < ActiveRecord::Base
