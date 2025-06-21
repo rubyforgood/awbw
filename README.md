@@ -82,13 +82,63 @@ available at http://localhost:3000/admin/cms
 
 # Tests
 
-To run tests run:
+## Running Tests
+
+To run the full test suite:
 
 ```shell
 bin/rspec
 ```
 
-This will execute all the tests in the `spec/` directory and provide a summary of the results.
+To run specific test types:
+
+```shell
+# Run only model specs
+bin/rspec spec/models/
+
+# Run only system specs (end-to-end tests)
+bin/rspec spec/system/
+
+# Run a specific test file
+bin/rspec spec/models/workshop_spec.rb
+```
+
+## Testing Strategy
+
+This legacy Rails application was recently upgraded from Rails 4.x and originally had no automated tests. We are starting to implement a comprehensive testing strategy using RSpec and FactoryBot.
+
+### Test Structure
+
+- **System Specs** (`spec/system/`): End-to-end browser-based tests using Capybara to verify happy paths of critical behavior
+- **Model Specs** (`spec/models/`): Unit tests for ActiveRecord models, validations, associations, and business logic
+- **Service Specs** (`spec/services/`): Tests for service objects and lower-level building blocks
+- **Mailer Specs** (`spec/mailers/`): Email functionality tests for lower-level building blocks
+- **Factory Definitions** (`spec/factories/`): Test data generators using FactoryBot
+
+### Key Testing Focus Areas
+
+- **System specs to verify happy paths of critical behavior**: User authentication flows, workshop creation and management, search functionality, report submission workflows
+- **Model/mailer/service specs for verifying lower level building blocks**: Business logic validation, email delivery, authentication tokens, permission systems, and data relationships
+
+### Test Configuration
+
+The test suite uses:
+- **RSpec Rails** for the testing framework
+- **FactoryBot** for test data generation
+- **Capybara** for browser automation in system specs
+- **Shoulda Matchers** for model testing helpers
+- **Devise Test Helpers** for authentication in tests
+
+### Running Tests in Development
+
+Ensure MySQL test database is running:
+```shell
+# Using Docker
+docker run --name awbw_mysql_test -e MYSQL_ALLOW_EMPTY_PASSWORD=true -e MYSQL_DATABASE=awbw_test -p 3307:3306 -d mysql:latest
+
+# Setup test database
+RAILS_ENV=test rake db:create db:migrate
+```
 
 User Permissions
 ================
