@@ -1,7 +1,9 @@
 require 'rails_helper'
 
-RSpec.describe "Workshops" do
+RSpec.describe "Workshops", type: :system do
   before do
+    driven_by(:rack_test)
+    
     create(:footer)
     create(:permission, :adult)
     create(:permission, :children)
