@@ -1,4 +1,4 @@
-FROM ruby:2.6.10-buster
+FROM ruby:2.7.8-buster
 
 # Install basic Linux packages
 RUN apt-get update -qq && apt-get install -y \
@@ -31,7 +31,7 @@ ENV RAILS_ENV=production \
     PATH="/gems/bin:$PATH"
 
 # Install bundler
-RUN gem install bundler -v 1.17.3
+RUN gem install bundler -v 2.4.12
 
 # Copy app code and install dependencies
 COPY . .
