@@ -216,9 +216,9 @@ class User < ApplicationRecord
   def recent_activity(limit=4)
     recent_activity  = workshops.where(inactive: true).last(10)
     recent_activity += workshop_logs.last(10)
-    recent_activity += reports.where('owner_type = "MonthlyReport"').
+    recent_activity += reports.where("owner_type = 'MonthlyReport'").
                        last(10)
-    recent_activity += reports.where('owner_id = "7"').
+    recent_activity += reports.where("owner_id = '7'").
                        last(10)
 
     recent_activity.sort{|x,y| y.created_at <=> x.created_at}[0..(limit - 1)]
