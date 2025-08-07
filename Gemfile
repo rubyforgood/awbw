@@ -59,12 +59,14 @@ gem 'premailer-rails'
 gem "bcrypt", '3.1.16'
 
 group :development, :test do
+  gem 'better_errors'
   gem 'capybara', '~> 3.36'
   gem 'dotenv-rails'
-  gem 'listen'
-  gem 'rspec-rails'
-  gem 'factory_bot_rails', '~> 6.0.0'
   gem 'faker'
+  gem 'factory_bot_rails', '~> 6.0.0'
+  gem 'listen'
+  gem 'pry-rails'
+  gem 'rspec-rails'
+  gem 'selenium-webdriver'
   gem 'shoulda-matchers', require: false
-  gem "better_errors"
 end
