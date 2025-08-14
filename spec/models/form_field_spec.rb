@@ -28,11 +28,10 @@ RSpec.describe FormField do
 
   describe 'enums' do
     it { should define_enum_for(:status).with_values([:inactive, :active]) }
-    it { should define_enum_for(:answer_type).with_values(['free-form input - one line', 'free-form input - paragraph',
-                                                            'multiple choice - radio', 'no user input',
-                                                            'multiple choice - checkbox', 'group-header']) }
-    it { should define_enum_for(:answer_datatype).with_values(['text (alphanumeric)', 'number (integer)', 'number (decimal)',
-                                                               'date']) }
+    it { should define_enum_for(:answer_type).with_values([:free_form_input_one_line, :free_form_input_paragraph, 
+                                                            :multiple_choice_radio, :no_user_input, :multiple_choice_checkbox,
+                                                            :group_header]) }
+    it { should define_enum_for(:answer_datatype).with_values([:text_alphanumeric, :number_integer, :number_decimal, :date,]) }
   end
 
   # it 'is valid with valid attributes' do

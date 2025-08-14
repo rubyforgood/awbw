@@ -5,8 +5,8 @@ FactoryBot.define do
 
     question { Faker::Lorem.sentence }
     status { :active } # Default to active
-    answer_type { 'free-form input - one line' } # Default type
-    answer_datatype { 'text (alphanumeric)' } # Default datatype
+    answer_type { :free_form_input_one_line } # Default type
+    answer_datatype { :text_alphanumeric } # Default datatype
     sequence(:ordering) { |n| n }
     parent_id { nil }
 
