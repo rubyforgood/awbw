@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 ruby "2.7.8"
 
-gem 'rails', '~> 6.1.0.0'
+gem 'rails', '~> 7.0.0.0'
 
 gem 'sprockets-rails', '~> 3.2.2'
 gem 'mysql2', '~> 0.5.0'
@@ -16,13 +16,13 @@ gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 gem 'sdoc', '~> 0.4.0', group: :doc
 
-gem 'devise', '~> 4.7.3'
+gem 'devise', '~> 4.8.0'
 gem 'neat', '1.7.1'
 gem 'bourbon', '~> 4.2.2'
 gem 'draper'
 gem 'paperclip', '~> 6.0.0'
 gem 'aws-sdk-s3', '~> 1.98.0'
-gem 'rails_admin','~> 2.2.1'
+gem 'rails_admin','~> 3.0.0'
 # gem 'rails_admin', git: 'https://github.com/enmand/rails_admin.git'
 # rails_admin 1.1.1 has a transitive dependency on haml (~> 4.0). haml 4.0.7 in
 # turn has a transitive dependency on tile and does not specify a version range.
