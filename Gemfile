@@ -22,7 +22,7 @@ gem 'devise', '~> 4.7.3'
 gem 'neat', '1.7.1'
 gem 'bourbon', '~> 4.2.2'
 gem 'draper'
-gem 'paperclip', '~> 6.0.0'
+gem "kt-paperclip", "~> 6.4", ">= 6.4.1"
 gem 'aws-sdk-s3'
 gem 'rails_admin','~> 2.2.1'
 # gem 'rails_admin', git: 'https://github.com/enmand/rails_admin.git'
