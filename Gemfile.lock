@@ -157,11 +157,11 @@ GEM
     erubi (1.13.1)
     excon (0.112.0)
     execjs (2.10.0)
-    factory_bot (6.0.2)
-      activesupport (>= 5.0.0)
-    factory_bot_rails (6.0.0)
-      factory_bot (~> 6.0.0)
-      railties (>= 5.0.0)
+    factory_bot (6.5.5)
+      activesupport (>= 6.1.0)
+    factory_bot_rails (6.5.0)
+      factory_bot (~> 6.5)
+      railties (>= 6.1.0)
     faker (3.5.2)
       i18n (>= 1.8.11, < 2)
     feature_flipper (2.0.0)
@@ -482,7 +482,7 @@ DEPENDENCIES
   devise (~> 4.7.3)
   dotenv-rails
   draper
-  factory_bot_rails (~> 6.0.0)
+  factory_bot_rails
   faker
   feature_flipper
   font-awesome-rails
@@ -569,8 +569,8 @@ CHECKSUMS
   erubi (1.13.1) sha256=a082103b0885dbc5ecf1172fede897f9ebdb745a4b97a5e8dc63953db1ee4ad9
   excon (0.112.0) sha256=daf9ac3a4c2fc9aa48383a33da77ecb44fa395111e973084d5c52f6f214ae0f0
   execjs (2.10.0) sha256=6bcb8be8f0052ff9d370b65d1c080f2406656e150452a0abdb185a133048450d
-  factory_bot (6.0.2) sha256=ec803c1d5be6ab95fb7709ab2bff38cf9b264c62e46deffe76cc552e60226bb4
-  factory_bot_rails (6.0.0) sha256=b6c7ae09bd3860597065cc9ceb22385e88ca4668ad86ec7532be71323ea4a3ee
+  factory_bot (6.5.5) sha256=ce59295daee1b4704dab8a2fee6816f513d467c6aa3bc587860767d74a66efbe
+  factory_bot_rails (6.5.0) sha256=4a7b61635424a57cc60412a18b72b9dcfb02fabfce2c930447a01dce8b37c0a2
   faker (3.5.2) sha256=f9a80291b2e3f259801d1dd552f0732fe04dce5d1f74e798365bc0413789c473
   feature_flipper (2.0.0) sha256=abc5d46e5a103da840dfb6898a7fc54d114ab08e2f36d7e1b0701bf9f3dfe545
   ffi (1.17.2) sha256=297235842e5947cc3036ebe64077584bff583cd7a4e94e9a02fdec399ef46da6
