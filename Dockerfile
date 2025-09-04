@@ -36,7 +36,8 @@ RUN gem install bundler -v 2.4.12
 # Copy app code and install dependencies
 COPY . .
 
-RUN bundle install --without development test
+RUN bundle install
+# --without development test
 
 # These envs are used in the rails application. While they are entirely 
 # unrelated to the docker build process, they are required for the app to run.
