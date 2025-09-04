@@ -32,6 +32,8 @@ services:
       # Fallback so Rails can boot even if .env is minimal.
       # If you prefer traditional keys, set DB_* in .env and configure database.yml accordingly.
       DATABASE_URL: mysql2://root@database:3306/awbw_development
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: "true"
     ports:
       - 3000:3000
     volumes:

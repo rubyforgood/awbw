@@ -64,7 +64,7 @@ group :development, :test do
   gem 'dotenv-rails'
   gem 'faker'
   gem 'factory_bot_rails', '~> 6.0.0'
-  gem 'listen'
+  # gem 'listen', "~> 3.8"
   gem 'pry-rails'
   gem 'rspec-rails'
   gem 'selenium-webdriver'
