@@ -1,4 +1,4 @@
-FROM ruby:2.7.8-buster
+FROM ruby:2.7.8-bullseye
 
 # Install basic Linux packages
 RUN apt-get update -qq && apt-get install -y \
@@ -24,8 +24,8 @@ RUN apt-get update -qq && apt-get install -y \
 WORKDIR /app
 
 # Set environment variables
-ENV RAILS_ENV=production \
-    RACK_ENV=production \
+ENV RAILS_ENV=development \
+    RACK_ENV=development \
     BUNDLE_PATH=/gems \
     BUNDLE_BIN=/gems/bin \
     PATH="/gems/bin:$PATH"
@@ -50,6 +50,15 @@ ARG SMTP_USERNAME
 ARG SMTP_PASSWORD
 ARG SMTP_SERVER
 ARG SMTP_PORT
+
+ENV SMTP_SERVER=dummy \
+    SMTP_PORT=587 \
+    SMTP_USERNAME=dummy \
+    SMTP_PASSWORD=dummy \
+    SECRET_KEY_BASE=dummy \
+    AWS_ACCESS_KEY_ID=dummy \
+    AWS_SECRET_ACCESS_KEY=dummy \
+    AWS_REGION=dummy
 
 # Precompile assets (if applicable)
 RUN bundle exec rake assets:precompile
