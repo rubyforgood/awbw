@@ -1,4 +1,4 @@
-FROM ruby:2.7.8-bullseye
+FROM ruby:3.3.8
 
 # Install basic Linux packages
 RUN apt-get update -qq && apt-get install -y \

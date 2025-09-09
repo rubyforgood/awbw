@@ -6,7 +6,7 @@ services:
     ports:
       - 3306:3306
     expose:
-      - '3306'
+      - "3306"
     volumes:
       - type: volume
         source: mysql-data
@@ -24,6 +24,7 @@ services:
   web:
     build:
       context: .
+      dockerfile: Dockerfile.dev
     depends_on:
       database:
         condition: service_healthy
@@ -49,3 +50,4 @@ services:
 volumes:
   mysql-data:
   bundle-cache:
+
