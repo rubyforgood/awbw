@@ -1,27 +1,26 @@
 source 'https://rubygems.org'
 
-ruby "2.7.8"
+ruby "3.3.8"
 
-gem 'rails', '~> 6.1.0.0'
+gem "rails", "~> 6.1.7"
 
 gem 'sprockets-rails', '~> 3.2.2'
 gem 'mysql2', '~> 0.5.0'
 gem 'bootstrap-sass'
-gem 'sass-rails', '~> 6.0.0'
+gem "sassc-rails", ">= 2.1.2"
 gem 'uglifier'
 gem 'coffee-rails'
 gem "feature_flipper"
 
 gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
-gem 'sdoc', '~> 0.4.0', group: :doc
 
 gem 'devise', '~> 4.7.3'
 gem 'neat', '1.7.1'
 gem 'bourbon', '~> 4.2.2'
 gem 'draper'
-gem 'paperclip', '~> 6.0.0'
-gem 'aws-sdk-s3', '~> 1.98.0'
+gem "kt-paperclip", "~> 6.4", ">= 6.4.1"
+gem 'aws-sdk-s3'
 gem 'rails_admin','~> 2.2.1'
 # gem 'rails_admin', git: 'https://github.com/enmand/rails_admin.git'
 # rails_admin 1.1.1 has a transitive dependency on haml (~> 4.0). haml 4.0.7 in
@@ -41,12 +40,11 @@ gem 'cocoon', '~> 1.2.6'
 gem 'font-awesome-rails'
 gem 'wicked'
 gem 'search_cop', '~> 1.0.6'
-gem 'mandrill_mailer', '~> 1.0.1'
+gem 'mandrill_mailer'
 gem 'jwt', '~> 1.2.1'
-gem 'httparty', '~> 0.13.7'
+gem 'httparty'
 gem 'will_paginate', '~> 3.1.7'
 gem 'bootstrap-will_paginate'
-gem 'aws-sdk-v1', '~> 1.64.0'
 gem 'apipie-rails', '~> 0.5.0'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'ckeditor', '~> 4.3.0'
@@ -57,13 +55,14 @@ gem 'inky-rb', require: 'inky'
 # Stylesheet inlining for email
 gem 'premailer-rails'
 gem "bcrypt", '3.1.16'
+gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
 
 group :development, :test do
   gem 'better_errors'
   gem 'capybara', '~> 3.36'
   gem 'dotenv-rails'
   gem 'faker'
-  gem 'factory_bot_rails', '~> 6.0.0'
+  gem 'factory_bot_rails'
   gem 'listen'
   gem 'pry-rails'
   gem 'rspec-rails'
