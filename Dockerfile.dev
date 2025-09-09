@@ -1,14 +1,64 @@
-FROM ruby:2.3
+FROM ruby:2.7.8-bullseye
 
-USER root
+# Install basic Linux packages
+RUN apt-get update -qq && apt-get install -y \
+  build-essential \
+  libpq-dev \
+  nodejs \
+  yarn \
+  git \
+  curl \
+  imagemagick \
+  libvips \
+  tzdata \
+  libxml2-dev \
+  libxslt1-dev \
+  libffi-dev \
+  libreadline-dev \
+  libssl-dev \
+  zlib1g-dev \
+  libsqlite3-dev \
+  sqlite3
 
-RUN apt-get update -qq && apt-get install -y qt5-default mysql-client libqtwebkit4 libqtwebkit-dev nodejs
-RUN mkdir /app
+# Set working directory
 WORKDIR /app
-COPY Gemfile /app/Gemfile
-COPY Gemfile.lock /app/Gemfile.lock
-RUN bundle install --without development test
-COPY . /app
 
+# Install bundler
+RUN gem install bundler -v 2.4.12
+
+# Speed up bundling by caching Gemfile layer
+ENV BUNDLE_PATH=/usr/local/bundle \
+    BUNDLE_BIN=/usr/local/bundle/bin \
+    GEM_HOME=/usr/local/bundle
+ENV PATH="$BUNDLE_BIN:$PATH"
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+# Bring in the rest of the app (still useful for initial build cache)
+COPY . .
+
+# Rails dev defaults
+ENV RAILS_ENV=development
+ENV NODE_ENV=development
+
+# These envs are used in the rails application. While they are entirely
+# unrelated to the docker build process, they are required for the app to run.
+# Without these build args the asset precompilation will fail.
+ENV SMTP_SERVER=dummy \
+    SMTP_PORT=587 \
+    SMTP_USERNAME=dummy \
+    SMTP_PASSWORD=dummy \
+    SECRET_KEY_BASE=dummy \
+    AWS_ACCESS_KEY_ID=dummy \
+    AWS_SECRET_ACCESS_KEY=dummy \
+    AWS_REGION=dummy
+
+# Precompile assets (if applicable)
+RUN bundle exec rake assets:precompile
+
+# Expose port (default Rails)
 EXPOSE 3000
-CMD ["rails", "server", "-b", "0.0.0.0", "-e", "development"]
+
+# Start the server (customize to your app server if needed)
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
