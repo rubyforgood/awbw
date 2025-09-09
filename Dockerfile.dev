@@ -42,21 +42,6 @@ COPY . .
 ENV RAILS_ENV=development
 ENV NODE_ENV=development
 
-# These envs are used in the rails application. While they are entirely
-# unrelated to the docker build process, they are required for the app to run.
-# Without these build args the asset precompilation will fail.
-ENV SMTP_SERVER=dummy \
-    SMTP_PORT=587 \
-    SMTP_USERNAME=dummy \
-    SMTP_PASSWORD=dummy \
-    SECRET_KEY_BASE=dummy \
-    AWS_ACCESS_KEY_ID=dummy \
-    AWS_SECRET_ACCESS_KEY=dummy \
-    AWS_REGION=dummy
-
-# Precompile assets (if applicable)
-RUN bundle exec rake assets:precompile
-
 # Expose port (default Rails)
 EXPOSE 3000
 
