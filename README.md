@@ -5,71 +5,35 @@ offers a place for workshop leaders to provide input and information about works
 
 # Prerequisits
 
-- Ruby 2.7+
-- Rubygems
+- [mise](https://mise.jdx.dev/getting-started.html#installing-mise-cli)
+- mysql OR docker
 
 # Getting Started
 
-## Using Codespaces
-
-As part of rubyforgood/awbw-dashboard#9, the development container configuration has been set up to be used in Codespaces. This means that there should be no set up needed, and one will only need to run the rails project via:
-```shell
-rails server
-```
-
 ## Local development
 
-### Install Bundler
+### Docker Development
 
-Bundler is used as a Ruby package management software in this project. To install it use
+This requires docker installed. Follow the instructions [here](https://docs.docker.com/desktop/).
 
-    gem install bundler
+Afterwards
 
-Bundler installs dependencies from Gemfile.
-
-### Install Dependencies
-
-To install new dependencies, or update existing ones to new a new version found in the Gemfile.
-
-    bundle install
-
-### Local MySQL Server
+### MySQL Server
 
 A local MySQL server must be running and configured for this software to function. If you have Docker
 installed, you can quickly start a container for development:
 
-    docker run --name awbw_mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=true -e MYSQL_DATABASE=awbw_development -p 3306:3306 -d mysql:latest -a
+```
+docker run --name awbw_mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=true -e MYSQL_DATABASE=awbw_development -p 3306:3306 -d mysql:latest -a
+```
 
 If you do not have Docker installed, or prefer to run the MySQL server some other way, the following information is required:
 
-| Name | Value |
-|-------|-------|
-| Database | awbw_development |
-| Username | root |
-| Password | <ALLOW EMPTY PASSWORD>  |
-
-### Database Migrations
-
-To update to the latest schema version, use
-
-    rake db:migrate
-
-### Seed Data
-
-The seed file will load a dump from production data and create a user and
-admin you can use for local development:
-
-- User
-  - email: umberto.user@example.com
-  - password: password
-- Admin
-  - email: amy.admin@example.com
-  - password: password
-
-**Note**: Why load up a production dump? Great question. There is no seed
-file, and the utility (`lib/tasks/setup.rake`) to bootstrap development with
-generated data does NOT work. So unless we wanted to stare at a blank screen, we
-needed to repurpose this sanitized dump file to stand up dev.
+| Name     | Value                  |
+| -------- | ---------------------- |
+| Database | awbw_development       |
+| Username | root                   |
+| Password | <ALLOW EMPTY PASSWORD> |
 
 ### Starting the Development Server
 
@@ -77,8 +41,27 @@ To start the development server run:
 
     bin/rails server
 
-One the application loads, it will be available at http://localhost:3000. The admin panel will be
-available at http://localhost:3000/admin/cms
+One the application loads, it will be available at <http://localhost:3000>. The admin panel will be
+available at <http://localhost:3000/admin/cms>
+
+## Using Codespaces
+
+As part of rubyforgood/awbw-dashboard#9, the development container configuration has been set up to be used in Codespaces. This means that there should be no set up needed, and one will only need to run the rails project via:
+
+```shell
+rails server
+```
+
+## Credentials
+
+These credentials also work for staging:
+
+- User
+  - email: <umberto.user@example.com>
+  - password: password
+- Admin
+  - email: <amy.admin@example.com>
+  - password: password
 
 # Tests
 
@@ -123,6 +106,7 @@ This legacy Rails application was recently upgraded from Rails 4.x and originall
 ### Test Configuration
 
 The test suite uses:
+
 - **RSpec Rails** for the testing framework
 - **FactoryBot** for test data generation
 - **Capybara** for browser automation in system specs
@@ -132,6 +116,7 @@ The test suite uses:
 ### Running Tests in Development
 
 Ensure MySQL test database is running:
+
 ```shell
 # Using Docker
 docker run --name awbw_mysql_test -e MYSQL_ALLOW_EMPTY_PASSWORD=true -e MYSQL_DATABASE=awbw_test -p 3307:3306 -d mysql:latest
@@ -140,14 +125,13 @@ docker run --name awbw_mysql_test -e MYSQL_ALLOW_EMPTY_PASSWORD=true -e MYSQL_DA
 RAILS_ENV=test rake db:create db:migrate
 ```
 
-User Permissions
-================
+# User Permissions
 
 user = User.last
 user.permissions << Permission.new(security_cat: "Children's Windows")
 
-Using the CMS
-==============
+# Using the CMS
+
 A given user can have 3 kind of permissions that belongs to a windows type
 so "Adult Windows", "Children's Windows" or "Combined Adult and Children's Windows"
 and it works with the user's curriculum, so if a user wants so "see" a particular
@@ -156,44 +140,41 @@ Using the CMS tool and admin user can add permissions to a given user in the use
 section.
 ![Alt text](app/assets/images/awbw-user-perms-cms.png?raw=true "Permissions")
 
-User Orphaned Reports
-======================
+# User Orphaned Reports
 
 When a user is deleted all their reports are assigned to the "orphaned reports user",
 if you want to take a look to all the orphaned reports, you should login using these credentials:
 
-user: orphaned_reports@awbw.org
+user: <orphaned_reports@awbw.org>
 pass: awbworphaned
 
-Development flow
-================
+# Development flow
 
-1) We have 2 branches on git: { *staging* - *production* },
-we do branching from *production* so when you start a new ticket you should
-create a new feature branch:
+1. We have 2 branches on git: { _staging_ - _production_ },
+   we do branching from _production_ so when you start a new ticket you should
+   create a new feature branch:
 
-```git checkout production```
+`git checkout production`
 
-```git checkout -b feature/awbw-123-ticket-description```
+`git checkout -b feature/awbw-123-ticket-description`
 
-2) You work and do stuff and push changes to the feature branch when you finish your
-work you should create a new PR and leave it as open.
+2. You work and do stuff and push changes to the feature branch when you finish your
+   work you should create a new PR and leave it as open.
 
-3) Then you should merge your branch to staging
+3. Then you should merge your branch to staging
 
-```git checkout staging```
+`git checkout staging`
 
-```git merge feature/awbw-123-ticket-description && git push```
+`git merge feature/awbw-123-ticket-description && git push`
 
-4) Then your changes will be in the staging env in the next deploy.
-This ticket will be tested and approved by QA.
+4. Then your changes will be in the staging env in the next deploy.
+   This ticket will be tested and approved by QA.
 
-5) Once the ticket is approved it will be merged to production
-by clickling in *merge* button on Github, then changes will be live in the next deploy to production env:
-This last step should be done by the deploy admin (Gastón).
+5. Once the ticket is approved it will be merged to production
+   by clickling in _merge_ button on Github, then changes will be live in the next deploy to production env:
+   This last step should be done by the deploy admin (Gastón).
 
-When the ticket is not approved:
-================================
+# When the ticket is not approved
 
 If the ticket requires some changes to be approved, you should
 work on the feature branch, update the PR and re-start the same flow

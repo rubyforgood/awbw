@@ -52,6 +52,19 @@ You might also want to try VSCode with [this WSL extension](https://marketplace.
 
 ### Docker Setup
 
+For Docker-based development (recommended):
+
+1. Ensure Docker is installed and running on your system
+2. Use mise tasks to manage Docker containers:
+   - `mise run docker-setup` - Set up the project with Docker database
+   - `mise run docker-server` - Start Rails server with Docker database
+   - `mise run docker-compose-up` - Start all Docker containers
+   - `mise run docker-compose-down` - Stop all Docker containers
+   - `mise run docker-compose-logs` - View container logs
+
+3. Visit <http://localhost:3000/> to see the AWBW portal page
+4. Log in as a sample user with the default [credentials](#credentials)
+
 ## Credentials
 
 These credentials also work for staging:
