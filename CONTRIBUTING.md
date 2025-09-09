@@ -1,10 +1,10 @@
 # Welcome Contributors! 👋
 
-We ♥ contributors! By participating in this project, you agree to abide by the Ruby for Good [code of conduct](https://github.com/rubyforgood/human-essentials/blob/main/code-of-conduct.md).
+We ♥ contributors! By participating in this project, you agree to abide by the Ruby for Good [code of conduct](https://github.com/rubyforgood/awbw/blob/main/CODE_OF_CONDUCT.md).
 
 If you're new here, here are some things you should know:
 
-- A great introductory overview of the application is available at the [wiki](https://github.com/rubyforgood/human-essentials/wiki/Application-Overview).
+- A great introductory overview of the application is available at the [README](https://github.com/rubyforgood/awbw/blob/main/README.md).
 - Issues tagged "Help Wanted" are self-contained and great for new contributors
 - Pull Requests are reviewed within a week or so
 - Ensure your build passes linting and tests and addresses the issue requirements
@@ -12,7 +12,7 @@ If you're new here, here are some things you should know:
 
 # Communication 💬
 
-If you have any questions about an issue, comment on the issue, open a new issue, or ask in [the RubyForGood slack](https://join.slack.com/t/rubyforgood/shared_invite/zt-2k5ezv241-Ia2Iac3amxDS8CuhOr69ZA). human-essentials has a `#human-essentials` channel in the Slack. Our channel in slack also contains a zoom link for office hours every day office hours are held.
+If you have any questions about an issue, comment on the issue, open a new issue, or ask in [the RubyForGood slack](https://join.slack.com/t/rubyforgood/shared_invite/zt-2k5ezv241-Ia2Iac3amxDS8CuhOr69ZA). awbw has a `#awbw` channel in the Slack.
 
 Many helpful members are available to answer your questions. Just ask, and someone will be there to help you!
 
@@ -38,17 +38,17 @@ You might also want to try VSCode with [this WSL extension](https://marketplace.
    - Install the version specified in [`.ruby-version`](.ruby-version).
    - Visit the [Install Ruby on Rails](https://gorails.com/setup/osx/12-monterey) guide by GoRails for Ubuntu, Windows, and macOSX setup. ⚠️ Follow only the Installing Ruby step, as our project setup differs ⚠️ It is highly recommended you use a ruby version manager such as [rbenv](https://github.com/rbenv/rbenv), [asdf](https://asdf-vm.com/), or [rvm](https://rvm.io/).
    - Verify that your Ruby installation works by running `ruby -v`.
-2. Install Postgres
-   - Follow one of these guides: [MacOSX](https://www.digitalocean.com/community/tutorials/how-to-use-postgresql-with-your-ruby-on-rails-application-on-macos), [Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-use-postgresql-with-your-ruby-on-rails-application-on-ubuntu-18-04).
-   - Create a `database.yml` file on `config/` directory with your database configurations. You can also copy the existing files called [`database.yml.example`](config/database.yml.example) and [`.env.example`](.env.example) and change the credentials.
+2. Install MySQL
+   - Follow the MySQL installation guide for your operating system
+   - For Docker setup (recommended), see the README for MySQL container setup instructions
 3. Clone the project and switch to its directory
 4. Run `bin/setup`
-5. Run `bin/start` and visit <http://localhost:3000/> to see the human essentials page.
+5. Run `bin/start` and visit <http://localhost:3000/> to see the AWBW portal page.
 6. Log in as a sample user with the default [credentials](#credentials).
 
 ## Credentials
 
-These credentials also work for [staging](https://staging.humanessentials.app/):
+These credentials also work for staging:
 
 - User
   - email: <umberto.user@example.com>
@@ -59,16 +59,16 @@ These credentials also work for [staging](https://staging.humanessentials.app/):
 
 ## Codespaces and Dev Container - EXPERIMENTAL 🛠️
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/rubyforgood/human-essentials/tree/main?quickstart=1)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/rubyforgood/awbw/tree/main?quickstart=1)
 
-[![Clone and open in VSCode Dev Container](https://img.shields.io/static/v1?label=Dev%20Containers&message=Clone%20and%20Open%20in%20VSCode&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/rubyforgood/human-essentials)
+[![Clone and open in VSCode Dev Container](https://img.shields.io/static/v1?label=Dev%20Containers&message=Clone%20and%20Open%20in%20VSCode&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/rubyforgood/awbw)
 
 1. Create the container:
    - To run the container on a Github VM, follow the Codespace link above. You can connect to the Codespace using VSCode or the VSCode web editor.
    - Or follow instructions to [create a new Codespace.](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository)
    - To clone this repo and run the container locally, follow instructions to [install VSCode and Docker](https://code.visualstudio.com/docs/devcontainers/containers). Click the Dev Container link above. Don't forget to add a git remote pointing to your fork once the container is setup and you want to push changes.
 2. Wait for the container to start. This will take a few (10-15) minutes since Ruby needs to be installed, the database needs to be created, and the `bin/setup` script needs to run
-3. Run `bin/start`. On the Ports tab, visit the forwarded port 3000 URL marked as Application to see the human essentials page.
+3. Run `bin/start`. On the Ports tab, visit the forwarded port 3000 URL marked as Application to see the AWBW portal page.
 4. Login as a sample user with the default [credentials](#credentials).
 
 ## Troubleshooting 👷🏼‍♀️
@@ -76,13 +76,6 @@ These credentials also work for [staging](https://staging.humanessentials.app/):
 Please let us know by opening up an issue! We have many new contributors come through and it is likely what you experienced will happen to them as well.
 
 - _"My RBENV installation didn't work!"_ - The rbenv repository provides a [rbenv-doctor script](https://github.com/rbenv/rbenv-installer#rbenv-doctor) to verify the installation and check if a ruby version is installed
-
-# Wiki Contribution Workflow
-
-1. Follow this [SO post](https://stackoverflow.com/a/56480628/13342792) to force push the main repo's Wiki to your fork's Wiki.
-2. Make edits to your fork's Wiki.
-3. Create a documentation issue about your changes. Make sure to note which pages you changed and link to your fork's Wiki.
-4. Someone will review and approve your changes and merge them into the main Wiki following this [SO post](https://stackoverflow.com/a/56810747/13342792)
 
 # 🤝 Code Contribution Workflow
 
@@ -109,7 +102,7 @@ Please let us know by opening up an issue! We have many new contributors come th
 Please feel free to contribute! While we welcome all contributions to this app, pull-requests that address outstanding Issues _and_ have appropriate test coverage for them will be strongly prioritized. In particular, addressing issues that are tagged with the next milestone should be prioritized higher.
 
 All work is organized by issues.
-[Find issues here.](https://github.com/rubyforgood/human-essentials/issues)
+[Find issues here.](https://github.com/rubyforgood/awbw/issues)
 
 If you would like to contribute, please ask for an issue to be assigned to you.
 If you would like to contribute something that is not represented by an issue, please make an issue and assign yourself.
@@ -144,7 +137,7 @@ Only commit the schema.rb only if you have committed anything that would change 
 
 ### Stay scoped
 
-Try to keep your PRs limited to one particular issue, and don't make changes that are out of scope for that issue. If you notice something that needs attention but is out of scope, please [create a new issue](https://github.com/rubyforgood/human-essentials/issues/new).
+Try to keep your PRs limited to one particular issue, and don't make changes that are out of scope for that issue. If you notice something that needs attention but is out of scope, please [create a new issue](https://github.com/rubyforgood/awbw/issues/new).
 
 ### In-flight pull requests
 
