@@ -34,17 +34,23 @@ You might also want to try VSCode with [this WSL extension](https://marketplace.
 
 **Note:** If you run into any issues with a command not running, restart your machine.
 
-1. Install Ruby
-   - Install the version specified in [`.ruby-version`](.ruby-version).
-   - Visit the [Install Ruby on Rails](https://gorails.com/setup/osx/12-monterey) guide by GoRails for Ubuntu, Windows, and macOSX setup. ⚠️ Follow only the Installing Ruby step, as our project setup differs ⚠️ It is highly recommended you use a ruby version manager such as [rbenv](https://github.com/rbenv/rbenv), [asdf](https://asdf-vm.com/), or [rvm](https://rvm.io/).
-   - Verify that your Ruby installation works by running `ruby -v`.
+### Non-Docker Setup
+
+1. Install mise
+   - Follow the [mise installation guide](https://mise.jdx.dev/getting-started.html#installing-mise-cli) for your operating system
+   - mise will automatically install and manage the Ruby version specified in [`.ruby-version`](.ruby-version) with `mise i`
+   - Verify that mise is working by running `mise --version`
 2. Install MySQL
-   - Follow the MySQL installation guide for your operating system
+   - **macOS**: Use Homebrew - see [MySQL Homebrew installation guide](https://formulae.brew.sh/formula/mysql)
+   - **Windows**: Use WSL2 with Ubuntu - follow [MySQL WSL installation guide](https://dev.mysql.com/doc/mysql-installation-excerpt/8.0/en/linux-installation.html)
+   - **Linux/Ubuntu**: Follow [official MySQL APT repository installation](https://dev.mysql.com/doc/mysql-installation-excerpt/8.0/en/linux-installation-apt-repo.html)
    - For Docker setup (recommended), see the README for MySQL container setup instructions
 3. Clone the project and switch to its directory
-4. Run `bin/setup`
-5. Run `bin/start` and visit <http://localhost:3000/> to see the AWBW portal page.
+4. Run `mise setup`
+5. Run `mise start` and visit <http://localhost:3000/> to see the AWBW portal page.
 6. Log in as a sample user with the default [credentials](#credentials).
+
+### Docker Setup
 
 ## Credentials
 
