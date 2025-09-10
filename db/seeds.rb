@@ -4,11 +4,7 @@ env_config = config[Rails.env]
 
 # Extract credentials
 adapter = env_config['adapter']
-host = env_config['host'] || 'localhost'
-port = env_config['port'] || 3306
 database = env_config['database']
-username = env_config['username']
-password = env_config['password']
 
 # Only run if MySQL is the DB
 if adapter.include?('mysql')
@@ -16,18 +12,8 @@ if adapter.include?('mysql')
 
   puts "Loading SQL dump from #{sql_file}..."
 
-  # Build the shell command
-  command = [
-    "mysql",
-    "-h", host.to_s,
-    "-P", port.to_s,
-    "-u", username.to_s,
-    ("-p#{password}" if password.to_s.present?),
-    database.to_s,
-    "< #{sql_file}"
-  ].compact.join(' ')
-
   # Run the command
+  command = "rails dbconsole < #{sql_file}"
   system(command) || raise("Failed to load SQL dump into #{database}")
   
   puts "SUCCESS! SQL dump loaded successfully."
@@ -37,11 +23,12 @@ end
 
 # wrapping in a tx for now
 ActiveRecord::Base.transaction do
-  # Load DML operations from dml_seeds.rb
-  Admin.all.each { |a| a.update!(password: password) }
+  admin_password = Devise::Encryptor.digest(Admin, 'password')
+  Admin.update_all(encrypted_password: admin_password)
 
-  User.all.find_in_batches(batch_size: 100) do |batch|
-    batch.each { |u| u.update!(password: password) }
+  user_password = Devise::Encryptor.digest(User, 'password')
+  User.in_batches do |batch|
+    batch.update_all(encrypted_password: user_password)
   end
 
   Admin.create!(first_name: "Amy", last_name: "Admin", email: "amy.admin@example.com", password: "password")

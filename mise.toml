@@ -1,0 +1,10 @@
+[tools]
+ruby = "3.3.8"
+
+[tasks.setup]
+description = "Set up the project for local non-docker developement."
+run = "bin/setup"
+
+[tasks.server]
+description = "Start the rails server"
+run = "bin/rails s"

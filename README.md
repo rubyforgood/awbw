@@ -12,10 +12,7 @@ offers a place for workshop leaders to provide input and information about works
 
 ## Using Codespaces
 
-As part of rubyforgood/awbw-dashboard#9, the development container configuration has been set up to be used in Codespaces. This means that there should be no set up needed, and one will only need to run the rails project via:
-```shell
-rails server
-```
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/rubyforgood/awbw/tree/main?quickstart=1)
 
 ## Local development
 
