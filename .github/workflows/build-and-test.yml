@@ -48,6 +48,9 @@ jobs:
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 
+      - name: Run RuboCop linting
+        run: bundle exec rubocop
+
       - name: Run tests
         run: bundle exec rspec
         env:
