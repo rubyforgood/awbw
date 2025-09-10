@@ -8,3 +8,42 @@ run = "bin/setup"
 [tasks.server]
 description = "Start the rails server"
 run = "bin/rails s"
+
+[tasks.spec]
+description = "Run RSpec tests"
+run = "bundle exec rspec"
+
+[tasks.docker-up]
+description = "Start Docker containers for development"
+run = "docker compose up -d"
+
+[tasks.docker-down]
+description = "Stop Docker containers"
+run = "docker compose down"
+
+[tasks.docker-logs]
+description = "View Docker container logs"
+run = "docker compose logs -f"
+
+[tasks.docker-db]
+description = "Starts a MySql database in docker"
+run = "docker compose up -d database"
+
+[tasks.docker-console]
+depends = ["docker-up"]
+description = "Starts a rails console within docker"
+run = "docker compose exec web bin/rails console"
+
+[tasks.docker-dbconsole]
+depends = ["docker-up"]
+description = "Starts a rails database console within docker"
+run = "docker compose exec web bin/rails dbconsole"
+
+[tasks.docker-exec]
+depends = ["docker-up"]
+description = "Provide commands to exec from the docker container. Ex: mise docker-exec rails db:migrate"
+run = "docker compose exec web"
+
+[tasks.docker-spec]
+description = "Run RSpec tests in Docker"
+run = "docker compose exec -e RAILS_ENV=test web bundle exec rspec"
