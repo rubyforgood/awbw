@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :permission do
     # Assuming 'security_cat' is the main attribute we need to set
@@ -19,4 +21,4 @@ FactoryBot.define do
       security_cat { "Combined Adult and Children's Windows" }
     end
   end
-end 
+end

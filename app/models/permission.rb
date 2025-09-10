@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Permission < ApplicationRecord
   # Associations
   has_many :user_permissions
@@ -15,10 +17,8 @@ class Permission < ApplicationRecord
     security_cat
   end
 
-  private
-
   def self.defaults
-    #TODO: Add Combined Windows
-    ['Guest', 'Member', 'Women\'s Windows', 'Children\'s Windows', 'Survivor\'s Art Circle']
+    # TODO: Add Combined Windows
+    ["Guest", "Member", "Women's Windows", "Children's Windows", "Survivor's Art Circle"]
   end
 end

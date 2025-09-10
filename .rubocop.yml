@@ -34,3 +34,13 @@ Style/Documentation:
 
 Style/ClassAndModuleChildren:
   Enabled: false
+
+# RSPEC
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false
+
+Style/ClassMethodsDefinitions:
+  Enabled: false

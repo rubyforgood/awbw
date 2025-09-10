@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 class Location < ApplicationRecord
   # Validations
-  validates_presence_of :city, :country
+  validates :city, :country, presence: true
 
   # Methods
   def name

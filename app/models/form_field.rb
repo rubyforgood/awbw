@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class FormField < ApplicationRecord
   # Associations
   belongs_to :form, inverse_of: :form_fields
@@ -7,28 +9,16 @@ class FormField < ApplicationRecord
   has_many :childs, foreign_key: "parent_id", class_name: "FormField"
 
   # Validations
-  validates_presence_of :question
+  validates :question, presence: true
 
   # Enum
-  enum status: [:inactive, :active]
+  enum status: { inactive: 0, active: 1 }
 
   # TODO: Rails 6.1 requires enums to be symbols
   # need additional refactoring in methods that call answer_type & answer_datatype to account for change to enum
-  enum answer_type: [
-    :free_form_input_one_line,
-    :free_form_input_paragraph,
-    :multiple_choice_radio,
-    :no_user_input,
-    :multiple_choice_checkbox,
-    :group_header
-  ]
+  enum answer_type: { free_form_input_one_line: 0, free_form_input_paragraph: 1, multiple_choice_radio: 2, no_user_input: 3, multiple_choice_checkbox: 4, group_header: 5 }
 
-  enum answer_datatype: [
-    :text_alphanumeric,
-    :number_integer,
-    :number_decimal,
-    :date,
-  ]
+  enum answer_datatype: { text_alphanumeric: 0, number_integer: 1, number_decimal: 2, date: 3 }
 
   rails_admin do
     # exclude_fields :answer_options
@@ -44,52 +34,52 @@ class FormField < ApplicationRecord
   end
 
   def multiple_choice?
-    answer_type ? answer_type.include?('multiple choice') : false
+    answer_type ? answer_type.include?("multiple choice") : false
   end
 
   def html_id
-    self.question.tr(" /#,')(.","_").downcase
+    question.tr(" /#,')(.", "_").downcase
   end
 
   def html_input_type
     case answer_type
 
-    when !self.parent_id.nil?
+    when !parent_id.nil?
       :child
 
-    when 'free-form input - one line'
-      self.parent_id.nil? ? :text : :child
+    when "free-form input - one line"
+      parent_id.nil? ? :text : :child
 
-    when 'free-form input - paragraph'
+    when "free-form input - paragraph"
       :textarea
 
-    when 'multiple choice - checkbox'
+    when "multiple choice - checkbox"
       :checkbox
 
-    when 'multiple choice - radio'
+    when "multiple choice - radio"
       :radio
 
-    when 'no user input'
-      !self.childs.empty? ? :group_header : :label
+    when "no user input"
+      !childs.empty? ? :group_header : :label
 
     else
       :hidden
     end
   end
 
-  # This one bellow should be removed and use 
+  # This one bellow should be removed and use
   # html_input_type
   def input_type
     case answer_type
-    when 'free-form input - one line'
+    when "free-form input - one line"
       :text_field
-    when 'free-form input - paragraph'
+    when "free-form input - paragraph"
       :text_area
-    when 'multiple choice - checkbox'
+    when "multiple choice - checkbox"
       :check_box
-    when 'multiple choice - radio'
+    when "multiple choice - radio"
       :radio_button
-    when 'no user input'
+    when "no user input"
       :label
     else
       :hidden_field
@@ -98,15 +88,16 @@ class FormField < ApplicationRecord
 
   def find_answer(report)
     return if report.nil?
-    report.report_form_field_answers.select{|fa| fa.form_field == self}.first
+
+    report.report_form_field_answers.select { |fa| fa.form_field == self }.first
   end
 
-  def answer report
+  def answer(report)
     answer = find_answer(report)
-    answer.response unless answer.nil?
+    answer&.response
   end
 
-  def checked report, value
+  def checked(report, value)
     answer = find_answer(report)
 
     if answer.nil?
@@ -116,12 +107,8 @@ class FormField < ApplicationRecord
     end
   end
 
-  def selected report, value
-    answer = find_answer(report)
-    if answers.include? value
-      true
-    else
-      false
-    end
+  def selected(report, value)
+    find_answer(report)
+    answers.include?(value)
   end
 end

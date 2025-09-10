@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class WorkshopVariationsController < ApplicationController
   def show
     @workshop_variation = WorkshopVariation.find(params[:id]).decorate

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Bookmark < ApplicationRecord
   belongs_to :user
   belongs_to :bookmarkable, polymorphic: true
@@ -5,28 +7,28 @@ class Bookmark < ApplicationRecord
 
   def self.sort_by_windows_type(bookmarks, windows_type_id)
     if windows_type_id == "3"
-      workshops = Workshop.where(id: bookmarks.map{|b| b.bookmarkable_id}).order(windows_type_id: :desc)
+      workshops = Workshop.where(id: bookmarks.map(&:bookmarkable_id)).order(windows_type_id: :desc)
     elsif windows_type_id == "1"
-      workshops = Workshop.where(id: bookmarks.map{|b| b.bookmarkable_id}).order(windows_type_id: :asc)
+      workshops = Workshop.where(id: bookmarks.map(&:bookmarkable_id)).order(windows_type_id: :asc)
     end
 
-    workshops_ids = workshops.map{|w| w.id}
-    bookmarks = bookmarks.where(bookmarkable_id: workshops_ids).order("FIELD(bookmarkable_id, #{workshops_ids.join(',')})")
+    workshops_ids = workshops.map(&:id)
+    bookmarks.where(bookmarkable_id: workshops_ids).order("FIELD(bookmarkable_id, #{workshops_ids.join(",")})")
   end
 
   def self.search(params, user)
     bookmarks = user.bookmarks
 
-    if params[:type].nil? || params[:type].empty?
-      workshops = Workshop.where(id: bookmarks.map{|b| b.bookmarkable_id}).order(title: :asc)
-      workshops_ids = workshops.map{|w| w.id}
-      bookmarks = bookmarks.where(bookmarkable_id: workshops_ids).order("FIELD(bookmarkable_id, #{workshops_ids.join(',')})")
+    if params[:type].blank?
+      workshops = Workshop.where(id: bookmarks.map(&:bookmarkable_id)).order(title: :asc)
+      workshops_ids = workshops.map(&:id)
+      bookmarks = bookmarks.where(bookmarkable_id: workshops_ids).order("FIELD(bookmarkable_id, #{workshops_ids.join(",")})")
     end
 
     if params[:type] == "led"
-      workshops = Workshop.where(id: bookmarks.map{|b| b.bookmarkable_id}).order(led_count: :desc)
-      workshops_ids = workshops.map{|w| w.id}
-      bookmarks = bookmarks.where(bookmarkable_id: workshops_ids).order("FIELD(bookmarkable_id, #{workshops_ids.join(',')})")
+      workshops = Workshop.where(id: bookmarks.map(&:bookmarkable_id)).order(led_count: :desc)
+      workshops_ids = workshops.map(&:id)
+      bookmarks = bookmarks.where(bookmarkable_id: workshops_ids).order("FIELD(bookmarkable_id, #{workshops_ids.join(",")})")
     end
 
     if params[:type] == "created"
@@ -34,7 +36,7 @@ class Bookmark < ApplicationRecord
     end
 
     if params[:type] == "3" || params[:type] == "1"
-      bookmarks = sort_by_windows_type(bookmarks, params[:type]) 
+      bookmarks = sort_by_windows_type(bookmarks, params[:type])
     end
 
     bookmarks

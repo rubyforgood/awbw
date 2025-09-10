@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :workshop do
     # Associations
@@ -15,6 +17,5 @@ FactoryBot.define do
 
     thumbnail_file_name { nil }
     header_file_name { nil }
-
   end
 end

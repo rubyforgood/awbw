@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class WorkshopVariationDecorator < Draper::Decorator
   delegate_all
 
@@ -9,13 +11,13 @@ class WorkshopVariationDecorator < Draper::Decorator
     if legacy
       html = Nokogiri::HTML(code)
       html.xpath("//img").each do |img|
-        src = img.attributes['src']
-        img.set_attribute('src', src)
+        src = img.attributes["src"]
+        img.set_attribute("src", src)
       end
       html.xpath("//a").each do |link|
-        href = link.attributes['href'].value.prepend('http://awbw.org')
-        link.set_attribute('href', href)
-        link.set_attribute('class', 'underline')
+        href = link.attributes["href"].value.prepend("http://awbw.org")
+        link.set_attribute("href", href)
+        link.set_attribute("class", "underline")
       end
       html.to_s.html_safe
     else
@@ -26,10 +28,9 @@ class WorkshopVariationDecorator < Draper::Decorator
   private
 
   def method_name
-
   end
 
   def workshop_link
-    h.link_to "#{workshop.title}", h.workshop_path(workshop)
+    h.link_to(workshop.title.to_s, h.workshop_path(workshop))
   end
 end

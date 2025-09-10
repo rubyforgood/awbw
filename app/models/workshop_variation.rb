@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class WorkshopVariation < ApplicationRecord
   belongs_to :workshop
 

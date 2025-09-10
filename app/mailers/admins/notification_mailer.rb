@@ -1,13 +1,14 @@
-class Admins::NotificationMailer < ApplicationMailer
+# frozen_string_literal: true
 
+class Admins::NotificationMailer < ApplicationMailer
   def email(notification)
     @notification = notification
     @noticeable   = notification.noticeable
-    @type = 'Report'
-    if @noticeable.respond_to? :windows_type
-      target = @noticeable.windows_type.name
+    @type = "Report"
+    target = if @noticeable.respond_to?(:windows_type)
+      @noticeable.windows_type.name
     else
-      target = ""
+      ""
     end
 
     if @noticeable.class == User
@@ -24,20 +25,20 @@ class Admins::NotificationMailer < ApplicationMailer
     end
 
     if @report.story?
-      @type = 'Story'
+      @type = "Story"
       @mail_to = "eaeevans@awbw.org, cturekrials@awbw.org, rhernandez@awbw.org"
     else
-      case target
+      @mail_to = case target
       when "ADULT WORKSHOP LOG"
-        @mail_to = "cturek@awbw.org"
+        "cturek@awbw.org"
       else
-        @mail_to = "rhernandez@awbw.org"
+        "rhernandez@awbw.org"
       end
     end
 
     mail(
       to: @mail_to,
-      subject: "New #{@type} Submission by #{@user.name}"
+      subject: "New #{@type} Submission by #{@user.name}",
     )
   end
 end

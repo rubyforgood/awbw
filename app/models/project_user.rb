@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ProjectUser < ApplicationRecord
   # Associations
   belongs_to :project
@@ -5,10 +7,10 @@ class ProjectUser < ApplicationRecord
 
   scope :liaisons, -> { where(position: 1) }
   # Validations
-  validates_presence_of :project_id
+  validates :project_id, presence: true
 
   # Enum
-  enum position: [:default, :liaison, :leader, :assistant]
+  enum position: { default: 0, liaison: 1, leader: 2, assistant: 3 }
   # Rails admin
   rails_admin do
     exclude_fields :agency_id, :position
@@ -16,6 +18,6 @@ class ProjectUser < ApplicationRecord
 
   # Methods
   def name
-    "#{user.name}" if user
+    user.name.to_s if user
   end
 end

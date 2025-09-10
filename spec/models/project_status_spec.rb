@@ -1,15 +1,9 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe ProjectStatus do
+require "rails_helper"
 
-  describe 'associations' do
+RSpec.describe(ProjectStatus) do
+  it "is valid with valid attributes" do
+    expect(build(:project_status)).to(be_valid)
   end
-
-  describe 'validations' do
-    subject { build(:project_status) }
-  end
-
-  it 'is valid with valid attributes' do
-    expect(build(:project_status)).to be_valid
-  end
-end 
+end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class FaqsController < ApplicationController
   def index
     @faqs = Faq.active.by_order

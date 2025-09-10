@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class QuotableItemQuote < ApplicationRecord
   belongs_to :quote
   belongs_to :quotable, polymorphic: true

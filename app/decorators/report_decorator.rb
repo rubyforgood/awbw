@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ReportDecorator < Draper::Decorator
   delegate_all
 
@@ -6,7 +8,7 @@ class ReportDecorator < Draper::Decorator
   end
 
   def breadcrumbs
-    "#{h.link_to 'Submit Report', h.new_report_path} >> #{formatted_title}".html_safe
+    "#{h.link_to("Submit Report", h.new_report_path)} >> #{formatted_title}".html_safe
   end
 
   def formatted_title
@@ -14,7 +16,7 @@ class ReportDecorator < Draper::Decorator
   end
 
   def monthly?
-    type.include?('Monthly')
+    type.include?("Monthly")
   end
 
   def display_date
@@ -22,6 +24,6 @@ class ReportDecorator < Draper::Decorator
   end
 
   def display_sectors
-    sectors.pluck(:name).to_sentence if sectors
+    sectors&.pluck(:name)&.to_sentence
   end
 end

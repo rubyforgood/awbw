@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Resource < ApplicationRecord
   # Associations
   belongs_to :user
@@ -14,26 +16,26 @@ class Resource < ApplicationRecord
   has_many :reports, as: :owner
   has_many :workshop_resources, dependent: :destroy
   # Scopes
-  scope :featured, -> { where(featured: true ).order(created_at: :desc)}
+  scope :featured, -> { where(featured: true).order(created_at: :desc) }
   scope :published, -> { where(inactive: false) }
-  scope :by_created, -> { order(created_at: :desc)}
+  scope :by_created, -> { order(created_at: :desc) }
 
-  scope :for_search, -> { published.where('kind NOT IN (?)', ['SectorImpact', 'LeaderSpotlight', 'Theme']) }
+  scope :for_search, -> { published.where("kind NOT IN (?)", ["SectorImpact", "LeaderSpotlight", "Theme"]) }
   scope :recent, -> { for_search.by_created }
 
   validates :title, presence: true
 
   # Nested Attributes
   accepts_nested_attributes_for :categorizable_items,
-                                 allow_destroy: true,
-                                 reject_if: proc { |resource| Resource.reject?(resource) }
+    allow_destroy: true,
+    reject_if: proc { |resource| Resource.reject?(resource) }
 
   accepts_nested_attributes_for :sectorable_items,
-                                 allow_destroy: true,
-                                 reject_if: proc { |resource| Resource.reject?(resource) }
+    allow_destroy: true,
+    reject_if: proc { |resource| Resource.reject?(resource) }
   accepts_nested_attributes_for :images,
-                                 allow_destroy: true,
-                                 reject_if: proc { |resource| Resource.reject?(resource) }
+    allow_destroy: true,
+    reject_if: proc { |resource| Resource.reject?(resource) }
   accepts_nested_attributes_for :attachments, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
 
@@ -44,10 +46,9 @@ class Resource < ApplicationRecord
 
     list do
       configure :title do
-        formatted_value{ "#{bindings[:object].title} - [ #{bindings[:object].kind.upcase} ]" }
+        formatted_value { "#{bindings[:object].title} - [ #{bindings[:object].kind.upcase} ]" }
       end
     end
-
   end
 
   # Search Cop
@@ -63,13 +64,12 @@ class Resource < ApplicationRecord
   scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
   scope :leader_spotlight, -> { where(kind: "LeaderSpotlight") }
 
-
   def story?
-    ["Story", "LeaderSpotlight"].include? self.kind
+    ["Story", "LeaderSpotlight"].include?(kind)
   end
 
   def custom_label_list
-    "#{self.title} (#{self.kind.upcase})" unless self.kind.nil?
+    "#{title} (#{kind.upcase})" unless kind.nil?
   end
 
   # Methods
@@ -88,7 +88,7 @@ class Resource < ApplicationRecord
   def main_image_url
     return main_image.file.url if main_image
 
-    if self.kind == "Theme"
+    if kind == "Theme"
       ActionController::Base.helpers.asset_path("workshop_default.png")
     else
       "/images/workshop_default.jpg"
@@ -96,31 +96,33 @@ class Resource < ApplicationRecord
   end
 
   def type_enum
-    types.map { |title| [title.titleize, title ]}
+    types.map { |title| [title.titleize, title] }
   end
 
   def types
-    ['Resource', 'LeaderSpotlight', 'SectorImpact',
-     'Story', 'Theme', 'Scholarship', 'TemplateAndHandout',
-     'ToolkitAndForm'
+    [
+      "Resource",
+      "LeaderSpotlight",
+      "SectorImpact",
+      "Story",
+      "Theme",
+      "Scholarship",
+      "TemplateAndHandout",
+      "ToolkitAndForm",
     ]
   end
 
-  def year
-    created_at.year
-  end
+  delegate :year, to: :created_at
 
-  def month
-    created_at.month
-  end
+  delegate :month, to: :created_at
 
   def self.search(params)
     resources = for_search
-    resources = resources.where('title like ?', "%#{params[:query]}%")
-    resources = resources.where('kind like ?', "%#{params[:kind]}%")
+    resources = resources.where("title like ?", "%#{params[:query]}%")
+    resources.where("kind like ?", "%#{params[:kind]}%")
   end
-  private
+
   def self.reject?(resource)
-    resource['_create'] == '0'
+    resource["_create"] == "0"
   end
 end

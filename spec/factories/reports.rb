@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :report do
     # Associations
@@ -11,7 +13,7 @@ FactoryBot.define do
     type { "Report" } # Default type, override for MonthlyReport, WorkshopLog etc.
 
     # Other potential attributes
-    date { Date.today }
+    date { Time.zone.today }
 
     # Paperclip attributes (placeholders)
     form_file_file_name { nil }
@@ -24,8 +26,8 @@ FactoryBot.define do
   end
 
   # Specific factory for MonthlyReport inheriting from Report
-  factory :monthly_report, parent: :report, class: 'MonthlyReport' do
+  factory :monthly_report, parent: :report, class: "MonthlyReport" do
     type { "MonthlyReport" }
     # Add specific attributes or associations for MonthlyReport if needed
   end
-end 
+end

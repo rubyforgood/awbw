@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CategorizableItem < ApplicationRecord
   # Associations
   belongs_to :categorizable, polymorphic: true

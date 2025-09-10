@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :form_field do
     # Association: belongs_to :form
@@ -12,4 +14,4 @@ FactoryBot.define do
 
     # Add other attributes based on schema if needed
   end
-end 
+end

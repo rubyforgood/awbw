@@ -1,18 +1,20 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe WorkshopLog do
+require "rails_helper"
+
+RSpec.describe(WorkshopLog) do
   # pending "add some examples to (or delete) #{__FILE__}"
 
-  it 'is a type of Report' do
-    expect(build(:workshop_log)).to be_a(Report)
+  it "is a type of Report" do
+    expect(build(:workshop_log)).to(be_a(Report))
   end
 
-  describe 'associations' do
+  describe "associations" do
     # Explicitly defined here
-    it { should belong_to(:workshop) }
-    it { should belong_to(:user) } # Inherited via Report but also explicit?
-    it { should belong_to(:project) } # Inherited via Report but also explicit?
-    it { should have_many(:media_files) }
+    it { is_expected.to(belong_to(:workshop)) }
+    it { is_expected.to(belong_to(:user)) } # Inherited via Report but also explicit?
+    it { is_expected.to(belong_to(:project)) } # Inherited via Report but also explicit?
+    it { is_expected.to(have_many(:media_files)) }
 
     # Inherited from Report
     # it { should belong_to(:windows_type) }
@@ -21,18 +23,10 @@ RSpec.describe WorkshopLog do
     # ... other Report associations
   end
 
-  describe 'validations' do
-    # Inherited from Report
-    # Add specific WorkshopLog validations if any
-  end
-
-  it 'is valid with valid attributes' do
-    # Note: Factory needs associations uncommented for create
+  it "is valid with valid attributes" do
+    # NOTE: Factory needs associations uncommented for create
     # expect(build(:workshop_log)).to be_valid
   end
 
   # Add tests for specific methods like #num_ongoing, #num_first_time, callbacks
-  describe 'callbacks' do
-    # Test after_save :update_workshop_log_count
-  end
-end 
+end

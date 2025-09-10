@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :image do
     association :owner, factory: :user
@@ -14,4 +16,4 @@ FactoryBot.define do
       file_file_name { "invalid.webp" }
     end
   end
-end 
+end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Project < ApplicationRecord
   # Associations
   belongs_to :location
@@ -15,7 +17,7 @@ class Project < ApplicationRecord
     end
     edit do
       exclude_fields :users, :project_users, :reports, :workshop_logs, :windows_type
-      group 'More Fields' do
+      group "More Fields" do
         active false
         field :location
         field :district
@@ -32,11 +34,12 @@ class Project < ApplicationRecord
   # Methods
   def led_by?(user)
     return false unless leader
+
     leader.user == user
   end
 
   def log_title
-    "#{name} #{windows_type.log_label if windows_type}"
+    "#{name} #{windows_type&.log_label}"
   end
 
   private

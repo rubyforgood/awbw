@@ -19,16 +19,14 @@ class WorkshopsController < ApplicationController
     reports = build_report
     @report = reports[0]
 
-    types = reports.map do |r|
-      r.windows_type
-    end
+    types = reports.map(&:windows_type)
     @workshop_logs = current_user.project_monthly_workshop_logs(
-      reports.first.date, *types,
+      reports.first.date, *types
     )
 
     logs = @workshop_logs.map { |_k, v| v }.flatten
-    @total_ongoing    = logs.reduce(0) { |sum, l| sum += l.num_ongoing }
-    @total_first_time = logs.reduce(0) { |sum, l| sum += l.num_first_time }
+    @total_ongoing    = logs.reduce(0) { |sum, l| sum + l.num_ongoing }
+    @total_first_time = logs.reduce(0) { |sum, l| sum + l.num_first_time }
 
     combined_windows_type = WindowsType.where("name LIKE ?", "%COMBINED (FAMILY)%").first
     @combined_workshop_logs = current_user.project_workshop_logs(
@@ -40,13 +38,13 @@ class WorkshopsController < ApplicationController
     date = Date.new(@year, @month)
 
     form_builder = FormBuilder
-                   .monthly
+      .monthly
 
     report = form_builder.map do |f|
       Report.new(
         type: f.report_type,
         windows_type: f.windows_type,
-        date: date
+        date: date,
       )
     end
 
@@ -83,12 +81,12 @@ class WorkshopsController < ApplicationController
   def update
     @workshop = Workshop.find(params[:id])
 
-    if @workshop.update_attributes(workshop_params)
-      flash[:alert] = 'Thank you for sharing your workshop idea.'
-      redirect_to root_path
+    if @workshop.update(workshop_params)
+      flash[:alert] = "Thank you for sharing your workshop idea."
+      redirect_to(root_path)
     else
-      flash[:error] = 'Unable to update the workshop.'
-      render :edit
+      flash[:error] = "Unable to update the workshop."
+      render(:edit)
     end
   end
 
@@ -96,11 +94,11 @@ class WorkshopsController < ApplicationController
     @workshop = current_user.workshops.build(workshop_params)
 
     if @workshop.save
-      flash[:alert] = 'Workshop created succesfully.'
-      redirect_to "/workshop_logs/new?windows_type_id=#{@workshop.windows_type.id}&workshop_id=#{@workshop.id}"
+      flash[:alert] = "Workshop created succesfully."
+      redirect_to("/workshop_logs/new?windows_type_id=#{@workshop.windows_type.id}&workshop_id=#{@workshop.id}")
     else
-      flash[:error] = 'Unable to save the workshop.'
-      render :new
+      flash[:error] = "Unable to save the workshop."
+      render(:new)
     end
   end
 
@@ -110,20 +108,20 @@ class WorkshopsController < ApplicationController
     @workshop.inactive = true
 
     if @workshop.save
-      flash[:alert] = 'Thank you for sharing your workshop idea.'
-      redirect_to root_path
+      flash[:alert] = "Thank you for sharing your workshop idea."
+      redirect_to(root_path)
     else
-      flash[:error] = 'Unable to save the workshop.'
-      render :share_idea
+      flash[:error] = "Unable to save the workshop."
+      render(:share_idea)
     end
   end
 
   def create_dummy_workshop
     @workshop = current_user.workshops.build(title: params[:title], windows_type_id: params[:windows_type_id], inactive: false)
     if @workshop.save
-      render json: { id: @workshop.id }
+      render(json: { id: @workshop.id })
     else
-      render json: { error: @workshop.errors }
+      render(json: { error: @workshop.errors })
     end
   end
 
@@ -132,16 +130,16 @@ class WorkshopsController < ApplicationController
     @query = params[:search][:query] if @params
     @workshops = Search.new.search(@params, current_user)
 
-    if @workshops.paginate(page: params[:search][:page], per_page: workshops_per_page).empty?
-      @workshops = @workshops.paginate(page: 1, per_page: workshops_per_page)
+    @workshops = if @workshops.paginate(page: params[:search][:page], per_page: workshops_per_page).empty?
+      @workshops.paginate(page: 1, per_page: workshops_per_page)
     else
-      @workshops = @workshops.paginate(page: params[:search][:page], per_page: workshops_per_page)
+      @workshops.paginate(page: params[:search][:page], per_page: workshops_per_page)
     end
 
     load_sortable_fields
     load_metadata
 
-    render :index
+    render(:index)
   end
 
   private
@@ -161,22 +159,39 @@ class WorkshopsController < ApplicationController
   end
 
   def view_all_workshops?
-    params[:search][:view_all] == '1'
+    params[:search][:view_all] == "1"
   end
 
   def workshop_params
     params.require(:workshop).permit(
-      :title, :full_name, :objective,
-      :materials, :optional_materials, :time_hours, :time_minutes, :age_range, :setup,
-      :introduction, :demonstration, :opening_circle, :warm_up,
-      :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2,
-      :windows_type_id, :inactive,
-      images_attributes: %i[file owner_id owner_type id _destroy]
+      :title,
+      :full_name,
+      :objective,
+      :materials,
+      :optional_materials,
+      :time_hours,
+      :time_minutes,
+      :age_range,
+      :setup,
+      :introduction,
+      :demonstration,
+      :opening_circle,
+      :warm_up,
+      :visualization,
+      :creation,
+      :closing,
+      :notes,
+      :tips,
+      :misc1,
+      :misc2,
+      :windows_type_id,
+      :inactive,
+      images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy],
     )
   end
 
   def load_sortable_fields
-    @sortable_fields = WindowsType.where('name NOT LIKE ?', '%COMBINED%')
+    @sortable_fields = WindowsType.where("name NOT LIKE ?", "%COMBINED%")
   end
 
   def load_metadata

@@ -1,5 +1,6 @@
-class Footer < ApplicationRecord
+# frozen_string_literal: true
 
+class Footer < ApplicationRecord
   def self.phone
     first&.phone
   end

@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 class Quote < ApplicationRecord
   scope :active, -> { where(inactive: false) }
   rails_admin do
     field :quote
     field :speaker_name do
-      label 'Speaker'
+      label "Speaker"
     end
     field :inactive
     field :legacy
@@ -13,6 +15,6 @@ class Quote < ApplicationRecord
   end
 
   def speaker
-    speaker_name.nil? || speaker_name.empty?  ? "Participant" : speaker_name
+    speaker_name.presence || "Participant"
   end
 end

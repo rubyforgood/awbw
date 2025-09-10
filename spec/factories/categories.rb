@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :category do
     # Needs a unique name
@@ -7,4 +9,4 @@ FactoryBot.define do
     # Association: belongs_to :metadatum
     association :metadatum
   end
-end 
+end

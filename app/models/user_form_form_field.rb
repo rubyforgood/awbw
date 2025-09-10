@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UserFormFormField < ApplicationRecord
   belongs_to :form_field
   belongs_to :user_form

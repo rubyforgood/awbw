@@ -1,19 +1,18 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe Banner do
+require "rails_helper"
+
+RSpec.describe(Banner) do
   # let(:banner) { build(:banner) } # Keep if needed for other tests
 
-  describe 'associations' do
-    # Add association tests if any
-  end
-
-  describe 'validations' do
+  describe "validations" do
     subject { build(:banner) }
-    it { should validate_presence_of(:content) }
+
+    it { is_expected.to(validate_presence_of(:content)) }
   end
 
   # Basic validity test included via shoulda
   # it 'is valid with valid attributes' do
   #   expect(build(:banner)).to be_valid
   # end
-end 
+end

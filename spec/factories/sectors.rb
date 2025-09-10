@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :sector do
     sequence(:name) { |n| "Sector Name #{n}" }
@@ -8,7 +10,7 @@ FactoryBot.define do
     end
 
     trait :other do
-      name { 'Other' }
+      name { "Other" }
     end
   end
-end 
+end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :faq do
     question { Faker::Lorem.question }
@@ -5,4 +7,4 @@ FactoryBot.define do
     inactive { false }
     sequence(:ordering) { |n| n }
   end
-end 
+end

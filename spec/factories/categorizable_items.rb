@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :categorizable_item do
     # Association: belongs_to :category
@@ -7,4 +9,4 @@ FactoryBot.define do
     # Needs a categorizable instance, e.g., a Workshop
     association :categorizable, factory: :workshop
   end
-end 
+end

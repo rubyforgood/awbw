@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :workshop_variation do
     association :workshop
@@ -6,4 +8,4 @@ FactoryBot.define do
     sequence(:ordering) { |n| n }
     inactive { false }
   end
-end 
+end

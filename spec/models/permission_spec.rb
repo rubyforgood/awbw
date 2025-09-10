@@ -1,28 +1,21 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe Permission do
+require "rails_helper"
 
-  describe 'associations' do
-    it { should have_many(:user_permissions) }
-    it { should have_many(:users).through(:user_permissions) }
+RSpec.describe(Permission) do
+  describe "associations" do
+    it { is_expected.to(have_many(:user_permissions)) }
+    it { is_expected.to(have_many(:users).through(:user_permissions)) }
   end
 
-  describe 'validations' do
-    # Assuming security_cat should be present and unique
-    subject { build(:permission) }
-    # it { should validate_presence_of(:security_cat) } # Model missing validation
-    # Uniqueness test would require create
-    # it { should validate_uniqueness_of(:security_cat) }
+  it "is valid with valid attributes" do
+    expect(build(:permission)).to(be_valid)
   end
 
-  it 'is valid with valid attributes' do
-    expect(build(:permission)).to be_valid
-  end
-
-  describe '#name' do
-    it 'returns the security_cat' do
+  describe "#name" do
+    it "returns the security_cat" do
       permission = build(:permission, security_cat: "Test Category")
-      expect(permission.name).to eq("Test Category")
+      expect(permission.name).to(eq("Test Category"))
     end
   end
-end 
+end

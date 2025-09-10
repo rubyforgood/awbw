@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Form < ApplicationRecord
   # Associations
   has_many :form_fields, dependent: :destroy, inverse_of: :form
@@ -14,6 +16,6 @@ class Form < ApplicationRecord
   end
 
   def name
-    owner ? "#{owner.try(:name)} Form" : 'New Form'
+    owner ? "#{owner.try(:name)} Form" : "New Form"
   end
 end

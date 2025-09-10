@@ -1,16 +1,10 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe WorkshopVariation do
+require "rails_helper"
 
-  describe 'associations' do
-    it { should belong_to(:workshop) }
-  end
-
-  describe 'validations' do
-    # Add validation tests if any (e.g., presence of name, code?)
-    # subject { build(:workshop_variation) } # Requires workshop
-    # it { should validate_presence_of(:name) }
-    # it { should validate_presence_of(:code) }
+RSpec.describe(WorkshopVariation) do
+  describe "associations" do
+    it { is_expected.to(belong_to(:workshop)) }
   end
 
   # it 'is valid with valid attributes' do
@@ -18,4 +12,4 @@ RSpec.describe WorkshopVariation do
   #   # expect(build(:workshop_variation)).to be_valid
   #   pending("Requires functional workshop factory and association uncommented")
   # end
-end 
+end

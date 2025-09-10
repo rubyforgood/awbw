@@ -1,13 +1,14 @@
-class WorkshopIdea < Workshop
+# frozen_string_literal: true
 
+class WorkshopIdea < Workshop
   default_scope { where(inactive: true) }
 
-    # Rails Admin
+  # Rails Admin
   rails_admin do
     field :title
     field :created_at
     field :full_name do
-      label 'Author'
+      label "Author"
     end
 
     field :month
@@ -15,202 +16,202 @@ class WorkshopIdea < Workshop
     field :featured
     field :objective, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
     field :materials, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
     field :optional_materials, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :age_range
     field :setup, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :introduction, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
     field :time_intro do
-      label 'Time Frame Introduction'
+      label "Time Frame Introduction"
     end
 
     field :demonstration, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
     field :time_demonstration do
-      label 'Time Frame Demo'
+      label "Time Frame Demo"
     end
 
     field :opening_circle, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
-      label 'Opening'
+      label "Opening"
     end
 
     field :time_opening do
-      label 'Time Frame Opening'
+      label "Time Frame Opening"
     end
 
     field :warm_up, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
-      label 'Warm-up / Relaxation / Meditation'
+      label "Warm-up / Relaxation / Meditation"
     end
 
     field :time_warm_up do
-      label 'Time Frame Warm Up'
+      label "Time Frame Warm Up"
     end
 
     field :visualization, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
     field :creation, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
     field :time_creation do
-      label 'Time Frame Creation'
+      label "Time Frame Creation"
     end
 
     field :closing, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
     field :time_closing do
-      label 'Time Frame Closing'
+      label "Time Frame Closing"
     end
 
     field :notes, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :tips, :ck_editor do
-      pretty_value do 
-        value.html_safe unless value.nil?
+      pretty_value do
+        value&.html_safe
       end
     end
     field :misc1, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :misc2, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
     field :objective_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :materials_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :optional_materials_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :timeframe_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :age_range_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :setup_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :introduction_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :demonstration_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :opening_circle_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
 
-      label 'Opening Spanish'
+      label "Opening Spanish"
     end
     field :warm_up_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
-      label 'Warm-up / Relaxation / Meditation Spanish'
+      label "Warm-up / Relaxation / Meditation Spanish"
     end
     field :visualization_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :creation_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :closing_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :notes_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :tips_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :misc1_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
     field :misc2_spanish, :ck_editor do
       pretty_value do
-        value.html_safe unless value.nil?
+        value&.html_safe
       end
     end
 
@@ -242,14 +243,23 @@ class WorkshopIdea < Workshop
       end
 
       configure :title do
-        formatted_value{ bindings[:object].admin_title }
+        formatted_value { bindings[:object].admin_title }
       end
     end
 
-    exclude_fields :categorizable_items, :quotable_item_quotes, :timestamps,
-                   :workshop_resources, :resources, :legacy_id, :workshop_age_ranges,
-                   :workshop_logs, :metadata, :bookmarks, :user, :misc1, :misc2, :reports
-
+    exclude_fields :categorizable_items,
+      :quotable_item_quotes,
+      :timestamps,
+      :workshop_resources,
+      :resources,
+      :legacy_id,
+      :workshop_age_ranges,
+      :workshop_logs,
+      :metadata,
+      :bookmarks,
+      :user,
+      :misc1,
+      :misc2,
+      :reports
   end
-
 end

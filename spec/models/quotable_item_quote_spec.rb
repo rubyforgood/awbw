@@ -1,20 +1,14 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe QuotableItemQuote do
+require "rails_helper"
+
+RSpec.describe(QuotableItemQuote) do
   # pending "add some examples to (or delete) #{__FILE__}"
 
-  describe 'associations' do
-    it { should belong_to(:quote) }
-    it { should belong_to(:quotable) } # Polymorphic
-    it { should accept_nested_attributes_for(:quote) }
-  end
-
-  describe 'validations' do
-    # Add validation tests if any (e.g., presence)
-    # subject { build(:quotable_item_quote) } # Requires associations
-    # it { should validate_presence_of(:quote_id) }
-    # it { should validate_presence_of(:quotable_id) }
-    # it { should validate_presence_of(:quotable_type) }
+  describe "associations" do
+    it { is_expected.to(belong_to(:quote)) }
+    it { is_expected.to(belong_to(:quotable)) } # Polymorphic
+    it { is_expected.to(accept_nested_attributes_for(:quote)) }
   end
 
   # it 'is valid with valid attributes' do
@@ -22,4 +16,4 @@ RSpec.describe QuotableItemQuote do
   #   # expect(build(:quotable_item_quote)).to be_valid
   #   pending("Requires functional quote/quotable factories and associations uncommented")
   # end
-end 
+end

@@ -1,13 +1,14 @@
-class UsersController < ApplicationController
+# frozen_string_literal: true
 
+class UsersController < ApplicationController
   def new
     if current_user.liaison?
       @user = User.new
       @user.project_users.build
       @projects = current_user.projects
     else
-      flash[:alert] = 'You must be a liaison to add a new user.'
-      redirect_to root_path
+      flash[:alert] = "You must be a liaison to add a new user."
+      redirect_to(root_path)
     end
   end
 
@@ -16,10 +17,10 @@ class UsersController < ApplicationController
     set_password
     if @user.save
       @user.notifications.create(notification_type: 0)
-      flash[:alert] = 'User has been created.'
-      redirect_to user_path(@user)
+      flash[:alert] = "User has been created."
+      redirect_to(user_path(@user))
     else
-      render :new
+      render(:new)
     end
   end
 
@@ -31,10 +32,10 @@ class UsersController < ApplicationController
     @user = User.find(id_param)
     if can_access_page?
       @project_users = @user.project_users
-      render :edit
+      render(:edit)
     else
-      flash[:alert] = 'You must be a liaison to edit user information.'
-      redirect_to root_path
+      flash[:alert] = "You must be a liaison to edit user information."
+      redirect_to(root_path)
     end
   end
 
@@ -46,12 +47,12 @@ class UsersController < ApplicationController
     @user = current_user
 
     if @user.update_with_password(pass_params)
-      sign_in(@user, :bypass => true)
-      flash[:alert] = 'Your Password was updated.'
-      redirect_to root_path
+      sign_in(@user, bypass: true)
+      flash[:alert] = "Your Password was updated."
+      redirect_to(root_path)
     else
-      flash[:error] = "#{@user.errors.full_messages.join(", ")}"
-      render "change_password"
+      flash[:error] = @user.errors.full_messages.join(", ").to_s
+      render("change_password")
     end
   end
 
@@ -62,16 +63,16 @@ class UsersController < ApplicationController
 
       if @user.update(user_params)
         @user.notifications.create(notification_type: 1)
-        flash[:alert] = 'User updated.'
-        sign_in(@user, :bypass => true)
-        redirect_to user_path(@user)
+        flash[:alert] = "User updated."
+        sign_in(@user, bypass: true)
+        redirect_to(user_path(@user))
       else
-        flash[:alert] = 'Unable to update user.'
-        render :edit
+        flash[:alert] = "Unable to update user."
+        render(:edit)
       end
     else
-      flash[:alert] = 'You are not authorized to update this user.'
-      redirect_to root_path
+      flash[:alert] = "You are not authorized to update this user."
+      redirect_to(root_path)
     end
   end
 

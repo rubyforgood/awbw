@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class WindowsType < ApplicationRecord
   # Associations
   has_many :workshops
@@ -6,7 +8,7 @@ class WindowsType < ApplicationRecord
   has_many :form_builders
 
   def custom_label_method
-    self.name.gsub("LOG", "").gsub("WORKSHOP", "WINDOWS").titleize.strip.gsub("Children", "Children's")
+    name.gsub("LOG", "").gsub("WORKSHOP", "WINDOWS").titleize.strip.gsub("Children", "Children's")
   end
 
   # Methods
@@ -14,7 +16,7 @@ class WindowsType < ApplicationRecord
     WindowsType.defaults.each_with_index do |name, index|
       WindowsType.find_or_create_by(
         name: name,
-        legacy_id: index + 1
+        legacy_id: index + 1,
       )
     end
   end
@@ -32,27 +34,28 @@ class WindowsType < ApplicationRecord
 
   def workshop_log_label
     label = name.gsub("LOG", "").gsub("WORKSHOP", "").titleize.strip
-    label.gsub("Children", "Children's").gsub("Adult & Children's","").gsub("(Family)", "").tr(' ','')
+    label.gsub("Children", "Children's").gsub("Adult & Children's", "").gsub("(Family)", "").tr(" ", "")
   end
 
   def log_label
-    id != 3 ? "(#{name.split(' ')[0]})" : ''
+    id != 3 ? "(#{name.split(" ")[0]})" : ""
   end
 
   rails_admin do
     exclude_fields :short_name
   end
 
-  private
-
   def self.symbolize(name)
     name.split(" ")[0]
-        .gsub("'s", "")
-        .downcase.to_sym
+      .gsub("'s", "")
+      .downcase.to_sym
   end
 
   def self.defaults
-    ['Women\'s Windows', 'Children\'s Windows',
-     'Combined Women\'s and Children\'s Windows']
+    [
+      "Women's Windows",
+      "Children's Windows",
+      "Combined Women's and Children's Windows",
+    ]
   end
 end

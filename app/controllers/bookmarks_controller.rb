@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class BookmarksController < ApplicationController
   before_action :set_breadcrumb
 
@@ -15,23 +17,23 @@ class BookmarksController < ApplicationController
     @bookmarkable = @bookmark.bookmarkable
     @bookmarkable.update(led_count: @bookmarkable.led_count + 1)
     flash[:alert] = "#{@bookmark.bookmarkable_type} added to your bookmarks."
-    redirect_to workshop_path(@bookmark.bookmarkable)
+    redirect_to(workshop_path(@bookmark.bookmarkable))
   end
 
   def show
     @bookmark = Bookmark.find(params[:id]).decorate
     @bookmarkable = @bookmark.bookmarkable
-    load_workshop_data if @bookmark.bookmarkable_class_name == 'Workshop'
+    load_workshop_data if @bookmark.bookmarkable_class_name == "Workshop"
   end
 
   def destroy
     @bookmark = Bookmark.find(params[:id])
     if @bookmark
       @bookmark.destroy
-      flash[:alert] = 'Bookmark has been deleted.'
-      redirect_to workshop_path(@bookmark.bookmarkable)
+      flash[:alert] = "Bookmark has been deleted."
+      redirect_to(workshop_path(@bookmark.bookmarkable))
     else
-      flash[:error] = 'Unable to find that bookmark.'
+      flash[:error] = "Unable to find that bookmark."
     end
   end
 

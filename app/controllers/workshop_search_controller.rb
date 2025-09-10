@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class WorkshopSearchController < ApplicationController
   before_action :load_metadata
   def new
@@ -10,7 +12,7 @@ class WorkshopSearchController < ApplicationController
     process_search
     load_sortable_fields
     load_metadata
-    render :new
+    render(:new)
   end
 
   private
@@ -26,8 +28,11 @@ class WorkshopSearchController < ApplicationController
       WindowsType.all,
       :rating,
       :warm_up_and_relaxation,
-      :led_count
-    ].flatten.select { |name| puts name.class; name != :combined  }
+      :led_count,
+    ].flatten.select do |name|
+      Rails.logger.debug(name.class)
+      name != :combined
+    end
   end
 
   def load_metadata

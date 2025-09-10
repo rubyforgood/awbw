@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 class Faq < ApplicationRecord
   # Validations
-  validates_presence_of :question, :answer
+  validates :question, :answer, presence: true
 
   # Scopes
   scope :active, -> { where(inactive: false) }

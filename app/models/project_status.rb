@@ -1,7 +1,8 @@
-class ProjectStatus < ApplicationRecord
+# frozen_string_literal: true
 
+class ProjectStatus < ApplicationRecord
   def self.create_defaults
-    ['Active', 'Inactive', 'Pending', 'Reinstate', 'Suspended'].each do |name|
+    ["Active", "Inactive", "Pending", "Reinstate", "Suspended"].each do |name|
       ProjectStatus.find_or_create_by(name: name)
     end
   end

@@ -1,4 +1,6 @@
 # coding: utf-8
+# frozen_string_literal: true
+
 class WorkshopDecorator < Draper::Decorator
   delegate_all
 
@@ -7,50 +9,77 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def display_fields
-    [:objective, :materials, :optional_materials, :timeframe,
-      :age_range, :setup, :introduction, :demonstration,
-      :opening_circle, :warm_up,
-      :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2
+    [
+      :objective,
+      :materials,
+      :optional_materials,
+      :timeframe,
+      :age_range,
+      :setup,
+      :introduction,
+      :demonstration,
+      :opening_circle,
+      :warm_up,
+      :visualization,
+      :creation,
+      :closing,
+      :notes,
+      :tips,
+      :misc1,
+      :misc2,
     ]
   end
 
   def display_spanish_fields
     [
-      :objective_spanish, :materials_spanish, :optional_materials_spanish,
-      :timeframe_spanish, :age_range_spanish, :setup_spanish,
-      :introduction_spanish, :demonstration_spanish, :opening_circle_spanish,
-      :warm_up_spanish, :visualization_spanish, :creation_spanish,
-      :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish,
-      :misc2_spanish, :extra_field_spanish
+      :objective_spanish,
+      :materials_spanish,
+      :optional_materials_spanish,
+      :timeframe_spanish,
+      :age_range_spanish,
+      :setup_spanish,
+      :introduction_spanish,
+      :demonstration_spanish,
+      :opening_circle_spanish,
+      :warm_up_spanish,
+      :visualization_spanish,
+      :creation_spanish,
+      :closing_spanish,
+      :notes_spanish,
+      :tips_spanish,
+      :misc1_spanish,
+      :misc2_spanish,
+      :extra_field_spanish,
     ]
   end
 
   def labels_spanish
     {
-      objective_spanish: 'Objectivo',
-      materials_spanish: 'Materiales',
-      optional_materials_spanish: 'Materiales Opcionales',
-      timeframe_spanish: 'Periodo de tiempo',
-      age_range_spanish: 'Rango de edad',
-      setup_spanish: 'Preparativos',
-      introduction_spanish: 'Introducción',
-      demonstration_spanish: 'Demostración',
-      opening_circle_spanish: 'Círculo de apertura',
-      visualization_spanish: 'Visualización',
-      warm_up_spanish: 'Comenzando',
-      creation_spanish: 'Creación',
-      closing_spanish: 'Clausura',
-      misc_instructions_spanish: 'Instrucciones de misceláneos',
-      project_spanish: 'Projecto',
-      description_spanish: 'Descripción',
-      notes_spanish: 'Notas',
-      tips_spanish: 'Consejos',
-      misc1_spanish: 'Misc 1',
-      misc2_spanish: 'Misc 2'
+      objective_spanish: "Objectivo",
+      materials_spanish: "Materiales",
+      optional_materials_spanish: "Materiales Opcionales",
+      timeframe_spanish: "Periodo de tiempo",
+      age_range_spanish: "Rango de edad",
+      setup_spanish: "Preparativos",
+      introduction_spanish: "Introducción",
+      demonstration_spanish: "Demostración",
+      opening_circle_spanish: "Círculo de apertura",
+      visualization_spanish: "Visualización",
+      warm_up_spanish: "Comenzando",
+      creation_spanish: "Creación",
+      closing_spanish: "Clausura",
+      misc_instructions_spanish: "Instrucciones de misceláneos",
+      project_spanish: "Projecto",
+      description_spanish: "Descripción",
+      notes_spanish: "Notas",
+      tips_spanish: "Consejos",
+      misc1_spanish: "Misc 1",
+      misc2_spanish: "Misc 2",
     }
   end
+
   def new?
-    (Date.today.year - year <= 1) if year
+    (Time.zone.today.year - year <= 1) if year
   end
 
   def log_fields
@@ -62,7 +91,7 @@ class WorkshopDecorator < Draper::Decorator
 
     html.xpath("//img").each do |img|
       src = formatted_url(img)
-      img.set_attribute('src', src)
+      img.set_attribute("src", src)
     end
 
     html.to_s.html_safe
@@ -73,12 +102,12 @@ class WorkshopDecorator < Draper::Decorator
       html = html_objective
       html.xpath("//img").each do |img|
         src = formatted_url(img)
-        img.set_attribute('src', src)
+        img.set_attribute("src", src)
       end
       html.xpath("//a").each do |link|
-        href = link.attributes['href'].value.gsub('https://www.awbw.org', 'http://dashboard.awbw.org') if link.attributes['href']
-        link.set_attribute('href', href)
-        link.set_attribute('class', 'underline')
+        href = link.attributes["href"].value.gsub("https://www.awbw.org", "http://dashboard.awbw.org") if link.attributes["href"]
+        link.set_attribute("href", href)
+        link.set_attribute("class", "underline")
       end
       html.to_s.html_safe
     else
@@ -87,17 +116,16 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def formatted_url(img)
-    return unless img.attributes['src']
-    value = img.attributes['src'].value
+    return unless img.attributes["src"]
 
-    if value.include?('awbw.org')
-      return value.gsub('https', 'http').gsub('www.', '').gsub('awbw.org', 'dashboard.awbw.org')
-    else
-      if value.include?("s3.amazonaws.com")
-        return value
-      else
-        return value.prepend('http://dashboard.awbw.org') unless value.include?('.org') || value.include?('.com')
-      end
+    value = img.attributes["src"].value
+
+    if value.include?("awbw.org")
+      value.gsub("https", "http").gsub("www.", "").gsub("awbw.org", "dashboard.awbw.org")
+    elsif value.include?("s3.amazonaws.com")
+      value
+    elsif value.exclude?(".org") && value.exclude?(".com")
+      value.prepend("http://dashboard.awbw.org")
     end
   end
 
@@ -105,7 +133,7 @@ class WorkshopDecorator < Draper::Decorator
     if legacy
       html = html_objective
 
-      html.search('.TextHeader2').each do |header|
+      html.search(".TextHeader2").each do |header|
         header.children.remove
       end
 
@@ -113,28 +141,31 @@ class WorkshopDecorator < Draper::Decorator
       obj ||= html.text.split("Objective:")[1]
       obj ||= html.text
 
-      h.truncate(obj.gsub(title, '').
-          gsub(/(Heart Story Example|Table set-up)/, '').squish, length: 100)
+      h.truncate(
+        obj.gsub(title, "")
+                  .gsub(/(Heart Story Example|Table set-up)/, "").squish,
+        length: 100,
+      )
     else
       h.truncate(html_objective.text.html_safe.squish, length: 100)
     end
   end
 
   def author
-    "#{full_name}"
+    full_name.to_s
   end
 
   def main_image
     content = html_content
 
-    if content.css('img').any?
-      images = html_objective.css('img')
+    if content.css("img").any?
+      images = html_objective.css("img")
 
-      return nil unless images.any?
+      return if images.none?
 
       pathname = images.map do |img|
-        src = img.attributes['src'].value
-        src unless src.include?('transparent')
+        src = img.attributes["src"].value
+        src if src.exclude?("transparent")
       end.compact.first
 
       if pathname
@@ -169,7 +200,8 @@ class WorkshopDecorator < Draper::Decorator
 
   def breadcrumb_link
     return title unless id
-    h.link_to title, h.workshop_path(self), class: 'underline'
+
+    h.link_to(title, h.workshop_path(self), class: "underline")
   end
 
   def detail_breadcrumbs
@@ -178,7 +210,7 @@ class WorkshopDecorator < Draper::Decorator
 
   def spanish_field_values
     display_spanish_fields.map do |field|
-      workshop.send(field) unless workshop.send(field).blank?
+      workshop.send(field).presence
     end.compact
   end
 
@@ -195,7 +227,7 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def breadcrumbs_title
-    h.link_to 'Search Curriculum', h.workshops_path, class: 'underline'
+    h.link_to("Search Curriculum", h.workshops_path, class: "underline")
   end
 
   def log_form_header
@@ -211,7 +243,7 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def rating_as_stars
-    str = ''
+    str = ""
     rating.times do
       str += '<div class="inline star full">★</div>'
     end
@@ -223,7 +255,7 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def field_has_empty_value?(field)
-    send(field).nil? || send(field).empty?
+    send(field).blank?
   end
 
   private

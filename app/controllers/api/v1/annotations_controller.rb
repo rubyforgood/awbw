@@ -1,28 +1,30 @@
+# frozen_string_literal: true
+
 class Api::V1::AnnotationsController < Api::V1::ApiController
   def index
     @bookmark = Bookmark.find(params[:bookmark_id])
     @annotations = @bookmark.bookmark_annotations
-    render json: @annotations.map(&:content_with_id).to_json, status: :ok
+    render(json: @annotations.map(&:content_with_id).to_json, status: :ok)
   end
 
   def create
     @bookmark = Bookmark.find(params[:bookmark_id])
     @annotation = @bookmark.bookmark_annotations.build(
-      annotation: params[:annotation].to_json
+      annotation: params[:annotation].to_json,
     )
     if @annotation.save
-      render json: @annotation, status: :ok
+      render(json: @annotation, status: :ok)
     else
-      render json: {}, status: :unprocessable_entity
+      render(json: {}, status: :unprocessable_entity)
     end
   end
 
   def update
     @annotation = BookmarkAnnotation.find(params[:id])
     if @annotation.update(annotation: params[:annotation])
-      render json: @annotation, status: :ok
+      render(json: @annotation, status: :ok)
     else
-      render json: {}, status: :unprocessable_entity
+      render(json: {}, status: :unprocessable_entity)
     end
   end
 
@@ -30,9 +32,9 @@ class Api::V1::AnnotationsController < Api::V1::ApiController
     @annotation = BookmarkAnnotation.find(params[:id])
     if @annotation
       @annotation.destroy
-      render json: @annotation, status: :ok
+      render(json: @annotation, status: :ok)
     else
-      render json: {}, status: :unprocessable_entity
+      render(json: {}, status: :unprocessable_entity)
     end
   end
 end

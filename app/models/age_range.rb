@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AgeRange < ApplicationRecord
   belongs_to :windows_type
 
@@ -7,18 +9,16 @@ class AgeRange < ApplicationRecord
       ranges.each do |range|
         AgeRange.find_or_create_by(
           name: range,
-          windows_type: windows_type
+          windows_type: windows_type,
         )
       end
     end
   end
 
-  private
-
   def self.defaults
     {
-      'Children\'s Windows' => ['2-5', '6-12', '13-18', '19-24'],
-      'Adult Windows' => ['Under 15', '25-35', '35-64', '65+']
+      "Children's Windows" => ["2-5", "6-12", "13-18", "19-24"],
+      "Adult Windows" => ["Under 15", "25-35", "35-64", "65+"],
     }
   end
 end

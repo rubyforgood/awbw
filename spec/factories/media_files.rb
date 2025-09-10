@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :media_file do
     association :report
@@ -7,4 +9,4 @@ FactoryBot.define do
     file_file_size { 1024 }
     file_updated_at { Time.zone.now }
   end
-end 
+end

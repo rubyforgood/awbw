@@ -1,5 +1,6 @@
+# frozen_string_literal: true
+
 class Banner < ApplicationRecord
   # Validations
-  validates_presence_of :content
-
+  validates :content, presence: true
 end

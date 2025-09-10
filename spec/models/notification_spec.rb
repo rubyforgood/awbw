@@ -1,12 +1,13 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe Notification do
+require "rails_helper"
 
-  describe 'associations' do
-    it { should belong_to(:noticeable) }
+RSpec.describe(Notification) do
+  describe "associations" do
+    it { is_expected.to(belong_to(:noticeable)) }
   end
 
-  describe 'enums' do
-    it { should define_enum_for(:notification_type).with_values([:created, :updated]) }
+  describe "enums" do
+    it { is_expected.to(define_enum_for(:notification_type).with_values([:created, :updated])) }
   end
-end 
+end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.configure do |config|
   # Configure default driver for system specs
   config.before(:each, type: :system) do

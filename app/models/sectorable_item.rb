@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SectorableItem < ApplicationRecord
   # Associations
   belongs_to :sector
@@ -14,8 +16,7 @@ class SectorableItem < ApplicationRecord
   # Methods
   def title
     return id unless sectorable && sectorable.class != WorkshopLog
-    "#{sectorable.title} - #{sectorable.windows_type.name if sectorable.windows_type}"
-  end
 
-  private
+    "#{sectorable.title} - #{sectorable.windows_type&.name}"
+  end
 end

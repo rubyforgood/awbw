@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ReportFormFieldAnswer < ApplicationRecord
   belongs_to :report
   belongs_to :form_field

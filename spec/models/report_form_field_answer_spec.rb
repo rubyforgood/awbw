@@ -1,10 +1,11 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe ReportFormFieldAnswer do
+require "rails_helper"
 
-  describe 'associations' do
-    it { should belong_to(:report) }
-    it { should belong_to(:form_field) }
-    it { should belong_to(:answer_option).optional }
+RSpec.describe(ReportFormFieldAnswer) do
+  describe "associations" do
+    it { is_expected.to(belong_to(:report)) }
+    it { is_expected.to(belong_to(:form_field)) }
+    it { is_expected.to(belong_to(:answer_option).optional) }
   end
 end

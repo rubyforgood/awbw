@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :report_form_field_answer do
     association :report
@@ -6,4 +8,4 @@ FactoryBot.define do
 
     answer { "User response text" }
   end
-end 
+end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Story < Report
   rails_admin do
     configure :owner do
@@ -31,7 +33,6 @@ class Story < Report
         searchable true
         column_width 10
       end
-
     end
   end
 end

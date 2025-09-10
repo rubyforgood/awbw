@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 class ResourcesController < ApplicationController
   def index
-    @resources = current_user.curriculum(Resource).by_created.search(params).
-                    paginate(page: params[:page], per_page: 6)
+    @resources = current_user.curriculum(Resource).by_created.search(params)
+      .paginate(page: params[:page], per_page: 6)
 
     load_sortable_fields
 
@@ -24,30 +26,30 @@ class ResourcesController < ApplicationController
   def show
     @resource = Resource.find(resource_id_param).decorate
     load_forms
-    render :show
+    render(:show)
   end
 
   def create
     @resource = current_user.resources.build(resource_params)
     if @resource.save
       flash[:alert] = "#{@resource.type} has been submitted."
-      redirect_to root_path
+      redirect_to(root_path)
     else
       flash[:error] = "Unable to save #{@resource.type.titleize}"
-      render :new
+      render(:new)
     end
   end
 
   def search
     process_search
     load_sortable_fields
-    render :index
+    render(:index)
   end
 
   def download
     attachment = Resource.find(params[:resource_id]).attachments.last
     extension = File.extname(attachment.file_file_name)
-    send_data open("#{attachment.file.expiring_url(10000, :original)}").read, filename: "original_#{attachment.id}#{extension}", type: attachment.file_content_type
+    send_data(open(attachment.file.expiring_url(10000, :original).to_s).read, filename: "original_#{attachment.id}#{extension}", type: attachment.file_content_type)
   end
 
   private
@@ -64,10 +66,14 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :text, :kind, :male, :female, :title,
+      :text,
+      :kind,
+      :male,
+      :female,
+      :title,
       categorizable_items_attributes: [:_create, :category_id],
       sectorable_items_attributes: [:_create, :sector_id],
-      images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
+      images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy],
     )
   end
 
@@ -75,24 +81,23 @@ class ResourcesController < ApplicationController
     form = @resource.form
     if form
       @user_form = Report.new(user: current_user, owner: @resource)
-      form.form_fields.where(status: 1).each do |field|
+      form.form_fields.where(status: 1).find_each do |field|
         @user_form.report_form_field_answers.build(form_field: field)
       end
     end
   end
 
   def load_age_ranges
-    Metadatum.find_by(name: 'AgeRange').categories.each do |category|
+    Metadatum.find_by(name: "AgeRange").categories.each do |category|
       @resource.categorizable_items.build(category: category)
     end
   end
 
   def load_sectors
-    Sector.all.each do |sector|
+    Sector.all.find_each do |sector|
       @resource.sectorable_items.build(sector: sector)
     end
   end
-
 
   def load_images
     @resource.images.build
@@ -100,10 +105,10 @@ class ResourcesController < ApplicationController
 
   def load_sortable_fields
     @sortable_fields = [
-      'Toolkit',
-      'Form',
-      'Template',
-      'Handout'
+      "Toolkit",
+      "Form",
+      "Template",
+      "Handout",
     ]
   end
 

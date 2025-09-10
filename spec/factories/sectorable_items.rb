@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :sectorable_item do
     # Association: belongs_to :sector
@@ -7,4 +9,4 @@ FactoryBot.define do
     # Needs a sectorable instance, e.g., a Workshop or Resource
     association :sectorable, factory: :workshop
   end
-end 
+end
