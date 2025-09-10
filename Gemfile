@@ -66,6 +66,11 @@ group :development, :test do
   gem 'listen'
   gem 'pry-rails'
   gem 'rspec-rails'
+  gem 'rubocop-capybara', require: false
+  gem 'rubocop-factory_bot', require: false
+  gem 'rubocop-rails', require: false
+  gem 'rubocop-rspec', require: false
+  gem 'rubocop-rspec_rails', require: false
   gem 'rubocop-shopify', require: false
   gem 'selenium-webdriver'
   gem 'shoulda-matchers', require: false

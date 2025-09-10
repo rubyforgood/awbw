@@ -391,6 +391,25 @@ GEM
     rubocop-ast (1.46.0)
       parser (>= 3.3.7.2)
       prism (~> 1.4)
+    rubocop-capybara (2.22.1)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72, >= 1.72.1)
+    rubocop-factory_bot (2.27.1)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72, >= 1.72.1)
+    rubocop-rails (2.33.3)
+      activesupport (>= 4.2.0)
+      lint_roller (~> 1.1)
+      rack (>= 1.1)
+      rubocop (>= 1.75.0, < 2.0)
+      rubocop-ast (>= 1.44.0, < 2.0)
+    rubocop-rspec (3.7.0)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72, >= 1.72.1)
+    rubocop-rspec_rails (2.31.0)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72, >= 1.72.1)
+      rubocop-rspec (~> 3.5)
     rubocop-shopify (2.17.1)
       rubocop (~> 1.62)
     ruby-progressbar (1.13.0)
@@ -500,6 +519,11 @@ DEPENDENCIES
   rails (~> 6.1.7)
   rails_admin (~> 2.2.1)
   rspec-rails
+  rubocop-capybara
+  rubocop-factory_bot
+  rubocop-rails
+  rubocop-rspec
+  rubocop-rspec_rails
   rubocop-shopify
   sassc-rails (>= 2.1.2)
   search_cop (~> 1.0.6)

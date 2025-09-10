@@ -2,6 +2,14 @@
 inherit_gem:
   rubocop-shopify: rubocop.yml
 
+# Load RuboCop extensions as plugins
+plugins:
+  - rubocop-capybara
+  - rubocop-factory_bot
+  - rubocop-rails
+  - rubocop-rspec
+  - rubocop-rspec_rails
+
 # Custom project-specific overrides
 AllCops:
   Exclude:
