@@ -66,6 +66,7 @@ group :development, :test do
   gem 'listen'
   gem 'pry-rails'
   gem 'rspec-rails'
+  gem 'rubocop-shopify', require: false
   gem 'selenium-webdriver'
   gem 'shoulda-matchers', require: false
 end
