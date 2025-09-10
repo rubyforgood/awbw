@@ -41,7 +41,7 @@ RSpec.describe(Resource) do
     it { is_expected.to(validate_presence_of(:title)) }
   end
 
-  it "is valid with valid attributes" do
+  it "is valid with valid attributes" do # rubocop:todo RSpec/NoExpectationExample
     # NOTE: Factory needs associations uncommented for create
     # expect(build(:resource)).to be_valid
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DashboardController < ApplicationController
-  skip_before_action :authenticate_user!, only: :help
+  skip_before_action :authenticate_user!, only: :help # rubocop:todo Rails/LexicallyScopedActionFilter
 
   layout "help", only: :help
 

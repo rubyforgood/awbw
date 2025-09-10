@@ -33,7 +33,7 @@ class Workshop < ApplicationRecord
 
   belongs_to :windows_type
   has_many :attachments, as: :owner, dependent: :destroy
-  has_many :workshop_age_ranges
+  has_many :workshop_age_ranges # rubocop:todo Rails/HasManyOrHasOneDependent
 
   has_attached_file :thumbnail, default_url: "/images/workshop_default.jpg"
   validates_attachment_content_type :thumbnail, content_type: %r{\Aimage/.*\Z}
@@ -114,56 +114,56 @@ class Workshop < ApplicationRecord
 
     field :extra_field, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :objective, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :materials, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :optional_materials, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :age_range
 
     field :setup, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :introduction, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -173,11 +173,11 @@ class Workshop < ApplicationRecord
 
     field :demonstration, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -190,7 +190,7 @@ class Workshop < ApplicationRecord
         "Opening</br><a href='#top'>Back To Top</a>".html_safe
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -203,7 +203,7 @@ class Workshop < ApplicationRecord
         "Warm-up / Relaxation / Meditation </br><a href='#top'>Back To Top</a>".html_safe
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -213,19 +213,19 @@ class Workshop < ApplicationRecord
 
     field :visualization, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :creation, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -235,10 +235,10 @@ class Workshop < ApplicationRecord
 
     field :closing, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -248,109 +248,109 @@ class Workshop < ApplicationRecord
 
     field :notes, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :tips, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :misc1, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :misc2, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :extra_field_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :objective_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :materials_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :optional_materials_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :timeframe_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :age_range_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :setup_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :introduction_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :demonstration_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :opening_circle_spanish, :ck_editor do
@@ -358,7 +358,7 @@ class Workshop < ApplicationRecord
         "Opening Spanish </br><a href='#top'>Back To Top</a>".html_safe
       end
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :warm_up_spanish, :ck_editor do
@@ -367,70 +367,70 @@ class Workshop < ApplicationRecord
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :visualization_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :creation_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :closing_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :notes_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :tips_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :misc1_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :misc2_spanish, :ck_editor do
       label do
-        "#{label}</br><a href='#top'>Back To Top</a>".html_safe
+        "#{label}</br><a href='#top'>Back To Top</a>".html_safe # rubocop:todo Rails/OutputSafety
       end
 
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -669,7 +669,7 @@ class Workshop < ApplicationRecord
       "tips",
     ].map do |field|
       "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |"
-    end.join(" ").html_safe
+    end.join(" ").html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def self.anchors_spanish_admin
@@ -694,6 +694,6 @@ class Workshop < ApplicationRecord
       "misc2_spanish",
     ].map do |field|
       "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |"
-    end.join(" ").html_safe
+    end.join(" ").html_safe # rubocop:todo Rails/OutputSafety
   end
 end

@@ -15,7 +15,7 @@ RSpec.describe(Project) do
     it { is_expected.to(have_many(:workshop_logs).through(:users)) }
   end
 
-  it "is valid with valid attributes" do
+  it "is valid with valid attributes" do # rubocop:todo RSpec/NoExpectationExample
     # NOTE: Factory needs associations uncommented for create
     # expect(build(:project)).to be_valid
   end

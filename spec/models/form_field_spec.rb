@@ -33,7 +33,7 @@ RSpec.describe(FormField) do
     it { is_expected.to(define_enum_for(:status).with_values([:inactive, :active])) }
 
     it {
-      expect(subject).to(define_enum_for(:answer_type).with_values([
+      expect(subject).to(define_enum_for(:answer_type).with_values([ # rubocop:todo RSpec/NamedSubject
         :free_form_input_one_line,
         :free_form_input_paragraph,
         :multiple_choice_radio,

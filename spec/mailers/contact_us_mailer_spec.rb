@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe(ContactUsMailer) do
   describe "#hello" do
-    xit 'sends to the adult program email when q is "adult"' do
+    xit 'sends to the adult program email when q is "adult"' do # rubocop:todo RSpec/PendingWithoutReason
       contact_params = {
         subject: "Test Subject",
         from: "test@example.com",
@@ -22,7 +22,7 @@ RSpec.describe(ContactUsMailer) do
       expect(mail.from).to(eq(["test@example.com"]))
     end
 
-    xit 'sends to the children program email when q is "children"' do
+    xit 'sends to the children program email when q is "children"' do # rubocop:todo RSpec/PendingWithoutReason
       contact_params = {
         subject: "Test Subject",
         from: "test@example.com",
@@ -38,7 +38,7 @@ RSpec.describe(ContactUsMailer) do
       expect(mail.to).to(eq(["cturekrials@awbw.org"]))
     end
 
-    xit 'sends to the general program email when q is "general"' do
+    xit 'sends to the general program email when q is "general"' do # rubocop:todo RSpec/PendingWithoutReason
       contact_params = {
         subject: "Test Subject",
         from: "test@example.com",
@@ -54,7 +54,7 @@ RSpec.describe(ContactUsMailer) do
       expect(mail.to).to(eq(["programs@awbw.org"]))
     end
 
-    xit "defaults to the general program email when q is nil" do
+    xit "defaults to the general program email when q is nil" do # rubocop:todo RSpec/PendingWithoutReason
       contact_params = {
         subject: "Test Subject",
         from: "test@example.com",
@@ -70,7 +70,7 @@ RSpec.describe(ContactUsMailer) do
       expect(mail.to).to(eq(["programs@awbw.org"]))
     end
 
-    xit "renders the email content correctly" do
+    xit "renders the email content correctly" do # rubocop:todo RSpec/PendingWithoutReason
       contact_params = {
         subject: "Test Subject",
         from: "test@example.com",

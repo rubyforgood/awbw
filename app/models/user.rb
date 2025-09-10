@@ -20,11 +20,11 @@ class User < ApplicationRecord
   validates_attachment_content_type :avatar, content_type: %r{\Aimage/.*\z}
 
   # Associations
-  has_many :workshops
+  has_many :workshops # rubocop:todo Rails/HasManyOrHasOneDependent
 
   # has_many :curriculum_workshops, -> (user) {  }, class_name: 'Workshop'
-  has_many :workshop_logs
-  has_many :reports
+  has_many :workshop_logs # rubocop:todo Rails/HasManyOrHasOneDependent
+  has_many :reports # rubocop:todo Rails/HasManyOrHasOneDependent
   has_many :communal_reports, through: :projects, source: :reports
   has_many :bookmarks, dependent: :destroy
   has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: "Workshop"
@@ -33,11 +33,11 @@ class User < ApplicationRecord
   has_many :windows_types, through: :projects
   has_many :user_permissions, dependent: :destroy
   has_many :permissions, through: :user_permissions
-  has_many :resources
+  has_many :resources # rubocop:todo Rails/HasManyOrHasOneDependent
   has_many :user_forms, dependent: :destroy
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
-  has_many :notifications, as: :noticeable
+  has_many :notifications, as: :noticeable # rubocop:todo Rails/HasManyOrHasOneDependent
 
   # Rails Admin
   rails_admin do
@@ -228,7 +228,9 @@ class User < ApplicationRecord
     end
   end
 
+  # rubocop:todo Style/OptionalArguments
   def submitted_monthly_report(submitted_date = Time.zone.today, windows_type, project_id)
+    # rubocop:enable Style/OptionalArguments
     Report.where(
       project_id: project_id,
       type: "MonthlyReport",

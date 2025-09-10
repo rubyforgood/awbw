@@ -27,7 +27,7 @@ RSpec.describe(WorkshopAgeRange) do
     it { is_expected.to(validate_uniqueness_of(:workshop_id).scoped_to(:age_range_id)) }
   end
 
-  it "is valid with valid attributes" do
+  it "is valid with valid attributes" do # rubocop:todo RSpec/NoExpectationExample
     # NOTE: Factory needs associations uncommented for create
     # expect(build(:workshop_age_range)).to be_valid
     # pending("Requires functional workshop/age_range factories and associations uncommented")

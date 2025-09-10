@@ -8,7 +8,7 @@ class ReportDecorator < Draper::Decorator
   end
 
   def breadcrumbs
-    "#{h.link_to("Submit Report", h.new_report_path)} >> #{formatted_title}".html_safe
+    "#{h.link_to("Submit Report", h.new_report_path)} >> #{formatted_title}".html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def formatted_title

@@ -12,8 +12,8 @@ class Resource < ApplicationRecord
   has_many :sectors, through: :sectorable_items, source: :sector
   has_many :related_workshops, through: :sectors, source: :workshops
   has_many :attachments, as: :owner, dependent: :destroy
-  has_one :form, as: :owner
-  has_many :reports, as: :owner
+  has_one :form, as: :owner # rubocop:todo Rails/HasManyOrHasOneDependent
+  has_many :reports, as: :owner # rubocop:todo Rails/HasManyOrHasOneDependent
   has_many :workshop_resources, dependent: :destroy
   # Scopes
   scope :featured, -> { where(featured: true).order(created_at: :desc) }

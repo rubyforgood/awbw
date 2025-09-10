@@ -6,7 +6,7 @@ class BookmarkDecorator < Draper::Decorator
   decorates_association :bookmarkable
 
   def breadcrumbs
-    "#{bookmarks_link} >> #{bookmarkable_link}".html_safe
+    "#{bookmarks_link} >> #{bookmarkable_link}".html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def content

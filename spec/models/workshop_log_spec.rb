@@ -23,7 +23,7 @@ RSpec.describe(WorkshopLog) do
     # ... other Report associations
   end
 
-  it "is valid with valid attributes" do
+  it "is valid with valid attributes" do # rubocop:todo RSpec/NoExpectationExample
     # NOTE: Factory needs associations uncommented for create
     # expect(build(:workshop_log)).to be_valid
   end

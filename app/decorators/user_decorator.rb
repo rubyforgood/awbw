@@ -14,7 +14,7 @@ class UserDecorator < Draper::Decorator
 
   def display_agencies
     project_users.map { |u| "#{u.project.name} - #{u.position}" }
-      .join(h.content_tag(:li)).html_safe
+      .join(h.content_tag(:li)).html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def last_logged_in

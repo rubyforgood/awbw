@@ -94,7 +94,7 @@ class WorkshopDecorator < Draper::Decorator
       img.set_attribute("src", src)
     end
 
-    html.to_s.html_safe
+    html.to_s.html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def display_objective
@@ -109,7 +109,7 @@ class WorkshopDecorator < Draper::Decorator
         link.set_attribute("href", href)
         link.set_attribute("class", "underline")
       end
-      html.to_s.html_safe
+      html.to_s.html_safe # rubocop:todo Rails/OutputSafety
     else
       objective
     end
@@ -147,7 +147,7 @@ class WorkshopDecorator < Draper::Decorator
         length: 100,
       )
     else
-      h.truncate(html_objective.text.html_safe.squish, length: 100)
+      h.truncate(html_objective.text.html_safe.squish, length: 100) # rubocop:todo Rails/OutputSafety
     end
   end
 
@@ -205,7 +205,7 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def detail_breadcrumbs
-    "#{breadcrumbs_title} >> #{breadcrumb_link}".html_safe
+    "#{breadcrumbs_title} >> #{breadcrumb_link}".html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def spanish_field_values
@@ -220,7 +220,7 @@ class WorkshopDecorator < Draper::Decorator
 
   def breadcrumbs
     if title
-      "#{breadcrumbs_title} >> #{breadcrumb_link} >> Workshop Log".html_safe
+      "#{breadcrumbs_title} >> #{breadcrumb_link} >> Workshop Log".html_safe # rubocop:todo Rails/OutputSafety
     else
       "Submit Workshop Log >> Report on a New Workshop"
     end
@@ -251,7 +251,7 @@ class WorkshopDecorator < Draper::Decorator
     (5 - rating).times do
       str += '<div class="star">☆</div>'
     end
-    str.html_safe
+    str.html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def field_has_empty_value?(field)

@@ -49,7 +49,9 @@ class ResourcesController < ApplicationController
   def download
     attachment = Resource.find(params[:resource_id]).attachments.last
     extension = File.extname(attachment.file_file_name)
+    # rubocop:todo Security/Open
     send_data(open(attachment.file.expiring_url(10000, :original).to_s).read, filename: "original_#{attachment.id}#{extension}", type: attachment.file_content_type)
+    # rubocop:enable Security/Open
   end
 
   private

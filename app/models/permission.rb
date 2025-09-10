@@ -2,7 +2,7 @@
 
 class Permission < ApplicationRecord
   # Associations
-  has_many :user_permissions
+  has_many :user_permissions # rubocop:todo Rails/HasManyOrHasOneDependent
   has_many :users, through: :user_permissions
 
   # Methods

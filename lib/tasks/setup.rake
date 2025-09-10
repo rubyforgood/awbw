@@ -138,8 +138,8 @@ namespace :db do
           next if pathname.include?("transparent") || pathname.include?("https") # yields error
 
           uri = pathname.include?("http") ? pathname : "http://awbw.org#{pathname}"
-          workshop.images.create(file: open(uri))
-        rescue OpenURI::HTTPError
+          workshop.images.create(file: open(uri)) # rubocop:todo Security/Open
+        rescue OpenURI::HTTPError # rubocop:todo Lint/SuppressedException
         end
       end
     end
@@ -194,7 +194,7 @@ def categories_filepaths
   }
 end
 
-def process_xml_rows(xml, method, _name = nil)
+def process_xml_rows(xml, method, _name = nil) # rubocop:todo Lint/UnderscorePrefixedVariableName
   xml.search("Row").each do |row|
     send(method, row, _name)
   end
@@ -260,7 +260,7 @@ def create_workshop(xml, _name = nil)
     searchable: search_for_value(xml, "bln_searchable"),
     legacy: true,
     featured: false,
-    created_at: search_for_value(xml, "ts_create").to_datetime,
+    created_at: search_for_value(xml, "ts_create").to_datetime, # rubocop:todo Style/DateTime
   )
 end
 
@@ -357,7 +357,7 @@ def create_leader_spotlight(xml, _name = nil)
 
   image = open("http://awbw.org#{search_for_value(xml, "str_pic")}")
   leader_spotlight.images.create(file: image)
-rescue OpenURI::HTTPError
+rescue OpenURI::HTTPError # rubocop:todo Lint/SuppressedException
 end
 
 def create_workshop_leader_spotlight(xml, _name = nil)

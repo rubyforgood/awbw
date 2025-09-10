@@ -3,8 +3,8 @@
 class Form < ApplicationRecord
   # Associations
   has_many :form_fields, dependent: :destroy, inverse_of: :form
-  has_many :user_forms
-  has_many :reports, as: :owner
+  has_many :user_forms # rubocop:todo Rails/HasManyOrHasOneDependent
+  has_many :reports, as: :owner # rubocop:todo Rails/HasManyOrHasOneDependent
   belongs_to :owner, polymorphic: true
 
   # Nested Attrs

@@ -6,8 +6,8 @@ class Report < ApplicationRecord
   belongs_to :windows_type
 
   belongs_to :owner, polymorphic: true, optional: true
-  has_one  :form, as: :owner
-  has_one  :image
+  has_one  :form, as: :owner # rubocop:todo Rails/HasManyOrHasOneDependent
+  has_one  :image # rubocop:todo Rails/HasManyOrHasOneDependent
   validate :image_valid?
   has_attached_file :form_file
 
@@ -17,7 +17,7 @@ class Report < ApplicationRecord
 
   validates_attachment :form_file, content_type: { content_type: FORM_FILE_CONTENT_TYPES }
 
-  has_many :images
+  has_many :images # rubocop:todo Rails/HasManyOrHasOneDependent
   has_many :form_fields, through: :form
   has_many :report_form_field_answers, dependent: :destroy
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
@@ -66,9 +66,9 @@ class Report < ApplicationRecord
         "#{type} - Monthly Report Date: #{date_label} - User: #{user&.full_name}"
       when "Report"
         if owner_type && (owner_type == "Resource")
-          "#{type} - #{owner ? owner_type : "[ EMPTY ]"} - User: #{user&.full_name}"
+          "#{type} - #{owner ? owner_type : "[ EMPTY ]"} - User: #{user&.full_name}" # rubocop:todo Metrics/BlockNesting
         else
-          "#{type} - #{owner ? owner.type : "[ EMPTY ]"} - User: #{user&.full_name}"
+          "#{type} - #{owner ? owner.type : "[ EMPTY ]"} - User: #{user&.full_name}" # rubocop:todo Metrics/BlockNesting
         end
       else
         "#{type} - #{owner ? owner.communal_label(self) : "[ EMPTY ]"} - User: #{user&.full_name}"

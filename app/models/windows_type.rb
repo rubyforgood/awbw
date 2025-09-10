@@ -2,10 +2,10 @@
 
 class WindowsType < ApplicationRecord
   # Associations
-  has_many :workshops
-  has_many :age_ranges
-  has_many :reports
-  has_many :form_builders
+  has_many :workshops # rubocop:todo Rails/HasManyOrHasOneDependent
+  has_many :age_ranges # rubocop:todo Rails/HasManyOrHasOneDependent
+  has_many :reports # rubocop:todo Rails/HasManyOrHasOneDependent
+  has_many :form_builders # rubocop:todo Rails/HasManyOrHasOneDependent
 
   def custom_label_method
     name.gsub("LOG", "").gsub("WORKSHOP", "WINDOWS").titleize.strip.gsub("Children", "Children's")

@@ -7,5 +7,5 @@ class WorkshopAgeRange < ApplicationRecord
   belongs_to :age_range
 
   validates :workshop_id, :age_range_id, presence: true
-  validates :workshop_id, uniqueness: { scope: :age_range_id }
+  validates :workshop_id, uniqueness: { scope: :age_range_id } # rubocop:todo Rails/UniqueValidationWithoutIndex
 end

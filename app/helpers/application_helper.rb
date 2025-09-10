@@ -28,13 +28,13 @@ module ApplicationHelper
   def show_time(time)
     if time.is_a?(Time)
       if time.hour > 0
-        return "<span> #{time.strftime("%H:%M")} </span><span>hr</span>".html_safe
+        return "<span> #{time.strftime("%H:%M")} </span><span>hr</span>".html_safe # rubocop:todo Rails/OutputSafety
       else
-        return "<span> #{time.strftime("%H:%M")} </span><span>min</span>".html_safe
+        return "<span> #{time.strftime("%H:%M")} </span><span>min</span>".html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
-    "<span> #{time.to_i} </span><span>min</span>".html_safe
+    "<span> #{time.to_i} </span><span>min</span>".html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def display_banner
@@ -43,7 +43,7 @@ module ApplicationHelper
     if !banner.nil? && banner.show
       content = "<div id='banner-news' class='banner-news'><div class='content'>"
       content += "#{banner.content}</div></div></br><div class='separator'></div>"
-      content.html_safe
+      content.html_safe # rubocop:todo Rails/OutputSafety
     end
   end
 

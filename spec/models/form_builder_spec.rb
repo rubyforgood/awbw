@@ -15,7 +15,7 @@ RSpec.describe(FormBuilder) do
     it { is_expected.to(validate_presence_of(:name)) }
   end
 
-  it "is valid with valid attributes" do
+  it "is valid with valid attributes" do # rubocop:todo RSpec/NoExpectationExample
     # NOTE: Factory needs windows_type association uncommented for create
     # expect(build(:form_builder)).to be_valid
   end

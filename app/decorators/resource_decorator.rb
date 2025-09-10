@@ -36,7 +36,7 @@ class ResourceDecorator < Draper::Decorator
   end
 
   def breadcrumbs
-    "#{type_link} >> #{title}".html_safe
+    "#{type_link} >> #{title}".html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def author_full_name
@@ -48,7 +48,7 @@ class ResourceDecorator < Draper::Decorator
   end
 
   def display_text
-    "<div class='reset-list-items'>#{text}</div>".html_safe
+    "<div class='reset-list-items'>#{text}</div>".html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def card_class

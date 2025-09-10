@@ -4,7 +4,7 @@ class WorkshopVariationDecorator < Draper::Decorator
   delegate_all
 
   def breadcrumbs
-    "#{workshop_link} >> #{name}".html_safe
+    "#{workshop_link} >> #{name}".html_safe # rubocop:todo Rails/OutputSafety
   end
 
   def display_code
@@ -19,7 +19,7 @@ class WorkshopVariationDecorator < Draper::Decorator
         link.set_attribute("href", href)
         link.set_attribute("class", "underline")
       end
-      html.to_s.html_safe
+      html.to_s.html_safe # rubocop:todo Rails/OutputSafety
     else
       code
     end

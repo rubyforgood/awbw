@@ -23,7 +23,7 @@ RSpec.describe(ProjectUser) do
     it { is_expected.to(define_enum_for(:position).with_values([:default, :liaison, :leader, :assistant])) }
   end
 
-  it "is valid with valid attributes" do
+  it "is valid with valid attributes" do # rubocop:todo RSpec/NoExpectationExample
     # NOTE: Factory needs associations uncommented for create
     # expect(build(:project_user)).to be_valid
     # pending("Requires functional project/user factories and associations uncommented")

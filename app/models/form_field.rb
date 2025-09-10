@@ -6,7 +6,9 @@ class FormField < ApplicationRecord
   has_many :form_field_answer_options, dependent: :destroy
   has_many :report_form_field_answers, dependent: :destroy
   has_many :answer_options, through: :form_field_answer_options
-  has_many :childs, foreign_key: "parent_id", class_name: "FormField"
+  # rubocop:todo Rails/InverseOf
+  has_many :childs, foreign_key: "parent_id", class_name: "FormField" # rubocop:todo Rails/HasManyOrHasOneDependent # rubocop:todo Rails/InverseOf
+  # rubocop:enable Rails/InverseOf
 
   # Validations
   validates :question, presence: true

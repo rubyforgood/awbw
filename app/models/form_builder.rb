@@ -3,7 +3,7 @@
 class FormBuilder < ApplicationRecord
   validates :name, presence: true
 
-  has_many :forms, as: :owner
+  has_many :forms, as: :owner # rubocop:todo Rails/HasManyOrHasOneDependent
   belongs_to :windows_type
   accepts_nested_attributes_for :forms
 

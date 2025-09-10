@@ -11,7 +11,7 @@ RSpec.describe("Workshops") do
   end
 
   describe "workshop index" do
-    context "When user is logged in" do
+    context "When user is logged in" do # rubocop:todo RSpec/ContextWording
       it "User sees overview of workshops" do
         sign_in(create(:user))
 
@@ -33,7 +33,7 @@ RSpec.describe("Workshops") do
       # Can't get this damn spec to work. WorkshopController#index performs a mix of "permissions"
       # checks using User#curriculum + search using Workshop#search (full text on query param &
       # where col match using windows_type_id). I am not sure why my factory data is being excluded.
-      xit "User can search for a workshop" do
+      xit "User can search for a workshop" do # rubocop:todo RSpec/PendingWithoutReason
         user = create(:user)
         sign_in(user)
 
@@ -60,7 +60,7 @@ RSpec.describe("Workshops") do
   end
 
   describe "view workshops" do
-    context "When user is logged in" do
+    context "When user is logged in" do # rubocop:todo RSpec/ContextWording
       it "User sees workshop details" do
         sign_in(create(:user))
 

@@ -61,7 +61,7 @@ RSpec.describe(Workshop) do
     # Conditional presence validation for legacy workshops (month, year)
   end
 
-  it "is valid with valid attributes" do
+  it "is valid with valid attributes" do # rubocop:todo RSpec/NoExpectationExample
     # NOTE: Factory needs associations uncommented for create
     # expect(build(:workshop)).to be_valid
   end

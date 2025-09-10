@@ -5,7 +5,7 @@ class WorkshopLog < Report
   belongs_to :user
   belongs_to :project
 
-  has_many :media_files
+  has_many :media_files # rubocop:todo Rails/HasManyOrHasOneDependent
 
   # Callbacks
   after_save :update_workshop_log_count
@@ -155,7 +155,7 @@ class WorkshopLog < Report
 
     if !owner.nil?
       title = "#{workshop_title} - #{owner.windows_type.label}"
-      "<a class='pjax' href='/admin/cms/workshop/#{owner.id}'>#{title}</a>".html_safe
+      "<a class='pjax' href='/admin/cms/workshop/#{owner.id}'>#{title}</a>".html_safe # rubocop:todo Rails/OutputSafety
     else
       title = "#{workshop_title} - #{windows_type.label}"
       title.to_s

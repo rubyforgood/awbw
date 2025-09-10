@@ -7,7 +7,7 @@ RSpec.describe(WorkshopIdea) do
     expect(build(:workshop_idea)).to(be_a(Workshop))
   end
 
-  it "is valid with valid attributes" do
+  it "is valid with valid attributes" do # rubocop:todo RSpec/NoExpectationExample
     # NOTE: Factory needs associations uncommented for create (from Workshop factory)
     # expect(build(:workshop_idea)).to be_valid
   end

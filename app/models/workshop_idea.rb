@@ -16,30 +16,30 @@ class WorkshopIdea < Workshop
     field :featured
     field :objective, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :materials, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :optional_materials, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :age_range
     field :setup, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :introduction, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -49,7 +49,7 @@ class WorkshopIdea < Workshop
 
     field :demonstration, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -59,7 +59,7 @@ class WorkshopIdea < Workshop
 
     field :opening_circle, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
       label "Opening"
     end
@@ -70,7 +70,7 @@ class WorkshopIdea < Workshop
 
     field :warm_up, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
       label "Warm-up / Relaxation / Meditation"
     end
@@ -81,13 +81,13 @@ class WorkshopIdea < Workshop
 
     field :visualization, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :creation, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -97,7 +97,7 @@ class WorkshopIdea < Workshop
 
     field :closing, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
@@ -107,111 +107,111 @@ class WorkshopIdea < Workshop
 
     field :notes, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :tips, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :misc1, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :misc2, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 
     field :objective_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :materials_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :optional_materials_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :timeframe_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :age_range_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :setup_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :introduction_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :demonstration_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :opening_circle_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
 
       label "Opening Spanish"
     end
     field :warm_up_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
       label "Warm-up / Relaxation / Meditation Spanish"
     end
     field :visualization_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :creation_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :closing_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :notes_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :tips_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :misc1_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
     field :misc2_spanish, :ck_editor do
       pretty_value do
-        value&.html_safe
+        value&.html_safe # rubocop:todo Rails/OutputSafety
       end
     end
 

@@ -6,7 +6,7 @@ RSpec.describe(User) do
   # Use FactoryBot
   # let(:user) { build(:user) } # Keep build for simple validation tests
   # Create permissions needed by the after_create callback
-  before(:all) do
+  before(:all) do # rubocop:todo RSpec/BeforeAfterAll
     create(:permission, security_cat: "Combined Adult and Children's Windows") unless Permission.exists?(security_cat: "Combined Adult and Children's Windows")
     create(:permission, security_cat: "Adult Windows") unless Permission.exists?(security_cat: "Adult Windows")
     create(:permission, security_cat: "Children's Windows") unless Permission.exists?(security_cat: "Children's Windows")
