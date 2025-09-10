@@ -1,4 +1,5 @@
-class Api::V1::ApiController < ApiController::Base
+class Api::V1::ApiController < ActionController::API
+  include ActionController::RequestForgeryProtection
   protect_from_forgery with: :null_session, :if => Proc.new { |c| c.request.format.json? }
 
   rescue_from AuthenticationFailed, with: :authentication_failed
