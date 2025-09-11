@@ -51,7 +51,6 @@ jobs:
         run: bundle exec rspec
         env:
           RAILS_ENV: test
-          DATABASE_URL: mysql2://root:@127.0.0.1:3306/awbw_test
           # AWS credentials
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
