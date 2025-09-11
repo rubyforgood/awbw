@@ -1,25 +1,13 @@
-# Resolve the correct DB credentials
-config = YAML.load(ERB.new(File.read(Rails.root.join('config/database.yml'))).result)
-env_config = config[Rails.env]
-
-# Extract credentials
-adapter = env_config['adapter']
-database = env_config['database']
-
 # Only run if MySQL is the DB
-if adapter.include?('mysql')
-  sql_file = Rails.root.join('db', 'awbw_dml_only.sql')
+sql_file = Rails.root.join('db', 'awbw_dml_only.sql')
 
-  puts "Loading SQL dump from #{sql_file}..."
+puts "Loading SQL dump from #{sql_file}..."
 
-  # Run the command
-  command = "rails dbconsole < #{sql_file}"
-  system(command) || raise("Failed to load SQL dump into #{database}")
-  
-  puts "SUCCESS! SQL dump loaded successfully."
-else
-  puts "Skipping SQL dump: not using MySQL (adapter = #{adapter})"
-end
+# Run the command
+command = "rails dbconsole < #{sql_file}"
+system(command) || raise("Failed to load SQL dump")
+
+puts "SUCCESS! SQL dump loaded successfully."
 
 # wrapping in a tx for now
 ActiveRecord::Base.transaction do

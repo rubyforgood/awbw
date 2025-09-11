@@ -6,7 +6,7 @@ services:
     ports:
       - 3306:3306
     expose:
-      - '3306'
+      - "3306"
     volumes:
       - type: volume
         source: mysql-data
@@ -24,7 +24,8 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.dev   # <— use the dev Dockerfile
+      dockerfile: Dockerfile
+      target: build
     depends_on:
       database:
         condition: service_healthy
@@ -32,7 +33,7 @@ services:
     environment:
       # Fallback so Rails can boot even if .env is minimal.
       # If you prefer traditional keys, set DB_* in .env and configure database.yml accordingly.
-      DATABASE_URL: mysql2://root@database:3306/awbw_development
+      DB_HOST: "database"
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "true"
     ports:
@@ -48,4 +49,3 @@ services:
 
 volumes:
   mysql-data:
-

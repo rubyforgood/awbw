@@ -1,61 +1,77 @@
-FROM ruby:2.7.8-buster
+# syntax=docker/dockerfile:1
+# check=error=true
 
-# Install basic Linux packages
-RUN apt-get update -qq && apt-get install -y \
-  build-essential \
-  libpq-dev \
-  nodejs \
-  yarn \
-  git \
+# Make sure RUBY_VERSION matches the Ruby version in .ruby-version
+ARG RUBY_VERSION=3.3.8
+FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+
+# Rails app lives here
+WORKDIR /rails
+
+# Install base packages
+RUN apt-get update -qq && \
+  apt-get install --no-install-recommends -y \
   curl \
-  imagemagick \
-  libvips \
-  tzdata \
-  libxml2-dev \
-  libxslt1-dev \
-  libffi-dev \
-  libreadline-dev \
-  libssl-dev \
-  zlib1g-dev \
-  libsqlite3-dev \
-  sqlite3
+  default-mysql-client \
+  libjemalloc2 \
+  libvips && \
+  rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Set working directory
-WORKDIR /app
+# Set production environment
+ENV RAILS_ENV="production" \
+  BUNDLE_DEPLOYMENT="1" \
+  BUNDLE_PATH="/usr/local/bundle" \
+  BUNDLE_WITHOUT="development"
 
-# Set environment variables
-ENV RAILS_ENV=production \
-    RACK_ENV=production \
-    BUNDLE_PATH=/gems \
-    BUNDLE_BIN=/gems/bin \
-    PATH="/gems/bin:$PATH"
+# Throw-away build stage to reduce size of final image
+FROM base AS build
 
-# Install bundler
-RUN gem install bundler -v 2.4.12
+# Install packages needed to build gems
+RUN apt-get update -qq && \
+  apt-get install --no-install-recommends -y \
+  build-essential \
+  default-libmysqlclient-dev \
+  git \
+  libyaml-dev \
+  pkg-config && \
+  rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Copy app code and install dependencies
+# Install application gems
+COPY Gemfile Gemfile.lock ./
+RUN bundle install && \
+  rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git 
+# && bundle exec bootsnap precompile --gemfile
+
+# Copy application code
 COPY . .
 
-RUN bundle install --without development test
+# Precompile bootsnap code for faster boot times
+# RUN bundle exec bootsnap precompile app/ lib/
 
-# These envs are used in the rails application. While they are entirely 
-# unrelated to the docker build process, they are required for the app to run.
-# Without these build args the asset precompilation will fail.
-ARG SECRET_KEY_BASE
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY
-ARG AWS_REGION
-ARG AWS_S3_BUCKET
-ARG SMTP_USERNAME
-ARG SMTP_PASSWORD
-ARG SMTP_SERVER
-ARG SMTP_PORT
+# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
+RUN SECRET_KEY_BASE=dummy \
+  SMTP_SERVER=dummy \
+  SMTP_PORT=dummy \
+  SMTP_USERNAME=dummy \
+  SMTP_PASSWORD=dummy \
+  ./bin/rails assets:precompile
 
-# Precompile assets (if applicable)
-RUN bundle exec rake assets:precompile
+# Final stage for app image
+FROM base
 
-# Expose port (default Rails)
+# Copy built artifacts: gems, application
+COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
+COPY --from=build /rails /rails
+
+# Run and own only the runtime files as a non-root user for security
+RUN groupadd --system --gid 1000 rails && \
+  useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
+  chown -R rails:rails db log tmp
+USER 1000:1000
+
+# Entrypoint prepares the database.
+ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+
+# Start server via Thruster by default, this can be overwritten at runtime
 EXPOSE 3000
-
-# Start the server (customize to your app server if needed)
-CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
+CMD ["./bin/rails", "server"]
