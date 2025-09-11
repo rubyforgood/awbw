@@ -1,7 +1,7 @@
 development:
   host: 127.0.0.1
   username: root
-  adapter: mysql2
+  adapter: trilogy
   encoding: utf8
   pool: 5
   database: awbw_development

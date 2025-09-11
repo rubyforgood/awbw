@@ -51,6 +51,9 @@ GEM
     activerecord (6.1.7.10)
       activemodel (= 6.1.7.10)
       activesupport (= 6.1.7.10)
+    activerecord-trilogy-adapter (3.2.0)
+      activerecord (>= 6.0.a, < 7.1.a)
+      trilogy (>= 2.4.0)
     activestorage (6.1.7.10)
       actionpack (= 6.1.7.10)
       activejob (= 6.1.7.10)
@@ -253,7 +256,6 @@ GEM
     mini_portile2 (2.8.9)
     minitest (5.25.5)
     multi_xml (0.6.0)
-    mysql2 (0.5.6)
     neat (1.7.1)
       bourbon (>= 4.0)
       sass (>= 3.3)
@@ -410,6 +412,7 @@ GEM
     timeout (0.4.3)
     treetop (1.6.14)
       polyglot (~> 0.3)
+    trilogy (2.9.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     uglifier (4.2.1)
@@ -432,6 +435,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  activerecord-trilogy-adapter
   apipie-rails (~> 0.5.0)
   aws-sdk-s3
   bcrypt (= 3.1.16)
@@ -462,7 +466,6 @@ DEPENDENCIES
   kt-paperclip (~> 6.4, >= 6.4.1)
   listen
   mandrill_mailer
-  mysql2 (~> 0.5.0)
   neat (= 1.7.1)
   premailer-rails
   pry-rails

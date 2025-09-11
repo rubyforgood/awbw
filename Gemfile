@@ -5,7 +5,7 @@ ruby "3.3.8"
 gem "rails", "~> 6.1.7"
 
 gem 'sprockets-rails', '~> 3.2.2'
-gem 'mysql2', '~> 0.5.0'
+gem "activerecord-trilogy-adapter" # for mysql installation
 gem 'bootstrap-sass'
 gem "sassc-rails", ">= 2.1.2"
 gem 'uglifier'
