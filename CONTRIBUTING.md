@@ -45,6 +45,9 @@ You might also want to try VSCode with [this WSL extension](https://marketplace.
    - **Windows**: Use WSL2 with Ubuntu - follow [the MariaDB install guide from digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04#step-1-installing-mariadb)
 
    - **Linux/Ubuntu**: Follow [the MariaDB install guide from digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04#step-1-installing-mariadb)
+**Note:** If you receive an error when connecting to the database "Access denied for user 'root'@'locahost' you may need to
+[create a root user password](https://phoenixnap.com/kb/access-denied-for-user-root-localhost)(a blank password will work).
+
    - Alternative (Docker): with docker installed run `mise docker-db` to start
      the DB only (after cloning the repo)
 
