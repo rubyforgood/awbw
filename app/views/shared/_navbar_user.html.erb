@@ -10,10 +10,9 @@
   >
     <span class="sr-only">Open user menu</span>
     <span class="absolute -inset-1.5"></span>
-    <%= image_tag current_user.avatar.url(:thumb),
+    <%= image_tag url_for(current_user.avatar),
                   id: "avatar-image",
-                  class:
-                    "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" %>
+                  class: "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10 img-circle avatar" %>
   </button>
   <!-- Dropdown menu -->
   <div

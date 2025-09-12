@@ -1,0 +1,1 @@
+ENV['ACTIVE_STORAGE'] = 'true'
