@@ -34,3 +34,4 @@
 # Ignore Mac Stuff
 ._*
 .idea
+coverage/
