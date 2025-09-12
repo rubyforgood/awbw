@@ -24,11 +24,11 @@ class UsersController < ApplicationController
   end
 
   def show
-    @user = User.find(id_param).decorate
+    @user = User.find(params[:id]).decorate
   end
 
   def edit
-    @user = User.find(id_param)
+    @user = User.find(params[:id])
     if can_access_page?
       @project_users = @user.project_users
       render :edit
@@ -56,7 +56,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    @user = User.find(id_param)
+    @user = User.find(params[:id])
     if can_access_page?
       set_password unless password_param.empty?
 
@@ -93,10 +93,6 @@ class UsersController < ApplicationController
   #     :city2, :state2, :zip2, :primary_address, :notes, :avatar,
   #     project_users_attributes: [:project_id, :position, :_destroy, :id]
   #   )
-  # end
-
-  # def id_param
-  #   params[:id]
   # end
 
   # def password_param
