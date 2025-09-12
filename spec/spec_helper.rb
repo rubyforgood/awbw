@@ -19,6 +19,10 @@ SimpleCov.start "rails" do
   enable_coverage :branch
   add_filter %w[/spec/ /vendor/ /config/ /bin/]
   track_files "{app,lib}/**/*.rb"
+  if ENV["CI"]
+    require "simplecov_json_formatter"
+    self.formatter = SimpleCov::Formatter::JSONFormatter
+  end
   minimum_coverage 20  # tune as you like
 end
 

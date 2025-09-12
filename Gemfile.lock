@@ -486,6 +486,7 @@ DEPENDENCIES
   selenium-webdriver
   shoulda-matchers
   simplecov
+  simplecov_json_formatter
   sprockets-rails (~> 3.2.2)
   tilt (~> 2.4.0)
   uglifier

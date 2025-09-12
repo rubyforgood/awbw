@@ -67,6 +67,7 @@ group :development, :test do
   gem 'pry-rails'
   gem 'rspec-rails'
   gem "simplecov", require: false
+  gem "simplecov_json_formatter", require: false
   gem 'selenium-webdriver'
   gem 'shoulda-matchers', require: false
 end
