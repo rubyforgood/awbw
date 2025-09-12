@@ -66,6 +66,8 @@ gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
 
 group :development, :test do
   gem 'better_errors'
+  gem "brakeman", require: false
+  gem "bundler-audit", require: false
   gem 'capybara', '~> 3.36'
   gem 'dotenv-rails'
   gem 'faker'
