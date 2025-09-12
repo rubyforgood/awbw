@@ -68,4 +68,6 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'selenium-webdriver'
   gem 'shoulda-matchers', require: false
+  gem "debug", "~> 1.11"
 end
+
