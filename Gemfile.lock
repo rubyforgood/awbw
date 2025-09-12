@@ -98,6 +98,7 @@ GEM
       erubi (>= 1.0.0)
       rack (>= 0.9.0)
       rouge (>= 1.0.0)
+    bigdecimal (3.2.3)
     binding_of_caller (1.0.1)
       debug_inspector (>= 1.2.0)
     bootstrap-sass (3.4.1)
@@ -160,6 +161,7 @@ GEM
       activesupport (>= 5.0)
       request_store (>= 1.0)
       ruby2_keywords
+    drb (2.2.3)
     erb (5.0.2)
     erubi (1.13.1)
     excon (0.112.0)
@@ -266,6 +268,7 @@ GEM
     mini_portile2 (2.8.9)
     minitest (5.25.5)
     multi_xml (0.6.0)
+    mutex_m (0.3.0)
     neat (1.7.1)
       bourbon (>= 4.0)
       sass (>= 3.3)
@@ -283,6 +286,7 @@ GEM
     nokogiri (1.15.7)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
+    observer (0.1.2)
     orm_adapter (0.5.0)
     polyglot (0.3.5)
     pp (0.6.2)
@@ -468,6 +472,7 @@ DEPENDENCIES
   aws-sdk-s3
   bcrypt (= 3.1.16)
   better_errors
+  bigdecimal
   binding_of_caller
   bootstrap-sass
   bootstrap-will_paginate
@@ -480,6 +485,7 @@ DEPENDENCIES
   devise (~> 4.7.3)
   dotenv-rails
   draper
+  drb
   factory_bot_rails
   faker
   feature_flipper
@@ -495,7 +501,9 @@ DEPENDENCIES
   kt-paperclip (~> 6.4, >= 6.4.1)
   listen
   mandrill_mailer
+  mutex_m
   neat (= 1.7.1)
+  observer
   premailer-rails
   pry-rails
   puma (~> 5.6)

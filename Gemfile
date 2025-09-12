@@ -3,6 +3,12 @@ source 'https://rubygems.org'
 ruby "3.3.8"
 
 gem "rails", "~> 6.1.7"
+# add required gems leaving standard library to avoid log noise
+gem "bigdecimal"
+gem "drb"
+gem "mutex_m"
+gem "observer"
+
 
 gem 'sprockets-rails', '~> 3.2.2'
 gem "activerecord-trilogy-adapter" # for mysql installation
