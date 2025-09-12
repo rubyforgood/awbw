@@ -18,17 +18,31 @@ RSpec.describe "/events", type: :request do
   # Event. As you add validations to Event, be sure to
   # adjust the attributes here as well.
   let(:valid_attributes) {
-    skip("Add a hash of attributes valid for your model")
+    {
+      "title": "sample title",
+      "description": "sample description",
+      "start_date": 1.day.from_now,
+      "end_date": 2.days.from_now,
+      "registration_close_date": 3.days.ago
+    }
   }
 
   let(:invalid_attributes) {
-    skip("Add a hash of attributes invalid for your model")
+    {
+      "title": "",
+      "description": "",
+      "start_date": "",
+      "end_date": "",
+      "registration_close_date": ""
+    }
   }
 
   describe "GET /index" do
     it "renders a successful response" do
       Event.create! valid_attributes
+
       get events_url
+
       expect(response).to be_successful
     end
   end
@@ -36,7 +50,9 @@ RSpec.describe "/events", type: :request do
   describe "GET /show" do
     it "renders a successful response" do
       event = Event.create! valid_attributes
+
       get event_url(event)
+
       expect(response).to be_successful
     end
   end
@@ -44,15 +60,30 @@ RSpec.describe "/events", type: :request do
   describe "GET /new" do
     it "renders a successful response" do
       get new_event_url
+
       expect(response).to be_successful
     end
   end
 
   describe "GET /edit" do
-    it "renders a successful response" do
-      event = Event.create! valid_attributes
-      get edit_event_url(event)
-      expect(response).to be_successful
+    describe 'when signed in as an admin' do
+      it "renders a successful response" do
+        event = Event.create! valid_attributes
+  
+        get edit_event_url(event)
+  
+        expect(response).to be_successful
+      end
+    end
+
+    describe "when not signed in as an admin" do
+      it "returns unauthorized" do
+        event = Event.create! valid_attributes
+
+        get edit_event_url(event)
+
+        expect(response).to have_http_status(:unauthorized)
+      end
     end
   end
 
@@ -90,18 +121,30 @@ RSpec.describe "/events", type: :request do
         skip("Add a hash of attributes valid for your model")
       }
 
-      it "updates the requested event" do
-        event = Event.create! valid_attributes
-        patch event_url(event), params: { event: new_attributes }
-        event.reload
-        skip("Add assertions for updated state")
+      context "when signed in as admin" do
+        it "updates the requested event" do
+          event = Event.create! valid_attributes
+          patch event_url(event), params: { event: new_attributes }
+          event.reload
+          skip("Add assertions for updated state")
+        end
+
+        it "redirects to the event" do
+          event = Event.create! valid_attributes
+          patch event_url(event), params: { event: new_attributes }
+          event.reload
+          expect(response).to redirect_to(event_url(event))
+        end
       end
 
-      it "redirects to the event" do
-        event = Event.create! valid_attributes
-        patch event_url(event), params: { event: new_attributes }
-        event.reload
-        expect(response).to redirect_to(event_url(event))
+      context "when not signed in as an admin" do
+        it "returns unauthorized" do
+          event = Event.create! valid_attributes
+
+          patch event_url(event), params: { event: new_attributes }
+
+          expect(response).to have_http_status(:unauthorized)
+        end
       end
     end
 

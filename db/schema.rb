@@ -134,6 +134,16 @@ ActiveRecord::Schema.define(version: 2025_09_12_144532) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "first_name"
+    t.string "last_name"
+    t.string "email"
+    t.bigint "event_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["event_id"], name: "index_event_registrations_on_event_id"
+  end
+
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -142,6 +152,7 @@ ActiveRecord::Schema.define(version: 2025_09_12_144532) do
     t.datetime "registration_close_date"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.boolean "publicly_visible", default: false, null: false
   end
 
   create_table "faqs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -665,6 +676,7 @@ ActiveRecord::Schema.define(version: 2025_09_12_144532) do
   add_foreign_key "bookmark_annotations", "bookmarks"
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "metadata"
+  add_foreign_key "event_registrations", "events"
   add_foreign_key "form_builders", "windows_types"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"

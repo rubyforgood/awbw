@@ -14,6 +14,11 @@
 
     <%= f.label :registration_close_date, class: 'bold' %>
     <%= f.text_field :registration_close_date, type: 'datetime-local', class: 'form-control' %>
+
+    <div style="display: flex; align-items: center; margin-top: 10px; column-gap: 10px;">
+      <%= f.label :publicly_visible, class: 'bold' %>
+      <%= f.check_box :publicly_visible, class: 'bold mt-0' %>
+    </div>
   </div>
 
   <div class="form-actions">
