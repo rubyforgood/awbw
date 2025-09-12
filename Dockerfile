@@ -1,4 +1,4 @@
-FROM ruby:2.7.8-buster
+FROM ruby:3.3.8-bookworm
 
 # Install basic Linux packages
 RUN apt-get update -qq && apt-get install -y \
@@ -31,7 +31,7 @@ ENV RAILS_ENV=production \
     PATH="/gems/bin:$PATH"
 
 # Install bundler
-RUN gem install bundler -v 2.4.12
+RUN gem install bundler -v 2.5.22
 
 # Copy app code and install dependencies
 COPY . .
@@ -41,18 +41,9 @@ RUN bundle install --without development test
 # These envs are used in the rails application. While they are entirely 
 # unrelated to the docker build process, they are required for the app to run.
 # Without these build args the asset precompilation will fail.
-ARG SECRET_KEY_BASE
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY
-ARG AWS_REGION
-ARG AWS_S3_BUCKET
-ARG SMTP_USERNAME
-ARG SMTP_PASSWORD
-ARG SMTP_SERVER
-ARG SMTP_PORT
 
 # Precompile assets (if applicable)
-RUN bundle exec rake assets:precompile
+RUN SECRET_KEY_BASE=1 bundle exec rake assets:precompile
 
 # Expose port (default Rails)
 EXPOSE 3000
