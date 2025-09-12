@@ -1,0 +1,6 @@
+*.swp
+pkg
+spec/_cases_output
+spec/test_app/log/*.log
+spec/test_app/tmp/
+Gemfile.lock

@@ -1,0 +1,6 @@
+<%= form_for user_form do |f| %>
+  <%= f.hidden_field :owner_id %>
+  <%= f.hidden_field :owner_type %>
+  <%= render 'shared/report_form_field_answers', f: f %>
+  <%= f.submit 'Submit' %>
+<% end %> 

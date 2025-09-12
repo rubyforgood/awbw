@@ -1,0 +1,138 @@
+<workshop_art_type>
+<Row>
+<id>
+<![CDATA[ 1 ]]>
+</id>
+<str_name>
+<![CDATA[ Boxes ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 2 ]]>
+</id>
+<str_name>
+<![CDATA[ Collage ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 3 ]]>
+</id>
+<str_name>
+<![CDATA[ Cray-Pas ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 5 ]]>
+</id>
+<str_name>
+<![CDATA[ Journaling ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 6 ]]>
+</id>
+<str_name>
+<![CDATA[ Mixed-Media ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 7 ]]>
+</id>
+<str_name>
+<![CDATA[ Painting ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 8 ]]>
+</id>
+<str_name>
+<![CDATA[ Puppets ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 9 ]]>
+</id>
+<str_name>
+<![CDATA[ Sculpture ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 10 ]]>
+</id>
+<str_name>
+<![CDATA[ Dolls ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 11 ]]>
+</id>
+<str_name>
+<![CDATA[ Sculpey Clay ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 12 ]]>
+</id>
+<str_name>
+<![CDATA[ Shrinky Dinks ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 13 ]]>
+</id>
+<str_name>
+<![CDATA[ Jewelry ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 16 ]]>
+</id>
+<str_name>
+<![CDATA[ Masks ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 17 ]]>
+</id>
+<str_name>
+<![CDATA[ Drawing ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 18 ]]>
+</id>
+<str_name>
+<![CDATA[ Scratch Art ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 20 ]]>
+</id>
+<str_name>
+<![CDATA[ Embodied Art ]]>
+</str_name>
+</Row>
+<Row>
+<id>
+<![CDATA[ 21 ]]>
+</id>
+<str_name>
+<![CDATA[ Digital Media ]]>
+</str_name>
+</Row>
+</workshop_art_type>

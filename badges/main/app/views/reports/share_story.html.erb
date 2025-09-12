@@ -1,0 +1,273 @@
+<div class="container-fluid">
+  <h2 class='normal'><%= "#{@form_builder.name}" %></h2>
+  <hr/>
+
+  <%= form_for @report, as: :report, url: {action: :create_story,
+    form_builder_id: params[:form_builder_id]}, :html => { :multipart => true },
+  method: :post do |f| %>
+    <div class="row">
+     <div class="col-md-8 col-lg-8">
+       <div class="row">
+         <div class="col-md-12 col-lg-12">
+           <%= render 'shared/errors', resource: @report if @report.errors.any? %>
+
+           <!-- ##### FACILITATOR  #### -->
+           <div class='form-group'>
+             <%= f.label 'Facilitator' %>
+             <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
+             <%= f.hidden_field :user_id, value: current_user.id %>
+             <%= f.hidden_field :type %>
+             <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
+             <%= f.hidden_field :id, value: @report.id %>
+	     <input type="hidden" id="workshop_id" name="workshop_id" />
+             <br>
+           </div>
+
+           <!-- ##### AGENCIES  #### -->
+           <div class='form-group'>
+             <div class="label-plus-comment">
+               <%= f.label 'Agency' %>
+               <div class="custom-smaller">
+                 Please contact AWBW if your agency is not listed.
+               </div>
+             </div>
+             <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
+             <%= f.collection_select :project_id, @agencies, :id, :name,
+{ selected: agency ? agency.id : nil,class: 'js-agency-select' },
+class:"selectpicker form-control form-control-custom" %>
+           </div>
+
+           <!-- ##### HIDDEN FIELDS  #### -->
+           <%= f.hidden_field :owner_id, value: @form_builder.id %>
+           <%= f.hidden_field :owner_type, value: @report.owner_type %>
+           <%= hidden_field_tag "form_builder_id", @form_builder.id %>
+
+           <!-- ##### SELECT WORKSHOP  #### -->
+           <div class="form-group" id="w_content">
+             <label class="label-select" for="select-workshop" >
+	       Enter workshop name or select from dropdown *
+             </label>
+             <div id="select_workshop">
+               <%= collection_select(
+                  :report,
+                  :workshop_id,
+                  @workshop_list,
+                    :id,
+                    :log_title, { :selected => params[:workshop_id],
+                    :prompt => "Select a workshop" },
+{
+:class  =>  "form-control form-control-custom",
+:id     => 'select-workshop'
+})
+%>
+             </div>
+           </div>
+
+         </div><!-- end col-md-12 col-lg-8 -->
+       </div><!-- end row -->
+
+       <!-- ### New Workshop ### -->
+       <div class="row hide" id="workshop_text_content">
+	 <div class="col-md-8 col-lg-12">
+	   <div class="form-group text-form-group">
+	     <input type="text" name="report[workshop_name]" id="workshop_name" class="form-control" placeholder='Enter the name of your new workshop'>
+                </input>
+	   </div>
+	 </div>
+       </div>
+
+       <!-- ### FORM FIELDS ### -->
+       <div class="row">
+         <div class="form-group col-md-12 col-lg-12">
+           <% @count = 1 %>
+           <% @report.log_fields.each do |field| %>
+             <%= render 'shared/form_field', :field => field, :report => @report %>
+           <% end %>
+           <script>
+             $("#Total--On-going-Participants").prop("readonly", true);
+             $("#Total--First-Time-Participants").prop("readonly", true);
+           </script>
+         </div>
+       </div>
+
+       <!-- ######## upload image ###### -->
+       <div class="form-group image-fields-wrapper">
+         <%= f.fields_for :media_files do |files_form| %>
+         <%= render 'media_file', :f => files_form %>
+
+         <div class="links small">
+           <%= link_to_add_association 'Add Another Media File', f, :media_files, partial: 'media_file', class:'btn-underline' %>
+         </div>
+         <% end %>
+       </div>
+
+     <!-- ######### SUBMIT BUTTON ########## -->
+     <div class="row">
+       <div class="col-md-8 align-right">
+	 <input class="btn btn-primary btn-blue" id="btn_submit" type="submit" value="Submit">
+       </div>
+     </div>
+     </div>
+    </div>
+    <% end %>
+</div>
+
+
+<script type="text/javascript">
+  $('#select-workshop').select2();
+
+  function set_error_workshop_name() {
+    $('#workshop_name').addClass('error-custom');
+    $('#workshop_name').addClass('scroll-to-error');
+    $('#workshop_name').closest('.form-group').find('.error-custom-message').remove();
+    $('#workshop_name').closest('.form-group').append('<p class="error-custom-message">Please complete this field</p>');
+  }
+
+  function remove_error_class_workshop_name(){
+    $('#workshop_name').removeClass('error-custom');
+    $('#workshop_name').removeClass('scroll-to-error');
+    $('#workshop_name').closest('.form-group').find('.error-custom-message').remove();
+
+  }
+
+</script>
+
+<script>
+    $.urlParam = function(name) {
+      var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+      if (results==null) return null;
+      else return results[1] || 0;
+    }
+
+    function fillOutDates() {
+      var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var select = document.getElementById('report_date');
+      var d = new Date();
+      var current_month = d.getMonth(); //parseInt($.urlParam('month'));
+      var current_year = d.getFullYear(); //parseInt($.urlParam('year'));
+      for (var i = 0; i<=12; i++) {
+      var opt = document.createElement('option');
+        if (current_month < 0) { current_month = 11; current_year -= 1}
+        opt.value = current_year+'-'+(current_month+1);
+        opt.innerHTML = months[current_month] + ' ' + current_year;
+        if (parseInt($.urlParam('month'))-1 == current_month && parseInt($.urlParam('year')) == current_year) {
+          opt.selected = true;
+        }
+        if (select) select.appendChild(opt);
+        current_month -= 1;
+      }
+      if (select) select.addEventListener("change", function() {
+        var date = select.options[select.selectedIndex].value;
+        var year = date.split("-")[0];
+        var month = date.split("-")[1];
+        window.location = window.location.toString().split("&month=")[0] + "&month=" +  month + "&year=" + year;
+      });
+    }
+
+    fillOutDates()
+</script>
+
+<script>
+  //<![CDATA[
+    $(function() {
+      var date;
+      var regex = /^[0-9]{2}-[0-9]{2}-[0-9]{4}$/;
+      $.urlParam = function(name) {
+        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        if (results==null) return null;
+        else return results[1] || 0;
+      }
+      if ($.urlParam('form_builder_id') == '5') {
+        var date = $( "#report_report_form_field_answers_attributes_0_answer" );
+        date.datepicker({dateFormat: 'mm-dd-yy'});
+        date.on('change', function(){
+          if(!regex.test(this.value)){
+           alert(this.value + " is an invalid date format. Please enter the date as MM-DD-YYYY");
+          }
+        });
+      }
+    });
+  //]]>
+</script>
+
+<script>
+    $("<option value='lnk_new_workshop'>[[ NEW WORKSHOP ]]</option>").insertBefore($("#select-workshop option:first"));
+
+    $("#select-workshop").change(function(){
+      option_value = $("#select-workshop").val();
+
+    if (option_value == "lnk_new_workshop") {
+      $("#workshop_text_content" ).removeClass('hide');
+      $("#workshop_id").val("");
+    } else if ( option_value != "" ){
+       $("#workshop_text_content" ).addClass('hide');
+       $("#workshop_id").val( option_value );
+
+    } else {
+      $("#workshop_text_content" ).addClass('hide');
+      $("#workshop_id").val("");
+     }
+    });
+</script>
+
+
+<script>
+  var enable_submit_form = false;
+  $('#btn_submit').on('click', function(event){
+    var header_height = $('.navbar').height();
+    // Validate Input Fields
+     $(this).closest('form').find('input').each(function(index, el) {
+       var is_input_text = $(el).attr('type') != 'radio' && $(el).attr('type') != 'checkbox' && $(el).attr('type') != 'hidden' && $(el).attr('required');
+       if (is_input_text) {
+         if (!$(el).val() || $(el).val() == '') {
+            $(el).addClass('error-custom');
+            $(el).addClass('scroll-to-error');
+            $(el).closest('.form-group').find('.error-custom-message').remove();
+            $(el).closest('.form-group').append('<p class="error-custom-message">Please complete this field</p>');
+          } else {
+            $(el).removeClass('error-custom');
+            $(el).removeClass('scroll-to-error');
+            $(el).closest('.form-group').find('.error-custom-message').remove();
+          }
+       }
+    });
+
+    if ( $('#workshop_name').val() == ''  &&  $('#workshop_text_content').hasClass('hide' ) == false ) {
+      set_error_workshop_name();
+    } else if ($('#workshop_name').val() != ''  &&  $('#workshop_text_content').hasClass('hide' ) == false) {
+      remove_error_class_workshop_name();
+      $("#workshop_title").val( $('#workshop_name').val() );
+     }
+
+    if ($("#select-workshop") && $("#select-workshop").val() == ''){
+
+       $("#select-workshop").addClass('error-select-custom');
+       $("#select-workshop").addClass('scroll-to-error');
+       $("#select-workshop").closest('.form-group').find('.error-custom-message').remove();
+       $("#select-workshop").closest('.form-group').append('<p class="error-custom-message">Please complete this field</p>');
+    } else {
+       $("#select-workshop").removeClass('scroll-to-error');
+       $("#select-workshop").removeClass('error-select-custom');
+       $("#w_content").find('.error-custom-message').remove();
+  }
+
+  // Scroll to logic corrected
+  if ($('.scroll-to-error').length) {
+
+    $("html, body").animate({ scrollTop: $('.scroll-to-error').first().closest('.form-group').offset().top - header_height - 50 }, 500);
+
+  } else {
+    enable_submit_form = true;
+  }
+
+
+  });
+
+   $('form').submit(function( event ) {
+     if (!enable_submit_form) {
+      event.preventDefault();
+     }
+   });
+
+
+</script>

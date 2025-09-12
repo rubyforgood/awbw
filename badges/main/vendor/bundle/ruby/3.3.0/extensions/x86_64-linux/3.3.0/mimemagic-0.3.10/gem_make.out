@@ -1,0 +1,3 @@
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/mimemagic-0.3.10/ext/mimemagic
+/opt/hostedtoolcache/Ruby/3.3.8/x64/bin/ruby -rrubygems /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/rake-13.3.0/exe/rake RUBYARCHDIR\=/home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/extensions/x86_64-linux/3.3.0/mimemagic-0.3.10 RUBYLIBDIR\=/home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/extensions/x86_64-linux/3.3.0/mimemagic-0.3.10
+mkdir -p /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/extensions/x86_64-linux/3.3.0/mimemagic-0.3.10/mimemagic

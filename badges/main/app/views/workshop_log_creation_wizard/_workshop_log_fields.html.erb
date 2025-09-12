@@ -1,0 +1,59 @@
+<div class="form-group">
+  <%= f.label 'Facilitator', class: 'bold' %>
+  <%= f.text_field :user, disabled: false, value: @user.name %>
+  <%= f.hidden_field :user_id, value: @user.id %>
+  <%= f.hidden_field :windows_type_id, value: windows_type ? windows_type.id : workshop.windows_type.id %>
+</div>
+<div class="form-group">
+  <%= f.label 'Agency', class: 'bold' %>
+  <%= f.collection_select :project_id, agencies, :id, :name %>
+  Please contact AWBW if your agency is not listed.
+</div>
+<div class="form-group">
+  <%= f.label 'Workshop Date (required)', class: 'bold' %>
+  <%= f.text_field :date, placeholder: 'mm-dd-yyyy', required: true, readonly: true, value: @date %>
+</div>
+<br>
+<h4 class="normal light larger">
+  Your feedback will assist the workshop author as well as AWBW.
+</h4>
+<div class="form-group rating js-rate-workshop">
+  <%= f.label 'Rate this workshop', class: 'inline-block bold' %>
+  <% 5.times do |i| %>
+    <span class="js-rating-star" id="js-star-<%= i %>" data-value="<%= i + 1 %>">☆</span>
+  <% end %>
+  <div class="hidden">
+    <%= f.select :rating, collection: (1..5).to_a, html: { class: 'js-workshop-rating-input' } %>
+  </div>
+</div>
+
+<div class="form-group">
+  <%= f.label 'Indicate populations served through this workshop', class: 'bold' %>
+  <%= parent_form.fields_for :sectorable_items do |sectorable_item| %>
+    <%= render 'shared/sectorable_item_fields', f: sectorable_item %>
+  <% end %>
+
+  <%= parent_form.fields_for :sectors do |sector| %>
+    <%= render 'shared/sector_fields', f: sector unless workshop.sector_has_name?(sector) %>
+  <% end %>
+</div>
+
+<br>
+<%= render 'shared/report_form_field_answers', f: f %>
+
+<script type="text/javascript">
+  $(function() {
+  var date;
+  var regex = /^[0-9]{2}-[0-9]{2}-[0-9]{4}$/;
+
+  for (i = 0; i < 100; i++) {
+    date = $( "#workshop_workshop_logs_attributes_"+i.toString()+"_date" );
+    date.datepicker({dateFormat: 'mm-dd-yy'});
+    date.on('change', function(){
+      if(!regex.test(this.value)){
+       alert(this.value + " is an invalid date format. Please enter the date as MM-DD-YYYY");
+      }
+    });
+  }
+  });
+</script> 

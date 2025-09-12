@@ -1,0 +1,43 @@
+<h2 class="normal">Monthly Report</h2>
+<hr/>
+<div class="row">
+  <div class="col-md-12 col-lg-8">
+    <div class="entry-content">
+      <p>
+	A monthly report is a summary of all the workshop logs that occurred in that month. Liaisons are in charge of submitting a monthly report on the 5th of the following month. For example, all monthly reports for January are due on February 5th.
+      </p>
+    </div>
+
+    <h4>Please select the report type</h4>
+
+    <hr/>
+  </div>
+</div>
+
+<div class="hidden-xs">
+  <div class="row">
+    <div class="col-md-8 form-group">
+      <div class='btn-container windows-type btns-aligned'>
+	<%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
+            class: "btn btn-primary btn--small #{'disabled' unless current_user.permissions_list.include? 'ADULT WORKSHOP LOG'}") %>
+
+	<%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
+            class: "btn btn-primary btn--small #{'disabled' unless current_user.permissions_list.include? 'CHILDREN WORKSHOP LOG'}") %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="visible-xs">
+  <div class="row">
+    <div class="col-md-8 form-group">
+      <div class='btn-container windows-type btns-aligned'>
+	<%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
+            class: "btn btn-primary btn--small #{'disabled' unless current_user.permissions_list.include? 'ADULT WORKSHOP LOG'}") %>
+
+	<%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
+            class: "btn btn-primary btn--small #{'disabled' unless current_user.permissions_list.include? 'CHILDREN WORKSHOP LOG'}") %>
+      </div>
+    </div>
+  </div>
+</div>

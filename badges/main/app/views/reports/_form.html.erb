@@ -1,0 +1,179 @@
+<%= form_for @report, as: :report, url: {action: :create,
+  form_builder_id: params[:form_builder_id],
+  month: @month,
+  year: @year },
+  method: :post do |f| %>
+  <hr>
+ <% unless params[:form_builder_id].to_i == 7 %>
+   <h4>Report Type</h4>
+  </hr>
+  <!-- ######### row 1 ##### -->
+  <div class="row">
+    <div class="col-md-8 form-group">
+      <div class='btn-container windows-type btns-aligned'>
+        <%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
+        class: "btn btn-primary btn--small #{'btn-active' if params['form_builder_id'] == '4'}") %>
+        <%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
+        class: "btn btn-primary btn--small #{'btn-active' if params['form_builder_id'] == '2'}") %>
+      </div>
+    </div>
+    <div class='col-md-8'>
+      <%= f.label 'Reporting for the Month Of' %>
+      <%= f.date_select :date,
+         { discard_day: true, selected: Date.new( @year.to_i, @month.to_i ), use_hidden: true },
+           onchange: 'window.location = window.location.toString().split("&month=")[0 + "&month=" +  $("#report_date_2i").val() + "&year=" + $("#report_date_1i").val()' %>
+
+      <%= f.select(:date, {}, {:include_blank => false}, {:class => "form-control form-control-custom"}) %>
+
+      <%= render 'workshop_log_summary', f: f, workshop_logs: @workshop_logs %>
+      <hr />
+    </div>
+  </div>
+<% end %>
+
+ <!-- ######### row 2 ########## -->
+  <div class='row'>
+    <div class='col-md-8'>
+      <%= render 'shared/errors', resource: @report if @report.errors.any? %>
+      <!-- ######### form fields ####### -->
+      <div class='form-group'>
+        <%= f.label 'Facilitator' %>
+        <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
+        <%= f.hidden_field :user_id, value: current_user.id %>
+        <%= f.hidden_field :type %>
+        <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
+        <%= f.hidden_field :id, value: @report.id %>
+        <br>
+      </div>
+
+      <div class='form-group'>
+        <div class="label-plus-comment">
+          <%= f.label 'Agency' %>
+          <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
+        </div>
+        <% agency = agencies.find_by(windows_type_id: f.object.windows_type.id) %>
+        <%= f.collection_select :project_id, agencies, :id, :name,
+        { selected: agency ? agency.id : nil,class: 'js-agency-select' },
+        class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewProject()' %>
+      </div>
+
+      <%= f.hidden_field :owner_id, value: @form_builder.id %>
+      <%= f.hidden_field :owner_type, value: @form_builder.report_type %>
+      <%= hidden_field_tag "form_builder_id", @form_builder.id %>
+
+      <% if params[:form_builder_id].to_i == 7 %>
+        <div class="row">
+          <div class="col-md-12 col-lg-8">
+            <label class="label-select" for="select-workshop" >
+              Select Workshop from dropdown
+            </label>
+            <div id="select_workshop">
+              <%= collection_select(
+                  :report,
+                  :workshop_id,
+                  @workshop_list,
+                    :id,
+                    :log_title, { :selected => params[:workshop_id],
+                    :prompt => "Select a workshop" },
+{
+:class  =>  "form-control form-control-custom",
+:id     => 'select-workshop'
+})
+%>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript">
+          $('#select-workshop').select2();
+        </script>
+
+      <% end %>
+
+      <%= render 'sectorable_items' %>
+
+      <%= render 'shared/report_form_field_answers', f: f %>
+
+      <!-- ######## uploads sectors ####### -->
+      <% if [4, 2].include? params[:form_builder_id].to_i %>
+
+        <div class="image-fields-wrapper">
+        <div class="image-upload-field form-group">
+
+          <div class="input-upload-description" >
+            <%= f.label "Upload Images" %>
+            <span class="smaller">
+              If the image includes the client or client artwork fill out
+              Art/Media Release Form
+              <%= link_to "here", "http://dashboard.awbw.org/resources/859" %>
+            </span>
+          </div><!-- bold -->
+
+          <div class="form-group">
+            <%= f.label :image, class: "btn btn-primary btn--small" do %>
+              <input type="file" id="report_image" name="image" >
+              Choose File
+            <% end %>
+          </div>
+        </div>
+
+        <div class="image-upload-field">
+          <div class="input-upload-description" >
+            <%= f.label "Upload Form Files" %>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :form_file, class: "btn btn-primary btn--small" do %>
+              <%= f.file_field :form_file, class: '', id: 'report_form_file'%>
+              Choose File
+            <% end %>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+<% end %>
+
+
+  <!-- ######### row 3 ########## -->
+  <div class="row">
+    <div class="col-md-8 align-right">
+      <%= f.submit 'Submit', class: "btn btn-primary btn-blue btn-filled" %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+    $.urlParam = function(name) {
+      var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+      if (results==null) return null;
+      else return results[1] || 0;
+    }
+
+    function fillOutDates() {
+      var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var select = document.getElementById('report_date');
+      var d = new Date();
+      var current_month = d.getMonth(); //parseInt($.urlParam('month'));
+      var current_year = d.getFullYear(); //parseInt($.urlParam('year'));
+      for (var i = 0; i<=12; i++) {
+      var opt = document.createElement('option');
+        if (current_month < 0) { current_month = 11; current_year -= 1}
+        opt.value = current_year+'-'+(current_month+1);
+        opt.innerHTML = months[current_month] + ' ' + current_year;
+        if (parseInt($.urlParam('month'))-1 == current_month && parseInt($.urlParam('year')) == current_year) {
+          opt.selected = true;
+        }
+        if (select) select.appendChild(opt);
+        current_month -= 1;
+      }
+      if (select) select.addEventListener("change", function() {
+        var date = select.options[select.selectedIndex].value;
+        var year = date.split("-")[0];
+        var month = date.split("-")[1];
+        window.location = window.location.toString().split("&month=")[0] + "&month=" +  month + "&year=" + year;
+      });
+    }
+
+    fillOutDates()
+</script>

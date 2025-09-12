@@ -1,0 +1,71 @@
+{:uriI"Áfile:///Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/wsc/dialogs/ciframe.html?type=text/html&id=43b4a2a8239bbc9c914d114ee9ef7b4fe4c2aec987c11caa1898549425016c29:ET:load_pathI"B/Users/patrick/development/ckeditor/vendor/assets/javascripts;T:filenameI"l/Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/wsc/dialogs/ciframe.html;T:	nameI")ckeditor/plugins/wsc/dialogs/ciframe;T:logical_pathI".ckeditor/plugins/wsc/dialogs/ciframe.html;T:content_typeI"text/html;T:sourceI"X<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!--
+Copyright (c) 2003-2015, CKSource - Frederico Knabben. All rights reserved.
+For licensing, see LICENSE.html or http://ckeditor.com/license
+-->
+<html>
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<script type="text/javascript">
+
+function gup( name )
+{
+	name = name.replace( /[\[]/, '\\\[' ).replace( /[\]]/, '\\\]' ) ;
+	var regexS = '[\\?&]' + name + '=([^&#]*)' ;
+	var regex = new RegExp( regexS ) ;
+	var results = regex.exec( window.location.href ) ;
+
+	if ( results )
+		return results[ 1 ] ;
+	else
+		return '' ;
+}
+
+var interval;
+
+function sendData2Master()
+{
+	var destination = window.parent.parent ;
+	try
+	{
+		if ( destination.XDTMaster )
+		{
+			var t = destination.XDTMaster.read( [ gup( 'cmd' ), gup( 'data' ) ] ) ;
+			window.clearInterval( interval ) ;
+		}
+	}
+	catch (e) {}
+}
+
+function OnMessage (event) {
+	        var message = event.data;
+	        var destination = window.parent.parent;
+	        destination.XDTMaster.read( [ 'end', message, 'fpm' ] ) ;
+}
+
+function listenPostMessage() {
+    if (window.addEventListener) { // all browsers except IE before version 9
+            window.addEventListener ("message", OnMessage, false);
+    }else {
+            if (window.attachEvent) { // IE before version 9
+                        window.attachEvent("onmessage", OnMessage);
+                }
+        }
+}
+
+function onLoad()
+{
+	interval = window.setInterval( sendData2Master, 100 );
+	listenPostMessage();
+}
+
+</script>
+</head>
+<body onload="onLoad()"><p></p></body>
+</html>
+;T:metadata{	:dependencieso:Set:
+@hash}
+I"environment-version;TTI"environment-paths;TTI"rails-env;TTI"2processors:type=text/html&file_type=text/html;TTI"zfile-digest:///Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/wsc/dialogs/ciframe.html;TTF:charsetI"
+utf-8;F:digest"%»Áø^Öø¢ŸÆãş2Yüªİz¸|Æ¬ñ7ó:lengthiX:dependencies_digest"%IüÕå»u‹²İÕ6ºÁ%±éù1RÌ$¾OĞÃ¸×):idI"E43b4a2a8239bbc9c914d114ee9ef7b4fe4c2aec987c11caa1898549425016c29;F:
+mtimel+à|ë[

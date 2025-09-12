@@ -1,0 +1,6 @@
+id	str_name
+1	Active
+2	Inactive
+3	Pending
+4	Reinstate
+5	Suspended

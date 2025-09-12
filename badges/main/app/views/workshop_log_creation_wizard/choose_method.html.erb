@@ -1,0 +1,25 @@
+<h2 class="normal">
+  Submit your Workshop Log by:
+</h2>
+<div>
+  <div class="circle">
+    <%= link_to 'Search Curriculum', workshops_path %>
+  </div>
+  <div class="inline-block smaller">
+    Find the workshop you want to log using the Search Curriculum tool to complete your Workshop Log.
+  </div>
+</div>
+<div>
+  <div class="circle">
+    <%= link_to 'Find in your Bookmarks', bookmarks_path %>
+  </div>
+  <div class="inline-block smaller">Find the workshop you saved under your Bookmarks to complete your Workshop Log.</div>
+</div>
+<div>
+  <div class="circle">
+    <%= link_to 'Report on a new Workshop', workshop_log_creation_wizard_path(:fill_out_form, {windows_type_id: @windows_type ? @windows_type.id : nil}) %>
+  </div>
+  <div class="inline-block smaller">
+    Report on a workshop of your own creation.
+  </div>
+</div> 

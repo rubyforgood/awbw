@@ -1,0 +1,19 @@
+{:uriI"½file:///Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/preview/preview.html?type=text/html&id=f540a27cced2009b1fd5c04bde1387018497a1e0d1c7c15f44347ba43a06d85c:ET:load_pathI"B/Users/patrick/development/ckeditor/vendor/assets/javascripts;T:filenameI"h/Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/preview/preview.html;T:	nameI"%ckeditor/plugins/preview/preview;T:logical_pathI"*ckeditor/plugins/preview/preview.html;T:content_typeI"text/html;T:sourceI"ö<script>
+
+// Prevent from DOM clobbering.
+if ( typeof window.opener._cke_htmlToLoad == 'string' ) {
+	var doc = document;
+	doc.open();
+	doc.write( window.opener._cke_htmlToLoad );
+	doc.close();
+
+	delete window.opener._cke_htmlToLoad;
+}
+
+</script>
+;T:metadata{	:dependencieso:Set:
+@hash}
+I"environment-version;TTI"environment-paths;TTI"rails-env;TTI"2processors:type=text/html&file_type=text/html;TTI"vfile-digest:///Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/preview/preview.html;TTF:charsetI"
+utf-8;F:digest"%Ø½Ëœßy™†ì¢€;jF>îç`¨Ø—hvêf…:lengthiö:dependencies_digest"%I„Ã°÷¢æªzÿ.²¬Èûµ‡ÁØ”bìTÚ0
+(ã:idI"Ef540a27cced2009b1fd5c04bde1387018497a1e0d1c7c15f44347ba43a06d85c;F:
+mtimel+à|ë[

@@ -1,0 +1,10 @@
+<h2 class="normal">
+  Thank you for submitting your Workshop Log For
+  <%= @workshop.title %>
+</h2>
+<h5>
+  <div class="underline inline">
+    <%= link_to 'Click Here', workshop_log_creation_wizard_path(:choose_method) %>
+  </div>
+  to submit another Workshop Log.
+</h5> 

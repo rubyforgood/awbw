@@ -1,0 +1,26 @@
+Encoding:
+  Enabled: false
+
+Documentation:
+  Enabled: false
+
+ClassAndModuleChildren:
+  Enabled: false
+
+ClassLength:
+  Enabled: false
+
+MethodLength:
+  Enabled: false
+
+AbcSize:
+  Max: 30
+
+DoubleNegation:
+  Enabled: false
+
+AllCops:
+  Exclude:
+    - "bin/**/*"
+    - "db/**/*"
+    - "config/**/*"

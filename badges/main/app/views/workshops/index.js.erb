@@ -1,0 +1,10 @@
+<% @workshops.each do |w| %>
+  $('#workshops-list').append('<%= j render 'flex', workshop: w.decorate, breadcrumb: 'Search Curriculum', link_route: workshop_path(w) %>');
+<% end %>
+
+<% if @workshops.next_page %>
+  $('.pagination').replaceWith('<%= j  will_paginate @workshops %>');
+<% else %>
+  $(window).off('scroll');
+  $('.pagination').remove();
+<% end %>

@@ -1,0 +1,55 @@
+
+grammar SearchCopGrammar
+  rule complex_expression
+    space? (boolean_expression / expression) space? <ComplexExpression>
+  end
+
+  rule boolean_expression
+    and_expression
+  end
+
+  rule and_expression
+    or_expression (space? ('AND' / 'and') space? / space !('OR' / 'or')) complex_expression <AndExpression> / or_expression
+  end
+
+  rule or_expression
+    expression space? ('OR' / 'or') space? (or_expression / expression) <OrExpression> / expression
+  end
+
+  rule expression
+    parentheses_expression / not_expression / comparative_expression / anywhere_expression
+  end
+
+  rule parentheses_expression
+    '(' complex_expression ')' <ParenthesesExpression>
+  end
+
+  rule not_expression
+    ('NOT' space / 'not' space / '-') (comparative_expression / anywhere_expression) <NotExpression>
+  end
+
+  rule comparative_expression
+    simple_column space? comparison_operator space? value <ComparativeExpression>
+  end
+
+  rule comparison_operator
+    ':' <IncludesOperator> / '=' <EqualOperator> / '!=' <UnequalOperator> / '>=' <GreaterEqualOperator> / '>' <GreaterOperator> / '<=' <LessEqualOperator> / '<' <LessOperator>
+  end
+
+  rule anywhere_expression
+    "'" [^\']* "'" <SingleQuotedAnywhereExpression> / '"' [^\"]* '"' <DoubleQuotedAnywhereExpression> / [^\s()]+ <AnywhereExpression>
+  end
+
+  rule simple_column
+    [a-zA-Z0-9_.]+ <Column>
+  end
+
+  rule value
+    "'" [^\']* "'" <SingleQuotedValue> / '"' [^\"]* '"' <DoubleQuotedValue> / [^\s()]+ <Value>
+  end
+
+  rule space
+    [\s]+
+  end
+end
+

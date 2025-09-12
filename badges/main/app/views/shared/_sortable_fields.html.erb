@@ -1,0 +1,7 @@
+<% sortable_fields.each do |sortable_field| %>
+  <% name = sortable_field.is_a?(Symbol) ? sortable_field : sortable_field.name %>
+  <div class="input-group">
+    <%= f.check_box name, checked: @params ? checked?(@params[:sort_by][name]) : false, onclick: ("$('form').submit();") %>
+    <span class="small"><%= sortable_field_display_name(name) %></span>
+  </div>
+<% end %> 

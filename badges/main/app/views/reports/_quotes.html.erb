@@ -1,0 +1,118 @@
+<!-- QUOTES -->
+<script>
+  window.quotesIndex = 0;
+</script>
+
+<div id="quotes">
+  <div class="single-quote" id="quote-0">
+    <div class="form-group">
+      <div class="label-plus-comment">
+        <label> Quotes &amp; Comments</label>
+        <div class="custom-smaller">Please write quote in first person Please consider the safety of  participant when disclosing name. Using a pseudonym or false protective name chosen by participant is a possible option</div>
+      </div>
+      <textarea name="quotes[0][quote]" class="form-control" placeholder="Ex., Coming here makes me feel happy!"></textarea>
+    </div>
+
+
+
+    <div class="form-group">
+      <label> Age of the speaker </label>
+      <input type="text" name="quotes[0][age]" class="form-control">
+    </div>
+
+    <div class="form-group radio-inline custom-appearance-field">
+      <input id="gender-m" type="radio" name="quotes[0][gender]" value="m" >
+      <label for="gender-m">
+        <span class="custom-radio-icon"></span>
+        <span>Male</span>
+      </label>
+    </div>
+
+    <div class="radio-inline custom-appearance-field">
+      <input id="gender-f" type="radio" name="quotes[0][gender]" value="f">
+      <label for="gender-f">
+        <span class="custom-radio-icon"></span>
+        <span>Female</span>
+      </label>
+    </div>
+
+    <div class="radio-inline custom-appearance-field">
+      <input id="gender-o" type="radio" name="quotes[0][gender]" value="o">
+      <label for="gender-o">
+        <span class="custom-radio-icon"></span>
+        <span>Other</span>
+      </label>
+    </div>
+
+    <div>
+      <a class="btn-underline" href="javascript:delQuote('#quote-0');">Remove Quote</a>
+    </div>
+
+  </div>
+
+</div><!-- END QUOTES -->
+
+<div>
+  <a class="btn-underline" href="javascript:addQuote();">
+    Add another Quote
+  </a>
+</div>
+
+<script>
+  function addQuote() {
+  window.quotesIndex += 1;
+
+  $("#quotes").append(`
+  <div class="single-quote" id="quote-${window.quotesIndex}">
+
+    <div class="form-group">
+      <div class="label-plus-comment">
+        <label>Quotes & Comments</label>
+        <div class="custom-smaller">Please write quote in first person Please consider the safety of participant when disclosing name.
+          Using a pseudonym or false protective name chosen by participant is a possible option
+        </div>
+      </div>
+      <textarea name="quotes[${window.quotesIndex}][quote]" class="form-control" placeholder="Ex., Coming here makes me feel happy!"></textarea>
+    </div>
+    
+    <div class="form-group">
+      <label> Age of the speaker </label>
+      <input type="text" name="quotes[${window.quotesIndex}][age]" class="form-control">
+    </div>
+
+    <div class="form-group radio-inline custom-appearance-field">
+      <input id="gender-m" type="radio" name="quotes[${window.quotesIndex}][gender]" value="m" checked>
+      <label for="gender-m">
+        <span class="custom-radio-icon"></span>
+        <span>Male</span>
+      </label>
+    </div>
+
+    <div class="radio-inline custom-appearance-field">
+      <input id="gender-f" type="radio" name="quotes[${window.quotesIndex}][gender]" value="f">
+      <label for="gender-f">
+        <span class="custom-radio-icon"></span>
+        <span>Female</span>
+      </label>
+    </div>
+
+    <div class="radio-inline custom-appearance-field">
+      <input id="gender-o" type="radio" name="quotes[${window.quotesIndex}][gender]" value="o">
+      <label for="gender-o">
+        <span class="custom-radio-icon"></span>
+        <span>Other</span>
+      </label>
+    </div>
+
+    <div class="small">
+      <a class="a-tiny" style="text-decoration: underline" href="javascript:delQuote('#quote-${window.quotesIndex}');" >Remove Quote</a>
+    </div>
+  </div>
+  `
+  );
+  }
+
+  function delQuote(quoteId) {
+  $( quoteId ).remove();
+  }
+</script>

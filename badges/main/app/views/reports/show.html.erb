@@ -1,0 +1,23 @@
+<div>
+  <h1>Report</h1>
+  <hr />
+
+  <p>
+  <b>Project:</b>
+  <%= @report.project.name %>
+  </p>
+
+  <p>
+   <b>Created by: </b><%= @report.user.decorate.full_name %>
+  </p>
+
+  <p>
+   <b>Created: </b><%= time_ago_in_words( @report.created_at ) %> ago
+  </p>
+
+  <p>
+   <b>Log Type: </b><%= @report.windows_type.label if @report.windows_type %>
+  </p>
+
+  <br />
+</div>

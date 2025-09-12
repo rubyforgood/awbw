@@ -1,0 +1,47 @@
+<h2 class="normal"><%= "Share a #{@resource.kind.titleize}" %></h2>
+<%= form_for @resource, as: :resource, url: resources_path do |f| %>
+  <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
+  <div class="form-group">
+    <br>
+    <%= f.label 'Title:', class: 'bold' %>
+    <%= f.text_field :title, placeholder: 'enter a title' %>
+    <%= f.text_area :text, placeholder: 'share a story with us' %>
+  </div>
+  <%= f.hidden_field :kind %>
+  <h4 class="normal">Check all that is related to this story (optional)</h4>
+  <div class="form-group">
+    <%= f.label 'Age:', class: 'bold' %>
+    <%= f.fields_for :categorizable_items do |ff| %>
+      <%= render 'categorizable_item_fields', f: ff %>
+    <% end %>
+  </div>
+  <div class="form-group">
+    <br>
+    <%= f.label 'Gender:', class: 'bold' %>
+    <%= f.check_box :male, class: 'inline-block' %>
+    <%= f.label 'Male', class: 'inline-block bold' %>
+    <%= f.check_box :female, class: 'inline-block' %>
+    <%= f.label 'Female', class: 'inline-block bold' %>
+  </div>
+  <div class="form-group">
+    <br>
+    <%= f.label 'Service Population:', class: 'bold' %>
+    <%= f.fields_for :sectorable_items do |ff| %>
+      <%= render 'shared/sectorable_item_fields', f: ff %>
+    <% end %>
+  </div>
+  <div class="form-group">
+    <br>
+    <%= f.fields_for :images do |image| %>
+      <%= render 'shared/image_fields', f: image %>
+      <div class="links">
+        <%= link_to_add_association 'add image', f, :images, partial: 'shared/image_fields' %>
+      </div>
+    <% end %>
+  </div>
+  <div class="form-group">
+    <br>
+    <%= link_to 'Cancel', root_path, class: 'btn cancel-btn' %>
+    <%= f.submit 'Submit' %>
+  </div>
+<% end %> 

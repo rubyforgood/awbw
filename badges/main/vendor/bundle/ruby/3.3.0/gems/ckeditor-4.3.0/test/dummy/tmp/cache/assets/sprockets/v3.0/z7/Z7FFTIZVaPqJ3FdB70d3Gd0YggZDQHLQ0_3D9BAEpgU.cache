@@ -1,0 +1,83 @@
+{:uriI"∫file:///Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/samples/old/tabindex.html?type=text/html&id=33c48bd2b1aab768d0abca0666b07516d3ac9b7b0b6170dc1316a21293f2be2e:ET:load_pathI"B/Users/patrick/development/ckeditor/vendor/assets/javascripts;T:filenameI"e/Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/samples/old/tabindex.html;T:	nameI""ckeditor/samples/old/tabindex;T:logical_pathI"'ckeditor/samples/old/tabindex.html;T:content_typeI"text/html;T:sourceI".	<!DOCTYPE html>
+<!--
+Copyright (c) 2003-2018, CKSource - Frederico Knabben. All rights reserved.
+For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
+-->
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>TAB Key-Based Navigation &mdash; CKEditor Sample</title>
+	<script src="../../ckeditor.js"></script>
+	<link href="sample.css" rel="stylesheet">
+	<style>
+
+		.cke_focused,
+		.cke_editable.cke_focused
+		{
+			outline: 3px dotted blue !important;
+			*border: 3px dotted blue !important;	/* For IE7 */
+		}
+
+	</style>
+	<script>
+
+		CKEDITOR.on( 'instanceReady', function( evt ) {
+			var editor = evt.editor;
+			editor.setData( 'This editor has it\'s tabIndex set to <strong>' + editor.tabIndex + '</strong>' );
+
+			// Apply focus class name.
+			editor.on( 'focus', function() {
+				editor.container.addClass( 'cke_focused' );
+			});
+			editor.on( 'blur', function() {
+				editor.container.removeClass( 'cke_focused' );
+			});
+
+			// Put startup focus on the first editor in tab order.
+			if ( editor.tabIndex == 1 )
+				editor.focus();
+		});
+
+	</script>
+</head>
+<body>
+	<h1 class="samples">
+		<a href="index.html">CKEditor Samples</a> &raquo; TAB Key-Based Navigation
+	</h1>
+	<div class="warning deprecated">
+		This sample is not maintained anymore. Check out its <a href="https://sdk.ckeditor.com/samples/tabindex.html">brand new version in CKEditor SDK</a>.
+	</div>
+	<div class="description">
+		<p>
+			This sample shows how tab key navigation among editor instances is
+			affected by the <code>tabIndex</code> attribute from
+			the original page element. Use TAB key to move between the editors.
+		</p>
+	</div>
+	<p>
+		<textarea class="ckeditor" cols="80" id="editor4" rows="10" tabindex="1"></textarea>
+	</p>
+	<div class="ckeditor" contenteditable="true" id="editor1" tabindex="4"></div>
+	<p>
+		<textarea class="ckeditor" cols="80" id="editor2" rows="10" tabindex="2"></textarea>
+	</p>
+	<p>
+		<textarea class="ckeditor" cols="80" id="editor3" rows="10" tabindex="3"></textarea>
+	</p>
+	<div id="footer">
+		<hr>
+		<p>
+			CKEditor - The text editor for the Internet - <a class="samples" href="https://ckeditor.com/">https://ckeditor.com</a>
+		</p>
+		<p id="copy">
+			Copyright &copy; 2003-2018, <a class="samples" href="https://cksource.com/">CKSource</a> - Frederico
+			Knabben. All rights reserved.
+		</p>
+	</div>
+</body>
+</html>
+;T:metadata{	:dependencieso:Set:
+@hash}
+I"environment-version;TTI"environment-paths;TTI"rails-env;TTI"2processors:type=text/html&file_type=text/html;TTI"sfile-digest:///Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/samples/old/tabindex.html;TTF:charsetI"
+utf-8;F:digest"%L0;:f¶D≥Y≠g„©üòÎ»è—Y^Ëø:lengthi.	:dependencies_digest"%ùâÑ„yﬂ©b◊'ô®}÷3Ë„ã—mò¸≥ùÑìíí:idI"E33c48bd2b1aab768d0abca0666b07516d3ac9b7b0b6170dc1316a21293f2be2e;F:
+mtimel+‡|Î[

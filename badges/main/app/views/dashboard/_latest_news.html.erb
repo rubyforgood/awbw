@@ -1,0 +1,25 @@
+<section>
+  <h2 class='no-margin-top normal section-title'><%= "Community News" %></h2>
+  <div class='row row-custom flex-row' style='padding-top:0px;'>
+      <% resources.each do |r| %>
+        <div class='col-xs-6 col-xs-6-custom'>
+          <div class='workshop-box latests-news-box'>
+            <%= link_to r.featured_url, target: :blank do %>
+              <figure class="portrait-img" style="background-image: url(<%= asset_path(r.main_image) %>);"></figure>
+              <div class="inner-content">
+                <h3><%= r.title %></h3>
+                <p style='color: #464748;'>
+                  <span class="dotdotdot"><%= r.truncated_text %></span>
+                </p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+      <div class="col-xs-12" style="text-align:right;">
+        <a href="/stories" class="btn btn-primary btn--small outline">
+          SEE ALL
+        </a>
+      </div>
+  </div>
+</section>

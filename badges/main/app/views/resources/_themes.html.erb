@@ -1,0 +1,30 @@
+<section>
+  <h2 class='no-margin-top section-title normal'><%= title %></h2>
+  <% if themes.any? %>
+    <div class='row flex-row' style='padding-top:0px;'>
+      <% themes.each do |t| %>
+        <div class='col-xs-6 col-xs-6-custom'>
+          <div class='workshop-box' style='position:relative;'>
+            
+            <figure class="portrait-img" style="background-image: url(<%= asset_path("workshop_default.png") %>);"></figure>
+            <div class='col'>
+              <%= t.title %>
+            </div>
+            <div class="inner-content">
+              <h3><%= t.text[0..60] + "..." %></h3>
+              <%= link_to("Read more...", t.url, target: :blank) %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+      <div class="col-xs-12" style="text-align:right;">
+        <a href="https://awbw.org/impact/themes-in-healing/"
+          class="btn btn-primary btn--small outline">
+          SEE ALL
+        </a>
+      </div>
+    </div>
+  <% else %>
+    <%= "There are no themes." %>
+  <% end %>
+</section>

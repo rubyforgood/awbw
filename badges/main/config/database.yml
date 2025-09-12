@@ -1,0 +1,16 @@
+base: &base
+  encoding: utf8
+  url: <%= ENV.fetch("DATABASE_URL", "trilogy://root@localhost") %>
+
+development:
+  <<: *base
+  pool: 5
+  database: awbw_development
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+test:
+  <<: *base
+  pool: 5
+  database: awbw_test

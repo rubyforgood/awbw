@@ -1,0 +1,50 @@
+<div class="single-quote quote-added" id="quote-<%= index %>">
+
+  <div class="form-group">
+    <div class="label-plus-comment">
+      <label> Quotes & Comments</label>
+      <div class="custom-smaller">Please write quote in first person Please
+        consider the safety of participant when disclosing name. <br />
+        Using a pseudonym or false protective name chosen
+        by participant is a possible option.</div>
+    </div>
+    <textarea name="quotes[<%= index %>][quote]" class="form-control" placeholder='Ex., "Coming here makes me feel happy!"'><%= q.quote if q.quote %></textarea>
+  </div>
+
+  <div class="form-group">
+    <label> Age of the speaker </label>
+    <input type="text" name="quotes[<%= index %>][age]" class="form-control" value="<%= q.age %>">
+  </div>
+    <div class="form-group radio-inline custom-appearance-field">
+      <input id="gender-m-<%= index %>" type="radio" name="quotes[<%= index %>][gender]" value="m"
+             <%= "checked" if q.gender == 'm' %> >
+      <label for="gender-m-<%= index %>">
+        <span class="custom-radio-icon"></span>
+        <span>Male</span>
+      </label>
+    </div>
+
+    <div class="radio-inline custom-appearance-field">
+      <input id="gender-f-<%= index %>" type="radio" name="quotes[<%= index %>][gender]" value="f"
+             <%= "checked" if q.gender == 'f' %> >
+      <label for="gender-f-<%= index %>">
+        <span class="custom-radio-icon"></span>
+        <span>Female</span>
+      </label>
+    </div>
+
+    <div class="radio-inline custom-appearance-field">
+      <input id="gender-o-<%= index %>" type="radio" name="quotes[<%= index %>][gender]" value="o"
+             <%= "checked" if q.gender == 'o' %>>
+      <label for="gender-o-<%= index %>">
+        <span class="custom-radio-icon"></span>
+        <span>Other</span>
+      </label>
+    </div>
+
+
+  <div>
+    <a class="btn-underline" href="javascript:delQuote('#quote-<%= index %>');" >Remove Quote</a>
+  </div>
+
+</div>

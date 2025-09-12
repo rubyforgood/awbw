@@ -1,0 +1,47 @@
+<br>
+<h2 class='normal'><%= "#{@form_builder.name}" %></h2>
+<%= render 'form', form_fields: @form_builder.form_fields %>
+<script>
+  //<![CDATA[
+    $(function() {
+      var date;
+      var regex = /^[0-9]{2}-[0-9]{2}-[0-9]{4}$/;
+      $.urlParam = function(name) {
+        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        if (results==null) return null;
+        else return results[1] || 0;
+      }
+
+      if ($.urlParam('form_builder_id') == '5') {
+         var date = $( "#report_report_form_field_answers_attributes_0_answer" );
+         date.datepicker({dateFormat: 'mm-dd-yy'});
+         date.on('change', function(){
+         if(!regex.test(this.value)){
+           alert(this.value + " is an invalid date format. Please enter the date as MM-DD-YYYY");
+          }
+        });
+      }
+    });
+
+    $.replaceUrlParam = function (url, paramName, paramValue){
+      var pattern     = new RegExp('('+paramName+'=).*?(&|$)')
+      var newUrl      = url.replace(pattern,'$1' + paramValue + '$2');
+      var n           = url.indexOf(paramName);
+      if(n == -1){
+        newUrl = newUrl + (newUrl.indexOf('?') > 0 ? '&' : '?') + paramName + '=' + paramValue
+      }
+      return newUrl;
+     }
+
+  //]]>
+</script>
+
+<script>
+<% if current_user.has_liasion_position_for?(@agency_id) %>
+  $("#new_report :input").attr("disabled", false);
+<% else %>
+  $("#new_report :input").attr("disabled", true);
+  $("#report_date").attr("disabled", false);
+  $("#report_project_id").attr("disabled", false);
+<% end %>
+</script>

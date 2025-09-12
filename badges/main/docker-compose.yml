@@ -1,0 +1,50 @@
+services:
+  database:
+    image: mysql:8.0
+    platform: linux/amd64
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - 3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      MYSQL_DATABASE: awbw_development
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev   # <— use the dev Dockerfile
+    depends_on:
+      database:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      # Fallback so Rails can boot even if .env is minimal.
+      # If you prefer traditional keys, set DB_* in .env and configure database.yml accordingly.
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: "true"
+      DATABASE_URL: trilogy://root@database:3306/
+
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/app:cached
+      - /app/tmp
+    working_dir: /app
+
+    command: bash -lc "bin/rails s -b 0.0.0.0 -p 3000"
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+

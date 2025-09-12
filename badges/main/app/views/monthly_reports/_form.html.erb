@@ -1,0 +1,292 @@
+<%= form_for @report, as: :report, url: {action: :create,
+  form_builder_id: params[:form_builder_id],
+  month: @month,
+  year: @year },
+  method: :post do |f| %>
+  <hr>
+ <% unless params[:form_builder_id].to_i == 7 %>
+   <h4>Report Type</h4>
+  </hr>
+  <!-- ######### row 1 ##### -->
+  <div class="row">
+    <div class="visible-xs">
+      <div class="col-md-8 form-group">
+      	<div class='btn-container windows-type btns-aligned'>
+          <%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
+              class: "btn btn-primary btn--small #{'btn-active' if params['form_builder_id'] == '4'}") %>
+          <%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
+              class: "btn btn-primary btn--small #{'btn-active' if params['form_builder_id'] == '2'}") %>
+      	</div>
+      </div>
+    </div>
+
+    <div class="hidden-xs">
+    	<div class="col-md-8 form-group">
+    	  <div class='btn-container windows-type btns-aligned'>
+    	    <%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
+    		class: "btn btn-primary btn--small #{'disabled' unless current_user.permissions_list.include? 'ADULT WORKSHOP LOG'}") %>
+
+    	    <%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
+    		class: "btn btn-primary btn--small #{'disabled' unless current_user.permissions_list.include? 'CHILDREN WORKSHOP LOG'}") %>
+    	  </div>
+	   </div>
+    </div>
+
+    <% if not @workshop_log_summary_page %>
+      <div class='col-md-8'>
+        <%= f.label 'Reporting for the Month Of' %>
+        <%= f.date_select :date,
+          { discard_day: true, selected: Date.new( @year.to_i, @month.to_i ), use_hidden: true },
+            onchange: 'window.location = window.location.toString().split("&month=")[0 + "&month=" +  $("#report_date_2i").val() + "&year=" + $("#report_date_1i").val()' %>
+
+        <%= f.select(:date, {}, {:include_blank => false}, {:class => "form-control form-control-custom"}) %>
+
+        <%= render 'workshop_log_summary', f: f, workshop_logs: @workshop_logs %>
+
+        <%= render 'combined_workshop_log_summary', f: f, workshop_logs: @combined_workshop_logs %>
+        <hr />
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+ <!-- ######### row 2 ########## -->
+  <div class='row'>
+    <div class='col-md-8'>
+
+      <!-- ######### form fields ####### -->
+      <div class='form-group'>
+        <%= f.label 'Facilitator' %>
+        <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
+        <%= f.hidden_field :user_id, value: current_user.id %>
+        <%= f.hidden_field :type %>
+        <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
+        <%= f.hidden_field :id, value: @report.id %>
+        <br>
+      </div>
+
+      <div class='form-group'>
+        <div class="label-plus-comment">
+          <%= f.label 'Agency' %>
+          <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
+        </div>
+        <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
+        <%= f.collection_select :project_id, @agencies, :id, :name,
+        { selected: agency ? agency.id : nil,class: 'js-agency-select' },
+        class:"selectpicker form-control form-control-custom", onchange: "window.location = $.replaceUrlParam(window.location.toString(),'agency_id',$(this).val() )" %>
+      </div>
+
+      <%= f.hidden_field :owner_id, value: @form_builder.id %>
+      <%= f.hidden_field :owner_type, value: @form_builder.report_type %>
+      <%= hidden_field_tag "form_builder_id", @form_builder.id %>
+
+      <% if params[:form_builder_id].to_i == 7 %>
+        <div class="row">
+          <div class="col-md-12 col-lg-8">
+            <label class="label-select" for="select-workshop" >
+              Select Workshop from dropdown
+            </label>
+            <div id="select_workshop">
+              <%= collection_select(
+                  :report,
+                  :workshop_id,
+                  @workshop_list,
+                    :id,
+                    :log_title, { :selected => params[:workshop_id],
+                    :prompt => "Select a workshop" },
+{
+:class  =>  "form-control form-control-custom",
+:id     => 'select-workshop'
+})
+%>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript">
+          $('#select-workshop').select2();
+        </script>
+
+      <% end %>
+
+      <!-- ################### SECTORS ################## -->
+      <%= render 'sectorable_items' %>
+      <div class="row hide" id="other_sector_description_content">
+        <div class="col-md-8 col-lg-8">
+          <div class="form-group text-form-group">
+            <input type="text" name="report[other_description]" id="other_description" class="form-control" placeholder='Enter other population(s) served'>
+      </input>
+          </div>
+        </div>
+      </div>
+
+      <!-- ################### FORM_FIELDS ################## -->
+      <div class="row">
+       <div class="col-md-12 col-lg-12">
+         <% @report.log_fields.each do |field| %>
+           <%= render 'shared/form_field', :field => field, :report => @report %>
+
+           <% if field.question == 'Share challenges for this month' ||
+    (field.question == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2) %>
+             <br />
+             <script>
+               window.quotesIndex = 0;
+             </script>
+
+             <div id="quotes">
+               <% if !@report.quotes.empty? %>
+                 <% @report.quotes.each_with_index do |q, i| %>
+                   <%= render 'quote', q: q, index: i %>
+                   <script>window.quotesIndex += 1;</script>
+                 <% end %>
+               <% else %>
+                 <%= render 'quote', index: 0, q: Quote.new %>
+               <% end %>
+             </div>
+
+             <div>
+               <a class="btn-underline" href="javascript:addQuote();">Add another Quote</a>
+             </div>
+             <br />
+
+           <% end %>
+
+         <% end %>
+
+         <script>
+           $(function() {
+             $( "input[id*=On-going]" ).val(<%= @total_ongoing %>).prop('readonly', true);
+             $( "input[id*=First-Time]" ).val(<%= @total_first_time %>).prop('readonly', true);
+           })
+         </script>
+       </div>
+     </div>
+
+      <!-- ######## uploads sectors ####### -->
+      <% if [4, 2].include? params[:form_builder_id].to_i %>
+
+      <div class="form-group image-fields-wrapper">
+        <!-- ######## upload image ###### -->
+        <%= f.fields_for :media_files do |files_form| %>
+        <%= render 'media_file', :f => files_form %>
+
+        <div class="links small">
+          <%= link_to_add_association 'Add Another Media File', f, :media_files, partial: 'media_file', class:'btn-underline' %>
+        </div>
+        <% end %>
+      </div>
+
+      <% end %>
+   </div>
+  </div>
+  <!-- ######### row 3 ########## -->
+  <div class="row">
+    <div class="col-md-8 align-right">
+      <%= f.submit 'Submit', id: "btn_submit", class: "btn btn-primary btn-blued" %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+    $.urlParam = function(name) {
+      var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+      if (results==null) return null;
+      else return results[1] || 0;
+    }
+
+    function fillOutDates() {
+      var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var select = document.getElementById('report_date');
+      var d = new Date();
+      var current_month = d.getMonth(); //parseInt($.urlParam('month'));
+      var current_year = d.getFullYear(); //parseInt($.urlParam('year'));
+      for (var i = 0; i<=12; i++) {
+      var opt = document.createElement('option');
+        if (current_month < 0) { current_month = 11; current_year -= 1}
+        opt.value = current_year+'-'+(current_month+1);
+        opt.innerHTML = months[current_month] + ' ' + current_year;
+        if (parseInt($.urlParam('month'))-1 == current_month && parseInt($.urlParam('year')) == current_year) {
+          opt.selected = true;
+        }
+        if (select) select.appendChild(opt);
+        current_month -= 1;
+      }
+      if (select) select.addEventListener("change", function() {
+        var date = select.options[select.selectedIndex].value;
+        var year = date.split("-")[0];
+        var month = date.split("-")[1];
+        window.location = window.location.toString().split("&month=")[0] + "&month=" +  month + "&year=" + year;
+      });
+    }
+
+ fillOutDates()
+
+  function addQuote() {
+    window.quotesIndex += 1;
+    $("#quotes").append('<%= j render 'quote', :index => "last-quotes",:q => Quote.new %>');
+
+    contentQuotes = document.getElementById("quote-last-quotes").innerHTML.replace(/last-quotes/g, window.quotesIndex);
+    document.getElementById("quote-last-quotes").innerHTML = contentQuotes;
+    newId = "quote-" + window.quotesIndex;
+    $('#quote-last-quotes').attr( 'id' , newId );
+  }
+
+  function delQuote(quoteId) {
+    $( quoteId ).remove();
+  }
+
+</script>
+
+<script>
+  var enable_submit_form = false;
+
+  $('#btn_submit').on('click', function(event){
+    var header_height = $('.navbar').height();
+    validateOptions(event, "#population_fields", "checkbox");
+
+    // Scroll to logic corrected
+    if ($('.scroll-to-error').length) {
+      $("html, body").animate({ scrollTop: $('.scroll-to-error').first().closest('.form-group').offset().top - header_height - 50 }, 500);
+
+    } else {
+        enable_submit_form = true;
+    }
+
+  });
+
+  $('form').submit(function( event ) {
+     if (!enable_submit_form) {
+      event.preventDefault();
+     }
+   });
+
+
+  if ($.urlParam('agency_id') != null){
+    $("#report_project_id").val("<%=params[:agency_id] %>");
+  }
+
+  function validateOptions(event, div_id, input_type) {
+    div_radios = $(div_id);
+    input_type = "input[type='" + input_type + "']:checked"
+    options     = div_radios.find(input_type);
+    p_error = div_id + "_error";
+
+    if(options.length == 0)  {
+      div_radios.addClass("error-custom");
+      div_radios.addClass("scroll-to-error");
+      $(p_error).removeClass('hide');
+      return false;
+    }else{
+      div_radios.removeClass("error-custom");
+      div_radios.removeClass("scroll-to-error");
+      $(p_error).addClass('hide');
+      return true;
+    }
+  }
+
+  $('#sector_7').change(function() {
+    if( $(this).is(':checked')) {
+     $('#other_sector_description_content').removeClass('hide');
+     $('#other_description').attr('required', true);
+    }
+  });
+</script>

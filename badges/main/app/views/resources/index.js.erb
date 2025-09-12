@@ -1,0 +1,10 @@
+<% @resources.each do |r| %>
+  $('#resources-list').append('<%= j render 'resource', resource: r %>');
+<% end %>
+
+<% if @resources.next_page %>
+  $('.pagination').replaceWith('<%= j  will_paginate @resources %>');
+<% else %>
+  $(window).off('scroll');
+  $('.pagination').remove();
+<% end %>

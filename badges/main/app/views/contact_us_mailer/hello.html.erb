@@ -1,0 +1,23 @@
+<h2>AWBW Contact us page message</h2>
+<table border="0">
+  <tr>
+    <td>
+      <b>Name:</b> <%= "#{@contact_us[:first_name]} #{@contact_us[:last_name]}" %>
+    </td>
+  </tr>
+ <tr>
+  <td>
+   <b>Organization:</b> <%= @contact_us[:agency] %>
+  </td>
+ </tr>
+ <tr>
+   <td>
+     <b>Message:</b>
+     <p>
+      <%= @contact_us[:message] %>
+     </p>
+   </td>
+ </tr>
+</table>
+
+<small>This message was send using the awbw contact us page</small>

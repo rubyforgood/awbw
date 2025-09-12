@@ -1,0 +1,508 @@
+  [1m[36m (0.3ms)[0m  [1mCREATE TABLE "schema_migrations" ("version" varchar NOT NULL) [0m
+  [1m[35m (0.8ms)[0m  select sqlite_version(*)
+  [1m[36m (0.2ms)[0m  [1mCREATE UNIQUE INDEX "unique_schema_migrations" ON "schema_migrations" ("version")[0m
+  [1m[35mActiveRecord::SchemaMigration Load (0.1ms)[0m  SELECT "schema_migrations".* FROM "schema_migrations"
+Migrating to CreatePosts (20110623120047)
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35m (0.2ms)[0m  CREATE TABLE "posts" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "title" varchar, "info" text, "content" text, "created_at" datetime NOT NULL, "updated_at" datetime NOT NULL) 
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO "schema_migrations" ("version") VALUES (?)[0m  [["version", "20110623120047"]]
+  [1m[35m (0.0ms)[0m  commit transaction
+  [1m[36m (0.2ms)[0m  [1mCREATE TABLE "ckeditor_assets" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "data_file_name" varchar NOT NULL, "data_content_type" varchar, "data_file_size" integer, "data_fingerprint" varchar, "type" varchar(30), "width" integer, "height" integer, "created_at" datetime NOT NULL, "updated_at" datetime NOT NULL) [0m
+  [1m[35m (0.1ms)[0m  CREATE  INDEX "index_ckeditor_assets_on_type" ON "ckeditor_assets" ("type")
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+--------------------------------------------------------------------------
+AttachmentFilesControllerTest: test_create_action_via_CKEditor_upload_form
+--------------------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+Processing by Ckeditor::AttachmentFilesController#create as HTML
+  Parameters: {"upload"=>#<Rack::Test::UploadedFile:0x007fc65fa30048 @content_type="application/x-gzip", @original_filename="rails.tar.gz", @tempfile=#<Tempfile:/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.tar.gz20181219-31036-cs7cxg>>, "CKEditor"=>"ckeditor_field"}
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.tar.gz20181219-31036-cs7cxg to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1pq7t5v.gz
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1pq7t5v.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-9r3i3w.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-9r3i3w.gz'
+  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1pq7t5v.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-11q5gs4.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-11q5gs4.gz'
+  [1m[35mSQL (0.4ms)[0m  INSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?, ?, ?)  [["type", "Ckeditor::AttachmentFile"], ["data_file_name", "rails.tar.gz"], ["data_content_type", "application/x-gzip"], ["data_file_size", 6823], ["data_fingerprint", "d49d6e2447863150455c0f102c489f33"], ["created_at", "2018-12-20 07:24:38.645381"], ["updated_at", "2018-12-20 07:24:38.645381"]]
+  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  Rendered html template (0.0ms)
+Completed 200 OK in 113ms (Views: 11.7ms | ActiveRecord: 0.7ms)
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+  [1m[36mCkeditor::AttachmentFile Load (0.2ms)[0m  [1mSELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')[0m
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.1ms)[0m  [1mDELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile') AND "ckeditor_assets"."id" = ?[0m  [["id", 1]]
+  [1m[35m (0.0ms)[0m  RELEASE SAVEPOINT active_record_1
+  [1m[36m (0.5ms)[0m  [1mrollback transaction[0m
+  [1m[35m (0.1ms)[0m  begin transaction
+-----------------------------------------------------------------
+AttachmentFilesControllerTest: test_create_action_via_filebrowser
+-----------------------------------------------------------------
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')[0m
+Processing by Ckeditor::AttachmentFilesController#create as HTML
+  Parameters: {"qqfile"=>#<Rack::Test::UploadedFile:0x007fc6607c7e90 @content_type="application/x-gzip", @original_filename="rails.tar.gz", @tempfile=#<Tempfile:/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.tar.gz20181219-31036-rqj3fe>>}
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.tar.gz20181219-31036-rqj3fe to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1upr4b9.gz
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1upr4b9.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-xizz2a.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-xizz2a.gz'
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1upr4b9.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1b82qqv.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1b82qqv.gz'
+  [1m[36mSQL (0.4ms)[0m  [1mINSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?, ?, ?)[0m  [["type", "Ckeditor::AttachmentFile"], ["data_file_name", "rails.tar.gz"], ["data_content_type", "application/x-gzip"], ["data_file_size", 6823], ["data_fingerprint", "d49d6e2447863150455c0f102c489f33"], ["created_at", "2018-12-20 07:24:38.723495"], ["updated_at", "2018-12-20 07:24:38.723495"]]
+  [1m[35m (0.1ms)[0m  RELEASE SAVEPOINT active_record_1
+Completed 200 OK in 66ms (Views: 0.2ms | ActiveRecord: 0.7ms)
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')[0m
+  [1m[35mCkeditor::AttachmentFile Load (0.2ms)[0m  SELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.1ms)[0m  DELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile') AND "ckeditor_assets"."id" = ?  [["id", 1]]
+  [1m[36m (0.0ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+------------------------------------------------------------------
+AttachmentFilesControllerTest: test_create_action_via_html5_upload
+------------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+Processing by Ckeditor::AttachmentFilesController#create as HTML
+  Parameters: {"qqfile"=>"rails.tar.gz"}
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/606afce7fb0b4b3c151f12365698c20cae841b8320181219-31036-1cx9uh1 to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1qm19ls.gz
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1qm19ls.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1jot0a5.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1jot0a5.gz'
+  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1qm19ls.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1a1ludq.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1a1ludq.gz'
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?, ?, ?)  [["type", "Ckeditor::AttachmentFile"], ["data_file_name", "rails.tar.gz"], ["data_content_type", "application/x-gzip"], ["data_file_size", 6823], ["data_fingerprint", "d49d6e2447863150455c0f102c489f33"], ["created_at", "2018-12-20 07:24:38.802854"], ["updated_at", "2018-12-20 07:24:38.802854"]]
+  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+Completed 200 OK in 51ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+  [1m[36mCkeditor::AttachmentFile Load (0.1ms)[0m  [1mSELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')[0m
+  [1m[35m (0.0ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.1ms)[0m  [1mDELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile') AND "ckeditor_assets"."id" = ?[0m  [["id", 1]]
+  [1m[35m (0.0ms)[0m  RELEASE SAVEPOINT active_record_1
+  [1m[36m (0.0ms)[0m  [1mrollback transaction[0m
+  [1m[35m (0.0ms)[0m  begin transaction
+------------------------------------------------------------------
+AttachmentFilesControllerTest: test_destroy_action_via_filebrowser
+------------------------------------------------------------------
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.tar.gz20181219-31036-1mlmbxg to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-126pggb.gz
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-126pggb.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1e80alc.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1e80alc.gz'
+  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-126pggb.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-10qqghg.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-10qqghg.gz'
+  [1m[35mSQL (0.1ms)[0m  INSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?, ?, ?)  [["type", "Ckeditor::AttachmentFile"], ["data_file_name", "rails.tar.gz"], ["data_content_type", "application/x-gzip"], ["data_file_size", 6823], ["data_fingerprint", "d49d6e2447863150455c0f102c489f33"], ["created_at", "2018-12-20 07:24:38.857470"], ["updated_at", "2018-12-20 07:24:38.857470"]]
+  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+Processing by Ckeditor::AttachmentFilesController#destroy as HTML
+  Parameters: {"id"=>"1"}
+  [1m[36mCkeditor::AttachmentFile Load (0.1ms)[0m  [1mSELECT  "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile') AND "ckeditor_assets"."id" = ? LIMIT 1[0m  [["id", 1]]
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.1ms)[0m  [1mDELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile') AND "ckeditor_assets"."id" = ?[0m  [["id", 1]]
+  [1m[35m (0.1ms)[0m  RELEASE SAVEPOINT active_record_1
+Redirected to http://test.host/ckeditor/attachment_files
+Completed 302 Found in 19ms (ActiveRecord: 0.4ms)
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')[0m
+  [1m[35mCkeditor::AttachmentFile Load (0.1ms)[0m  SELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+  [1m[36m (0.0ms)[0m  [1mrollback transaction[0m
+  [1m[35m (0.1ms)[0m  begin transaction
+------------------------------------------------
+AttachmentFilesControllerTest: test_index_action
+------------------------------------------------
+Processing by Ckeditor::AttachmentFilesController#index as HTML
+  Rendered /Users/patrick/development/ckeditor/app/views/ckeditor/shared/_asset.html.erb (0.0ms)
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')[0m
+  Rendered /Users/patrick/development/ckeditor/app/views/ckeditor/attachment_files/index.html.erb within layouts/ckeditor/application (10.3ms)
+  Rendered /Users/patrick/development/ckeditor/app/views/ckeditor/shared/_asset_tmpl.html.erb (0.8ms)
+Completed 200 OK in 3576ms (Views: 3574.8ms | ActiveRecord: 0.1ms)
+  [1m[35mCkeditor::AttachmentFile Load (0.1ms)[0m  SELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+  [1m[36m (0.2ms)[0m  [1mrollback transaction[0m
+  [1m[35m (0.1ms)[0m  begin transaction
+--------------------------------------------------------------------
+AttachmentFilesControllerTest: test_invalid_params_for_create_action
+--------------------------------------------------------------------
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')[0m
+Processing by Ckeditor::AttachmentFilesController#create as HTML
+  Parameters: {"qqfile"=>nil}
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+  [1m[36m (0.0ms)[0m  [1mROLLBACK TO SAVEPOINT active_record_1[0m
+Completed 200 OK in 4ms (Views: 0.1ms | ActiveRecord: 0.1ms)
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')
+  [1m[36mCkeditor::AttachmentFile Load (0.1ms)[0m  [1mSELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile')[0m
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+--------------------------------
+UtilsTest: test_exists_filethumb
+--------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+-------------------------------
+UtilsTest: test_wrong_filethumb
+-------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+---------------------------------------------
+PostsControllerTest: test_form_builder_helper
+---------------------------------------------
+  [1m[35m (0.0ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO "posts" ("title", "content", "info", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)[0m  [["title", "test"], ["content", "content"], ["info", "info"], ["created_at", "2018-12-20 07:24:42.491667"], ["updated_at", "2018-12-20 07:24:42.491667"]]
+  [1m[35m (0.0ms)[0m  RELEASE SAVEPOINT active_record_1
+Processing by PostsController#new as HTML
+  Rendered posts/_form.html.erb (19.5ms)
+  Rendered posts/new.html.erb within layouts/application (21.2ms)
+Completed 200 OK in 34ms (Views: 33.3ms | ActiveRecord: 0.0ms)
+  [1m[36m (0.2ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.1ms)[0m  DELETE FROM "posts" WHERE "posts"."id" = ?  [["id", 1]]
+  [1m[36m (0.0ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+---------------------------------------------
+PostsControllerTest: test_include_javascripts
+---------------------------------------------
+  [1m[35m (0.0ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO "posts" ("title", "content", "info", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)[0m  [["title", "test"], ["content", "content"], ["info", "info"], ["created_at", "2018-12-20 07:24:42.539303"], ["updated_at", "2018-12-20 07:24:42.539303"]]
+  [1m[35m (0.0ms)[0m  RELEASE SAVEPOINT active_record_1
+Processing by PostsController#index as HTML
+  [1m[36mPost Load (0.1ms)[0m  [1mSELECT "posts".* FROM "posts"[0m
+  Rendered posts/index.html.erb within layouts/application (1.5ms)
+Completed 200 OK in 5ms (Views: 4.4ms | ActiveRecord: 0.1ms)
+  [1m[35m (0.2ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.0ms)[0m  [1mDELETE FROM "posts" WHERE "posts"."id" = ?[0m  [["id", 1]]
+  [1m[35m (0.0ms)[0m  RELEASE SAVEPOINT active_record_1
+  [1m[36m (0.0ms)[0m  [1mrollback transaction[0m
+  [1m[35m (0.0ms)[0m  begin transaction
+-----------------------------------------------------
+PostsControllerTest: test_pass_text_area_with_options
+-----------------------------------------------------
+  [1m[36m (0.0ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.1ms)[0m  INSERT INTO "posts" ("title", "content", "info", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)  [["title", "test"], ["content", "content"], ["info", "info"], ["created_at", "2018-12-20 07:24:42.548301"], ["updated_at", "2018-12-20 07:24:42.548301"]]
+  [1m[36m (0.0ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+Processing by PostsController#index as HTML
+  [1m[35mPost Load (0.1ms)[0m  SELECT "posts".* FROM "posts"
+  Rendered posts/index.html.erb within layouts/application (0.8ms)
+Completed 200 OK in 2ms (Views: 1.7ms | ActiveRecord: 0.1ms)
+  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.0ms)[0m  DELETE FROM "posts" WHERE "posts"."id" = ?  [["id", 1]]
+  [1m[36m (0.0ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+-----------------------------------------
+PostsControllerTest: test_text_area_value
+-----------------------------------------
+  [1m[35m (0.0ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.0ms)[0m  [1mINSERT INTO "posts" ("title", "content", "info", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)[0m  [["title", "test"], ["content", "content"], ["info", "info"], ["created_at", "2018-12-20 07:24:42.569891"], ["updated_at", "2018-12-20 07:24:42.569891"]]
+  [1m[35m (0.0ms)[0m  RELEASE SAVEPOINT active_record_1
+Processing by PostsController#edit as HTML
+  Parameters: {"id"=>"1"}
+  [1m[36mPost Load (0.1ms)[0m  [1mSELECT  "posts".* FROM "posts" WHERE "posts"."id" = ? LIMIT 1[0m  [["id", 1]]
+  Rendered posts/_form.html.erb (1.7ms)
+  Rendered posts/edit.html.erb within layouts/application (2.3ms)
+Completed 200 OK in 7ms (Views: 4.6ms | ActiveRecord: 0.1ms)
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.1ms)[0m  [1mDELETE FROM "posts" WHERE "posts"."id" = ?[0m  [["id", 1]]
+  [1m[35m (0.0ms)[0m  RELEASE SAVEPOINT active_record_1
+  [1m[36m (0.0ms)[0m  [1mrollback transaction[0m
+  [1m[35m (0.0ms)[0m  begin transaction
+-------------------------------------------------------------------
+PicturesControllerTest: test_create_action_via_CKEditor_upload_form
+-------------------------------------------------------------------
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+Processing by Ckeditor::PicturesController#create as HTML
+  Parameters: {"upload"=>#<Rack::Test::UploadedFile:0x007fc660ad7860 @content_type="image/png", @original_filename="rails.png", @tempfile=#<Tempfile:/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.png20181219-31036-1egsgh7>>, "CKEditor"=>"ckeditor_field"}
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.png20181219-31036-1egsgh7 to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-ryima6.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-ryima6.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png[0]' -auto-orient -resize "800>" '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/6fe4770c7fe5137d681a050bc733cbd920181219-31036-t2268e'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/6fe4770c7fe5137d681a050bc733cbd920181219-31036-t2268e to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/2f77ba40d98c3da1e21442964bd3388220181219-31036-1wcqu3h
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png[0]' -auto-orient -resize "118x" -crop "118x100+0+25" +repage '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/6fe4770c7fe5137d681a050bc733cbd920181219-31036-1iioqwu'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/6fe4770c7fe5137d681a050bc733cbd920181219-31036-1iioqwu to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/29ed0cfe1535b432e588d581dfa2177120181219-31036-e7bw6t
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1i0axq6.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1i0axq6.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4vescp.png[0]' 2>/dev/null
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at", "width", "height") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)[0m  [["type", "Ckeditor::Picture"], ["data_file_name", "rails.png"], ["data_content_type", "image/png"], ["data_file_size", 6646], ["data_fingerprint", "9c0a079bdd7701d7e729bd956823d153"], ["created_at", "2018-12-20 07:24:42.810946"], ["updated_at", "2018-12-20 07:24:42.810946"], ["width", 50], ["height", 64]]
+  [1m[35m (0.1ms)[0m  RELEASE SAVEPOINT active_record_1
+  Rendered html template (0.0ms)
+Completed 200 OK in 256ms (Views: 3.3ms | ActiveRecord: 0.4ms)
+  [1m[36m (0.3ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+  [1m[35mCkeditor::Picture Load (0.1ms)[0m  SELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')
+  [1m[36m (0.2ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.1ms)[0m  DELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture') AND "ckeditor_assets"."id" = ?  [["id", 1]]
+  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  [1m[35m (0.3ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+----------------------------------------------------------
+PicturesControllerTest: test_create_action_via_filebrowser
+----------------------------------------------------------
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')
+Processing by Ckeditor::PicturesController#create as HTML
+  Parameters: {"qqfile"=>#<Rack::Test::UploadedFile:0x007fc666770ba8 @content_type="image/png", @original_filename="rails.png", @tempfile=#<Tempfile:/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.png20181219-31036-l7h2q0>>}
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.png20181219-31036-l7h2q0 to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1mg8lfy.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1mg8lfy.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png[0]' -auto-orient -resize "800>" '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/468125f4932ff49a270a90fd6a35f91920181219-31036-1q0dzzq'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/468125f4932ff49a270a90fd6a35f91920181219-31036-1q0dzzq to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/f6e16d11e4ac9ba55ee0bb5e7ed4503d20181219-31036-1fgsom2
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png[0]' -auto-orient -resize "118x" -crop "118x100+0+25" +repage '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/468125f4932ff49a270a90fd6a35f91920181219-31036-9tpkqx'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/468125f4932ff49a270a90fd6a35f91920181219-31036-9tpkqx to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/c32a907721262b4870e1fc4414ab510b20181219-31036-kiqkw3
+  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1shevfi.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1shevfi.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-i8zy9l.png[0]' 2>/dev/null
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at", "width", "height") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)  [["type", "Ckeditor::Picture"], ["data_file_name", "rails.png"], ["data_content_type", "image/png"], ["data_file_size", 6646], ["data_fingerprint", "9c0a079bdd7701d7e729bd956823d153"], ["created_at", "2018-12-20 07:24:43.041325"], ["updated_at", "2018-12-20 07:24:43.041325"], ["width", 50], ["height", 64]]
+  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+Completed 200 OK in 216ms (Views: 0.2ms | ActiveRecord: 0.4ms)
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')
+  [1m[36mCkeditor::Picture Load (0.2ms)[0m  [1mSELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+  [1m[35m (0.0ms)[0m  SAVEPOINT active_record_1
+  [1m[36mSQL (0.1ms)[0m  [1mDELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture') AND "ckeditor_assets"."id" = ?[0m  [["id", 1]]
+  [1m[35m (0.0ms)[0m  RELEASE SAVEPOINT active_record_1
+  [1m[36m (0.0ms)[0m  [1mrollback transaction[0m
+  [1m[35m (0.1ms)[0m  begin transaction
+-----------------------------------------------------------
+PicturesControllerTest: test_create_action_via_html5_upload
+-----------------------------------------------------------
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+Processing by Ckeditor::PicturesController#create as HTML
+  Parameters: {"qqfile"=>"rails.png"}
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/488f7fcd99b9665a68db94709735208315017dde20181219-31036-1wwxk84 to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1qxgcpg.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1qxgcpg.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png[0]' -auto-orient -resize "800>" '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/96d88f7bc133063a119cd58319225c0920181219-31036-nbsq82'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/96d88f7bc133063a119cd58319225c0920181219-31036-nbsq82 to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/6fb299ba39a91e51aa446c17bb68a25320181219-31036-1agytbv
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png[0]' -auto-orient -resize "118x" -crop "118x100+0+25" +repage '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/96d88f7bc133063a119cd58319225c0920181219-31036-y083y7'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/96d88f7bc133063a119cd58319225c0920181219-31036-y083y7 to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/3e4a309ca6f7618b1726dec3be3b9a1f20181219-31036-1b27jdr
+  [1m[35m (0.2ms)[0m  SAVEPOINT active_record_1
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-43s0dp.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-43s0dp.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-yu16xf.png[0]' 2>/dev/null
+  [1m[36mSQL (0.3ms)[0m  [1mINSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at", "width", "height") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)[0m  [["type", "Ckeditor::Picture"], ["data_file_name", "rails.png"], ["data_content_type", "image/png"], ["data_file_size", 6646], ["data_fingerprint", "9c0a079bdd7701d7e729bd956823d153"], ["created_at", "2018-12-20 07:24:43.272159"], ["updated_at", "2018-12-20 07:24:43.272159"], ["width", 50], ["height", 64]]
+  [1m[35m (0.1ms)[0m  RELEASE SAVEPOINT active_record_1
+Completed 200 OK in 216ms (Views: 0.2ms | ActiveRecord: 0.6ms)
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+  [1m[35mCkeditor::Picture Load (0.1ms)[0m  SELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')
+  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.1ms)[0m  DELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture') AND "ckeditor_assets"."id" = ?  [["id", 1]]
+  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+-----------------------------------------------------------
+PicturesControllerTest: test_destroy_action_via_filebrowser
+-----------------------------------------------------------
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.png20181219-31036-1q2ha7x to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-2aapzy.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-2aapzy.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png[0]' -auto-orient -resize "800>" '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/0314dd9176d274810e2a32efd4175e0b20181219-31036-1qbs3l2'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/0314dd9176d274810e2a32efd4175e0b20181219-31036-1qbs3l2 to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/d9490bcd6c22daf5c3ea608d7b6797e020181219-31036-1y26qg4
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png[0]' -auto-orient -resize "118x" -crop "118x100+0+25" +repage '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/0314dd9176d274810e2a32efd4175e0b20181219-31036-13pv9mn'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/0314dd9176d274810e2a32efd4175e0b20181219-31036-13pv9mn to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4887648af39a04ce5b1bb2cb30461fb120181219-31036-12j0qj9
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1vy50mt.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1vy50mt.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-4w1np1.png[0]' 2>/dev/null
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at", "width", "height") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)[0m  [["type", "Ckeditor::Picture"], ["data_file_name", "rails.png"], ["data_content_type", "image/png"], ["data_file_size", 6646], ["data_fingerprint", "9c0a079bdd7701d7e729bd956823d153"], ["created_at", "2018-12-20 07:24:43.501846"], ["updated_at", "2018-12-20 07:24:43.501846"], ["width", 50], ["height", 64]]
+  [1m[35m (0.2ms)[0m  RELEASE SAVEPOINT active_record_1
+  [1m[36m (0.5ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+Processing by Ckeditor::PicturesController#destroy as HTML
+  Parameters: {"id"=>"1"}
+  [1m[35mCkeditor::Picture Load (0.2ms)[0m  SELECT  "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture') AND "ckeditor_assets"."id" = ? LIMIT 1  [["id", 1]]
+  [1m[36m (0.0ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.1ms)[0m  DELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture') AND "ckeditor_assets"."id" = ?  [["id", 1]]
+  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+Redirected to http://test.host/ckeditor/pictures
+Completed 302 Found in 7ms (ActiveRecord: 0.4ms)
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')
+  [1m[36mCkeditor::Picture Load (0.1ms)[0m  [1mSELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+-----------------------------------------
+PicturesControllerTest: test_index_action
+-----------------------------------------
+Processing by Ckeditor::PicturesController#index as HTML
+  [1m[35mCkeditor::Picture Load (0.1ms)[0m  SELECT  "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')  ORDER BY id desc LIMIT 24 OFFSET 0
+  Rendered /Users/patrick/development/ckeditor/app/views/ckeditor/shared/_asset.html.erb (0.0ms)
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+  Rendered /Users/patrick/development/ckeditor/app/views/ckeditor/pictures/index.html.erb within layouts/ckeditor/application (2.6ms)
+  Rendered /Users/patrick/development/ckeditor/app/views/ckeditor/shared/_asset_tmpl.html.erb (0.3ms)
+Completed 200 OK in 8ms (Views: 7.0ms | ActiveRecord: 0.2ms)
+  [1m[35mCkeditor::Picture Load (0.1ms)[0m  SELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')
+  [1m[36m (0.0ms)[0m  [1mrollback transaction[0m
+  [1m[35m (0.1ms)[0m  begin transaction
+-------------------------------------------------------------
+PicturesControllerTest: test_invalid_params_for_create_action
+-------------------------------------------------------------
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+Processing by Ckeditor::PicturesController#create as HTML
+  Parameters: {"qqfile"=>nil}
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+  [1m[36m (0.1ms)[0m  [1mROLLBACK TO SAVEPOINT active_record_1[0m
+Completed 200 OK in 4ms (Views: 0.1ms | ActiveRecord: 0.1ms)
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')
+  [1m[36mCkeditor::Picture Load (0.3ms)[0m  [1mSELECT "ckeditor_assets".* FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture')[0m
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+----------------------------------------------------------------
+InstallGeneratorTest: test_Assert_all_files_are_properly_created
+----------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+-------------------------------------------------------------------
+InstallGeneratorTest: test_Assert_configurator_is_valid_for_mongoid
+-------------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+-------------------------------------------------------------------------------------
+InstallGeneratorTest: test_models_and_migration_for_active_record_orm_via_carrierwave
+-------------------------------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+-----------------------------------------------------------------------------------
+InstallGeneratorTest: test_models_and_migration_for_active_record_orm_via_dragonfly
+-----------------------------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+-----------------------------------------------------------------------------------
+InstallGeneratorTest: test_models_and_migration_for_active_record_orm_via_paperclip
+-----------------------------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+--------------------------------------------------------------------------------
+InstallGeneratorTest: test_models_and_migration_for_active_record_orm_via_refile
+--------------------------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+-----------------------------------------------------------------
+InstallGeneratorTest: test_models_for_mongoid_orm_via_carrierwave
+-----------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+---------------------------------------------------------------
+InstallGeneratorTest: test_models_for_mongoid_orm_via_paperclip
+---------------------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+--------------------------
+NavigationTest: test_truth
+--------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+----------------------------
+CkeditorTest: test_CDN_setup
+----------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+------------------------------------------------
+CkeditorTest: test_attachment_file_model_adapter
+------------------------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+-----------------------------------------------------------------
+CkeditorTest: test_configuration_specifying_attachment_file_model
+-----------------------------------------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+-----------------------------------------------------------------------------
+CkeditorTest: test_configuration_specifying_attachment_file_model_using_block
+-----------------------------------------------------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+---------------------------------------------------------
+CkeditorTest: test_configuration_specifying_picture_model
+---------------------------------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+---------------------------------------------------------------------
+CkeditorTest: test_configuration_specifying_picture_model_using_block
+---------------------------------------------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+------------------------------------------------------------------------------------------------
+CkeditorTest: test_configuration_specifying_running_ckeditor:nondigest_task_on_assets:precompile
+------------------------------------------------------------------------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+------------------------------------------------
+CkeditorTest: test_default_attachment_file_model
+------------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+----------------------------------------
+CkeditorTest: test_default_picture_model
+----------------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+-----------------------------------------
+CkeditorTest: test_languages_ingnore_list
+-----------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+----------------------------------------
+CkeditorTest: test_picture_model_adapter
+----------------------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+---------------------------------------
+CkeditorTest: test_plugins_ingnore_list
+---------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+------------------------------------------
+CkeditorTest: test_setup_block_yields_self
+------------------------------------------
+  [1m[35m (0.1ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+------------------------
+CkeditorTest: test_truth
+------------------------
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+------------------------------------------------
+PictureTest: test_Set_file_content_type_and_size
+------------------------------------------------
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.png20181219-31036-1h216xq to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-dpqj13.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-dpqj13.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png[0]' -auto-orient -resize "800>" '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/c768803948ba57f6aa420dbc38bf9c8320181219-31036-1ouytvh'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/c768803948ba57f6aa420dbc38bf9c8320181219-31036-1ouytvh to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/e4e3ce30540043b9c6b8e8eef462e11d20181219-31036-1kchy09
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png[0]' 2>/dev/null
+Command :: PATH=/usr/local/bin/:$PATH; identify -format %m '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png[0]'
+Command :: PATH=/usr/local/bin/:$PATH; convert '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png[0]' -auto-orient -resize "118x" -crop "118x100+0+25" +repage '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/c768803948ba57f6aa420dbc38bf9c8320181219-31036-18gvu6a'
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/c768803948ba57f6aa420dbc38bf9c8320181219-31036-18gvu6a to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/ee6c26cb4af35241ec0c1c380bbe4f7920181219-31036-egq5jb
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-10wyxod.png
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-10wyxod.png'
+Command :: PATH=/usr/local/bin/:$PATH; identify -format '%wx%h,%[exif:orientation]' '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/4d003d1435f0827cfe18ac2d2a3979e720181219-31036-1giewt4.png[0]' 2>/dev/null
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at", "width", "height") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)[0m  [["type", "Ckeditor::Picture"], ["data_file_name", "rails.png"], ["data_content_type", "image/png"], ["data_file_size", 6646], ["data_fingerprint", "9c0a079bdd7701d7e729bd956823d153"], ["created_at", "2018-12-20 07:24:43.942477"], ["updated_at", "2018-12-20 07:24:43.942477"], ["width", 50], ["height", 64]]
+  [1m[35m (0.1ms)[0m  RELEASE SAVEPOINT active_record_1
+  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.1ms)[0m  DELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::Picture') AND "ckeditor_assets"."id" = ?  [["id", 1]]
+  [1m[36m (0.0ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  [1m[35m (0.0ms)[0m  rollback transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+-------------------------------------------------------
+AttachmentFileTest: test_Set_file_content_type_and_size
+-------------------------------------------------------
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/rails.tar.gz20181219-31036-chpoew to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1cwawc1.gz
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1cwawc1.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-d8w1ws.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-d8w1ws.gz'
+  [1m[35m (0.1ms)[0m  SAVEPOINT active_record_1
+[paperclip] Trying to link /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-1cwawc1.gz to /var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-15ko80x.gz
+Command :: PATH=/usr/local/bin/:$PATH; file -b --mime '/var/folders/y7/_t4yp4_96j9cldm655fp9tvr0000gn/T/8cfb64e5b1958f04b4b93c382fa438bf20181219-31036-15ko80x.gz'
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO "ckeditor_assets" ("type", "data_file_name", "data_content_type", "data_file_size", "data_fingerprint", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?, ?, ?)[0m  [["type", "Ckeditor::AttachmentFile"], ["data_file_name", "rails.tar.gz"], ["data_content_type", "application/x-gzip"], ["data_file_size", 6823], ["data_fingerprint", "d49d6e2447863150455c0f102c489f33"], ["created_at", "2018-12-20 07:24:44.025490"], ["updated_at", "2018-12-20 07:24:44.025490"]]
+  [1m[35m (0.1ms)[0m  RELEASE SAVEPOINT active_record_1
+  [1m[36m (0.0ms)[0m  [1mSAVEPOINT active_record_1[0m
+  [1m[35mSQL (0.2ms)[0m  DELETE FROM "ckeditor_assets" WHERE "ckeditor_assets"."type" IN ('Ckeditor::AttachmentFile') AND "ckeditor_assets"."id" = ?  [["id", 1]]
+  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
+  [1m[35m (0.1ms)[0m  rollback transaction

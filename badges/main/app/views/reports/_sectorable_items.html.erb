@@ -1,0 +1,31 @@
+<!-- SECTORS -->
+<% @sectors = Sector.published.map{ |si| [ si.id, si.name ] } %>
+
+<div class="form-group">
+  <label for="agency">Select all populations served this month:</label>
+  <% i= 0 %>
+  <div class="four-btn-row clearfix">
+    <% @sectors.each do |sf| %>
+      <div id="selector-button" class="btn-group" data-toggle="buttons">
+        <label class="btn btn-primary btn--small btn-blue btn-sectors btn-fs-medium
+ <%= "active" if @report and @report.sectorable_items.any?{|si| si.sector_id == sf[0].to_i } %>">
+          <input name="sectorable_items[<%= i %>][sector_id]"
+                 type="checkbox" value="<%= sf[0] %>"
+                 <%= "checked=true" if @report and @report.sectorable_items.any?{|si| si.sector_id == sf[0].to_i } %> />
+          <%= sf[1] %>
+        </label>
+      </div>
+
+      <% i = i + 1 %>
+    <% end %>
+  </div>
+</div>
+<script>
+
+  $('body').on('click', '.btn-group .btn.active',function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    $(this).find('input').removeAttr('checked');
+    $(this).removeClass('active');
+  });
+</script>

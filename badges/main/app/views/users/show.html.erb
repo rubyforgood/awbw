@@ -1,0 +1,51 @@
+<h3 class="normal inline-block">
+  <%= image_tag @user.avatar.url(:thumb), class: 'img-rounded avatar' %>
+  <%= @user.name %>
+</h3>
+<% if @user == current_user || current_user.liaison_in_projects?(@user.projects) %>
+  <div class="right btn user-edit-btn">
+    <%= link_to 'Edit', edit_user_path(@user) %>
+  </div>
+<% end %>
+<hr>
+<h5 class="normal upcase">associated projects:</h5>
+<h4 class="normal">
+  <%= @user.display_agencies %>
+</h4>
+<h5 class="normal upcase">
+  contact info:
+</h5>
+<label class="upcase smaller">email:</label>
+<p><%= @user.email %></p>
+<label class="upcase smaller">first name:</label>
+<p><%= @user.first_name %></p>
+<label class="upcase smaller">last name:</label>
+<p><%= @user.last_name %></p>
+<label class="upcase smaller">phone:</label>
+<p><%= @user.phone %></p>
+<label class="upcase smaller">phone2:</label>
+<p><%= @user.phone2 %></p>
+<label class="upcase smaller">phone3:</label>
+<p><%= @user.phone3 %></p>
+<label class="upcase smaller">best time to call:</label>
+<p><%= @user.best_time_to_call %></p>
+<label class="upcase smaller">work address:</label>
+<p><%= @user.address %></p>
+<label class="upcase smaller">work city:</label>
+<p><%= @user.city %></p>
+<label class="upcase smaller">work state:</label>
+<p><%= @user.state %></p>
+<label class="upcase smaller">work zip:</label>
+<p><%= @user.zip %></p>
+<label class="upcase smaller">home address:</label>
+<p><%= @user.address2 %></p>
+<label class="upcase smaller">home city:</label>
+<p><%= @user.city2 %></p>
+<label class="upcase smaller">home state:</label>
+<p><%= @user.state2 %></p>
+<label class="upcase smaller">home zip:</label>
+<p><%= @user.zip2 %></p>
+<label class="upcase smaller">primary address:</label>
+<p><%= @user.display_primary_address %></p>
+<label class="upcase smaller">notes:</label>
+<p><%= @user.notes %></p> 

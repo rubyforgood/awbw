@@ -1,0 +1,21 @@
+<h4 class='light upcase'><%= @workshop.log_form_header %></h4>
+<hr />
+<h3 class='normal no-margin-bottom'><%= "#{@workshop.title} - #{@workshop.windows_type.label if @workshop.windows_type}" %></h3>
+
+<br/><br/>
+<p>
+<b>Facilitator: </b>
+<%= @workshop_log.user.name %>
+</p>
+
+<p>
+<b>Workshop Date: </b>
+<%= @workshop_log.date %>
+</p>
+
+<% @answers.each do |answer| %>
+  <p>
+  <b><%= answer.form_field.question %>: </b>
+  <%= answer.response %>
+  </p>
+<% end %>

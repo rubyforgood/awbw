@@ -1,0 +1,5 @@
+<%= f.check_box :_create %>
+<%= f.hidden_field :sector_id %>
+<% name = f.object.sector.name %>
+<% name.upcase! if name.downcase == 'lgbtqia' %>
+<%= f.label name, name, class: 'inline-block' %> 

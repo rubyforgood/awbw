@@ -1,0 +1,166 @@
+<script type="text/javascript" src="/vendor/tinycarousel/jquery.tinycarousel.min.js"></script>
+<link rel="stylesheet" href="/vendor/tinycarousel/tinycarousel.css" type="text/css" media="screen"/>
+<script type="text/javascript">
+  $(document).ready(function()
+  {
+    $('#slider1').tinycarousel();
+  });
+</script>
+
+<style>
+  #slider1 .viewport {
+    height: 320px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #slider1 .overview li {
+    border: 1px solid #dcdcdc;
+    float: left;
+    width: 236px; height: 320px;
+    margin: 0 10px 0 10px;
+    padding: 1px;
+  }
+
+  .tiny-label {
+    color: #4a4a4a;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    line-height: 1.83;
+    margin: 10px 0 6px 0;
+    padding: 0 10px;
+  }
+
+  .workshop p {
+    color: #464748;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    line-height: 1.71;
+  }
+
+  .workshop { background-color: #fff;}
+
+  .ws-desc { padding: 0 10px 10px 10px;}
+
+  .ws-desc .ws-title{
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .ws-desc p {
+    padding-top: 10px;
+  }
+
+  #slider1 {
+    height: 1%;
+    overflow: hidden;
+    padding: 0 0px 0px;
+    position: relative;
+  }
+
+  #slider1 .buttons {
+    box-shadow: 3px 3px 3px 3px #ccc;
+    border: solid #ccc 1px;
+    padding-top: 14px;
+    padding-left: 0px;
+    margin-left: 0px;
+    color: #063b8d;
+    background: #fff none repeat scroll 0 0;
+    font-size: 25px;
+    width: 40px;
+    height: 65px;
+    z-index: 1;
+  }
+
+  #slider1 .prev {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-top-right-radius: 75px;
+    border-bottom-right-radius: 75px;
+    padding-left: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-right:0px;
+  }
+
+  #slider1 .next {
+    border-top-left-radius: 75px;
+    border-bottom-left-radius: 75px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    padding-left: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-right:0px;
+  }
+
+</style>
+
+<div class="hidden-xs">
+  <div class="printable-area">
+    <div class="container-fluid">
+      <h2 class="normal custom-h2">Featured Workshops</h2>
+      <div class="row" style="padding-top: 0px;" >
+        <div class="col-md-12">
+
+          <div id="slider1">
+            <a class="buttons prev" href="#">&#60;</a>
+
+            <div class="viewport">
+              <ul class="overview">
+                <% @workshops.each do |w| %>
+                  <li class="workshop">
+                    <%= link_to workshop_path(w), { class: "nodecor"}  do %>
+                    <figure class="portrait-img" style="background-image: url(<%= w.thumbnail_image %>);">
+                    </figure>
+                    <div class="tiny-label"><%= w.windows_type.label if w.windows_type %>
+                      <span class="pull-right"><%= w.date %></span>
+                    </div>
+
+                    <div class="ws-desc">
+                      <span class="ws-title"><%= w.title %></span>
+                      <p><%= w.formatted_objective %></p>
+                    </div>
+                  <% end %>
+                </li>
+              <% end %>
+              </ul>
+            </div><!-- VIEWPORT -->
+
+             <a class="buttons next" href="#">&#62;</a>
+          </div><!-- SLIDER1 -->
+       </div>   <!-- COL_MD-12 -->
+   </div>       <!-- ROW -->
+  </div>        <!-- CONTAINER-FLUID -->
+ </div>
+</div>
+
+<div class="hidden-xs">
+  <div class="printable-area" style="font-size: 60%;">
+    <div class="container-fluid container-fluid-custom">
+      <div class="row" style="padding-top:0px;" >
+       <div class="col-md-12">
+        <div class="col-md-5">
+          <div style="padding-top: 0px">
+            <%= render 'resources/popular_desktop', resources: @resources, title: 'Popular Resources' %><br/>
+          </div>
+        </div>
+
+        <div class="col-md-7">
+          <%= render 'dashboard/latest_news_desktop', resources: @stories %>
+        </div>
+        </div>
+      </div>
+     </div>
+  </div>
+</div>
+
+<div class="visible-xs">
+  <div class="printable-area" style="font-size: 60%;">
+    <%= render 'workshops/featured', workshops: @workshops %><br />
+    <%= render 'resources/popular', resources: @resources, title: 'Popular Resources' %><br/>
+    <%= render 'dashboard/latest_news', resources: @stories %><br />
+    <%= render 'resources/featured', resources: @sector_impacts, title: 'Populations We Reach' %><br />
+    <%= render 'resources/themes', themes: @themes, title: 'Themes in Healing' %><br />
+  </div>
+</div>

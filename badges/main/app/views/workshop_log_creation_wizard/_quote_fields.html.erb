@@ -1,0 +1,13 @@
+<div class="nested-fields">
+  <div class="field">
+    <%= f.label 'Enter quotation followed by the name of its speaker; please write in first person.', class: 'small' %>
+    <%= f.label 'Please consider the safety of participant when disclosing name.', class: 'small' %>
+    <%= f.label 'Using a pseudonym or false protective name chosen by participant is a possible option.', class: 'small' %>
+    <%= f.text_field :quote, placeholder: '\"Quote goes here\" -- Name' %>
+    <%= f.label 'Age of the speaker', class: 'small' %>
+    <%= f.text_field :age %>
+  </div>
+  <span class="small right">
+    <%= link_to_remove_association "remove quote", f %>
+  </span>
+</div> 

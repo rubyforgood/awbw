@@ -1,0 +1,57 @@
+{:uriI"Åfile:///Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/wsc/dialogs/tmpFrameset.html?type=text/html&id=eca21917d3ba6aa52deae0417cf49f0a343ab006aab8bef66d4aa62524e3725c:ET:load_pathI"B/Users/patrick/development/ckeditor/vendor/assets/javascripts;T:filenameI"p/Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/wsc/dialogs/tmpFrameset.html;T:	nameI"-ckeditor/plugins/wsc/dialogs/tmpFrameset;T:logical_pathI"2ckeditor/plugins/wsc/dialogs/tmpFrameset.html;T:content_typeI"text/html;T:sourceI"[<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
+<!--
+Copyright (c) 2003-2015, CKSource - Frederico Knabben. All rights reserved.
+For licensing, see LICENSE.html or http://ckeditor.com/license
+-->
+<html>
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<script type="text/javascript">
+
+function doLoadScript( url )
+{
+	if ( !url )
+		return false ;
+
+	var s = document.createElement( "script" ) ;
+	s.type = "text/javascript" ;
+	s.src = url ;
+	document.getElementsByTagName( "head" )[ 0 ].appendChild( s ) ;
+
+	return true ;
+}
+
+var opener;
+function tryLoad()
+{
+	opener = window.parent;
+
+	// get access to global parameters
+	var oParams = window.opener.oldFramesetPageParams;
+
+	// make frameset rows string prepare
+	var sFramesetRows = ( parseInt( oParams.firstframeh, 10 ) || '30') + ",*," + ( parseInt( oParams.thirdframeh, 10 ) || '150' ) + ',0' ;
+	document.getElementById( 'itFrameset' ).rows = sFramesetRows ;
+
+	// dynamic including init frames and crossdomain transport code
+	// from config sproxy_js_frameset url
+	var addScriptUrl = oParams.sproxy_js_frameset ;
+	doLoadScript( addScriptUrl ) ;
+}
+
+	</script>
+</head>
+
+<frameset id="itFrameset" onload="tryLoad();" border="0" rows="30,*,*,0">
+    <frame scrolling="no" framespacing="0" frameborder="0" noresize="noresize" marginheight="0" marginwidth="2" src="" name="navbar"></frame>
+    <frame scrolling="auto" framespacing="0" frameborder="0" noresize="noresize" marginheight="0" marginwidth="0" src="" name="mid"></frame>
+    <frame scrolling="no" framespacing="0" frameborder="0" noresize="noresize" marginheight="1" marginwidth="1" src="" name="bot"></frame>
+    <frame scrolling="no" framespacing="0" frameborder="0" noresize="noresize" marginheight="1" marginwidth="1" src="" name="spellsuggestall"></frame>
+</frameset>
+</html>
+;T:metadata{	:dependencieso:Set:
+@hash}
+I"environment-version;TTI"environment-paths;TTI"rails-env;TTI"2processors:type=text/html&file_type=text/html;TTI"~file-digest:///Users/patrick/development/ckeditor/vendor/assets/javascripts/ckeditor/plugins/wsc/dialogs/tmpFrameset.html;TTF:charsetI"
+utf-8;F:digest"%ŽÚÙh$ínf‡¼É+§IàÍUÄôÞSCEhâìáâ¹™:lengthi[:dependencies_digest"%h4m§%ÈÐúä–œÌUg™pÍ“hËùyòÞE›Á#Ã·:idI"Eeca21917d3ba6aa52deae0417cf49f0a343ab006aab8bef66d4aa62524e3725c;F:
+mtimel+à|ë[

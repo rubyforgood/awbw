@@ -1,0 +1,133 @@
+<h1></h1>
+<% answers = [] %>
+<%= f.fields_for :report_form_field_answers do |report_form_field_answer_form| %>
+  <% answer = report_form_field_answer_form.object %>
+  <% form = report_form_field_answer_form %>
+  <% log_field = answer.form_field %>
+  <%= form.hidden_field :form_field_id, value: log_field.id %>
+
+  <div class="label-plus-comment">
+    <% unless answers.include?(log_field.id) %>
+      <label class='bold'><%= "#{log_field.question}" %><% if log_field.is_required %><%= " *" %><% end %></label>
+    <% end %>
+
+    <% unless answers.include?(log_field.instructional_hint) %>
+      <div class='custom-smaller'><%= log_field.instructional_hint %></div>
+    <% end %>
+  </div>
+
+  <% answers.push(log_field.id, log_field.instructional_hint) %>
+
+  <%= form.hidden_field :answer_option_id, id: "log-field-#{log_field.id}" %>
+
+  <% if log_field.multiple_choice? %>
+    <% answer_option = answer.answer_option %>
+    <% if log_field.input_type == :radio_button %>
+      <% log_field.answer_options.each do |answer_option| %>
+        <% next if answers.include?("#{answer_option.id}-#{log_field.id}") %>
+        <% answers.push("#{answer_option.id}-#{log_field.id}") %>
+        <%= form.send(log_field.input_type, :_create, 1, onclick: 'deselectCheckboxesIfSelected($(this));', class: "js-answer-button-radio-#{log_field.id}", id: "js-answer-button-radio-#{answer_option.id}", data: { log_field_id: log_field.id }, checked: log_field.checked(@old_report, answer_option.name)) %>
+        <%= hidden_field({}, :answer_option_id, value: answer_option.id) %>
+        <% label_txt = answer_option.name.titleize %>
+        <% style = 'text-transform: uppercase;' if label_txt.downcase == 'lgbtqia' %>
+        <%= form.label label_txt, class: 'inline', style: style unless answer_option.name.empty? %>
+
+      <% end %>
+    <% else %>
+      <div class='form-group'>
+        <%= form.send(log_field.input_type, :_create, checked: log_field.selected(@old_report, answer_option.id)) %>
+        <label class='inline'><%= answer_option.name %></label>
+        <% if log_field.question == 'Workshop Details' %>
+          <br>
+        <% end %>
+        <%= form.hidden_field :answer_option_id, value: answer_option.id %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class='form-group'>
+      <% unless log_field.input_type == :hidden_field %>
+        <%= form.send(log_field.input_type, :answer, class: "#{log_field.question.downcase.gsub(' ', '-')} form-control", required: log_field.is_required, value: log_field.answer(@old_report)) %>
+      <% end %>
+    </div>
+
+    <% if log_field.question == 'Share challenges for this month' ||
+      (log_field.question == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2) %>
+      <br />
+      <script>
+        window.quotesIndex = 0;
+      </script>
+
+      <div id="quotes">
+        <% if !@report.quotes.empty? %>
+          <% @report.quotes.each_with_index do |q, i| %>
+            <%= render 'quote', q: q, index: i %>
+            <script>window.quotesIndex += 1;</script>
+          <% end %>
+        <% else %>
+          <%= render 'quote', index: 0, q: Quote.new %>
+        <% end %>
+      </div>
+
+      <div>
+        <a class="btn-underline" href="javascript:addQuote();">Add another Quote</a>
+      </div>
+      <br />
+
+      <%= render 'sectorable_items' %>
+    <% end %>
+
+  <% end %>
+<% end %>
+
+<script>
+  //<![CDATA[
+    if (!String.prototype.includes) {
+      String.prototype.includes = function() {
+         'use strict';
+         return String.prototype.indexOf.apply(this, arguments) !== -1;
+      };
+    }
+    function deselectCheckboxesIfSelected($selector) {
+      // set value of selected option on first matching input
+      // prevents from being overwritten
+      id = '#log-field-' + $selector.data().logFieldId
+      $(id).val($selector.next('input[type="hidden"]').val())
+
+      // deselects other selected checkboxes
+      if($selector[0].checked) {
+        var objectClass = $selector.attr('class');
+        var checkboxes = $('.'+objectClass+':not(#'+$selector.attr('id')+')');
+        for(var i = 0; i < checkboxes.length; i++) {
+          checkboxes[i].checked = false;
+        }
+      }
+    }
+
+
+    $(function() {
+      if(window.location.pathname.includes('workshop_log') == false && window.location.search.includes('form_builder_id=5') == false) {
+        $( "input[class*=on-going]" ).val(<%= @total_ongoing %>).prop('readonly', true)
+        $( "input[class*=first-time]" ).val(<%= @total_first_time %>).prop('readonly', true)
+      }
+    })
+
+  //]]>
+</script>
+
+
+<script>
+  function addQuote() {
+    window.quotesIndex += 1;
+    $("#quotes").append('<%= j render 'quote', :index => "last-quotes",:q => Quote.new %>');
+
+    contentQuotes = document.getElementById("quote-last-quotes").innerHTML.replace(/last-quotes/g, window.quotesIndex);
+    document.getElementById("quote-last-quotes").innerHTML = contentQuotes;
+    newId = "quote-" + window.quotesIndex;
+    $('#quote-last-quotes').attr( 'id' , newId );
+  }
+
+  function delQuote(quoteId) {
+    $( quoteId ).remove();
+  }
+
+</script>
