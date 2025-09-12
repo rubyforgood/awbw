@@ -32,7 +32,7 @@ services:
       # If you prefer traditional keys, set DB_* in .env and configure database.yml accordingly.
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "true"
-      DATABASE_URL: trilogy://root@development:3306/
+      DATABASE_URL: trilogy://root@database:3306/
 
     ports:
       - 3000:3000
