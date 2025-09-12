@@ -1,0 +1,22 @@
+<%= form_for(@event) do |f| %>
+  <div class="form-group">
+    <%= f.label :title, class: 'bold' %>
+    <%= f.text_field :title, class: 'form-control' %>  
+
+    <%= f.label :description, class: 'bold' %>
+    <%= f.text_area :description, class: 'form-control' %>
+
+    <%= f.label :start_date, class: 'bold' %>
+    <%= f.text_field :start_date, type: 'datetime-local', class: 'form-control' %>
+
+    <%= f.label :end_date, class: 'bold' %>
+    <%= f.text_field :end_date, type: 'datetime-local', class: 'form-control' %>
+
+    <%= f.label :registration_close_date, class: 'bold' %>
+    <%= f.text_field :registration_close_date, type: 'datetime-local', class: 'form-control' %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit, class: 'btn btn-primary' %>
+  </div>
+<% end %>

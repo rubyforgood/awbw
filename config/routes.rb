@@ -45,6 +45,7 @@ Rails.application.routes.draw do
   resources :workshop_log_creation_wizard
   resources :workshop_logs, only: [:show, :edit, :new, :create, :update]
 
+  resources :events
   resources :resources
 
   get 'stories', to: 'resources#stories'
