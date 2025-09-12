@@ -7,7 +7,7 @@ adapter = env_config['adapter']
 database = env_config['database']
 
 # Only run if MySQL is the DB
-if adapter.include?('mysql')
+if adapter.include?('trilogy')
   sql_file = Rails.root.join('db', 'awbw_dml_only.sql')
 
   puts "Loading SQL dump from #{sql_file}..."
