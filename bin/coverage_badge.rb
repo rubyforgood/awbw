@@ -2,11 +2,11 @@
 # frozen_string_literal: true
 require "json"
 
-json_path = "coverage/coverage.json"
+json_path = "coverage/summary.json"
 abort("Missing #{json_path} (did SimpleCov JSON run in CI?)") unless File.exist?(json_path)
 
 data = JSON.parse(File.read(json_path))
-percent = data.dig("result", "covered_percent")
+percent = data.dig("covered_percent")
 abort("Could not read covered_percent") unless percent
 
 percent = percent.to_f.round(2)
@@ -55,5 +55,5 @@ svg = <<~SVG
 </svg>
 SVG
 
-File.write("coverage_badge.svg", svg)
+File.write("tmp/coverage_badge.svg", svg)
 puts "Generated coverage_badge.svg (#{percent}%)"

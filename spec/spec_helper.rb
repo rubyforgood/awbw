@@ -13,17 +13,28 @@
 # it.
 #
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
-require "simplecov"
-
-SimpleCov.start "rails" do
-  enable_coverage :branch
-  add_filter %w[/spec/ /vendor/ /config/ /bin/]
-  track_files "{app,lib}/**/*.rb"
-  if ENV["CI"]
-    require "simplecov_json_formatter"
-    self.formatter = SimpleCov::Formatter::JSONFormatter
+if ENV["CI"]
+  require "simplecov"
+  require "simplecov_json_formatter"
+  SimpleCov.formatter =
+    if ENV["GITHUB_ACTIONS"] == "true"
+      SimpleCov::Formatter::JSONFormatter
+    else
+      SimpleCov::Formatter::MultiFormatter.new([
+        SimpleCov::Formatter::HTMLFormatter,
+        SimpleCov::Formatter::JSONFormatter
+      ])
+    end
+  SimpleCov.at_exit do
+    SimpleCov.result.format!
+    File.write("coverage/summary.json", JSON.dump({ covered_percent: SimpleCov.result.covered_percent }))
   end
-  minimum_coverage 20  # tune as you like
+  SimpleCov.start "rails" do
+    enable_coverage :branch
+    add_filter %w[/spec/ /vendor/ /config/ /bin/]
+    track_files "{app,lib}/**/*.rb"
+    minimum_coverage 20  # tune as you like
+  end
 end
 
 RSpec.configure do |config|
