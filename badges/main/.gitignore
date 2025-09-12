@@ -30,6 +30,8 @@
 
 # env file
 .env
+.envrc
+.direnv/*
 
 # Ignore Mac Stuff
 ._*
