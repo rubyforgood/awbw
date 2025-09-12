@@ -24,6 +24,7 @@
 /public/system/attachments/*
 /public/system/thumbnails/*
 /public/ckeditor_assets
+/public/assets/
 
 # Ignore Byebug command history file.
 .byebug_history
