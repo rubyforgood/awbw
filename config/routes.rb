@@ -46,6 +46,11 @@ Rails.application.routes.draw do
   resources :workshop_logs, only: [:show, :edit, :new, :create, :update]
 
   resources :events
+  resources :event_registrations, only: [:create] do
+    collection do
+      post :bulk_create
+    end
+  end
   resources :resources
 
   get 'stories', to: 'resources#stories'

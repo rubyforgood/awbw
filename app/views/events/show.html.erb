@@ -27,5 +27,10 @@
     <%= @event.registration_close_date.strftime("%B %d, %Y %I:%M %p") if @event.registration_close_date.present? %>
 </p>
 
+<p>
+    <strong>Publicly Visible:</strong>
+    <%= @event.publicly_visible? ? 'Yes' : 'No' %>
+</p>
+
 <%= link_to 'Edit', edit_event_path(@event) %> |
 <%= link_to 'Back', events_path %>
