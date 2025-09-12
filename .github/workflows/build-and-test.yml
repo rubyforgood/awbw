@@ -70,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-badge
-          path: coverage_badge.svg
+          path: tmp/coverage_badge.svg
 
       - name: Publish badge to gh-pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
