@@ -1,10 +1,9 @@
 # Resolve the correct DB credentials
-config = YAML.load(ERB.new(File.read(Rails.root.join('config/database.yml'))).result)
-env_config = config[Rails.env]
+config = ActiveRecord::Base.configurations[Rails.env]
 
 # Extract credentials
-adapter = env_config['adapter']
-database = env_config['database']
+adapter = config[:adapter]
+database = config[:database]
 
 # Only run if MySQL is the DB
 if adapter.include?('trilogy')

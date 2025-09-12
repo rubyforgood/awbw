@@ -1,8 +1,9 @@
-development:
-  host: 127.0.0.1
-  username: root
-  adapter: trilogy
+base: &base
   encoding: utf8
+  url: <%= ENV.fetch("DATABASE_URL", "trilogy://root@localhost") %>
+
+development:
+  <<: *base
   pool: 5
   database: awbw_development
 
@@ -10,9 +11,6 @@ development:
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
-  host: 127.0.0.1
-  username: root
-  adapter: trilogy
-  encoding: utf8
+  <<: *base
   pool: 5
   database: awbw_test
