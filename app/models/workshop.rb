@@ -7,6 +7,9 @@ class Workshop < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :windows_type
 
+  has_one_attached :thumbnail
+  has_one_attached :header
+
   has_many :sectorable_items, dependent: :destroy,
            inverse_of: :sectorable, as: :sectorable
 
@@ -42,13 +45,6 @@ class Workshop < ApplicationRecord
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_child_id",
            dependent: :destroy
-
-  has_attached_file :thumbnail, default_url: "/images/workshop_default.jpg"
-  validates_attachment_content_type :thumbnail, content_type: /\Aimage\/.*\Z/
-
-  has_attached_file :header, default_url: "/images/workshop_default.jpg"
-  validates_attachment_content_type :header, content_type: /\Aimage\/.*\Z/
-
 
   # Nested Attributes
   accepts_nested_attributes_for :images, reject_if: :all_blank, allow_destroy: true

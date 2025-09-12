@@ -1,0 +1,25 @@
+<% thumbnail_image = url_for(workshop.thumbnail_image) %>
+
+<div class='list-group-item list-group-item-custom'>
+  <div class='row'>
+    <div class='col-xs-4 fixed-width'>
+      <div
+        class='portrait-img content-img-popular popular-img'
+        style="background-image: url(<%= thumbnail_image %>)"
+      ></div>
+    </div>
+    <div class='col-xs-8 col-xs-6-custom content-heading span'>
+      <h3><%= link_to workshop.title, link_route %></h3>
+      <small><%= "#{workshop.windows_type.label unless workshop.windows_type.nil?} - #{workshop.date}" %></small><br/>
+      <small>Author:
+        <%= workshop.author %></small>
+      <p class='workshop-description'><%= truncate(
+          workshop.formatted_objective,
+          length: 120,
+          omission: "... ",
+          separator: " ",
+        ) %></p>
+      <a><%= link_to "Read more", link_route, target: "blank" %></a>
+    </div>
+  </div>
+</div>
