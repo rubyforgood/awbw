@@ -1,8 +1,3 @@
-sql_file = Rails.root.join('db', 'init', '02_awbw_dml_only.sql')
-puts "Loading SQL dump from #{sql_file}..."
-command = "rails dbconsole < #{sql_file}"
-system(command) || raise("Failed to load SQL dump into #{database}")
-
 admin_password = Devise::Encryptor.digest(Admin, 'password')
 Admin.update_all(encrypted_password: admin_password)
 
