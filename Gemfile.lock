@@ -164,7 +164,6 @@ GEM
     drb (2.2.3)
     erb (5.0.2)
     erubi (1.13.1)
-    excon (0.112.0)
     execjs (2.10.0)
     factory_bot (6.5.5)
       activesupport (>= 6.1.0)
@@ -243,14 +242,6 @@ GEM
       net-imap
       net-pop
       net-smtp
-    mandrill_mailer (1.8.0)
-      actionpack
-      activejob
-      activesupport
-      mandrillus (~> 2.0.0)
-    mandrillus (2.0.0)
-      excon (>= 0.16.0, < 1.0)
-      json (>= 1.7.7, < 3.0)
     marcel (1.0.4)
     matrix (0.4.3)
     method_source (1.1.0)
@@ -502,7 +493,6 @@ DEPENDENCIES
   jwt (~> 1.2.1)
   kt-paperclip (~> 6.4, >= 6.4.1)
   listen
-  mandrill_mailer
   mutex_m
   neat (= 1.7.1)
   observer

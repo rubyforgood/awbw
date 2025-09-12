@@ -5,7 +5,3 @@ ActionMailer::Base.smtp_settings = {
   :password  => ENV.fetch('SMTP_PASSWORD'),
 }
 ActionMailer::Base.delivery_method = :smtp
-
-MandrillMailer.configure do |config|
-  config.api_key = ENV.fetch('SMTP_PASSWORD')
-end

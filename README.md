@@ -13,7 +13,7 @@ This is a Rails 6.1 application built with:
 - **Frontend**: Bootstrap with SASS for styling
 - **Database**: MySQL with ActiveRecord ORM
 - **File Uploads**: Paperclip with AWS S3 storage
-- **Email**: Mandrill for transactional emails
+- **Email**: ActionMailer for transactional emails (*TODO* Need to configure smtp creds)
 - **API**: JSON API with JWT authentication
 
 ## Key Features
