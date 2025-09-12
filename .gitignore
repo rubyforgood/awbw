@@ -26,6 +26,9 @@
 /public/ckeditor_assets
 /public/assets/
 
+# Ignore local active storage attachments
+storage
+
 # Ignore Byebug command history file.
 .byebug_history
 
