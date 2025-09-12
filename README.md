@@ -1,4 +1,5 @@
 # awbw-portal
+![Coverage](https://rubyforgood.github.io/awbw/badges/main/coverage_badge.svg)
 
 This project is the Leaders Dashboard for the A Windows Between Worlds Leader site. The Leaders site
 offers a place for workshop leaders to provide input and information about workshops.
