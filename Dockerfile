@@ -1,4 +1,4 @@
-FROM ruby:3.3.8-bookworm AS base
+FROM ruby:3.3.8-slim AS base
 
 # Set working directory
 WORKDIR /app
