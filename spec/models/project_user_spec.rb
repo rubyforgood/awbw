@@ -18,7 +18,7 @@ RSpec.describe ProjectUser do
   end
 
   describe 'enums' do
-    it { should define_enum_for(:position).with_values([:default, :liaison, :leader, :assistant]) }
+    it { should define_enum_for(:position).with_values(default: 0, liaison: 1, leader: 2, assistant: 3) }
   end
 
   it 'is valid with valid attributes' do
