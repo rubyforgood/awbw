@@ -6,9 +6,8 @@ services:
     ports:
       - 3306
     volumes:
-      - type: volume
-        source: mysql-data
-        target: /var/lib/mysql
+      - mysql-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
       MYSQL_DATABASE: awbw_development
