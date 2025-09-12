@@ -22,7 +22,6 @@ jobs:
         env:
           RAILS_ENV: test
           CI: "true"
-          DISABLE_SPRING: "1"
         run: bundle exec rspec
 
       - name: Generate coverage badge

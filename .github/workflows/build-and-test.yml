@@ -62,23 +62,3 @@ jobs:
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           CI: "true"
-
-      - name: Generate coverage badge
-        run: ruby bin/coverage_badge.rb
-
-      - name: Upload badge artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-badge
-          path: tmp/coverage_badge.svg
-
-      - name: Publish badge to gh-pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./
-          publish_files: coverage_badge.svg
-          destination_dir: badges
-          keep_files: true
