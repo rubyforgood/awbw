@@ -1,0 +1,19 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>First name:</strong>
+  <%= @facilitator.first_name %>
+</p>
+
+<p>
+  <strong>Last name:</strong>
+  <%= @facilitator.last_name %>
+</p>
+
+<p>
+  <strong>Email:</strong>
+  <%= @facilitator.email %>
+</p>
+
+<%= link_to 'Edit', edit_facilitator_path(@facilitator) %> |
+<%= link_to 'Back', facilitators_path %>

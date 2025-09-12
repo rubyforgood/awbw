@@ -1,0 +1,16 @@
+<%= form_for(@facilitator) do |f| %>
+  <%= render 'shared/errors', resource: facilitator if facilitator.errors.any? %>
+
+  <div class="form-inputs">
+    <%= f.label :first_name, class: 'bold' %>
+    <%= f.text_field :first_name %>
+    <%= f.label :last_name, class: 'bold' %>
+    <%= f.text_field :last_name %>
+    <%= f.label :email, class: 'bold' %>
+    <%= f.text_field :email %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit %>
+  </div>
+<% end %>

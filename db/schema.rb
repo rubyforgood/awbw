@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_04_07_002246) do
+ActiveRecord::Schema.define(version: 2025_09_12_144532) do
 
   create_table "admins", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "email", default: "", null: false
@@ -116,6 +116,14 @@ ActiveRecord::Schema.define(version: 2025_04_07_002246) do
     t.string "actual_url"
     t.index ["assetable_type", "assetable_id"], name: "idx_ckeditor_assetable"
     t.index ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type"
+  end
+
+  create_table "facilitators", force: :cascade do |t|
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.string "email", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "faqs", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -480,8 +488,10 @@ ActiveRecord::Schema.define(version: 2025_04_07_002246) do
     t.integer "avatar_file_size"
     t.datetime "avatar_updated_at"
     t.boolean "super_user", default: false
+    t.bigint "facilitator_id"
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["facilitator_id"], name: "index_users_on_facilitator_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
@@ -668,6 +678,7 @@ ActiveRecord::Schema.define(version: 2025_04_07_002246) do
   add_foreign_key "user_forms", "users"
   add_foreign_key "user_permissions", "permissions"
   add_foreign_key "user_permissions", "users"
+  add_foreign_key "users", "facilitators"
   add_foreign_key "users", "projects", column: "agency_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"

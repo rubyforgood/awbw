@@ -14,6 +14,7 @@ RSpec.describe User do
     # Need create for association tests to work correctly with callbacks
     subject { create(:user) }
 
+    it { should belong_to(:facilitator).optional}
     it { should have_many(:workshops) }
     it { should have_many(:workshop_logs) }
     it { should have_many(:reports) }

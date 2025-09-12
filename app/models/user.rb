@@ -15,6 +15,7 @@ class User < ApplicationRecord
   validates_attachment_content_type :avatar, content_type: /\Aimage\/.*\z/
 
   # Associations
+  belongs_to :facilitator, optional: true
   has_many :workshops
 
   # has_many :curriculum_workshops, -> (user) {  }, class_name: 'Workshop'
