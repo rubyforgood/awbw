@@ -3,11 +3,8 @@ FROM ruby:3.3.8-bookworm
 # Install basic Linux packages
 RUN apt-get update -qq && apt-get install -y \
   build-essential \
-  libpq-dev \
   nodejs \
   yarn \
-  git \
-  curl \
   imagemagick \
   libvips \
   tzdata \
@@ -16,9 +13,7 @@ RUN apt-get update -qq && apt-get install -y \
   libffi-dev \
   libreadline-dev \
   libssl-dev \
-  zlib1g-dev \
-  libsqlite3-dev \
-  sqlite3
+  zlib1g-dev
 
 # Set working directory
 WORKDIR /app
