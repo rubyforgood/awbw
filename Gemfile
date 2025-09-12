@@ -3,6 +3,8 @@ source 'https://rubygems.org'
 ruby "3.3.8"
 
 gem "rails", "~> 6.1.7"
+
+# TODO Consider removing these after upgrading Rails. These are a Ruby 3.3 => 3.4 warning.
 # add required gems leaving standard library to avoid log noise
 gem "bigdecimal"
 gem "drb"
