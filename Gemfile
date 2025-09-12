@@ -4,6 +4,14 @@ ruby "3.3.8"
 
 gem "rails", "~> 6.1.7"
 
+# TODO Consider removing these after upgrading Rails. These are a Ruby 3.3 => 3.4 warning.
+# add required gems leaving standard library to avoid log noise
+gem "bigdecimal"
+gem "drb"
+gem "mutex_m"
+gem "observer"
+
+
 gem 'sprockets-rails', '~> 3.2.2'
 gem "activerecord-trilogy-adapter" # for mysql installation
 gem 'bootstrap-sass'
@@ -66,6 +74,10 @@ group :development, :test do
   gem 'listen'
   gem 'pry-rails'
   gem 'rspec-rails'
+  gem "simplecov", require: false
+  gem "simplecov_json_formatter", require: false
   gem 'selenium-webdriver'
   gem 'shoulda-matchers', require: false
+  gem "debug", "~> 1.11"
 end
+

@@ -1,0 +1,38 @@
+name: Publish Coverage Badge
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write   # required for gh-pages branch writes
+
+jobs:
+  publish-badge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Run RSpec (SimpleCov JSON + summary via at_exit)
+        env:
+          RAILS_ENV: test
+          CI: "true"
+        run: bundle exec rspec
+
+      - name: Generate coverage badge
+        run: ruby bin/coverage_badge.rb coverage/summary.json coverage_badge.svg
+
+      - name: Publish badge to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: .
+          publish_files: coverage_badge.svg
+          destination_dir: badges/main
+          keep_files: true
