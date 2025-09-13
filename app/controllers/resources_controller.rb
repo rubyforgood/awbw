@@ -15,10 +15,8 @@ class ResourcesController < ApplicationController
   end
 
   def new
-    @resource = Resource.new(type: params[:type])
-    load_age_ranges
-    load_sectors
-    load_images
+    @resource = Resource.new
+    @sectors = Sector.pluck(:name, :id)
   end
 
   def edit
@@ -83,23 +81,6 @@ class ResourcesController < ApplicationController
         @user_form.report_form_field_answers.build(form_field: field)
       end
     end
-  end
-
-  def load_age_ranges
-    Metadatum.find_by(name: 'AgeRange').categories.each do |category|
-      @resource.categorizable_items.build(category: category)
-    end
-  end
-
-  def load_sectors
-    Sector.all.each do |sector|
-      @resource.sectorable_items.build(sector: sector)
-    end
-  end
-
-
-  def load_images
-    @resource.images.build
   end
 
   def search_params
