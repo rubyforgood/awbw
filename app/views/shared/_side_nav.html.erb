@@ -67,12 +67,6 @@
         </li>
       <% end %>
       <% if user_signed_in? %>
-        <%= link_to faqs_path do %>
-          <li class="nav-item js-faq">
-            <i class="icon icon-faq"></i>
-            <span>FAQ</span>
-          </li>
-        <% end %>
         <%= link_to contact_us_path(q: "adult") do %>
           <li class="nav-item js-contact">
             <i class="far fa-envelope icon"></i>
