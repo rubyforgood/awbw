@@ -1,6 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe "EventRegistrations", type: :request do
+  before(:all) do
+    create(:permission, security_cat: "Combined Adult and Children's Windows") unless Permission.exists?(security_cat: "Combined Adult and Children's Windows")
+    create(:permission, security_cat: "Adult Windows") unless Permission.exists?(security_cat: "Adult Windows")
+    create(:permission, security_cat: "Children's Windows") unless Permission.exists?(security_cat: "Children's Windows")
+  end
+
   let(:user) { create(:user, first_name: "John", last_name: "Doe", email: "john.doe@example.com") }
   let(:event) { create(:event, title: "Test Event") }
   let(:valid_attributes) do
