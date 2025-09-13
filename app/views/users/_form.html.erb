@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <%= simple_form_for @user, html: { multipart: true, class: "space-y-8" } do |f| %>
   <%= render 'shared/errors', resource: @user if @user.errors.any? %>
 
@@ -42,7 +43,7 @@
     <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
       <%= f.label :avatar, class: "block font-medium mb-1 text-gray-700 string required" %>
 
-      <% if @user.avatar.present? %>
+      <% if @user.avatar.attached? %>
         <%= image_tag url_for(@user.avatar),
                       id: "avatar-preview",
                       class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm img-rounded avatar" %>
