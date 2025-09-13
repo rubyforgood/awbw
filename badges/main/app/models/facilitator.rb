@@ -1,5 +1,7 @@
 class Facilitator < ApplicationRecord
   has_one :user
+  has_many :facilitator_organizations, dependent: :restrict_with_exception
+  has_many :organizations, through: :facilitator_organizations
 
   CONTACT_TYPES = ["Work", "Personal"].freeze
   PERMITTED_PARAMS = [

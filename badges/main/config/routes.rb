@@ -51,6 +51,7 @@ Rails.application.routes.draw do
   resources :users
   resources :user_forms
   resources :facilitators
+  resources :organizations
 
   get 'reports/:id/edit_story', to: 'reports#edit_story', as: 'reports_edit_story'
   put 'reports/update_story/:id', to: 'reports#update_story', as: 'reports_update_story'
