@@ -7,4 +7,7 @@ export default defineConfig({
       envVars: { RAILS_ENV: "development" }
     })
   ],
+  server: {
+    allowedHosts: ["localhost", "vite"],
+  }
 })

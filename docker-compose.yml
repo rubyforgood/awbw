@@ -31,20 +31,34 @@ services:
       # If you prefer traditional keys, set DB_* in .env and configure database.yml accordingly.
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "true"
+      VITE_RUBY_HOST: vite
       DATABASE_URL: trilogy://root@database:3306/
-
     ports:
       - 3000:3000
     volumes:
       - ./:/app:cached
       - /app/tmp
-    working_dir: /app
 
     command: bash -lc "bin/rails s -b 0.0.0.0 -p 3000"
     tty: true
     stdin_open: true
     restart: unless-stopped
 
+  vite:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: "true"
+      VITE_RUBY_HOST: 0.0.0.0
+    volumes:
+      - ./:/app:cached
+      - /app/tmp
+    command: bin/vite dev
+    ports:
+      - 3036:3036
 
   prod:
     profiles:
