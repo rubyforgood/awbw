@@ -40,6 +40,7 @@ RSpec.describe User do
     # Nested Attributes
     it { should accept_nested_attributes_for(:user_forms) }
     it { should accept_nested_attributes_for(:project_users).allow_destroy(true) }
+    it { should have_many(:organizations) }
   end
 
   describe 'validations' do
