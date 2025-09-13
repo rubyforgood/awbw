@@ -29,17 +29,6 @@ gem 'bourbon', '~> 4.2.2'
 gem 'draper'
 gem "kt-paperclip", "~> 6.4", ">= 6.4.1"
 gem 'aws-sdk-s3'
-gem 'rails_admin','~> 2.2.1'
-# gem 'rails_admin', git: 'https://github.com/enmand/rails_admin.git'
-# rails_admin 1.1.1 has a transitive dependency on haml (~> 4.0). haml 4.0.7 in
-# turn has a transitive dependency on tile and does not specify a version range.
-# This causes it to pull in tilt 2.6.0 which is incompatible with haml 4.0.7. So
-# specifying tilt as a direct dependency with a version range that is compatible
-# with haml 4.0.7. We can remove this as soon we get upgrade to a newer version
-# of rails_admin that should pull in a newer version of haml, breaking this
-# dependency chain.
-gem 'tilt', '~> 2.4.0'
-
 
 gem 'puma', '~> 5.6' # Add Puma as the web server
 

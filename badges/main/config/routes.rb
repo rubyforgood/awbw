@@ -1,13 +1,7 @@
 Rails.application.routes.draw do
-  mount RailsAdmin::Engine => '/admin/cms', as: 'rails_admin'
   mount Ckeditor::Engine => '/admin/ckeditor', as: 'ckeditor'
   apipie
   get 'cms', to: 'admins/base#show'
-
-  namespace :admins do
-    root 'base#show'
-    resources :form_builders
-  end
 
   devise_for :users, controllers: { registrations: 'registrations', passwords: 'passwords' }
 

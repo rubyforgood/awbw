@@ -24,7 +24,8 @@ class ApplicationController < ActionController::Base
       flash[:notice] = 'We have migrated our data to a new system.  '\
                        'Please click the link below to reset your password.'
     end
-    admin_request? ? rails_admin_path : super
+
+    super
   end
 
   # IMPERSONATE USER
@@ -37,16 +38,12 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def admin_request?
-    params['controller'].include?('rails_admin') || params['controller'].include?('ckeditor')
-  end
-
   def after_sign_in_path_for(resource)
-    resource.class.name == 'User' ? root_path : admins_root_path
+    root_path
   end
 
   def after_sign_out_path_for(resource)
-    resource == :admin ? rails_admin_path : new_user_session_path
+    new_user_session_path
   end
 
   def current_api_user

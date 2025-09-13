@@ -8,11 +8,6 @@ class Form < ApplicationRecord
   # Nested Attrs
   accepts_nested_attributes_for :form_fields, allow_destroy: true
 
-  # Rails Admin
-  rails_admin do
-    exclude_fields :form_builder_id, :reports, :user_forms, form_fields: [:form]
-  end
-
   def name
     owner ? "#{owner.try(:name)} Form" : 'New Form'
   end
