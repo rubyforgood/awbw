@@ -5,9 +5,9 @@ RSpec.describe User do
   # let(:user) { build(:user) } # Keep build for simple validation tests
   # Create permissions needed by the after_create callback
   before(:all) do
-      create(:permission, security_cat: "Combined Adult and Children's Windows") unless Permission.exists?(security_cat: "Combined Adult and Children's Windows")
-      create(:permission, security_cat: "Adult Windows") unless Permission.exists?(security_cat: "Adult Windows")
-      create(:permission, security_cat: "Children's Windows") unless Permission.exists?(security_cat: "Children's Windows")
+      create(:permission, :adult)
+      create(:permission, :children)
+      create(:permission, :combined)
   end
 
   describe 'associations' do
