@@ -76,7 +76,11 @@
       <%= f.text_area :notes, placeholder: 'Any tips on how to make this workshop a success.' , class: "form-control form-control-workshop" %>
     </div>
 
-    <%= f.hidden_field :windows_type_id, value: params[:windows_type] %>
+    <div class="form-group">
+      <%= f.label 'Workshop Type' %>
+      <%= f.collection_select :windows_type_id, WindowsType.all, :id, :label, {prompt: 'Select Workshop Type', selected: WindowsType.first&.id}, {class: "form-control selectpicker"} %>
+    </div>
+
 
     <div class="form-group image-fields-wrapper">
       <%= f.fields_for :images do |img_fields| %>
