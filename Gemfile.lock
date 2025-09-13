@@ -481,7 +481,6 @@ DEPENDENCIES
   ckeditor (~> 4.3.0)
   cocoon (~> 1.2.6)
   coffee-rails
-  concurrent-ruby (= 1.3.4)
   debug (~> 1.11)
   devise (~> 4.9.4)
   dotenv-rails

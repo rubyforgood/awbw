@@ -3,10 +3,6 @@ source 'https://rubygems.org'
 ruby "3.3.8"
 
 gem "rails", "~> 7.1.5"
-gem "concurrent-ruby", "1.3.4"
-
-# Ruby 3.2 doesn't need these standard library gems
-
 
 gem 'sprockets-rails', '~> 3.2.2'
 gem 'trilogy'
