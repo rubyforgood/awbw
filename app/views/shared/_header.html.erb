@@ -11,6 +11,12 @@
     <%= image_tag("logo-color.png", class:"colored-logo") %>
   <% end %>
 
+  <div class="navbar-text navbar-link">
+    <%= link_to workshops_path do %>
+      Workshops
+    <% end %>
+  </div>
+
   <% if user_signed_in? %>
     <div class="navbar-text pull-right container-fluid">
       <div class="dropdown">
