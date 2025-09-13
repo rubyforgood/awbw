@@ -80,10 +80,6 @@ class User < ApplicationRecord
     (liaison_project_ids & projects.map(&:id)).any?
   end
 
-  def liaison?
-    liaison_project_ids.count > 0
-  end
-
   def project_monthly_workshop_logs(date, *windows_type)
     where = windows_type.map do |wt| 'windows_type_id = ?' end
 

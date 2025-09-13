@@ -1,54 +1,98 @@
-<%= form_for @user, html: { multipart: true } do |f| %>
+<%= simple_form_for @user, html: { multipart: true } do |f| %>
   <%= render 'shared/errors', resource: user if user.errors.any? %>
-  <div class="form-group">
-    <%= f.label :avatar, class: 'bold' %>
-    <%= image_tag user.avatar.url(:thumb), class: "img-rounded avatar" %>
-    <%= f.file_field :avatar %>
-    <%= f.label :email, class: 'bold' %>
-    <%= f.text_field :email %>
-    <%= f.label :password, class: 'bold' %>
-    <%= f.password_field :password %>
-    <%= f.label :first_name %>
-    <%= f.text_field :first_name %>
-    <%= f.label :last_name %>
-    <%= f.text_field :last_name %>
-    <div class="form-group">
-      <%= f.fields_for :project_users do |project_user_form| %>
-        <%= render 'project_user_fields', f: project_user_form, projects: projects, user: user %>
-      <% end %>
-      <%= link_to_add_association 'add role', f, :project_users, html_options: { locals: {projects: projects} }, class: 'smaller' %>
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.label :avatar, class: 'bold' %>
+      <%= image_tag user.avatar.url(:thumb), class: "img-rounded avatar" %>
+      <%= f.file_field :avatar %>
     </div>
-    <%= f.label :phone, value: 'work phone' %>
-    <%= f.text_field :phone %>
-    <%= f.label :phone2, value: 'home phone' %>
-    <%= f.text_field :phone2 %>
-    <%= f.label :phone3, value: 'cell phone' %>
-    <%= f.text_field :phone3 %>
-    <%= f.label :best_time_to_call %>
-    <%= f.text_field :best_time_to_call %>
-    <label class="bold">Work Address</label>
-    <%= f.label :address, value: 'street' %>
-    <%= f.text_field :address %>
-    <%= f.label :city %>
-    <%= f.text_field :city %>
-    <%= f.label :state %>
-    <%= f.text_field :state %>
-    <%= f.label :zip %>
-    <%= f.text_field :zip %>
-    <label class="bold">Home Address</label>
-    <%= f.label :address2, value: 'street' %>
-    <%= f.text_field :address2 %>
-    <%= f.label :city2, value: 'city' %>
-    <%= f.text_field :city2 %>
-    <%= f.label :state2, value: 'state' %>
-    <%= f.text_field :state2 %>
-    <%= f.label :zip2, value: 'zip' %>
-    <%= f.text_field :zip2 %>
-    <%= f.label :primary_address %>
-    <%= f.select :primary_address, [['work', 1], ['home', 2]] %>
-    <%= f.label :notes %>
-    <%= f.text_area :notes %>
-    <%= link_to 'Cancel', user.id ? user_path(user) : root_path, class: 'btn secondary cancel-btn' %>
-    <%= f.submit 'Submit' %>
+    <div class="col-md-6">
+      <%= f.input :super_user, as: :boolean %>
+    </div>
   </div>
+
+
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :email %>
+    </div>
+    <div class="col-md-6">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :first_name %>
+    </div>
+    <div class="col-md-6">
+      <%= f.input :last_name %>
+    </div>
+  </div>
+
+
+
+  <div class="row">
+    <div class="col-md-3">
+      <%= f.input :phone, label: 'Work phone' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :phone2, label: 'Home phone' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :phone3, value: 'Cell phone' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :best_time_to_call %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :primary_address, collection: [['work', 1], ['home', 2]] %>
+    </div>
+    <div class="col-md-6">
+
+    </div>
+  </div>
+
+  <div class="row">
+    <label class="bold">Work Address</label>
+    <div class="col-md-3">
+      <%= f.input :address, value: 'Street' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :city %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :state %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :zip %>
+    </div>
+  </div>
+
+
+  <div class="row">
+    <label class="bold">Home Address</label>
+    <div class="col-md-3">
+      <%= f.input :address2, value: 'street' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :city2 %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :state2 %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :zip2 %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <%= f.input :notes, as: :text, input_html: { rows: 2 } %>
+    </div>
+  </div>
+
+  <%= link_to 'Cancel', users_path, class: 'btn secondary cancel-btn' %>
+  <%= f.submit 'Submit', class: "btn btn-success" %>
 <% end %> 
