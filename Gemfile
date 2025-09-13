@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 ruby "3.3.8"
 
-gem "rails", "~> 7.1.5"
+gem "rails", "~> 7.2.2"
 
 gem 'sprockets-rails', '~> 3.2.2'
 gem 'trilogy'

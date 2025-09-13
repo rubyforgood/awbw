@@ -10,11 +10,11 @@ class FormField < ApplicationRecord
   validates_presence_of :question
 
   # Enum
-  enum status: [:inactive, :active]
+  enum :status, [:inactive, :active]
 
   # TODO: Rails 6.1 requires enums to be symbols
   # need additional refactoring in methods that call answer_type & answer_datatype to account for change to enum
-  enum answer_type: [
+  enum :answer_type, [
     :free_form_input_one_line,
     :free_form_input_paragraph,
     :multiple_choice_radio,
@@ -23,7 +23,7 @@ class FormField < ApplicationRecord
     :group_header
   ]
 
-  enum answer_datatype: [
+  enum :answer_datatype, [
     :text_alphanumeric,
     :number_integer,
     :number_decimal,
