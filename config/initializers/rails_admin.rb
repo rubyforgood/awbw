@@ -1,7 +1,8 @@
-require Rails.root.join('lib', 'rails_admin', 'duplicate.rb')
-RailsAdmin::Config::Actions.register(RailsAdmin::Config::Actions::Duplicate)
 RailsAdmin.config do |config|
   config.asset_source = :sprockets
+
+  require Rails.root.join('lib', 'rails_admin', 'duplicate.rb')
+  RailsAdmin::Config::Actions.register(RailsAdmin::Config::Actions::Duplicate)
 
   config.navigation_static_links = {
     'Help' => '/dashboard/help'
