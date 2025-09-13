@@ -4,16 +4,13 @@ class Report < ApplicationRecord
   belongs_to :windows_type
 
   belongs_to :owner, polymorphic: true, optional: true
-  has_one  :form, as: :owner
-  has_one  :image
+  has_one :form, as: :owner
+  has_one :image
   validate :image_valid?
-  has_attached_file :form_file
 
-  before_save :set_has_attachament
-
-  FORM_FILE_CONTENT_TYPES = %w[application/pdf application/msword application/vnd.openxmlformats-officedocument.wordprocessingml.document application/vnd.ms-excel application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]
-
-  validates_attachment :form_file, content_type: { content_type:  FORM_FILE_CONTENT_TYPES }
+  # TODO handle set_has_attachment
+  # before_save :set_has_attachament
+  has_one_attached :form_file
 
   has_many :images
   has_many :form_fields, through: :form
@@ -23,15 +20,15 @@ class Report < ApplicationRecord
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :sectors, through: :sectorable_items, dependent: :destroy
-  scope :in_month, -> (date) { where(created_at: date.beginning_of_month..date.end_of_month) }
+  scope :in_month, ->(date) { where(created_at: date.beginning_of_month..date.end_of_month) }
 
   has_many :media_files, dependent: :destroy
   accepts_nested_attributes_for :media_files
 
   accepts_nested_attributes_for :report_form_field_answers,
-                                reject_if: proc { |object|
-                                  (object['_create'].to_i == 0 && object['answer'].nil?)
-                                }
+    reject_if: proc { |object|
+      object["_create"].to_i == 0 && object["answer"].nil?
+    }
   accepts_nested_attributes_for :quotable_item_quotes
 
   after_create :set_windows_type
@@ -45,13 +42,13 @@ class Report < ApplicationRecord
       when "MonthlyReport"
         "#{type} - Monthly Report Date: #{date_label} - User: #{user.full_name if user}"
       when "Report"
-        if owner_type and owner_type == 'Resource'
-          "#{type} - #{owner ? owner_type : '[ EMPTY ]'} - User: #{user.full_name if user}"
+        if owner_type and owner_type == "Resource"
+          "#{type} - #{owner ? owner_type : "[ EMPTY ]"} - User: #{user.full_name if user}"
         else
-           "#{type} - #{owner ? owner.type : '[ EMPTY ]'} - User: #{user.full_name if user}"
+          "#{type} - #{owner ? owner.type : "[ EMPTY ]"} - User: #{user.full_name if user}"
         end
       else
-        "#{type} - #{owner ? owner.communal_label(self) : '[ EMPTY ]'} - User: #{user.full_name if user}"
+        "#{type} - #{owner ? owner.communal_label(self) : "[ EMPTY ]"} - User: #{user.full_name if user}"
       end
     end
   end
@@ -61,7 +58,7 @@ class Report < ApplicationRecord
   end
 
   def date_label
-    "#{date ? date.strftime('%m/%d/%y') : '[ EMPTY ]'}"
+    "#{date ? date.strftime("%m/%d/%y") : "[ EMPTY ]"}"
   end
 
   def delete_and_update_all(quotes_params, log_fields, image = nil)
@@ -73,7 +70,7 @@ class Report < ApplicationRecord
 
     unless image.blank?
       self.image.destroy if self.image
-      self.image = Image.new( file: image )
+      self.image = Image.new(file: image)
     end
 
     save
@@ -90,8 +87,8 @@ class Report < ApplicationRecord
 
   def log_fields
     if form_builder
-      form_builder.forms[0].form_fields.where('ordering is not null and status = 1').
-        order(ordering: :desc).all
+      form_builder.forms[0].form_fields.where("ordering is not null and status = 1")
+        .order(ordering: :desc).all
     else
       []
     end
@@ -105,9 +102,7 @@ class Report < ApplicationRecord
         FormBuilder.find(2)
       end
     elsif owner and owner_type.include? "FormBuilder"
-       FormBuilder.find(7)
-    else
-      nil
+      FormBuilder.find(7)
     end
   end
 
@@ -120,11 +115,11 @@ class Report < ApplicationRecord
   end
 
   def name
-    type ? type.titleize : 'Report'
+    type ? type.titleize : "Report"
   end
 
   def display_date
-    created_at.strftime('%B %e, %Y')
+    created_at.strftime("%B %e, %Y")
   end
 
   private
@@ -132,7 +127,7 @@ class Report < ApplicationRecord
   def set_has_attachament
     self.has_attachment = false
 
-    unless self.image.blank? and self.media_files.empty? and self.form_file.blank?
+    unless image.blank? and media_files.empty? and form_file.blank?
       self.has_attachment = true
     end
   end
