@@ -56,6 +56,7 @@ RUN apt-get update -qq && apt-get install --no-install-recommends -y \
     libffi8 \
     libreadline8 \
     libssl3 \
+    libyaml-dev \
     zlib1g \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
