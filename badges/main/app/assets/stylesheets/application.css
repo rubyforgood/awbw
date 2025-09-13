@@ -1,4 +1,5 @@
 /*
- *= require_self
- *= require awbw
- */
+ *= require bootstrap/bootstrap.min
+ *= require awbw/base-20250913
+ *= require awbw/application-20250913
+*/

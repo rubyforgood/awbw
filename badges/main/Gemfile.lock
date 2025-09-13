@@ -84,8 +84,6 @@ GEM
     apipie-rails (1.5.0)
       actionpack (>= 5.0)
       activesupport (>= 5.0)
-    autoprefixer-rails (10.4.21.0)
-      execjs (~> 2)
     aws-eventstream (1.4.0)
     aws-partitions (1.1159.0)
     aws-sdk-core (3.232.0)
@@ -115,14 +113,8 @@ GEM
     bigdecimal (3.2.3)
     binding_of_caller (1.0.1)
       debug_inspector (>= 1.2.0)
-    bootstrap-sass (3.4.1)
-      autoprefixer-rails (>= 5.2.1)
-      sassc (>= 2.0.0)
     bootstrap-will_paginate (1.0.0)
       will_paginate
-    bourbon (4.2.3)
-      sass (~> 3.4)
-      thor
     brakeman (7.1.0)
       racc
     builder (3.3.0)
@@ -263,9 +255,6 @@ GEM
     minitest (5.25.5)
     multi_xml (0.7.2)
       bigdecimal (~> 3.1)
-    neat (1.7.1)
-      bourbon (>= 4.0)
-      sass (>= 3.3)
     net-imap (0.4.22)
       date
       net-protocol
@@ -383,19 +372,6 @@ GEM
       logger
     ruby2_keywords (0.0.5)
     rubyzip (3.1.0)
-    sass (3.7.4)
-      sass-listen (~> 4.0.0)
-    sass-listen (4.0.0)
-      rb-fsevent (~> 0.9, >= 0.9.4)
-      rb-inotify (~> 0.9, >= 0.9.7)
-    sassc (2.4.0)
-      ffi (~> 1.9)
-    sassc-rails (2.1.2)
-      railties (>= 4.0.0)
-      sassc (>= 2.0)
-      sprockets (> 3.0)
-      sprockets-rails
-      tilt
     search_cop (1.0.9)
       treetop
     securerandom (0.4.1)
@@ -428,7 +404,6 @@ GEM
     terrapin (0.6.0)
       climate_control (>= 0.0.3, < 1.0)
     thor (1.4.0)
-    tilt (2.4.0)
     timeout (0.4.3)
     treetop (1.6.14)
       polyglot (~> 0.3)
@@ -465,9 +440,7 @@ DEPENDENCIES
   bcrypt (= 3.1.16)
   better_errors
   binding_of_caller
-  bootstrap-sass
   bootstrap-will_paginate
-  bourbon (~> 4.2.2)
   brakeman
   bundler-audit
   capybara (~> 3.36)
@@ -493,14 +466,12 @@ DEPENDENCIES
   jwt (~> 1.2.1)
   kt-paperclip (~> 7.1.1)
   listen
-  neat (= 1.7.1)
   premailer-rails
   pry-rails
   puma (~> 6.0)
   rack-cors
   rails (= 8.1.0.beta1)
   rspec-rails
-  sassc-rails
   search_cop (~> 1.0.6)
   selenium-webdriver
   shoulda-matchers

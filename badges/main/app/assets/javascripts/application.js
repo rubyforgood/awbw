@@ -12,7 +12,7 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require bootstrap
+//= require bootstrap.min
 //= require cocoon
 //= require annotator-full.min
 //= require ckeditor/init

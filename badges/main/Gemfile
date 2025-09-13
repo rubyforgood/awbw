@@ -6,9 +6,6 @@ gem "rails", "8.1.0.beta1"
 
 gem 'sprockets-rails', '~> 3.2.2'
 gem 'trilogy'
-# gem "activerecord-trilogy-adapter" # no longer needed for rails 7.1+
-gem 'bootstrap-sass'
-gem "sassc-rails"
 gem 'uglifier'
 gem 'coffee-rails'
 gem "feature_flipper"
@@ -17,8 +14,6 @@ gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 
 gem 'devise', '~> 4.9.4'
-gem 'neat', '1.7.1'
-gem 'bourbon', '~> 4.2.2'
 gem 'draper'
 gem "kt-paperclip", "~> 7.1.1"
 gem 'aws-sdk-s3'
