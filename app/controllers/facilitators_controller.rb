@@ -13,7 +13,7 @@ class FacilitatorsController < ApplicationController
   end
 
   def show
-    @facilitator = Facilitator.find(params[:id])
+    @facilitator = Facilitator.find(params[:id]).decorate
   end
 
   def new
@@ -61,6 +61,6 @@ class FacilitatorsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def facilitator_params
-      params.require(:facilitator).permit(:first_name, :last_name, :email)
+      params.require(:facilitator).permit(Facilitator::PERMITTED_PARAMS)
     end
 end

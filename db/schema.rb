@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_09_12_173152) do
+ActiveRecord::Schema.define(version: 2025_09_13_171135) do
 
   create_table "admins", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "email", default: "", null: false
@@ -142,9 +142,18 @@ ActiveRecord::Schema.define(version: 2025_09_12_173152) do
   create_table "facilitators", charset: "utf8mb3", force: :cascade do |t|
     t.string "first_name", null: false
     t.string "last_name", null: false
-    t.string "email", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "primary_email_address", null: false
+    t.string "primary_email_address_type", null: false
+    t.string "street_address", null: false
+    t.string "city", null: false
+    t.string "state", null: false
+    t.string "zip", null: false
+    t.string "country", null: false
+    t.string "mailing_address_type", null: false
+    t.string "phone_number", null: false
+    t.string "phone_number_type", null: false
   end
 
   create_table "faqs", id: :integer, charset: "utf8mb3", force: :cascade do |t|
