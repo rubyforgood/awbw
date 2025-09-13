@@ -45,7 +45,6 @@ Rails.application.routes.draw do
       post :bulk_create
     end
   end
-  resources :resources
 
   get 'stories', to: 'resources#stories'
 
@@ -89,7 +88,6 @@ Rails.application.routes.draw do
       resources :authentications, only: [:create]
       resources :workshops
       resources :quotes
-      resources :resources
       resources :bookmarks do
         resources :annotations
       end

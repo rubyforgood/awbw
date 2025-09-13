@@ -3,7 +3,7 @@ class ResourcesController < ApplicationController
     @resources = current_user.curriculum(Resource).by_created.search(params).
                     paginate(page: params[:page], per_page: 6)
 
-    load_sortable_fields
+    @sortable_fields = Resource::KINDS
 
     respond_to do |format|
       format.html
@@ -15,10 +15,12 @@ class ResourcesController < ApplicationController
   end
 
   def new
-    @resource = Resource.new(type: params[:type])
-    load_age_ranges
-    load_sectors
-    load_images
+    @resource = Resource.new
+    @sectors = Sector.pluck(:name, :id)
+  end
+
+  def edit
+    @resource = Resource.find(resource_id_param).decorate
   end
 
   def show
@@ -30,17 +32,16 @@ class ResourcesController < ApplicationController
   def create
     @resource = current_user.resources.build(resource_params)
     if @resource.save
-      flash[:alert] = "#{@resource.type} has been submitted."
-      redirect_to root_path
+      redirect_to resources_path
     else
-      flash[:error] = "Unable to save #{@resource.type.titleize}"
+      flash[:error] = "Unable to save #{@resource.title.titleize}"
       render :new
     end
   end
 
   def search
     process_search
-    load_sortable_fields
+    @sortable_fields = Resource::KINDS.dup.delete("Story")
     render :index
   end
 
@@ -79,32 +80,6 @@ class ResourcesController < ApplicationController
         @user_form.report_form_field_answers.build(form_field: field)
       end
     end
-  end
-
-  def load_age_ranges
-    Metadatum.find_by(name: 'AgeRange').categories.each do |category|
-      @resource.categorizable_items.build(category: category)
-    end
-  end
-
-  def load_sectors
-    Sector.all.each do |sector|
-      @resource.sectorable_items.build(sector: sector)
-    end
-  end
-
-
-  def load_images
-    @resource.images.build
-  end
-
-  def load_sortable_fields
-    @sortable_fields = [
-      'Toolkit',
-      'Form',
-      'Template',
-      'Handout'
-    ]
   end
 
   def search_params

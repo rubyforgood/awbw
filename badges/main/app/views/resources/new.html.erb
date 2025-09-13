@@ -1,44 +1,57 @@
-<h2 class="normal"><%= "Share a #{@resource.kind.titleize}" %></h2>
-<%= form_for @resource, as: :resource, url: resources_path do |f| %>
+<h2 class="normal"><%= "New Resource" %></h2>
+
+<%= simple_form_for @resource, as: :resource, url: resources_path do |f| %>
   <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
-  <div class="form-group">
-    <br>
-    <%= f.label 'Title:', class: 'bold' %>
-    <%= f.text_field :title, placeholder: 'enter a title' %>
-    <%= f.text_area :text, placeholder: 'share a story with us' %>
+
+  <div class="row mb-3">
+    <div class="col-md-8">
+      <%= f.input :title,
+                  placeholder: "enter a title",
+                  wrapper: false,
+                  input_html: { class: "form-control w-100" } %>
+    </div>
   </div>
-  <%= f.hidden_field :kind %>
-  <h4 class="normal">Check all that is related to this story (optional)</h4>
-  <div class="form-group">
-    <%= f.label 'Age:', class: 'bold' %>
-    <%= f.fields_for :categorizable_items do |ff| %>
-      <%= render 'categorizable_item_fields', f: ff %>
-    <% end %>
+  <div class="row mb-3">
+    <div class="col-md-1">
+      <%= f.input :kind, as: :select, collection: ["Toolkit","Form","Template","Handout", "Story"] %>
+    </div>
+    <div class="col-md-4">
+      <%= f.input :sectors, as: :select, collection: @sectors %>
+    </div>
+    <div class="col-md-4">
+      <%= f.input :url, as: :text, input_html: { rows: 1, class: "form-control w-100" } %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :ordering,
+                  as: :integer,
+                  label: "Dashboard display order",
+                  input_html: { class: "form-control form-control-sm", min: 1, step: 1 },
+                  wrapper_html: { class: "form-group-sm" } %>
+    </div>
   </div>
-  <div class="form-group">
-    <br>
-    <%= f.label 'Gender:', class: 'bold' %>
-    <%= f.check_box :male, class: 'inline-block' %>
-    <%= f.label 'Male', class: 'inline-block bold' %>
-    <%= f.check_box :female, class: 'inline-block' %>
-    <%= f.label 'Female', class: 'inline-block bold' %>
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <%= f.input :text, as: :text, input_html: { rows: 5 } %>
+    </div>
+    <div class="col-md-8">
+      <%= f.input :attachment, as: :file %>
+    </div>
   </div>
-  <div class="form-group">
-    <br>
-    <%= f.label 'Service Population:', class: 'bold' %>
-    <%= f.fields_for :sectorable_items do |ff| %>
-      <%= render 'shared/sectorable_item_fields', f: ff %>
-    <% end %>
+  <div class="row">
+    <div class="col-md-4">
+      <%= f.input :featured, as: :boolean,
+                  label: "Feature on the dashboard?" %>
+    </div>
+    <div class="col-md-8">
+      <%= f.input :inactive, as: :boolean,
+                  input_html: { class: "form-check-input" },
+                  wrapper_html: { class: "form-check d-block text-start" } %>
+    </div>
   </div>
-  <div class="form-group">
-    <br>
-    <%= f.fields_for :images do |image| %>
-      <%= render 'shared/image_fields', f: image %>
-      <div class="links">
-        <%= link_to_add_association 'add image', f, :images, partial: 'shared/image_fields' %>
-      </div>
-    <% end %>
-  </div>
+
+
+
+
   <div class="form-group">
     <br>
     <%= link_to 'Cancel', root_path, class: 'btn cancel-btn' %>

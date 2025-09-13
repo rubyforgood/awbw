@@ -120,11 +120,9 @@ class User < ApplicationRecord
   end
 
   def curriculum(klass = Workshop)
-    results = klass.joins(:windows_type)
-    results = results.where('windows_types.name IN (?) and inactive is false', permissions_list)
-
+    results = klass.where(inactive: false)
     results = results.where(kind: ['Template','Handout', 'Scholarship',
-                                   'Toolkit', 'Form', 'Resource']) if klass == Resource
+                                   'Toolkit', 'Form', 'Resource', 'Story']) if klass == Resource
 
     results
   end
