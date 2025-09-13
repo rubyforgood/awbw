@@ -152,6 +152,7 @@ GEM
       execjs
     coffee-script-source (1.12.2)
     concurrent-ruby (1.3.5)
+    connection_pool (2.5.4)
     countries (8.0.4)
       unaccent (~> 0.3)
     country_select (11.0.0)
@@ -230,7 +231,7 @@ GEM
       thor (>= 0.14, < 2.0)
     json (2.13.2)
     jwt (1.2.1)
-    kt-paperclip (6.4.2)
+    kt-paperclip (7.1.1)
       activemodel (>= 4.2.0)
       activesupport (>= 4.2.0)
       marcel (~> 1.0.1)
@@ -306,10 +307,13 @@ GEM
     rack (2.2.17)
     rack-cors (2.0.2)
       rack (>= 2.0.0)
+    rack-session (1.0.2)
+      rack (< 3)
     rack-test (2.2.0)
       rack (>= 1.3)
-    rackup (2.2.1)
-      rack (>= 3)
+    rackup (1.0.1)
+      rack (< 3)
+      webrick
     rails (8.1.0.beta1)
       actioncable (= 8.1.0.beta1)
       actionmailbox (= 8.1.0.beta1)
@@ -331,10 +335,11 @@ GEM
     rails-html-sanitizer (1.6.2)
       loofah (~> 2.21)
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
-    railties (6.1.7.10)
-      actionpack (= 6.1.7.10)
-      activesupport (= 6.1.7.10)
-      method_source
+    railties (8.1.0.beta1)
+      actionpack (= 8.1.0.beta1)
+      activesupport (= 8.1.0.beta1)
+      irb (~> 1.13)
+      rackup (>= 1.0.0)
       rake (>= 12.2)
       thor (~> 1.0, >= 1.2.2)
       tsort (>= 0.2)
@@ -429,16 +434,16 @@ GEM
       polyglot (~> 0.3)
     trilogy (2.9.0)
     tsort (0.2.0)
-    turbo-rails (2.0.16)
-      actionpack (>= 7.1.0)
-      railties (>= 7.1.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     uglifier (4.2.1)
       execjs (>= 0.3.0, < 3)
     unaccent (0.4.0)
+    uri (1.0.3)
+    useragent (0.16.11)
     warden (1.2.9)
       rack (>= 2.0.9)
+    webrick (1.9.1)
     websocket (1.2.11)
     websocket-driver (0.8.0)
       base64
@@ -493,7 +498,7 @@ DEPENDENCIES
   pry-rails
   puma (~> 6.0)
   rack-cors
-  rails (~> 6.1.7)
+  rails (= 8.1.0.beta1)
   rspec-rails
   sassc-rails
   search_cop (~> 1.0.6)
@@ -503,6 +508,7 @@ DEPENDENCIES
   simplecov
   simplecov_json_formatter
   sprockets-rails (~> 3.2.2)
+  trilogy
   uglifier
   wicked
   will_paginate (~> 3.1.7)
