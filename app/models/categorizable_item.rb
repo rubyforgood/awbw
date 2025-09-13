@@ -5,9 +5,4 @@ class CategorizableItem < ApplicationRecord
 
   # Attr Accessor
   attr_accessor :_create
-
-  # Rails Admin
-  rails_admin do
-    exclude_fields :legacy
-  end
 end

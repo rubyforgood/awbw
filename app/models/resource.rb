@@ -37,19 +37,6 @@ class Resource < ApplicationRecord
   accepts_nested_attributes_for :attachments, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
 
-  # Rails Admin
-  rails_admin do
-    exclude_fields :sectorable_items, :categorizable_items, :reports, :user_forms, :related_workshops, :filemaker_code, :legacy
-    field :text, :ck_editor
-
-    list do
-      configure :title do
-        formatted_value{ "#{bindings[:object].title} - [ #{bindings[:object].kind.upcase} ]" }
-      end
-    end
-
-  end
-
   # Search Cop
   include SearchCop
 
