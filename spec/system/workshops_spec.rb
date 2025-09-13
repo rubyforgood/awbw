@@ -90,7 +90,7 @@ RSpec.describe "Workshops" do
         fill_in 'workshop_creation', with: 'Step 1, Step 2'
 
         click_on 'Submit'
-        save_page
+
         expect(Workshop.last.title).to eq('My New Workshop')
         # expect(page).to have_content('My New Workshop')
         # expect(page).to have_content('Learn something new')
