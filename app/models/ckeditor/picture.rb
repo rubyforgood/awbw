@@ -1,7 +1,7 @@
 class Ckeditor::Picture < ApplicationRecord # Ckeditor::Asset
   ACCEPTED_CONTENT_TYPES = ["image/jpg", "image/jpeg", "image/png"].freeze
   has_one_attached :data
-  validates :data, size: {less_than: 2.megabytes}, content_type: ACCEPTED_CONTENT_TYPES
+  validates :data, size: {less_than: 2.megabytes}, content_type: ACCEPTED_CONTENT_TYPES, attached: true
 
   def url_content
     url(:content)

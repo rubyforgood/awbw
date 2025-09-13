@@ -13,6 +13,8 @@
 # it.
 #
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+require "active_storage_validations/matchers"
+
 if ENV["CI"]
   require "simplecov"
   require "simplecov_json_formatter"
@@ -27,7 +29,7 @@ if ENV["CI"]
     end
   SimpleCov.at_exit do
     SimpleCov.result.format!
-    File.write("coverage/summary.json", JSON.dump({ covered_percent: SimpleCov.result.covered_percent }))
+    File.write("coverage/summary.json", JSON.dump({covered_percent: SimpleCov.result.covered_percent}))
   end
   SimpleCov.start "rails" do
     enable_coverage :branch
@@ -114,4 +116,6 @@ RSpec.configure do |config|
   # test failures related to randomization by passing the same `--seed` value
   # as the one that triggered the failure.
   Kernel.srand config.seed
+
+  config.include ActiveStorageValidations::Matchers
 end
