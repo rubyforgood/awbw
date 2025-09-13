@@ -3,6 +3,8 @@ require 'rails_helper'
 RSpec.describe Organization, type: :model do
   describe 'associations' do
     it { should have_many(:addresses).dependent(:destroy) }
+    it { should have_many(:facilitator_organizations).dependent(:restrict_with_exception) }
+    it { should have_many(:facilitators).through(:facilitator_organizations) }
   end
 
   describe 'validations' do

@@ -12,5 +12,11 @@ FactoryBot.define do
     mailing_address_type { 'Personal' }
     phone_number { Faker::PhoneNumber.phone_number }
     phone_number_type { 'Personal' }
+
+    trait :with_organization do
+      after(:create) do |facilitator|
+        facilitator.organizations << create(:organization)
+      end
+    end
   end
 end

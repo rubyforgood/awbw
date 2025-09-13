@@ -9,5 +9,11 @@ FactoryBot.define do
     phone { "(213) 555-0123" }
     mission { "To promote community development and provide essential services to underserved populations in Los Angeles County." }
     project_id { "1717" }
+
+    trait :with_facilitator do
+      after(:create) do |organization|
+        organization.facilitators << create(:facilitator)
+      end
+    end
   end
 end
