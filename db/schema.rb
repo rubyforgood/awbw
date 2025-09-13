@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_09_12_184522) do
+ActiveRecord::Schema.define(version: 2025_09_13_000000) do
 
   create_table "addresses", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "organization_id", null: false
@@ -154,6 +154,26 @@ ActiveRecord::Schema.define(version: 2025_09_12_184522) do
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "facilitator_organizations", charset: "utf8mb3", force: :cascade do |t|
+    t.bigint "facilitator_id", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["facilitator_id", "organization_id"], name: "index_facilitator_organizations_on_ids", unique: true
+    t.index ["facilitator_id"], name: "index_facilitator_organizations_on_facilitator_id"
+    t.index ["organization_id"], name: "index_facilitator_organizations_on_organization_id"
+  end
+
+  create_table "facilitator_organizations", charset: "utf8mb3", force: :cascade do |t|
+    t.bigint "facilitator_id", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["facilitator_id", "organization_id"], name: "index_facilitator_organizations_on_ids", unique: true
+    t.index ["facilitator_id"], name: "index_facilitator_organizations_on_facilitator_id"
+    t.index ["organization_id"], name: "index_facilitator_organizations_on_organization_id"
   end
 
   create_table "facilitators", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -711,6 +731,8 @@ ActiveRecord::Schema.define(version: 2025_09_12_184522) do
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "metadata"
   add_foreign_key "event_registrations", "events"
+  add_foreign_key "facilitator_organizations", "facilitators"
+  add_foreign_key "facilitator_organizations", "organizations"
   add_foreign_key "form_builders", "windows_types"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"
