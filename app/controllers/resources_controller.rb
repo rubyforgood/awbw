@@ -21,6 +21,10 @@ class ResourcesController < ApplicationController
     load_images
   end
 
+  def edit
+    @resource = Resource.find(resource_id_param).decorate
+  end
+
   def show
     @resource = Resource.find(resource_id_param).decorate
     load_forms
@@ -40,7 +44,7 @@ class ResourcesController < ApplicationController
 
   def search
     process_search
-    load_sortable_fields
+    @sortable_fields = Resource::KINDS.dup.delete("Story")
     render :index
   end
 
@@ -96,15 +100,6 @@ class ResourcesController < ApplicationController
 
   def load_images
     @resource.images.build
-  end
-
-  def load_sortable_fields
-    @sortable_fields = [
-      'Toolkit',
-      'Form',
-      'Template',
-      'Handout'
-    ]
   end
 
   def search_params

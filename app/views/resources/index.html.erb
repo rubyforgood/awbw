@@ -40,7 +40,7 @@
       <div class="filter-wrapper">
         <% if params[:kind] != "Scholarship" %>
           <div class="small-gray-title">Filter By:</div>
-            <%= render 'shared/sortable_fields_btn', sortable_fields: @sortable_fields %>
+            <%= render 'shared/sortable_fields_btn', sortable_fields: Resource::KINDS.dup.delete("Story") %>
           </div>
         <% end %>
     </div>
