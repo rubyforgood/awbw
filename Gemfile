@@ -30,8 +30,6 @@ gem 'draper'
 gem "kt-paperclip", "~> 6.4", ">= 6.4.1"
 gem 'aws-sdk-s3'
 
-gem "kaminari"
-
 gem 'puma', '~> 5.6' # Add Puma as the web server
 
 gem 'cocoon', '~> 1.2.6'
