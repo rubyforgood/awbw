@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
-import RubyPlugin from 'vite-plugin-ruby'
+import RailsPlugin from 'vite-plugin-rails'
 
 export default defineConfig({
   plugins: [
-    RubyPlugin(),
+    RailsPlugin({
+      envVars: { RAILS_ENV: "development" }
+    })
   ],
 })
