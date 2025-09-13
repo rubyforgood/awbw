@@ -70,6 +70,12 @@
      }
   }
 
+  .navbar-text.navbar-link {
+    width: auto;
+    min-width: fit-content;
+    margin-right: 10px;
+  }
+
   .navbar-link {
     display: flex;
     align-items: center;
