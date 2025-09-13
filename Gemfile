@@ -26,7 +26,6 @@ gem "cocoon", "~> 1.2.6"
 
 gem "wicked"
 gem "search_cop", "~> 1.0.6"
-# gem "activerecord-trilogy-adapter" # for mysql installation
 gem "jwt", "~> 1.2.1"
 gem "httparty"
 gem "will_paginate", "~> 3.1.7"
