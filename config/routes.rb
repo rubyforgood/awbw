@@ -45,8 +45,6 @@ Rails.application.routes.draw do
   resources :workshop_log_creation_wizard
   resources :workshop_logs, only: [:show, :edit, :new, :create, :update]
 
-  resources :resources
-
   get 'stories', to: 'resources#stories'
 
   resources :users
@@ -89,7 +87,6 @@ Rails.application.routes.draw do
       resources :authentications, only: [:create]
       resources :workshops
       resources :quotes
-      resources :resources
       resources :bookmarks do
         resources :annotations
       end
