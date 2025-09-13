@@ -44,7 +44,6 @@ class Workshop < ApplicationRecord
            foreign_key: "workshop_parent_id",
            dependent: :destroy
 
-
   # When this workshop is the child in a series
   has_many :workshop_series_parents,
            class_name: "WorkshopSeriesMembership",
@@ -54,22 +53,22 @@ class Workshop < ApplicationRecord
   # Nested Attributes
   accepts_nested_attributes_for :images, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :sectorable_items,
-                                reject_if: proc { |object| object['_create'] == '0' },
-                                allow_destroy: true
+    reject_if: proc { |object| object["_create"] == "0" },
+    allow_destroy: true
   accepts_nested_attributes_for :sectors,
-                                reject_if: proc { |object| object['_create'] == '0' || !object['_create'] },
-                                allow_destroy: true
+    reject_if: proc { |object| object["_create"] == "0" || !object["_create"] },
+    allow_destroy: true
   accepts_nested_attributes_for :workshop_age_ranges,
-                                reject_if: proc { |object|
-                                  object['_create'] == '0' || !object['_create'] ||
-                                  WorkshopAgeRange.find_by(workshop_id: object[:workshop_id], age_range_id: object[:age_range_id]);
-                                },
-                                allow_destroy: true
+    reject_if: proc { |object|
+      object["_create"] == "0" || !object["_create"] ||
+        WorkshopAgeRange.find_by(workshop_id: object[:workshop_id], age_range_id: object[:age_range_id])
+    },
+    allow_destroy: true
   accepts_nested_attributes_for :quotes,
-                                reject_if: proc { |object| object['quote'].nil? }
+    reject_if: proc { |object| object["quote"].nil? }
 
   accepts_nested_attributes_for :workshop_variations,
-                                reject_if: proc { |object| object.nil? }
+    reject_if: proc { |object| object.nil? }
 
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
@@ -84,14 +83,14 @@ class Workshop < ApplicationRecord
 
   # Validations
   validates_presence_of :title
-  #validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
+  # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
   validates_length_of :age_range, maximum: 16
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
   # Nested Attributes
   accepts_nested_attributes_for :workshop_logs,
-                                reject_if: :all_blank,
-                                allow_destroy: true
+    reject_if: :all_blank,
+    allow_destroy: true
 
   attr_writer :time_hours, :time_minutes
 
@@ -136,8 +135,8 @@ class Workshop < ApplicationRecord
 
   def workshop_log_fields
     if form_builder
-      form_builder.forms[0].form_fields.where('ordering is not null and status = 1').
-        order(ordering: :desc).all
+      form_builder.forms[0].form_fields.where("ordering is not null and status = 1")
+        .order(ordering: :desc).all
     else
       []
     end
@@ -159,7 +158,7 @@ class Workshop < ApplicationRecord
 
   def default_image_url
     ActionController::Base.helpers.asset_path(
-      'workshop_default.jpg'
+      "workshop_default.jpg"
     )
   end
 
@@ -182,8 +181,8 @@ class Workshop < ApplicationRecord
 
   def sector_hashtags
     sectors.map do |sector|
-      "\##{sector.name.split(' ')[0].downcase}"
-    end.join(',')
+      "##{sector.name.split(" ")[0].downcase}"
+    end.join(",")
   end
 
   def admin_title
@@ -195,7 +194,7 @@ class Workshop < ApplicationRecord
   end
 
   def communal_label(report)
-    "Workshop Title: #{title} - Workshop Date: #{report.date ? report.date.strftime('%m/%d/%y') : '[ EMPTY ]'}"
+    "Workshop Title: #{title} - Workshop Date: #{report.date ? report.date.strftime("%m/%d/%y") : "[ EMPTY ]"}"
   end
 
   def published_sectors
@@ -203,13 +202,13 @@ class Workshop < ApplicationRecord
   end
 
   def time_frame_total
-    total_time = time_intro.to_i    + time_demonstration.to_i +
-                 time_opening.to_i  + time_warm_up.to_i +
-                 time_creation.to_i + time_closing.to_i
+    total_time = time_intro.to_i + time_demonstration.to_i +
+      time_opening.to_i + time_warm_up.to_i +
+      time_creation.to_i + time_closing.to_i
 
-    return ("00:00") if total_time == 0
+    return "00:00" if total_time == 0
 
-    Time.at(total_time * 60).utc #.strftime("%H:%M")
+    Time.at(total_time * 60).utc # .strftime("%H:%M")
   end
 
   def set_time_frame
@@ -220,18 +219,18 @@ class Workshop < ApplicationRecord
 
   def self.anchors_english_admin
     "<a name='top'></a>".html_safe
-    %w(extra_field objective materials optional_materials setup
+    %w[extra_field objective materials optional_materials setup
       introduction demonstration opening_circle warm_up visualization creation
-      closing notes tips).map {|field|
-        "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |"}.join(" ").html_safe
+      closing notes tips].map { |field|
+      "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |" }.join(" ").html_safe
   end
 
-   def self.anchors_spanish_admin
-     %w(extra_field_spanish objective_spanish materials_spanish optional_materials_spanish
+  def self.anchors_spanish_admin
+    %w[extra_field_spanish objective_spanish materials_spanish optional_materials_spanish
       timeframe_spanish age_range_spanish setup_spanish introduction_spanish
       demonstration_spanish opening_circle_spanish warm_up_spanish visualization_spanish
       creation_spanish closing_spanish notes_spanish tips_spanish misc1_spanish
-      misc2_spanish).map {|field|
-        "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |"}.join(" ").html_safe
-   end
+      misc2_spanish].map { |field|
+      "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |" }.join(" ").html_safe
+  end
 end

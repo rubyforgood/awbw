@@ -2,7 +2,7 @@ class Image < ApplicationRecord
   belongs_to :owner, polymorphic: true
   belongs_to :report, optional: true
 
-  ACCEPTED_CONTENT_TYPES = ["image/jpg", "image/jpeg", "image/png", "image/gif"].freeze
+  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif"].freeze
 
   if ENV["ACTIVE_STORAGE"].present?
     has_one_attached :file

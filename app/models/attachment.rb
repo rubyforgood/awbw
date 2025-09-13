@@ -1,7 +1,7 @@
 class Attachment < ApplicationRecord
   belongs_to :owner, polymorphic: true
 
-  ACCEPTED_CONTENT_TYPES = %w[application/pdf application/msword image/gif image/jpg image/jpeg image/png].freeze
+  ACCEPTED_CONTENT_TYPES = %w[application/pdf application/msword image/gif image/jpeg image/png].freeze
 
   if ENV["ACTIVE_STORAGE"].present?
     has_one_attached :file
