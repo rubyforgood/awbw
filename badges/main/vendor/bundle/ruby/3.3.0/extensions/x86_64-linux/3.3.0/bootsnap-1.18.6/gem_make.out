@@ -1,0 +1,22 @@
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.18.6/ext/bootsnap
+/opt/hostedtoolcache/Ruby/3.3.8/x64/bin/ruby extconf.rb
+checking for fdatasync() in unistd.h... yes
+checking for whether -D_GNU_SOURCE is accepted as CPPFLAGS... yes
+checking for whether -O3 is accepted as CFLAGS... yes
+checking for whether -std=c99 is accepted as CFLAGS... yes
+creating Makefile
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.18.6/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20250913-2810-ypyw1e sitelibdir\=./.gem.20250913-2810-ypyw1e clean
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.18.6/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20250913-2810-ypyw1e sitelibdir\=./.gem.20250913-2810-ypyw1e
+compiling bootsnap.c
+linking shared-object bootsnap/bootsnap.so
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.18.6/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20250913-2810-ypyw1e sitelibdir\=./.gem.20250913-2810-ypyw1e install
+/usr/bin/install -c -m 0755 bootsnap.so ./.gem.20250913-2810-ypyw1e/bootsnap
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.18.6/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20250913-2810-ypyw1e sitelibdir\=./.gem.20250913-2810-ypyw1e clean
