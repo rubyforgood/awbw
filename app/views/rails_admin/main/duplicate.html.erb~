@@ -1,5 +1,0 @@
-<h3>
-"Are you sure you want to update '#{@object.name}'
-</h3>
-= link_to 'Update', update2_path, method: 'post', class: "btn btn-danger"
-= link_to 'Cancel', show_path, class: "btn btn-primary"

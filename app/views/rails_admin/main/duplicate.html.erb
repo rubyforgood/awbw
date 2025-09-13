@@ -1,7 +1,0 @@
-<h3>
-Are you sure you want to duplicate: <b><%= "#{@object.title}" %></b>?
-</h3>
-<%= link_to '<i class="icon-ok icon-white"></i> Duplicate'.html_safe, duplicate_path, method: 'post', class: "btn btn-primary" %>
-<%= button_tag onclick: "location.href='#{index_path}'", class: "btn" do %>
-  <i class='icon-white icon-ok'></i> Cancel
-<% end %>
