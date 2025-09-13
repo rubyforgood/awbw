@@ -17,6 +17,12 @@
     <% end %>
   </div>
 
+  <div class="navbar-text navbar-link">
+    <%= link_to resources_path do %>
+      Resources
+    <% end %>
+  </div>
+
   <% if user_signed_in? %>
     <div class="navbar-text pull-right container-fluid">
       <div class="dropdown">
