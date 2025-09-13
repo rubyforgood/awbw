@@ -30,10 +30,6 @@ class FormField < ApplicationRecord
     :date,
   ]
 
-  rails_admin do
-    # exclude_fields :answer_options
-  end
-
   accepts_nested_attributes_for :form_field_answer_options
 
   default_scope { order(ordering: :desc) }

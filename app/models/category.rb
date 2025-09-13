@@ -7,8 +7,4 @@ class Category < ApplicationRecord
   scope :published, -> { where(published: true) }
   # Validations
   validates_presence_of :name, uniqueness: true
-
-  rails_admin do
-    exclude_fields :categorizable_items, :legacy
-  end
 end

@@ -1,0 +1,196 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "23223b1e5030a4476088aea976cf673e2a30ece4dda7f63e1abd01a2fd8f939e",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/workshop.rb",
+      "line": 517,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "all.order(:title).search_by_categories(params[:categories]).order(:title).search_by_sectors(params[:sectors]).order(:title).order(:led_count => :desc).where(:windows_type_id => params[:type].to_i).order(:title).find_by_sql(\"SELECT *, MATCH ( #{\"title, full_name, objective, materials, introduction, demonstration, opening_circle, warm_up, creation, closing, notes, tips, misc1, misc2\"} ) AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) AS all_score,\\n                 MATCH ( title ) AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) AS title_score\\n\\n                 FROM workshops WHERE MATCH ( #{\"title, full_name, objective, materials, introduction, demonstration, opening_circle, warm_up, creation, closing, notes, tips, misc1, misc2\"} )\\n                 AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) #{\"AND windows_type_id = #{params[:type]}\"} AND inactive is false ORDER BY title_score DESC;\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Workshop",
+        "method": "Workshop.search"
+      },
+      "user_input": "params[:query]",
+      "confidence": "Weak",
+      "cwe_id": [
+        89
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "3143e4690dfdaf7bb904980f061cc9764ede5382bad4602edabaa4b6a56c07b5",
+      "check_name": "MassAssignment",
+      "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
+      "file": "app/controllers/monthly_reports_controller.rb",
+      "line": 243,
+      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": "params[:quotes].permit!",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "MonthlyReportsController",
+        "method": "quotes_params"
+      },
+      "user_input": null,
+      "confidence": "Medium",
+      "cwe_id": [
+        915
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Remote Code Execution",
+      "warning_code": 24,
+      "fingerprint": "59ffdfd50cdef491cfd47d69eaa3edc1d3a291661c75c5f1b10c7afa173581af",
+      "check_name": "UnsafeReflection",
+      "message": "Unsafe reflection method `constantize` called on parameter value",
+      "file": "app/controllers/api/v1/resources_controller.rb",
+      "line": 3,
+      "link": "https://brakemanscanner.org/docs/warning_types/remote_code_execution/",
+      "code": "params[:type].constantize",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Api::V1::ResourcesController",
+        "method": "index"
+      },
+      "user_input": "params[:type]",
+      "confidence": "High",
+      "cwe_id": [
+        470
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "801ab5e957972d9cafe31dcbb1f53ca2416781cc09e5b8bd0fe62f05eeeda6c7",
+      "check_name": "MassAssignment",
+      "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
+      "file": "app/controllers/workshop_logs_controller.rb",
+      "line": 142,
+      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": "params[:quotes].permit!",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "WorkshopLogsController",
+        "method": "quotes_params"
+      },
+      "user_input": null,
+      "confidence": "Medium",
+      "cwe_id": [
+        915
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "abea946803acd0f0fe12c3bcd54e9b5b04d04f78ff6672e38a6cb8db02e3b5eb",
+      "check_name": "MassAssignment",
+      "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
+      "file": "app/controllers/reports_controller.rb",
+      "line": 270,
+      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": "params[:quotes].permit!",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "ReportsController",
+        "method": "quotes_params"
+      },
+      "user_input": null,
+      "confidence": "Medium",
+      "cwe_id": [
+        915
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "b10de889c20028842db9a1821e6214044ff9adf7cd90f2ee6621a66c9c03a162",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped model attribute",
+      "file": "app/views/workshop_variations/show.html.erb",
+      "line": 16,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "WorkshopVariation.find(params[:id]).decorate.display_code",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "WorkshopVariationsController",
+          "method": "show",
+          "line": 10,
+          "file": "app/controllers/workshop_variations_controller.rb",
+          "rendered": {
+            "name": "workshop_variations/show",
+            "file": "app/views/workshop_variations/show.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "workshop_variations/show"
+      },
+      "user_input": null,
+      "confidence": "High",
+      "cwe_id": [
+        79
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "d241d7e5a92d236ee0b2642ccdbde49e42dbb34989232d7c0d35cdabebb4e9b8",
+      "check_name": "MassAssignment",
+      "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
+      "file": "app/controllers/workshop_logs_controller.rb",
+      "line": 146,
+      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": "params[:files].permit!",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "WorkshopLogsController",
+        "method": "files_params"
+      },
+      "user_input": null,
+      "confidence": "Medium",
+      "cwe_id": [
+        915
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Unmaintained Dependency",
+      "warning_code": 120,
+      "fingerprint": "d84924377155b41e094acae7404ec2e521629d86f97b0ff628e3d1b263f8101c",
+      "check_name": "EOLRails",
+      "message": "Support for Rails 6.1.7.10 ended on 2024-10-01",
+      "file": "Gemfile.lock",
+      "line": 319,
+      "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
+      "code": null,
+      "render_path": null,
+      "location": null,
+      "user_input": null,
+      "confidence": "High",
+      "cwe_id": [
+        1104
+      ],
+      "note": ""
+    }
+  ],
+  "brakeman_version": "7.1.0"
+}

@@ -1,13 +1,7 @@
 Rails.application.routes.draw do
-  mount RailsAdmin::Engine => '/admin/cms', as: 'rails_admin'
   mount Ckeditor::Engine => '/admin/ckeditor', as: 'ckeditor'
   apipie
   get 'cms', to: 'admins/base#show'
-
-  namespace :admins do
-    root 'base#show'
-    resources :form_builders
-  end
 
   devise_for :users, controllers: { registrations: 'registrations', passwords: 'passwords' }
 
@@ -45,12 +39,19 @@ Rails.application.routes.draw do
   resources :workshop_log_creation_wizard
   resources :workshop_logs, only: [:show, :edit, :new, :create, :update]
 
+  resources :events
+  resources :event_registrations, only: [:create] do
+    collection do
+      post :bulk_create
+    end
+  end
   resources :resources
 
   get 'stories', to: 'resources#stories'
 
   resources :users
   resources :user_forms
+  resources :facilitators
 
   get 'reports/:id/edit_story', to: 'reports#edit_story', as: 'reports_edit_story'
   put 'reports/update_story/:id', to: 'reports#update_story', as: 'reports_update_story'

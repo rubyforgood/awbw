@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
-  create_table "admins", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+ActiveRecord::Schema.define(version: 2025_09_13_171135) do
+
+  create_table "admins", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name", default: "", null: false
@@ -30,7 +31,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
-  create_table "age_ranges", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "age_ranges", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
@@ -38,14 +39,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["windows_type_id"], name: "index_age_ranges_on_windows_type_id"
   end
 
-  create_table "answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "answer_options", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.integer "order"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
   end
 
-  create_table "attachments", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "attachments", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "owner_id"
     t.string "owner_type"
     t.datetime "created_at", precision: nil, null: false
@@ -56,22 +57,22 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.datetime "file_updated_at", precision: nil
   end
 
-  create_table "banners", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "banners", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.text "content"
     t.boolean "show"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
   end
 
-  create_table "bookmark_annotations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "bookmark_annotations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "bookmark_id"
     t.text "annotation", size: :medium
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["bookmark_id"], name: "index_bookmark_annotations_on_bookmark_id"
   end
 
-  create_table "bookmarks", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "bookmarks", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "user_id"
     t.string "bookmarkable_type"
     t.integer "bookmarkable_id"
@@ -80,7 +81,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
-  create_table "categories", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "categories", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "metadatum_id"
     t.string "name"
     t.integer "legacy_id"
@@ -90,7 +91,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["metadatum_id"], name: "index_categories_on_metadatum_id"
   end
 
-  create_table "categorizable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "categorizable_items", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "categorizable_id"
     t.string "categorizable_type"
     t.integer "category_id"
@@ -101,7 +102,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["category_id"], name: "index_categorizable_items_on_category_id"
   end
 
-  create_table "ckeditor_assets", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "ckeditor_assets", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "data_file_name", null: false
     t.string "data_content_type"
     t.integer "data_file_size"
@@ -117,16 +118,54 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type"
   end
 
-  create_table "faqs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "event_registrations", charset: "utf8mb3", force: :cascade do |t|
+    t.string "first_name"
+    t.string "last_name"
+    t.string "email"
+    t.bigint "event_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["event_id"], name: "index_event_registrations_on_event_id"
+  end
+
+  create_table "events", charset: "utf8mb3", force: :cascade do |t|
+    t.string "title"
+    t.text "description"
+    t.datetime "start_date"
+    t.datetime "end_date"
+    t.datetime "registration_close_date"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.boolean "publicly_visible", default: false, null: false
+  end
+
+  create_table "facilitators", charset: "utf8mb3", force: :cascade do |t|
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "primary_email_address", null: false
+    t.string "primary_email_address_type", null: false
+    t.string "street_address", null: false
+    t.string "city", null: false
+    t.string "state", null: false
+    t.string "zip", null: false
+    t.string "country", null: false
+    t.string "mailing_address_type", null: false
+    t.string "phone_number", null: false
+    t.string "phone_number_type", null: false
+  end
+
+  create_table "faqs", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "question"
     t.text "answer", size: :medium
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.boolean "inactive"
     t.integer "ordering"
   end
 
-  create_table "footers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "footers", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "phone"
     t.string "children_program"
     t.string "adult_program"
@@ -135,17 +174,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.datetime "updated_at", precision: nil, null: false
   end
 
-  create_table "form_builders", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "form_builders", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.integer "owner_type"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.text "description", size: :medium
     t.integer "windows_type_id"
     t.index ["windows_type_id"], name: "index_form_builders_on_windows_type_id"
   end
 
-  create_table "form_field_answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "form_field_answer_options", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "form_field_id"
     t.integer "answer_option_id"
     t.datetime "created_at", precision: nil, null: false
@@ -154,7 +193,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["form_field_id"], name: "index_form_field_answer_options_on_form_field_id"
   end
 
-  create_table "form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "form_fields", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "form_id"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
@@ -169,7 +208,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["form_id"], name: "index_form_fields_on_form_id"
   end
 
-  create_table "forms", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "forms", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "owner_type"
     t.integer "owner_id"
     t.datetime "created_at", precision: nil, null: false
@@ -178,7 +217,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
   end
 
-  create_table "images", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "images", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "owner_id"
     t.string "owner_type"
     t.datetime "created_at", precision: nil, null: false
@@ -191,7 +230,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["owner_id"], name: "index_images_on_owner_id"
   end
 
-  create_table "locations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "locations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "city"
     t.string "state"
     t.string "country"
@@ -199,7 +238,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.datetime "updated_at", precision: nil, null: false
   end
 
-  create_table "media_files", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "media_files", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "file_file_name"
     t.string "file_content_type"
     t.integer "file_file_size"
@@ -208,7 +247,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.integer "workshop_log_id"
   end
 
-  create_table "metadata", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "metadata", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.string "legacy_id"
     t.datetime "created_at", precision: nil, null: false
@@ -216,7 +255,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.boolean "published", default: false
   end
 
-  create_table "monthly_reports", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "monthly_reports", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "month"
     t.integer "project_id"
     t.integer "project_user_id"
@@ -239,34 +278,34 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["project_user_id"], name: "index_monthly_reports_on_project_user_id"
   end
 
-  create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+  create_table "notifications", id: :integer, charset: "utf8mb3", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.integer "notification_type"
     t.string "noticeable_type"
     t.integer "noticeable_id"
   end
 
-  create_table "permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "permissions", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "security_cat"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "legacy_id"
   end
 
-  create_table "project_obligations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "project_obligations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
   end
 
-  create_table "project_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "project_statuses", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
   end
 
-  create_table "project_users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "project_users", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "agency_id"
     t.integer "user_id"
     t.integer "position"
@@ -279,7 +318,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["user_id"], name: "index_project_users_on_user_id"
   end
 
-  create_table "projects", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "projects", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.integer "location_id"
     t.datetime "created_at", precision: nil, null: false
@@ -301,7 +340,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["windows_type_id"], name: "index_projects_on_windows_type_id"
   end
 
-  create_table "quotable_item_quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "quotable_item_quotes", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "quotable_type"
     t.integer "quotable_id"
     t.integer "legacy_id"
@@ -311,7 +350,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["quote_id"], name: "index_quotable_item_quotes_on_quote_id"
   end
 
-  create_table "quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "quotes", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.text "quote", size: :medium
     t.boolean "inactive", default: true
     t.integer "legacy_id"
@@ -325,19 +364,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
   end
 
-  create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "report_form_field_answers", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "report_id"
     t.integer "form_field_id"
     t.text "answer", size: :medium
-    t.datetime "created_at", precision: nil
-    t.datetime "updated_at", precision: nil
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.integer "answer_option_id"
     t.index ["answer_option_id"], name: "index_report_form_field_answers_on_answer_option_id"
     t.index ["form_field_id"], name: "index_report_form_field_answers_on_form_field_id"
     t.index ["report_id"], name: "index_report_form_field_answers_on_report_id"
   end
 
-  create_table "reports", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "reports", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "type"
     t.integer "owner_id"
     t.string "owner_type"
@@ -367,7 +406,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["windows_type_id"], name: "index_reports_on_windows_type_id"
   end
 
-  create_table "resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "resources", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "title"
     t.string "author"
     t.integer "user_id"
@@ -392,7 +431,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
   end
 
-  create_table "sectorable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "sectorable_items", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "sectorable_id"
     t.string "sectorable_type"
     t.integer "sector_id"
@@ -402,24 +441,24 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["sector_id"], name: "index_sectorable_items_on_sector_id"
   end
 
-  create_table "sectors", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "sectors", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.boolean "published", default: false
   end
 
-  create_table "user_form_form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "user_form_form_fields", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "form_field_id"
     t.integer "user_form_id"
     t.text "text", size: :medium
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["form_field_id"], name: "index_user_form_form_fields_on_form_field_id"
     t.index ["user_form_id"], name: "index_user_form_form_fields_on_user_form_id"
   end
 
-  create_table "user_forms", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "user_forms", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "user_id"
     t.integer "form_id"
     t.datetime "created_at", precision: nil, null: false
@@ -428,7 +467,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["user_id"], name: "index_user_forms_on_user_id"
   end
 
-  create_table "user_permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "user_permissions", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "user_id"
     t.integer "permission_id"
     t.datetime "created_at", precision: nil, null: false
@@ -437,7 +476,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["user_id"], name: "index_user_permissions_on_user_id"
   end
 
-  create_table "users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "users", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name", default: ""
@@ -479,12 +518,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.integer "avatar_file_size"
     t.datetime "avatar_updated_at", precision: nil
     t.boolean "super_user", default: false
+    t.bigint "facilitator_id"
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["facilitator_id"], name: "index_users_on_facilitator_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  create_table "windows_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "windows_types", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
@@ -492,7 +533,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.string "short_name"
   end
 
-  create_table "workshop_age_ranges", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "workshop_age_ranges", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "workshop_id"
     t.integer "age_range_id"
     t.datetime "created_at", precision: nil, null: false
@@ -501,7 +542,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["workshop_id"], name: "index_workshop_age_ranges_on_workshop_id"
   end
 
-  create_table "workshop_logs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "workshop_logs", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "workshop_id"
     t.integer "user_id"
     t.date "date"
@@ -515,8 +556,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.text "similarities", size: :medium
     t.text "differences", size: :medium
     t.text "comments", size: :medium
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.integer "project_id"
     t.boolean "is_embodied_art_workshop", default: false
     t.integer "num_participants_on_going", default: 0
@@ -526,7 +567,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["workshop_id"], name: "index_workshop_logs_on_workshop_id"
   end
 
-  create_table "workshop_resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "workshop_resources", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "workshop_id"
     t.integer "resource_id"
     t.datetime "created_at", precision: nil, null: false
@@ -535,10 +576,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["workshop_id"], name: "index_workshop_resources_on_workshop_id"
   end
 
-  create_table "workshop_variations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "workshop_variations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "workshop_id"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.text "code", size: :medium
     t.boolean "inactive", default: true
     t.integer "ordering"
@@ -548,7 +589,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
   end
 
-  create_table "workshops", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "workshops", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "title"
     t.string "full_name"
     t.string "author_location"
@@ -601,7 +642,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
     t.string "thumbnail_file_name"
     t.string "thumbnail_content_type"
     t.integer "thumbnail_file_size"
-    t.datetime "thumbnail_updated_at", precision: nil
+    t.datetime "thumbnail_updated_at"
     t.text "optional_materials", size: :medium
     t.text "optional_materials_spanish", size: :medium
     t.text "introduction", size: :medium
@@ -636,6 +677,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
   add_foreign_key "bookmark_annotations", "bookmarks"
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "metadata"
+  add_foreign_key "event_registrations", "events"
   add_foreign_key "form_builders", "windows_types"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"
@@ -667,6 +709,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_12_180653) do
   add_foreign_key "user_forms", "users"
   add_foreign_key "user_permissions", "permissions"
   add_foreign_key "user_permissions", "users"
+  add_foreign_key "users", "facilitators"
   add_foreign_key "users", "projects", column: "agency_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"

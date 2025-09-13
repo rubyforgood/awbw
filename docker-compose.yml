@@ -45,6 +45,25 @@ services:
     stdin_open: true
     restart: unless-stopped
 
+
+  prod:
+    profiles:
+      - production
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+    depends_on:
+      - database
+    environment:
+      DATABASE_URL: trilogy://root@database:3306/awbw_development
+      RAILS_LOG_TO_STDOUT: "true"
+      SECRET_KEY_BASE: "foobar"
+    ports:
+      - 3030:3000
+
+
+
 volumes:
   mysql-data:
 

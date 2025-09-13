@@ -9,10 +9,6 @@ class ProjectUser < ApplicationRecord
 
   # Enum
   enum :position, { default: 0, liaison: 1, leader: 2, assistant: 3 }
-  # Rails admin
-  rails_admin do
-    exclude_fields :agency_id, :position
-  end
 
   # Methods
   def name

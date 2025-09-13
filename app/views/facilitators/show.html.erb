@@ -1,0 +1,13 @@
+<p id="notice"><%= notice %></p>
+
+<% @facilitator.display_fields.each do |field| %>
+  <p>
+    <strong><%= field[:label] %>:</strong>
+    <%= field[:value].presence || "N/A" %>
+  </p>
+<% end %>
+
+
+
+<%= link_to 'Edit', edit_facilitator_path(@facilitator) %> |
+<%= link_to 'Back', facilitators_path %>
