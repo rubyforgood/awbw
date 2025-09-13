@@ -1,9 +1,8 @@
+# Load and register the custom duplicate action
+require Rails.root.join('lib', 'rails_admin', 'config', 'actions', 'duplicate.rb')
+RailsAdmin::Config::Actions.register(RailsAdmin::Config::Actions::Duplicate)
 RailsAdmin.config do |config|
   config.asset_source = :sprockets
-
-  # Load and register the custom duplicate action
-  require Rails.root.join('lib', 'rails_admin', 'config', 'actions', 'duplicate.rb')
-  RailsAdmin::Config::Actions.register(RailsAdmin::Config::Actions::Duplicate)
 
   config.navigation_static_links = {
     'Help' => '/dashboard/help'
