@@ -1,5 +1,3 @@
-require 'paperclip_attachment'
-
 class Workshop < ApplicationRecord
 
   default_scope { where(inactive: false) }

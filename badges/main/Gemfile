@@ -2,20 +2,13 @@ source 'https://rubygems.org'
 
 ruby "3.3.8"
 
-gem "rails", "~> 6.1.7"
-
-# TODO Consider removing these after upgrading Rails. These are a Ruby 3.3 => 3.4 warning.
-# add required gems leaving standard library to avoid log noise
-gem "bigdecimal"
-gem "drb"
-gem "mutex_m"
-gem "observer"
-
+gem "rails", "8.1.0.beta1"
 
 gem 'sprockets-rails', '~> 3.2.2'
-gem "activerecord-trilogy-adapter" # for mysql installation
+gem 'trilogy'
+# gem "activerecord-trilogy-adapter" # no longer needed for rails 7.1+
 gem 'bootstrap-sass'
-gem "sassc-rails", ">= 2.1.2"
+gem "sassc-rails"
 gem 'uglifier'
 gem 'coffee-rails'
 gem "feature_flipper"
@@ -23,14 +16,14 @@ gem "feature_flipper"
 gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 
-gem 'devise', '~> 4.7.3'
+gem 'devise', '~> 4.9.4'
 gem 'neat', '1.7.1'
 gem 'bourbon', '~> 4.2.2'
 gem 'draper'
-gem "kt-paperclip", "~> 6.4", ">= 6.4.1"
+gem "kt-paperclip", "~> 7.1.1"
 gem 'aws-sdk-s3'
 
-gem 'puma', '~> 5.6' # Add Puma as the web server
+gem 'puma', '~> 6.0' # Add Puma as the web server
 
 gem 'cocoon', '~> 1.2.6'
 
@@ -41,7 +34,7 @@ gem 'jwt', '~> 1.2.1'
 gem 'httparty'
 gem 'will_paginate', '~> 3.1.7'
 gem 'bootstrap-will_paginate'
-gem 'apipie-rails', '~> 0.5.0'
+gem 'apipie-rails', '~> 1.5.0'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'ckeditor', '~> 4.3.0'
 gem "binding_of_caller"
@@ -72,4 +65,3 @@ group :development, :test do
   gem 'shoulda-matchers', require: false
   gem "debug", "~> 1.11"
 end
-

@@ -82,8 +82,8 @@ class Report < ApplicationRecord
   def image_valid?
     return true if image.nil?
     unless image.valid?
-      image.errors.each do |k, v|
-        errors.add(k, v)
+      image.errors.each do |error|
+        errors.add(error.attribute, error.message)
       end
     end
   end

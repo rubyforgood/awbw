@@ -29,12 +29,11 @@ class ApplicationController < ActionController::Base
   end
 
   # IMPERSONATE USER
-  alias_method :devise_current_user, :current_user
   def current_user
-    if session[:i_user] && devise_current_user && devise_current_user.super_user?
+    if session[:i_user] && super && super.super_user?
       user = User.find_by(email: session[:i_user]) if session[:i_user]
     else
-      devise_current_user
+      super
     end
   end
 

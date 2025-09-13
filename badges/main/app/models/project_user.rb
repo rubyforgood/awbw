@@ -8,7 +8,7 @@ class ProjectUser < ApplicationRecord
   validates_presence_of :project_id
 
   # Enum
-  enum position: [:default, :liaison, :leader, :assistant]
+  enum :position, { default: 0, liaison: 1, leader: 2, assistant: 3 }
 
   # Methods
   def name

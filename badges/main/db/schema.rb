@@ -18,23 +18,23 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "first_name", default: "", null: false
     t.string "last_name", default: "", null: false
     t.string "reset_password_token"
-    t.datetime "reset_password_sent_at"
-    t.datetime "remember_created_at"
+    t.datetime "reset_password_sent_at", precision: nil
+    t.datetime "remember_created_at", precision: nil
     t.integer "sign_in_count", default: 0, null: false
-    t.datetime "current_sign_in_at"
-    t.datetime "last_sign_in_at"
+    t.datetime "current_sign_in_at", precision: nil
+    t.datetime "last_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
     t.string "last_sign_in_ip"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.index ["email"], name: "index_admins_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
   create_table "age_ranges", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "windows_type_id"
     t.index ["windows_type_id"], name: "index_age_ranges_on_windows_type_id"
   end
@@ -42,26 +42,26 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "answer_options", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.integer "order"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "attachments", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "owner_id"
     t.string "owner_type"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "file_file_name"
     t.string "file_content_type"
     t.integer "file_file_size"
-    t.datetime "file_updated_at"
+    t.datetime "file_updated_at", precision: nil
   end
 
   create_table "banners", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.text "content"
     t.boolean "show"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "bookmark_annotations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
@@ -76,8 +76,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.integer "user_id"
     t.string "bookmarkable_type"
     t.integer "bookmarkable_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
@@ -85,8 +85,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.integer "metadatum_id"
     t.string "name"
     t.integer "legacy_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.boolean "published", default: false
     t.index ["metadatum_id"], name: "index_categories_on_metadatum_id"
   end
@@ -96,8 +96,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "categorizable_type"
     t.integer "category_id"
     t.integer "legacy_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.boolean "inactive", default: true
     t.index ["category_id"], name: "index_categorizable_items_on_category_id"
   end
@@ -111,8 +111,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "type", limit: 30
     t.integer "width"
     t.integer "height"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "actual_url"
     t.index ["assetable_type", "assetable_id"], name: "idx_ckeditor_assetable"
     t.index ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type"
@@ -170,8 +170,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "children_program"
     t.string "adult_program"
     t.string "general_questions"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "form_builders", id: :integer, charset: "utf8mb3", force: :cascade do |t|
@@ -187,16 +187,16 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "form_field_answer_options", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "form_field_id"
     t.integer "answer_option_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["answer_option_id"], name: "index_form_field_answer_options_on_answer_option_id"
     t.index ["form_field_id"], name: "index_form_field_answer_options_on_form_field_id"
   end
 
   create_table "form_fields", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "form_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "question"
     t.string "instructional_hint"
     t.integer "answer_type"
@@ -211,8 +211,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "forms", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "owner_type"
     t.integer "owner_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "form_builder_id"
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
   end
@@ -220,12 +220,12 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "images", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "owner_id"
     t.string "owner_type"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "file_file_name"
     t.string "file_content_type"
     t.integer "file_file_size"
-    t.datetime "file_updated_at"
+    t.datetime "file_updated_at", precision: nil
     t.integer "report_id"
     t.index ["owner_id"], name: "index_images_on_owner_id"
   end
@@ -234,15 +234,15 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "city"
     t.string "state"
     t.string "country"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "media_files", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "file_file_name"
     t.string "file_content_type"
     t.integer "file_file_size"
-    t.datetime "file_updated_at"
+    t.datetime "file_updated_at", precision: nil
     t.integer "report_id"
     t.integer "workshop_log_id"
   end
@@ -250,8 +250,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "metadata", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.string "legacy_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.boolean "published", default: false
   end
 
@@ -272,8 +272,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.boolean "call_requested"
     t.string "best_call_time"
     t.string "phone"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["project_id"], name: "index_monthly_reports_on_project_id"
     t.index ["project_user_id"], name: "index_monthly_reports_on_project_user_id"
   end
@@ -288,29 +288,29 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
 
   create_table "permissions", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "security_cat"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "legacy_id"
   end
 
   create_table "project_obligations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "project_statuses", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "project_users", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "agency_id"
     t.integer "user_id"
     t.integer "position"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "project_id"
     t.string "filemaker_code"
     t.index ["agency_id"], name: "index_project_users_on_agency_id"
@@ -321,8 +321,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "projects", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
     t.integer "location_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "windows_type_id"
     t.string "district"
     t.date "start_date"
@@ -345,8 +345,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.integer "quotable_id"
     t.integer "legacy_id"
     t.integer "quote_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["quote_id"], name: "index_quotable_item_quotes_on_quote_id"
   end
 
@@ -355,8 +355,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.boolean "inactive", default: true
     t.integer "legacy_id"
     t.boolean "legacy", default: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "workshop_id"
     t.string "age"
     t.string "gender", limit: 1
@@ -380,8 +380,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "type"
     t.integer "owner_id"
     t.string "owner_type"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
     t.integer "project_id"
     t.date "date"
@@ -390,7 +390,7 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "form_file_file_name"
     t.string "form_file_content_type"
     t.integer "form_file_file_size"
-    t.datetime "form_file_updated_at"
+    t.datetime "form_file_updated_at", precision: nil
     t.integer "workshop_id"
     t.string "workshop_name"
     t.string "other_description"
@@ -412,8 +412,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.integer "user_id"
     t.text "text", size: :medium
     t.boolean "featured", default: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "kind"
     t.integer "workshop_id"
     t.boolean "male", default: false
@@ -435,16 +435,16 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.integer "sectorable_id"
     t.string "sectorable_type"
     t.integer "sector_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.boolean "inactive", default: true
     t.index ["sector_id"], name: "index_sectorable_items_on_sector_id"
   end
 
   create_table "sectors", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.boolean "published", default: false
   end
 
@@ -461,8 +461,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "user_forms", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "user_id"
     t.integer "form_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["form_id"], name: "index_user_forms_on_form_id"
     t.index ["user_id"], name: "index_user_forms_on_user_id"
   end
@@ -470,8 +470,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "user_permissions", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "user_id"
     t.integer "permission_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["permission_id"], name: "index_user_permissions_on_permission_id"
     t.index ["user_id"], name: "index_user_permissions_on_user_id"
   end
@@ -482,15 +482,15 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "first_name", default: ""
     t.string "last_name", default: ""
     t.string "reset_password_token"
-    t.datetime "reset_password_sent_at"
-    t.datetime "remember_created_at"
+    t.datetime "reset_password_sent_at", precision: nil
+    t.datetime "remember_created_at", precision: nil
     t.integer "sign_in_count", default: 0, null: false
-    t.datetime "current_sign_in_at"
-    t.datetime "last_sign_in_at"
+    t.datetime "current_sign_in_at", precision: nil
+    t.datetime "last_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
     t.string "last_sign_in_ip"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "agency_id"
     t.string "phone"
     t.string "address"
@@ -516,7 +516,7 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "avatar_file_name"
     t.string "avatar_content_type"
     t.integer "avatar_file_size"
-    t.datetime "avatar_updated_at"
+    t.datetime "avatar_updated_at", precision: nil
     t.boolean "super_user", default: false
     t.bigint "facilitator_id"
     t.index ["agency_id"], name: "index_users_on_agency_id"
@@ -527,8 +527,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
 
   create_table "windows_types", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "legacy_id"
     t.string "short_name"
   end
@@ -536,8 +536,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "workshop_age_ranges", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "workshop_id"
     t.integer "age_range_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["age_range_id"], name: "index_workshop_age_ranges_on_age_range_id"
     t.index ["workshop_id"], name: "index_workshop_age_ranges_on_workshop_id"
   end
@@ -570,8 +570,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
   create_table "workshop_resources", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.integer "workshop_id"
     t.integer "resource_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["resource_id"], name: "index_workshop_resources_on_resource_id"
     t.index ["workshop_id"], name: "index_workshop_resources_on_workshop_id"
   end
@@ -618,8 +618,8 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.boolean "featured", default: false
     t.string "photo_caption"
     t.string "filemaker_code"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.boolean "legacy", default: false
     t.integer "legacy_id"
     t.integer "windows_type_id"
@@ -664,7 +664,7 @@ ActiveRecord::Schema.define(version: 2025_09_13_171135) do
     t.string "header_file_name"
     t.string "header_content_type"
     t.integer "header_file_size"
-    t.datetime "header_updated_at"
+    t.datetime "header_updated_at", precision: nil
     t.text "extra_field"
     t.text "extra_field_spanish"
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
