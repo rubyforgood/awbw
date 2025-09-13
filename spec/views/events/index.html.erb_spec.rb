@@ -1,6 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe "events/index", type: :view do
+  before do
+    create(:permission, :adult)
+    create(:permission, :children)
+    create(:permission, :combined)
+  end
+
   let(:user) { create(:user) }
   let(:event1) { create(:event, title: "Event 1", start_date: 1.day.from_now, end_date: 2.days.from_now) }
   let(:event2) { create(:event, title: "Event 2", start_date: 3.days.from_now, end_date: 4.days.from_now) }
