@@ -34,7 +34,11 @@
 </div>
 
 <div class='links' id='links'>
-
+  <div class='btn-bookmark bookmark-inline'>
+    <%= link_to '', edit_workshop_path(workshop), class: 'btn-bookmark__unmark-layer' %>
+    <%= image_tag("pencil.png", class:"img-responsive") %>
+    <div><%= 'Edit' %></div>
+  </div>
   <% if current_user.has_bookmarked_workshop?(workshop) %>
     <div class='btn-bookmark bookmark-inline'>
       <%= link_to '', bookmark_path(@bookmark), method: :delete, class: 'btn-bookmark__unmark-layer' %>
