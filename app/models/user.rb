@@ -7,6 +7,11 @@ class User < ApplicationRecord
   after_create :set_default_values
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
+  # Avatar
+  ACCEPTED_CONTENT_TYPES = ["image/jpg", "image/jpeg", "image/png" ].freeze
+  has_one_attached :avatar
+  validates :avatar, content_type: ACCEPTED_CONTENT_TYPES
+
   # Associations
   belongs_to :facilitator, optional: true
   has_many :workshops
@@ -14,9 +19,9 @@ class User < ApplicationRecord
   has_many :reports
   has_many :communal_reports, through: :projects, source: :reports
   has_many :bookmarks, dependent: :destroy
-  has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: 'Workshop'
-  has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: 'Resource'
-  has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: 'Event'
+  has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: "Workshop"
+  has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: "Resource"
+  has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: "Event"
   has_many :project_users, dependent: :destroy
   has_many :projects, through: :project_users
   has_many :windows_types, through: :projects
@@ -27,9 +32,6 @@ class User < ApplicationRecord
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
   has_many :notifications, as: :noticeable
-
-  # Avatar
-  has_one_attached :avatar
 
   # Nested
   accepts_nested_attributes_for :user_forms
@@ -59,7 +61,7 @@ class User < ApplicationRecord
   end
 
   def active_for_authentication?
-    super && !self.inactive?
+    super && !inactive?
   end
 
   def bookmark_for(record)
@@ -75,9 +77,8 @@ class User < ApplicationRecord
   end
 
   def submitted_monthly_report(submitted_date = Date.today, windows_type, project_id)
-
     Report.where(project_id: project_id, type: "MonthlyReport", date: submitted_date,
-                  windows_type: windows_type).last
+      windows_type: windows_type).last
   end
 
   def recent_activity(activity_limit = 10)
@@ -101,24 +102,24 @@ class User < ApplicationRecord
   end
 
   def project_monthly_workshop_logs(date, *windows_type)
-    where = windows_type.map do |wt| 'windows_type_id = ?' end
+    where = windows_type.map { |wt| "windows_type_id = ?" }
 
     logs = projects.map do |project|
-      project.workshop_logs.where(where.join(' OR '), *windows_type)
+      project.workshop_logs.where(where.join(" OR "), *windows_type)
     end.flatten
     logs = logs.select do |log|
-      log.date && log.date.month == date.month.to_i && \
-      log.date.year == date.year.to_i
+      log.date && log.date.month == date.month.to_i &&
+        log.date.year == date.year.to_i
     end.flatten
     logs.uniq.group_by { |log| log.date }
   end
 
   def project_workshop_logs(date, windows_type, project_id)
-   if project_id
+    if project_id
       logs = workshop_logs.where(project_id: project_id, windows_type_id: windows_type.id)
       logs = logs.select do |log|
-        log.date && log.date.month == date.month.to_i && \
-        log.date.year == date.year.to_i
+        log.date && log.date.month == date.month.to_i &&
+          log.date.year == date.year.to_i
       end.flatten
       logs.uniq.group_by { |log| log.date }
     end
@@ -141,7 +142,7 @@ class User < ApplicationRecord
   end
 
   def agency_name
-   agency ? agency.name : 'No agency.'
+    agency ? agency.name : "No agency."
   end
 
   def has_bookmarkable?(bookmarkable, type: nil)
@@ -167,9 +168,9 @@ class User < ApplicationRecord
     adult_perm = Permission.find_by(security_cat: "Adult Windows")
     children_perm = Permission.find_by(security_cat: "Children's Windows")
 
-    self.permissions << combined_perm
-    self.permissions << adult_perm
-    self.permissions << children_perm
+    permissions << combined_perm
+    permissions << adult_perm
+    permissions << children_perm
   end
 
   def reassign_reports_and_logs_to_orphaned_user

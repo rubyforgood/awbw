@@ -8,9 +8,12 @@ class Report < ApplicationRecord
   has_one :image
   validate :image_valid?
 
-  # TODO handle set_has_attachment
-  # before_save :set_has_attachament
+  # before_save :set_has_attachament # TODO handle set_has_attachment
+  FORM_FILE_CONTENT_TYPES = %w[application/pdf application/msword
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document application/vnd.ms-excel
+    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]
   has_one_attached :form_file
+  validates :form_file, content_type: FORM_FILE_CONTENT_TYPES
 
   has_many :images
   has_many :form_fields, through: :form

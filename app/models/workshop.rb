@@ -7,8 +7,12 @@ class Workshop < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :windows_type
 
+  ACCEPTED_CONTENT_TYPES = ["image/jpg", "image/jpeg", "image/png" ].freeze
   has_one_attached :thumbnail
+  validates :thumbnail, content_type: ACCEPTED_CONTENT_TYPES
+
   has_one_attached :header
+  validates :header, content_type: ACCEPTED_CONTENT_TYPES
 
   has_many :sectorable_items, dependent: :destroy,
            inverse_of: :sectorable, as: :sectorable
@@ -39,6 +43,7 @@ class Workshop < ApplicationRecord
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_parent_id",
            dependent: :destroy
+
 
   # When this workshop is the child in a series
   has_many :workshop_series_parents,
