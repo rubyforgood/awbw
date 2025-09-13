@@ -138,13 +138,6 @@ GEM
     climate_control (0.2.0)
     cocoon (1.2.15)
     coderay (1.1.3)
-    coffee-rails (5.0.0)
-      coffee-script (>= 2.2.0)
-      railties (>= 5.2.0)
-    coffee-script (2.4.1)
-      coffee-script-source
-      execjs
-    coffee-script-source (1.12.2)
     concurrent-ruby (1.3.5)
     connection_pool (2.5.4)
     countries (8.0.4)
@@ -448,7 +441,6 @@ DEPENDENCIES
   capybara (~> 3.36)
   ckeditor (~> 4.3.0)
   cocoon (~> 1.2.6)
-  coffee-rails
   country_select
   debug (~> 1.11)
   devise (~> 4.9.4)
