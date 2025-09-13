@@ -2,14 +2,15 @@ source 'https://rubygems.org'
 
 ruby "3.3.8"
 
-gem "rails", "~> 7.0.8"
+gem "rails", "~> 7.1.5"
 gem "concurrent-ruby", "1.3.4"
 
 # Ruby 3.2 doesn't need these standard library gems
 
 
 gem 'sprockets-rails', '~> 3.2.2'
-gem "activerecord-trilogy-adapter" # for mysql installation
+gem 'trilogy'
+# gem "activerecord-trilogy-adapter" # no longer needed for rails 7.1+
 gem 'bootstrap-sass'
 gem "sassc-rails"
 gem 'uglifier'
@@ -23,7 +24,7 @@ gem 'devise', '~> 4.9.4'
 gem 'neat', '1.7.1'
 gem 'bourbon', '~> 4.2.2'
 gem 'draper'
-gem "kt-paperclip", "~> 6.4", ">= 6.4.1"
+gem "kt-paperclip", "~> 7.1.1"
 gem 'aws-sdk-s3'
 gem 'rails_admin','~> 3.0'
 # gem 'rails_admin', git: 'https://github.com/enmand/rails_admin.git'
@@ -48,7 +49,7 @@ gem 'jwt', '~> 1.2.1'
 gem 'httparty'
 gem 'will_paginate', '~> 3.1.7'
 gem 'bootstrap-will_paginate'
-gem 'apipie-rails', '~> 0.5.0'
+gem 'apipie-rails', '~> 1.5.0'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'ckeditor', '~> 4.3.0'
 gem "binding_of_caller"
