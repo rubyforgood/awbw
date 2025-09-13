@@ -10,6 +10,8 @@ gem 'trilogy'
 gem 'uglifier'
 gem "feature_flipper"
 
+gem "vite_rails"
+
 gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 
