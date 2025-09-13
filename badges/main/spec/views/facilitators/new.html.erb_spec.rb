@@ -15,7 +15,7 @@ RSpec.describe "facilitators/new", type: :view do
   it "has a form with the facilitator fields" do
     expect(rendered).to have_field('First name')
     expect(rendered).to have_field('Last name')
-    expect(rendered).to have_field('Email')
+    expect(rendered).to have_field('Primary email address')
   end
 
   it "has a link back to the index page" do
