@@ -2,20 +2,13 @@ source 'https://rubygems.org'
 
 ruby "3.3.8"
 
-gem "rails", "~> 6.1.7"
-
-# TODO Consider removing these after upgrading Rails. These are a Ruby 3.3 => 3.4 warning.
-# add required gems leaving standard library to avoid log noise
-gem "bigdecimal"
-gem "drb"
-gem "mutex_m"
-gem "observer"
-
+gem "rails", "8.1.0.beta1"
 
 gem 'sprockets-rails', '~> 3.2.2'
-gem "activerecord-trilogy-adapter" # for mysql installation
+gem 'trilogy'
+# gem "activerecord-trilogy-adapter" # no longer needed for rails 7.1+
 gem 'bootstrap-sass'
-gem "sassc-rails", ">= 2.1.2"
+gem "sassc-rails"
 gem 'uglifier'
 gem 'coffee-rails'
 gem "feature_flipper"
@@ -23,25 +16,14 @@ gem "feature_flipper"
 gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 
-gem 'devise', '~> 4.7.3'
+gem 'devise', '~> 4.9.4'
 gem 'neat', '1.7.1'
 gem 'bourbon', '~> 4.2.2'
 gem 'draper'
-gem "kt-paperclip", "~> 6.4", ">= 6.4.1"
+gem "kt-paperclip", "~> 7.1.1"
 gem 'aws-sdk-s3'
-gem 'rails_admin','~> 2.2.1'
-# gem 'rails_admin', git: 'https://github.com/enmand/rails_admin.git'
-# rails_admin 1.1.1 has a transitive dependency on haml (~> 4.0). haml 4.0.7 in
-# turn has a transitive dependency on tile and does not specify a version range.
-# This causes it to pull in tilt 2.6.0 which is incompatible with haml 4.0.7. So
-# specifying tilt as a direct dependency with a version range that is compatible
-# with haml 4.0.7. We can remove this as soon we get upgrade to a newer version
-# of rails_admin that should pull in a newer version of haml, breaking this
-# dependency chain.
-gem 'tilt', '~> 2.4.0'
 
-
-gem 'puma', '~> 5.6' # Add Puma as the web server
+gem 'puma', '~> 6.0' # Add Puma as the web server
 
 gem 'cocoon', '~> 1.2.6'
 
@@ -52,7 +34,7 @@ gem 'jwt', '~> 1.2.1'
 gem 'httparty'
 gem 'will_paginate', '~> 3.1.7'
 gem 'bootstrap-will_paginate'
-gem 'apipie-rails', '~> 0.5.0'
+gem 'apipie-rails', '~> 1.5.0'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'ckeditor', '~> 4.3.0'
 gem "binding_of_caller"
@@ -64,6 +46,7 @@ gem 'premailer-rails'
 gem "bcrypt", '3.1.16'
 gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
 gem 'simple_form'
+gem 'country_select'
 
 group :development, :test do
   gem 'better_errors'
@@ -82,4 +65,3 @@ group :development, :test do
   gem 'shoulda-matchers', require: false
   gem "debug", "~> 1.11"
 end
-

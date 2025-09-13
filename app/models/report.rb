@@ -37,25 +37,6 @@ class Report < ApplicationRecord
   after_create :set_windows_type
   after_save :create_admin_notification
 
-  rails_admin do
-    configure :owner do
-      hide
-    end
-    list do
-      field :id
-      field :type
-      field :windows_type do
-        filterable true
-        queryable true
-        searchable [:name]
-      end
-      field :user
-      field :project
-      field :created_at
-    end
-
-  end
-
   def users_admin_type
     if form_builder && form_builder.id == 7
       "Story"
@@ -101,8 +82,8 @@ class Report < ApplicationRecord
   def image_valid?
     return true if image.nil?
     unless image.valid?
-      image.errors.each do |k, v|
-        errors.add(k, v)
+      image.errors.each do |error|
+        errors.add(error.attribute, error.message)
       end
     end
   end

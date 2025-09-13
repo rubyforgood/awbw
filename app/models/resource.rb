@@ -41,19 +41,6 @@ class Resource < ApplicationRecord
 
   KINDS = ['Toolkit', 'Form', 'Template', 'Handout', 'Story']
 
-  # Rails Admin
-  rails_admin do
-    exclude_fields :sectorable_items, :categorizable_items, :reports, :user_forms, :related_workshops, :filemaker_code, :legacy
-    field :text, :ck_editor
-
-    list do
-      configure :title do
-        formatted_value{ "#{bindings[:object].title} - [ #{bindings[:object].kind.upcase} ]" }
-      end
-    end
-
-  end
-
   # Search Cop
   include SearchCop
 

@@ -1,16 +1,24 @@
-<%= form_for(@facilitator) do |f| %>
-  <%= render 'shared/errors', resource: facilitator if facilitator.errors.any? %>
-
-  <div class="form-inputs">
-    <%= f.label :first_name, class: 'bold' %>
-    <%= f.text_field :first_name %>
-    <%= f.label :last_name, class: 'bold' %>
-    <%= f.text_field :last_name %>
-    <%= f.label :email, class: 'bold' %>
-    <%= f.text_field :email %>
-  </div>
-
-  <div class="form-actions">
-    <%= f.button :submit %>
-  </div>
+  <%= simple_form_for @facilitator do |f| %>
+  <%= f.input :first_name %>
+  <%= f.input :last_name %>
+  <%= f.input :primary_email_address %>
+  <%= f.input :primary_email_address_type, 
+    as: :radio_buttons,
+    collection: Facilitator::CONTACT_TYPES,
+    item_wrapper_class: 'form-check' %>
+  <%= f.input :street_address %>
+  <%= f.input :city %>
+  <%= f.input :state %>
+  <%= f.input :zip %>
+  <%= f.input :country %>
+  <%= f.input :mailing_address_type, 
+    as: :radio_buttons,
+    collection: Facilitator::CONTACT_TYPES,
+    item_wrapper_class: 'form-check' %>
+  <%= f.input :phone_number%>
+  <%= f.input :phone_number_type,
+    as: :radio_buttons,
+    collection: Facilitator::CONTACT_TYPES,
+    item_wrapper_class: 'form-check' %>
+  <%= f.button :submit %>
 <% end %>

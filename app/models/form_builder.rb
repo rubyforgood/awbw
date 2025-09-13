@@ -5,10 +5,6 @@ class FormBuilder < ApplicationRecord
   belongs_to :windows_type
   accepts_nested_attributes_for :forms
 
-  rails_admin do
-    exclude_fields :owner_type, forms: [:owner, :owner_id, :owner_type, :owner]
-  end
-
   scope :workshop_logs, -> { where('name LIKE ?', '%Log%') }
   scope :monthly, -> { where('name LIKE ?', '%monthly%') }
 

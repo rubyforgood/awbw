@@ -1,0 +1,29 @@
+<%= form_for(@event) do |f| %>
+  <%= render 'shared/errors', resource: @event if @event.errors.any? %>
+
+  <div class="form-group">
+    <%= f.label :title, class: 'bold' %>
+    <%= f.text_field :title, class: 'form-control' %>  
+
+    <%= f.label :description, class: 'bold' %>
+    <%= f.text_area :description, class: 'form-control' %>
+
+    <%= f.label :start_date, class: 'bold' %>
+    <%= f.text_field :start_date, type: 'datetime-local', class: 'form-control', value: @event.start_date&.strftime('%Y-%m-%dT%H:%M') %>
+
+    <%= f.label :end_date, class: 'bold' %>
+    <%= f.text_field :end_date, type: 'datetime-local', class: 'form-control', value: @event.end_date&.strftime('%Y-%m-%dT%H:%M') %>
+
+    <%= f.label :registration_close_date, class: 'bold' %>
+    <%= f.text_field :registration_close_date, type: 'datetime-local', class: 'form-control', value: @event.registration_close_date&.strftime('%Y-%m-%dT%H:%M') %>
+
+    <div style="display: flex; align-items: center; margin-top: 10px; column-gap: 10px;">
+      <%= f.label :publicly_visible, class: 'bold' %>
+      <%= f.check_box :publicly_visible, { class: 'bold mt-0' }, '1', '0' %>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit, class: 'btn btn-primary' %>
+  </div>
+<% end %>

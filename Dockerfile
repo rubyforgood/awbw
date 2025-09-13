@@ -30,6 +30,7 @@ RUN apt-get update -qq && apt-get install -y \
   libffi-dev \
   libreadline-dev \
   libssl-dev \
+  libyaml-dev \
   zlib1g-dev
 
 # Copy app code and install dependencies

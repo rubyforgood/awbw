@@ -10,7 +10,7 @@ RSpec.describe "facilitators/index", type: :view do
   end
 
   it "renders a list of facilitators" do
-    expect(rendered).to match(facilitator.email)
-    expect(rendered).to match(facilitator_2.email)
+    expect(rendered).to match(facilitator.primary_email_address)
+    expect(rendered).to match(facilitator_2.primary_email_address)
   end
 end

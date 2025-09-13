@@ -82,8 +82,7 @@ class WorkshopsController < ApplicationController
 
   def update
     @workshop = Workshop.find(params[:id])
-
-    if @workshop.update_attributes(workshop_params)
+    if @workshop.update(workshop_params)
       flash[:alert] = 'Thank you for sharing your workshop idea.'
       redirect_to root_path
     else
