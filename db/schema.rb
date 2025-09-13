@@ -166,16 +166,6 @@ ActiveRecord::Schema.define(version: 2025_09_13_000000) do
     t.index ["organization_id"], name: "index_facilitator_organizations_on_organization_id"
   end
 
-  create_table "facilitator_organizations", charset: "utf8mb3", force: :cascade do |t|
-    t.bigint "facilitator_id", null: false
-    t.bigint "organization_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["facilitator_id", "organization_id"], name: "index_facilitator_organizations_on_ids", unique: true
-    t.index ["facilitator_id"], name: "index_facilitator_organizations_on_facilitator_id"
-    t.index ["organization_id"], name: "index_facilitator_organizations_on_organization_id"
-  end
-
   create_table "facilitators", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "city", null: false
     t.string "country", null: false
