@@ -3,7 +3,7 @@ class ResourcesController < ApplicationController
     @resources = current_user.curriculum(Resource).by_created.search(params).
                     paginate(page: params[:page], per_page: 6)
 
-    load_sortable_fields
+    @sortable_fields = Resource::KINDS
 
     respond_to do |format|
       format.html
@@ -32,10 +32,9 @@ class ResourcesController < ApplicationController
   def create
     @resource = current_user.resources.build(resource_params)
     if @resource.save
-      flash[:alert] = "#{@resource.type} has been submitted."
-      redirect_to root_path
+      redirect_to resources_path
     else
-      flash[:error] = "Unable to save #{@resource.type.titleize}"
+      flash[:error] = "Unable to save #{@resource.title.titleize}"
       render :new
     end
   end

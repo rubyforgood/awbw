@@ -2,7 +2,7 @@ class Resource < ApplicationRecord
   # Associations
   belongs_to :user
   belongs_to :workshop, optional: true
-  belongs_to :windows_type
+  belongs_to :windows_type, optional: true
   has_many :images, as: :owner, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :categories, through: :categorizable_items
@@ -22,6 +22,8 @@ class Resource < ApplicationRecord
   scope :recent, -> { for_search.by_created }
 
   validates :title, presence: true
+  validates :kind, presence: true
+  attribute :inactive, :boolean, default: false
 
   # Nested Attributes
   accepts_nested_attributes_for :categorizable_items,
