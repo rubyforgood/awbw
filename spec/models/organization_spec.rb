@@ -5,6 +5,8 @@ RSpec.describe Organization, type: :model do
     it { should have_many(:addresses).dependent(:destroy) }
     it { should have_many(:facilitator_organizations).dependent(:restrict_with_exception) }
     it { should have_many(:facilitators).through(:facilitator_organizations) }
+    it { should have_many(:organization_workshops).dependent(:restrict_with_exception) }
+    it { should have_many(:workshops).through(:organization_workshops) }
   end
 
   describe 'validations' do
