@@ -29,17 +29,13 @@
         FAQ
       <% end %>
     </div>
+
     <div class="navbar-text pull-right container-fluid">
       <div class="dropdown">
         <div class="dropdown-compoments pull-right">
           <a class="dropdown-toggle" role="button" data-toggle="dropdown">
             <div class="col-xs-2 avatar">
               <%= image_tag current_user.avatar.url(:thumb), class: 'img-circle avatar' %>
-            </div>
-            <div class="col-xs-4 visible-xs-block mobile-name">
-              <p>
-                <%= current_user.decorate.first_name %>
-              </p>
             </div>
             <div class="col-xs-1 carot hidden-xs">
               <i class="fa fa-angle-down"></i>
@@ -51,6 +47,20 @@
             </li>
             <li>
               <%= link_to("Logout", destroy_user_session_path, :method => :delete) %>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="navbar-text navbar-link pull-right">
+      <div class="dropdown">
+        <div class="dropdown-compoments pull-right">
+          <a class="dropdown-toggle" role="button" data-toggle="dropdown">
+            <button type="button" class="btn btn-primary new-button">+ NEW</button>
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <%= link_to "New workshop idea", workshops_share_idea_path %>
             </li>
           </ul>
         </div>
