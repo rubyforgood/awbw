@@ -70,6 +70,10 @@ RSpec.configure do |config|
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
 
+  # ensure that warden is configured for running in test mode.
+  config.before(:suite) { Warden.test_mode! }
+  config.after { Warden.test_reset! }
+
   # ==> Mailer Prevention (add this block)
   config.before(:each) do
     ActionMailer::Base.delivery_method = :test
