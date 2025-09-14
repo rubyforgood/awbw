@@ -1,0 +1,38 @@
+<div class="col-md-12">
+  <h2 class="normal">Users</h2>
+</div>
+<div class="col-md-12">
+  <table class="table table-responsive table-bordered table-curved">
+    <thead>
+    <tr id="festi-table-thead-tr" class="<%= @color_class %>">
+      <th class="text-start text-nowrap">Participant</th>
+      <th class="text-center">Email</th>
+      <th class="text-left">Super user?</th>
+      <th class="text-center">Sign in<br>count</th>
+      <th class="text-center">Current<br>sign-in</th>
+      <th class="text-center">Last updated</th>
+      <th class="text-center">Edit</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <% @users.each do |user| %>
+      <tr>
+        <td class="text-start text-nowrap"><%= user.first_name %> <%= user.last_name %></td>
+        <td class="text-start"><%= user.email %></td>
+        <td class="text-center">
+          <span class="<%= user.super_user? ? 'glyphicon glyphicon glyphicon-record success text-success' : 'glyphicon glyphicon-circle' %>"></span>
+        </td>
+        <td class="sign-in-count text-center">
+          <span class="<%= "text-utility" unless user.sign_in_count > 0 %>">
+            <%= user.sign_in_count %>
+          </span>
+        </td>
+        <td class="current-sign-in" style="max-width: 3em;"><%= user.current_sign_in_at && user.current_sign_in_at.strftime('%m/%d/%y %I:%M %P') %></td>
+        <td class="user-updated-at text-center"><%= user.updated_at&.strftime('%m/%d/%y %I:%M %P') %></td>
+        <td class="text-center"><%= link_to "<span class='glyphicon glyphicon-pencil'></span>".html_safe, edit_user_path(user) %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+</div>

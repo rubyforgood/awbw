@@ -79,7 +79,7 @@ class WorkshopLogsController < ApplicationController
     @answers      = @workshop_log.report_form_field_answers
 
     if @workshop_log
-      if current_user.liaison? && @workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id)
+      if @workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id)
         render :show
       else
         redirect_to root_path, error: 'You do not have permission to view this page.'

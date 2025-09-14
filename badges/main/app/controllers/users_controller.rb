@@ -1,14 +1,17 @@
 class UsersController < ApplicationController
 
-  def new
-    if current_user.liaison?
-      @user = User.new
-      @user.project_users.build
-      @projects = current_user.projects
+  def index
+    if current_user.super_user?
+      @users = User.paginate(page: params[:page], per_page: 6)
     else
-      flash[:alert] = 'You must be a liaison to add a new user.'
       redirect_to root_path
     end
+  end
+
+  def new
+    @user = User.new
+    @user.project_users.build
+    @projects = current_user.projects
   end
 
   def create
@@ -17,7 +20,7 @@ class UsersController < ApplicationController
     if @user.save
       @user.notifications.create(notification_type: 0)
       flash[:alert] = 'User has been created.'
-      redirect_to user_path(@user)
+      redirect_to users_path
     else
       render :new
     end
@@ -29,13 +32,6 @@ class UsersController < ApplicationController
 
   def edit
     @user = User.find(params[:id])
-    if can_access_page?
-      @project_users = @user.project_users
-      render :edit
-    else
-      flash[:alert] = 'You must be a liaison to edit user information.'
-      redirect_to root_path
-    end
   end
 
   def change_password
@@ -57,21 +53,15 @@ class UsersController < ApplicationController
 
   def update
     @user = User.find(params[:id])
-    if can_access_page?
-      set_password unless password_param.empty?
+    set_password unless password_param.nil?
 
-      if @user.update(user_params)
-        @user.notifications.create(notification_type: 1)
-        flash[:alert] = 'User updated.'
-        sign_in(@user, :bypass => true)
-        redirect_to user_path(@user)
-      else
-        flash[:alert] = 'Unable to update user.'
-        render :edit
-      end
+    if @user.update(user_params)
+      # @user.notifications.create(notification_type: 1)
+      flash[:alert] = 'User updated.'
+      redirect_to users_path
     else
-      flash[:alert] = 'You are not authorized to update this user.'
-      redirect_to root_path
+      flash[:alert] = 'Unable to update user.'
+      render :edit
     end
   end
 
@@ -81,23 +71,19 @@ class UsersController < ApplicationController
     @user.password = password_param unless password_param.empty?
   end
 
-  def can_access_page?
-    @user == current_user || current_user.liaison_in_projects?(@user.projects)
+  def user_params
+    params.require(:user).permit(
+      :email, :first_name, :last_name,
+      :phone, :phone2, :phone3, :best_time_to_call,
+      :birthday, :address, :city, :state, :zip, :address2,
+      :city2, :state2, :zip2, :primary_address, :notes, :avatar, :super_user,
+      project_users_attributes: [:project_id, :position, :_destroy, :id]
+    )
   end
 
-  # def user_params
-  #   params.require(:user).permit(
-  #     :email, :first_name, :last_name,
-  #     :phone, :phone2, :phone3, :best_time_to_call,
-  #     :birthday, :address, :city, :state, :zip, :address2,
-  #     :city2, :state2, :zip2, :primary_address, :notes, :avatar,
-  #     project_users_attributes: [:project_id, :position, :_destroy, :id]
-  #   )
-  # end
-
-  # def password_param
-  #   params[:user][:password]
-  # end
+  def password_param
+    params[:user][:password]
+  end
 
   def pass_params
     # NOTE: Using `strong_parameters` gem
