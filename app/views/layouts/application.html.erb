@@ -24,19 +24,19 @@
       </div>
 
       <div class='row main-content'>
-        <% if user_signed_in? %>
-          <%= render 'shared/side_nav' %>
-
-          <div class='<%= main_content_classes %>'>
-             <%= render 'shared/flash_messages' %>
-             <%= yield %>
-          </div>
-        <% else %>
-          <div class='<%= main_content_classes %>'>
-            <%= render 'shared/flash_messages' %>
-            <%= yield %>
-          </div>
-        <% end %>
+        <div class="col-md-12">
+          <% if user_signed_in? %>
+            <div class='signed-in-user <%= main_content_classes %> mt-3 mb-3'>
+              <%= render 'shared/flash_messages' %>
+              <%= yield %>
+            </div>
+          <% else %>
+            <div class='not-signed-in-user <%= main_content_classes %> mt-3 mb-3'>
+              <%= render 'shared/flash_messages' %>
+              <%= yield %>
+            </div>
+          <% end %>
+        </div>
       </div>
       </div>
     <footer class='container-fluid'>

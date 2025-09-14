@@ -123,7 +123,7 @@ module ApplicationHelper
     base_classes = "printable-area"
 
     if user_signed_in?
-      content_classes = "content-area col-md-10 col-md-offset-2"
+      content_classes = "col-md-12"
       if params[:controller] == 'dashboard' && params[:action] == 'index'
         specific_class = "dashboard-area"
       else
