@@ -67,6 +67,13 @@ For Docker-based development (recommended):
 3. Visit <http://localhost:3000/> to see the AWBW portal page
 4. Log in as a sample user with the default [credentials](#credentials)
 
+### Database encoding
+We were getting a different schema encoding on Mac vs Linux (utf8mb4 vs utf8) which was causing some merge conflicts. 
+To ensure consistent encoding across environments, we have set MySQL database to use `utf8mb4` encoding by default by
+overriding DATABASE_URL in `.env` and `.env.example` files:
+
+```
+
 ## Dev seeds
 
 - Running mise should have run `rake db:seed`
