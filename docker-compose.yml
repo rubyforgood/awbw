@@ -38,6 +38,7 @@ services:
     volumes:
       - ./:/app:cached
       - /app/tmp
+      - ./tmp/capybara:/app/tmp/capybara
     working_dir: /app
 
     command: bash -lc "bin/rails s -b 0.0.0.0 -p 3000"

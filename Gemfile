@@ -47,6 +47,7 @@ gem "bcrypt", '3.1.16'
 gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
 gem 'simple_form'
 gem 'country_select'
+gem 'actiontext'
 
 group :development, :test do
   gem 'better_errors'

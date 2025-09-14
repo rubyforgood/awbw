@@ -5,6 +5,7 @@ class Workshop < ApplicationRecord
   # Associations
   belongs_to :user, optional: true
   before_save :set_time_frame
+  has_rich_text :notes
 
   has_many :sectorable_items, dependent: :destroy,
            inverse_of: :sectorable, as: :sectorable
