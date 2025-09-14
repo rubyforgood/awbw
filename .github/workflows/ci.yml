@@ -49,6 +49,11 @@ jobs:
         with:
           bundler-cache: true
 
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci
+
       - name: Setup database
         run: |
           bundle exec rake db:create db:schema:load
