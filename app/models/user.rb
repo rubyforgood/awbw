@@ -61,7 +61,7 @@ class User < ApplicationRecord
   end
 
   def active_for_authentication?
-    super && !inactive?
+    super && !self.inactive?
   end
 
   def bookmark_for(record)
@@ -168,9 +168,10 @@ class User < ApplicationRecord
     adult_perm = Permission.find_by(security_cat: "Adult Windows")
     children_perm = Permission.find_by(security_cat: "Children's Windows")
 
-    permissions << combined_perm
-    permissions << adult_perm
-    permissions << children_perm
+
+    self.permissions << combined_perm
+    self.permissions << adult_perm
+    self.permissions << children_perm
   end
 
   def reassign_reports_and_logs_to_orphaned_user
