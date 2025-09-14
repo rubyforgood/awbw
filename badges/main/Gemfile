@@ -23,7 +23,6 @@ gem 'puma', '~> 6.0' # Add Puma as the web server
 
 gem 'cocoon', '~> 1.2.6'
 
-gem 'font-awesome-rails'
 gem 'wicked'
 gem 'search_cop', '~> 1.0.6'
 gem 'jwt', '~> 1.2.1'
@@ -35,7 +34,6 @@ gem 'rack-cors', :require => 'rack/cors'
 gem 'ckeditor', '~> 4.3.0'
 gem "binding_of_caller"
 gem 'image_processing'
-gem 'foundation_emails'
 gem 'inky-rb', require: 'inky'
 # Stylesheet inlining for email
 gem 'premailer-rails'
