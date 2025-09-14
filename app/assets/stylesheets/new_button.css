@@ -1,0 +1,16 @@
+.btn.btn-primary.new-button {
+  border: 2px solid white;
+  color: white;
+  &:hover,
+  &:focus,
+  &.active{
+    background-color: white;
+    border-color: #002358;
+    color: #063b8d;
+  }
+  &.btn-filled{
+    background-color: #063b8d;
+    border-color: #063b8d;
+    color: white;
+  }
+}
