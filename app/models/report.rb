@@ -106,6 +106,8 @@ class Report < ApplicationRecord
       end
     elsif owner and owner_type.include? "FormBuilder"
       FormBuilder.find(7)
+    else
+      nil
     end
   end
 
@@ -130,7 +132,7 @@ class Report < ApplicationRecord
   def set_has_attachament
     self.has_attachment = false
 
-    unless image.blank? and media_files.empty? and form_file.blank?
+    unless self.image.blank? and self.media_files.empty? and self.form_file.blank?
       self.has_attachment = true
     end
   end

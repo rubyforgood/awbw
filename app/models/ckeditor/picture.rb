@@ -11,7 +11,7 @@ class Ckeditor::Picture < ApplicationRecord # Ckeditor::Asset
     return super if actual_url.nil?
 
     if param == :content
-      actual_url
+      return actual_url
     else
       actual_url.gsub("/original", "/thumb")
     end

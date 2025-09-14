@@ -26,9 +26,6 @@
 /public/ckeditor_assets
 /public/assets/
 
-# Ignore local active storage attachments
-storage
-
 # Ignore Byebug command history file.
 .byebug_history
 
@@ -40,6 +37,7 @@ storage
 # Ignore Mac Stuff
 ._*
 .idea
+storage
 coverage/
 
 # Vite Ruby

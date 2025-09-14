@@ -20,7 +20,7 @@ class Admins::NotificationMailer < ApplicationMailer
       @answers     = @report.report_form_field_answers
     end
 
-    if @report&.type == "WorkshopLog"
+    if @report.type == "WorkshopLog"
     end
 
     if @report.story?

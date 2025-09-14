@@ -181,7 +181,7 @@ class Workshop < ApplicationRecord
 
   def sector_hashtags
     sectors.map do |sector|
-      "##{sector.name.split(" ")[0].downcase}"
+      "\#{sector.name.split(" ")[0].downcase}"
     end.join(",")
   end
 
