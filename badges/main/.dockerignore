@@ -1,0 +1,15 @@
+tmp
+log
+.direnv
+.devcontainer
+.git
+.gihub
+.bundle
+
+public/assets
+public/vite*
+public/system
+
+node_modules
+coverage
+spec

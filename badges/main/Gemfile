@@ -8,8 +8,9 @@ gem "bootsnap", require: false
 gem 'sprockets-rails', '~> 3.2.2'
 gem 'trilogy'
 gem 'uglifier'
-gem 'coffee-rails'
 gem "feature_flipper"
+
+gem "vite_rails"
 
 gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'

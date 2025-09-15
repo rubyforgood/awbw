@@ -31,11 +31,14 @@ RUN apt-get update -qq && apt-get install -y \
   libreadline-dev \
   libssl-dev \
   libyaml-dev \
+  nodejs \
+  npm \
   zlib1g-dev
 
 # Copy app code and install dependencies
 COPY . .
 
+RUN npm ci
 RUN bundle install --without development test
 
 # These envs are used in the rails application. While they are entirely 
@@ -62,15 +65,14 @@ RUN apt-get update -qq && apt-get install --no-install-recommends -y \
   && rm -rf /var/lib/apt/lists/*
 
 
-
-
 # Set working directory
 WORKDIR /app
 
 COPY --from=assets /gems /gems
 COPY --from=assets /app/public/assets /app/public/assets
+COPY --from=assets /app/public/vite /app/public/vite
 
-# Copy app code and install dependencies
+# Copy app code
 COPY . .
 
 # Expose port (default Rails)
