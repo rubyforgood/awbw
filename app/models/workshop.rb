@@ -1,6 +1,7 @@
 class Workshop < ApplicationRecord
 
   default_scope { where(inactive: false) }
+  attr_accessor :time_hours, :time_minutes
 
   # Associations
   belongs_to :user, optional: true
@@ -233,7 +234,7 @@ class Workshop < ApplicationRecord
   end
 
   def set_time_frame
-    unless @time_hours.blank? and @time_minutes.blank?
+    unless @time_hours.blank? && @time_minutes.blank?
       self.timeframe = "#{@time_hours}:#{@time_minutes}"
     end
   end

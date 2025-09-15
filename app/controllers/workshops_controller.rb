@@ -83,15 +83,20 @@ class WorkshopsController < ApplicationController
   def update
     @workshop = Workshop.find(params[:id])
     if @workshop.update(workshop_params)
-      flash[:alert] = 'Thank you for sharing your workshop idea.'
-      redirect_to root_path
+      if @workshop.inactive
+        flash[:alert] = 'Thank you for sharing your workshop idea.'
+        redirect_to root_path
+      else
+        flash[:alert] = 'Workshop created.'
+        redirect_to workshops_path
+      end
     else
       flash[:error] = 'Unable to update the workshop.'
       render :edit
     end
   end
 
-  def create_from_log
+  def create_workshop_idea
     @workshop = current_user.workshops.build(workshop_params)
 
     if @workshop.save
