@@ -1,11 +1,11 @@
 class Workshop < ApplicationRecord
-
-  default_scope { where(inactive: false) }
   attr_accessor :time_hours, :time_minutes
+
+  before_save :set_time_frame
 
   # Associations
   belongs_to :user, optional: true
-  before_save :set_time_frame
+  belongs_to :windows_type
 
   has_many :sectorable_items, dependent: :destroy,
            inverse_of: :sectorable, as: :sectorable
@@ -27,7 +27,6 @@ class Workshop < ApplicationRecord
   has_many :workshop_resources, dependent: :destroy
   has_many :resources, through: :workshop_resources
 
-  belongs_to :windows_type
   has_many :attachments, as: :owner, dependent: :destroy
   has_many :workshop_age_ranges
 

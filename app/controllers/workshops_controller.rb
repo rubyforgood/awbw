@@ -161,7 +161,7 @@ class WorkshopsController < ApplicationController
   end
 
   def workshops_per_page
-    view_all_workshops? ? @workshops.count : 12
+    view_all_workshops? ? @workshops.where(inactive: false).count : 12
   end
 
   def view_all_workshops?
