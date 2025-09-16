@@ -1,0 +1,36 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Event Details</h1>
+
+<p>
+    <strong>Title:</strong>
+    <%= @event.title %>
+</p>
+
+<p>
+    <strong>Description:</strong>
+    <%= @event.description %>
+</p>
+
+<p>
+    <strong>Start Date:</strong>
+    <%= @event.start_date.strftime("%B %d, %Y %I:%M %p") if @event.start_date.present? %>
+</p>
+
+<p>
+    <strong>End Date:</strong>
+    <%= @event.end_date.strftime("%B %d, %Y %I:%M %p") if @event.end_date.present? %>
+</p>
+
+<p>
+    <strong>Registration Close Date:</strong>
+    <%= @event.registration_close_date.strftime("%B %d, %Y %I:%M %p") if @event.registration_close_date.present? %>
+</p>
+
+<p>
+    <strong>Publicly Visible:</strong>
+    <%= @event.publicly_visible? ? 'Yes' : 'No' %>
+</p>
+
+<%= link_to 'Edit', edit_event_path(@event) %> |
+<%= link_to 'Back', events_path %>

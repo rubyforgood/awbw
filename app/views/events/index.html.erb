@@ -1,0 +1,60 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Events</h1>
+
+<%= form_with url: bulk_create_event_registrations_path, method: :post, local: true, id: 'bulk-registration-form' do |form| %>
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Title</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @events.each do |event| %>
+        <tr>
+          <td style="padding-right: 10px;">
+            <%= check_box_tag "event_ids[]", event.id, false, class: "event-checkbox" %>
+          </td>
+          <td style="padding-right: 10px;"><%= event.title %></td>
+          <td style="padding-right: 10px;"><%= event.start_date.strftime("%B %d, %Y") if event.start_date %></td>
+          <td style="padding-right: 10px;"><%= event.end_date.strftime("%B %d, %Y") if event.end_date %></td>
+          <td style="padding-right: 10px;">
+            <%= link_to 'Show', event %> |
+            <%= link_to 'Edit', edit_event_path(event) %> |
+            <%= link_to 'Destroy', event, method: :delete, data: { confirm: 'Are you sure?' } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <br>
+
+  <div>
+    <%= form.submit "Register for Selected Events", class: "btn btn-primary", id: "register-button", disabled: true %>
+    <%= link_to 'New Event', new_event_path, class: "btn btn-primary" %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.event-checkbox');
+    const registerButton = document.getElementById('register-button');
+    
+    function updateRegisterButton() {
+      const checkedBoxes = document.querySelectorAll('.event-checkbox:checked');
+      registerButton.disabled = checkedBoxes.length === 0;
+    }
+    
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateRegisterButton);
+    });
+    
+    updateRegisterButton();
+  });
+</script>

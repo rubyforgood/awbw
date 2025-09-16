@@ -1,0 +1,36 @@
+.header .navbar-text {
+  border-left: 0px;
+}
+
+.navbar-text.navbar-link {
+  width: auto;
+  min-width: fit-content;
+  margin-right: 10px;
+  border-left: 0px;
+}
+
+.navbar-link {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  a {
+    text-decoration: none;
+  }
+}
+
+.btn.btn-primary.new-button {
+  width: 150px;
+  color: white;
+  &:hover,
+  &:focus,
+  &.active{
+    background-color: white;
+    border-color: #002358;
+    color: #063b8d;
+  }
+  &.btn-filled{
+    background-color: #063b8d;
+    border-color: #063b8d;
+    color: white;
+  }
+}

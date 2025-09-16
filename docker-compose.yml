@@ -4,13 +4,10 @@ services:
     platform: linux/amd64
     command: --default-authentication-plugin=mysql_native_password
     ports:
-      - 3306:3306
-    expose:
-      - '3306'
+      - 3306
     volumes:
-      - type: volume
-        source: mysql-data
-        target: /var/lib/mysql
+      - mysql-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
       MYSQL_DATABASE: awbw_development
@@ -32,19 +29,54 @@ services:
     environment:
       # Fallback so Rails can boot even if .env is minimal.
       # If you prefer traditional keys, set DB_* in .env and configure database.yml accordingly.
-      DATABASE_URL: mysql2://root@database:3306/awbw_development
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "true"
+      VITE_RUBY_HOST: vite
+      DATABASE_URL: trilogy://root@database:3306/
     ports:
       - 3000:3000
     volumes:
       - ./:/app:cached
-    working_dir: /app
+      - /app/tmp
 
     command: bash -lc "bin/rails s -b 0.0.0.0 -p 3000"
     tty: true
     stdin_open: true
     restart: unless-stopped
+
+  vite:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: "true"
+      VITE_RUBY_HOST: 0.0.0.0
+    volumes:
+      - ./:/app:cached
+      - /app/tmp
+    command: bin/vite dev
+    ports:
+      - 3036:3036
+
+  prod:
+    profiles:
+      - production
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+    depends_on:
+      - database
+    environment:
+      DATABASE_URL: trilogy://root@database:3306/awbw_development
+      RAILS_LOG_TO_STDOUT: "true"
+      SECRET_KEY_BASE: "foobar"
+    ports:
+      - 3030:3000
+
+
 
 volumes:
   mysql-data:

@@ -18,6 +18,6 @@ RSpec.describe 'User login', type: :system do
 
     click_button 'Log in'
 
-    expect(page).to have_content("Welcome back, #{user.first_name} #{ user.last_name}")
+    expect(page).to have_css('.avatar')
   end
 end

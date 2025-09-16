@@ -7,7 +7,7 @@ class AuthenticationToken
 
   def self.generate_token(user_id, expiry=EXPIRY_TIME.call)
     payload = {user_id: user_id, exp: expiry.to_i }
-    new(JWT.encode(payload, Rails.application.secrets.secret_key_base))
+    new(JWT.encode(payload, Rails.application.credentials.secret_key_base))
   end
 
   def to_s
@@ -22,7 +22,7 @@ class AuthenticationToken
 
   def decode
     begin
-      JWT.decode(@token, Rails.application.secrets.secret_key_base).first
+      JWT.decode(@token, Rails.application.credentials.secret_key_base).first
     rescue JWT::ExpiredSignature
       raise AuthenticationFailed.new("Token Expired")
     rescue JWT::DecodeError

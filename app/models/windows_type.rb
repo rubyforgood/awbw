@@ -39,10 +39,6 @@ class WindowsType < ApplicationRecord
     id != 3 ? "(#{name.split(' ')[0]})" : ''
   end
 
-  rails_admin do
-    exclude_fields :short_name
-  end
-
   private
 
   def self.symbolize(name)

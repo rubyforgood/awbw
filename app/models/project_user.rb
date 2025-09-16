@@ -8,11 +8,7 @@ class ProjectUser < ApplicationRecord
   validates_presence_of :project_id
 
   # Enum
-  enum position: [:default, :liaison, :leader, :assistant]
-  # Rails admin
-  rails_admin do
-    exclude_fields :agency_id, :position
-  end
+  enum :position, { default: 0, liaison: 1, leader: 2, assistant: 3 }
 
   # Methods
   def name

@@ -13,11 +13,6 @@ class Sector < ApplicationRecord
   # ATTR Accessor
   attr_accessor :_create
 
-  # Rails Admin
-  rails_admin do
-    exclude_fields :workshops
-  end
-
   default_scope { order('name') }
 
   # Methods

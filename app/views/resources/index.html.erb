@@ -1,12 +1,13 @@
 <div class="container-fluid search-curriculum-page resources-page">
   <div class="row">
-    <div class="col-md-12 col-lg-8 width">
+    <div class="col-md-9 col-lg-8 width">
       <div class="entry-content">
-        <% if params[:kind] == "Scholarship" %>
-          <h2 class="normal">Scholarship</h2>
-        <% else %>
-          <h2 class="normal">Resources</h2>
-        <% end %>
+        <h2 class="normal">Resources</h2>
+      </div>
+    </div>
+    <div class="col-md-3 col-lg-4 width">
+      <div class="entry-content">
+        <%= link_to "New Resource", new_resource_path, class: "btn btn-success mb-3" %>
       </div>
     </div>
   </div>
@@ -15,9 +16,7 @@
        <%= form_tag resources_path, method: 'get' do |f| %>
         <div class="search-wrapper">
           <div class="search-field-row" >
-            <% if params[:kind] == "Scholarship" %>
-              <input type="hidden" name="kind" value="<%= params[:kind] %>" />
-            <% end %>
+            <input type="hidden" name="kind" value="<%= params[:kind] %>" />
 
             <%= text_field_tag :query, params[:query], class: 'search',
                                       placeholder: ' Enter keywords here...' %>
@@ -26,11 +25,7 @@
             </div>
           </div>
         </div>
-        <% if params[:kind] != "Scholarship" %>
-          <div class="clear-lnk">
-            <%= link_to 'Clear All', resources_path %>
-          </div>
-       <% end %>
+        <%= link_to 'Clear All', resources_path %>
 
     </div>
   </div><!-- search row -->
@@ -40,7 +35,7 @@
       <div class="filter-wrapper">
         <% if params[:kind] != "Scholarship" %>
           <div class="small-gray-title">Filter By:</div>
-            <%= render 'shared/sortable_fields_btn', sortable_fields: @sortable_fields %>
+            <%= render 'shared/sortable_fields_btn', sortable_fields: Resource::KINDS - ["Story"] %>
           </div>
         <% end %>
     </div>

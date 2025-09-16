@@ -2,7 +2,7 @@ class Resource < ApplicationRecord
   # Associations
   belongs_to :user
   belongs_to :workshop, optional: true
-  belongs_to :windows_type
+  belongs_to :windows_type, optional: true
   has_many :images, as: :owner, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :categories, through: :categorizable_items
@@ -22,6 +22,8 @@ class Resource < ApplicationRecord
   scope :recent, -> { for_search.by_created }
 
   validates :title, presence: true
+  validates :kind, presence: true
+  attribute :inactive, :boolean, default: false
 
   # Nested Attributes
   accepts_nested_attributes_for :categorizable_items,
@@ -37,18 +39,7 @@ class Resource < ApplicationRecord
   accepts_nested_attributes_for :attachments, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
 
-  # Rails Admin
-  rails_admin do
-    exclude_fields :sectorable_items, :categorizable_items, :reports, :user_forms, :related_workshops, :filemaker_code, :legacy
-    field :text, :ck_editor
-
-    list do
-      configure :title do
-        formatted_value{ "#{bindings[:object].title} - [ #{bindings[:object].kind.upcase} ]" }
-      end
-    end
-
-  end
+  KINDS = ['Toolkit', 'Form', 'Template', 'Handout', 'Story']
 
   # Search Cop
   include SearchCop

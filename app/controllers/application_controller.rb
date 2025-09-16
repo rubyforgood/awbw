@@ -24,29 +24,25 @@ class ApplicationController < ActionController::Base
       flash[:notice] = 'We have migrated our data to a new system.  '\
                        'Please click the link below to reset your password.'
     end
-    admin_request? ? rails_admin_path : super
+
+    super
   end
 
   # IMPERSONATE USER
-  alias_method :devise_current_user, :current_user
   def current_user
-    if session[:i_user] && devise_current_user && devise_current_user.super_user?
+    if session[:i_user] && super && super.super_user?
       user = User.find_by(email: session[:i_user]) if session[:i_user]
     else
-      devise_current_user
+      super
     end
   end
 
-  def admin_request?
-    params['controller'].include?('rails_admin') || params['controller'].include?('ckeditor')
-  end
-
   def after_sign_in_path_for(resource)
-    resource.class.name == 'User' ? root_path : admins_root_path
+    root_path
   end
 
   def after_sign_out_path_for(resource)
-    resource == :admin ? rails_admin_path : new_user_session_path
+    new_user_session_path
   end
 
   def current_api_user
