@@ -111,7 +111,7 @@ RSpec.describe "Workshops" do
         fill_in 'workshop_title', with: 'Updated Title'
         click_on 'Submit'
 
-        expect(page).to have_content('Thank you for sharing your workshop idea.')
+        expect(page).to have_content('Workshop updated successfully.')
         expect(workshop.reload.title).to eq('Updated Title')
       end
     end
