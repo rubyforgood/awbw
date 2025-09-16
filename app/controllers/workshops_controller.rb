@@ -99,8 +99,10 @@ class WorkshopsController < ApplicationController
   def create_workshop_idea
     @workshop = current_user.workshops.build(workshop_params)
 
+    @workshop.inactive = true # Workshop ideas are workshops with inactive == true
+
     if @workshop.save
-      flash[:alert] = 'Workshop created succesfully.'
+      flash[:alert] = 'Thank you for submitting your workshop idea.'
       redirect_to "/workshop_logs/new?windows_type_id=#{@workshop.windows_type.id}&workshop_id=#{@workshop.id}"
     else
       flash[:error] = 'Unable to save the workshop.'
@@ -110,12 +112,10 @@ class WorkshopsController < ApplicationController
 
   def create
     @workshop = current_user.workshops.build(workshop_params)
-    # Only workshop ideas are being created from here
-    @workshop.inactive = true
 
     if @workshop.save
-      flash[:alert] = 'Thank you for sharing your workshop idea.'
-      redirect_to root_path
+      flash[:alert] = 'Workshop created successfully.'
+      redirect_to workshops_path
     else
       flash[:error] = 'Unable to save the workshop.'
       render :share_idea
