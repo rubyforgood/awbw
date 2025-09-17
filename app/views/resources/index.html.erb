@@ -50,12 +50,6 @@
     <div class="col-md-12 col-lg-12 width" >
       <% if @resources.any? %>
         <table width="80%" class="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
           <tbody id="resources-list">
             <% @resources.each do |r| %>
               <%= render 'resource', resource: r %>
