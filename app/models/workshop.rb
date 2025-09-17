@@ -130,7 +130,7 @@ class Workshop < ApplicationRecord
   end
 
   def self.search_by_categories(categories)
-    categories = categories.map{|k,v| v}
+    categories = categories.to_unsafe_h.map{|k,v| v}
     citems = CategorizableItem.where(categorizable_type: "Workshop",
                                      category_id:  categories)
 
@@ -138,7 +138,7 @@ class Workshop < ApplicationRecord
   end
 
   def self.search_by_sectors(sectors)
-    sectors = sectors.map{|k,v| v}
+    sectors = sectors.to_unsafe_h.map{|k,v| v}
     sectorable_items = SectorableItem.where(sectorable_type: "Workshop",
                                             sector_id:  sectors)
 
