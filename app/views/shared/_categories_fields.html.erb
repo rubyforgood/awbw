@@ -1,23 +1,24 @@
-<% metadata.each do |metadatum, categories| %>
-  <div class="categories-fields-wrapper">
-    <div class="categories-header">
-      <label>
-        <%= metadatum.display_name %>
-      </label>
-      <%= image_tag("collapse-arrow.png", class:"arrow-down") %>
-    </div>
-    <div class="categories-fields">
-      <% metadatum.categories.each do |category| %>
+<div class="categories-wrapper d-flex flex-wrap gap-3">
+  <% metadata.each do |metadatum, categories| %>
+    <div class="categories-fields-wrapper border p-2">
+      <div class="categories-header d-flex justify-content-between align-items-center mb-1">
+        <label class="mb-0"><%= metadatum.display_name %></label>
+        <%= image_tag("collapse-arrow.png", class: "arrow-down") %>
+      </div>
 
-        <div class="input-group">
-          <%= check_box_tag "categories[#{category.id}]", category.id,
-           (!params[:categories].nil? and params[:categories]["#{category.id}" ] == category.id.to_s), {} %>
-          <span class="small">
-            <%= category.name %>
-          </span>
-        </div>
-      <% end %>
+      <div class="categories-fields">
+        <% metadatum.categories.each do |category| %>
+          <div class="form-check">
+            <%= check_box_tag "categories[#{category.id}]",
+                              category.id,
+                              params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
+                              id: "category_#{category.id}",
+                              class: "form-check-input" %>
+            <%= label_tag "category_#{category.id}", category.name, class: "form-check-label small" %>
+          </div>
+        <% end %>
+      </div>
     </div>
-  </div>
-<% end %>
+  <% end %>
+</div>
 <!--<input id="search_Clay" value="1" checked="checked" name="search[Clay]" type="checkbox">  -->
