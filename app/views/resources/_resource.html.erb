@@ -1,37 +1,26 @@
 <tr>
   <td>
     <div class="row">
-      <div class="col-sm-5 col-md-4 col-lg-4 resource-img">
+      <div class="col-sm-2 resource-img">
         <a href="<%= resource_path(resource) %>">
-        <figure class="portrait-img" style="background-image: url(<%= resource.main_image_url %>);">
-        </figure>
+          <img src="<%= resource.main_image_url %>"
+               alt="<%= resource.title.truncate(25) %>"
+               style="height: 1.2em; width: auto; border-radius: 4px;">
         </a>
+
       </div>
-      <div class="col-sm-7 col-md-8 col-lg-8 resource-title">
-        <h4 class='left normal flex-title less-width'>
-          <%= resource.title.titleize %>
-        </h4>
+      <div class="col-sm-10">
+        <%= link_to resource.title.titleize, resource_path(resource), style: "text-decoration: none; color: black;" %>
+        <span class="pull-right">
+          <% unless resource.attachments.empty? %>
+            <a href="<%= resource_download_path(resource) %>"
+               style="text-decoration: none;">
+              <i class="fa fa-download" aria-hidden="true"></i>
+              Download File
+            </a>
+          <% end %>
+        </span>
       </div>
     </div>
   </td>
-
-  <td class="attachment-actions">
-    <% unless resource.attachments.empty? %>
-      <div class="attachment-col pdf-container">
-        <a href="<%= resource.attachments.last.file.url %>" target="_blank">
-          <i class="fa fa-file-pdf-o" aria-hidden="true"></i>
-          <br/>
-          <span>PDF Link</span>
-        </a>
-      </div>
-      <div class="attachment-col btn_container">
-        <a href="<%= resource_download_path(resource) %>">
-          <i class="fa fa-download" aria-hidden="true"></i>
-          </br>
-          <span>Download File</span>
-        </a>
-      </div>
-    <% end %>
-  </td>
 </tr>
-
