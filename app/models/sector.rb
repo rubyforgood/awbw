@@ -15,17 +15,15 @@ class Sector < ApplicationRecord
 
   default_scope { order('name') }
 
+  # Scopes
+  scope :published, -> { where(published: true).
+                         order(Arel.sql("CASE WHEN name = 'Other' THEN 1 ELSE 0 END, LOWER(name) ASC")) }
+
   # Methods
   def self.create_defaults
     Sector.defaults.each do | name |
       Sector.find_or_create_by(name: name, published: true)
     end
-  end
-
-  def self.published
-    sectors = Sector.where("published = ? AND name != ?", true, 'Other').to_a
-    sectors.sort!{|x, y| x[:name].downcase <=> y[:name].downcase}
-    sectors << Sector.where(name: 'Other').first
   end
 
   private
