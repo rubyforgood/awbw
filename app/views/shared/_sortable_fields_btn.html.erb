@@ -30,7 +30,10 @@
          </label>
          <script>
            $("#kind_<%= name %>").change( function(){
-              $('form').submit();
+               const url = new URL(window.location.href);
+               url.searchParams.set("kind", "<%= name %>");   // set (rather than append) kind
+               url.searchParams.delete("show_all");         // remove any show_all param
+               window.location.href = url.toString();
            });
          </script>
       </div>
