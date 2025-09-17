@@ -1,0 +1,68 @@
+<%= simple_form_for @resource do |f| %>
+  <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <%= f.input :title,
+                  as: :text,
+                  input_html: { rows: 1 },
+                  wrapper: false,
+                  label_html: { class: 'form-label' } %>
+    </div>
+    <div class="col-md-4">
+      <%= f.input :kind, as: :select,
+                  collection: Resource::KINDS %>
+    </div>
+
+    <% if request.path == workshops_share_idea_path %>
+      <%= f.hidden_field :inactive, value: true %>
+    <% else %>
+      <!-- Flags -->
+      <div class="col-md-4">
+        <label>Flags</label>
+        <div style="display: flex;" class="d-flex gap-3 align-items-center">
+          <div style="margin-right: 3em;">
+            <%= f.input :featured, as: :boolean, wrapper: false %>
+          </div>
+          <%= f.input :inactive, as: :boolean, wrapper: false %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+
+  <div class="row mb-3">
+
+    <div class="col-md-4">
+      <%= f.input :sectors, as: :select, collection: @sectors %>
+    </div>
+    <div class="col-md-4">
+      <%= f.input :url, as: :text, input_html: { rows: 1, class: "form-control w-100" } %>
+    </div>
+    <div class="col-md-3">
+      <%= f.input :ordering,
+                  as: :integer,
+                  label: "Dashboard display order",
+                  input_html: { class: "form-control form-control-sm", min: 1, step: 1 },
+                  wrapper_html: { class: "form-group-sm" } %>
+    </div>
+  </div>
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <%= f.input :text, as: :text, input_html: { rows: 5 } %>
+    </div>
+    <div class="col-md-8">
+      <%= f.input :attachment, as: :file %>
+    </div>
+  </div>
+
+
+
+
+  <div class="form-group">
+    <br>
+    <%= link_to 'Cancel', root_path, class: 'btn cancel-btn' %>
+    <%= f.submit 'Submit' %>
+  </div>
+
+<% end %>
