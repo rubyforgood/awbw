@@ -1,97 +1,239 @@
 <div class="row">
-  <div class="col-sm-12 col-md-8">
+  <div class="col-md-12">
 
- <%= form_for workshop, url: url do |f| %>
+ <%= simple_form_for workshop, url: url do |f| %>
     <div class="errors">
       <%= render 'shared/errors', resource: workshop if workshop.errors.any? %>
     </div>
-    <div class="form-group">
-      <label>Workshop Title</label>
-      <%= f.text_field :title, class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <label>Author's First & Last Name</label>
-      <%= f.text_field :full_name , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <label>Workshop Objective</label>
-      <%= f.text_area :objective, placeholder: 'Indicate goals of the workshop.' , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <label>Materials Needed</label>
-      <%= f.text_area :materials, placeholder: 'List all materials needed to create the workshop.' , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <label>Timeframe</label>
-      <div class="row">
-        <div class="col-md-12 form-item-dropdown">
-          <select id="workshop_log_hour" class="selectpicker form-control form-control-custom" name="workshop[time_hours]">
-            <option value="" selected disabled>Hour</option>
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </div>
-        <div class="col-md-12 form-item-dropdown">
-          <select id="workshop_log_minutes" class="selectpicker form-control form-control-custom" name="workshop[time_minutes]">
-            <option value="" selected disabled>Minutes</option>
-            <option value="0">0</option>
-            <option value="15">15</option>
-            <option value="30">30</option>
-            <option value="45">45</option>
-          </select>
-        </div>
-        <div class="col-md-8"></div>
+
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <%= f.input :title,
+                    as: :text,
+                    label: "Workshop title",
+                    input_html: { rows: 1 },
+                    wrapper: false,
+                    label_html: { class: 'form-label' } %>
       </div>
-    </div>
-    <div class="form-group">
-      <label>Set Up Instructions</label>
-      <%= f.text_area :setup, placeholder: 'Include any tips needed to prep the workshop.' , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <%= f.label 'Demonstration Instructions' %>
-      <%= f.text_area :demonstration, placeholder: 'Include a description of a demonstration of the activity.' , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <label>Warm-up/relaxation/meditation</label>
-      <%= f.text_area :warm_up, placeholder: 'Include a description of a warm-up of relaxation activity related to the workshop.' , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <%= f.label 'Creation' %>
-      <%= f.text_area :creation, placeholder: 'Step by step how to create the workshop' , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <%= f.label 'Closing' %>
-      <%= f.text_area :closing, placeholder: 'Step by step how to close the workshop' , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <%= f.label 'Notes' %>
-      <%= f.text_area :notes, placeholder: 'Anything else you\'d like us to know.' , class: "form-control form-control-workshop" %>
-    </div>
-    <div class="form-group">
-      <%= f.label 'Tips' %>
-      <%= f.text_area :notes, placeholder: 'Any tips on how to make this workshop a success.' , class: "form-control form-control-workshop" %>
-    </div>
+      <div class="col-md-4">
+        <%= f.input :windows_type_id,
+                    as: :select,
+                    label: "Workshop type",
+                    required: true,
+                    collection: WindowsType.pluck(:name, :id).sort_by(&:first),
+                    selected: @workshop.windows_type_id || WindowsType.where("name like 'adult%'").last&.id %>%>
+      </div>
 
-    <div class="form-group">
-      <%= f.label 'Workshop Type' %>
-      <%= f.collection_select :windows_type_id, WindowsType.all, :id, :label, {prompt: 'Select Workshop Type', selected: WindowsType.first&.id}, {class: "form-control selectpicker"} %>
-    </div>
-
-
-    <div class="form-group image-fields-wrapper">
-      <%= f.fields_for :images do |img_fields| %>
-        <%= render 'image_fields', :f => img_fields %>
-
-        <div class="links small">
-          <%= link_to_add_association 'Add Another Image', f, :images, partial: 'image_fields', class:'btn-underline' %>
+      <% if request.path == workshops_share_idea_path %>
+        <%= f.hidden_field :inactive, value: true %>
+      <% else %>
+        <!-- Flags -->
+        <div class="col-md-4">
+          <label>Flags</label>
+          <div style="display: flex;" class="d-flex gap-3 align-items-center">
+            <div style="margin-right: 3em;">
+              <%= f.input :featured, as: :boolean, wrapper: false %>
+            </div>
+            <%= f.input :inactive, as: :boolean, wrapper: false %>
+          </div>
         </div>
       <% end %>
-      <br/>
     </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <%= f.input :objective,
+                    as: :text,
+                    label: "Workshop objective",
+                    placeholder: 'Indicate goals of the workshop',
+                    input_html: { rows: 1 } %>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :full_name,
+                    as: :text,
+                    label: "Author's first & last name",
+                    input_html: { rows: 1 } %>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :age_range,
+                    as: :select,
+                    collection: AgeRange.pluck(:name).sort_by(&:first),
+                    input_html: { rows: 1 } %>
+      </div>
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-4">
+        <%= f.input :materials,
+                    as: :text,
+                    label: "Materials needed",
+                    placeholder: 'List all materials needed to create the workshop',
+                    input_html: { rows: 2 } %>
+      </div>
+
+      <div class="col-md-4">
+        <label>Timeframe/duration</label>
+        <div class="col-md-4">
+          <%= f.input :time_hours,
+                      as: :select,
+                      label: false,
+                      collection: (0..5).to_a,
+                      prompt: "Hour",
+                      input_html: { class: "selectpicker form-control form-control-custom" } %>
+        </div>
+        <div class="col-md-4">
+          <%= f.input :time_minutes,
+                      as: :select,
+                      label: false,
+                      collection: [0, 15, 30, 45],
+                      prompt: "Minutes",
+                      input_html: { class: "selectpicker form-control form-control-custom" } %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :setup,
+                    as: :text,
+                    label: "Set Up Instructions",
+                    placeholder: 'Include any tips needed to prep the workshop',
+                    input_html: { rows: 2 } %>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <div class="col-md-10">
+          <%= f.input :demonstration,
+                      as: :text,
+                      label: "Demonstration Instructions",
+                      placeholder: 'Include a description of a demonstration of the activity',
+                      input_html: { rows: 2 } %>
+        </div>
+        <div class="col-md-2">
+          <%= f.input :time_demonstration, label: "Minutes" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="col-md-10">
+          <%= f.input :warm_up,
+                      as: :text,
+                      label: "Warm-up/relaxation/meditation",
+                      placeholder: 'Include a description of a warm-up of relaxation activity related to the workshop',
+                      input_html: { rows: 2 } %>
+        </div>
+        <div class="col-md-2">
+          <%= f.input :time_warm_up, label: "Minutes" %>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="col-md-10">
+          <%= f.input :creation,
+                      as: :text,
+                      placeholder: 'Step by step how to create the workshop',
+                      input_html: { rows: 3 } %>
+        </div>
+        <div class="col-md-2 pull-left">
+          <%= f.input :time_creation, label: "Minutes" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="col-md-10">
+          <%= f.input :closing,
+                      as: :text,
+                      placeholder: 'Step by step how to close the workshop',
+                      input_html: { rows: 3 } %>
+        </div>
+        <div class="col-md-2 pull-left">
+          <%= f.input :time_closing, label: "Minutes" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <%= f.input :notes,
+                    as: :text,
+                    placeholder: 'Anything else you\'d like us to know',
+                    input_html: { rows: 2 } %>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :tips,
+                    as: :text,
+                    placeholder: 'Any tips on how to make this workshop a success',
+                    input_html: { rows: 2 } %>
+      </div>
+      <% if request.path == workshops_share_idea_path %>
+        <%= f.hidden_field :month, value: Date.today.month %>
+        <%= f.hidden_field :year, value: Date.today.year %>
+      <% else %>
+        <div class="col-md-4">
+          <!-- Date created -->
+          <label>Date created</label>
+          <div class="d-flex gap-2">
+            <div class="flex-fill">
+              <%= f.input :month,
+                          as: :select,
+                          collection: Date::MONTHNAMES.compact.each_with_index.map { |m, i| [m, i + 1] },
+                          selected: f.object.month || Date.today.month,
+                          required: true,
+                          wrapper: false,
+                          label: false,
+                          input_html: { class: "form-control" } %>
+            </div>
+
+            <div class="flex-fill">
+              <%= f.input :year,
+                          as: :integer,
+                          value: f.object.year || Date.today.year,
+                          required: true,
+                          wrapper: false,
+                          label: false,
+                          input_html: { class: "form-control" } %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+
+
+    <!-- Spanish Fields Accordion -->
+    <div class="accordion-wrapper mb-3">
+      <button type="button" class="accordion-toggle">Spanish Translations</button>
+      <div class="accordion-content" style="display: none; padding: 10px; border: 1px solid #ccc; border-top: none;">
+        <div class="row mb-2">
+          <% workshop.decorate.display_spanish_fields.each do |field| %>
+            <div class="col-md-6">
+              <%= f.input field,
+                          as: :text,
+                          input_html: { rows: 1 } %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-wrapper mb-3">
+      <button type="button" class="accordion-toggle">Images</button>
+      <div class="accordion-content" style="display: none; padding: 10px; border: 1px solid #ccc; border-top: none;">
+        <div class="row mb-2">
+          <div class="form-group image-fields-wrapper">
+            <%= f.fields_for :images do |img_fields| %>
+              <%= render 'image_fields', :f => img_fields %>
+
+              <div class="links small">
+                <%= link_to_add_association 'Add Another Image', f, :images, partial: 'image_fields', class:'btn-underline' %>
+              </div>
+            <% end %>
+            <br/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
 
     <div class="btn-container">
       <%= link_to 'Cancel', root_path, class: 'btn btn-primary btn-blue' %>
@@ -101,9 +243,36 @@
   </div>
    <div class="col-md-6"></div>
 </div>
+
+<!-- Script and style added here until we get bootstrap installed -->
 <script>
-  <% if @workshop.timeframe %>
-    $("#workshop_log_hour").val("<%=@workshop.timeframe.split(":")[0]%>").change();
-    $("#workshop_log_minutes").val("<%=@workshop.timeframe.split(":")[1]%>").change();
-  <% end %>
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggles = document.querySelectorAll('.accordion-toggle');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const content = toggle.nextElementSibling;
+                content.style.display = (content.style.display === "none" || content.style.display === "") ? "block" : "none";
+            });
+        });
+    });
 </script>
+<style>
+    .accordion-toggle {
+        width: 100%;
+        background: #ccc;
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        margin-bottom: 2px;
+        text-transform: none;
+    }
+
+    .accordion-toggle:hover {
+        background: #7C7C7C;
+    }
+</style>
+<!-- End script and style -->

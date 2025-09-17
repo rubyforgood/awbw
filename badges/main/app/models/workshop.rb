@@ -1,10 +1,11 @@
 class Workshop < ApplicationRecord
+  attr_accessor :time_hours, :time_minutes
 
-  default_scope { where(inactive: false) }
+  before_save :set_time_frame
 
   # Associations
   belongs_to :user, optional: true
-  before_save :set_time_frame
+  belongs_to :windows_type
 
   has_many :sectorable_items, dependent: :destroy,
            inverse_of: :sectorable, as: :sectorable
@@ -26,7 +27,6 @@ class Workshop < ApplicationRecord
   has_many :workshop_resources, dependent: :destroy
   has_many :resources, through: :workshop_resources
 
-  belongs_to :windows_type
   has_many :attachments, as: :owner, dependent: :destroy
   has_many :workshop_age_ranges
 
@@ -130,7 +130,7 @@ class Workshop < ApplicationRecord
   end
 
   def self.search_by_categories(categories)
-    categories = categories.map{|k,v| v}
+    categories = categories.to_unsafe_h.map{|k,v| v}
     citems = CategorizableItem.where(categorizable_type: "Workshop",
                                      category_id:  categories)
 
@@ -138,7 +138,7 @@ class Workshop < ApplicationRecord
   end
 
   def self.search_by_sectors(sectors)
-    sectors = sectors.map{|k,v| v}
+    sectors = sectors.to_unsafe_h.map{|k,v| v}
     sectorable_items = SectorableItem.where(sectorable_type: "Workshop",
                                             sector_id:  sectors)
 
@@ -233,7 +233,7 @@ class Workshop < ApplicationRecord
   end
 
   def set_time_frame
-    unless @time_hours.blank? and @time_minutes.blank?
+    unless @time_hours.blank? && @time_minutes.blank?
       self.timeframe = "#{@time_hours}:#{@time_minutes}"
     end
   end

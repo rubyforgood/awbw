@@ -3,4 +3,10 @@
   <p>All fields below are optional</p>
 </div>
 
-<%= render 'form', workshop: @workshop, url: '/workshops/create_from_log', inactive: false %>
+<% if params[:workshop_idea] || !current_user.super_user? %>
+  <%= render 'form',
+             workshop: @workshop,
+             url: '/workshops/share_workshop_idea', inactive: true %>
+<% else %>
+  <%= render 'form', workshop: @workshop, url: '/workshops' %>
+<% end %>

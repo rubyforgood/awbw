@@ -15,7 +15,7 @@ Rails.application.routes.draw do
   get 'workshops/:id/share_idea_show', to: 'workshops#share_idea_show',
       as: 'share_idea_show'
 
-  post 'workshops/create_from_log', to: 'workshops#create_from_log'
+  post 'workshops/create_workshop_idea', to: 'workshops#create_workshop_idea'
   post 'workshops/create_dummy_workshop', to: 'workshops#create_dummy_workshop'
 
   post 'workshop_logs/validate_new', to: 'workshop_logs#validate_new'
@@ -81,13 +81,13 @@ Rails.application.routes.draw do
   resources :monthly_reports
   resources :faqs
   resources :project_users
+  resources :workshops
   resources :workshop_variations, only: [:show]
   root 'dashboard#index'
 
   namespace :api do
     namespace :v1 do
       resources :authentications, only: [:create]
-      resources :workshops
       resources :quotes
       resources :bookmarks do
         resources :annotations

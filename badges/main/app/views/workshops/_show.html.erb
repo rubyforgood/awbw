@@ -34,11 +34,6 @@
 </div>
 
 <div class='links' id='links'>
-  <div class='btn-bookmark bookmark-inline'>
-    <%= link_to '', edit_workshop_path(workshop), class: 'btn-bookmark__unmark-layer' %>
-    <%= image_tag("pencil.png", class:"img-responsive") %>
-    <div><%= 'Edit' %></div>
-  </div>
   <% if current_user.has_bookmarked_workshop?(workshop) %>
     <div class='btn-bookmark bookmark-inline'>
       <%= link_to '', bookmark_path(@bookmark), method: :delete, class: 'btn-bookmark__unmark-layer' %>
@@ -64,11 +59,19 @@
     <%= image_tag("printer.png", class:"img-responsive") %>
     <span><%= 'Print' %></span>
   </div>
+
+  <div class='btn-bookmark bookmark-inline'>
+    <% if current_user.super_user? %>
+      <%= link_to '', edit_workshop_path(workshop), class: 'btn-bookmark__unmark-layer' %>
+      <%= image_tag("pencil.png", class:"img-responsive") %>
+      <div><%= 'Edit' %></div>
+    <% end %>
+  </div>
   
   <div class="workshop-actions">
 
     <%= link_to 'Submit Workshop Log', new_workshop_log_path(windows_type_id: workshop.windows_type_id, workshop_id: workshop.id, breadcrumb: 'Search Curriculum'), class: 'btn btn-small' %>
-    
+
     <a href="#workshopVariations" class="btn btn-small <% if !@workshop_variations.any? %>btn--disabled<% end %>">Workshop Variations</a>
     
     <a href="#workshopQuotes" class="btn btn-small <% if !@quotes.any? %>btn--disabled<% end %>">Related Quotes</a>
@@ -85,7 +88,7 @@
   <li class='tab-header-and-content'>
 
     <a class='is-active tab-link' href='javascript:void(0)' id='english'>
-      English
+      <%= workshop.has_spanish_fields? ? "English" : "Details" %>
     </a>
 
     <div class='tab-content reset-list-items' id='english-content'>

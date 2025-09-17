@@ -116,7 +116,7 @@ class User < ApplicationRecord
   end
 
   def curriculum(klass = Workshop)
-    results = klass.where(inactive: false)
+    results = super_user? ? klass.all : klass.where(inactive: false)
     results = results.where(kind: ['Template','Handout', 'Scholarship',
                                    'Toolkit', 'Form', 'Resource', 'Story']) if klass == Resource
 

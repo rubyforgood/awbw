@@ -83,19 +83,21 @@ class WorkshopsController < ApplicationController
   def update
     @workshop = Workshop.find(params[:id])
     if @workshop.update(workshop_params)
-      flash[:alert] = 'Thank you for sharing your workshop idea.'
-      redirect_to root_path
+      flash[:alert] = 'Workshop updated successfully.'
+      redirect_to workshops_path
     else
       flash[:error] = 'Unable to update the workshop.'
       render :edit
     end
   end
 
-  def create_from_log
+  def create_workshop_idea
     @workshop = current_user.workshops.build(workshop_params)
 
+    @workshop.inactive = true # Workshop ideas are workshops with inactive == true
+
     if @workshop.save
-      flash[:alert] = 'Workshop created succesfully.'
+      flash[:alert] = 'Thank you for submitting your workshop idea.'
       redirect_to "/workshop_logs/new?windows_type_id=#{@workshop.windows_type.id}&workshop_id=#{@workshop.id}"
     else
       flash[:error] = 'Unable to save the workshop.'
@@ -105,12 +107,10 @@ class WorkshopsController < ApplicationController
 
   def create
     @workshop = current_user.workshops.build(workshop_params)
-    # Only workshop ideas are being created from here
-    @workshop.inactive = true
 
     if @workshop.save
-      flash[:alert] = 'Thank you for sharing your workshop idea.'
-      redirect_to root_path
+      flash[:alert] = 'Workshop created successfully.'
+      redirect_to workshops_path
     else
       flash[:error] = 'Unable to save the workshop.'
       render :share_idea
@@ -156,7 +156,7 @@ class WorkshopsController < ApplicationController
   end
 
   def workshops_per_page
-    view_all_workshops? ? @workshops.count : 12
+    view_all_workshops? ? @workshops.where(inactive: false).count : 12
   end
 
   def view_all_workshops?
@@ -169,7 +169,7 @@ class WorkshopsController < ApplicationController
       :materials, :optional_materials, :time_hours, :time_minutes, :age_range, :setup,
       :introduction, :demonstration, :opening_circle, :warm_up,
       :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2,
-      :windows_type_id, :inactive,
+      :windows_type_id, :inactive, :month, :year,
       images_attributes: %i[file owner_id owner_type id _destroy]
     )
   end

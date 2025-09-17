@@ -72,15 +72,18 @@ RSpec.describe "Workshops" do
   end
 
   describe 'create workshop' do
-    context "When user is logged in" do
-      it "User can create a new workshop" do
-        user = create(:user)
+    context "When super user is logged in" do
+      it "Super user can create a new workshop" do
+        user = create(:user, super_user: true)
         sign_in(user)
         adult_window = create(:windows_type, :adult)
 
-        visit new_workshop_path
+        visit new_workshop_path(windows_type_id: adult_window.id)
 
-        fill_in 'workshop_title', with: 'My New Workshop'
+        save_and_open_page
+
+        fill_in 'Workshop title', with: 'My New Workshop'
+        select adult_window.name, from: 'workshop_windows_type_id'
         fill_in 'workshop_full_name', with: 'Jane Doe'
         fill_in 'workshop_objective', with: 'Learn something new'
         fill_in 'workshop_materials', with: 'Paper, Markers'
@@ -99,20 +102,20 @@ RSpec.describe "Workshops" do
   end
 
   describe 'edit workshop' do
-    context "When user is logged in" do
-      it "User can edit an existing workshop" do
-        user = create(:user)
+    context "When super user is logged in" do
+      it "Super user can edit an existing workshop" do
+        user = create(:user, super_user: true)
         sign_in(user)
         adult_window = create(:windows_type, :adult)
         workshop = create(:workshop, title: 'Old Title', windows_type: adult_window, user: user)
 
         visit edit_workshop_path(workshop)
 
-        fill_in 'workshop_title', with: 'Updated Title'
+        fill_in 'Workshop title', with: 'Updated Title'
         click_on 'Submit'
 
-        expect(page).to have_content('Thank you for sharing your workshop idea.')
         expect(workshop.reload.title).to eq('Updated Title')
+        expect(page).to have_content('Workshop updated successfully.')
       end
     end
   end
