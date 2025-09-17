@@ -2,8 +2,6 @@ FactoryBot.define do
   factory :windows_type do
     sequence(:name) { |n| "Windows Type Name #{n}" }
 
-    legacy_id { 1 }
-
     trait :adult do
       name { 'ADULT WORKSHOP LOG' }
     end
