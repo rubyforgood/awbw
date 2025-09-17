@@ -4,4 +4,6 @@ updates:
   directory: "/"
   schedule:
     interval: "weekly"
+  # TODO: add grouped updates as shown here 
+  # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/optimizing-pr-creation-version-updates#example-3-individual-pull-requests-for-major-updates-and-grouped-for-minorpatch-updates
   open-pull-requests-limit: 10
