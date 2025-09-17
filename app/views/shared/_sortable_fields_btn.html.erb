@@ -10,8 +10,11 @@
     </div>
 
     <script>
-      $("#show_all").change( function(){
-      $('form').submit();
+      $("#show_all").change(function() {
+          const url = new URL(window.location.href);
+          url.searchParams.set("show_all", "1");   // set show_all
+          url.searchParams.delete("kind");         // remove any kind param
+          window.location.href = url.toString();
       });
     </script>
 
