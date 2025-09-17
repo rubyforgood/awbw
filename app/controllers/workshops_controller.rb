@@ -169,7 +169,7 @@ class WorkshopsController < ApplicationController
       :materials, :optional_materials, :time_hours, :time_minutes, :age_range, :setup,
       :introduction, :demonstration, :opening_circle, :warm_up,
       :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2,
-      :windows_type_id, :inactive,
+      :windows_type_id, :inactive, :month, :year,
       images_attributes: %i[file owner_id owner_type id _destroy]
     )
   end
