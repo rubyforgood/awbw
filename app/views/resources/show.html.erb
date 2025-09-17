@@ -1,5 +1,8 @@
 <div class="curriculum-detail">
   <div class="container-fluid">
+    <div class="row pull-right">
+      <%= link_to "Edit", edit_resource_path(@resource), class: "btn btn-primary" if current_user.super_user? %>
+    </div>
     <div class="row">
       <div class="col-md-10 col-lg-8">
         <h2 class="normal">
