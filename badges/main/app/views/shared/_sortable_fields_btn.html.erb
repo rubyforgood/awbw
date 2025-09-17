@@ -10,8 +10,11 @@
     </div>
 
     <script>
-      $("#show_all").change( function(){
-      $('form').submit();
+      $("#show_all").change(function() {
+          const url = new URL(window.location.href);
+          url.searchParams.set("show_all", "1");   // set show_all
+          url.searchParams.delete("kind");         // remove any kind param
+          window.location.href = url.toString();
       });
     </script>
 
@@ -27,7 +30,10 @@
          </label>
          <script>
            $("#kind_<%= name %>").change( function(){
-              $('form').submit();
+               const url = new URL(window.location.href);
+               url.searchParams.set("kind", "<%= name %>");   // set (rather than append) kind
+               url.searchParams.delete("show_all");         // remove any show_all param
+               window.location.href = url.toString();
            });
          </script>
       </div>

@@ -1,10 +1,28 @@
-form.simple_form .form-check-input + .form-check-label {
+form.simple_form .form-check-input + .form-check-label, .categories-fields .form-check-input + .form-check-label {
     height: auto !important;
     width: auto !important;
 }
 
-form.simple_form select.form-select {
+form.simple_form select.form-select, .categories-fields select.form-select {
     height: auto;
     border-radius: 0px;
     border: 1px solid #ccc;
+}
+
+.categories-fields .form-check {
+    display: flex !important;
+    flex: 0 0 100% !important;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.categories-fields .form-check .form-check-label {
+    font-weight: normal;
+    margin-left: 0.5em;
+    margin-bottom: 0;
+}
+
+.categories-fields .form-check .form-check-input {
+    margin-top: 0rem;
 }

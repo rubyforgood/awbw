@@ -7,7 +7,7 @@
     </div>
     <div class="col-md-3 col-lg-4 width">
       <div class="entry-content">
-        <%= link_to "New Resource", new_resource_path, class: "btn btn-success mb-3" %>
+        <%= link_to "New Resource", new_resource_path, class: "btn btn-primary" if current_user.super_user? %>
       </div>
     </div>
   </div>
@@ -50,12 +50,6 @@
     <div class="col-md-12 col-lg-12 width" >
       <% if @resources.any? %>
         <table width="80%" class="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
           <tbody id="resources-list">
             <% @resources.each do |r| %>
               <%= render 'resource', resource: r %>

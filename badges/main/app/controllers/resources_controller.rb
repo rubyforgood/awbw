@@ -1,7 +1,7 @@
 class ResourcesController < ApplicationController
   def index
     @resources = current_user.curriculum(Resource).by_created.search(params).
-                    paginate(page: params[:page], per_page: 6)
+                    paginate(page: params[:page], per_page: 25)
 
     @sortable_fields = Resource::KINDS
 
@@ -21,6 +21,7 @@ class ResourcesController < ApplicationController
 
   def edit
     @resource = Resource.find(resource_id_param).decorate
+    @sectors = Sector.pluck(:name, :id)
   end
 
   def show
@@ -38,6 +39,18 @@ class ResourcesController < ApplicationController
       render :new
     end
   end
+
+  def update
+    @resource = Resource.find(params[:id])
+    if @resource.update(resource_params)
+      flash[:alert] = 'Resource updated.'
+      redirect_to resources_path
+    else
+      flash[:error] = 'Failed to update Resource.'
+      render :edit
+    end
+  end
+
 
   def search
     process_search
@@ -65,7 +78,8 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :text, :kind, :male, :female, :title,
+      :text, :kind, :male, :female, :title, :featured, :inactive, :url,
+      :agency, :author, :filemaker_code, :windows_type_id, :ordering,
       categorizable_items_attributes: [:_create, :category_id],
       sectorable_items_attributes: [:_create, :sector_id],
       images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
