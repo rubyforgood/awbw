@@ -1,3 +1,7 @@
+.navbar-brand {
+  margin-right: 3em;
+}
+
 .header .navbar-text {
   border-left: 0px;
 }
@@ -33,4 +37,14 @@
     border-color: #063b8d;
     color: white;
   }
+}
+
+/* Nav link hover effect */
+.navbar-text.navbar-link a {
+  text-decoration: none;
+  transition: color 0.3s, background-color 0.3s;
+}
+
+.navbar-text.navbar-link a:hover {
+  background-color: whitesmoke; /* subtle highlight */
 }
