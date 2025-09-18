@@ -75,16 +75,20 @@ class Workshop < ApplicationRecord
                                 allow_destroy: true
 
   # Scopes
-  scope :published, -> { where(inactive: false) }
+  scope :for_search, -> { published }
+
   scope :featured, -> { where(featured: true) }
-  scope :by_year, -> { order(year: :desc).order(month: :desc) }
+  scope :legacy, -> { where(legacy: true) }
+  scope :published, -> { where(inactive: false) }
   scope :recent, -> { for_search.by_year.order(led_count: :desc).uniq(&:title) }
+  scope :title, -> (title) { where("title like ?", "%#{ title }%") }
+
+  scope :by_created_at, -> { order(created_at: :desc) }
+  scope :by_led_count, -> { order(led_count: :desc) }
   scope :by_rating, -> { by_year.sort_by(&:rating)}
   scope :by_warm_up_and_relaxation, -> { search('Warm Up Relaxation') }
-  scope :by_led_count, -> { order(led_count: :desc) }
-  scope :for_search, -> { published }
-  scope :legacy, -> { where(legacy: true) }
-  scope :by_created_at, -> { order(created_at: :desc) }
+  scope :by_year, -> { order(year: :desc).order(month: :desc) }
+
 
   # Validations
   validates_presence_of :title

@@ -2,7 +2,12 @@
 
 class WorkshopsController < ApplicationController
   def index
-    @workshops = current_user.curriculum(Workshop).search(params).paginate(page: params[:page], per_page: 20)
+    workshops = current_user.curriculum(Workshop).search(params,
+                                                         super_user: current_user.super_user?) # inactive and active results
+    if params[:title].present?
+      workshops = workshops.title(params[:title])
+    end
+    @workshops = workshops.paginate(page: params[:page], per_page: 50)
 
     load_sortable_fields
     load_metadata
