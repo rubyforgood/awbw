@@ -21,7 +21,7 @@
                     label: "Workshop type",
                     required: true,
                     collection: WindowsType.pluck(:name, :id).sort_by(&:first),
-                    selected: @workshop.windows_type_id || WindowsType.where("name like 'adult%'").last&.id %>%>
+                    selected: @workshop.windows_type_id || WindowsType.where("name like 'adult%'").last&.id %>
       </div>
 
       <% if request.path == workshops_share_idea_path %>
@@ -227,6 +227,28 @@
               </div>
             <% end %>
             <br/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-wrapper mb-3">
+      <button type="button" class="accordion-toggle">Series workshops</button>
+      <div class="accordion-content" style="display: none; padding: 10px; border: 1px solid #ccc; border-top: none;">
+        <div class="row mb-2">
+          If this is a Workshop is a series, add the other "series workshops" below.
+          You can also add a series-specific description for each workshop in the series, and the order in which they should appear.
+          (The main workshop description will appear if you don't add a "series description".)
+        </div>
+        <div class="row mb-2">
+          <div class="form-group image-fields-wrapper">
+            <%= f.fields_for :workshop_series_children do |child_workshop_membership| %>
+              <%= render 'workshop_series_child_fields', :f => child_workshop_membership %>
+            <% end %>
+            <div class="links small">
+              <%= link_to_add_association 'Add Another Workshop to this Series', f, :workshop_series_children,
+                                          partial: 'workshop_series_child_fields', class:'btn-underline' %>
+            </div>
           </div>
         </div>
       </div>

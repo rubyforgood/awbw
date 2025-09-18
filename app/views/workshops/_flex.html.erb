@@ -1,23 +1,38 @@
+<% workshop_series_membership ||= nil %>
+<% spanish ||= false %>
+
+<% if !spanish && workshop_series_membership&.series_description.present? %>
+  <% description = workshop_series_membership.series_description %>
+<% elsif spanish && workshop_series_membership &&
+  (workshop_series_membership.series_description_spanish || workshop_series_membership.series_description) %>
+  <% description = workshop_series_membership.series_description_spanish || workshop_series_membership.series_description %>
+<% else %>
+  <% description = workshop.formatted_objective %>
+<% end %>
+
 <div class='list-group-item list-group-item-custom'>
   <div class='row'>
-    <div class='col-xs-2 fixed-width'>
+    <div class='col-md-2'>
       <div class='portrait-img content-img-popular popular-img'
            style="background-image: url(<%= workshop.thumbnail_image %>);
                   max-height: 50px;" ></div>
     </div>
-    <div class='col-xs-6 col-xs-6-custom content-heading span'>
+    <div class="<%= workshop_series_membership ? "col-md-10" : "col-md-6 col-xs-6-custom" %> content-heading span">
       <h3><%= link_to workshop.title, link_route %></h3>
       <small><%= "#{workshop.windows_type.label unless workshop.windows_type.nil?} - #{workshop.date}" %></small><br/>
       <small>Author: <%= workshop.author %></small>
-      <p class='workshop-description'><%= truncate(workshop.formatted_objective, :length => 120, :omission => '... ', :separator => ' ') %></p>
-      <a><%= link_to "Read more", link_route, :target=>"blank" %></a>
+      <p class='workshop-description'>
+        <%= truncate(description, :length => 120, :omission => '... ', :separator => ' ') %>
+      </p>
     </div>
-    <div class="col-xs-3 col-md-3">
-      <small>
-        <span title="<%= workshop.categories.map(&:name).to_sentence %>">
-          <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
-        </span>
-      </small>
-    </div>
+    <% unless workshop_series_membership %>
+      <div class="col-md-3">
+        <small>
+          <span title="<%= workshop.categories.map(&:name).to_sentence %>">
+            <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
+          </span>
+        </small>
+      </div>
+    <% end %>
   </div>
 </div>
