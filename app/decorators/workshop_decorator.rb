@@ -101,7 +101,7 @@ class WorkshopDecorator < Draper::Decorator
     end
   end
 
-  def formatted_objective
+  def formatted_objective(length: 100)
     if legacy
       html = html_objective
 
@@ -114,9 +114,9 @@ class WorkshopDecorator < Draper::Decorator
       obj ||= html.text
 
       h.truncate(obj.gsub(title, '').
-          gsub(/(Heart Story Example|Table set-up)/, '').squish, length: 100)
+          gsub(/(Heart Story Example|Table set-up)/, '').squish, length: length)
     else
-      h.truncate(html_objective.text.html_safe.squish, length: 100)
+      h.truncate(html_objective.text.html_safe.squish, length: length)
     end
   end
 
