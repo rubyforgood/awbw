@@ -101,4 +101,12 @@
     $('.submit-div').click(function() {
         $(this).closest('form').submit();
     });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".sector-checkbox").forEach(function(checkbox) {
+            checkbox.addEventListener("change", function() {
+                this.form.submit();
+            });
+        });
+    });
 </script>
