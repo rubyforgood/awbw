@@ -112,10 +112,10 @@ class Workshop < ApplicationRecord
   end
 
   def date
-    if month.nil? or year.nil?
-      "#{created_at.month}/#{created_at.year}"
-    else
+    if month.present? && year.present?
       "#{month}/#{year}"
+    else
+      "#{created_at.month}/#{created_at.year}"
     end
   end
 
