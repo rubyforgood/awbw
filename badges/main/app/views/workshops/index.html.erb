@@ -30,35 +30,36 @@
     <div class='instructions'>
       Click on categories below to expand
     </div>
-      <%= form_tag('/workshops', method: :get) do %>
+    <%= form_tag('/workshops', method: :get) do %>
       <div class='width checkbox-area'>
-        <div class='btn-wrapper'>
-          <button class='btn btn-primary btn--small outline'>
-            Apply filters
-          </button>
-          <div class='clear-all'>
-            <%= link_to 'Clear All', workshops_path %>
-          </div>
-        </div>
         <%= render 'shared/categories_fields', metadata: @metadata %>
         <%= render 'sectors_fields', sectors: @sectors %>
       </div>
       <div class='search-wrapper'>
-        <div class='search-field-row'>
-          <%= text_field_tag :query, params[:query], class: 'search',
-                                           placeholder: ' Enter keywords here...' %>
-
-          <div class='btn btn-primary btn-search-wrapper' id="submit-div">
-            <i class='fa fa-search'></i>
+        <div class="search-field-row col-md-6">
+          <%= label_tag "Title" %>
+          <div class="search-input-wrapper" style="position: relative; display: inline-block; width: 100%;">
+            <%= text_field_tag :title, params[:title], class: 'search', placeholder: 'Title', style: 'padding-right: 30px;' %>
+            <div class="submit-div" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+              <i class='glyphicon glyphicon-search'></i>
+            </div>
           </div>
         </div>
-        <div class='apply-all'>
-          <%= link_to 'See All Workshops', workshops_path, class: 'js-view-all underline' %>
+        <div class='search-field-row col-md-6'>
+          <%= label_tag "Keywords" %>
+          <div class="search-input-wrapper" style="position: relative; display: inline-block; width: 100%;">
+            <%= text_field_tag :query, params[:query], class: 'search', placeholder: 'Keywords', style: 'padding-right: 30px;' %>
+            <div class="submit-div" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+              <i class='fa fa-search'></i>
+            </div>
+          </div>
         </div>
-        <div class='small-gray-title'>
-          Last Search Results
+        <div class="col-md-12 filtered-by mt-3">
+          <%= render "filters_applied" %>
         </div>
-        <div class='hide-labels medium search-filters clearfix'>
+        <div class="col-md-12 mb-3"></div>
+        <div class='sort-options'>
+          <br>
           <div class='sortable-label'>
             <b>Sort By:</b>
           </div>
@@ -82,16 +83,22 @@
             Your search returned no results.  Please try again.
           <% end %>
         </div>
-
-
       </div>
     <% end %>
   </div>
-  </div>
+</div>
 
 </div>
 <script>
-  $('#submit-div').click(function() {
-   $('form').submit();
-  });
+    $('.submit-div').click(function() {
+        $(this).closest('form').submit();
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".category-checkbox, .sector-checkbox").forEach(function(checkbox) {
+            checkbox.addEventListener("change", function() {
+                this.form.submit();
+            });
+        });
+    });
 </script>

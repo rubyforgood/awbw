@@ -2,7 +2,9 @@
 
 class WorkshopsController < ApplicationController
   def index
-    @workshops = current_user.curriculum(Workshop).search(params).paginate(page: params[:page], per_page: 20)
+    workshops = current_user.curriculum(Workshop).search(params,
+                                                         super_user: current_user.super_user?) # inactive and active results
+    @workshops = workshops.paginate(page: params[:page], per_page: 50)
 
     load_sortable_fields
     load_metadata
@@ -171,7 +173,7 @@ class WorkshopsController < ApplicationController
       :materials, :optional_materials, :time_hours, :time_minutes, :age_range, :setup,
       :introduction, :demonstration, :opening_circle, :warm_up,
       :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2,
-      :windows_type_id, :inactive, :month, :year, :extra_field,
+      :windows_type_id, :inactive, :month, :year, :extra_field, :user_id,
       :time_demonstration, :time_warm_up, :time_creation, :time_closing, :objective_spanish,
       :materials_spanish, :optional_materials_spanish, :timeframe_spanish, :age_range_spanish,
       :setup_spanish, :introduction_spanish, :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish,

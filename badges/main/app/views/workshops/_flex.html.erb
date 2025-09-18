@@ -7,24 +7,37 @@
   (workshop_series_membership.series_description_spanish || workshop_series_membership.series_description) %>
   <% description = workshop_series_membership.series_description_spanish || workshop_series_membership.series_description %>
 <% else %>
-  <% description = workshop.formatted_objective %>
+  <% description = workshop.formatted_objective(length: 215) %>
 <% end %>
 
 <div class='list-group-item list-group-item-custom'>
   <div class='row'>
-    <div class='col-md-2'>
-      <div class='portrait-img content-img-popular popular-img'
-           style="background-image: url(<%= workshop.thumbnail_image %>);
-                  max-height: 50px;" ></div>
+    <div class='col-md-9'>
+      <div class='col-md-3'>
+        <div class='portrait-img content-img-popular popular-img'
+             style="background-image: url(<%= workshop.thumbnail_image %>);
+               max-height: 100px;" ></div>
+      </div>
+      <div class="<%= workshop_series_membership ? "col-md-9" : "col-md-6 col-xs-6-custom" %> content-heading span">
+        <h3><%= link_to workshop.title, link_route %></h3>
+        <small>
+          <%= "#{workshop.windows_type.label unless workshop.windows_type.nil?} - #{workshop.date}" %>
+          &nbsp;<%= "(#{ workshop.age_range.strip })" if workshop.age_range.present? %>
+        </small>
+        <br/>
+        <small>Author: <%= workshop.user ? link_to(workshop.author, user_path(workshop.user)) : workshop.author %></small>
+        <br>
+        <small>Favorited: <%= workshop.led_count %> times</small>
+      </div>
+      <div class="col-md-12">
+        <p class='workshop-description'>
+        <span title="<%= workshop.formatted_objective(length: 600) %>">
+          <%= truncate(description, :length => 215, :omission => '... ', :separator => ' ') %>
+        </span>
+        </p>
+      </div>
     </div>
-    <div class="<%= workshop_series_membership ? "col-md-10" : "col-md-6 col-xs-6-custom" %> content-heading span">
-      <h3><%= link_to workshop.title, link_route %></h3>
-      <small><%= "#{workshop.windows_type.label unless workshop.windows_type.nil?} - #{workshop.date}" %></small><br/>
-      <small>Author: <%= workshop.author %></small>
-      <p class='workshop-description'>
-        <%= truncate(description, :length => 120, :omission => '... ', :separator => ' ') %>
-      </p>
-    </div>
+
     <% unless workshop_series_membership %>
       <div class="col-md-3">
         <small>

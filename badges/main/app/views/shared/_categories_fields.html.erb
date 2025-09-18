@@ -13,7 +13,7 @@
                               category.id,
                               params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
                               id: "category_#{category.id}",
-                              class: "form-check-input" %>
+                              class: "form-check-input category-checkbox" %>
             <%= label_tag "category_#{category.id}", category.name, class: "form-check-label small" %>
           </div>
         <% end %>

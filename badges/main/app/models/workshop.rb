@@ -75,16 +75,20 @@ class Workshop < ApplicationRecord
                                 allow_destroy: true
 
   # Scopes
-  scope :published, -> { where(inactive: false) }
+  scope :for_search, -> { published }
+
   scope :featured, -> { where(featured: true) }
-  scope :by_year, -> { order(year: :desc).order(month: :desc) }
+  scope :legacy, -> { where(legacy: true) }
+  scope :published, -> { where(inactive: false) }
   scope :recent, -> { for_search.by_year.order(led_count: :desc).uniq(&:title) }
+  scope :title, -> (title) { where("title like ?", "%#{ title }%") }
+
+  scope :by_created_at, -> { order(created_at: :desc) }
+  scope :by_led_count, -> { order(led_count: :desc) }
   scope :by_rating, -> { by_year.sort_by(&:rating)}
   scope :by_warm_up_and_relaxation, -> { search('Warm Up Relaxation') }
-  scope :by_led_count, -> { order(led_count: :desc) }
-  scope :for_search, -> { published }
-  scope :legacy, -> { where(legacy: true) }
-  scope :by_created_at, -> { order(created_at: :desc) }
+  scope :by_year, -> { order(year: :desc).order(month: :desc) }
+
 
   # Validations
   validates_presence_of :title
@@ -108,58 +112,85 @@ class Workshop < ApplicationRecord
   end
 
   def date
-    if month.nil? or year.nil?
-      "#{created_at.month}/#{created_at.year}"
-    else
+    if month.present? && year.present?
       "#{month}/#{year}"
+    else
+      "#{created_at.month}/#{created_at.year}"
     end
   end
 
-  def self.search(params)
-    workshops = all.order(:title)
-    workshops = workshops.search_by_categories( params[:categories] ).order(:title) if params[:categories]
-    workshops = workshops.search_by_sectors( params[:sectors] ).order(:title) if params[:sectors]
+  def self.search(params, super_user: false)
+    workshops = all
 
-    if params[:type] == "led"
+    # filter by
+    if params[:categories].present?
+      workshops = workshops.search_by_categories( params[:categories] )
+    end
+    if params[:sectors].present?
+      workshops = workshops.search_by_sectors( params[:sectors] )
+    end
+    if params[:title].present?
+      workshops = workshops.title(params[:title])
+    end
+
+    if params[:query].present?
+      # Columns you want to search
+      cols = "title, full_name, objective, materials, introduction, demonstration, opening_circle,
+            warm_up, creation, closing, notes, tips, misc1, misc2"
+      # Prepare query for BOOLEAN MODE (prefix matching)
+      terms = params[:query].to_s.strip.split.map { |term| "#{term}*" }.join(' ')
+      escaped_terms = ActiveRecord::Base.sanitize_sql_like(terms)
+      workshops = workshops
+                    .select("workshops.*, MATCH(#{cols}) AGAINST('#{escaped_terms}' IN BOOLEAN MODE) AS all_score")
+                    .where("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)", terms)
+    end
+
+    # only show published results to regular users
+    unless super_user
+      workshops = workshops.published
+    end
+
+    # sort by
+    if params[:sort] == 'created'
+      workshops = workshops.order(
+        Arel.sql("
+          CASE
+            WHEN year IS NOT NULL AND month IS NOT NULL THEN
+              STR_TO_DATE(CONCAT(year,'-',month,'-01'), '%Y-%m-%d')
+            ELSE created_at
+          END DESC")
+      )
+    elsif params[:sort] == 'led'
       workshops = workshops.order(led_count: :desc)
-    elsif params[:type] and params[:type] != 'created'
-      workshops = workshops.where(windows_type_id: params[:type].to_i).order(:title)
-      type_sql  = "AND windows_type_id = #{params[:type]}"
+    elsif params[:sort] == "title"
+      workshops = workshops.order(title: :asc)
+    elsif params[:query].present? # params[:sort] == 'keywords'
+      workshops = workshops.order("all_score DESC")
+    else
+      workshops = workshops.order(title: :asc)
     end
 
-    cols = "title, full_name, objective, materials, introduction, demonstration, opening_circle, warm_up, creation, closing, notes, tips, misc1, misc2"
-
-    query_str = "SELECT *, MATCH ( #{cols} ) AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) AS all_score,
-                 MATCH ( title ) AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) AS title_score
-
-                 FROM workshops WHERE MATCH ( #{cols} )
-                 AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) #{type_sql} AND inactive is false ORDER BY title_score DESC;"
-
-    unless params[:query].blank?
-      workshops = workshops.find_by_sql(query_str)
-    end
-
-    if params[:type] == 'created'
-      workshops = workshops.sort{|x,y| Date.parse(y.date) <=> Date.parse(x.date) }
+    if params[:type] == 'led' # TODO - find wherever this gets used and change param name to :sort
+      workshops = workshops.order(led_count: :desc)
     end
 
     workshops
   end
 
   def self.search_by_categories(categories)
-    categories = categories.to_unsafe_h.map{|k,v| v}
-    citems = CategorizableItem.where(categorizable_type: "Workshop",
-                                     category_id:  categories)
-
-    where(:id => citems.map{|ci| ci.categorizable_id} )
+    category_ids = categories.to_unsafe_h.values.reject(&:blank?)
+    return all if category_ids.empty?
+    joins(:categorizable_items)
+      .where(categorizable_items: { categorizable_type: "Workshop", category_id: category_ids })
+      .distinct
   end
 
   def self.search_by_sectors(sectors)
-    sectors = sectors.to_unsafe_h.map{|k,v| v}
-    sectorable_items = SectorableItem.where(sectorable_type: "Workshop",
-                                            sector_id:  sectors)
-
-    where( :id =>  sectorable_items.map{|si| si.sectorable_id} )
+    sector_ids = sectors.to_unsafe_h.values.reject(&:blank?)
+    return all if sector_ids.empty?
+    joins(:sectorable_items)
+      .where(sectorable_items: { sectorable_type: "Workshop", sector_id: sector_ids })
+      .distinct
   end
 
   def author_name

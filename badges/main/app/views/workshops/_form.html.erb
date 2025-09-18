@@ -48,11 +48,14 @@
                     placeholder: 'Indicate goals of the workshop',
                     input_html: { rows: 1 } %>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-4" style="display: flex">
         <%= f.input :full_name,
                     as: :text,
                     label: "Author's first & last name",
                     input_html: { rows: 1 } %>
+        <% if current_user.super_user %>
+          <%= f.input :user_id, as: :select, collection: User.order(:last_name, :first_name) %>
+        <% end %>
       </div>
       <div class="col-md-4">
         <%= f.input :age_range,

@@ -1,0 +1,20 @@
+<% categories_applied = params[:categories].present? ? Category.where(id: params[:categories].to_unsafe_h.values.reject(&:blank?)).
+  pluck(:name) : [] %>
+<% sections_applied = params[:sectors].present? ? Sector.where(id: params[:sectors].to_unsafe_h.values.reject(&:blank?)).
+  pluck(:name) : [] %>
+<% filters_applied = [
+  *categories_applied,
+  *sections_applied,
+  params[:title],
+  params[:query]
+].reject(&:blank?).sort %>
+
+<div style="display: flex; justify-content: space-between; align-items: center;">
+  <div class="filters-applied" style="display: flex; gap: 0.5rem; align-items: center;">
+    <%= label_tag nil, "Filters applied:" %>
+    <span><%= filters_applied.any? ? filters_applied.to_sentence : "None" %></span>
+  </div>
+  <div class="clear-all">
+    <%= link_to 'Clear filters', workshops_path %>
+  </div>
+</div>
