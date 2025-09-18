@@ -8,3 +8,21 @@
 .search-curriculum-page {
   padding: 3em;
 }
+
+.sort-options {
+  display: flex;          /* align label and options inline */
+  align-items: center;    /* vertically center label + options */
+  gap: 1rem;              /* spacing between label and options */
+  width: 100%;            /* full-width row */
+  margin: 1rem 0;         /* space above/below the row */
+  flex-wrap: wrap;        /* wrap on small screens */
+}
+
+.sort-options .sortable-label {
+  font-weight: bold;
+}
+
+.sort-options .sortable-group {
+  display: flex;
+  gap: 0.5rem;            /* space between each sort option */
+}
