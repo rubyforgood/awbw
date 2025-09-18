@@ -41,7 +41,11 @@
         <div class="search-field-row col-md-6">
           <%= label_tag "Title" %>
           <div class="search-input-wrapper" style="position: relative; display: inline-block; width: 100%;">
+<<<<<<< HEAD
             <%= text_field_tag :title, params[:title], class: 'search', style: 'padding-right: 30px;' %>
+=======
+            <%= text_field_tag :title, params[:title], class: 'search', placeholder: 'Title', style: 'padding-right: 30px;' %>
+>>>>>>> d8340288 (Adjust search boxes to have labels and move clickable icon within the search box)
             <div class="submit-div" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">
               <i class='glyphicon glyphicon-search'></i>
             </div>
@@ -95,6 +99,7 @@
     $('.submit-div').click(function() {
         $(this).closest('form').submit();
     });
+<<<<<<< HEAD
 
     document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll(".category-checkbox").forEach(function(checkbox) {
@@ -103,4 +108,6 @@
             });
         });
     });
+=======
+>>>>>>> d8340288 (Adjust search boxes to have labels and move clickable icon within the search box)
 </script>
