@@ -28,12 +28,14 @@
   </span>
 </div>
 
-<div class="input-group">
-  <%= radio_button_tag :sort, "keywords",
-                       params[:sort] == "keywords",
-                       onclick: ("$('form').submit();") %>
+<% if params[:query].present? %>
+  <div class="input-group">
+    <%= radio_button_tag :sort, "keywords",
+                         params[:sort] == "keywords",
+                         onclick: ("$('form').submit();") %>
 
-  <span class="small">
-    Keywords
-  </span>
-</div>
+    <span class="small">
+      Keywords
+    </span>
+  </div>
+<% end %>
