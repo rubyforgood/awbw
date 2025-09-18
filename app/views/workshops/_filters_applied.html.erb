@@ -9,7 +9,12 @@
   params[:query]
 ].reject(&:blank?).sort %>
 
-<div style="display: flex;">
-  <%= label_tag "Filters applied:" %>&nbsp;
-  <%= filters_applied.any? ? filters_applied.to_sentence : "None" %>
+<div style="display: flex; justify-content: space-between; align-items: center;">
+  <div class="filters-applied" style="display: flex; gap: 0.5rem; align-items: center;">
+    <%= label_tag nil, "Filters applied:" %>
+    <span><%= filters_applied.any? ? filters_applied.to_sentence : "None" %></span>
+  </div>
+  <div class="clear-all">
+    <%= link_to 'Clear filters', workshops_path %>
+  </div>
 </div>

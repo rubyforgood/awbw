@@ -32,14 +32,6 @@
     </div>
     <%= form_tag('/workshops', method: :get) do %>
       <div class='width checkbox-area'>
-        <div class='btn-wrapper'>
-          <button class='btn btn-primary btn--small outline'>
-            Apply filters
-          </button>
-          <div class='clear-all'>
-            <%= link_to 'Clear All', workshops_path %>
-          </div>
-        </div>
         <%= render 'shared/categories_fields', metadata: @metadata %>
         <%= render 'sectors_fields', sectors: @sectors %>
       </div>
