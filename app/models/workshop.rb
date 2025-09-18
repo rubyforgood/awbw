@@ -129,6 +129,9 @@ class Workshop < ApplicationRecord
     if params[:sectors].present?
       workshops = workshops.search_by_sectors( params[:sectors] )
     end
+    if params[:title].present?
+      workshops = workshops.title(params[:title])
+    end
 
     if params[:query].present?
       # Columns you want to search
