@@ -1,0 +1,15 @@
+<% categories_applied = params[:categories].present? ? Category.where(id: params[:categories].to_unsafe_h.values.reject(&:blank?)).
+  pluck(:name) : [] %>
+<% sections_applied = params[:sectors].present? ? Sector.where(id: params[:sectors].to_unsafe_h.values.reject(&:blank?)).
+  pluck(:name) : [] %>
+<% filters_applied = [
+  *categories_applied,
+  *sections_applied,
+  params[:title],
+  params[:query]
+].reject(&:blank?).sort %>
+
+<div style="display: flex;">
+  <%= label_tag "Filters applied:" %>&nbsp;
+  <%= filters_applied.any? ? filters_applied.to_sentence : "None" %>
+</div>
