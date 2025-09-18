@@ -119,32 +119,57 @@ class Workshop < ApplicationRecord
     end
   end
 
-  def self.search(params)
-    workshops = all.order(:title)
-    workshops = workshops.search_by_categories( params[:categories] ).order(:title) if params[:categories]
-    workshops = workshops.search_by_sectors( params[:sectors] ).order(:title) if params[:sectors]
+  def self.search(params, super_user: false)
+    workshops = all
 
-    if params[:type] == "led"
+    # filter by
+    if params[:categories].present?
+      workshops = workshops.search_by_categories( params[:categories] )
+    end
+    if params[:sectors].present?
+      workshops = workshops.search_by_sectors( params[:sectors] )
+    end
+
+    if params[:query].present?
+      # Columns you want to search
+      cols = "title, full_name, objective, materials, introduction, demonstration, opening_circle,
+            warm_up, creation, closing, notes, tips, misc1, misc2"
+      # Prepare query for BOOLEAN MODE (prefix matching)
+      terms = params[:query].to_s.strip.split.map { |term| "#{term}*" }.join(' ')
+      # Build the MATCH...AGAINST SQL
+      match_sql = "MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)"
+
+      workshops = workshops.select("workshops.*, #{match_sql} AS all_score", terms)
+                           .where(match_sql, terms)
+    end
+
+    # only show published results to regular users
+    unless super_user
+      workshops = workshops.published
+    end
+
+    # sort by
+    if params[:sort] == 'created'
+      workshops = workshops.order(
+        Arel.sql("
+          CASE
+            WHEN year IS NOT NULL AND month IS NOT NULL THEN
+              STR_TO_DATE(CONCAT(year,'-',month,'-01'), '%Y-%m-%d')
+            ELSE created_at
+          END DESC")
+      )
+    elsif params[:sort] == 'led'
       workshops = workshops.order(led_count: :desc)
-    elsif params[:type] and params[:type] != 'created'
-      workshops = workshops.where(windows_type_id: params[:type].to_i).order(:title)
-      type_sql  = "AND windows_type_id = #{params[:type]}"
+    elsif params[:sort] == "title"
+      workshops = workshops.order(title: :asc)
+    elsif params[:query].present? # params[:sort] == 'keywords'
+      workshops = workshops.order("all_score DESC")
+    else
+      workshops = workshops.order(title: :asc)
     end
 
-    cols = "title, full_name, objective, materials, introduction, demonstration, opening_circle, warm_up, creation, closing, notes, tips, misc1, misc2"
-
-    query_str = "SELECT *, MATCH ( #{cols} ) AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) AS all_score,
-                 MATCH ( title ) AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) AS title_score
-
-                 FROM workshops WHERE MATCH ( #{cols} )
-                 AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) #{type_sql} AND inactive is false ORDER BY title_score DESC;"
-
-    unless params[:query].blank?
-      workshops = workshops.find_by_sql(query_str)
-    end
-
-    if params[:type] == 'created'
-      workshops = workshops.sort{|x,y| Date.parse(y.date) <=> Date.parse(x.date) }
+    if params[:type] == 'led' # TODO - find wherever this gets used and change param name to :sort
+      workshops = workshops.order(led_count: :desc)
     end
 
     workshops
