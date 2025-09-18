@@ -179,19 +179,21 @@ class Workshop < ApplicationRecord
   end
 
   def self.search_by_categories(categories)
-    categories = categories.to_unsafe_h.map{|k,v| v}
-    citems = CategorizableItem.where(categorizable_type: "Workshop",
-                                     category_id:  categories)
+    category_ids = categories.to_unsafe_h.values.reject(&:blank?)
+    return all if category_ids.empty?
 
-    where(:id => citems.map{|ci| ci.categorizable_id} )
+    joins(:categorizable_items)
+      .where(categorizable_items: { categorizable_type: "Workshop", category_id: category_ids })
+      .distinct
   end
 
   def self.search_by_sectors(sectors)
-    sectors = sectors.to_unsafe_h.map{|k,v| v}
-    sectorable_items = SectorableItem.where(sectorable_type: "Workshop",
-                                            sector_id:  sectors)
+    sector_ids = sectors.to_unsafe_h.values.reject(&:blank?)
+    return all if sector_ids.empty?
 
-    where( :id =>  sectorable_items.map{|si| si.sectorable_id} )
+    joins(:sectorable_items)
+      .where(sectorable_items: { sectorable_type: "Workshop", sector_id: sector_ids })
+      .distinct
   end
 
   def author_name
