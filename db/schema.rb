@@ -621,7 +621,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_09_18_000354) do
     t.datetime "created_at", null: false
     t.string "series_description"
     t.string "series_description_spanish"
-    t.integer "series_order", default: 1
+    t.integer "series_order", default: 1, null: false
     t.datetime "updated_at", null: false
     t.integer "workshop_child_id", null: false
     t.integer "workshop_parent_id", null: false

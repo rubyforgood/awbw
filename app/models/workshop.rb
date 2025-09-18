@@ -32,6 +32,7 @@ class Workshop < ApplicationRecord
 
   # When this workshop is the parent in a series
   has_many :workshop_series_children,
+           -> { order(:series_order) },
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_parent_id",
            dependent: :destroy

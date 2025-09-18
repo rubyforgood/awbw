@@ -5,7 +5,7 @@ class CreateWorkshopSeriesMembership < ActiveRecord::Migration[8.1]
       t.integer :workshop_child_id, null: false
       t.string :series_description
       t.string :series_description_spanish
-      t.integer :series_order, default: 1
+      t.integer :series_order, default: 1, null: false
 
       t.timestamps
 
