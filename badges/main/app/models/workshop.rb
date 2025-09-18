@@ -30,6 +30,19 @@ class Workshop < ApplicationRecord
   has_many :attachments, as: :owner, dependent: :destroy
   has_many :workshop_age_ranges
 
+  # When this workshop is the parent in a series
+  has_many :workshop_series_children,
+           -> { order(:series_order) },
+           class_name: "WorkshopSeriesMembership",
+           foreign_key: "workshop_parent_id",
+           dependent: :destroy
+
+  # When this workshop is the child in a series
+  has_many :workshop_series_parents,
+           class_name: "WorkshopSeriesMembership",
+           foreign_key: "workshop_child_id",
+           dependent: :destroy
+
   has_attached_file :thumbnail, default_url: "/images/workshop_default.jpg"
   validates_attachment_content_type :thumbnail, content_type: /\Aimage\/.*\Z/
 
@@ -56,6 +69,10 @@ class Workshop < ApplicationRecord
 
   accepts_nested_attributes_for :workshop_variations,
                                 reject_if: proc { |object| object.nil? }
+
+  accepts_nested_attributes_for :workshop_series_children,
+                                reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
+                                allow_destroy: true
 
   # Scopes
   scope :published, -> { where(inactive: false) }

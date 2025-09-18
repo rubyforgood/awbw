@@ -358,6 +358,28 @@
         <% end %>
 
       <% end %>
+
+      <% if workshop.workshop_series_children.any? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Series workshops</h3>
+          <hr>
+          <div id="series-workshops-list">
+            <% workshop.workshop_series_children.each do |workshop_series_membership| %>
+              <%= render 'workshops/flex',
+                         workshop: workshop_series_membership.workshop_child.decorate,
+                         link_route: workshop_path(workshop_series_membership.workshop_child),
+                         workshop_series_membership: workshop_series_membership
+              %>
+            <% end %>
+          </div>
+
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <p><%= workshop.age_range.html_safe %></p>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
   </li>
 
@@ -580,6 +602,29 @@
             </div>
           </div>
         <% end %>
+
+      <% if workshop.workshop_series_children.any? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Series workshops</h3>
+          <hr>
+          <div id="series-workshops-list">
+            <% workshop.workshop_series_children.each do |workshop_series_membership| %>
+              <%= render 'workshops/flex',
+                         workshop: workshop_series_membership.workshop_child.decorate,
+                         link_route: workshop_path(workshop_series_membership.workshop_child),
+                         workshop_series_membership: workshop_series_membership,
+                         spanish: true
+              %>
+            <% end %>
+          </div>
+
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <p><%= workshop.age_range.html_safe %></p>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
   </li>
 <% end %>

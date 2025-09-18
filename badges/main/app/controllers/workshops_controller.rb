@@ -59,6 +59,7 @@ class WorkshopsController < ApplicationController
 
   def new
     @workshop = current_user.workshops.build
+    @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
     @image    = @workshop.images.build
   end
 
@@ -69,6 +70,7 @@ class WorkshopsController < ApplicationController
 
   def edit
     @workshop = Workshop.find(params[:id])
+    @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
     @image    = @workshop.images.build if @workshop.images.empty?
   end
 
@@ -165,11 +167,20 @@ class WorkshopsController < ApplicationController
 
   def workshop_params
     params.require(:workshop).permit(
-      :title, :full_name, :objective,
+      :title, :full_name, :objective, :featured,
       :materials, :optional_materials, :time_hours, :time_minutes, :age_range, :setup,
       :introduction, :demonstration, :opening_circle, :warm_up,
       :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2,
-      :windows_type_id, :inactive, :month, :year,
+      :windows_type_id, :inactive, :month, :year, :extra_field,
+      :time_demonstration, :time_warm_up, :time_creation, :time_closing, :objective_spanish,
+      :materials_spanish, :optional_materials_spanish, :timeframe_spanish, :age_range_spanish,
+      :setup_spanish, :introduction_spanish, :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish,
+      :visualization_spanish, :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish,
+      :misc1_spanish, :misc2_spanish, :extra_field_spanish,
+
+      workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id,
+                                            :series_description, :series_description_spanish,
+                                            :series_order, :_destroy],
       images_attributes: %i[file owner_id owner_type id _destroy]
     )
   end
