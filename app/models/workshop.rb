@@ -139,11 +139,10 @@ class Workshop < ApplicationRecord
             warm_up, creation, closing, notes, tips, misc1, misc2"
       # Prepare query for BOOLEAN MODE (prefix matching)
       terms = params[:query].to_s.strip.split.map { |term| "#{term}*" }.join(' ')
-      # Build the MATCH...AGAINST SQL
-      match_sql = "MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)"
-
-      workshops = workshops.select("workshops.*, #{match_sql} AS all_score", terms)
-                           .where(match_sql, terms)
+      escaped_terms = ActiveRecord::Base.sanitize_sql_like(terms)
+      workshops = workshops
+                    .select("workshops.*, MATCH(#{cols}) AGAINST('#{escaped_terms}' IN BOOLEAN MODE) AS all_score")
+                    .where("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)", terms)
     end
 
     # only show published results to regular users
@@ -181,7 +180,6 @@ class Workshop < ApplicationRecord
   def self.search_by_categories(categories)
     category_ids = categories.to_unsafe_h.values.reject(&:blank?)
     return all if category_ids.empty?
-
     joins(:categorizable_items)
       .where(categorizable_items: { categorizable_type: "Workshop", category_id: category_ids })
       .distinct
@@ -190,7 +188,6 @@ class Workshop < ApplicationRecord
   def self.search_by_sectors(sectors)
     sector_ids = sectors.to_unsafe_h.values.reject(&:blank?)
     return all if sector_ids.empty?
-
     joins(:sectorable_items)
       .where(sectorable_items: { sectorable_type: "Workshop", sector_id: sector_ids })
       .distinct
