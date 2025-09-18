@@ -138,7 +138,19 @@ class Workshop < ApplicationRecord
       workshops = workshops.title(params[:title])
     end
     if params[:query].present?
+<<<<<<< HEAD
       workshops = workshops.filter_by_query(params[:query])
+=======
+      # Columns you want to search
+      cols = "title, full_name, objective, materials, introduction, demonstration, opening_circle,
+            warm_up, creation, closing, notes, tips, misc1, misc2"
+      # Prepare query for BOOLEAN MODE (prefix matching)
+      terms = params[:query].to_s.strip.split.map { |term| "#{term}*" }.join(' ')
+      escaped_terms = ActiveRecord::Base.sanitize_sql_like(terms)
+      workshops = workshops
+                    .select("workshops.*, MATCH(#{cols}) AGAINST('#{escaped_terms}' IN BOOLEAN MODE) AS all_score")
+                    .where("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)", terms)
+>>>>>>> 218b7361 (Escape the search terms and move sql clauses into the select statement to avoid errors)
     end
     workshops
   end
