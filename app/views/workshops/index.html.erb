@@ -103,7 +103,7 @@
     });
 
     document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll(".sector-checkbox").forEach(function(checkbox) {
+        document.querySelectorAll(".category-checkbox, .sector-checkbox").forEach(function(checkbox) {
             checkbox.addEventListener("change", function() {
                 this.form.submit();
             });
