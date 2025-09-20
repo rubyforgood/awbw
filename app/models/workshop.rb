@@ -118,9 +118,9 @@ class Workshop < ApplicationRecord
   def self.filter_by_params(params={})
     # filter by
     if params[:active].present? || params[:inactive].present?
-      active = params[:active].present? && YAML.load(params[:active])
-      inactive = params[:inactive].present? && YAML.load(params[:inactive])
-      debugger
+      active = params[:active] == "true"
+      inactive = params[:inactive] == "true"
+
       all_workshops = active && inactive
       if all_workshops
         workshops = self.all
@@ -143,8 +143,10 @@ class Workshop < ApplicationRecord
     end
     if params[:query].present?
       # Columns you want to search
-      cols = "title, full_name, objective, materials, introduction, demonstration, opening_circle,
-            warm_up, creation, closing, notes, tips, misc1, misc2"
+      cols = %w[
+      title full_name objective materials introduction demonstration opening_circle
+      warm_up creation closing notes tips misc1 misc2 ].
+        map { |c| connection.quote_column_name(c) }.join(", ")
       # Prepare query for BOOLEAN MODE (prefix matching)
       terms = params[:query].to_s.strip.split.map { |term| "#{term}*" }.join(' ')
       escaped_terms = ActiveRecord::Base.sanitize_sql_like(terms)
