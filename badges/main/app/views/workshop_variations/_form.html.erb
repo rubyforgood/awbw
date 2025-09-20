@@ -1,0 +1,33 @@
+<%= simple_form_for @workshop_variation, html: { multipart: true } do |f| %>
+  <%= render 'shared/errors', resource: workshop_variation if workshop_variation.errors.any? %>
+
+  <div class="row">
+    <div class="col-md-6">
+      <% if @workshop_variation.workshop %>
+        Variant of: <%= link_to(@workshop_variation.workshop.name,
+                                workshop_path(@workshop_variation.workshop)) %>
+      <% end %>
+      <%= f.input :workshop_id,
+                  as: :select,
+                  collection: @workshops %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :name %>
+      <%= f.input :code, as: :text,
+                  label: "Description (add your html)",
+                  input_html: { rows: 10 } %>
+    </div>
+    <div class="col-md-6">
+      <%= f.input :inactive, as: :boolean,
+                  input_html: { checked: f.object.id ? f.object.inactive : false } %>
+      <%= f.input :ordering, as: :integer %>
+    </div>
+  </div>
+
+  <%= link_to 'Cancel', workshop_variations_path,
+              class: 'btn btn-default btn-secondary' %>
+  <%= f.submit 'Submit', class: "btn btn-primary" %>
+<% end %>

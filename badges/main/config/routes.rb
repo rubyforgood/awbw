@@ -82,7 +82,7 @@ Rails.application.routes.draw do
   resources :faqs
   resources :project_users
   resources :workshops
-  resources :workshop_variations, only: [:show]
+  resources :workshop_variations
   root 'dashboard#index'
 
   namespace :api do

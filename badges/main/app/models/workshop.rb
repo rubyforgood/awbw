@@ -111,12 +111,8 @@ class Workshop < ApplicationRecord
     attributes sector: ['sectors.name']
   end
 
-  def date
-    if month.present? && year.present?
-      "#{month}/#{year}"
-    else
-      "#{created_at.month}/#{created_at.year}"
-    end
+  def self.grouped_by_sector
+    Sector.all.map { |sector| Hash[sector.name, sector.workshops] }.flatten
   end
 
   def self.search(params, super_user: false)
@@ -198,6 +194,18 @@ class Workshop < ApplicationRecord
     user.full_name
   end
 
+  def date
+    if month.present? && year.present?
+      "#{month}/#{year}"
+    else
+      "#{created_at.month}/#{created_at.year}"
+    end
+  end
+
+  def name
+    title
+  end
+
   def workshop_log_fields
     if form_builder
       form_builder.forms[0].form_fields.where('ordering is not null and status = 1').
@@ -219,10 +227,6 @@ class Workshop < ApplicationRecord
 
   def related_workshops
     []
-  end
-
-  def self.grouped_by_sector
-    Sector.all.map { |sector| Hash[sector.name, sector.workshops] }.flatten
   end
 
   def default_image_url
