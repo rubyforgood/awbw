@@ -138,19 +138,22 @@ class Workshop < ApplicationRecord
       workshops = workshops.title(params[:title])
     end
     if params[:query].present?
-      # Columns you want to search
-      cols = %w[
-      title full_name objective materials introduction demonstration opening_circle
-      warm_up creation closing notes tips misc1 misc2 ].
-        map { |c| connection.quote_column_name(c) }.join(", ")
-      # Prepare query for BOOLEAN MODE (prefix matching)
-      terms = params[:query].to_s.strip.split.map { |term| "#{term}*" }.join(' ')
-      escaped_terms = ActiveRecord::Base.sanitize_sql_like(terms)
-      workshops = self
-                    .select("workshops.*, MATCH(#{cols}) AGAINST('#{escaped_terms}' IN BOOLEAN MODE) AS all_score")
-                    .where("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)", terms)
+      workshops = workshops.filter_by_query(params[:query])
     end
     workshops
+  end
+
+  def self.filter_by_query(query=nil)
+    # Columns you want to search
+    cols = %w[
+      title full_name objective materials introduction demonstration opening_circle
+      warm_up creation closing notes tips misc1 misc2 ].
+      map { |c| connection.quote_column_name(c) }.join(", ")
+    # Prepare query for BOOLEAN MODE (prefix matching)
+    terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(' ')
+    self.select(sanitize_sql_array(
+                      ["workshops.*, MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE) AS all_score", terms]))
+        .where("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)", terms)
   end
 
   def self.search(params, super_user: false)
