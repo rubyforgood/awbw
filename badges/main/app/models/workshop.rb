@@ -116,43 +116,48 @@ class Workshop < ApplicationRecord
   end
 
   def self.filter_by_params(params={})
+    workshops = self.all
     # filter by
     if params[:active].present? || params[:inactive].present?
-      active = params[:active].present? && YAML.load(params[:active])
-      inactive = params[:inactive].present? && YAML.load(params[:inactive])
-      debugger
-      all_workshops = active && inactive
-      if all_workshops
-        workshops = self.all
-      elsif active && !inactive
-        workshops = self.published(true)
-      else
-        workshops = self.published(false)
+      active = params[:active] == "true"
+      inactive = params[:inactive] == "true"
+
+      if active && !inactive
+        workshops = workshops.published(true)
+      elsif !active || inactive
+        workshops = workshops.published(false)
       end
-    else
-      workshops = self.all
     end
     if params[:categories].present?
-      workshops = self.search_by_categories( params[:categories] )
+      workshops = workshops.search_by_categories( params[:categories] )
     end
     if params[:sectors].present?
-      workshops = self.search_by_sectors( params[:sectors] )
+      workshops = workshops.search_by_sectors( params[:sectors] )
     end
     if params[:title].present?
-      workshops = self.title(params[:title])
+      workshops = workshops.title(params[:title])
     end
     if params[:query].present?
-      # Columns you want to search
-      cols = "title, full_name, objective, materials, introduction, demonstration, opening_circle,
-            warm_up, creation, closing, notes, tips, misc1, misc2"
-      # Prepare query for BOOLEAN MODE (prefix matching)
-      terms = params[:query].to_s.strip.split.map { |term| "#{term}*" }.join(' ')
-      escaped_terms = ActiveRecord::Base.sanitize_sql_like(terms)
-      workshops = self
-                    .select("workshops.*, MATCH(#{cols}) AGAINST('#{escaped_terms}' IN BOOLEAN MODE) AS all_score")
-                    .where("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)", terms)
+      workshops = workshops.filter_by_query(params[:query])
     end
     workshops
+  end
+
+  def self.filter_by_query(query = nil)
+    return all if query.blank?
+
+    # Whitelisted, quoted column names to use in search
+    cols = %w[title full_name objective materials introduction demonstration opening_circle
+              warm_up creation closing notes tips misc1 misc2].
+           map { |c| connection.quote_column_name(c) }.join(", ")
+    # Prepare query for BOOLEAN MODE (prefix matching)
+    terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
+    # Convert to Arel for safety
+    match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
+
+    select(
+      sanitize_sql_array(["workshops.*, #{match_expr.to_sql} AS all_score", terms])
+    ).where(match_expr, terms)
   end
 
   def self.search(params, super_user: false)

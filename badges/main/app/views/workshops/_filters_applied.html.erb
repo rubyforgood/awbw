@@ -4,8 +4,8 @@
   pluck(:name) : [] %>
 <% sections_applied = params[:sectors].present? ? Sector.where(id: params[:sectors].to_unsafe_h.values.reject(&:blank?)).
   pluck(:name) : [] %>
-<% active_applied = "Published" if params[:active] && YAML.load(params[:active]) %>
-<% inactive_applied = "Unpublished" if params[:inactive] && YAML.load(params[:inactive]) %>
+<% active_applied = "Published" if params[:active] == "true" %>
+<% inactive_applied = "Unpublished" if params[:inactive] == "true" %>
 <% filters_applied = [
   *windows_types_applied,
   *categories_applied,

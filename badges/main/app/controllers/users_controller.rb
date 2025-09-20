@@ -2,7 +2,7 @@ class UsersController < ApplicationController
 
   def index
     if current_user.super_user?
-      @users = User.paginate(page: params[:page], per_page: 6)
+      @users = User.paginate(page: params[:page], per_page: 25)
     else
       redirect_to root_path
     end
