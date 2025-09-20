@@ -32,14 +32,16 @@
     </div>
     <%= form_tag('/workshops', method: :get) do %>
       <div class='width checkbox-area'>
-        <%= render 'shared/categories_fields', metadata: @metadata %>
+        <%= render 'windows_type_fields', windows_types: @windows_types %>
+        <%= render 'categories_fields', metadata: @metadata %>
         <%= render 'sectors_fields', sectors: @sectors %>
+        <%= render 'inactive_fields' if current_user.super_user? %>
       </div>
       <div class='search-wrapper'>
         <div class="search-field-row col-md-6">
           <%= label_tag "Title" %>
           <div class="search-input-wrapper" style="position: relative; display: inline-block; width: 100%;">
-            <%= text_field_tag :title, params[:title], class: 'search', placeholder: 'Title', style: 'padding-right: 30px;' %>
+            <%= text_field_tag :title, params[:title], class: 'search', style: 'padding-right: 30px;' %>
             <div class="submit-div" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">
               <i class='glyphicon glyphicon-search'></i>
             </div>
@@ -48,7 +50,7 @@
         <div class='search-field-row col-md-6'>
           <%= label_tag "Keywords" %>
           <div class="search-input-wrapper" style="position: relative; display: inline-block; width: 100%;">
-            <%= text_field_tag :query, params[:query], class: 'search', placeholder: 'Keywords', style: 'padding-right: 30px;' %>
+            <%= text_field_tag :query, params[:query], class: 'search', style: 'padding-right: 30px;' %>
             <div class="submit-div" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">
               <i class='fa fa-search'></i>
             </div>
@@ -61,7 +63,7 @@
         <div class='sort-options'>
           <br>
           <div class='sortable-label'>
-            <b>Sort By:</b>
+            <b>Sort by:</b>
           </div>
           <div class='sortable-group'>
             <%= render 'sortable_fields', sortable_fields: @sortable_fields %>
@@ -71,7 +73,7 @@
           <% if @workshops.any? %>
             <div id="workshops-list">
               <% @workshops.each do |workshop| %>
-              <%= render 'workshops/flex', workshop: workshop.decorate, breadcrumb: 'Search Curriculum', link_route: workshop_path(workshop) %>
+              <%= render 'workshops/index_row', workshop: workshop.decorate, breadcrumb: 'Search Curriculum', link_route: workshop_path(workshop) %>
             <% end %>
             </div>
 
@@ -95,7 +97,7 @@
     });
 
     document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll(".category-checkbox, .sector-checkbox").forEach(function(checkbox) {
+        document.querySelectorAll(".category-checkbox").forEach(function(checkbox) {
             checkbox.addEventListener("change", function() {
                 this.form.submit();
             });

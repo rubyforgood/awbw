@@ -1,0 +1,20 @@
+<div class="categories-fields-wrapper border p-2">
+  <div class="categories-header d-flex justify-content-between align-items-center mb-1">
+    <label class="mb-0">Windows Type</label>
+    <%= image_tag("collapse-arrow.png", class: "arrow-down") %>
+  </div>
+
+  <div class="categories-fields">
+    <% windows_types.each do |windows_type| %>
+      <div class="form-check">
+        <%= check_box_tag "windows_types[#{windows_type.id}]",
+                          windows_type.id,
+                          params.dig(:windows_types, windows_type.id.to_s).to_s == windows_type.id.to_s,
+                          id: "windows_type_#{windows_type.id}",
+                          class: "form-check-input category-checkbox" %>
+        <%= label_tag "windows_type_#{windows_type.id}", windows_type.name.downcase.gsub(" log", "").titleize, class: "form-check-label small" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+

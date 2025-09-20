@@ -79,7 +79,7 @@ class Workshop < ApplicationRecord
 
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
-  scope :published, -> { where(inactive: false) }
+  scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }
   scope :recent, -> { for_search.by_year.order(led_count: :desc).uniq(&:title) }
   scope :title, -> (title) { where("title like ?", "%#{ title }%") }
 
@@ -115,20 +115,32 @@ class Workshop < ApplicationRecord
     Sector.all.map { |sector| Hash[sector.name, sector.workshops] }.flatten
   end
 
-  def self.search(params, super_user: false)
-    workshops = all
-
+  def self.filter_by_params(params={})
     # filter by
+    if params[:active].present? || params[:inactive].present?
+      active = params[:active].present? && YAML.load(params[:active])
+      inactive = params[:inactive].present? && YAML.load(params[:inactive])
+      debugger
+      all_workshops = active && inactive
+      if all_workshops
+        workshops = self.all
+      elsif active && !inactive
+        workshops = self.published(true)
+      else
+        workshops = self.published(false)
+      end
+    else
+      workshops = self.all
+    end
     if params[:categories].present?
-      workshops = workshops.search_by_categories( params[:categories] )
+      workshops = self.search_by_categories( params[:categories] )
     end
     if params[:sectors].present?
-      workshops = workshops.search_by_sectors( params[:sectors] )
+      workshops = self.search_by_sectors( params[:sectors] )
     end
     if params[:title].present?
-      workshops = workshops.title(params[:title])
+      workshops = self.title(params[:title])
     end
-
     if params[:query].present?
       # Columns you want to search
       cols = "title, full_name, objective, materials, introduction, demonstration, opening_circle,
@@ -136,10 +148,15 @@ class Workshop < ApplicationRecord
       # Prepare query for BOOLEAN MODE (prefix matching)
       terms = params[:query].to_s.strip.split.map { |term| "#{term}*" }.join(' ')
       escaped_terms = ActiveRecord::Base.sanitize_sql_like(terms)
-      workshops = workshops
+      workshops = self
                     .select("workshops.*, MATCH(#{cols}) AGAINST('#{escaped_terms}' IN BOOLEAN MODE) AS all_score")
                     .where("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)", terms)
     end
+    workshops
+  end
+
+  def self.search(params, super_user: false)
+    workshops = self.filter_by_params(params)
 
     # only show published results to regular users
     unless super_user

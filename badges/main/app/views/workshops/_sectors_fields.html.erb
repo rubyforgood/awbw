@@ -9,7 +9,7 @@
         <div class="input-group">
           <%= check_box_tag "sectors[#{sector.id}]", sector.id,
                             (params[:sectors] && params[:sectors]["#{sector.id}"] == sector.id.to_s),
-                            class: "sector-checkbox" %>
+                            class: "category-checkbox" %>
           <span class="small"><%= sector.name %></span>
         </div>
       <% end %>
