@@ -116,30 +116,26 @@ class Workshop < ApplicationRecord
   end
 
   def self.filter_by_params(params={})
+    workshops = self.all
     # filter by
     if params[:active].present? || params[:inactive].present?
       active = params[:active] == "true"
       inactive = params[:inactive] == "true"
 
-      all_workshops = active && inactive
-      if all_workshops
-        workshops = self.all
-      elsif active && !inactive
-        workshops = self.published(true)
-      else
-        workshops = self.published(false)
+      if active && !inactive
+        workshops = workshops.published(true)
+      elsif !active || inactive
+        workshops = workshops.published(false)
       end
-    else
-      workshops = self.all
     end
     if params[:categories].present?
-      workshops = self.search_by_categories( params[:categories] )
+      workshops = workshops.search_by_categories( params[:categories] )
     end
     if params[:sectors].present?
-      workshops = self.search_by_sectors( params[:sectors] )
+      workshops = workshops.search_by_sectors( params[:sectors] )
     end
     if params[:title].present?
-      workshops = self.title(params[:title])
+      workshops = workshops.title(params[:title])
     end
     if params[:query].present?
       # Columns you want to search
