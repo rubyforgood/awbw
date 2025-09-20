@@ -9,7 +9,7 @@ class WorkshopVariationsController < ApplicationController
 
   def new
     @workshop_variation = WorkshopVariation.new
-    @workshops = Workshop.published
+    @workshops = Workshop.published.order(:title)
   end
 
   def create
@@ -34,11 +34,24 @@ class WorkshopVariationsController < ApplicationController
 
   def edit
     @workshop_variation = WorkshopVariation.find(params[:id])
-    @workshops = Workshop.published
+    @workshops = Workshop.published.order(:title)
+  end
+
+  def update
+    @workshop_variation = WorkshopVariation.find(params[:id])
+
+    if @workshop_variation.update(workshop_variation_params)
+      flash[:alert] = 'Workshop Variation updated successfully.'
+      redirect_to workshop_variations_path
+    else
+      flash[:alert] = 'Unable to update Workshop Variation.'
+      render :edit
+    end
   end
 
   def workshop_variation_params
-    [:name, :code, :inactive, :ordering, :workshop_id]
+    params.require(:workshop_variation).permit(
+      [:name, :code, :inactive, :ordering, :workshop_id])
   end
 
 end
