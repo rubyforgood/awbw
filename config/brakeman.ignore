@@ -1,29 +1,6 @@
 {
   "ignored_warnings": [
     {
-      "warning_type": "SQL Injection",
-      "warning_code": 0,
-      "fingerprint": "23223b1e5030a4476088aea976cf673e2a30ece4dda7f63e1abd01a2fd8f939e",
-      "check_name": "SQL",
-      "message": "Possible SQL injection",
-      "file": "app/models/workshop.rb",
-      "line": 517,
-      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
-      "code": "all.order(:title).search_by_categories(params[:categories]).order(:title).search_by_sectors(params[:sectors]).order(:title).order(:led_count => :desc).where(:windows_type_id => params[:type].to_i).order(:title).find_by_sql(\"SELECT *, MATCH ( #{\"title, full_name, objective, materials, introduction, demonstration, opening_circle, warm_up, creation, closing, notes, tips, misc1, misc2\"} ) AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) AS all_score,\\n                 MATCH ( title ) AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) AS title_score\\n\\n                 FROM workshops WHERE MATCH ( #{\"title, full_name, objective, materials, introduction, demonstration, opening_circle, warm_up, creation, closing, notes, tips, misc1, misc2\"} )\\n                 AGAINST ( '*#{params[:query]}*' IN BOOLEAN MODE ) #{\"AND windows_type_id = #{params[:type]}\"} AND inactive is false ORDER BY title_score DESC;\")",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "Workshop",
-        "method": "Workshop.search"
-      },
-      "user_input": "params[:query]",
-      "confidence": "Weak",
-      "cwe_id": [
-        89
-      ],
-      "note": ""
-    },
-    {
       "warning_type": "Mass Assignment",
       "warning_code": 70,
       "fingerprint": "3143e4690dfdaf7bb904980f061cc9764ede5382bad4602edabaa4b6a56c07b5",
@@ -130,7 +107,7 @@
           "type": "controller",
           "class": "WorkshopVariationsController",
           "method": "show",
-          "line": 10,
+          "line": 37,
           "file": "app/controllers/workshop_variations_controller.rb",
           "rendered": {
             "name": "workshop_variations/show",
@@ -146,6 +123,29 @@
       "confidence": "High",
       "cwe_id": [
         79
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "b4d49187956743736add52930225188e431bc4c97b76ead2ca4d3d794deb707a",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/workshop.rb",
+      "line": 156,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Workshop",
+        "method": "Workshop.filter_by_query"
+      },
+      "user_input": "[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)\n end.join(\", \")",
+      "confidence": "Medium",
+      "cwe_id": [
+        89
       ],
       "note": ""
     },
@@ -169,25 +169,6 @@
       "confidence": "Medium",
       "cwe_id": [
         915
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "Unmaintained Dependency",
-      "warning_code": 120,
-      "fingerprint": "d84924377155b41e094acae7404ec2e521629d86f97b0ff628e3d1b263f8101c",
-      "check_name": "EOLRails",
-      "message": "Support for Rails 6.1.7.10 ended on 2024-10-01",
-      "file": "Gemfile.lock",
-      "line": 319,
-      "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
-      "code": null,
-      "render_path": null,
-      "location": null,
-      "user_input": null,
-      "confidence": "High",
-      "cwe_id": [
-        1104
       ],
       "note": ""
     }
