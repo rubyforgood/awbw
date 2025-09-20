@@ -21,7 +21,8 @@
                   input_html: { rows: 10 } %>
     </div>
     <div class="col-md-6">
-      <%= f.input :inactive, as: :boolean %>
+      <%= f.input :inactive, as: :boolean,
+                  input_html: { checked: f.object.id ? f.object.inactive : false } %>
       <%= f.input :ordering, as: :integer %>
     </div>
   </div>
