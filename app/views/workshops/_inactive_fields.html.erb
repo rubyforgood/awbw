@@ -1,0 +1,21 @@
+<div class="categories-fields-wrapper border p-2">
+  <div class="categories-header">
+    <label class="mb-0">Published</label>
+    <%= image_tag("collapse-arrow.png", class: "arrow-down") %>
+  </div>
+
+  <div class="categories-fields">
+    <div class="form-check">
+      <%= check_box_tag "active", true,
+                        (params[:active].present? && YAML.load(params[:active].to_s) == true),
+                        id: "inactive_false", class: "form-check-input category-checkbox" %>
+      <%= label_tag "active", "Active/published", class: "form-check-label small" %>
+    </div>
+    <div class="form-check">
+      <%= check_box_tag "inactive", true,
+                        (params[:inactive].present? && YAML.load(params[:inactive].to_s) == true),
+                        id: "inactive_true", class: "form-check-input category-checkbox" %>
+      <%= label_tag "inactive", "Inactive/unpublished", class: "form-check-label small" %>
+    </div>
+  </div>
+</div>

@@ -34,7 +34,7 @@
             <div style="margin-right: 3em;">
               <%= f.input :featured, as: :boolean, wrapper: false %>
             </div>
-            <%= f.input :inactive, as: :boolean, wrapper: false %>
+            <%= f.input :inactive, as: :boolean, label: "Not published (inactive)", wrapper: false %>
           </div>
         </div>
       <% end %>
@@ -246,7 +246,7 @@
         <div class="row mb-2">
           <div class="form-group image-fields-wrapper">
             <%= f.fields_for :workshop_series_children do |child_workshop_membership| %>
-              <%= render 'workshop_series_child_fields', :f => child_workshop_membership %>
+              <%= render 'workshop_series_child_fields', f: child_workshop_membership %>
             <% end %>
             <div class="links small">
               <%= link_to_add_association 'Add Another Workshop to this Series', f, :workshop_series_children,

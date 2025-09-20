@@ -60,13 +60,14 @@ class WorkshopsController < ApplicationController
   end
 
   def new
-    @workshop = current_user.workshops.build
-    @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
+    @workshop = Workshop.new(user: current_user)
+    @potential_series_workshops = Workshop.published.order(:title)
     @image    = @workshop.images.build
   end
 
   def share_idea
     @workshop = current_user.workshops.build
+    @potential_series_workshops = Workshop.published.order(:title)
     @image    = @workshop.images.build
   end
 
@@ -117,6 +118,8 @@ class WorkshopsController < ApplicationController
       redirect_to workshops_path
     else
       flash[:error] = 'Unable to save the workshop.'
+      @potential_series_workshops = Workshop.published.order(:title)
+      @image    = @workshop.images.build
       render :share_idea
     end
   end
@@ -194,5 +197,6 @@ class WorkshopsController < ApplicationController
   def load_metadata
     @metadata = Metadatum.published.includes(:categories).decorate
     @sectors = Sector.published
+    @windows_types = WindowsType.all
   end
 end
