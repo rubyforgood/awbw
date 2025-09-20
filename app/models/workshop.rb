@@ -79,7 +79,7 @@ class Workshop < ApplicationRecord
 
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
-  scope :published, -> { where(inactive: false) }
+  scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }
   scope :recent, -> { for_search.by_year.order(led_count: :desc).uniq(&:title) }
   scope :title, -> (title) { where("title like ?", "%#{ title }%") }
 
