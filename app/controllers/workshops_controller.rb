@@ -103,10 +103,10 @@ class WorkshopsController < ApplicationController
 
     if @workshop.save
       flash[:alert] = 'Thank you for submitting your workshop idea.'
-      redirect_to "/workshop_logs/new?windows_type_id=#{@workshop.windows_type.id}&workshop_id=#{@workshop.id}"
+      redirect_to root_path
     else
-      flash[:error] = 'Unable to save the workshop.'
-      render :new
+      flash[:error] = 'Unable to save your workshop idea.'
+      render :share_idea
     end
   end
 
