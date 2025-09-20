@@ -143,17 +143,21 @@ class Workshop < ApplicationRecord
     workshops
   end
 
-  def self.filter_by_query(query=nil)
-    # Columns you want to search
-    cols = %w[
-      title full_name objective materials introduction demonstration opening_circle
-      warm_up creation closing notes tips misc1 misc2 ].
-      map { |c| connection.quote_column_name(c) }.join(", ")
+  def self.filter_by_query(query = nil)
+    return all if query.blank?
+
+    # Whitelisted, quoted column names to use in search
+    cols = %w[title full_name objective materials introduction demonstration opening_circle
+              warm_up creation closing notes tips misc1 misc2].
+           map { |c| connection.quote_column_name(c) }.join(", ")
     # Prepare query for BOOLEAN MODE (prefix matching)
-    terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(' ')
-    self.select(sanitize_sql_array(
-                      ["workshops.*, MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE) AS all_score", terms]))
-        .where("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)", terms)
+    terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
+    # Convert to Arel for safety
+    match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
+
+    select(
+      sanitize_sql_array(["workshops.*, #{match_expr.to_sql} AS all_score", terms])
+    ).where(match_expr, terms)
   end
 
   def self.search(params, super_user: false)
