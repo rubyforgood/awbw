@@ -46,6 +46,9 @@
               <%= link_to "Profile", user_path(current_user) %>
             </li>
             <li>
+              <%= link_to("Change password", change_password_path) %>
+            </li>
+            <li>
               <%= link_to("Logout", destroy_user_session_path, :method => :delete) %>
             </li>
           </ul>
