@@ -7,8 +7,8 @@ Rails.application.routes.draw do
 
   devise_for :admins
 
-  get 'users/:id/change_password', to: 'users#change_password', as:'change_password'
-  post 'users/:id/update_password', to: 'users#update_password'
+  get 'users/change_password', to: 'users#change_password', as:'change_password'
+  post 'users/update_password', to: 'users#update_password', as: 'update_password'
 
   get 'workshops/share_idea', to: 'workshops#share_idea'
   get 'workshops/summary', to: 'workshops#summary'
