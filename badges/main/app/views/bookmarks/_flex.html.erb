@@ -4,26 +4,37 @@
     <div class="col-xs-4 fixed-width">
       <div class="portrait-img content-img-popular popular-img" style="background-image: url(<%= workshop.thumbnail_image %>)"></div>
     </div>
-    <div class="col-xs-8 col-xs-6-custom content-heading span">
-      <h3><%= link_to workshop.title, link_route %></h3>
+    <div class="col-md-8 col-xs-6-custom content-heading span">
+      <div class="col-md-4">
+        <h3><%= link_to workshop.title, link_route %></h3>
+        <div class="bookmarked-on">
+          <small>Bookmarked on <%= bookmark.created_at.strftime("%B %d, %Y") %></small>
+          <br>
+          <small>Bookmarked by <%= workshop.bookmarks.length %> <%= "facilitator".pluralize(workshop.bookmarks.length) %></small>
+        </div>
 
-      <small class="workshop-thanksto">
-        <%= "Thanks to #{workshop.full_name}" if workshop.full_name %><br/>
-        <%= "In #{workshop.windows_type_name.gsub(" WORKSHOP LOG", "'s windows").titleize if !workshop.windows_type.nil?}"  %>
-      </small>
+        <small class="workshop-thanksto">
+          <%= "Thanks to #{workshop.full_name}" if workshop.full_name %><br/>
+          <%= "In #{workshop.windows_type_name.gsub(" WORKSHOP LOG", "'s windows").gsub("Log","").titleize if workshop.windows_type}"  %>
+        </small>
+      </div>
 
-      <p class="workshop-description">
-        <%= truncate(workshop.description, :length => 240, :omission => '... ', :separator => ' ') %>
-      </p>
-    </div>
+      <div class="col-md-4">
+        <div class="workshop-description">
+          <span title="<%= workshop.formatted_objective(length: 600) %>">
+            <%= truncate(workshop.formatted_objective(length: 215), length: 215, omission: '... ', separator: ' ') %>
+          </span>
+        </div>
+      </div>
 
-    <div class="col-xs-1">
-      <div class='btn-bookmark pull-right'>
-        <%= image_tag("bookmark.png", class:"img-responsive") %>
+      <div class="col-md-4">
+        <div class="workshop-categories" style="font-style: italic;">
+          <span title="<%= workshop.categories.map(&:name).to_sentence %>">
+            <%= "Categories: " if workshop.categories.any? %><%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
+          </span>
+        </div>
       </div>
     </div>
-
-
   </div>
 
 </div>

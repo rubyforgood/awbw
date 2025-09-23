@@ -2,7 +2,8 @@ class BookmarksController < ApplicationController
   before_action :set_breadcrumb
 
   def index
-    @bookmarks = Bookmark.search(params, current_user).paginate(page: params[:page], per_page: 3)
+    @bookmarks = Bookmark.search(params, current_user).paginate(page: params[:page], per_page: 25)
+
     load_sortable_fields
     respond_to do |format|
       format.html
@@ -39,6 +40,7 @@ class BookmarksController < ApplicationController
 
   def load_sortable_fields
     @sortable_fields = WindowsType.where("name NOT LIKE ?", "%COMBINED%")
+    @windows_types = WindowsType.all
   end
 
   def load_workshop_data

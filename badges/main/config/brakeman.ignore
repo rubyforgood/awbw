@@ -47,6 +47,29 @@
       "note": ""
     },
     {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "6bfd3126d28d19cb7dd9c8e176e92e8bc3b05cf179dc8600aee3f312bc2700ca",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/bookmark.rb",
+      "line": 58,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Bookmark",
+        "method": "Bookmark.filter_by_query"
+      },
+      "user_input": "[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)\n end.join(\", \")",
+      "confidence": "Medium",
+      "cwe_id": [
+        89
+      ],
+      "note": ""
+    },
+    {
       "warning_type": "Mass Assignment",
       "warning_code": 70,
       "fingerprint": "801ab5e957972d9cafe31dcbb1f53ca2416781cc09e5b8bd0fe62f05eeeda6c7",
