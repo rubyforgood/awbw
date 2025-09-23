@@ -8,12 +8,13 @@ class Report < ApplicationRecord
   has_one :image
   validate :image_valid?
 
-  # before_save :set_has_attachament # TODO handle set_has_attachment
   FORM_FILE_CONTENT_TYPES = %w[application/pdf application/msword
     application/vnd.openxmlformats-officedocument.wordprocessingml.document application/vnd.ms-excel
     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]
   has_one_attached :form_file
   validates :form_file, content_type: FORM_FILE_CONTENT_TYPES
+
+  before_save :set_has_attachament # TODO verify set_has_attachament works as expected once this feature is enabled in the UI
 
   has_many :images
   has_many :form_fields, through: :form
@@ -130,10 +131,14 @@ class Report < ApplicationRecord
   private
 
   def set_has_attachament
-    self.has_attachment = false
+    if ENV["ACTIVE_STORAGE"].present?
+      self.has_attachment = image.attached? || form_file.attached? || media_files.any? { |media_file| media_file.file.attached? }
+    else
+      self.has_attachment = false
 
-    unless self.image.blank? and self.media_files.empty? and self.form_file.blank?
-      self.has_attachment = true
+      unless image.blank? && media_files.empty? && form_file.blank?
+        self.has_attachment = true
+      end
     end
   end
 
