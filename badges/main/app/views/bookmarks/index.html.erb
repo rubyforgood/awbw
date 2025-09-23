@@ -10,7 +10,7 @@
   <%= form_tag('/bookmarks', method: :get) do %>
     <!-- ####### Filter Section ####### -->
     <div class="row">
-    <div class='search-wrapper'>
+    <div class='search-boxes'>
       <div class="search-field-row col-md-4">
         <%= label_tag "Title" %>
         <div class="search-input-wrapper" style="position: relative; display: inline-block; width: 100%;">
@@ -32,6 +32,7 @@
 
       <div class='search-field-row col-md-4'>
         <%= render 'workshops/windows_type_fields', windows_types: @windows_types %>
+        <%= link_to 'Clear filters', bookmarks_path %>
       </div>
 
       <div class="col-md-12 mb-3"></div>
