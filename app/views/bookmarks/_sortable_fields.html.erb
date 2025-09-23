@@ -1,30 +1,41 @@
 <div class="input-group">
-    <%= radio_button_tag :type, "created",
-          params[:type] == "created",
-          onclick: ("addURL('created')") %>
+  <%= radio_button_tag :sort, "created",
+                       params[:sort] == "created",
+                       onclick: ("$('form').submit();") %>
 
-    <span class="small">
-      Date Bookmarked
+  <span class="small">
+      Newest date bookmarked
     </span>
 </div>
 
-<% sortable_fields.each do |sortable_field| %>
+<div class="input-group">
+  <%= radio_button_tag :sort, "title",
+                       params[:sort] == "title",
+                       onclick: ("$('form').submit();") %>
+
+  <span class="small">
+    Title
+  </span>
+</div>
+
+<div class="input-group">
+  <%= radio_button_tag :sort, "led",
+                       params[:sort] == "led",
+                       onclick: ("$('form').submit();") %>
+
+  <span class="small">
+    Most favorited
+  </span>
+</div>
+
+<% if params[:query].present? %>
   <div class="input-group">
-    <%= radio_button_tag :type, sortable_field.id,
-          sortable_field.id.to_s == params[:type],
-          onclick: ("addURL(#{sortable_field.id.to_s})") %>
+    <%= radio_button_tag :sort, "keywords",
+                         params[:sort] == "keywords",
+                         onclick: ("$('form').submit();") %>
 
     <span class="small">
-      <%= sortable_field.name.titleize.gsub("Log", "").gsub("Children", "Children's") %>
+      Keywords
     </span>
   </div>
 <% end %>
-
-
-<script>
-
-  function addURL(type)
-  {
-    window.location.href='?type=' + type;
-  }
-</script>

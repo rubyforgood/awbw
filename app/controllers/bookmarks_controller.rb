@@ -40,6 +40,7 @@ class BookmarksController < ApplicationController
 
   def load_sortable_fields
     @sortable_fields = WindowsType.where("name NOT LIKE ?", "%COMBINED%")
+    @windows_types = WindowsType.all
   end
 
   def load_workshop_data
