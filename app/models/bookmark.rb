@@ -22,7 +22,7 @@ class Bookmark < ApplicationRecord
                     .joins("INNER JOIN workshops as windows_type_workshops ON windows_type_workshops.id = bookmarks.bookmarkable_id")
                     .where("windows_type_workshops.windows_type_id IN (?)", windows_type_ids)
                     .select("bookmarks.*, windows_type_workshops.*")
-                    .order(windows_type_id: :desc, title: :asc)
+                    .order("windows_type_workshops.windows_type_id DESC, windows_type_workshops.title ASC")
     end
     bookmarks
   end
