@@ -3,6 +3,8 @@ class Bookmark < ApplicationRecord
   belongs_to :bookmarkable, polymorphic: true
   has_many :bookmark_annotations, dependent: :destroy
 
+  scope :for_workshops, -> { where(bookmarkable_type: 'Workshop') }
+
   def self.filter_by_windows_type_ids(windows_type_ids)
     bookmarks = self.all
     if windows_type_ids
@@ -39,28 +41,17 @@ class Bookmark < ApplicationRecord
   def self.filter_by_query(query = nil)
     return all if query.blank?
 
-    # Only apply search to Workshop bookmarks
-    bookmarks = joins(
-      "INNER JOIN workshops AS search_workshops ON search_workshops.id = bookmarks.bookmarkable_id"
-    ).where(bookmarks: { bookmarkable_type: "Workshop" })
+    terms = query.strip.split.map { |t| "#{t}*" }.join(" ")
 
-    # Whitelisted, quoted column names to use in search
-    cols = %w[
-    title full_name objective materials introduction demonstration opening_circle
-    warm_up creation closing notes tips misc1 misc2
-  ].map { |c| "search_workshops.#{connection.quote_column_name(c)}" }.join(", ")
-
-    # Prepare query for BOOLEAN MODE (prefix matching)
-    terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
-
-    # MATCH...AGAINST expression using the alias
-    match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
-
-    bookmarks
-      .select(
-        sanitize_sql_array(["bookmarks.*, search_workshops.*, #{match_expr} AS all_score", terms])
+    joins("INNER JOIN workshops AS search_workshops ON search_workshops.id = bookmarks.bookmarkable_id")
+      .for_workshops
+      .select("bookmarks.*")
+      .where(
+        "MATCH(search_workshops.title, search_workshops.full_name, search_workshops.objective, search_workshops.materials,
+             search_workshops.introduction, search_workshops.demonstration, search_workshops.opening_circle, search_workshops.warm_up,
+             search_workshops.creation, search_workshops.closing, search_workshops.notes, search_workshops.tips, search_workshops.misc1,
+             search_workshops.misc2) AGAINST(? IN BOOLEAN MODE)", terms
       )
-      .where(match_expr, terms)
   end
 
   def self.search(params, user)
