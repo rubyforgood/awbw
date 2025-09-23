@@ -1,0 +1,12 @@
+<div class="row mb-3">
+  <div class="col text-end">
+    <%= link_to "Delete", @faq, method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-outline-danger" if current_user.super_user? %>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <h2>Edit <%= @faq.class.model_name.human %></h2>
+    <%= render "form", locals: { faq: @faq } %>
+  </div>
+</div>

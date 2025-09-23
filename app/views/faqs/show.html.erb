@@ -1,0 +1,26 @@
+<% if current_user.super_user? %>
+  <div class="row mb-3">
+    <div class="col text-end">
+      <%= link_to "Index", faqs_path, class: "btn btn-outline-secondary" %>
+      <%= link_to "Edit", edit_faq_path(@faq), class: "btn btn-outline-secondary" %>
+    </div>
+  </div>
+<% end %>
+
+<div class="row">
+  <div class="col-md-12">
+    <h2><%= @faq.class.model_name.human %> Details</h2>
+
+    <table class="table table-striped">
+      <tbody>
+        <% attributes = @faq.attributes.keys if @faq %>
+        <% attributes&.each do |attribute| -%>
+          <tr>
+            <th><%= attribute.humanize %></th>
+            <td><%= @faq.send(attribute) %></td>
+          </tr>
+        <% end -%>
+      </tbody>
+    </table>
+  </div>
+</div>
