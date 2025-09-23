@@ -1,0 +1,23 @@
+<div class="row mb-3">
+  <div class="col text-end">
+    <%%= link_to "Edit", edit_<%= singular_table_name %>_path(@<%= singular_table_name %>), class: "btn btn-outline-primary" if current_user.super_user? %>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <h2><%%= @<%= singular_table_name %>.class.model_name.human %> Details</h2>
+
+    <table class="table table-striped">
+      <tbody>
+        <%% attributes = @<%= singular_table_name %>.attributes.keys if @<%= singular_table_name %> %>
+        <%% attributes&.each do |attribute| -%>
+          <tr>
+            <th><%%= attribute.humanize %></th>
+            <td><%%= @<%= singular_table_name %>.send(attribute) %></td>
+          </tr>
+        <%% end -%>
+      </tbody>
+    </table>
+  </div>
+</div>

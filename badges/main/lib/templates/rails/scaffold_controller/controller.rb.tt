@@ -1,0 +1,73 @@
+<% module_namespacing do -%>
+class <%= controller_class_name %>Controller < ApplicationController
+  before_action :set_<%= singular_table_name %>, only: [:show, :edit, :update, :destroy]
+
+  def index
+    per_page = params[:number_of_items_per_page].presence || 25
+    @<%= plural_table_name %> = <%= orm_class.all(class_name) %>.paginate(page: params[:page], per_page: per_page)
+  end
+
+  def show
+  end
+
+  def new
+    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>
+    set_form_variables
+  end
+
+  def edit
+    set_form_variables
+  end
+
+  def create
+    @<%= singular_table_name %> = <%= orm_class.build(class_name, "#{singular_table_name}_params") %>
+
+    if @<%= orm_instance.save %>
+      redirect_to <%= index_helper %>_path, notice: "<%= human_name %> was successfully created."
+    else
+      set_form_variables
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  def update
+    if @<%= orm_instance.update("#{singular_table_name}_params") %>
+      redirect_to <%= index_helper %>_path, notice: "<%= human_name %> was successfully updated.", status: :see_other
+    else
+      set_form_variables
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @<%= orm_instance.destroy %>
+    redirect_to <%= index_helper %>_path, notice: "<%= human_name %> was successfully destroyed."
+  end
+
+  # Optional hooks for setting variables for forms or index
+  def set_form_variables
+  end
+
+  private
+
+  def set_<%= singular_table_name %>
+    @<%= singular_table_name %> = <%= orm_class.find(class_name, "params[:id]") %>
+  end
+
+  # Strong parameters
+  def <%= "#{singular_table_name}_params" %>
+    <%- strong_params_constant_name = "StrongParamsConstants::#{ singular_table_name.upcase }_PARAMS" -%>
+    <%- begin %>
+      <%- strong_params_constant = strong_params_constant_name.constantize -%>
+      params.require(:<%= singular_table_name %>).permit(<%= strong_params_constant_name %>)
+    <%- rescue -%>
+      # Missing <%= strong_params_constant_name %>
+      <%- if attributes_names.empty? -%>
+        params.fetch(:<%= singular_table_name %>, {})
+      <%- else -%>
+        params.require(:<%= singular_table_name %>).permit(<%= permitted_params %>)
+      <%- end -%>
+    <%- end -%>
+  end
+end
+<% end -%>

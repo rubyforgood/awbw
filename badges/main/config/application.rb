@@ -23,5 +23,15 @@ module Awbw
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    config.generators do |g| # scaffold generator settings
+      # g.orm :active_record             # Use ActiveRecord (default)
+      # g.template_engine :erb           # Use ERB for templates
+      g.test_framework :rspec, fixture: false  # Use RSpec, skip fixtures
+      g.jbuilder false                 # Skip Jbuilder views
+      g.helper false                   # Skip helper files
+      g.assets false                   # Skip JS/CSS assets
+      g.channel assets: false          # Skip ActionCable JS
+    end
   end
 end
