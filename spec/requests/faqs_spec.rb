@@ -34,11 +34,24 @@ RSpec.describe "/faqs", type: :request do
     sign_in super_user
   end
 
-  describe "GET /index" do
-    it "renders a successful response" do
-      Faq.create! valid_attributes
-      get faqs_url
-      expect(response).to be_successful
+
+  describe "GET /faqs" do
+    context "as a super_user" do
+
+      it "renders a successful response" do
+        Faq.create! valid_attributes
+        get faqs_url
+        expect(response).to be_successful
+      end
+    end
+
+    context "as a non-super_user" do
+      before { sign_in normal_user }
+
+      it "redirects to collapsible_faqs_path" do
+        get faqs_path
+        expect(response).to redirect_to(collapsible_faqs_path)
+      end
     end
   end
 
