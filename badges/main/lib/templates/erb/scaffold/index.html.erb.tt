@@ -36,4 +36,8 @@
       <%% end %>
     </tbody>
   </table>
+
+  <div class="text-center">
+    <%<%= will_paginate @<%= plural_table_name %>, :previous_label => '<<', :next_label => '>>', :inner_window => 2 %>
+  </div>
 </div>

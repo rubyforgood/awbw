@@ -56,18 +56,9 @@ class <%= controller_class_name %>Controller < ApplicationController
 
   # Strong parameters
   def <%= "#{singular_table_name}_params" %>
-    <%- strong_params_constant_name = "StrongParamsConstants::#{ singular_table_name.upcase }_PARAMS" -%>
-    <%- begin %>
-      <%- strong_params_constant = strong_params_constant_name.constantize -%>
-      params.require(:<%= singular_table_name %>).permit(<%= strong_params_constant_name %>)
-    <%- rescue -%>
-      # Missing <%= strong_params_constant_name %>
-      <%- if attributes_names.empty? -%>
-        params.fetch(:<%= singular_table_name %>, {})
-      <%- else -%>
-        params.require(:<%= singular_table_name %>).permit(<%= permitted_params %>)
-      <%- end -%>
-    <%- end -%>
+    params.require(:<%= singular_table_name %>).permit(
+      <%= attributes.map { |a| ":#{a.name}" }.join(", ") %>
+    )
   end
 end
 <% end -%>

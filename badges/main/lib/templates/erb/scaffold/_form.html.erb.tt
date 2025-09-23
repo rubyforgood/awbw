@@ -11,6 +11,9 @@
   </div>
 
   <div class="form-actions mt-3">
+    <% if @<%= singular_table_name %>.persisted? && current_user.super_user? %>
+      <%%= link_to "Delete", @<%= singular_table_name %>, method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-outline-danger" %>
+    <% end %>
     <%%= link_to "Cancel", <%= plural_table_name %>_path, class: "btn btn-outline-secondary" %>
     <%%= f.button :submit, class: "btn btn-outline-primary ms-2" %>
   </div>
