@@ -175,7 +175,7 @@ class Workshop < ApplicationRecord
           CASE
             WHEN year IS NOT NULL AND month IS NOT NULL THEN
               STR_TO_DATE(CONCAT(year,'-',month,'-01'), '%Y-%m-%d')
-            ELSE created_at
+            ELSE workshops.created_at
           END DESC")
       )
     elsif params[:sort] == 'led'
