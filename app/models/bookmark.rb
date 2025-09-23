@@ -32,8 +32,9 @@ class Bookmark < ApplicationRecord
     if params[:title].present?
       bookmarks = bookmarks
                     .where(bookmarkable_type: "Workshop")
-                    .joins("INNER JOIN workshops ON workshops.id = bookmarks.bookmarkable_id")
-                    .where("workshops.title LIKE ?", "%#{params[:title]}%")
+                    .joins("INNER JOIN workshops AS title_workshops ON title_workshops.id = bookmarks.bookmarkable_id")
+                    .where("title_workshops.title LIKE ?", "%#{params[:title]}%")
+                    .select("bookmarks.*, title_workshops.*") # ensure bookmark columns are present
     end
     if params[:windows_types].present?
       windows_type_ids = params[:windows_types].values.map(&:to_i)
@@ -48,18 +49,28 @@ class Bookmark < ApplicationRecord
   def self.filter_by_query(query = nil)
     return all if query.blank?
 
+    # Only apply search to Workshop bookmarks
+    bookmarks = joins(
+      "INNER JOIN workshops AS search_workshops ON search_workshops.id = bookmarks.bookmarkable_id"
+    ).where(bookmarks: { bookmarkable_type: "Workshop" })
+
     # Whitelisted, quoted column names to use in search
-    cols = %w[title full_name objective materials introduction demonstration opening_circle
-              warm_up creation closing notes tips misc1 misc2].
-      map { |c| connection.quote_column_name(c) }.join(", ")
+    cols = %w[
+    title full_name objective materials introduction demonstration opening_circle
+    warm_up creation closing notes tips misc1 misc2
+  ].map { |c| "search_workshops.#{connection.quote_column_name(c)}" }.join(", ")
+
     # Prepare query for BOOLEAN MODE (prefix matching)
     terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
-    # Convert to Arel for safety
+
+    # MATCH...AGAINST expression using the alias
     match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
 
-    joins(:bookmarkable).select(
-      sanitize_sql_array(["workshops.*, #{match_expr.to_sql} AS all_score", terms])
-    ).where(match_expr, terms)
+    bookmarks
+      .select(
+        sanitize_sql_array(["bookmarks.*, search_workshops.*, #{match_expr} AS all_score", terms])
+      )
+      .where(match_expr, terms)
   end
 
   def self.search(params, user)
