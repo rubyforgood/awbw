@@ -6,7 +6,7 @@ class Bookmark < ApplicationRecord
   def self.filter_by_windows_type_ids(windows_type_ids)
     bookmarks = self.all
     if windows_type_ids
-      bookmarks = Bookmark
+      bookmarks = bookmarks
                     .where(bookmarkable_type: "Workshop")
                     .joins("INNER JOIN workshops as windows_type_workshops ON windows_type_workshops.id = bookmarks.bookmarkable_id")
                     .where("windows_type_workshops.windows_type_id IN (?)", windows_type_ids)
