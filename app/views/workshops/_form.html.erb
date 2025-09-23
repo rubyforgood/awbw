@@ -261,8 +261,10 @@
 
 
     <div class="btn-container">
-      <%= link_to 'Cancel', root_path, class: 'btn btn-primary btn-blue' %>
-      <%= f.submit 'Submit', class: 'btn btn-primary btn-blue' %>
+      <%= link_to "Cancel",
+                  (action_name == "share_idea" ? root_path : workshops_path),
+                  class: "btn btn-secondary" %>
+      <%= f.submit 'Submit', class: 'btn btn-primary btn-outline-primary' %>
     </div>
   <% end %>
   </div>
