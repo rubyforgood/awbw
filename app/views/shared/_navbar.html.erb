@@ -1,0 +1,24 @@
+<%= display_banner %>
+<nav class="navbar navbar-light header container">
+  <i class="fa fa-bars pull-left navbar-toggler hidden-md hidden-lg" data-toggle="collapse" datar-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation"></i>
+
+  <%= link_to root_path, class: "navbar-brand visible-xs-inline" do %>
+    <%= image_tag("awbw-mobile.png", class:"img-responsive") %>
+  <% end %>
+
+  <%= link_to root_path, class: 'navbar-brand hidden-xs' do %>
+    <%= image_tag("logo.png") %>
+    <%= image_tag("logo-color.png", class:"colored-logo") %>
+  <% end %>
+
+  <% if user_signed_in? %>
+    <%= render "shared/navbar_text" %>
+
+    <div class="navbar-text pull-right container-fluid">
+      <%= render "shared/navbar_user" %>
+    </div>
+    <div class="navbar-text navbar-link pull-right">
+      <%= render "shared/navbar_new_button" %>
+    </div>
+  <% end %>
+</nav>

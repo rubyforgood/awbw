@@ -1,0 +1,26 @@
+<div class="dropdown">
+  <div class="dropdown-compoments pull-right">
+    <a class="dropdown-toggle" role="button" data-toggle="dropdown">
+      <div class="col-xs-2 avatar">
+        <%= image_tag current_user.avatar.url(:thumb), class: 'img-circle avatar' %>
+      </div>
+      <div class="col-xs-1 carot hidden-xs">
+        <i class="fa fa-angle-down"></i>
+      </div>
+    </a>
+    <ul class="dropdown-menu">
+      <li>
+        <%= link_to "My profile", user_path(current_user) %>
+      </li>
+      <li>
+        <%= link_to("My bookmarks", bookmarks_path) %>
+      </li>
+      <li>
+        <%= link_to("Change password", change_password_path) %>
+      </li>
+      <li>
+        <%= link_to("Logout", destroy_user_session_path, :method => :delete) %>
+      </li>
+    </ul>
+  </div>
+</div>
