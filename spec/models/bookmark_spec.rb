@@ -17,26 +17,6 @@ RSpec.describe Bookmark, type: :model do
     end
   end
 
-  describe '.sort_by_windows_type' do
-    let(:user) { create(:user) }
-    let!(:windows_type1) { create(:windows_type, id: 1, name: "Type 1") }
-    let!(:windows_type3) { create(:windows_type, id: 3, name: "Type 3") }
-    let!(:workshop1) { create(:workshop, title: "Alpha", windows_type: windows_type1) }
-    let!(:workshop2) { create(:workshop, title: "Bravo", windows_type: windows_type3) }
-    let!(:bookmark1) { create(:bookmark, user: user, bookmarkable: workshop1) }
-    let!(:bookmark2) { create(:bookmark, user: user, bookmarkable: workshop2) }
-
-    it 'orders bookmarks by windows_type_id ascending for "1"' do
-      result = Bookmark.sort_by_windows_type(Bookmark.all, "1")
-      expect(result.first.id).to eq(bookmark1.id)
-    end
-
-    it 'orders bookmarks by windows_type_id descending for "3"' do
-      result = Bookmark.sort_by_windows_type(Bookmark.all, "3")
-      expect(result.first.id).to eq(bookmark2.id)
-    end
-  end
-
   describe '.filter_by_windows_type_ids' do
     let(:user) { create(:user) }
     let!(:windows_type1) { create(:windows_type, id: 1, name: "Type 1") }
@@ -129,12 +109,6 @@ RSpec.describe Bookmark, type: :model do
       params = { sort: "created" }
       result = Bookmark.search(params, user)
       expect(result.first).to eq(bookmark2)
-    end
-
-    it 'sorts by windows_type when sort=1 or 3' do
-      params = { sort: "3" }
-      result = Bookmark.search(params, user)
-      expect(result.first.bookmarkable).to eq(workshop2)
     end
   end
 end

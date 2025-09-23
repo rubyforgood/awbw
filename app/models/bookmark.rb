@@ -3,17 +3,6 @@ class Bookmark < ApplicationRecord
   belongs_to :bookmarkable, polymorphic: true
   has_many :bookmark_annotations, dependent: :destroy
 
-  def self.sort_by_windows_type(bookmarks, windows_type_id)
-    if windows_type_id == "3"
-      workshops = Workshop.where(id: bookmarks.pluck{|b| b.bookmarkable_id}).order(windows_type_id: :desc)
-    elsif windows_type_id == "1"
-      workshops = Workshop.where(id: bookmarks.pluck{|b| b.bookmarkable_id}).order(windows_type_id: :asc)
-    end
-
-    workshops_ids = workshops.pluck{|w| w.id}
-    bookmarks = bookmarks.where(bookmarkable_id: workshops_ids).order(:windows_type_id)
-  end
-
   def self.filter_by_windows_type_ids(windows_type_ids)
     bookmarks = self.all
     if windows_type_ids
@@ -92,10 +81,6 @@ class Bookmark < ApplicationRecord
 
     if params[:sort] == "created"
       bookmarks = bookmarks.order(created_at: :desc)
-    end
-
-    if params[:sort] == "3" || params[:sort] == "1"
-      bookmarks = sort_by_windows_type(bookmarks, params[:sort])
     end
 
     bookmarks
