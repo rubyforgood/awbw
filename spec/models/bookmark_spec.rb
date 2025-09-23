@@ -53,6 +53,27 @@ RSpec.describe Bookmark, type: :model do
     let!(:bookmark1) { create(:bookmark, user: user, bookmarkable: workshop1) }
     let!(:bookmark2) { create(:bookmark, user: user, bookmarkable: workshop2) }
 
+    it 'applies title correctly' do
+      params = { title: "Alpha" }
+      result = Bookmark.filter_by_params(params)
+      expect(result).to include(bookmark1)
+      expect(result).not_to include(bookmark2)
+    end
+
+    it 'applies windows_type filter' do
+      params = { windows_types: { "0" => "1" } }
+      result = Bookmark.filter_by_params(params)
+      expect(result).to include(bookmark1)
+      expect(result).not_to include(bookmark2)
+    end
+
+    it 'applies query filter correctly' do
+      params = { query: "Alice" }
+      result = Bookmark.filter_by_params(params)
+      expect(result).to include(bookmark1)
+      expect(result).not_to include(bookmark2)
+    end
+
     it 'applies title filter, windows_type filter, and query filter correctly' do
       params = {
         title: "Alpha",
