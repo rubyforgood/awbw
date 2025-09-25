@@ -27,7 +27,7 @@
         </small>
       </div>
 
-      <div class="col-md-4">
+      <div class="col-md-3">
         <div class="workshop-description">
           <span title="<%= workshop.formatted_objective(length: 600) %>">
             <%= truncate(workshop.formatted_objective(length: 215), length: 215, omission: '... ', separator: ' ') %>
@@ -40,6 +40,15 @@
           <span title="<%= workshop.categories.map(&:name).to_sentence %>">
             <%= "Categories: " if workshop.categories.any? %><%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
           </span>
+        </div>
+      </div>
+
+      <div class="col-md-1 pull-right">
+        <div class="bookmark-action">
+          <%= link_to "Remove", bookmark_path(bookmark, from: "index"),
+                      method: :delete,
+                      data: { confirm: "Are you sure you want to remove this bookmark?" },
+                      class: "btn btn-outline-primary" %>
         </div>
       </div>
     </div>

@@ -54,42 +54,6 @@ class Bookmark < ApplicationRecord
       )
   end
 
-  def self.filter_by_params(params={})
-    bookmarks = self.all
-    # filter by
-    if params[:title].present?
-      bookmarks = bookmarks
-                    .where(bookmarkable_type: "Workshop")
-                    .joins("INNER JOIN workshops ON workshops.id = bookmarks.bookmarkable_id")
-                    .where("workshops.title LIKE ?", "%#{params[:title]}%")
-    end
-    if params[:windows_types].present?
-      windows_type_ids = params[:windows_types].values.map(&:to_i)
-      bookmarks = filter_by_windows_type_ids(windows_type_ids)
-    end
-    if params[:query].present?
-      bookmarks = bookmarks.filter_by_query(params[:query])
-    end
-    bookmarks
-  end
-
-  def self.filter_by_query(query = nil)
-    return all if query.blank?
-
-    # Whitelisted, quoted column names to use in search
-    cols = %w[title full_name objective materials introduction demonstration opening_circle
-              warm_up creation closing notes tips misc1 misc2].
-      map { |c| connection.quote_column_name(c) }.join(", ")
-    # Prepare query for BOOLEAN MODE (prefix matching)
-    terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
-    # Convert to Arel for safety
-    match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
-
-    joins(:bookmarkable).select(
-      sanitize_sql_array(["workshops.*, #{match_expr.to_sql} AS all_score", terms])
-    ).where(match_expr, terms)
-  end
-
   def self.search(params, user)
     bookmarks = user.bookmarks
     bookmarks = bookmarks.filter_by_params(params)

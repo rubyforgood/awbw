@@ -30,7 +30,11 @@ class BookmarksController < ApplicationController
     if @bookmark
       @bookmark.destroy
       flash[:alert] = 'Bookmark has been deleted.'
-      redirect_to workshop_path(@bookmark.bookmarkable)
+      if params[:from] == "index"
+        redirect_to bookmarks_path
+      else
+        redirect_to workshop_path(@bookmark.bookmarkable)
+      end
     else
       flash[:error] = 'Unable to find that bookmark.'
     end
