@@ -1,7 +1,13 @@
 <%= simple_form_for(@workshop_log || WorkshopLog.new) do |f| %>
+  <%= f.input :user_id, as: :hidden, input_html: { value: current_user.id } %>
+  <%= f.input :windows_type_id, as: :hidden, input_html: { value: @windows_type_id } %>
+
   <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12 mb-3">
       <%= f.error_notification %>
+      <span class="text-danger">
+        <%= f.object.errors.full_messages.to_sentence %>
+      </span>
     </div>
   </div>
 
@@ -11,11 +17,6 @@
       <% if params[:action] != 'new' %>
         <h2 class="normal"><%= @workshop_log.title %></h2>
       <% end %>
-
-      <%= f.input :user, as: :hidden, input_html: {
-        value: params[:action] == 'new' ? current_user.name : @workshop_log.user.name,
-        id: 'facilitator', readonly: true
-      } %>
 
       <!-- Workshop Select -->
       <%= f.input :workshop_id,
@@ -28,9 +29,8 @@
                   required: true,
                   input_html: { class: "form-control form-control-custom" } %>
       <%= f.hidden_field :workshop_name, id: "workshop_title" %>
-      <%= f.hidden_field :owner_id, value: @workshop&.id || f.object.workshop_id %>
-      <%= hidden_field_tag :workshop_id, (@workshop&.id || f.object.workshop_id) %>
-      <%= f.hidden_field :windows_type_id, value: 1 %>
+      <%= f.input :owner_type, as: :hidden, input_html: { value: "Workshop" } %>
+      <%= f.input :owner_id, as: :hidden, input_html: { value:  @workshop&.id || f.object.workshop_id } %>
 
       <!-- Agency Select -->
       <div class="form-group">
@@ -54,6 +54,7 @@
                     required: true,
                     as: :string,
                     input_html: {
+                      required: true,
                       type: 'date',
                       class: 'form-control',
                       value: @workshop_log.date&.strftime('%Y-%m-%d')
@@ -74,6 +75,7 @@
   <!-- Participants Section -->
   <div class="row">
     <div class="col-md-9">
+      <hr>
       <div class="label-plus-comment">
         <label>Participants</label>
       </div>
@@ -153,19 +155,28 @@
   <!-- Dynamic Form Fields -->
   <div class="row">
     <div class="col-md-9">
-      <% workshop = @workshop || f.object.workshop %>
-      <% fields = @workshop_log&.owner.nil? ? @workshop_log.log_fields : workshop&.workshop_log_fields %>
-      <% fields.each do |field| %>
-        <% next if [5,6,7,8,9,10,11,25,26,27,28,44,45,46,47,48,49,50,83,84,20,21,22,113,115,116,117,118,119,120].include?(field.id) %>
-        <%= render 'shared/form_field', field: field, report: @workshop_log %>
+      <hr>
+      <% @report_field_answers.each do |rffa| %>
+        <%= f.simple_fields_for :report_form_field_answers, rffa do |rffa_form| %>
+          <% field = rffa_form.object.form_field %>
+          <% skip_ids = [5,6,7,8,9,10,11,25,26,27,28,44,45,46,47,48,49,50,83,84,20,21,22,113,115,116,117,118,119,120,
+                         38, 39, 40,41,42,123,43,124,125,126,127,128, 101] %>
+          <% next if skip_ids.include?(field.id) %>
+          <%= render 'report_form_field_answer_fields', field: field, report_id: f.object.id || @workshop_log&.id, f: rffa_form %>
+        <% end %>
       <% end %>
     </div>
   </div>
 
+
+
   <!-- Quotes -->
   <div class="row form-group">
     <div class="col-md-8 col-lg-8">
-      <h3>Quotes from participants</h3>
+      <hr>
+      <div class="label-plus-comment">
+        <label>Quotes from participants</label>
+      </div>
       What did your participants share about their experience? Please write quotes in first person. For confidentiality, do not disclose names.
       <div id="quotes">
         <%= f.simple_fields_for :quotable_item_quotes do |qiq_form| %>
@@ -184,7 +195,10 @@
 
   <div class="row">
     <div class="col-md-8 col-lg-8">
-      <h3>Upload Images / Media Releases</h3>
+      <hr>
+      <div class="label-plus-comment">
+        <label>Upload Images / Media Releases</label>
+      </div>
       <p>
         Click <a href="https://bit.ly/AWBWartmedia" target="_blank">here to download</a> the Art/Media Release in English and Spanish.
       </p>

@@ -1,0 +1,31 @@
+<div class="nested-fields row mb-2">
+  <!-- Hidden associations -->
+  <%= f.input :form_field_id, as: :hidden, input_html: { value: field.id } %>
+  <%= f.input :report_id, as: :hidden, input_html: { value: report_id } %>
+
+  <div class="col-md-10">
+    <% if f.object.form_field&.answer_options&.any? %>
+      <!-- Multiple choice -->
+      <%= f.input :answer_option_id,
+                  collection: f.object.form_field.answer_options,
+                  label_method: :name,
+                  value_method: :id,
+                  include_blank: "Select an option",
+                  label: f.object.form_field&.question,
+                  required: f.object.form_field&.is_required?,
+                  hint: f.object.form_field.instructional_hint,
+                  input_html: { class: "form-control mb-2" } %>
+    <% else %>
+      <!-- Freeform text with 3 rows -->
+      <%= f.input :answer,
+                  label: f.object.form_field&.question,
+                  placeholder: "Enter response...",
+                  required: f.object.form_field&.is_required?,
+                  hint: f.object.form_field.instructional_hint,
+                  input_html: { class: "form-control mb-2", rows: 3 } %>
+    <% end %>
+    <% if f.object.errors[:answer].any? %>
+      <div class="text-danger"><%= f.object.errors[:answer].join(', ') %></div>
+    <% end %>
+  </div>
+</div>

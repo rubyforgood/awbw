@@ -33,6 +33,7 @@ class FormField < ApplicationRecord
   accepts_nested_attributes_for :form_field_answer_options
 
   default_scope { order(ordering: :desc) }
+  scope :active, -> { where(status: "active") }
 
   # Methods
   def name

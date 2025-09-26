@@ -63,7 +63,7 @@
       <h2>Form Answers</h2>
       <ul>
         <% @answers.each do |answer| %>
-          <li><strong><%= answer.label %>:</strong> <%= answer.value %></li>
+          <li><strong><%= answer.name %>:</strong> <%= answer.answer %></li>
         <% end %>
       </ul>
     </div>

@@ -6,11 +6,17 @@ class WorkshopLog < Report
   has_many :media_files, dependent: :destroy
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
   has_many :quotes, through: :quotable_item_quotes
+  has_many :report_form_field_answers,
+           foreign_key: :report_id, inverse_of: :report,
+           dependent: :destroy
 
+  accepts_nested_attributes_for :media_files, allow_destroy: true
   accepts_nested_attributes_for :quotable_item_quotes,
                                 allow_destroy: true,
                                 reject_if: ->(attributes) { false } # allow empty
-  accepts_nested_attributes_for :media_files, allow_destroy: true
+  accepts_nested_attributes_for :report_form_field_answers,
+                                allow_destroy: true,
+                                reject_if: ->(attributes) { false } # allow empty
 
   # Callbacks
   after_save :update_workshop_log_count
@@ -18,6 +24,7 @@ class WorkshopLog < Report
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
             :children_first_time, :teens_first_time, :adults_first_time,
             numericality: { greater_than_or_equal_to: 0, only_integer: true }
+  validates :date, presence: true
 
   scope :user_id, ->(user_id) { where(user_id: user_id.to_i) if user_id.present? }
   scope :month_and_year, ->(month_and_year) {

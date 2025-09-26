@@ -9,6 +9,7 @@ class WorkshopLogsController < ApplicationController
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: 25)
     set_index_variables
   end
+
   def new
     @workshop_log = WorkshopLog.new
     set_form_variables
@@ -41,19 +42,9 @@ class WorkshopLogsController < ApplicationController
   def create
     set_default_values
     workshop_id = params[:workshop_id].present? ? params[:workshop_id] : params[:workshop_log][:workshop_id]
-    @workshop = Workshop.where(id: workshop_id).last
-
-    if @workshop
-      log_params = workshop_log_params.merge(owner_id: workshop_id)
-    else
-
-      log_params = workshop_log_params
-    end
-
+    workshop = Workshop.where(id: workshop_id).last
+    log_params = workshop ? workshop_log_params.merge(owner_id: workshop_id) : workshop_log_params
     @workshop_log = WorkshopLog.new( log_params )
-    @workshop_log.quotes.build( quotes_params )
-    @workshop_log.report_form_field_answers.build( log_fields )
-    @workshop_log.media_files.build( files_params )
 
     if @workshop_log.save
       flash[:alert] = 'Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile.'
@@ -130,6 +121,15 @@ class WorkshopLogsController < ApplicationController
     # @sectors = Sector.published.map{ |si| [ si.id, si.name ] }
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
 
+    @windows_type_id = params[:windows_type_id].presence || @workshop.windows_type_id || 3
+    form = FormBuilder.where(windows_type_id: @windows_type_id)
+                      .first&.forms.first # because there's only one form per form_builder
+    if form
+      @report_field_answers = form.form_fields.active.order(:ordering).map do |field|
+        @workshop_log.report_form_field_answers.find_or_initialize_by(form_field: field)
+      end
+    end
+
     @title = params[:windows_type_id] == '3' ? :log_title : :title
     @agency_title = params[:windows_type_id] == '3' ? :log_title : :name
 
@@ -167,39 +167,20 @@ class WorkshopLogsController < ApplicationController
     @workshop = Workshop.find_by(id: params[:workshop_id])
   end
 
-  def log_fields
-    log_fields_params.to_unsafe_h.map do |k, v|
-      { :form_field_id => k, :answer => v, :report_id => @workshop_log.id }
-    end
-  end
-
-  def log_fields_params
-    params.fetch(:log_fields, {}).permit!
-  end
-
-  def ws_params
-    params.require(:workshop).permit( sectorable_items: [ :sector_id ] )
-  end
+  # def ws_params # TODO - figure out why this was needed in 2016
+  #   params.require(:workshop).permit( sectorable_items: [ :sector_id ] )
+  # end
 
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :owner_id, :project_id, :date,
+      :adults_ongoing, :adults_first_time, :owner_id,:owner_type, :user_id, :project_id, :date,
       :workshop_name, :workshop_id, :windows_type_id, :other_description, #:user,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
         quote_attributes: [:id, :quote, :age, :workshop_id, :_destroy]],
       media_files_attributes: [:id, :file, :_destroy],
-      report_form_field_answers: [:form_field_id, :answer_option_id, :answer]).
-        merge( :user_id => current_user.id, :owner_type => "Workshop" )
-  end
-
-  def quotes_params
-    return [] if params[:quotes].nil?
-    params[:quotes].permit!.map{|k, v| v}
-  end
-  def files_params
-    return [] if params[:files].nil?
-    params[:files].permit!.map{ |k, v| {:file => v} }
+      report_form_field_answers_attributes: [:id, :form_field_id, :answer_option_id,
+                                             :answer, :report_id, :_destroy])
   end
 end
