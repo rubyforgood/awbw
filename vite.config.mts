@@ -4,10 +4,10 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     RailsPlugin({
       envVars: { RAILS_ENV: "development" }
     }),
-    tailwindcss(),
   ],
   server: {
     allowedHosts: ["localhost", "vite"],
