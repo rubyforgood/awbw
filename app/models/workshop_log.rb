@@ -3,10 +3,46 @@ class WorkshopLog < Report
   belongs_to :user
   belongs_to :project
 
-  has_many :media_files
+  has_many :media_files, dependent: :destroy
+  has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
+  has_many :quotes, through: :quotable_item_quotes
+
+  accepts_nested_attributes_for :quotable_item_quotes,
+                                allow_destroy: true,
+                                reject_if: ->(attributes) { false } # allow empty
+  accepts_nested_attributes_for :media_files, allow_destroy: true
 
   # Callbacks
   after_save :update_workshop_log_count
+
+  validates :children_ongoing, :teens_ongoing, :adults_ongoing,
+            :children_first_time, :teens_first_time, :adults_first_time,
+            numericality: { greater_than_or_equal_to: 0, only_integer: true }
+
+  scope :user_id, ->(user_id) { where(user_id: user_id.to_i) if user_id.present? }
+  scope :month_and_year, ->(month_and_year) {
+    if month_and_year.present?
+      year, month = month_and_year.split("-").map(&:to_i)
+      where("EXTRACT(YEAR FROM COALESCE(reports.date, reports.created_at)) = ? AND
+               EXTRACT(MONTH FROM COALESCE(reports.date, reports.created_at)) = ?", year, month)
+    end
+  }
+  scope :year, ->(year) {
+    if year.present?
+      where("EXTRACT(YEAR FROM COALESCE(reports.date, reports.created_at)) = ?", year.to_i)
+    end
+  }
+  scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
+  scope :ordered_by_date, -> { order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")) }
+
+  def self.search(params)
+    logs = all
+    logs = logs.user_id(params[:user_id])
+    logs = logs.month_and_year(params[:month_and_year])
+    logs = logs.year(params[:year])
+    logs = logs.workshop_id(params[:workshop_id])
+    logs.ordered_by_date
+  end
 
   def name
     return "" unless user
@@ -89,6 +125,10 @@ class WorkshopLog < Report
 
   def date_label
    date ? date.strftime('%m/%d/%Y') : created_at.strftime('%m/%d/%Y')
+  end
+
+  def workshop_quotes
+    workshop&.quotes || Quote.none
   end
 
   private

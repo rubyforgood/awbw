@@ -1,0 +1,18 @@
+<div class="nested-fields mb-3">
+  <div class="file-list__item">
+    <div class="file-list__media">
+      <%= f.input :file, as: :file, label: "Upload File" %>
+    </div>
+
+    <% if f.object.file.present? %>
+      <div class="file-list__meta-info">
+        <div class="file-list__file-name"><%= f.object.file_file_name %></div>
+        <div class="file-list__other-info"><%= f.object.updated_at.strftime('%B %d, %Y %l:%M %p') %></div>
+      </div>
+    <% end %>
+
+    <div>
+      <%= link_to_remove_association "Remove", f %>
+    </div>
+  </div>
+</div>
