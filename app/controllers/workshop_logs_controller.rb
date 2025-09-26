@@ -25,7 +25,7 @@ class WorkshopLogsController < ApplicationController
     @workshop_log = WorkshopLog.find params[:id]
 
     ActiveRecord::Base.transaction do
-      @workshop_log.update_attributes( wsl_params )
+      @workshop_log.update(workshop_log_params)
 
       @saved = @workshop_log.delete_and_update_all(quotes_params, log_fields)
     end
