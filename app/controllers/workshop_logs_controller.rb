@@ -41,10 +41,7 @@ class WorkshopLogsController < ApplicationController
 
   def create
     set_default_values
-    workshop_id = params[:workshop_id].present? ? params[:workshop_id] : params[:workshop_log][:workshop_id]
-    workshop = Workshop.where(id: workshop_id).last
-    log_params = workshop ? workshop_log_params.merge(owner_id: workshop_id) : workshop_log_params
-    @workshop_log = WorkshopLog.new( log_params )
+    @workshop_log = WorkshopLog.new(workshop_log_params)
 
     if @workshop_log.save
       flash[:alert] = 'Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile.'

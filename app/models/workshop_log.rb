@@ -19,6 +19,7 @@ class WorkshopLog < Report
                                 reject_if: ->(attributes) { false } # allow empty
 
   # Callbacks
+  after_save :update_owner_and_date
   after_save :update_workshop_log_count
 
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
@@ -144,6 +145,13 @@ class WorkshopLog < Report
     return unless owner
     new_led_count = owner.workshop_logs.count
     owner.update(led_count: new_led_count)
+  end
+
+  def update_owner_and_date
+    changes = {}
+    changes[:date] = created_at if date.blank?
+    changes[:owner_id] = workshop_id if owner_id.blank?
+    update_columns(changes) if changes.any?
   end
 
   protected
