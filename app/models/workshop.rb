@@ -156,7 +156,7 @@ class Workshop < ApplicationRecord
     match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
 
     select(
-      sanitize_sql_array(["workshops.*, #{match_expr.to_sql} AS all_score", terms])
+      sanitize_sql_array(["workshops.*, #{match_expr} AS all_score", terms])
     ).where(match_expr, terms)
   end
 
