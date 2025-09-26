@@ -1,13 +1,11 @@
 <% case field.html_input_type %>
 <% when :label %>
-
   <div class="label-plus-comment">
     <label><%= field.question %> <%= "*" if field.is_required? %></label>
     <div class="custom-smaller"> <%= field.instructional_hint %> </div>
   </div>
 
 <% when :group_header %>
-
   <div class="label-plus-comment">
     <label><%= field.question %> </label>
     <div class="custom-smaller"><%= field.instructional_hint %></div>
@@ -17,37 +15,33 @@
   <div class="row">
     <div class="col-md-8 col-lg-12">
       <div class="ethnicity-wrapper clearfix">
-	<% field.childs.each do |f| %>
+				<% field.childs.each do |f| %>
+					<div class="form-group text-form-group">
+						<div class="label-plus-comment">
+							<label><%= f.question %></label>
+							<div class="custom-smaller">
+								<%= f.instructional_hint %>
+							</div>
+						</div>
 
-	  <div class="form-group text-form-group">
-	    <div class="label-plus-comment">
-	      <label><%= f.question %></label>
-	      <div class="custom-smaller">
-		<%= f.instructional_hint %>
-	      </div>
-	    </div>
+						<input type="text"
+						 name="log_fields[<%= f.id %>]" class="form-control"
+						 id="<%= f.question.downcase.tr(" /", "_") %>"
+						 <%= 'required' if f.is_required %>
+						 oninvalid="scroll_here(this);"
+						 value="<%= f.answer( report ) %>"
+						 onkeyup="setNumberParticipantsLeft(this);"
+						 onmouseover="showToolTip(this);"
+						 data-toggle="tooltip" data-placement="top"/>
 
-	    <input type="text"
-		   name="log_fields[<%= f.id %>]" class="form-control"
-		   id="<%= f.question.downcase.tr(" /", "_") %>"
-		   <%= 'required' if f.is_required %>
-		   oninvalid="scroll_here(this);"
-		   value="<%= f.answer( report ) %>"
-		   onkeyup="setNumberParticipantsLeft(this);"
-		   onmouseover="showToolTip(this);"
-		   data-toggle="tooltip" data-placement="top"/>
-
-	  </div>
-
-	<% end %>
-     </div>
-    </div>
-  </div>
+	  			</div>
+				<% end %>
+			</div>
+		</div>
+	</div>
 
 <% when :text %>
-
   <div class="form-group <%= field.html_input_type %>-form-group">
-
     <div class="label-plus-comment">
       <label><%= field.question %> <%= "*" if field.is_required? %></label>
       <div class="custom-smaller"> <%= field.instructional_hint %> </div>
@@ -73,41 +67,39 @@
   </div>
 
 <% when :checkbox, :radio  %>
-
   <div class="form-group <%= field.html_input_type %>-form-group <%='checkbox-group-custom' if field.html_id == 'gender_identity__all_participants_'%> " id="<%= field.html_id %>">
-
     <div class="label-plus-comment">
       <label>
-	<% if field.html_input_type == :radio  %>
-	  <%= @count %>.
-	  <% @count +=1 %>
-	<% end %>
-
-	<%= field.question %> <%= "*" if field.is_required? %></label>
+				<% if field.html_input_type == :radio  %>
+					<%= @count %>.
+					<% @count +=1 %>
+				<% end %>
+				<%= field.question %> <%= "*" if field.is_required? %>
+			</label>
       <div class="custom-smaller"> <%= field.instructional_hint %> </div>
     </div>
 
     <% field.answer_options.each do |answer_option| %>
       <% if field.html_input_type == :radio %>
-	<div class="radio-inline custom-appearance-field">
-      <% else  %>
-	<div class="custom-checkbox custom-appearance-field">
+				<% css_class = "radio-inline" %>
+      <% else %>
+        <% css_class = "custom-checkbox" %>
       <% end %>
 
-      <input type="<%= field.html_input_type %>"
-	     id="field-<%= field.id %>-<%= answer_option.id %>"
-	     name="log_fields[<%= field.id %>]"
-	     value="<%= answer_option.name %>"
-	     <%= "checked=true" if field.checked( report, answer_option.name ) %> />
+			<div class="<%= css_class %> custom-appearance-field">
+				<input type="<%= field.html_input_type %>"
+				 id="field-<%= field.id %>-<%= answer_option.id %>"
+				 name="log_fields[<%= field.id %>]"
+				 value="<%= answer_option.name %>"
+				 <%= "checked=true" if field.checked( report, answer_option.name ) %> />
 
-      <label for="field-<%= field.id %>-<%= answer_option.id %>">
-	<span class="custom-<%= field.html_input_type %>-icon"></span>
-	<span><%= answer_option.name %></span>
-      </label>
-
+      	<label for="field-<%= field.id %>-<%= answer_option.id %>">
+					<span class="custom-<%= field.html_input_type %>-icon"></span>
+					<span><%= answer_option.name %></span>
+     	  </label>
       </div>
     <% end %>
-      <p id="<%= field.html_id %>_error" class="hide">Please select at least one option</p>
-    </div>
-    <%= "<br/>".html_safe if field.html_id == 'children_s_ages' && field.form.name.include?('Family Workshop Log') %>
+		<p id="<%= field.html_id %>_error" class="hide">Please select at least one option</p>
+	</div>
+	<%= "<br/>".html_safe if field.html_id == 'children_s_ages' && field.form.name.include?('Family Workshop Log') %>
 <% end %>
