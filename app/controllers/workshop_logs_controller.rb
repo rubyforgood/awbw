@@ -21,12 +21,12 @@ class WorkshopLogsController < ApplicationController
 
     ActiveRecord::Base.transaction do
       @workshop_log.update(workshop_log_params)
-
-      @saved = @workshop_log.delete_and_update_all(quotes_params, log_fields)
+      @saved = @workshop_log.delete_and_update_all(params[:quotes_attributes], params[:report_form_field_answers_attributes])
     end
 
     if @saved
-      files_params.each do |file|
+      # TODO - why are we iterating over files params after the fact?
+      params[:files].each do |file|
         file = MediaFile.new(file: file)
         file.update(report_id: @workshop_log.id, owner_type: @workshop_log.owner_type, owner_id: @workshop_log.owner_id)
         file.save
