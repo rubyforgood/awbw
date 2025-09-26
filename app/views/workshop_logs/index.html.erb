@@ -41,7 +41,7 @@
     <tbody>
     <% @workshop_logs.each do |log| %>
       <tr>
-        <td><%= log.date&.strftime("%b %d, %Y") %></td>
+        <td><%= link_to (log.date || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %></td>
         <td><%= log.workshop ? link_to(log.workshop.title, workshop_path(log.workshop)) : "-" %></td>
         <td><%= log.user ? link_to(log.user.name, user_path(log.user)) : "—" %></td>
 
