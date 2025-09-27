@@ -15,8 +15,8 @@
     <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
     <%= csrf_meta_tags %>
     <meta
-      content='width=device-width initial-scale=1 maximum-scale=1 user-scalable=no'
-      name='viewport'
+      content="width=device-width initial-scale=1 maximum-scale=1 user-scalable=no"
+      name="viewport"
     >
     <link
       rel="shortcut icon"
@@ -25,28 +25,24 @@
     >
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application" %>
-    <!-- If using a TypeScript entrypoint file: vite_typescript_tag
-    'application' If using a .jsx or .tsx entrypoint, add the extension:
-    vite_javascript_tag 'application.jsx' Visit the guide for more information:
-    https://vite-ruby.netlify.app/guide/rails -->
   </head>
-  <body class='<%= controller.controller_name %> <%= controller.action_name %>'>
+  <body class="<%= controller.controller_name %> <%= controller.action_name %> flex flex-col min-h-screen">
 
-    <div class='content container-fluid' id='main'>
+    <div class="flex-grow" id="main">
       <%= render "shared/tailwind/navbar" %>
       <div class="header-printable">
         <%= image_tag("awbw-print-logo.png", class: "img-responsive") %>
       </div>
 
-      <div class='row main-content'>
+      <div class="row main-content">
         <div class="col-md-12">
           <% if user_signed_in? %>
-            <div class='signed-in-user <%= main_content_classes %> mt-3 mb-3'>
+            <div class="signed-in-user <%= main_content_classes %> mt-3 mb-3">
               <%= render "shared/flash_messages" %>
               <%= yield %>
             </div>
           <% else %>
-            <div class='not-signed-in-user <%= main_content_classes %> mt-3 mb-3'>
+            <div class="not-signed-in-user <%= main_content_classes %> mt-3 mb-3">
               <%= render "shared/flash_messages" %>
               <%= yield %>
             </div>
@@ -54,17 +50,17 @@
         </div>
       </div>
     </div>
-    <footer class='container-fluid'>
-      <div class='smaller u-textCenter white contact'>
-        <ul class='row'>
+    <footer class="bg-[#063b8d] text-white py-4">
+      <div class="container mx-auto text-center">
+        <ul class="row">
           <li>
             <dt>Contact Us</dt>
             <dd><%= Footer.phone %></dd>
             <dd><%= Footer.general_questions %></dd>
           </li>
         </ul>
+      <div class="pt-4 text-2xl text-white">A Window Between Worlds ® ™</div>
       </div>
-      <div class='smaller copyright u-textCenter white'>A Window Between Worlds ® ™</div>
     </footer>
   </body>
 </html>
