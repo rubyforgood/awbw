@@ -116,3 +116,14 @@ dataset.each do |metadata_name, category_name|
     metadata.categories.find_or_create_by!(name: category_name)
   end
 end
+
+[
+  "Share a Story",
+  "Family Workshop Log",
+  "Adult Monthly Report",
+  "Adult Workshop Log",
+  "Children's Monthly Report",
+  "Children's Workshop Log"
+].each do |form_name|
+  Form.find_or_create_by!(name: form_name)
+end

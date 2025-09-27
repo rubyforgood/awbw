@@ -1,0 +1,30 @@
+<div class="nested-fields row mb-2">
+  <%= f.input :quotable_type, as: :hidden, input_html: { value: "WorkshopLog" } %>
+  <%= f.input :quotable_id, as: :hidden, input_html: { value: f.object.quotable_id || @workshop_log.id } if @workshop_log.persisted? %>
+
+  <div class="col-md-10">
+    <% f.object.build_quote if f.object.quote.nil? %>
+    <%= f.simple_fields_for :quote do |quote_form| %>
+      <%= quote_form.input :workshop_id, as: :hidden, input_html: { value: f.object.quotable.workshop_id || @workshop&.id || @workshop_log.workshop_id } %>
+      <div class="col-md-12">
+        <div class="col-md-8">
+          <%= quote_form.input :quote,
+                               label: "Quote",
+                               required: false,
+                               placeholder: "Ex. 'Coming here makes me feel happy!'",
+                               input_html: { rows: 3 } %>
+        </div>
+        <div class="col-md-4">
+          <%= quote_form.input :age,
+                               label: "<span style='wrap: no-wrap;'>Participant age</span>".html_safe,
+                               required: false,
+                               hint: "If unknown, enter: child, teen, or adult." %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="col-md-2 d-flex align-items-center">
+    <%= link_to_remove_association "Delete", f %>
+  </div>
+</div>

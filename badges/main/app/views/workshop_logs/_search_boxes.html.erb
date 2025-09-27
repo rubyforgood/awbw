@@ -1,0 +1,52 @@
+<!-- Filter form -->
+<%= form_with url: workshop_logs_path, method: :get, local: true,
+              class: "mb-3 row g-3 row g-3 d-flex align-items-end",
+              html: { id: "filter-form" } do |f| %>
+  <div style="display:flex;">
+    <div class="col-auto">
+      <%= f.label :month_and_year, "Month Submitted" %>
+      <%= f.select :month_and_year, @month_year_options,
+                   { include_blank: "All months",
+                     selected: params[:month_and_year] },
+                   class: "form-select form-select-sm" %>
+    </div>
+
+    <div class="col-auto">
+      <%= f.label :year, "Year submitted" %>
+      <%= f.select :year, @year_options,
+                   { include_blank: "All years",
+                     selected: params[:year] },
+                   class: "form-select form-select-sm" %>
+    </div>
+
+<!--    <div class="col-auto">-->
+      <%#= f.label :workshop_id, "Workshop" %>
+      <%#= f.collection_select :workshop_id, @workshops, :id, :title,
+                              { include_blank: "All workshops",
+                                selected: params[:workshop_id] },
+                              class: "form-select form-select-sm" %>
+<!--    </div>-->
+
+    <div class="col-auto">
+      <%= f.label :user_id, "Facilitator" %>
+      <%= f.collection_select :user_id, @facilitators, :id, :name,
+                              { include_blank: "All facilitators",
+                                selected: params[:user_id] },
+                              class: "form-select form-select-sm" %>
+    </div>
+  </div>
+<% end %>
+
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const filterForm = document.getElementById("filter-form");
+        if (filterForm) {
+            filterForm.querySelectorAll("select").forEach(select => {
+                select.addEventListener("change", () => filterForm.submit());
+            });
+        }
+    });
+</script>

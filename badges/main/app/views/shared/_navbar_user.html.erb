@@ -16,6 +16,9 @@
         <%= link_to("My bookmarks", bookmarks_path) %>
       </li>
       <li>
+        <%= link_to("My workshop logs", workshop_logs_path(user_id: current_user.id)) %>
+      </li>
+      <li>
         <%= link_to("Change password", change_password_path) %>
       </li>
       <li>

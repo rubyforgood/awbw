@@ -1,21 +1,73 @@
 <h4 class='light upcase'><%= @workshop.log_form_header %></h4>
 <hr />
-<h3 class='normal no-margin-bottom'><%= "#{@workshop.title} - #{@workshop.windows_type.label if @workshop.windows_type}" %></h3>
+<h3 class='normal no-margin-bottom'>
+  <%= "#{@workshop.title} - #{@workshop.windows_type.label if @workshop.windows_type}" %>
+</h3>
 
 <br/><br/>
-<p>
-<b>Facilitator: </b>
-<%= @workshop_log.user.name %>
-</p>
+<p><b>Facilitator: </b> <%= @workshop_log.user.name %></p>
+<p><b>Workshop Date: </b> <%= @workshop_log.date %></p>
 
-<p>
-<b>Workshop Date: </b>
-<%= @workshop_log.date %>
-</p>
+<hr>
+
+<h5>Participant Counts</h5>
+<table class="table table-sm table-bordered w-auto">
+  <thead>
+  <tr>
+    <th>Category</th>
+    <th>Children (0-12)</th>
+    <th>Teens (13-17)</th>
+    <th>Adults (18+)</th>
+    <th>Total</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% # Row: Ongoing %>
+  <tr>
+    <td>Ongoing Participants</td>
+    <td><%= @workshop_log.children_ongoing || 0 %></td>
+    <td><%= @workshop_log.teens_ongoing || 0 %></td>
+    <td><%= @workshop_log.adults_ongoing || 0 %></td>
+    <td><%= (@workshop_log.children_ongoing || 0) + (@workshop_log.teens_ongoing || 0) + (@workshop_log.adults_ongoing || 0) %></td>
+  </tr>
+
+  <% # Row: First-Time %>
+  <tr>
+    <td>First-Time Participants</td>
+    <td><%= @workshop_log.children_first_time || 0 %></td>
+    <td><%= @workshop_log.teens_first_time || 0 %></td>
+    <td><%= @workshop_log.adults_first_time || 0 %></td>
+    <td><%= (@workshop_log.children_first_time || 0) + (@workshop_log.teens_first_time || 0) + (@workshop_log.adults_first_time || 0) %></td>
+  </tr>
+
+  <% # Row: Column Totals %>
+  <tr class="fw-bold">
+    <td>Subtotals</td>
+    <% children_total = (@workshop_log.children_ongoing || 0) + (@workshop_log.children_first_time || 0) %>
+    <% teens_total    = (@workshop_log.teens_ongoing || 0) + (@workshop_log.teens_first_time || 0) %>
+    <% adults_total   = (@workshop_log.adults_ongoing || 0) + (@workshop_log.adults_first_time || 0) %>
+    <td class="text-bold fw-bold"><%= children_total %></td>
+    <td class="text-bold fw-bold"><%= teens_total %></td>
+    <td class="text-bold fw-bold"><%= adults_total %></td>
+    <td class="text-bold fw-bold"><%= children_total + teens_total + adults_total %></td>
+  </tr>
+
+  <tr>
+    <td><strong>Grand Total: <%= (@workshop_log.children_ongoing || 0) + (@workshop_log.teens_ongoing || 0) + (@workshop_log.adults_ongoing || 0) +
+                                   (@workshop_log.children_first_time || 0) + (@workshop_log.teens_first_time || 0) + (@workshop_log.adults_first_time || 0) %></strong></td>
+    <td colspan="4">
+
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+<hr>
 
 <% @answers.each do |answer| %>
   <p>
-  <b><%= answer.form_field.question %>: </b>
-  <%= answer.response %>
+    <b><%= answer.form_field.question %>: </b>
+    <%= answer.response %>
   </p>
 <% end %>
+

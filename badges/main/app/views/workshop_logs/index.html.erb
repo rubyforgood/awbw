@@ -1,0 +1,83 @@
+<h1>Workshop Logs</h1>
+
+<div class="mb-3">
+  <%= link_to "New Workshop Log", new_workshop_log_path, class: "btn btn-primary" %>
+</div>
+
+<div class="mb-3">
+  <%= render "search_boxes" %>
+</div>
+
+<% if @workshop_logs.any? %>
+  <table class="table normal light table-striped js-workshop-logs">
+    <thead>
+    <!-- Top-tier grouping -->
+    <tr>
+      <th colspan="3"></th>
+      <th colspan="3" class="bold small text-center blue-200"># Ongoing</th>
+      <th colspan="3" class="bold small text-center green-200"># First-time</th>
+    </tr>
+
+    <!-- Second-tier column headers -->
+    <tr>
+      <th class="bold small">Date</th>
+      <th class="bold small">Workshop</th>
+      <th class="bold small">Facilitator</th>
+
+      <!-- Ongoing -->
+      <th class="bold small text-center blue-200">children</th>
+      <th class="bold small text-center blue-200">teens</th>
+      <th class="bold small text-center blue-200">adults</th>
+
+      <!-- First-time -->
+      <th class="bold small text-center green-200">children</th>
+      <th class="bold small text-center green-200">teens</th>
+      <th class="bold small text-center green-200">adults</th>
+
+      <th class="bold small">Edit</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <% @workshop_logs.each do |log| %>
+      <tr>
+        <td><%= link_to (log.date || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %></td>
+        <td><%= log.workshop ? link_to(log.workshop.title, workshop_path(log.workshop)) : "-" %></td>
+        <td><%= log.user ? link_to(log.user.name, user_path(log.user)) : "—" %></td>
+
+        <!-- Ongoing -->
+        <td class="text-center blue-200"><%= log.children_ongoing %></td>
+        <td class="text-center blue-200"><%= log.teens_ongoing %></td>
+        <td class="text-center blue-200"><%= log.adults_ongoing %></td>
+
+        <!-- First-time -->
+        <td class="text-center green-200"><%= log.children_first_time %></td>
+        <td class="text-center green-200"><%= log.teens_first_time %></td>
+        <td class="text-center green-200"><%= log.adults_first_time %></td>
+
+        <td><%= link_to "Edit", edit_workshop_log_path(log) %></td>
+      </tr>
+    <% end %>
+    </tbody>
+
+    <tfoot>
+      <tr class="bold small">
+        <td colspan="3" class="text-right">Total:</td>
+        <td class="text-center blue-200"><%= @workshop_logs_unpaginated.sum(:children_ongoing) %></td>
+        <td class="text-center blue-200"><%= @workshop_logs_unpaginated.sum(:teens_ongoing) %></td>
+        <td class="text-center blue-200"><%= @workshop_logs_unpaginated.sum(:adults_ongoing) %></td>
+        <td class="text-center green-200"><%= @workshop_logs_unpaginated.sum(:children_first_time) %></td>
+        <td class="text-center green-200"><%= @workshop_logs_unpaginated.sum(:teens_first_time) %></td>
+        <td class="text-center green-200"><%= @workshop_logs_unpaginated.sum(:adults_first_time) %></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <%# Pagination if using kaminari or pagy %>
+  <div class="d-flex justify-content-center">
+    <%= will_paginate @workshop_logs, :previous_label => '<<', :next_label => '>>', :inner_window => 2 %>
+  </div>
+
+<% else %>
+  <p>No workshop logs found.</p>
+<% end %>

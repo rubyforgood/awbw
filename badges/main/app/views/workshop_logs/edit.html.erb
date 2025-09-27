@@ -1,28 +1,3 @@
 <div class="container-fluid workshop-logs">
-  <%= form_for @wl, url: workshop_log_path(@wl), :method => :put do |f| %>
-    <%= render 'form', { form: f } %>
-  <% end %>
-
-  <link rel="stylesheet" href="/vendor/Pikaday/css/pikaday.css">
-  <script src="/vendor/Pikaday/pikaday.js"></script>
-  <script>
-    var picker = new Pikaday({ field: document.getElementById('datepicker') });
-    picker.setDate(new Date(<%= @wl.date.year %>, <%= ( @wl.date.month - 1 ) %>, <%= @wl.date.day %>));
-  </script>
-
+  <%= render 'form', workshop_log: @workshop_log %>
 </div>
-
-<script>
-  $("form :input").attr("disabled", true);
-  $("#workshop_log_project_id").val("<%=@wl.project_id%>").change();
-  console.log($("#workshop_log_project_id").val())
-
-  <% if !@wl.workshop_name.nil? && !@wl.workshop_name.empty?  %>
-     $("#workshop_title").val("<%= @wl.workshop_name %>");
-  <% end %>
-
-  <% unless @wl.other_description.blank?  %>
-    $('#other_sector_description_content').removeClass('hide');
-    $('#other_description').val("<%= @wl.other_description%>")
-  <% end %>
-</script>

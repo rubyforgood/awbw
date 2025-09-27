@@ -37,7 +37,7 @@ Rails.application.routes.draw do
   end
 
   resources :workshop_log_creation_wizard
-  resources :workshop_logs, only: [:show, :edit, :new, :create, :update]
+  resources :workshop_logs
 
   resources :events
   resources :event_registrations, only: [:create] do
