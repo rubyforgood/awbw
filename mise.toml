@@ -6,6 +6,9 @@ ruby = "3.3.8"
 description = "Set up the project for local non-docker developement."
 run = "bin/setup"
 
+# [tasks.server]
+# description = "Start the rails server"
+# run = "bin/rails s"
 [tasks.server]
 description = "Start rails server + vite"
 run = """
