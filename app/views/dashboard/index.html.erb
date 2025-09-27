@@ -146,3 +146,16 @@
 resources: @sector_impacts,
 title: "Populations We Reach" %><br>
 <%= render "resources/themes", resources: @themes, title: "Themes in Healing" %><br>
+=======
+<div class="">
+  <div class="printable-area">
+    <%# render "workshops/featured", workshops: @workshops %><br>
+    <%= render "dashboard/latest_news", resources: @stories %><br>
+    <%= render "resources/popular", resources: @resources, title: "Popular Resources" %><br>
+    <%= render "resources/featured",
+    resources: @sector_impacts,
+    title: "Populations We Reach" %><br>
+    <%= render "resources/themes", themes: @themes, title: "Themes in Healing" %><br>
+  </div>
+</div>
+>>>>>>> 54b8ab60 (update latest news)
