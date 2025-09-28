@@ -7,7 +7,7 @@
   </div>
   <% if resources.any? %>
     <div class="flex flex-wrap justify-center gap-8">
-      <% resources.each do |r| %>
+      <% resources.each do |resource| %>
         <div
           class="
             w-full mx-8 md:mx-0 md:w-80 h-48 flex overflow-hidden bg-gray-300 rounded-lg
@@ -40,13 +40,13 @@
           </div>
           <div class="w-2/3 p-4 flex flex-col">
             <div class="grow">
-              <h3 class="text-lg pb-2 font-medium text-gray-700"><%= r.title %></h3>
+              <h3 class="text-lg pb-2 font-medium text-gray-700"><%= resource.title %></h3>
               <p class="px-2 text-gray-700">
-                <span class="line-clamp-3"><%= strip_tags(r.text).truncate(250) %></span>
+                <span class="line-clamp-3"><%= strip_tags(resource.text).truncate(250) %></span>
               </p>
             </div>
             <div class="flex justify-between mt-auto">
-              <%= link_to r.featured_url, target: :blank, class: "px-3 py-2 text-sm font-medium text-white uppercase transition-colors duration-300 transform bg-gray-800 rounded hover:bg-gray-700 focus:outline-none focus:bg-gray-700" do %>
+              <%= link_to resource.featured_url, target: :blank, class: "px-3 py-2 text-sm font-medium text-white uppercase transition-colors duration-300 transform bg-gray-800 rounded hover:bg-gray-700 focus:outline-none focus:bg-gray-700" do %>
                 View Resource
               <% end %>
             </div>

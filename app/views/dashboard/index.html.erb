@@ -102,6 +102,7 @@
     padding-right:0px;
   }
 </style>
+<%# TODO Carousel and associated cards need to be updated to stimulus/tailwind %>
 <!--Carousel-->
 <div class="flex flex-col mb-16">
   <h2 class="text-center text-4xl text-gray-700 font-medium pt-4">Featured Workshops</h2>
@@ -113,21 +114,21 @@
 
       <div class="viewport">
         <ul class="overview">
-          <% @workshops.each do |w| %>
+          <% @workshops.each do |workshop| %>
             <li class="rounded-xl bg-white shadow-lg">
-              <%= link_to workshop_path(w), { class: "nodecor"}  do %>
+              <%= link_to workshop_path(workshop), { class: "nodecor"}  do %>
                 <figure
                   class="portrait-img"
-                  style="background-image: url(<%= w.thumbnail_image %>);"
+                  style="background-image: url(<%= workshop.thumbnail_image %>);"
                 >
                 </figure>
-                <div class="tiny-label"><%= w.windows_type.label if w.windows_type %>
-                  <span class="pull-right"><%= w.date %></span>
+                <div class="tiny-label"><%= workshop.windows_type.label if workshop.windows_type %>
+                  <span class="pull-right"><%= workshop.date %></span>
                 </div>
 
                 <div class="ws-desc">
-                  <span class="ws-title"><%= w.title %></span>
-                  <p><%= w.formatted_objective %></p>
+                  <span class="ws-title"><%= workshop.title %></span>
+                  <p><%= workshop.formatted_objective %></p>
                 </div>
               <% end %>
             </li>

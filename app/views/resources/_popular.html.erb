@@ -7,7 +7,7 @@
   </div>
   <% if resources.any? %>
     <div class="flex flex-wrap justify-center gap-8">
-      <% resources.each do |r| %>
+      <% resources.each do |resource| %>
         <div
           class="
             w-full mx-8 md:mx-0 md:w-80 h-48 flex overflow-hidden bg-gray-300 rounded-lg
@@ -21,9 +21,9 @@
                   text-gray-700 font-medium text-sm uppercase tracking-wide block mb-2
                 "
               >
-                <%= r.kind || "Resource" %>
+                <%= resource.kind || "Resource" %>
               </span>
-              <% case r.kind %>
+              <% case resource.kind %>
               <% when "Resource" %>
                 <svg
                   class="w-12 h-12 text-gray-800"
@@ -138,10 +138,10 @@
             </div>
           </div>
           <div class="w-2/3 p-4 flex flex-col">
-            <h1 class="text-xl font-bold text-gray-800 mb-2"><%= r.title %></h1>
+            <h1 class="text-xl font-bold text-gray-800 mb-2"><%= resource.title %></h1>
 
             <div class="flex justify-between mt-auto">
-              <%= link_to r.featured_url, target: :blank, class: "px-3 py-2 text-sm font-medium text-white uppercase transition-colors duration-300 transform bg-gray-800 rounded hover:bg-gray-700 focus:outline-none focus:bg-gray-700" do %>
+              <%= link_to resource.featured_url, target: :blank, class: "px-3 py-2 text-sm font-medium text-white uppercase transition-colors duration-300 transform bg-gray-800 rounded hover:bg-gray-700 focus:outline-none focus:bg-gray-700" do %>
                 View Resource
               <% end %>
             </div>
