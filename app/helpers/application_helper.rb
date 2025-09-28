@@ -39,9 +39,9 @@ module ApplicationHelper
     banner = Banner.last
 
     if !banner.nil? && banner.show
-      content = "<div id='banner-news' class='banner-news'><div class='content'>"
-      content += "#{banner.content}</div></div></br><div class='separator'></div>"
-      return content.html_safe
+      ("<div id='banner-news' class='banner-news'>" +
+        "<div class='content'>#{banner.content}</div>" +
+        "</div><div class='separator'></div>").html_safe
     end
   end
 
