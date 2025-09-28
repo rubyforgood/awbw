@@ -21,12 +21,12 @@
   <body
     class="
       <%= controller.controller_name %> <%= controller.action_name %>
-      flex flex-col min-h-screen bg-gray-100 scroll-pt-40
+      flex flex-col min-h-screen bg-gray-100
     "
   >
 
     <div class="flex-grow" id="main">
-      <div class="fixed top-0 left-0 w-full z-50">
+      <div class="sticky top-0 left-0 w-full z-50">
         <!-- Navbar -->
         <nav class="bg-[#063b8d] text-white">
           <%= render "shared/tailwind/navbar" %>
