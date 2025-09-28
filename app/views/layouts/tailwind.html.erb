@@ -2,16 +2,7 @@
 <html>
   <head>
     <title>AWBW</title>
-    <link rel="stylesheet" href="/vendor/select-2/select2.min.css">
-    <%# stylesheet_link_tag "application",
-    :media => "all",
-    "data-turbolinks-track" => true %>
     <%= vite_stylesheet_tag "application.css" %>
-    <%= stylesheet_link_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css" %>
-    <%= render partial: "layouts/google_webfonts" %>
-    <%= javascript_include_tag "https://code.jquery.com/jquery-1.8.3.min.js" %>
-    <%= javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js" %>
-    <%= stylesheet_link_tag "/vendor/fontawesome/css/all.min.css" %>
     <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
     <%= csrf_meta_tags %>
     <meta
@@ -26,7 +17,12 @@
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application" %>
   </head>
-  <body class="<%= controller.controller_name %> <%= controller.action_name %> flex flex-col min-h-screen bg-gray-100">
+  <body
+    class="
+      <%= controller.controller_name %> <%= controller.action_name %>
+      flex flex-col min-h-screen bg-gray-100
+    "
+  >
 
     <div class="flex-grow" id="main">
       <%= render "shared/tailwind/navbar" %>
@@ -35,18 +31,18 @@
       </div>
 
       <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-          <%# TODO handle printable area  %>
-          <% if user_signed_in? %>
-            <div class="signed-in-user <%= main_content_classes %> my-3">
-              <%= render "shared/flash_messages" %>
-              <%= yield %>
-            </div>
-          <% else %>
-            <div class="not-signed-in-user <%= main_content_classes %> my-3">
-              <%= render "shared/flash_messages" %>
-              <%= yield %>
-            </div>
-          <% end %>
+        <%# TODO handle printable area %>
+        <% if user_signed_in? %>
+          <div class="signed-in-user <%= main_content_classes %> my-3">
+            <%= render "shared/flash_messages" %>
+            <%= yield %>
+          </div>
+        <% else %>
+          <div class="not-signed-in-user <%= main_content_classes %> my-3">
+            <%= render "shared/flash_messages" %>
+            <%= yield %>
+          </div>
+        <% end %>
       </div>
     </div>
     <footer class="bg-[#063b8d] text-white py-4 mt-24">
