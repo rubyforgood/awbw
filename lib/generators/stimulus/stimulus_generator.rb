@@ -1,12 +1,19 @@
 require "rails/generators/named_base"
+require "fileutils"
 
 class StimulusGenerator < Rails::Generators::NamedBase
   source_root File.expand_path("templates", __dir__)
 
-  def copy_view_files
-    @attribute = stimulus_attribute_value(controller_name)
-    template "controller.js", "app/frontend/javascript/controllers/#{controller_name}_controller.js"
+  def copy_controller_file
+    controllers_path = Rails.root.join("app/frontend/javascript/controllers")
+    full_path = controllers_path.join("#{controller_name}_controller.js")
 
+    FileUtils.mkdir_p(File.dirname(full_path))
+
+    # Set attribute for template
+    @attribute = stimulus_identifier
+
+    template "controller.js", full_path
     update_index_js
   end
 
@@ -16,19 +23,27 @@ class StimulusGenerator < Rails::Generators::NamedBase
     name.underscore.gsub(/_controller$/, "")
   end
 
-  def stimulus_attribute_value(controller_name)
+  def stimulus_identifier
     controller_name.gsub("/", "--").tr("_", "-")
+  end
+
+  def controller_class_name
+    controller_name.split("/").map(&:camelize).join
   end
 
   def update_index_js
     controllers_path = Rails.root.join("app/frontend/javascript/controllers")
     index_file = controllers_path.join("index.js")
 
-    import_line = "import #{controller_name.camelize}Controller from \"./#{controller_name}_controller\""
-    register_line = "application.register(\"#{controller_name}\", #{controller_name.camelize}Controller)"
+    unless File.exist?(index_file)
+      File.write(index_file, "// Auto-generated Stimulus controller index\nimport { application } from \"../application\"\n\n")
+    end
 
-    # Avoid duplicate entries
+    import_line = "import #{controller_class_name}Controller from \"./#{controller_name}_controller\""
+    register_line = "application.register(\"#{stimulus_identifier}\", #{controller_class_name}Controller)"
+
     content = File.read(index_file)
+
     unless content.include?(import_line)
       File.open(index_file, "a") do |f|
         f.puts "\n#{import_line}"
