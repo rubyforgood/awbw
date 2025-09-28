@@ -27,6 +27,7 @@ class DashboardController < ApplicationController
         { title: "Bookmarks tally", path: root_path, icon: "🔖" },
         { title: "Quotes", path: root_path, icon: "💬" },
         { title: "Stories", path: root_path, icon: "🗣️" },
+        { title: "Vision Seeds", path: root_path, icon: "🌱" },
         { title: "Annual Reports", path: root_path, icon: "📊" },
         { title: "Workshop Logs", path: workshop_logs_path, icon: "📝" },
         { title: "Workshops", path: workshops_path, icon: "🎨" },
@@ -47,7 +48,7 @@ class DashboardController < ApplicationController
 
       @reference_cards = [
 
-        # { title: "Age ranges", path: root_path, icon: "👶" },
+        { title: "Age ranges", path: root_path, icon: "👶" },
         { title: "Categories", path: root_path, icon: "🗂️" },
         { title: "Sectors", path: root_path, icon: "🏭" },
         # { title: "WindowsTypes", path: root_path, icon: "🪟" },
