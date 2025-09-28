@@ -26,7 +26,18 @@
   >
 
     <div class="flex-grow" id="main">
-      <%= render "shared/tailwind/navbar" %>
+      <div class="sticky top-0 left-0 w-full z-50">
+        <!-- Navbar -->
+        <nav class="bg-[#063b8d] text-white">
+          <%= render "shared/tailwind/navbar" %>
+        </nav>
+
+        <!-- Banner -->
+        <div class="text-center bg-yellow-400 text-black font-normal px-2 py-2">
+          <%= render 'shared/tailwind/banner' %>
+        </div>
+      </div>
+
       <div class="hidden print:block">
         <%= image_tag("awbw-print-logo.png") %>
       </div>
