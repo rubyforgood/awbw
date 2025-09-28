@@ -2,7 +2,6 @@
 <html>
   <head>
     <title>AWBW</title>
-    <%= vite_stylesheet_tag "application.css" %>
     <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
     <%= csrf_meta_tags %>
     <meta
@@ -14,6 +13,8 @@
       type="image/png"
       href="<%= asset_path("favicon.png") %>"
     >
+
+    <%= vite_stylesheet_tag "application.css" %>
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application" %>
   </head>
