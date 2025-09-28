@@ -1,0 +1,62 @@
+<section class="mt-10 px-8">
+  <div class="flex flex-col items-start mb-4">
+    <h2 class="text-3xl text-gray-700 m-2">Admin Dashboard</h2>
+  </div>
+
+  <div class="flex gap-6">
+    <!-- Column 1 -->
+    <div class="flex flex-col gap-4 flex-1">
+      User-generated content
+      <% @user_content_cards.each do |card| %>
+        <a href="<%= card[:path] %>"
+           class="flex items-center gap-6 bg-white rounded-lg shadow-lg border border-gray-200
+                  hover:bg-gray-100 hover:shadow-2xl transition-colors transition-shadow duration-300 p-4">
+
+          <div class="text-5xl text-gray-700 flex-shrink-0">
+            <%= card[:icon] %>
+          </div>
+
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+          </div>
+
+        </a>
+      <% end %>
+    </div>
+
+    <!-- Column 2 -->
+    <div class="flex flex-col gap-4 flex-1">
+      System settings
+      <% @system_cards.each do |card| %>
+        <a href="<%= card[:path] %>"
+           class="flex items-center gap-6 bg-white rounded-lg shadow-lg border border-gray-200
+                  hover:bg-gray-100 hover:shadow-2xl transition-colors transition-shadow duration-300 p-4">
+
+          <div class="text-5xl text-gray-700 flex-shrink-0">
+            <%= card[:icon] %>
+          </div>
+
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+          </div>
+
+        </a>
+      <% end %>
+      <% @reference_cards.each do |card| %>
+        <a href="<%= card[:path] %>"
+           class="flex items-center gap-6 bg-white rounded-lg shadow-lg border border-gray-200
+                  hover:bg-gray-100 hover:shadow-2xl transition-colors transition-shadow duration-300 p-4">
+
+          <div class="text-5xl text-gray-700 flex-shrink-0">
+            <%= card[:icon] %>
+          </div>
+
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+          </div>
+
+        </a>
+      <% end %>
+    </div>
+  </div>
+</section>

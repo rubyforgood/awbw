@@ -2,7 +2,7 @@ class DashboardController < ApplicationController
   skip_before_action :authenticate_user!, only: :help
 
   layout "help", only: :help
-  layout "tailwind", only: :index
+  layout "tailwind", only: [:admin, :index]
 
   def index
     @user = current_user.decorate
@@ -18,6 +18,46 @@ class DashboardController < ApplicationController
     @themes = Resource.theme.featured.decorate
     @sector_impacts = Resource.sector_impact.featured.decorate
     @recent_activity = current_user.recent_activity
+  end
+
+  def admin
+    if current_user.super_user?
+      @user_content_cards = [
+
+        { title: "Bookmarks tally", path: root_path, icon: "🔖" },
+        { title: "Quotes", path: root_path, icon: "💬" },
+        { title: "Stories", path: root_path, icon: "🗣️" },
+        { title: "Vision Seeds", path: root_path, icon: "🌱" },
+        { title: "Annual Reports", path: root_path, icon: "📊" },
+        { title: "Workshop Logs", path: workshop_logs_path, icon: "📝" },
+        { title: "Workshops", path: workshops_path, icon: "🎨" },
+        { title: "Workshop Ideas", path: root_path, icon: "💡" },
+        { title: "Workshop Variations", path: workshop_variations_path, icon: "🔀" },
+      ]
+
+      @system_cards = [
+        { title: "Banners", path: root_path, icon: "📣" },
+        { title: "Events", path: events_path, icon: "📆" },
+        { title: "FAQs", path: faqs_path, icon: "❔" },
+        { title: "Forms", path: root_path, icon: "📋" },
+        { title: "Organizations", path: root_path, icon: "🏫" },
+        { title: "Resources", path: resources_path, icon: "📚" },
+        { title: "Users", path: users_path, icon: "👥" },
+
+      ]
+
+      @reference_cards = [
+
+        { title: "Age ranges", path: root_path, icon: "👶" },
+        { title: "Categories", path: root_path, icon: "🗂️" },
+        { title: "Sectors", path: root_path, icon: "🏭" },
+        # { title: "WindowsTypes", path: root_path, icon: "🪟" },
+        # { title: "FormFields", path: root_path, icon: "✏️" },
+        # { title: "FormAnswerOptions", path: root_path, icon: "🗳️" },
+      ]
+    else
+      redirect_to root_path, alert: 'You do not have permission.'
+    end
   end
 
   def recent_activity
