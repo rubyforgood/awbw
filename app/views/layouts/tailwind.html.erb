@@ -21,13 +21,23 @@
   <body
     class="
       <%= controller.controller_name %> <%= controller.action_name %>
-      flex flex-col min-h-screen bg-gray-100
+      flex flex-col min-h-screen bg-gray-100 scroll-pt-40
     "
   >
 
     <div class="flex-grow" id="main">
-      <%= render 'shared/tailwind/banner' %>
-      <%= render "shared/tailwind/navbar" %>
+      <div class="fixed top-0 left-0 w-full z-50">
+        <!-- Navbar -->
+        <nav class="bg-[#063b8d] text-white">
+          <%= render "shared/tailwind/navbar" %>
+        </nav>
+
+        <!-- Banner -->
+        <div class="text-center bg-yellow-400 text-black font-normal px-2 py-2">
+          <%= render 'shared/tailwind/banner' %>
+        </div>
+      </div>
+
       <div class="hidden print:block">
         <%= image_tag("awbw-print-logo.png") %>
       </div>
