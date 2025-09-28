@@ -1,6 +1,6 @@
 require "rails/generators/named_base"
 
-class ViteStimulusGenerator < Rails::Generators::NamedBase
+class StimulusGenerator < Rails::Generators::NamedBase
   source_root File.expand_path("templates", __dir__)
 
   def copy_view_files
