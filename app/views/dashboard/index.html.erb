@@ -146,36 +146,10 @@
   </div>
 </div>
 
-<div class="hidden">
-  <div class="printable-area" style="font-size: 60%;">
-    <div class="container-fluid container-fluid-custom">
-      <div class="row" style="padding-top:0px;">
-        <div class="col-md-12">
-          <div class="col-md-5">
-            <div style="padding-top: 0px">
-              <%= render "resources/popular_desktop",
-              resources: @resources,
-              title: "Popular Resources" %><br>
-            </div>
-          </div>
-
-          <div class="col-md-7">
-            <%= render "dashboard/latest_news_desktop", resources: @stories %>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="">
-  <div class="printable-area">
-    <%# render "workshops/featured", workshops: @workshops %><br>
-    <%= render "dashboard/latest_news", resources: @stories %><br>
-    <%= render "resources/popular", resources: @resources, title: "Popular Resources" %><br>
-    <%= render "resources/featured",
-    resources: @sector_impacts,
-    title: "Populations We Reach" %><br>
-    <%= render "resources/themes", resources: @themes, title: "Themes in Healing" %><br>
-  </div>
-</div>
+<%# render "workshops/featured", workshops: @workshops %><br>
+<%= render "dashboard/latest_news", resources: @stories %><br>
+<%= render "resources/popular", resources: @resources, title: "Popular Resources" %><br>
+<%= render "resources/featured",
+resources: @sector_impacts,
+title: "Populations We Reach" %><br>
+<%= render "resources/themes", resources: @themes, title: "Themes in Healing" %><br>
