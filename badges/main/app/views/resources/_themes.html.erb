@@ -1,30 +1,62 @@
-<section>
-  <h2 class='no-margin-top section-title normal'><%= title %></h2>
-  <% if themes.any? %>
-    <div class='row flex-row' style='padding-top:0px;'>
-      <% themes.each do |t| %>
-        <div class='col-xs-6 col-xs-6-custom'>
-          <div class='workshop-box' style='position:relative;'>
-            
-            <figure class="portrait-img" style="background-image: url(<%= asset_path("workshop_default.png") %>);"></figure>
-            <div class='col'>
-              <%= t.title %>
+<section class="flex flex-col mt-10 px-8">
+  <div class="flex flex-col items-end mb-4">
+    <div class="inline-block mr-24">
+      <h2 class="text-2xl text-gray-700 font-medium m-2"><%= title %></h2>
+      <hr class="h-1 bg-[#063b8d] border-0 rounded-sm my-2 mx-4">
+    </div>
+  </div>
+  <% if resources.any? %>
+    <div class="flex flex-wrap justify-center gap-8">
+      <% resources.each do |resource| %>
+        <div
+          class="
+            w-full mx-8 md:mx-0 md:w-80 h-48 flex overflow-hidden bg-gray-300 rounded-lg
+            shadow-lg border border-gray-200
+          "
+        >
+          <div class="w-1/3 bg-gray-400 flex flex-col items-center justify-center p-4">
+            <div class="text-center">
+              <%# TODO These could be applicable images since there seems to be a limited number of "Themes" %>
+              <span
+                class="
+                  text-gray-700 font-medium text-sm uppercase tracking-wide block mb-2
+                "
+              >
+              </span>
+              <svg
+                class="w-12 h-12 text-gray-800"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
             </div>
-            <div class="inner-content">
-              <h3><%= t.text[0..60] + "..." %></h3>
-              <%= link_to("Read more...", t.url, target: :blank) %>
+          </div>
+          <div class="w-2/3 p-4 flex flex-col">
+            <div class="grow">
+              <h3 class="text-lg pb-2 font-medium text-gray-700"><%= resource.title %></h3>
+              <p class="px-2 text-gray-700">
+                <span class="line-clamp-3"><%= strip_tags(resource.text).truncate(250) %></span>
+              </p>
+            </div>
+            <div class="flex justify-between mt-auto">
+              <%= link_to resource.featured_url, target: :blank, class: "px-3 py-2 text-sm font-medium text-white uppercase transition-colors duration-300 transform bg-gray-800 rounded hover:bg-gray-700 focus:outline-none focus:bg-gray-700" do %>
+                View Resource
+              <% end %>
             </div>
           </div>
         </div>
       <% end %>
-      <div class="col-xs-12" style="text-align:right;">
-        <a href="https://awbw.org/impact/themes-in-healing/"
-          class="btn btn-primary btn--small outline">
-          SEE ALL
-        </a>
-      </div>
     </div>
   <% else %>
-    <%= "There are no themes." %>
+    <p class="py-7 text-center">
+      <%= "There are no resources for this category at this time." %>
+    </p>
   <% end %>
 </section>

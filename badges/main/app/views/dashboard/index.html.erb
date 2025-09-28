@@ -1,5 +1,13 @@
-<script type="text/javascript" src="/vendor/tinycarousel/jquery.tinycarousel.min.js"></script>
-<link rel="stylesheet" href="/vendor/tinycarousel/tinycarousel.css" type="text/css" media="screen"/>
+<script
+  type="text/javascript"
+  src="/vendor/tinycarousel/jquery.tinycarousel.min.js"
+></script>
+<link
+  rel="stylesheet"
+  href="/vendor/tinycarousel/tinycarousel.css"
+  type="text/css"
+  media="screen"
+>
 <script type="text/javascript">
   $(document).ready(function()
   {
@@ -93,74 +101,48 @@
     margin-right: 0px;
     padding-right:0px;
   }
-
 </style>
+<%# TODO Carousel and associated cards need to be updated to stimulus/tailwind %>
+<!--Carousel-->
+<div class="flex flex-col mb-16">
+  <h2 class="text-center text-4xl text-gray-700 font-medium pt-4">Featured Workshops</h2>
+  <hr class="w-48 h-1 mx-auto my-4 bg-[#063b8d] border-0 rounded-sm">
+  <div class="px-6 lg:px-24 bg-gray-300 pb-8 rounded-lg">
 
-<div class="hidden-xs">
-  <div class="printable-area">
-    <div class="container-fluid">
-      <h2 class="normal custom-h2">Featured Workshops</h2>
-      <div class="row" style="padding-top: 0px;" >
-        <div class="col-md-12">
+    <div id="slider1">
+      <a class="buttons prev" href="#">&#60;</a>
 
-          <div id="slider1">
-            <a class="buttons prev" href="#">&#60;</a>
+      <div class="viewport">
+        <ul class="overview">
+          <% @workshops.each do |workshop| %>
+            <li class="rounded-xl bg-white shadow-lg">
+              <%= link_to workshop_path(workshop), { class: "nodecor"}  do %>
+                <figure
+                  class="portrait-img"
+                  style="background-image: url(<%= workshop.thumbnail_image %>);"
+                >
+                </figure>
+                <div class="tiny-label"><%= workshop.windows_type.label if workshop.windows_type %>
+                  <span class="pull-right"><%= workshop.date %></span>
+                </div>
 
-            <div class="viewport">
-              <ul class="overview">
-                <% @workshops.each do |w| %>
-                  <li class="workshop">
-                    <%= link_to workshop_path(w), { class: "nodecor"}  do %>
-                    <figure class="portrait-img" style="background-image: url(<%= w.thumbnail_image %>);">
-                    </figure>
-                    <div class="tiny-label"><%= w.windows_type.label if w.windows_type %>
-                      <span class="pull-right"><%= w.date %></span>
-                    </div>
-
-                    <div class="ws-desc">
-                      <span class="ws-title"><%= w.title %></span>
-                      <p><%= w.formatted_objective %></p>
-                    </div>
-                  <% end %>
-                </li>
+                <div class="ws-desc">
+                  <span class="ws-title"><%= workshop.title %></span>
+                  <p><%= workshop.formatted_objective %></p>
+                </div>
               <% end %>
-              </ul>
-            </div><!-- VIEWPORT -->
-
-             <a class="buttons next" href="#">&#62;</a>
-          </div><!-- SLIDER1 -->
-       </div>   <!-- COL_MD-12 -->
-   </div>       <!-- ROW -->
-  </div>        <!-- CONTAINER-FLUID -->
- </div>
-</div>
-
-<div class="hidden-xs">
-  <div class="printable-area" style="font-size: 60%;">
-    <div class="container-fluid container-fluid-custom">
-      <div class="row" style="padding-top:0px;" >
-       <div class="col-md-12">
-        <div class="col-md-5">
-          <div style="padding-top: 0px">
-            <%= render 'resources/popular_desktop', resources: @resources, title: 'Popular Resources' %><br/>
-          </div>
-        </div>
-
-        <div class="col-md-7">
-          <%= render 'dashboard/latest_news_desktop', resources: @stories %>
-        </div>
-        </div>
+            </li>
+          <% end %>
+        </ul>
       </div>
-     </div>
+      <a class="buttons next" href="#">&#62;</a>
+    </div>
   </div>
 </div>
 
-<div class="visible-xs">
-  <div class="printable-area" style="font-size: 60%;">
-    <%= render 'workshops/featured', workshops: @workshops %><br />
-    <%= render 'resources/popular', resources: @resources, title: 'Popular Resources' %><br/>
-    <%= render 'dashboard/latest_news', resources: @stories %><br />
-    <%= render 'resources/featured', resources: @sector_impacts, title: 'Populations We Reach' %><br />
-    <%= render 'resources/themes', themes: @themes, title: 'Themes in Healing' %><br />
-  </div>
-</div>
+<%= render "dashboard/latest_news", resources: @stories %><br>
+<%= render "resources/popular", resources: @resources, title: "Popular Resources" %><br>
+<%= render "resources/featured",
+resources: @sector_impacts,
+title: "Populations We Reach" %><br>
+<%= render "resources/themes", resources: @themes, title: "Themes in Healing" %><br>

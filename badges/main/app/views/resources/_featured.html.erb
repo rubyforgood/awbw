@@ -1,23 +1,59 @@
-<section>
-  <h2 class="no-margin-top section-title normal"><%= title %></h2>
+<section class="flex flex-col mt-10 px-8">
+  <div class="flex flex-col items-start mb-4">
+    <div class="inline-block ml-24">
+      <h2 class="text-2xl text-gray-700 font-medium m-2"><%= title %></h2>
+      <hr class="h-1 bg-[#063b8d] border-0 rounded-sm my-2 mx-4">
+    </div>
+  </div>
   <% if resources.any? %>
-    <div class="row flex-row" style="padding-top:0px;">
+    <div class="flex flex-wrap justify-center gap-8">
       <% resources.each do |resource| %>
-        <div class="col-xs-6 col-xs-6-custom">
-          <div class="workshop-box">
-            <%= link_to resource.featured_url, target: :blank do %>
-              <% unless resource.kind == 'Theme' %>
-                <figure class="portrait-img" style="background-image: url(<%= resource.main_image %>)"></figure>
+        <div
+          class="
+            w-full mx-8 md:mx-0 md:w-80 h-48 flex overflow-hidden bg-gray-300 rounded-lg
+            shadow-lg border border-gray-200
+          "
+        >
+          <div class="w-2/3 p-4 flex flex-col">
+            <h1 class="text-xl font-bold text-gray-800 mb-2"><%= resource.title %></h1>
+
+            <div class="flex justify-between mt-auto">
+              <%= link_to resource.featured_url, target: :blank, class: "px-3 py-2 text-sm font-medium text-white uppercase transition-colors duration-300 transform bg-gray-800 rounded hover:bg-gray-700 focus:outline-none focus:bg-gray-700" do %>
+                View Resource
               <% end %>
-              <div class="inner-content">
-                <h3><%= resource.title %></h3>
-              </div>
-            <% end %>
+            </div>
+          </div>
+          <div class="w-1/3 bg-gray-400 flex flex-col items-center justify-center p-4">
+            <div class="text-center">
+
+              <%# TODO conditionally show resource image if attached %>
+              <span
+                class="
+                  text-gray-700 font-medium text-sm uppercase tracking-wide block mb-2
+                "
+              >
+              </span>
+              <svg
+                class="w-12 h-12 text-gray-800"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
           </div>
         </div>
       <% end %>
     </div>
   <% else %>
-    <%= "There are no resources." %>
+    <p class="py-7 text-center">
+      <%= "There are no resources for this category at this time." %>
+    </p>
   <% end %>
-</section> 
+</section>

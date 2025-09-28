@@ -1,0 +1,122 @@
+<%# display_banner %>
+<%# TODO This needs to be change to stimulus and remove tailwind el-menu which requires a commercial license %>
+<script
+  src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1"
+  type="module"
+></script>
+<nav class="relative bg-[#063b8d] print:hidden">
+  <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+    <div class="relative flex items-center justify-between py-2.5">
+      <div class="absolute inset-y-0 left-0 flex items-center md:hidden">
+        <!-- Mobile menu button-->
+        <button
+          type="button"
+          command="--toggle"
+          commandfor="mobile-menu"
+          class="
+            relative inline-flex items-center justify-center rounded-md p-2 text-gray-400
+            hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1
+            focus:outline-indigo-500
+          "
+        >
+          <span class="absolute -inset-0.5"></span>
+          <span class="sr-only">Open main menu</span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            data-slot="icon"
+            aria-hidden="true"
+            class="size-6 in-aria-expanded:hidden"
+          >
+            <path
+              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            data-slot="icon"
+            aria-hidden="true"
+            class="size-6 not-in-aria-expanded:hidden"
+          >
+            <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div
+        class="
+          flex flex-1 items-center justify-center md:items-stretch md:justify-start
+        "
+      >
+        <div class="flex shrink-0 items-center">
+          <%= link_to root_path, class: "relative group" do %>
+            <%= image_tag("logo.png", class: "h-8 sm:h-10 w-auto block") %>
+            <%= image_tag(
+              "logo-color.png",
+              class:
+                "h-8 sm:h-10 absolute inset-0 w-auto opacity-0 transition-opacity duration-400 ease-out group-hover:opacity-100",
+            ) %>
+          <% end %>
+        </div>
+        <div class="hidden grow md:ml-6 md:block content-center">
+          <% if user_signed_in? %>
+            <div class="flex justify-between">
+
+              <%= render "shared/tailwind/navbar_text" %>
+              <el-dropdown class="relative ml-3">
+                <%= render "shared/tailwind/navbar_new_button" %>
+              </el-dropdown>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      <div
+        class="
+          absolute inset-y-0 right-0 flex items-center pr-2 md:static md:inset-auto
+          md:ml-6 md:pr-0
+        "
+      >
+        <!-- Profile dropdown -->
+        <el-dropdown class="relative ml-3">
+          <%= render "shared/tailwind/navbar_user" %>
+        </el-dropdown>
+      </div>
+    </div>
+  </div>
+
+  <el-disclosure id="mobile-menu"
+    hidden class="block md:hidden">
+    <div class="space-y-1 px-2 pt-2 pb-3">
+      <%= link_to workshops_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+          hover:text-white" do %>
+        Workshops
+      <% end %>
+
+      <%= link_to resources_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+          hover:text-white"  do %>
+        Resources
+      <% end %>
+
+      <%= link_to collapsible_faqs_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+          hover:text-white"  do %>
+        FAQ
+      <% end %>
+      <%= link_to "New workshop idea",
+      workshops_share_idea_path,
+      class:
+        "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+                                                                                  hover:text-white" %>
+      <%= link_to "New workshop variation",
+      new_workshop_variation_path,
+      class:
+        "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+                                                                                  hover:text-white" %>
+    </div>
+  </el-disclosure>
+</nav>

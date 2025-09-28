@@ -7,8 +7,11 @@ description = "Set up the project for local non-docker developement."
 run = "bin/setup"
 
 [tasks.server]
-description = "Start the rails server"
-run = "bin/rails s"
+description = "Start rails server + vite"
+run = """
+bin/vite dev &
+bin/rails s
+"""
 
 [tasks.spec]
 description = "Run RSpec tests"

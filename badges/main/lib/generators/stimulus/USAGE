@@ -1,0 +1,8 @@
+Description:
+   Stimulus generator using vite path
+
+Example:
+    bin/rails generate stimulus Thing
+
+    This will create:
+        app/frontend/javascript/controllers/thing_controller.js

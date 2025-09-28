@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AWBW</title>
+    <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
+    <%= csrf_meta_tags %>
+    <meta
+      content="width=device-width initial-scale=1 maximum-scale=1 user-scalable=no"
+      name="viewport"
+    >
+    <link
+      rel="shortcut icon"
+      type="image/png"
+      href="<%= asset_path("favicon.png") %>"
+    >
+
+    <%= vite_stylesheet_tag "application.css" %>
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag "application" %>
+  </head>
+  <body
+    class="
+      <%= controller.controller_name %> <%= controller.action_name %>
+      flex flex-col min-h-screen bg-gray-100
+    "
+  >
+
+    <div class="flex-grow" id="main">
+      <%= render "shared/tailwind/navbar" %>
+      <div class="hidden print:block">
+        <%= image_tag("awbw-print-logo.png") %>
+      </div>
+
+      <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+        <%# TODO handle printable area %>
+        <% if user_signed_in? %>
+          <div class="signed-in-user <%= main_content_classes %> my-3">
+            <%= render "shared/flash_messages" %>
+            <%= yield %>
+          </div>
+        <% else %>
+          <div class="not-signed-in-user <%= main_content_classes %> my-3">
+            <%= render "shared/flash_messages" %>
+            <%= yield %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <footer class="bg-[#063b8d] text-white py-4 mt-24">
+      <div class="container mx-auto text-center">
+        <ul class="row">
+          <li>
+            <dt>Contact Us</dt>
+            <dd><%= Footer.phone %></dd>
+            <dd><%= Footer.general_questions %></dd>
+          </li>
+        </ul>
+        <p class="pt-4 text-2xl text-white">A Window Between Worlds ® ™</p>
+      </div>
+    </footer>
+  </body>
+</html>

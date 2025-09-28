@@ -1,0 +1,44 @@
+<div class="relative ml-3" id="avatar">
+  <button
+    type="button"
+    class="
+      relative flex rounded-full focus-visible:outline-2
+      focus-visible:outline-offset-2 focus-visible:outline-indigo-500
+    "
+  >
+    <span class="sr-only">Open user menu</span>
+    <span class="absolute -inset-1.5"></span>
+    <%= image_tag current_user.avatar.url(:thumb),
+    class:
+      "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" %>
+  </button>
+  <!-- Dropdown menu -->
+  <%# TODO This dropdown needs to be change to stimulus and remove tailwind el-menu which requires a commercial license %>
+  <el-menu
+    anchor="bottom end"
+    popover
+    class="
+      w-48 origin-top-right rounded-md bg-white py-1 shadow-lg outline outline-black/5
+      transition transition-discrete [--anchor-gap:--spacing(2)] data-closed:scale-95
+      data-closed:transform data-closed:opacity-0 data-enter:duration-100
+      data-enter:ease-out data-leave:duration-75 data-leave:ease-in
+    "
+  ><%= link_to "My profile",
+    user_path(current_user),
+    class:
+      "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+    <%= link_to "My bookmarks",
+    bookmarks_path,
+    class:
+      "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+    <%= link_to "Change password",
+    change_password_path,
+    class:
+      "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+    <%= link_to "Logout",
+    destroy_user_session_path,
+    method: :delete,
+    class:
+      "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+  </el-menu>
+</div>
