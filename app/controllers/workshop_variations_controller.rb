@@ -19,7 +19,7 @@ class WorkshopVariationsController < ApplicationController
   def create
     @workshop_variation = WorkshopVariation.new(workshop_variation_params)
     if @workshop_variation.save
-      flash[:alert] = 'Workshop Variation has been created.'
+      flash[:notice] = 'Workshop Variation has been created.'
       redirect_to workshop_variations_path
     else
       render :new
@@ -45,7 +45,7 @@ class WorkshopVariationsController < ApplicationController
     @workshop_variation = WorkshopVariation.find(params[:id])
 
     if @workshop_variation.update(workshop_variation_params)
-      flash[:alert] = 'Workshop Variation updated successfully.'
+      flash[:notice] = 'Workshop Variation updated successfully.'
       redirect_to workshop_variations_path
     else
       flash[:alert] = 'Unable to update Workshop Variation.'

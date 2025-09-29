@@ -46,7 +46,7 @@ class ResourcesController < ApplicationController
   def update
     @resource = Resource.find(params[:id])
     if @resource.update(resource_params)
-      flash[:alert] = 'Resource updated.'
+      flash[:notice] = 'Resource updated.'
       redirect_to resources_path
     else
       flash[:error] = 'Failed to update Resource.'

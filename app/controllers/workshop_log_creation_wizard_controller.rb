@@ -56,7 +56,7 @@ class WorkshopLogCreationWizardController < ApplicationController
     find_or_build_workshop
     if @workshop.save
       if @new_workshop
-        flash[:alert] = 'Thanks for reporting on a new workshop.  Please fill out the workshop details below.'
+        flash[:notice] = 'Thanks for reporting on a new workshop.  Please fill out the workshop details below.'
         redirect_to edit_workshop_path(@workshop)
       else
         jump_to(:confirmation, workshop_id: @workshop.id)

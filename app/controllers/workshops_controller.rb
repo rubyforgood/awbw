@@ -91,7 +91,7 @@ class WorkshopsController < ApplicationController
   def update
     @workshop = Workshop.find(params[:id])
     if @workshop.update(workshop_params)
-      flash[:alert] = 'Workshop updated successfully.'
+      flash[:notice] = 'Workshop updated successfully.'
       redirect_to workshops_path
     else
       flash[:error] = 'Unable to update the workshop.'
@@ -105,7 +105,7 @@ class WorkshopsController < ApplicationController
     @workshop.inactive = true # Workshop ideas are workshops with inactive == true
 
     if @workshop.save
-      flash[:alert] = 'Thank you for submitting your workshop idea.'
+      flash[:notice] = 'Thank you for submitting your workshop idea.'
       redirect_to root_path
     else
       flash[:error] = 'Unable to save your workshop idea.'
@@ -117,7 +117,7 @@ class WorkshopsController < ApplicationController
     @workshop = current_user.workshops.build(workshop_params)
 
     if @workshop.save
-      flash[:alert] = 'Workshop created successfully.'
+      flash[:notice] = 'Workshop created successfully.'
       redirect_to workshops_path
     else
       flash[:error] = 'Unable to save the workshop.'

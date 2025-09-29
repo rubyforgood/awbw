@@ -5,7 +5,7 @@ class ContactUsController < ApplicationController
 
   def create
     ContactUsMailer.hello(params[:contact_us]).deliver_now
-    flash[:alert] = "Your message was sent!"
+    flash[:notice] = "Your message was sent!"
     redirect_to '/'
   end
 end
