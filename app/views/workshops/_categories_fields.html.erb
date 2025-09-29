@@ -1,24 +1,28 @@
-<div class="categories-wrapper d-flex flex-wrap gap-3">
-  <% metadata.each do |metadatum, categories| %>
-    <div class="categories-fields-wrapper border p-2">
-      <div class="categories-header d-flex justify-content-between align-items-center mb-1">
-        <label class="mb-0"><%= metadatum.display_name %></label>
-        <%= image_tag("collapse-arrow.png", class: "arrow-down") %>
-      </div>
-
-      <div class="categories-fields">
-        <% metadatum.categories.each do |category| %>
-          <div class="form-check">
-            <%= check_box_tag "categories[#{category.id}]",
-                              category.id,
-                              params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
-                              id: "category_#{category.id}",
-                              class: "form-check-input category-checkbox" %>
-            <%= label_tag "category_#{category.id}", category.name, class: "form-check-label small" %>
-          </div>
-        <% end %>
-      </div>
+<% metadata.each do |metadatum, categories| %>
+  <div class="categories-fields-wrapper border border-gray-300 rounded-lg overflow-hidden flex-1 min-w-[200px] max-w-md">
+    <!-- Header -->
+    <div class="categories-header flex justify-between items-center bg-white px-4 py-2 w-full cursor-pointer"
+         data-action="click->dropdown#toggle">
+      <label class="mb-0 font-medium text-gray-700"><%= metadatum.display_name %></label>
+      <%= image_tag(
+            "collapse-arrow.png",
+            class: "arrow-down w-4 h-4 transition-transform duration-300",
+            "data-dropdown-target" => "icon"
+          ) %>
     </div>
-  <% end %>
-</div>
-<!--<input id="search_Clay" value="1" checked="checked" name="search[Clay]" type="checkbox">  -->
+
+    <!-- Collapsible content -->
+    <div class="categories-fields mt-2 hidden" data-dropdown-target="content">
+      <% metadatum.categories.each do |category| %>
+        <div class="form-check flex items-center gap-2 mb-1 px-4">
+          <%= check_box_tag "categories[#{category.id}]",
+                            category.id,
+                            params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
+                            id: "category_#{category.id}",
+                            class: "form-check-input category-checkbox" %>
+          <%= label_tag "category_#{category.id}", category.name, class: "form-check-label text-sm text-gray-700" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
