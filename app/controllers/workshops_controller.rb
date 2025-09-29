@@ -5,8 +5,11 @@ class WorkshopsController < ApplicationController
   layout "tailwind", only: :index
 
   def index
-    workshops = current_user.curriculum(Workshop).search(params,
-                                                         super_user: current_user.super_user?) # inactive and active results
+    workshops = Workshop.includes(:categories, :sectors, :windows_type, :user, :images,
+                                  :workshop_age_ranges, :bookmarks)
+                        .references(:categories, :sectors, :windows_type, :user, :images,
+                                    :workshop_age_ranges, :bookmarks)
+                        .search(params, super_user: current_user.super_user?) # inactive and active results
     @workshops = workshops.paginate(page: params[:page], per_page: params[:per_page] || 50)
 
     load_sortable_fields
