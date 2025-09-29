@@ -15,7 +15,7 @@ class BookmarksController < ApplicationController
     @bookmark = current_user.bookmarks.find_or_create_by(bookmark_params)
     @bookmarkable = @bookmark.bookmarkable
     @bookmarkable.update(led_count: @bookmarkable.led_count + 1)
-    flash[:alert] = "#{@bookmark.bookmarkable_type} added to your bookmarks."
+    flash[:notice] = "#{@bookmark.bookmarkable_type} added to your bookmarks."
     if params[:from] == "workshops_index"
       redirect_to workshops_path(params.permit(:title, :query, :sort, :page, :active).to_h),
                   anchor: "workshop-#{@bookmark.bookmarkable.id}-anchor"
@@ -35,7 +35,7 @@ class BookmarksController < ApplicationController
     @bookmark = Bookmark.find(params[:id])
     if @bookmark
       @bookmark.destroy
-      flash[:alert] = 'Bookmark has been deleted.'
+      flash[:notice] = 'Bookmark has been deleted.'
       if params[:from] == "index"
         redirect_to bookmarks_path
       elsif params[:from] == "workshops_index"
@@ -45,7 +45,7 @@ class BookmarksController < ApplicationController
         redirect_to workshop_path(@bookmark.bookmarkable)
       end
     else
-      flash[:error] = 'Unable to find that bookmark.'
+      flash[:alert] = 'Unable to find that bookmark.'
     end
   end
 

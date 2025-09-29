@@ -19,7 +19,7 @@ class UsersController < ApplicationController
     set_password
     if @user.save
       @user.notifications.create(notification_type: 0)
-      flash[:alert] = 'User has been created.'
+      flash[:notice] = 'User has been created.'
       redirect_to users_path
     else
       render :new
@@ -43,10 +43,10 @@ class UsersController < ApplicationController
 
     if @user.update_with_password(pass_params)
       bypass_sign_in(@user)
-      flash[:alert] = 'Your Password was updated.'
+      flash[:notice] = 'Your Password was updated.'
       redirect_to root_path
     else
-      flash[:error] = "#{@user.errors.full_messages.join(", ")}"
+      flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
       render "change_password"
     end
   end
@@ -57,7 +57,7 @@ class UsersController < ApplicationController
 
     if @user.update(user_params)
       # @user.notifications.create(notification_type: 1)
-      flash[:alert] = 'User updated.'
+      flash[:notice] = 'User updated.'
       redirect_to users_path
     else
       flash[:alert] = 'Unable to update user.'

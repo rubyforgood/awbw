@@ -4,18 +4,14 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :null_session
   before_action :authenticate_api_user!
   before_action :authenticate_user!
-  before_action :clear_sign_in_flash
 
   private
 
-  def clear_sign_in_flash
-    flash.delete(:notice) if flash.notice == "You have successfully logged in."
-  end
-
   def authenticate_api_user!
-    return unless current_api_user.present?
-    sign_in current_api_user
-    flash[:notice] = 'You have successfully logged in.'
+    return unless current_api_user   # do nothing if no API user
+
+    sign_in(current_api_user)
+    flash[:notice] ||= 'You have successfully logged in.' # use :info
   end
 
   def authenticate_user!

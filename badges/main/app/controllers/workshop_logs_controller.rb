@@ -31,7 +31,7 @@ class WorkshopLogsController < ApplicationController
         file.update(report_id: @workshop_log.id, owner_type: @workshop_log.owner_type, owner_id: @workshop_log.owner_id)
         file.save
       end
-      flash[:alert] = 'Thanks for reporting on a workshop.'
+      flash[:notice] = 'Thanks for reporting on a workshop.'
       redirect_to root_path
     else
       set_form_variables
@@ -44,7 +44,7 @@ class WorkshopLogsController < ApplicationController
     @workshop_log = WorkshopLog.new(workshop_log_params)
 
     if @workshop_log.save
-      flash[:alert] = 'Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile.'
+      flash[:notice] = 'Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile.'
       redirect_to root_path
     else
       set_form_variables

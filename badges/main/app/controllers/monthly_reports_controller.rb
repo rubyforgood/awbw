@@ -36,7 +36,7 @@ class MonthlyReportsController < ApplicationController
 
     if params[:sectorable_items]
       if @report.save
-        flash[:alert] = "Your Monthly report has been successfully submitted."
+        flash[:notice] = "Your Monthly report has been successfully submitted."
         redirect_to '/'
       else
         @form_builder = FormBuilder.find( @report.owner_id )
@@ -49,7 +49,7 @@ class MonthlyReportsController < ApplicationController
         render :new
       end
     else
-      flash[:error] = 'Please select some populations that attended this monthly report!!!'
+      flash[:alert] = 'Please select some populations that attended this monthly report!!!'
 
       @total_ongoing    = 0
       @total_first_time = 0
@@ -86,7 +86,7 @@ class MonthlyReportsController < ApplicationController
       end
 
       if @saved
-        flash[:alert] = 'Thanks for reporting on a update report. '
+        flash[:notice] = 'Thanks for reporting on a update report. '
         redirect_to root_path
       else
         @agencies  = current_user.projects.

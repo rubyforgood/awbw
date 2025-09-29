@@ -5,8 +5,11 @@ class WorkshopsController < ApplicationController
   layout "tailwind", only: :index
 
   def index
-    workshops = current_user.curriculum(Workshop).search(params,
-                                                         super_user: current_user.super_user?) # inactive and active results
+    workshops = Workshop.includes(:categories, :sectors, :windows_type, :user, :images,
+                                  :workshop_age_ranges, :bookmarks)
+                        .references(:categories, :sectors, :windows_type, :user, :images,
+                                    :workshop_age_ranges, :bookmarks)
+                        .search(params, super_user: current_user.super_user?) # inactive and active results
     @workshops = workshops.paginate(page: params[:page], per_page: params[:per_page] || 50)
 
     load_sortable_fields
@@ -91,10 +94,10 @@ class WorkshopsController < ApplicationController
   def update
     @workshop = Workshop.find(params[:id])
     if @workshop.update(workshop_params)
-      flash[:alert] = 'Workshop updated successfully.'
+      flash[:notice] = 'Workshop updated successfully.'
       redirect_to workshops_path
     else
-      flash[:error] = 'Unable to update the workshop.'
+      flash[:alert] = 'Unable to update the workshop.'
       render :edit
     end
   end
@@ -105,10 +108,10 @@ class WorkshopsController < ApplicationController
     @workshop.inactive = true # Workshop ideas are workshops with inactive == true
 
     if @workshop.save
-      flash[:alert] = 'Thank you for submitting your workshop idea.'
+      flash[:notice] = 'Thank you for submitting your workshop idea.'
       redirect_to root_path
     else
-      flash[:error] = 'Unable to save your workshop idea.'
+      flash[:alert] = 'Unable to save your workshop idea.'
       render :share_idea
     end
   end
@@ -117,10 +120,10 @@ class WorkshopsController < ApplicationController
     @workshop = current_user.workshops.build(workshop_params)
 
     if @workshop.save
-      flash[:alert] = 'Workshop created successfully.'
-      redirect_to workshops_path
+      flash[:notice] = 'Workshop created successfully.'
+      redirect_to workshops_path(sort: "created")
     else
-      flash[:error] = 'Unable to save the workshop.'
+      flash.now[:alert] = 'Unable to save the workshop.'
       @potential_series_workshops = Workshop.published.order(:title)
       @image    = @workshop.images.build
       render :share_idea

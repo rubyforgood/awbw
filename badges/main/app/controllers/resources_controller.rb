@@ -38,7 +38,7 @@ class ResourcesController < ApplicationController
     if @resource.save
       redirect_to resources_path
     else
-      flash[:error] = "Unable to save #{@resource.title.titleize}"
+      flash[:alert] = "Unable to save #{@resource.title.titleize}"
       render :new
     end
   end
@@ -46,10 +46,10 @@ class ResourcesController < ApplicationController
   def update
     @resource = Resource.find(params[:id])
     if @resource.update(resource_params)
-      flash[:alert] = 'Resource updated.'
+      flash[:notice] = 'Resource updated.'
       redirect_to resources_path
     else
-      flash[:error] = 'Failed to update Resource.'
+      flash[:alert] = 'Failed to update Resource.'
       render :edit
     end
   end

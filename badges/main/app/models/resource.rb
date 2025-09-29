@@ -21,7 +21,7 @@ class Resource < ApplicationRecord
   scope :for_search, -> { published.where('kind NOT IN (?)', ['SectorImpact', 'LeaderSpotlight', 'Theme']) }
   scope :recent, -> { for_search.by_created }
 
-  validates :title, presence: true
+  validates :title, presence: true, uniqueness: { case_sensitive: false }
   validates :kind, presence: true
   attribute :inactive, :boolean, default: false
 

@@ -75,7 +75,7 @@ class ReportsController < ApplicationController
       end
 
       if @saved
-        flash[:alert] = 'Thanks for reporting on a update report. '
+        flash[:notice] = 'Thanks for reporting on a update report. '
         redirect_to root_path
       else
         @agencies  = current_user.projects.
@@ -101,7 +101,7 @@ class ReportsController < ApplicationController
       end
 
       if @saved
-        flash[:alert] = 'Thanks for reporting on a update report. '
+        flash[:notice] = 'Thanks for reporting on a update report. '
         redirect_to root_path
       else
         @agencies  = current_user.projects.
@@ -124,7 +124,7 @@ class ReportsController < ApplicationController
 
     if params[:sectorable_items] or params[:form_builder_id] == '7'
       if @report.save
-        flash[:alert] = "Your #{report_type} has been successfully submitted."
+        flash[:notice] = "Your #{report_type} has been successfully submitted."
         redirect_to '/'
       else
         @form_builder = FormBuilder.find( @report.owner_id )
@@ -136,7 +136,7 @@ class ReportsController < ApplicationController
         redirect_to :action =>'new', :form_builder_id => @report.owner_id
       end
     else
-      flash[:error] = 'Please select some populations that attended this monthly report!!!'
+      flash[:alert] = 'Please select some populations that attended this monthly report!!!'
       redirect_to "/reports/monthly?form_builder_id=#{params[:form_builder_id]}&year=#{params[:year]}&month=#{params[:month]}"
     end
   end
@@ -155,7 +155,7 @@ class ReportsController < ApplicationController
     end
 
     if @report.save
-      flash[:alert] = "Your Story has been successfully submitted."
+      flash[:notice] = "Your Story has been successfully submitted."
       redirect_to '/'
     else
       @form_builder = FormBuilder.find( @report.owner_id )
