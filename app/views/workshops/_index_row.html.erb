@@ -22,7 +22,7 @@
   <!-- 2️⃣ Title / author / metadata -->
   <div class="flex flex-col gap-1 min-w-[40ch] max-w-[40ch] break-words">
     <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-      <% if current_user.has_bookmarked_workshop?(workshop) %>
+      <% if workshop.bookmarks.any?{ |b| b.user_id == current_user.id } %>
         <%= link_to image_tag("bookmark-active.png", class: "w-5 h-5"),
                     bookmark_path(current_user.bookmark_for(workshop),
                                   from: "workshops_index",
@@ -45,7 +45,7 @@
 
     <div class="text-sm text-gray-600">
       Author:
-      <% if workshop.user.present? %>
+      <% if workshop.user %>
         <%= link_to workshop.author_name, user_path(workshop.user), class: "hover:underline" %>
       <% else %>
         <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
