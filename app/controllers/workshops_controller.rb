@@ -121,7 +121,7 @@ class WorkshopsController < ApplicationController
 
     if @workshop.save
       flash[:notice] = 'Workshop created successfully.'
-      redirect_to workshops_path
+      redirect_to workshops_path(sort: "created")
     else
       flash[:alert] = 'Unable to save the workshop.'
       @potential_series_workshops = Workshop.published.order(:title)
