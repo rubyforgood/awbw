@@ -1,8 +1,3 @@
-<%# TODO This needs to be change to stimulus and remove tailwind el-menu which requires a commercial license %>
-<script
-  src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1"
-  type="module"
-></script>
 <nav class="relative bg-[#063b8d] print:hidden">
   <div class="px-2 sm:px-6 lg:px-8">
     <div class="relative flex items-center justify-between py-2.5">
@@ -10,13 +5,15 @@
         <!-- Mobile menu button-->
         <button
           type="button"
-          command="--toggle"
-          commandfor="mobile-menu"
           class="
             relative inline-flex items-center justify-center rounded-md p-2 text-gray-400
             hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1
             focus:outline-indigo-500
           "
+          data-controller="dropdown"
+          data-dropdown-utility-class="hidden block"
+          data-dropdown-element-value="mobile-menu"
+          data-action="dropdown#toggle"
         >
           <span class="absolute -inset-0.5"></span>
           <span class="sr-only">Open main menu</span>
@@ -68,9 +65,7 @@
             <div class="flex justify-between">
 
               <%= render "shared/tailwind/navbar_text" %>
-              <el-dropdown class="relative ml-3">
-                <%= render "shared/tailwind/navbar_new_button" %>
-              </el-dropdown>
+              <%= render "shared/tailwind/navbar_new_button" %>
             </div>
           <% end %>
         </div>
@@ -82,15 +77,12 @@
         "
       >
         <!-- Profile dropdown -->
-        <el-dropdown class="relative ml-3">
-          <%= render "shared/tailwind/navbar_user" %>
-        </el-dropdown>
+        <%= render "shared/tailwind/navbar_user" %>
       </div>
     </div>
   </div>
 
-  <el-disclosure id="mobile-menu"
-    hidden class="block md:hidden">
+  <div id="mobile-menu" class="hidden md:hidden">
     <div class="space-y-1 px-2 pt-2 pb-3">
       <%= link_to workshops_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
           hover:text-white" do %>
@@ -110,12 +102,12 @@
       workshops_share_idea_path,
       class:
         "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
-                                                                                  hover:text-white" %>
+                                                                                                                                                          hover:text-white" %>
       <%= link_to "New workshop variation",
       new_workshop_variation_path,
       class:
         "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
-                                                                                  hover:text-white" %>
+                                                                                                                                                          hover:text-white" %>
     </div>
-  </el-disclosure>
+  </div>
 </nav>
