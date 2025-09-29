@@ -15,7 +15,7 @@
     <% flash_notices = [] %>
   <% end %>
 
-  <% notices_and_alerts = manual_messages + flash_notices + [[:alert, "hello"]] %>
+  <% notices_and_alerts = manual_messages + flash_notices %>
 
   <% notices_and_alerts.each do |type, msg| %>
     <% next unless msg.to_s.present? && !msg.is_a?(ActiveRecord::Relation) && !msg.is_a?(Array) %>
