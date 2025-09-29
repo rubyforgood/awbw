@@ -16,7 +16,13 @@ class BookmarksController < ApplicationController
     @bookmarkable = @bookmark.bookmarkable
     @bookmarkable.update(led_count: @bookmarkable.led_count + 1)
     flash[:alert] = "#{@bookmark.bookmarkable_type} added to your bookmarks."
-    redirect_to workshop_path(@bookmark.bookmarkable)
+    if params[:from] == "workshops_index"
+      redirect_to workshops_path(params.permit(:title, :query, :sort, :page, :active).to_h),
+                  anchor: "workshop-#{@bookmark.bookmarkable.id}-anchor"
+    else
+      redirect_to workshop_path(@bookmark.bookmarkable)
+    end
+
   end
 
   def show
@@ -32,6 +38,9 @@ class BookmarksController < ApplicationController
       flash[:alert] = 'Bookmark has been deleted.'
       if params[:from] == "index"
         redirect_to bookmarks_path
+      elsif params[:from] == "workshops_index"
+        redirect_to workshops_path(params.permit(:title, :query, :sort, :page, :active).to_h),
+                    anchor: "workshop-#{@bookmark.bookmarkable.id}-anchor"
       else
         redirect_to workshop_path(@bookmark.bookmarkable)
       end
