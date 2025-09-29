@@ -4,3 +4,11 @@
 @source "../../../app/views/**/*.html.erb";
 @source "../../../app/views/**/*.rb";
 @source "../../../app/helpers/**/*.rb";
+
+@theme {
+  --color-primary: #063b8d;
+  --color-secondary: var(--color-gray-500);
+  --color-danger: var(--color-red-500);
+  --color-warning: var(--color-yellow-500);
+  --color-info: var(--color-blue-500);
+}
