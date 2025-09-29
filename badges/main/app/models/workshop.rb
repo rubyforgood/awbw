@@ -82,6 +82,7 @@ class Workshop < ApplicationRecord
   scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }
   scope :recent, -> { for_search.by_year.order(led_count: :desc).uniq(&:title) }
   scope :title, -> (title) { where("title like ?", "%#{ title }%") }
+  scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
 
   scope :by_created_at, -> { order(created_at: :desc) }
   scope :by_led_count, -> { order(led_count: :desc) }
@@ -118,6 +119,10 @@ class Workshop < ApplicationRecord
   def self.filter_by_params(params={})
     workshops = self.all
     # filter by
+    if params[:windows_types].present?
+      windows_type_ids = params[:windows_types].values.map(&:to_i) # windows_types param is like {"1"=>"1", "2"=>"1"}
+      workshops = workshops.windows_type_ids(windows_type_ids)
+    end
     if params[:active].present? || params[:inactive].present?
       active = params[:active] == "true"
       inactive = params[:inactive] == "true"

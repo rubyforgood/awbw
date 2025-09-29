@@ -1,101 +1,131 @@
-<div class='width search-curriculum-page'>
-  <!-- %br -->
-  <div class="col-md-12">
-    <div class="entry-content d-flex align-items-start justify-content-between mb-3">
-      <div class="me-3">
-        <div class="pull-left">
-          <h2 class="normal">Search Curriculum</h2>
-          <p>
-            Search by emotional theme, materials needed, ease of set-up and clean-up and more.
-            <br>We always encourage the creativity and innovation of each Windows Facilitator;
-            if you adapt and improve workshops, please be sure to share your ideas with us!
-          </p>
-        </div>
-        <div class="pull-right">
-          <% if current_user.super_user? %>
-            <div>
-              <%= link_to 'New Workshop', new_workshop_path, class: 'btn btn-primary' %>
-            </div>
-          <% end %>
-        </div>
+<style>
+
+</style>
+
+<div class="w-full px-4 search-curriculum-page">
+  <!-- Header -->
+  <div class="w-full">
+    <div class="flex items-start justify-between mb-6">
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">Workshops</h2>
+        <p class="text-gray-700">
+          Search by emotional theme, materials needed, ease of set-up and clean-up, and more.
+          <br>
+          We always encourage the creativity and innovation of each Windows Facilitator;
+          if you adapt and improve workshops, please be sure to share your ideas with us!
+        </p>
       </div>
+      <% if current_user.super_user? %>
+        <%= link_to 'New Workshop', new_workshop_path,
+                    class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
+                    rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200 font-medium shadow-sm" %>
+      <% end %>
     </div>
   </div>
-  <div class="col-md-12">
-    <hr>
-    <div class="inner-container">
-    <div class='small-gray-title'>
-      Filter By
-    </div>
-    <div class='instructions'>
-      Click on categories below to expand
-    </div>
-    <%= form_tag('/workshops', method: :get) do %>
-      <div class='width checkbox-area'>
+
+  <!-- Divider -->
+  <div class="w-full">
+    <hr class="border-gray-300 mb-6">
+  </div>
+
+  <!-- Search Form -->
+  <div class="w-full">
+    <%= form_tag('/workshops', method: :get, class: "space-y-6") do %>
+
+      <!-- Filters Header -->
+      <div>
+        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters</h3>
+      </div>
+
+      <!-- Search Fields -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <%= label_tag :title, "Title", class: "block text-gray-700 font-medium mb-1" %>
+          <div class="relative">
+            <%= text_field_tag :title, params[:title],
+                               class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500" %>
+            <button type="submit"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <%= label_tag :query, "Keywords", class: "block text-gray-700 font-medium mb-1" %>
+          <div class="relative">
+            <%= text_field_tag :query, params[:query],
+                               class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500" %>
+            <button type="submit"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkboxes -->
+      <div class="flex flex-wrap gap-4">
         <%= render 'windows_type_fields', windows_types: @windows_types %>
         <%= render 'categories_fields', metadata: @metadata %>
         <%= render 'sectors_fields', sectors: @sectors %>
         <%= render 'inactive_fields' if current_user.super_user? %>
       </div>
-      <div class='search-wrapper'>
-        <div class="search-field-row col-md-6">
-          <%= label_tag "Title" %>
-          <div class="search-input-wrapper" style="position: relative; display: inline-block; width: 100%;">
-            <%= text_field_tag :title, params[:title], class: 'search', style: 'padding-right: 30px;' %>
-            <div class="submit-div" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">
-              <i class='glyphicon glyphicon-search'></i>
-            </div>
-          </div>
-        </div>
-        <div class='search-field-row col-md-6'>
-          <%= label_tag "Keywords" %>
-          <div class="search-input-wrapper" style="position: relative; display: inline-block; width: 100%;">
-            <%= text_field_tag :query, params[:query], class: 'search', style: 'padding-right: 30px;' %>
-            <div class="submit-div" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">
-              <i class='fa fa-search'></i>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-12 filtered-by mt-3">
-          <%= render "filters_applied" %>
-        </div>
-        <div class="col-md-12 mb-3"></div>
-        <div class='sort-options'>
-          <br>
-          <div class='sortable-label'>
-            <b>Sort by:</b>
-          </div>
-          <div class='sortable-group'>
-            <%= render 'sortable_fields', sortable_fields: @sortable_fields %>
-          </div>
-        </div>
-        <div class='list-group'>
-          <% if @workshops.any? %>
-            <div id="workshops-list">
-              <% @workshops.each do |workshop| %>
-              <%= render 'workshops/index_row', workshop: workshop.decorate, breadcrumb: 'Search Curriculum', link_route: workshop_path(workshop) %>
-            <% end %>
-            </div>
 
-            <div class='paginate-container'>
-              <!-- ##### Will Paginate #### -->
-              <%= will_paginate @workshops, :previous_label => '<<', :next_label => '>>', :inner_window => 2 %>
-            </div>
-          <% else %>
-            Your search returned no results.  Please try again.
-          <% end %>
-        </div>
+      <div>
+        <hr class="border-gray-300 my-6">
+      </div>
+
+      <!-- Filters Applied -->
+      <div class="mt-6">
+        <%= render "filters_applied" %>
+      </div>
+
+      <!-- Divider -->
+      <div>
+        <hr class="border-gray-300 my-6">
+      </div>
+
+      <!-- Sort Options -->
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 font-medium">
+        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Sort by</h3>
+        <%= render 'sortable_fields' %>
+      </div>
+
+      <div>
+        <hr class="border-gray-300 my-6">
+      </div>
+
+      <!-- Workshops List -->
+      <div class="mt-6">
+        <% if @workshops.any? %>
+          <div id="workshops-list" class="space-y-4">
+            <% @workshops.each do |workshop| %>
+              <%= render 'workshops/index_row',
+                         workshop: workshop.decorate,
+                         breadcrumb: 'Search Curriculum',
+                         link_route: workshop_path(workshop) %>
+            <% end %>
+          </div>
+
+          <div class="pagination mt-6">
+            <%= will_paginate @workshops,
+                              previous_label: '<<',
+                              next_label: '>>',
+                              inner_window: 2,
+                              class: 'will-paginate-wrapper flex space-x-2 list-none p-0' %>
+          </div>
+
+
+        <% else %>
+          <p class="text-gray-600">Your search returned no results. Please try again.</p>
+        <% end %>
       </div>
     <% end %>
   </div>
 </div>
 
-</div>
 <script>
-    $('.submit-div').click(function() {
-        $(this).closest('form').submit();
-    });
-
     document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll(".category-checkbox").forEach(function(checkbox) {
             checkbox.addEventListener("change", function() {

@@ -26,3 +26,51 @@
   display: flex;
   gap: 0.5rem;            /* space between each sort option */
 }
+
+
+/*###*/
+
+.search-curriculum-page form .checkbox-area {
+  width: 100%; /*32%;*/
+  /*margin-right: 40px;*/
+  float: left;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.categories-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.categories-wrapper .form-check {
+  flex: 1 1 30%;     /* about 3 per row, but wraps as needed */
+  /*flex: 0 1 200px;   !* each item tries for 200px, wraps if not enough space *!*/
+  min-width: 180px;  /* don’t shrink too small */
+  margin-bottom: 0.5rem;
+}
+
+.search-curriculum-page form .checkbox-area .categories-fields-wrapper .categories-header label.target-active {
+  border-bottom: 0.8px solid #d4d4d4;
+}
+
+.search-curriculum-page form .checkbox-area .categories-fields-wrapper .categories-header label {
+  padding: 0 12px;
+  margin: 0;
+  height: 35px;
+  line-height: 35px;
+  font-weight: 500;
+  border-bottom: 0.8px solid transparent;
+  transition: border-color 0.3s ease-out;
+}
+
+.categories-fields .form-check .form-check-label {
+  font-weight: normal;
+  margin-left: 0.5em;
+  margin-bottom: 0;
+}
+
+form.simple_form .form-check-input + .form-check-label, .categories-fields .form-check-input + .form-check-label {
+  height: auto !important;
+  width: auto !important;
+}

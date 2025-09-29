@@ -1,0 +1,62 @@
+/* Container wrapper */
+.will-paginate-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+/* Horizontal list */
+.will-paginate-wrapper ul.pagination {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* List items as inline-flex buttons */
+.will-paginate-wrapper ul.pagination li {
+    display: inline-flex;
+}
+
+/* Links / spans styled as buttons */
+.will-paginate-wrapper ul.pagination li a,
+.will-paginate-wrapper ul.pagination li span {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #e5e7eb; /* very light grey outline */
+    border-radius: 0.25rem;
+    text-decoration: none;
+    color: #a6a7a8; /* light grey text */
+    background-color: #faf9f9;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* Remove border for active or ellipsis */
+.will-paginate-wrapper ul.pagination li.active a,
+.will-paginate-wrapper ul.pagination li span:contains('…') {
+    border: none;
+}
+
+/* Hover effect: light grey background */
+.will-paginate-wrapper ul.pagination li a:hover {
+    background-color: #E8E8E8; /* light grey */
+    color: #374151; /* dark grey text on hover */
+}
+
+/* Active page styling: light grey background */
+.will-paginate-wrapper ul.pagination li.active a {
+    background-color: #f3f4f6;
+    color: #374151;
+    cursor: default;
+    border: none;
+}
+
+/* Disabled page styling */
+.will-paginate-wrapper ul.pagination li.disabled a {
+    background-color: #f3f4f6;
+    color: #a6a7a8; /* light grey text */
+    cursor: default;
+    border: none;
+}

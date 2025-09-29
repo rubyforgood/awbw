@@ -21,7 +21,7 @@ RSpec.describe "Workshops" do
   
         visit workshops_path
 
-        within('.search-wrapper') do
+        within('#workshops-list') do
           expect(page).to have_content('The best workshop in the world')
           expect(page).to have_content('The best workshop on mars')
           expect(page).to have_content('oh hello!')
@@ -48,7 +48,7 @@ RSpec.describe "Workshops" do
     
         click_on 'Apply filters'
 
-        within('.search-wrapper') do
+        within('#workshops-list') do
           expect(page).to have_content('The best workshop in the world')
           expect(page).to have_content('The best workshop on mars')
           expect(page).not_to have_content('oh hello!')
