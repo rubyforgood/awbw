@@ -136,7 +136,7 @@ class ReportsController < ApplicationController
         redirect_to :action =>'new', :form_builder_id => @report.owner_id
       end
     else
-      flash[:error] = 'Please select some populations that attended this monthly report!!!'
+      flash[:alert] = 'Please select some populations that attended this monthly report!!!'
       redirect_to "/reports/monthly?form_builder_id=#{params[:form_builder_id]}&year=#{params[:year]}&month=#{params[:month]}"
     end
   end

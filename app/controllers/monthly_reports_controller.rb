@@ -49,7 +49,7 @@ class MonthlyReportsController < ApplicationController
         render :new
       end
     else
-      flash[:error] = 'Please select some populations that attended this monthly report!!!'
+      flash[:alert] = 'Please select some populations that attended this monthly report!!!'
 
       @total_ongoing    = 0
       @total_first_time = 0

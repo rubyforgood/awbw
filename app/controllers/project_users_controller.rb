@@ -6,7 +6,7 @@ class ProjectUsersController < ApplicationController
     if project_user.destroy
       flash[:notice] = 'Project user has been deleted.'
     else
-      flash[:error] = 'Unable to delete project user.  Please contact AWBW.'
+      flash[:alert] = 'Unable to delete project user.  Please contact AWBW.'
     end
     redirect_to user_path(user)
   end

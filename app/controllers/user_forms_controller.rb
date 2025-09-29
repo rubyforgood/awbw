@@ -4,7 +4,7 @@ class UserFormsController < ApplicationController
     if @user_form.save
       flash[:notice] = 'User form successfully created'
     else
-      flash[:error] = 'There was a problem saving your form.'
+      flash[:alert] = 'There was a problem saving your form.'
     end
     redirect_to root_path
   end

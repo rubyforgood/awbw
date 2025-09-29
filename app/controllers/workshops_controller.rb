@@ -94,7 +94,7 @@ class WorkshopsController < ApplicationController
       flash[:notice] = 'Workshop updated successfully.'
       redirect_to workshops_path
     else
-      flash[:error] = 'Unable to update the workshop.'
+      flash[:alert] = 'Unable to update the workshop.'
       render :edit
     end
   end
@@ -108,7 +108,7 @@ class WorkshopsController < ApplicationController
       flash[:notice] = 'Thank you for submitting your workshop idea.'
       redirect_to root_path
     else
-      flash[:error] = 'Unable to save your workshop idea.'
+      flash[:alert] = 'Unable to save your workshop idea.'
       render :share_idea
     end
   end
@@ -120,7 +120,7 @@ class WorkshopsController < ApplicationController
       flash[:notice] = 'Workshop created successfully.'
       redirect_to workshops_path
     else
-      flash[:error] = 'Unable to save the workshop.'
+      flash[:alert] = 'Unable to save the workshop.'
       @potential_series_workshops = Workshop.published.order(:title)
       @image    = @workshop.images.build
       render :share_idea

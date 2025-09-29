@@ -45,7 +45,7 @@ class BookmarksController < ApplicationController
         redirect_to workshop_path(@bookmark.bookmarkable)
       end
     else
-      flash[:error] = 'Unable to find that bookmark.'
+      flash[:alert] = 'Unable to find that bookmark.'
     end
   end
 

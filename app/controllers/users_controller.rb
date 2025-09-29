@@ -46,7 +46,7 @@ class UsersController < ApplicationController
       flash[:notice] = 'Your Password was updated.'
       redirect_to root_path
     else
-      flash[:error] = "#{@user.errors.full_messages.join(", ")}"
+      flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
       render "change_password"
     end
   end
