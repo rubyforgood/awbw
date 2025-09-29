@@ -5,9 +5,10 @@
         <% if params[:kind] != "Scholarship" %>
           <div class="small-gray-title">Filter By:</div>
           <%= render 'shared/sortable_fields_btn', sortable_fields: @sortable_fields %>
+        <% end %>
       </div>
-<% end %>
-</div>
+    </div>
+  </div>
 </div>
 
 <div class="row result-title">

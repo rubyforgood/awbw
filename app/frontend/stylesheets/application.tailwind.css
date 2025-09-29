@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./pagination.css";
 
 @source "../../../app/views/**/*.html.erb";
 @source "../../../app/views/**/*.rb";

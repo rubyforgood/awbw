@@ -1,20 +1,23 @@
-<div class="categories-fields-wrapper border p-2">
-  <div class="categories-header d-flex justify-content-between align-items-center mb-1">
-    <label class="mb-0">Windows Type</label>
-    <%= image_tag("collapse-arrow.png", class: "arrow-down") %>
+<%# Example: Windows Type %>
+<div class="categories-fields-wrapper border border-gray-300 rounded-lg overflow-hidden w-full max-w-md">
+  <!-- Header -->
+  <div class="categories-header flex justify-between items-center bg-white px-4 py-2 w-full cursor-pointer"
+       data-action="click->dropdown#toggle">
+    <label class="mb-0 font-medium text-gray-700">Windows Type</label>
+    <%= image_tag("collapse-arrow.png", class: "arrow-down w-4 h-4 transition-transform duration-300", "data-dropdown-target" => "icon") %>
   </div>
 
-  <div class="categories-fields">
+  <div class="categories-fields mt-2 hidden active">
     <% windows_types.each do |windows_type| %>
-      <div class="form-check">
+      <div class="form-check flex items-center gap-2 mb-1 px-4">
         <%= check_box_tag "windows_types[#{windows_type.id}]",
                           windows_type.id,
                           params.dig(:windows_types, windows_type.id.to_s).to_s == windows_type.id.to_s,
                           id: "windows_type_#{windows_type.id}",
                           class: "form-check-input category-checkbox" %>
-        <%= label_tag "windows_type_#{windows_type.id}", windows_type.name.downcase.gsub(" log", "").titleize, class: "form-check-label small" %>
+        <%= label_tag "windows_type_#{windows_type.id}", windows_type.name.titleize,
+                      class: "form-check-label text-sm text-gray-700" %>
       </div>
     <% end %>
   </div>
 </div>
-

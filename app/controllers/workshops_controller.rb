@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 class WorkshopsController < ApplicationController
+
+  layout "tailwind", only: :index
+
   def index
     workshops = current_user.curriculum(Workshop).search(params,
                                                          super_user: current_user.super_user?) # inactive and active results
-    @workshops = workshops.paginate(page: params[:page], per_page: 50)
+    @workshops = workshops.paginate(page: params[:page], per_page: params[:per_page] || 50)
 
     load_sortable_fields
     load_metadata
