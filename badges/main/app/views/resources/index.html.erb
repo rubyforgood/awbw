@@ -1,73 +1,128 @@
-<div class="container-fluid search-curriculum-page resources-page">
-  <div class="row">
-    <div class="col-md-9 col-lg-8 width">
-      <div class="entry-content">
-        <h2 class="normal">Resources</h2>
+<div class="w-full px-4 search-resources-page">
+  <!-- Header Row -->
+  <div class="w-full">
+    <div class="flex items-start justify-between mb-6">
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">Resources</h2>
       </div>
-    </div>
-    <div class="col-md-3 col-lg-4 width">
-      <div class="entry-content">
-        <%= link_to "New Resource", new_resource_path, class: "btn btn-primary" if current_user.super_user? %>
-      </div>
-    </div>
-  </div>
-  <div class="row search-row">
-    <div class="col-md-12 col-lg-12">
-       <%= form_tag resources_path, method: 'get' do |f| %>
-        <div class="search-wrapper">
-          <div class="search-field-row" >
-            <input type="hidden" name="kind" value="<%= params[:kind] %>" />
-
-            <%= text_field_tag :query, params[:query], class: 'search',
-                                      placeholder: ' Enter keywords here...' %>
-            <div class="btn btn-primary btn-search-wrapper" id="submit-div">
-              <i class='fa fa-search'></i>
-            </div>
-          </div>
-        </div>
-        <%= link_to 'Clear All', resources_path %>
-
-    </div>
-  </div><!-- search row -->
-
-  <div class="row">
-    <div class="col-md-12 col-lg-12">
-      <div class="filter-wrapper">
-        <% if params[:kind] != "Scholarship" %>
-          <div class="small-gray-title">Filter By:</div>
-            <%= render 'shared/sortable_fields_btn', sortable_fields: Resource::KINDS - ["Story"] %>
-          </div>
-        <% end %>
-    </div>
-    <% end %><!-- filter_by row -->
-  </div>
-
-  <div class="col-md-12 col-lg-8 width result-title">
-    <h2 class="normal title-spacing">Results</h2>
-  </div><!-- result title-->
-
-  <div class="row">
-    <div class="col-md-12 col-lg-12 width" >
-      <% if @resources.any? %>
-        <table width="80%" class="table">
-          <tbody id="resources-list">
-            <% @resources.each do |r| %>
-              <%= render 'resource', resource: r %>
-              <% end %>
-          </tbody>
-        </table>
-      <% else %>
-        There are no resources that match your search.  Please try again.
+      <% if current_user.super_user? %>
+        <%= link_to 'New Resource', new_resource_path,
+                    class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
+                    rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200 font-medium shadow-sm" %>
       <% end %>
     </div>
+  </div>
 
-    <div class="text-center">
-      <%= will_paginate @resources, :previous_label => '<<', :next_label => '>>', :inner_window => 2 %>
+  <!-- Search Form -->
+  <div class="w-full">
+    <%= form_tag resources_path, method: :get, class: "space-y-2" do %>
+      <input type="hidden" name="kind" value="<%= params[:kind] %>" />
+      <!-- Filters Header -->
+      <div>
+        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters</h3>
+      </div>
+
+      <!-- Search Fields -->
+      <div class="flex flex-col md:flex-row items-start md:items-end gap-6">
+
+        <!-- Keywords -->
+        <div class="keywords-search-box flex-1">
+          <%#= label_tag :query, "Keywords", class: "block text-gray-700 font-medium mb-1" %>
+          <div class="relative">
+            <%= text_field_tag :query, params[:query],
+                                placeholder: "Keywords",
+                               class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10
+                               focus:ring-blue-500 focus:border-blue-500" %>
+            <button type="submit"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Row -->
+        <% if params[:kind] != "Scholarship" %>
+          <div class="flex items-center gap-2">
+            <%= render "search_boxes_kinds", sortable_fields: Resource::KINDS - ["Story"] %>
+          </div>
+        <% end %>
+
+        <!-- Clear Filters -->
+        <div>
+          <%= link_to 'Clear filters', resources_path,
+                      class: "inline-block px-4 py-2 bg-[#faf9f9] text-[#a6a7a8] rounded
+                        hover:bg-[#E8E8E8] hover:text-[#374151] transition-colors duration-200" %>
+        </div>
+
+      </div>
+
+    <% end %>
+
+  </div>
+
+  <!-- Divider -->
+  <div class="w-full mt-6">
+    <hr class="border-gray-300 mb-6">
+  </div>
+
+  <!-- Results Table -->
+  <% if @resources.any? %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full border-collapse">
+        <tbody id="resources-list" class="divide-y divide-gray-200">
+        <% @resources.each do |resource| %>
+          <tr>
+            <td class="py-3">
+              <div class="flex items-center gap-3">
+                <!-- Image -->
+                <div class="image max-w-[60px] flex-shrink-0">
+                  <%= link_to resource_path(resource) do %>
+                    <img class="h-10 w-auto rounded-md object-cover"
+                         src="<%= resource.main_image_url || asset_path('missing.png') %>"
+                         alt="<%= resource.title.truncate(25) %>">
+                  <% end %>
+                </div>
+
+                <!-- Title -->
+                <div class="title">
+                  <%= link_to resource.title.titleize, resource_path(resource),
+                              class: "text-gray-900 hover:underline font-medium block" %>
+                </div>
+
+                <% unless resource.attachments.empty? %>
+                  <!-- Download -->
+                  <div class="download flex items-center gap-1">
+                    <%= link_to resource_download_path(resource),
+                                class: "text-blue-600 hover:underline flex items-center gap-1" do %>
+                      <i class="fa fa-download" aria-hidden="true"></i>
+                      Download
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            </td>
+
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
     </div>
+  <% else %>
+    <p class="text-gray-500">There are no resources that match your search. Please try again.</p>
+  <% end %>
 
-  </div><!-- result row -->
+  <!-- Pagination -->
+  <div class="pagination mt-6">
+    <div class="pagination mt-6">
+      <%= will_paginate @resources,
+                        previous_label: '<<',
+                        next_label: '>>',
+                        inner_window: 2,
+                        class: 'will-paginate-wrapper flex space-x-2 list-none p-0' %>
+    </div>
+  </div>
 
-</div><!-- container-fluid -->
+</div>
 
 <script>
   $('#submit-div').click(function() {

@@ -1,0 +1,33 @@
+<% default_btn_classes = "text-[#a6a7a8] bg-white hover:bg-[#E8E8E8] hover:text-[#374151]" %>
+<% selected_btn_classes = "text-[#374151] bg-[#E8E8E8] hover:bg-white hover:text-[#a6a7a8]" %>
+
+<div class="flex flex-wrap gap-2">
+  <h3 class="text-sm font-semibold text-gray-500 tracking-wide">Kinds</h3>
+  <!-- Sortable Fields -->
+  <% sortable_fields.each do |sortable_field| %>
+    <% name = sortable_field.is_a?(String) ? sortable_field : sortable_field.name %>
+
+    <label for="kind_<%= name %>"
+           class="cursor-pointer inline-block px-4 py-2 rounded font-medium transition-colors duration-200
+                <%= name.to_s == params[:kind] ? selected_btn_classes : default_btn_classes %>">
+      <%= check_box_tag(:kind, name, name.to_s == params[:kind],
+                        id: "kind_#{name}", class: "hidden") %>
+      <%= name.pluralize %>
+    </label>
+
+    <script>
+        document.addEventListener("turbo:load", function () {
+            const el = document.getElementById("kind_<%= name %>")
+            if (el) {
+                el.addEventListener("change", function () {
+                    const url = new URL(window.location.href)
+                    url.searchParams.set("kind", "<%= name %>")   // set kind
+                    url.searchParams.delete("show_all")           // remove show_all
+                    window.location.href = url.toString()
+                })
+            }
+        })
+    </script>
+  <% end %>
+
+</div>
