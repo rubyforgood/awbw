@@ -1,10 +1,10 @@
-<div id="<%= dom_id faq %>" data-controller="dropdown">
-  <div>
+<div id="<%= dom_id faq %>">
+
+  <div class="border-b border-gray-300">
     <button
       type="button"
       class="
         flex items-center justify-between w-full py-5 px-4 font-medium text-left
-        border-b border-gray-300
       "
     >
       <strong class="sr-only">Question:</strong>
@@ -24,21 +24,26 @@
 
     </button>
 
+    <% if current_user.super_user? %>
+      <div class="flex gap-4 px-4 pb-2">
+        <div>
+          <strong>Inactive:</strong>
+          <%= faq.inactive %>
+        </div>
+
+        <div>
+          <strong>Ordering:</strong>
+          <%= faq.ordering %>
+        </div>
+        <%= link_to "Edit", edit_faq_path(faq), class: "" %>
+      </div>
+
+    <% end %>
   </div>
 
   <div class="py-5 border-b border-gray-300">
     <strong class="sr-only">Answer:</strong>
     <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
-  </div>
-
-  <div>
-    <strong class="sr-only">Inactive:</strong>
-    <%= faq.inactive %>
-  </div>
-
-  <div>
-    <strong class="sr-only">Ordering:</strong>
-    <%= faq.ordering %>
   </div>
 
 </div>
