@@ -123,7 +123,7 @@ class WorkshopsController < ApplicationController
       flash[:notice] = 'Workshop created successfully.'
       redirect_to workshops_path(sort: "created")
     else
-      flash[:alert] = 'Unable to save the workshop.'
+      flash.now[:alert] = 'Unable to save the workshop.'
       @potential_series_workshops = Workshop.published.order(:title)
       @image    = @workshop.images.build
       render :share_idea
