@@ -51,6 +51,10 @@ class User < ApplicationRecord
     super && !self.inactive?
   end
 
+  def bookmark_for(record)
+    bookmarks.find_by(bookmarkable: record)
+  end
+
   def full_name
     if !first_name || first_name.empty?
       email
