@@ -100,6 +100,20 @@ RSpec.describe User do
     end
   end
 
+  describe '#bookmark_for' do
+    let(:user) { create(:user) }
+    let(:workshop) { create(:workshop) }
+
+    it 'returns the bookmark object if it exists' do
+      bookmark = create(:bookmark, user: user, bookmarkable: workshop)
+      expect(user.bookmark_for(workshop)).to eq(bookmark)
+    end
+
+    it 'returns nil if bookmark does not exist' do
+      expect(user.bookmark_for(workshop)).to be_nil
+    end
+  end
+
   # Add tests for other methods like #active_for_authentication?, #has_liaison_position_for?, etc.
   # Test callbacks like :set_default_values, :before_destroy
 end 

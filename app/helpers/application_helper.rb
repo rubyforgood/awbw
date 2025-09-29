@@ -37,11 +37,16 @@ module ApplicationHelper
 
   def display_banner
     banner = Banner.last
+    return unless banner&.show
 
-    if !banner.nil? && banner.show
-      ("<div id='banner-news' class='banner-news'>" +
-        "<div class='content'>#{banner.content}</div>" +
-        "</div><div class='separator'></div>").html_safe
+    safe_content = sanitize(
+      banner.content,
+      tags: %w[a],
+      attributes: %w[href]
+    )
+
+    content_tag(:div, id: "banner-news", class: "bg-yellow-400 text-black text-center px-4 py-2") do
+      content_tag(:div, safe_content.html_safe, class: "font-medium")
     end
   end
 
