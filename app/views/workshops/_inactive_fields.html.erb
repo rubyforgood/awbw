@@ -1,21 +1,33 @@
-<div class="categories-fields-wrapper border p-2">
-  <div class="categories-header">
-    <label class="mb-0">Published</label>
-    <%= image_tag("collapse-arrow.png", class: "arrow-down") %>
+<div class="categories-fields-wrapper border border-gray-300 rounded-lg overflow-hidden w-full max-w-md">
+  <!-- Header -->
+  <div class="categories-header flex justify-between items-center bg-white px-4 py-2 w-full cursor-pointer"
+       data-action="click->dropdown#toggle">
+    <label class="mb-0 font-medium text-gray-700">Published</label>
+    <%= image_tag(
+          "collapse-arrow.png",
+          class: "arrow-down w-4 h-4 transition-transform duration-300",
+          "data-dropdown-target" => "icon"
+        ) %>
   </div>
 
-  <div class="categories-fields">
-    <div class="form-check">
+  <!-- Collapsible content -->
+  <div class="categories-fields mt-2 hidden" data-dropdown-target="content">
+    <div class="input-group flex items-center gap-2 mb-1 px-4">
       <%= check_box_tag "active", true,
                         (params[:active].present? && YAML.load(params[:active].to_s) == true),
-                        id: "inactive_false", class: "form-check-input category-checkbox" %>
-      <%= label_tag "active", "Active/published", class: "form-check-label small" %>
+                        id: "inactive_false", class: "category-checkbox" %>
+      <span class="text-sm text-gray-700">
+        Active/published
+      </span>
     </div>
-    <div class="form-check">
+
+    <div class="input-group flex items-center gap-2 mb-1 px-4">
       <%= check_box_tag "inactive", true,
                         (params[:inactive].present? && YAML.load(params[:inactive].to_s) == true),
-                        id: "inactive_true", class: "form-check-input category-checkbox" %>
-      <%= label_tag "inactive", "Inactive/unpublished", class: "form-check-label small" %>
+                        id: "inactive_true", class: "category-checkbox" %>
+      <span class="text-sm text-gray-700">
+        Inactive/unpublished
+      </span>
     </div>
   </div>
 </div>

@@ -1,41 +1,29 @@
-<div class="input-group">
-    <%= radio_button_tag :sort, "created",
-          params[:sort] == "created",
-          onclick: ("$('form').submit();") %>
-
-    <span class="small">
-      Newest
-    </span>
+<div class="flex items-center gap-1">
+  <%= radio_button_tag :sort, "created",
+                       params[:sort] == "created",
+                       onclick: ("$('form').submit();") %>
+  <span class="text-sm">Newest</span>
 </div>
 
-<div class="input-group">
+<div class="flex items-center gap-1">
   <%= radio_button_tag :sort, "title",
                        params[:sort] == "title",
                        onclick: ("$('form').submit();") %>
-
-  <span class="small">
-    Title
-  </span>
+  <span class="text-sm">Title</span>
 </div>
 
-<div class="input-group">
+<div class="flex items-center gap-1">
   <%= radio_button_tag :sort, "led",
                        params[:sort] == "led",
                        onclick: ("$('form').submit();") %>
-
-  <span class="small">
-    Most favorited
-  </span>
+  <span class="text-sm">Most led</span>
 </div>
 
 <% if params[:query].present? %>
-  <div class="input-group">
+  <div class="flex items-center gap-1">
     <%= radio_button_tag :sort, "keywords",
                          params[:sort] == "keywords",
                          onclick: ("$('form').submit();") %>
-
-    <span class="small">
-      Keywords
-    </span>
+    <span class="text-sm">Keywords</span>
   </div>
 <% end %>
