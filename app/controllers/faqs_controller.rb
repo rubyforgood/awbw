@@ -1,6 +1,8 @@
 class FaqsController < ApplicationController
   before_action :set_faq, only: [:show, :edit, :update, :destroy]
 
+  layout "tailwind", only: [:index]
+
   def index
     if current_user.super_user?
       per_page = params[:number_of_items_per_page].presence || 25

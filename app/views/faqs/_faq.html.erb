@@ -1,21 +1,43 @@
-<div id="<%= dom_id faq %>">
+<div id="<%= dom_id faq %>" data-controller="dropdown">
   <div>
-    <strong>Question:</strong>
-    <%= faq.question %>
+    <button
+      type="button"
+      class="
+        flex items-center justify-between w-full py-5 px-4 font-medium text-left
+        border-b border-gray-300
+      "
+    >
+      <strong class="sr-only">Question:</strong>
+      <span class="text-lg"><%= faq.question %></span>
+      <svg
+        class="w-6 h-6 shrink-0 rotate-180"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        ></path>
+      </svg>
+
+    </button>
+
+  </div>
+
+  <div class="py-5 border-b border-gray-300">
+    <strong class="sr-only">Answer:</strong>
+    <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
   </div>
 
   <div>
-    <strong>Answer:</strong>
-    <%= faq.answer %>
-  </div>
-
-  <div>
-    <strong>Inactive:</strong>
+    <strong class="sr-only">Inactive:</strong>
     <%= faq.inactive %>
   </div>
 
   <div>
-    <strong>Ordering:</strong>
+    <strong class="sr-only">Ordering:</strong>
     <%= faq.ordering %>
   </div>
 
