@@ -85,14 +85,12 @@ export default class extends Controller {
     }
   }
 
-  processPayload(payloadString) {
-    this.lastPayload = payloadString;
-    const payloadArray = JSON.parse(`[${payloadString}]`);
+  processPayload(payloadArray) {
+    this.lastPayload = payloadArray;
 
     payloadArray.forEach((item) => {
       Object.entries(item).forEach(([elementId, classString]) => {
         const element = document.getElementById(elementId);
-
         this.toggleClassesOnElement(element, classString);
       });
     });

@@ -1,9 +1,4 @@
-<div
-  class="relative ml-3"
-  data-controller="dropdown"
-  data-dropdown-utility-class="hidden"
-  data-dropdown-element-value="workshop-dropdown"
->
+<div class="relative ml-3" data-controller="dropdown">
   <!-- Button wrapper is relative so dropdown anchors here -->
   <div class="relative flex items-center">
     <button
@@ -12,6 +7,7 @@
         hover:text-white
       "
       data-action="dropdown#toggle"
+      data-dropdown-payload-param='[{"workshop-dropdown":"hidden"}]'
     >
       + NEW
     </button>
@@ -22,6 +18,7 @@
         absolute right-0 top-11 mt-2 w-48 rounded-md bg-white py-1 shadow-lg outline
         outline-black/5 transition transition-discrete hidden
       "
+      data-dropdown-target="content"
     >
       <%= link_to "New workshop idea",
       workshops_share_idea_path,

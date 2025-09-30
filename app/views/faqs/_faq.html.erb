@@ -8,7 +8,7 @@
         cursor-pointer
       "
       data-action="dropdown#toggle"
-      data-dropdown-payload-param='{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}'
+      data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]'
     >
       <strong class="sr-only">Question:</strong>
       <span class="text-lg"><%= faq.question %></span>
