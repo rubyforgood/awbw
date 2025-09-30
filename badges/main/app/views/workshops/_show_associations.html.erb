@@ -1,0 +1,72 @@
+<%# if @workshop_variations.any? %>
+<div id="workshop-variations" class="flex-1 space-y-8 bg-white p-4 rounded-lg shadow-md mb-3">
+  <section id="workshopVariations">
+    <div class="flex items-start justify-between mb-6">
+      <div class="pr-6">
+        <h2 class="text-lg font-semibold mb-2">Variations of this Workshop</h2>
+      </div>
+      <% if current_user.super_user? %>
+        <%= link_to 'New variation',
+                    new_workshop_variation_path(from: "workshop_show"),
+                    class: "print:hidden inline-flex items-center gap-2 px-4 py-2 border border-gray-400 text-gray-600
+                        rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-200
+                        font-medium shadow-sm text-sm" %>
+      <% end %>
+    </div>
+
+    <hr class="border-gray-300 mb-4">
+    <ul class="list-disc list-inside">
+      <% @workshop_variations.each do |variation| %>
+        <li>
+          <%= link_to variation.name, workshop_variation_path(variation),
+                      class: "text-gray-900 hover:underline font-medium" %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+</div>
+<%# end %>
+
+<% if @quotes.any? %>
+  <div id="workshop-quotes" class="flex-1 space-y-8 bg-white p-4 rounded-lg shadow-md mb-3">
+    <section id="workshopQuotes">
+      <h2 class="text-lg font-semibold mb-2">Quotes</h2>
+      <hr class="border-gray-300 mb-4">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <% @quotes.each do |quote| %>
+          <div class="space-y-1">
+            <p class="italic text-gray-700 text-sm"><%= quote.quote %></p>
+            <p class="text-sm font-bold text-gray-800">- <%= quote.speaker %></p>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  </div>
+<% end %>
+
+<% if @leader_spotlights.any? %>
+  <div id="workshop-spotlights" class="flex-1 bg-white p-4 rounded-lg shadow-md mb-3">
+    <section id="workshopLeaderSpotlights">
+      <h2 class="text-lg font-semibold mb-2">Related Facilitator Spotlight(s)</h2>
+      <hr class="border-gray-300 mb-4">
+      <div class="flex flex-wrap gap-4">
+        <% @leader_spotlights.each do |spotlight| %>
+          <div class="flex flex-col items-center space-y-2 max-w-[120px] mb-3">
+            <%= link_to resource_path(spotlight), class: "flex flex-col items-center text-center" do %>
+              <img
+                src="<%= spotlight.decorate.main_image || asset_path('missing.png') %>"
+                alt="<%= spotlight.title.truncate(25) %>"
+                class="block w-10 h-10 rounded-md object-cover"
+                />
+              <p class="text-sm text-gray-700 mt-1 leading-tight">
+                <span class="block"><%= spotlight.author %></span>
+                <span class="block text-xs text-gray-500"><%= spotlight.title %></span>
+              </p>
+            <% end %>
+          </div>
+      <% end %>
+      </div>
+    </section>
+  </div>
+<% end %>

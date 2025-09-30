@@ -14,12 +14,14 @@ class Resource < ApplicationRecord
   has_many :reports, as: :owner
   has_many :workshop_resources, dependent: :destroy
   # Scopes
-  scope :featured, -> { where(featured: true ).order(created_at: :desc)}
-  scope :published, -> { where(inactive: false) }
-  scope :by_created, -> { order(created_at: :desc)}
-
+  scope :by_created, -> { order(created_at: :desc) }
   scope :for_search, -> { published.where('kind NOT IN (?)', ['SectorImpact', 'LeaderSpotlight', 'Theme']) }
+  scope :featured, -> { where(featured: true ).order(created_at: :desc) }
+  scope :published, -> { where(inactive: false) }
+  scope :leader_spotlights, -> { where("kind like ?", "LeaderSpotlight" ) }
   scope :recent, -> { for_search.by_created }
+
+
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }
   validates :kind, presence: true

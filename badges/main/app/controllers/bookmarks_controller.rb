@@ -35,6 +35,8 @@ class BookmarksController < ApplicationController
     @bookmark = Bookmark.find(params[:id])
     if @bookmark
       @bookmark.destroy
+      @bookmarkable = @bookmark.bookmarkable
+      @bookmarkable.update(led_count: @bookmarkable.led_count - 1)
       flash[:notice] = 'Bookmark has been deleted.'
       if params[:from] == "index"
         redirect_to bookmarks_path
@@ -58,10 +60,9 @@ class BookmarksController < ApplicationController
 
   def load_workshop_data
     @quotes = @bookmarkable.quotes
-    # @leader_spotlights = @bookmarkable.leader_spotlights
+    @leader_spotlights = @bookmarkable.leader_spotlights
     @workshop_variations = @bookmarkable.workshop_variations.decorate
     @sectors = @bookmarkable.sectors
-    @new_bookmark = @bookmarkable.bookmarks.build
   end
 
   def bookmark_params

@@ -95,6 +95,7 @@ class Workshop < ApplicationRecord
   validates_presence_of :title
   #validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
   validates_length_of :age_range, maximum: 16
+  validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
   # Nested Attributes
   accepts_nested_attributes_for :workshop_logs,

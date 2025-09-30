@@ -1,71 +1,11 @@
-<div class="curriculum-detail">
-  <div class='show' id='show'>
-    <%= render 'show', workshop: @workshop, sectors: @sectors, new_bookmark: @new_bookmark, quotes: @quotes, leader_spotlights: @leader_spotlights, workshop_variations: @workshop_variations %>
+<div class="flex flex-col gap-6">
+  <!-- Main Workshop Show -->
+  <div id="show" class="flex-1">
+    <!-- Tabs -->
+    <%= render "show_actions_row", workshop: @workshop, sectors: @sectors %>
+    <%= render 'show_body', workshop: @workshop %>
   </div>
-  <% if @quotes.any? || @leader_spotlights.any? || @workshop_variations.any? %>
-    <div class='panel curriculum-panel' id='right-panel'>
-      <% if @workshop_variations.any? %>
-        <section id="workshopVariations" class="workshop-variations">
-          <h2 class='normal custom-h2'>Variations of this Workshop:</h2>
-          <hr>
-          <div class="curriculum-detail__content-container">
-            <div class="container-fluid">
-              <div class="variations-container">
-                <% @workshop_variations.each do |variation| %>
-                  <div>
-                    <%= link_to variation.name, workshop_variation_path(variation), class: 'workshop-variation' %>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </section>
-      <% end %>
-
-      <% if @quotes.any? %>
-        <section id="workshopQuotes" class="quotes">
-          <h2 class='normal custom-h2'>Quotes</h2>
-          <hr>
-          <div class="curriculum-detail__content-container">
-            <div class="quotes__inner-wrapper">
-              <% @quotes.each do |quote| %>
-                <div class='quote'>
-                  <div class='italic small quote-content'>
-                    <%= quote.quote %>
-                  </div>
-                  <div class='small bold'>
-                    - <%= quote.speaker %>
-                  </div>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        </section>
-      <% end %>
-
-      <% if @leader_spotlights.any? %>
-        <section id="workshopLeaderSpotlights" class="leader-spotlights">
-          <h2 class='normal custom-h2'>Related Facilitator Spotlight(s)</h2>
-          <hr>
-          <div class="curriculum-detail__content-container">
-            <div class="leaders-container">
-              <% @leader_spotlights.each do |spotlight, index| %>
-                <div class='spacing-tight'>
-                  <%= link_to resource_path(spotlight) do %>
-                    <%= image_tag spotlight.decorate.main_image, class: 'block' %>
-                    <p class='small'>
-                      <%= spotlight.author %>
-                      <br>
-                      <%= spotlight.title %>
-                    </p>
-                  <% end %>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        </section>
-      <% end %>
-    </div>
-  <% end %>
+  <div class="print:hidden">
+    <%= render "show_associations" %>
+  </div>
 </div>
-<%# :javascript %>

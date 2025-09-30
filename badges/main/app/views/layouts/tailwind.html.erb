@@ -26,7 +26,7 @@
   >
 
     <div class="flex-grow" id="main">
-      <div class="sticky top-0 left-0 w-full z-50">
+      <div class="sticky top-0 left-0 w-full z-50 print:hidden">
         <!-- Navbar -->
         <nav class="bg-primary text-white">
           <%= render "shared/tailwind/navbar" %>
@@ -35,8 +35,9 @@
         <%= render "shared/tailwind/banner" %>
       </div>
 
-      <div class="hidden print:block">
-        <%= image_tag("awbw-print-logo.png") %>
+      <div class="printed-logo hidden print:block">
+        <%= image_tag("awbw-print-logo.png", class: "print:w-36 m-3") %>
+        <hr>
       </div>
 
       <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -54,17 +55,8 @@
         <% end %>
       </div>
     </div>
-    <footer class="bg-primary text-white py-4 mt-24">
-      <div class="container mx-auto text-center">
-        <ul class="row">
-          <li>
-            <dt>Contact Us</dt>
-            <dd><%= Footer.phone %></dd>
-            <dd><%= Footer.general_questions %></dd>
-          </li>
-        </ul>
-        <p class="pt-4 text-2xl text-white">A Window Between Worlds ® ™</p>
-      </div>
-    </footer>
+    <div class="site-footer print:hidden">
+      <%= render "shared/tailwind/footer" %>
+    </div>
   </body>
 </html>
