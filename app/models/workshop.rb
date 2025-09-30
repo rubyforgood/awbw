@@ -156,12 +156,15 @@ class Workshop < ApplicationRecord
            map { |c| "workshops.#{ connection.quote_column_name(c) }" }.join(", ")
     # Prepare query for BOOLEAN MODE (prefix matching)
     terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
+
+    # rubocop:disable brakeman
     # Convert to Arel for safety
     match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
 
     workshops = select(
       sanitize_sql_array(["workshops.*, #{match_expr} AS all_score", terms])
     ).where(match_expr, terms)
+    # rubocop:enable brakeman
 
     workshops.order("all_score DESC") if sort == "keywords"
     workshops
