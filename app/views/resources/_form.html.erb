@@ -51,9 +51,48 @@
     <div class="col-md-4">
       <%= f.input :text, as: :text, input_html: { rows: 5 } %>
     </div>
-    <div class="col-md-8">
-      <%= f.input :attachment, as: :file %>
+    <!-- Nested Images -->
+    <div class="col-md-4">
+      <!-- Main Image -->
+      <div class="flex-1 flex flex-col">
+        <%= f.simple_fields_for :images, f.object.images.first || f.object.images.build do |mi| %>
+          <div class="nested-fields flex flex-col">
+            <%= mi.input :file, as: :file, label: "Main Image", wrapper_html: { class: "mb-2" } %>
+
+            <% if mi.object.persisted? && mi.object.file.present? %>
+              <%= image_tag mi.object.file.url(:thumb),
+                            alt: "Main Image",
+                            class: "rounded-md border max-h-[150px] w-auto mb-2" %>
+              <%= mi.input :_destroy, as: :boolean, label: "Remove", wrapper_html: { class: "mb-0" } %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     </div>
+    <div class="col-md-4">
+      <!-- Attachment -->
+      <div class="flex-1 flex flex-col">
+        <%= f.simple_fields_for :attachments, f.object.attachments.first || f.object.attachments.build do |att| %>
+          <div class="nested-fields flex flex-col">
+            <%= att.input :file, as: :file, label: "Attachment", wrapper_html: { class: "mb-2" } %>
+
+            <% if att.object.persisted? && att.object.file.present? %>
+              <% if att.object.file_content_type.start_with?('image/') %>
+                <%= image_tag att.object.file.url(:thumb),
+                              alt: "Attachment",
+                              class: "rounded-md border max-h-[150px] w-auto mb-2" %>
+              <% else %>
+                <span class="block text-sm text-gray-700 mb-2"><%= att.object.file_file_name %></span>
+              <% end %>
+              <%= att.input :_destroy, as: :boolean, label: "Remove", wrapper_html: { class: "mb-0" } %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+
+
   </div>
 
 
