@@ -3,8 +3,9 @@ class ResourcesController < ApplicationController
   layout "tailwind", only: :index
 
   def index
-    @resources = current_user.curriculum(Resource).by_created.search(params).
-                    paginate(page: params[:page], per_page: 25)
+    @resources = current_user.curriculum(Resource).by_created.search(params)
+                             .includes(:images)
+                             .paginate(page: params[:page], per_page: 25)
 
     @sortable_fields = Resource::KINDS
 
