@@ -34,15 +34,15 @@
 
       <!-- Filters Header -->
       <div>
-        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters</h3>
+        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Search Filters</h3>
       </div>
 
       <!-- Search Fields -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <%= label_tag :title, "Title", class: "block text-gray-700 font-medium mb-1" %>
           <div class="relative">
             <%= text_field_tag :title, params[:title],
+                               placeholder: "Title",
                                class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500" %>
             <button type="submit"
                     class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
@@ -52,9 +52,9 @@
         </div>
 
         <div>
-          <%= label_tag :query, "Keywords", class: "block text-gray-700 font-medium mb-1" %>
           <div class="relative">
             <%= text_field_tag :query, params[:query],
+                               placeholder: "Keywords",
                                class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500" %>
             <button type="submit"
                     class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
