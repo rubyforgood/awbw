@@ -4,7 +4,7 @@
     <button
       type="button"
       class="
-        flex items-center justify-between w-full py-5 px-4 font-medium text-left
+        flex items-center justify-between w-full py-5 font-medium text-left
         cursor-pointer
       "
       data-action="dropdown#toggle"
@@ -48,7 +48,7 @@
   <div
     id="<%= dom_id faq, :answer  %>"
     class="hidden py-5 border-b border-gray-300"
-    <%# data-dropdown-target="content" %>
+    data-dropdown-target="content"
   >
     <strong class="sr-only">Answer:</strong>
     <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
