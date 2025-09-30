@@ -169,17 +169,17 @@ class Workshop < ApplicationRecord
     workshops
   end
 
-  def self.search(params, super_user: false)
-    workshops = self.filter_by_params(params)
+  def self.search_and_sort(params, super_user: false)
+    workshops = all
+    workshops = workshops.filter_by_params(params)
+    workshops = workshops.published unless super_user # only show published results to regular users
+    workshops.order_by_params(params)
+  end
 
-    # only show published results to regular users
-    unless super_user
-      workshops = workshops.published
-    end
-
-    # sort by
+  def self.order_by_params(params)
+    workshops = self.all
     if params[:sort] == "created"
-      workshops = workshops.order(
+      workshops.order(
         Arel.sql("
           CASE
             WHEN year IS NOT NULL AND month IS NOT NULL THEN
@@ -188,20 +188,14 @@ class Workshop < ApplicationRecord
           END DESC")
       )
     elsif params[:sort] == "led"
-      workshops = workshops.order(led_count: :desc)
+      workshops.order(led_count: :desc)
     elsif params[:sort] == "title"
-      workshops = workshops.order(title: :asc)
-    elsif params[:query].present? # params[:sort] == 'keywords'
-      # do nothing, already sorted by relevance
+      workshops.order(title: :asc)
+    elsif !params[:query].present? # params[:sort] == 'keywords'
+      workshops
     else
-      workshops = workshops.order(title: :asc)
+      workshops.order(title: :asc)
     end
-
-    if params[:type] == 'led' # TODO - find wherever this gets used and change param name to :sort
-      workshops = workshops.order(led_count: :desc)
-    end
-
-    workshops
   end
 
   def self.search_by_categories(categories)
