@@ -211,15 +211,11 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def rating_as_stars
-    str = ''
-    rating.times do
-      str += '<div class="inline star full">★</div>'
-    end
+    full_star = '<i class="fas fa-star text-yellow-400"></i>'
+    empty_star = '<i class="far fa-star text-gray-300"></i>'
 
-    (5 - rating).times do
-      str += '<div class="star">☆</div>'
-    end
-    str.html_safe
+    stars = full_star * rating + empty_star * (5 - rating)
+    stars.html_safe
   end
 
   def field_has_empty_value?(field)

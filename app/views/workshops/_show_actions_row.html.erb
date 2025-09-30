@@ -1,0 +1,98 @@
+<!-- Hero Workshop Section -->
+<style>
+    .is-active {
+        @apply text-blue-600 border-b-2 border-blue-600;
+        font-weight: bold;
+        background-color: #eaeaea;
+    }
+</style>
+
+<div class="relative bg-cover bg-center" style="background-image: url(<%= workshop.header_image %>)">
+  <div class="bg-black/40 p-6 md:p-12">
+    <h2 class="text-3xl md:text-4xl font-bold text-white mb-2 inline-block">
+      <%= workshop.title %>
+    </h2>
+
+    <div class="flex flex-wrap gap-4 text-sm text-gray-200 mt-2">
+      <span>Author: <%= workshop.author %></span>
+      <span>Category: <%= workshop.windows_type&.label %></span>
+      <span>Added: <%= workshop.date %></span>
+      <% if sectors&.any? %>
+        <span>Sectors:
+          <% sectors.each do |sector| %>
+            <%= sector.name %>
+          <% end %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="flex items-center space-x-6 mt-4">
+  <!-- Rating Stars -->
+  <div class="text-yellow-400">
+    <%= workshop.rating_as_stars %>
+  </div>
+
+  <!-- Pencil / Led Count -->
+  <div class="text-gray-700">
+    <span>Bookmarked by <%= workshop.led_count %> facilitators</span>
+  </div>
+</div>
+
+<!-- Actions / Links -->
+<div id="links" class="mt-4 flex flex-wrap gap-4 items-center">
+
+  <% if current_user.has_bookmarked_workshop?(workshop) %>
+    <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
+                method: :delete,
+                class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
+                     rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
+                     font-medium shadow-sm flex items-center gap-2",
+                data: { turbo_confirm: "Remove bookmark?" } do %>
+      <i class="fas fa-bookmark w-5 h-5"></i>
+      <span>Bookmark</span>
+    <% end %>
+  <% else %>
+    <%= link_to bookmarks_path(bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" }),
+                method: :post,
+                class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
+                     rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
+                     font-medium shadow-sm flex items-center gap-2" do %>
+      <i class="far fa-bookmark w-5 h-5"></i>
+      <span>Bookmark</span>
+    <% end %>
+  <% end %>
+
+  <!-- Print Button -->
+  <%= link_to '#',
+              onclick: 'window.print()',
+              class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
+                    rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
+                    font-medium shadow-sm flex items-center gap-2" do %>
+    <i class="fas fa-print w-5 h-5"></i>
+    <span>Print</span>
+  <% end %>
+
+  <!-- Edit Button for Super Users -->
+  <% if current_user.super_user? %>
+    <%= link_to edit_workshop_path(workshop),
+                class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
+                     rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
+                     font-medium shadow-sm flex items-center gap-2" do %>
+      <i class="fas fa-pencil-alt w-5 h-5"></i>
+      <span>Edit</span>
+    <% end %>
+  <% end %>
+
+  <!-- Workshop Actions -->
+  <div class="flex flex-wrap gap-2 mt-2">
+    <%= link_to 'Submit Workshop Log', new_workshop_log_path(windows_type_id: workshop.windows_type_id, workshop_id: workshop.id, breadcrumb: 'Search Curriculum'), class: 'px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm' %>
+
+    <a href="#workshopVariations" class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm <%= 'opacity-50 pointer-events-none' unless @workshop_variations.any? %>">Workshop Variations</a>
+
+    <a href="#workshopQuotes" class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm <%= 'opacity-50 pointer-events-none' unless @quotes.any? %>">Related Quotes</a>
+
+    <a href="#workshopLeaderSpotlights" class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm <%= 'opacity-50 pointer-events-none' unless @leader_spotlights.any? %>">Related Stories</a>
+  </div>
+</div>
