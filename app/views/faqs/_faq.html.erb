@@ -1,16 +1,20 @@
-<div id="<%= dom_id faq %>">
+<div id="<%= dom_id faq %>" data-controller="dropdown">
 
   <div class="border-b border-gray-300">
     <button
       type="button"
       class="
         flex items-center justify-between w-full py-5 px-4 font-medium text-left
+        cursor-pointer
       "
+      data-action="dropdown#toggle"
+      data-dropdown-payload-param='{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}'
     >
       <strong class="sr-only">Question:</strong>
       <span class="text-lg"><%= faq.question %></span>
       <svg
-        class="w-6 h-6 shrink-0 rotate-180"
+        id="<%= dom_id faq, :arrow %>"
+        class="w-6 h-6 shrink-0"
         fill="currentColor"
         viewBox="0 0 20 20"
         xmlns="http://www.w3.org/2000/svg"
@@ -41,7 +45,11 @@
     <% end %>
   </div>
 
-  <div class="py-5 border-b border-gray-300">
+  <div
+    id="<%= dom_id faq, :answer  %>"
+    class="hidden py-5 border-b border-gray-300"
+    <%# data-dropdown-target="content" %>
+  >
     <strong class="sr-only">Answer:</strong>
     <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
   </div>
