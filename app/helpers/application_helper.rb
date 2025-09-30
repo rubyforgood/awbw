@@ -1,5 +1,21 @@
 module ApplicationHelper
-  def search_page(parmas)
+
+  def link_to_button(text, url, variant: :secondary, **options)
+    manual_classes = options.delete(:class)
+    base_classes = "inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                    transition-colors duration-200 font-medium shadow-sm text-sm"
+    variant_classes = {
+      primary:   "border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white",
+      secondary: "border border-gray-400 text-gray-600 hover:bg-gray-600 hover:text-white",
+      info:      "border border-sky-500 text-gray-600 hover:bg-sky-600 hover:text-white",
+      warning:   "border border-yellow-400 text-gray-600 hover:bg-yellow-500 hover:text-white",
+      danger:    "border border-red-600 text-gray-600 hover:bg-red-600 hover:text-white",
+    }
+    classes = [base_classes, variant_classes[variant.to_sym], manual_classes].join(" ")
+    link_to text, url, options.merge(class: classes)
+  end
+
+  def search_page(params)
     params[:search] ? params[:search][:page] : 1
   end
 
