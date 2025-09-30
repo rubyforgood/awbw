@@ -28,71 +28,58 @@
   </div>
 </div>
 
-<div class="flex items-center space-x-6 mt-4">
-  <!-- Rating Stars -->
-  <div class="text-yellow-400">
+<div class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden">
+  <!-- Left: Bookmark -->
+  <div class="flex items-center gap-2">
+    <% if current_user.has_bookmarked_workshop?(workshop) %>
+      <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
+                  method: :delete,
+                  class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
+                          rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
+                          font-medium shadow-sm",
+                  data: { turbo_confirm: "Remove bookmark?" } do %>
+        <i class="fas fa-bookmark w-5 h-5"></i>
+        <span>Bookmark</span>
+      <% end %>
+    <% else %>
+      <%= link_to bookmarks_path(bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" }),
+                  method: :post,
+                  class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
+                          rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
+                          font-medium shadow-sm" do %>
+        <i class="far fa-bookmark w-5 h-5"></i>
+        <span>Bookmark</span>
+      <% end %>
+    <% end %>
+    <span class="text-gray-600 text-sm">(Bookmarked by <%= pluralize(workshop.led_count, "facilitator") %>)</span>
+  </div>
+
+  <!-- Middle: Rating -->
+  <div class="text-yellow-400 text-lg">
     <%= workshop.rating_as_stars %>
   </div>
 
-  <!-- Pencil / Led Count -->
-  <div class="text-gray-700">
-    <span>Bookmarked by <%= workshop.led_count %> facilitators</span>
+  <!-- Right: Utilities -->
+  <div class="flex items-center gap-4">
+    <% if current_user.super_user? %>
+      <%= link_to edit_workshop_path(workshop),
+                  class: "inline-flex items-center gap-2 px-4 py-2 border border-gray-400 text-gray-600
+                          rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-200
+                          font-medium shadow-sm text-sm" do %>
+        <i class="fas fa-pencil-alt w-5 h-5"></i>
+        <span>Edit</span>
+      <% end %>
+    <% end %>
+
+    <%= link_to '#',
+                onclick: 'window.print()',
+                class: "inline-flex items-center gap-2 px-4 py-2 border border-gray-400 text-gray-600
+                        rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-200
+                        font-medium shadow-sm text-sm" do %>
+      <i class="fas fa-print w-5 h-5"></i>
+      <span>Print</span>
+    <% end %>
   </div>
 </div>
 
-<!-- Actions / Links -->
-<div id="links" class="mt-4 flex flex-wrap gap-4 items-center">
 
-  <% if current_user.has_bookmarked_workshop?(workshop) %>
-    <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
-                method: :delete,
-                class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
-                     rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
-                     font-medium shadow-sm flex items-center gap-2",
-                data: { turbo_confirm: "Remove bookmark?" } do %>
-      <i class="fas fa-bookmark w-5 h-5"></i>
-      <span>Bookmark</span>
-    <% end %>
-  <% else %>
-    <%= link_to bookmarks_path(bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" }),
-                method: :post,
-                class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
-                     rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
-                     font-medium shadow-sm flex items-center gap-2" do %>
-      <i class="far fa-bookmark w-5 h-5"></i>
-      <span>Bookmark</span>
-    <% end %>
-  <% end %>
-
-  <!-- Print Button -->
-  <%= link_to '#',
-              onclick: 'window.print()',
-              class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
-                    rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
-                    font-medium shadow-sm flex items-center gap-2" do %>
-    <i class="fas fa-print w-5 h-5"></i>
-    <span>Print</span>
-  <% end %>
-
-  <!-- Edit Button for Super Users -->
-  <% if current_user.super_user? %>
-    <%= link_to edit_workshop_path(workshop),
-                class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
-                     rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
-                     font-medium shadow-sm flex items-center gap-2" do %>
-      <i class="fas fa-pencil-alt w-5 h-5"></i>
-      <span>Edit</span>
-    <% end %>
-  <% end %>
-
-  <!-- Workshop Actions -->
-  <div class="flex flex-wrap gap-2 mt-2">
-    <%= link_to 'Submit Workshop Log', new_workshop_log_path(windows_type_id: workshop.windows_type_id, workshop_id: workshop.id, breadcrumb: 'Search Curriculum'), class: 'px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm' %>
-
-    <a href="#workshopVariations" class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm <%= 'opacity-50 pointer-events-none' unless @workshop_variations.any? %>">Workshop Variations</a>
-
-    <a href="#workshopQuotes" class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm <%= 'opacity-50 pointer-events-none' unless @quotes.any? %>">Related Quotes</a>
-
-    <a href="#workshopLeaderSpotlights" class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm <%= 'opacity-50 pointer-events-none' unless @leader_spotlights.any? %>">Related Stories</a>
-  </div>
-</div>
