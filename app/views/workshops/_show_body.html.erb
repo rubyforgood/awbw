@@ -28,29 +28,30 @@
     <li class="-mb-px mr-1 ml-auto">
       <a href="#workshopVariations"
          class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
-            <%= 'opacity-50 pointer-events-none' unless @workshop_variations.any? %>">
+            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200">
         Workshop Variations
       </a>
     </li>
 
-    <li class="-mb-px mr-1">
-      <a href="#workshopQuotes"
-         class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
-            <%= 'opacity-50 pointer-events-none' unless @quotes.any? %>">
-        Related Quotes
-      </a>
-    </li>
+    <% if @quotes.any? %>
+      <li class="-mb-px mr-1">
+        <a href="#workshopQuotes"
+           class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
+              hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200">
+          Related Quotes
+        </a>
+      </li>
+    <% end %>
 
-    <li class="-mb-px mr-1">
-      <a href="#workshopLeaderSpotlights"
-         class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
-            <%= 'opacity-50 pointer-events-none' unless @leader_spotlights.any? %>">
-        Related Stories
-      </a>
-    </li>
+    <% if @leader_spotlights.any? %>
+      <li class="-mb-px mr-1">
+        <a href="#workshopLeaderSpotlights"
+           class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
+              hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200">
+          Related Stories
+        </a>
+      </li>
+    <% end %>
 
   </ul>
 
