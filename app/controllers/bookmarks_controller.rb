@@ -35,6 +35,8 @@ class BookmarksController < ApplicationController
     @bookmark = Bookmark.find(params[:id])
     if @bookmark
       @bookmark.destroy
+      @bookmarkable = @bookmark.bookmarkable
+      @bookmarkable.update(led_count: @bookmarkable.led_count - 1)
       flash[:notice] = 'Bookmark has been deleted.'
       if params[:from] == "index"
         redirect_to bookmarks_path
