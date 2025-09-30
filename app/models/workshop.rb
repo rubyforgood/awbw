@@ -189,8 +189,8 @@ class Workshop < ApplicationRecord
       workshops.order(led_count: :desc)
     elsif params[:sort] == "title"
       workshops.order(title: :asc)
-    elsif !params[:query].present? # params[:sort] == 'keywords'
-      workshops
+    elsif params[:sort] == 'keywords' && params[:query].present? # only in the UI if params[:query] is present
+      workshops # keep same collection bc order was applied in filter_by_query
     else
       workshops.order(title: :asc)
     end
