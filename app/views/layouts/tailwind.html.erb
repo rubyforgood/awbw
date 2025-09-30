@@ -26,7 +26,7 @@
   >
 
     <div class="flex-grow" id="main">
-      <div class="sticky top-0 left-0 w-full z-50">
+      <div class="sticky top-0 left-0 w-full z-50 print:hidden">
         <!-- Navbar -->
         <nav class="bg-primary text-white">
           <%= render "shared/tailwind/navbar" %>
@@ -35,8 +35,9 @@
         <%= render "shared/tailwind/banner" %>
       </div>
 
-      <div class="hidden print:block">
-        <%= image_tag("awbw-print-logo.png") %>
+      <div class="printed-logo hidden print:block">
+        <%= image_tag("awbw-print-logo.png", class: "print:w-36 m-3") %>
+        <hr>
       </div>
 
       <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -54,6 +55,8 @@
         <% end %>
       </div>
     </div>
-    <%= render "shared/tailwind/footer" %>
+    <div class="site-footer print:hidden">
+      <%= render "shared/tailwind/footer" %>
+    </div>
   </body>
 </html>
