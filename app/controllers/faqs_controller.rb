@@ -12,10 +12,6 @@ class FaqsController < ApplicationController
     end
   end
 
-  def collapsible
-    @faqs = Faq.active.by_order
-  end
-
   def show
   end
 
