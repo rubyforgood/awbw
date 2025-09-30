@@ -4,11 +4,8 @@
     <div class="categories-header flex justify-between items-center bg-white px-4 py-2 w-full cursor-pointer"
          data-action="click->dropdown#toggle">
       <label class="mb-0 font-medium text-gray-700"><%= metadatum.display_name %></label>
-      <%= image_tag(
-            "collapse-arrow.png",
-            class: "arrow-down w-4 h-4 transition-transform duration-300",
-            "data-dropdown-target" => "icon"
-          ) %>
+      <i class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"
+         data-dropdown-target="icon"></i>
     </div>
 
     <!-- Collapsible content -->
