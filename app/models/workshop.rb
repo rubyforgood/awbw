@@ -144,26 +144,29 @@ class Workshop < ApplicationRecord
       workshops = workshops.title(params[:title])
     end
     if params[:query].present?
-      workshops = workshops.filter_by_query(params[:query])
+      workshops = workshops.filter_by_query(params[:query], sort: params[:sort])
     end
     workshops
   end
 
-  def self.filter_by_query(query = nil)
+  def self.filter_by_query(query = nil, sort: nil)
     return all if query.blank?
 
     # Whitelisted, quoted column names to use in search
     cols = %w[title full_name objective materials introduction demonstration opening_circle
               warm_up creation closing notes tips misc1 misc2].
-           map { |c| connection.quote_column_name(c) }.join(", ")
+           map { |c| "workshops.#{ connection.quote_column_name(c) }" }.join(", ")
     # Prepare query for BOOLEAN MODE (prefix matching)
     terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
     # Convert to Arel for safety
     match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
 
-    select(
+    workshops = select(
       sanitize_sql_array(["workshops.*, #{match_expr} AS all_score", terms])
     ).where(match_expr, terms)
+
+    workshops.order("all_score DESC") if sort == "keywords"
+    workshops
   end
 
   def self.search(params, super_user: false)
@@ -175,7 +178,7 @@ class Workshop < ApplicationRecord
     end
 
     # sort by
-    if params[:sort] == 'created'
+    if params[:sort] == "created"
       workshops = workshops.order(
         Arel.sql("
           CASE
@@ -184,12 +187,12 @@ class Workshop < ApplicationRecord
             ELSE workshops.created_at
           END DESC")
       )
-    elsif params[:sort] == 'led'
+    elsif params[:sort] == "led"
       workshops = workshops.order(led_count: :desc)
     elsif params[:sort] == "title"
       workshops = workshops.order(title: :asc)
     elsif params[:query].present? # params[:sort] == 'keywords'
-      workshops = workshops.order("all_score DESC")
+      # do nothing, already sorted by relevance
     else
       workshops = workshops.order(title: :asc)
     end
