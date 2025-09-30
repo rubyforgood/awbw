@@ -78,8 +78,11 @@
                 <div class="image max-w-[60px] flex-shrink-0">
                   <%= link_to resource_path(resource) do %>
                     <img class="h-10 w-auto rounded-md object-cover"
-                         src="<%= resource.main_image_url || asset_path('missing.png') %>"
-                         alt="<%= resource.title.truncate(25) %>">
+                         src="<%= resource.main_image_url || asset_path('workshop_default.png') %>"
+                         alt="<%= resource.title.truncate(25) %>"
+                         onerror="this.onerror=null;this.src='<%= asset_path('workshop_default.png') %>';
+                                  this.classList.add('w-auto', 'rounded-md', 'object-cover', 'object-contain');"
+                      />
                   <% end %>
                 </div>
 
