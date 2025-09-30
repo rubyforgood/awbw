@@ -87,7 +87,8 @@ class ResourcesController < ApplicationController
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
       categorizable_items_attributes: [:_create, :category_id],
       sectorable_items_attributes: [:_create, :sector_id],
-      images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
+      images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy],
+      attachments_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
     )
   end
 
