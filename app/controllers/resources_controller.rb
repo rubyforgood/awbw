@@ -46,6 +46,7 @@ class ResourcesController < ApplicationController
 
   def update
     @resource = Resource.find(params[:id])
+    @resource.user ||= current_user
     if @resource.update(resource_params)
       flash[:notice] = 'Resource updated.'
       redirect_to resources_path
