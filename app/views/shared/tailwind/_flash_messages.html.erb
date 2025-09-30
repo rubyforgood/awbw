@@ -1,26 +1,22 @@
-<div id="flash_now" class="inset-x-0 flex justify-center z-50">
-  <% notice = [:notice, params[:notice]] if params[:notice].present? %>
-  <% alert = [:alert, params[:alert]] if params[:alert].present? %>
-  <% info = [:info, params[:info]] if params[:info].present? %>
-  <% warning = [:warning, params[:warning]] if params[:warning].present? %>
-  <% error = [:error, params[:error]] if params[:error].present? %>
-  <% manual_messages = [notice, alert, info, warning, error].compact %>
-
-  <% if flash.any? %>
-    <% flash_notices = [] %>
-    <% flash.each do |type, msg| %>
-      <% flash_notices << [type, msg] %>
-    <% end %>
-  <% else %>
-    <% flash_notices = [] %>
+<div id="flash_now" class="inset-x-0 flex justify-center z-50 print:hidden">
+  <%# === Collect manual messages from params === %>
+  <% manual_messages = [] %>
+  <% { notice: params[:notice], alert: params[:alert], info: params[:info], warning: params[:warning], error: params[:error] }.each do |type, msg| %>
+    <% manual_messages << [type, msg] if msg.present? %>
   <% end %>
 
+  <%# === Collect flash messages === %>
+  <% flash_notices = flash.to_a.reject { |_, msg| msg.blank? || msg.is_a?(Array) || msg.is_a?(ActiveRecord::Relation) } %>
+
+  <%# === Discard flash so it doesn’t persist on next request (works for Turbo + normal) === %>
+  <% flash.discard %>
+
+  <%# === Merge manual + flash messages === %>
   <% notices_and_alerts = manual_messages + flash_notices %>
 
+  <%# === Render each message === %>
   <% notices_and_alerts.each do |type, msg| %>
-    <% next unless msg.to_s.present? && !msg.is_a?(ActiveRecord::Relation) && !msg.is_a?(Array) %>
-
-    <div class="flash-msg w-full max-w-3xl" data-controller="alerts" data-alerts-flash-value="<%= type %>">
+    <div class="flash-msg w-full max-w-3xl my-2" data-controller="alerts" data-alerts-flash-value="<%= type %>">
       <% bg_class, text_class = case type.to_s
                                 when "notice", "info" then ["bg-blue-50", "text-blue-800"]
                                 when "warning" then ["bg-yellow-50", "text-yellow-800"]
@@ -30,12 +26,8 @@
 
       <div class="flex items-center justify-between px-4 py-3 rounded shadow-md <%= bg_class %> <%= text_class %>">
         <div class="flex-1 text-center font-medium">
-          <p class='<%= type %>'>
-            <% if msg.is_a?(String) %>
-              <%= msg %>
-            <% else %>
-              <%= msg.html_safe %>
-            <% end %>
+          <p class="<%= type %>">
+            <%= msg.is_a?(String) ? msg : msg.html_safe %>
           </p>
         </div>
       </div>
