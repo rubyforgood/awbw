@@ -15,7 +15,7 @@ class Resource < ApplicationRecord
   has_many :workshop_resources, dependent: :destroy
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
-  scope :for_search, -> { published.where('kind NOT IN (?)', ['SectorImpact', 'LeaderSpotlight', 'Theme']) }
+  scope :published, -> { published.where('kind NOT IN (?)', ['SectorImpact', 'LeaderSpotlight', 'Theme']) }
   scope :featured, -> { where(featured: true ).order(created_at: :desc) }
   scope :published, -> { where(inactive: false) }
   scope :leader_spotlights, -> { where("kind like ?", "LeaderSpotlight" ) }
