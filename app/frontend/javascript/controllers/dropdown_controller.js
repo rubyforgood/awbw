@@ -6,9 +6,10 @@ import { Controller } from "@hotwired/stimulus";
 // Your elements should have their initial utility classes defined in your view. These classes
 // should be included in the payload-params. Add key:value pairs for each element that should
 // have classes toggle via the payload-params. Multiple space separated values are allowed per key.
+// Params should be defined on the element that triggers the action.
 //
 // data-action="dropdown#toggle"
-// data-dropdown-payload-param='{"answer_5":"hidden block"}, {"question_5_arrow":"rotate-180"}'
+// data-dropdown-payload-param='[{"answer_5":"hidden block"}, {"question_5_arrow":"rotate-180"}]'
 //
 export default class extends Controller {
   // add a content target if you want the dropdown to close with "escape button" or clicking outside of content
