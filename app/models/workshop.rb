@@ -75,8 +75,6 @@ class Workshop < ApplicationRecord
                                 allow_destroy: true
 
   # Scopes
-  scope :for_search, -> { published }
-
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
   scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }
