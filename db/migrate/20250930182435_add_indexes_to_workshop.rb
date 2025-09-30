@@ -7,7 +7,7 @@ class AddIndexesToWorkshop < ActiveRecord::Migration[8.1]
 
     # Handle multiple indexes on title safely
     unless index_exists?(:workshops, :title, name: 'index_workshops_on_title')
-      add_index :workshops, :title
+      add_index :workshops, :title, type: :fulltext
     end
 
     add_index :workshops, [:inactive, :led_count, :title], if_not_exists: true
@@ -38,7 +38,7 @@ class AddIndexesToWorkshop < ActiveRecord::Migration[8.1]
 
     remove_index :sectorable_items, name: 'index_sectorable_items_on_sectorable_type_and_sectorable_id' if index_exists?(:sectorable_items, [:sectorable_type, :sectorable_id], name: 'index_sectorable_items_on_sectorable_type_and_sectorable_id')
 
-    Only remove sector_id index if no FK references
+    # Only remove sector_id index if no FK references
     if !foreign_key_exists?(:sectorable_items, :sectors) &&
       index_exists?(:sectorable_items, :sector_id, name: 'index_sectorable_items_on_sector_id')
       remove_index :sectorable_items, name: 'index_sectorable_items_on_sector_id'

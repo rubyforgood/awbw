@@ -726,7 +726,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_09_30_182435) do
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
     t.index ["led_count"], name: "index_workshops_on_led_count"
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
-    t.index ["title"], name: "index_workshops_on_title"
+    t.index ["title"], name: "index_workshops_on_title", type: :fulltext
     t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext
     t.index ["user_id"], name: "index_workshops_on_user_id"
     t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
