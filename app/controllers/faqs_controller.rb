@@ -8,7 +8,7 @@ class FaqsController < ApplicationController
       per_page = params[:number_of_items_per_page].presence || 25
       @faqs = Faq.all.paginate(page: params[:page], per_page: per_page)
     else
-      redirect_to collapsible_faqs_path
+      @faqs = Faq.active.by_order
     end
   end
 
