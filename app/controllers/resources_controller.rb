@@ -20,12 +20,10 @@ class ResourcesController < ApplicationController
 
   def new
     @resource = Resource.new
-    @sectors = Sector.pluck(:name, :id)
   end
 
   def edit
     @resource = Resource.find(resource_id_param).decorate
-    @sectors = Sector.pluck(:name, :id)
   end
 
   def show
@@ -85,8 +83,8 @@ class ResourcesController < ApplicationController
     params.require(:resource).permit(
       :text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
-      categorizable_items_attributes: [:_create, :category_id],
-      sectorable_items_attributes: [:_create, :sector_id],
+      categorizable_items_attributes: [:id, :category_id, :_destroy], category_ids: [],
+      sectorable_items_attributes: [:id, :sector_id, :_destroy], sector_ids: [],
       images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy],
       attachments_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
     )
