@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_09_18_000354) do
+ActiveRecord::Schema[8.1].define(version: 2025_09_30_182435) do
   create_table "addresses", charset: "utf8mb3", force: :cascade do |t|
     t.string "city", null: false
     t.string "country"
@@ -115,6 +115,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_09_18_000354) do
     t.boolean "inactive", default: true
     t.integer "legacy_id"
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["categorizable_type", "categorizable_id"], name: "idx_on_categorizable_type_categorizable_id_ccce65d80c"
     t.index ["category_id"], name: "index_categorizable_items_on_category_id"
   end
 
@@ -480,6 +481,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_09_18_000354) do
     t.string "sectorable_type"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["sector_id"], name: "index_sectorable_items_on_sector_id"
+    t.index ["sectorable_type", "sectorable_id"], name: "index_sectorable_items_on_sectorable_type_and_sectorable_id"
   end
 
   create_table "sectors", id: :integer, charset: "utf8mb3", force: :cascade do |t|
@@ -720,10 +722,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_09_18_000354) do
     t.text "warm_up_spanish", size: :medium
     t.integer "windows_type_id"
     t.integer "year"
+    t.index ["created_at"], name: "index_workshops_on_created_at"
+    t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
+    t.index ["led_count"], name: "index_workshops_on_led_count"
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
+    t.index ["title"], name: "index_workshops_on_title", type: :fulltext
     t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext
     t.index ["user_id"], name: "index_workshops_on_user_id"
     t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
+    t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
   add_foreign_key "addresses", "organizations"

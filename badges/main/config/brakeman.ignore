@@ -49,46 +49,23 @@
     {
       "warning_type": "SQL Injection",
       "warning_code": 0,
-      "fingerprint": "6bfd3126d28d19cb7dd9c8e176e92e8bc3b05cf179dc8600aee3f312bc2700ca",
+      "fingerprint": "87fb1f4501a3d156ffa9c00e02c8b239255a8190d8d5c8f3092d00c8e37bf2fe",
       "check_name": "SQL",
       "message": "Possible SQL injection",
-      "file": "app/models/bookmark.rb",
-      "line": 58,
+      "file": "app/models/workshop.rb",
+      "line": 160,
       "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
-      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
+      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n \"workshops.#{connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)}\"\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
       "render_path": null,
       "location": {
         "type": "method",
-        "class": "Bookmark",
-        "method": "Bookmark.filter_by_query"
+        "class": "Workshop",
+        "method": "Workshop.filter_by_query"
       },
-      "user_input": "[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)\n end.join(\", \")",
+      "user_input": "[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n \"workshops.#{connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)}\"\n end.join(\", \")",
       "confidence": "Medium",
       "cwe_id": [
         89
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "Mass Assignment",
-      "warning_code": 70,
-      "fingerprint": "801ab5e957972d9cafe31dcbb1f53ca2416781cc09e5b8bd0fe62f05eeeda6c7",
-      "check_name": "MassAssignment",
-      "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
-      "file": "app/controllers/workshop_logs_controller.rb",
-      "line": 142,
-      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params[:quotes].permit!",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "WorkshopLogsController",
-        "method": "quotes_params"
-      },
-      "user_input": null,
-      "confidence": "Medium",
-      "cwe_id": [
-        915
       ],
       "note": ""
     },
@@ -130,7 +107,7 @@
           "type": "controller",
           "class": "WorkshopVariationsController",
           "method": "show",
-          "line": 37,
+          "line": 43,
           "file": "app/controllers/workshop_variations_controller.rb",
           "rendered": {
             "name": "workshop_variations/show",
@@ -146,52 +123,6 @@
       "confidence": "High",
       "cwe_id": [
         79
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "SQL Injection",
-      "warning_code": 0,
-      "fingerprint": "b4d49187956743736add52930225188e431bc4c97b76ead2ca4d3d794deb707a",
-      "check_name": "SQL",
-      "message": "Possible SQL injection",
-      "file": "app/models/workshop.rb",
-      "line": 156,
-      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
-      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "Workshop",
-        "method": "Workshop.filter_by_query"
-      },
-      "user_input": "[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)\n end.join(\", \")",
-      "confidence": "Medium",
-      "cwe_id": [
-        89
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "Mass Assignment",
-      "warning_code": 70,
-      "fingerprint": "d241d7e5a92d236ee0b2642ccdbde49e42dbb34989232d7c0d35cdabebb4e9b8",
-      "check_name": "MassAssignment",
-      "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
-      "file": "app/controllers/workshop_logs_controller.rb",
-      "line": 146,
-      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params[:files].permit!",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "WorkshopLogsController",
-        "method": "files_params"
-      },
-      "user_input": null,
-      "confidence": "Medium",
-      "cwe_id": [
-        915
       ],
       "note": ""
     }
