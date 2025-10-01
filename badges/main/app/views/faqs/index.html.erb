@@ -1,43 +1,14 @@
-<div class="col-md-12">
-  <div class="row">
-    <div class="col-md-9 col-lg-8 width">
-      <div class="entry-content">
-        <h2 class="normal"><%= Faq.model_name.human.pluralize %></h2>
-      </div>
+<div class="flex flex-col mb-16 px-2 sm:px-4">
+  <h2 class="hidden sm:block text-center text-4xl text-gray-700 font-medium pt-4">Frequently Asked Questions</h2>
+  <h2 class="sm:hidden text-center text-4xl text-gray-700 font-medium pt-4">FAQ's</h2>
+  <hr class="w-48 h-1 mx-auto my-4 bg-primary border-0 rounded-sm">
+
+  <% if current_user.super_user? %>
+    <div class="self-end pb-3 pr-6">
+      <%= link_to_button("New", new_faq_path) %>
     </div>
-    <div class="col-md-3 col-lg-4 width">
-      <div class="entry-content">
-        <%= link_to 'New ' + Faq.model_name.human, new_faq_path, class: "btn btn-outline-primary" %>
-      </div>
-    </div>
-  </div>
-</div>
 
-<div class="col-md-12">
-  <table class="table table-striped table-bordered table-responsive">
-    <thead>
-      <tr>
-        <% attributes = @faqs.first.attributes.keys if @faqs.any? %>
-        <% attributes&.each do |attribute| %>
-          <th><%= attribute.humanize %></th>
-        <% end %>
-        <th>Edit</th>
-      </tr>
-    </thead>
+  <% end %>
+  <%= render @faqs %>
 
-    <tbody>
-      <% @faqs.each do |faq| %>
-        <tr>
-          <% attributes.each do |attribute| %>
-            <td><%= faq[attribute] %></td>
-          <% end %>
-          <td><%= link_to 'Edit', edit_faq_path(faq) %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-
-  <div class="text-center">
-    <%= will_paginate @faqs, :previous_label => '<<', :next_label => '>>', :inner_window => 2 %>
-  </div>
 </div>

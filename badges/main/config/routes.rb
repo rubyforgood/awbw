@@ -80,11 +80,7 @@ Rails.application.routes.draw do
   get 'dashboard/help', to: 'dashboard#help'
 
   resources :monthly_reports
-  resources :faqs do
-    collection do
-      get :collapsible
-    end
-  end
+  resources :faqs
   resources :project_users
   resources :workshops
   resources :workshop_variations

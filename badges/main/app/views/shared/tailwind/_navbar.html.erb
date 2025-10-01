@@ -1,4 +1,4 @@
-<nav class="relative bg-primary">
+<nav class="relative bg-primary print:hidden" data-controller="dropdown">
   <div class="px-2 sm:px-6 lg:px-8">
     <div class="relative flex items-center justify-between py-2.5">
       <div class="absolute inset-y-0 left-0 flex items-center md:hidden">
@@ -10,10 +10,8 @@
             hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1
             focus:outline-indigo-500
           "
-          data-controller="dropdown"
-          data-dropdown-utility-class="hidden block"
-          data-dropdown-element-value="mobile-menu"
           data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"mobile-menu":"hidden block"}]'
         >
           <span class="absolute -inset-0.5"></span>
           <span class="sr-only">Open main menu</span>
@@ -82,7 +80,8 @@
     </div>
   </div>
 
-  <div id="mobile-menu" class="hidden md:hidden">
+  <div id="mobile-menu" class="hidden md:hidden" data-dropdown-target="content">
+
     <div class="space-y-1 px-2 pt-2 pb-3">
       <%= link_to workshops_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
           hover:text-white" do %>
@@ -94,7 +93,7 @@
         Resources
       <% end %>
 
-      <%= link_to collapsible_faqs_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+      <%= link_to faqs_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
           hover:text-white"  do %>
         FAQ
       <% end %>
@@ -102,12 +101,12 @@
       workshops_share_idea_path,
       class:
         "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
-                                                                                                                                                                hover:text-white" %>
+                                                                                                                                                                                                                hover:text-white" %>
       <%= link_to "New workshop variation",
       new_workshop_variation_path,
       class:
         "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
-                                                                                                                                                                hover:text-white" %>
+                                                                                                                                                                                                                hover:text-white" %>
     </div>
   </div>
 </nav>

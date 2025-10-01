@@ -1,10 +1,4 @@
-<div
-  class="relative ml-3"
-  id="avatar"
-  data-controller="dropdown"
-  data-dropdown-utility-class="hidden"
-  data-dropdown-element-value="avatar-dropdown"
->
+<div class="relative ml-3" id="avatar" data-controller="dropdown">
   <button
     type="button"
     class="
@@ -12,6 +6,7 @@
       focus-visible:outline-offset-2 focus-visible:outline-indigo-500
     "
     data-action="dropdown#toggle"
+    data-dropdown-payload-param='[{"avatar-dropdown":"hidden"}]'
   >
     <span class="sr-only">Open user menu</span>
     <span class="absolute -inset-1.5"></span>
@@ -26,6 +21,7 @@
       outline-black/5 transition hidden
     "
     id="avatar-dropdown"
+    data-dropdown-target="content"
   >
     <% if current_user.super_user? %>
       <%= link_to "Admin",

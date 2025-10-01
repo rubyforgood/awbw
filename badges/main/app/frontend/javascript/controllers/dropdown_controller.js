@@ -1,15 +1,19 @@
 import { Controller } from "@hotwired/stimulus";
 
 // Connects to data-controller="dropdown"
+//
+//
+// Your elements should have their initial utility classes defined in your view. These classes
+// should be included in the payload-params. Add key:value pairs for each element that should
+// have classes toggle via the payload-params. Multiple space separated values are allowed per key.
+// Params should be defined on the element that triggers the action.
+//
+// data-action="dropdown#toggle"
+// data-dropdown-payload-param='[{"answer_5":"hidden block"}, {"question_5_arrow":"rotate-180"}]'
+//
 export default class extends Controller {
-  //Your element should have it's initial utility classes defined when the page
-  //loads (eg. class="hidden"). Pass into the controller what classes should be toggled including
-  //the classes from the initial state (data-dropdown-utility-class="hidden block")
-
-  static classes = ["utility"];
-  static values = {
-    element: String,
-  };
+  // add a content target if you want the dropdown to close with "escape button" or clicking outside of content
+  static targets = ["content"];
 
   connect() {
     this.open = false;
@@ -17,13 +21,23 @@ export default class extends Controller {
     this.handleEscapeKey = this.handleEscapeKey.bind(this);
   }
 
-  toggle() {
-    const element = document.getElementById(this.elementValue);
-    if (!element) return;
-
-    this.utilityClasses.forEach((c) => element.classList.toggle(c));
+  toggle(event) {
+    this.processPayload(event.params.payload);
     this.manageEventListeners();
     this.open = !this.open;
+  }
+
+  toggleClassesOnElement(element, classString) {
+    const classes = this.parseClassString(classString);
+    classes.forEach((className) => {
+      element.classList.toggle(className);
+    });
+  }
+
+  parseClassString(classString) {
+    return classString
+      .split(" ")
+      .filter((className) => className.trim() !== "");
   }
 
   manageEventListeners() {
@@ -48,13 +62,12 @@ export default class extends Controller {
   }
 
   handleOutsideClick(event) {
-    const element = document.getElementById(this.elementValue);
-    if (!element) return;
+    if (!this.hasContentTarget) return;
 
-    const isClickInsideElement = element.contains(event.target);
+    const isClickInsideContent = this.contentTarget.contains(event.target);
     const isClickOnToggle = this.element.contains(event.target);
 
-    if (!isClickInsideElement && !isClickOnToggle) {
+    if (!isClickInsideContent && !isClickOnToggle) {
       this.close();
     }
   }
@@ -66,14 +79,22 @@ export default class extends Controller {
   }
 
   close() {
-    const element = document.getElementById(this.elementValue);
-    if (!element) return;
-
     if (this.open) {
-      this.utilityClasses.forEach((c) => element.classList.toggle(c));
+      this.processPayload(this.lastPayload);
       this.removeEventListeners();
       this.open = false;
     }
+  }
+
+  processPayload(payloadArray) {
+    this.lastPayload = payloadArray;
+
+    payloadArray.forEach((item) => {
+      Object.entries(item).forEach(([elementId, classString]) => {
+        const element = document.getElementById(elementId);
+        this.toggleClassesOnElement(element, classString);
+      });
+    });
   }
 
   disconnect() {
