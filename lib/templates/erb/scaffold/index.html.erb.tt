@@ -7,7 +7,7 @@
     </div>
     <div class="col-md-3 col-lg-4 width">
       <div class="entry-content">
-        <%%= link_to 'New ' + <%= singular_table_name.classify %>.model_name.human, new_<%= singular_table_name %>_path, class: "btn btn-outline-primary" %>
+        <%%= link_to_button 'New ' + <%= singular_table_name.classify %>.model_name.human.downcase, new_<%= singular_table_name %>_path, variant: :primary_outline %>
       </div>
     </div>
   </div>
