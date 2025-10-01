@@ -1,4 +1,8 @@
 class Faq < ApplicationRecord
+  # TODO After the production db migration we should "heal_ordering_column!" and add db contraints
+  # https://github.com/brendon/positioning
+  positioned on: [], column: :ordering
+
   # Validations
   validates_presence_of :question, :answer
 
