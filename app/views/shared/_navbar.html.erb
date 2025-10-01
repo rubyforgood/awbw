@@ -11,14 +11,16 @@
     <%= image_tag("logo-color.png", class:"colored-logo") %>
   <% end %>
 
-  <% if user_signed_in? %>
-    <%= render "shared/navbar_text" %>
+  <div class="print:hidden">
+    <% if user_signed_in? %>
+      <%= render "shared/navbar_text" %>
 
-    <div class="navbar-text pull-right container-fluid">
-      <%= render "shared/navbar_user" %>
-    </div>
-    <div class="navbar-text navbar-link pull-right">
-      <%= render "shared/navbar_new_button" %>
-    </div>
-  <% end %>
+      <div class="navbar-text navbar-link pull-right">
+        <%= render "shared/navbar_new_button" %>
+      </div>
+      <div class="navbar-text pull-right container-fluid">
+        <%= render "shared/navbar_user" %>
+      </div>
+    <% end %>
+  </div>
 </nav>

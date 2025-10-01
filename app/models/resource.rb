@@ -14,12 +14,13 @@ class Resource < ApplicationRecord
   has_many :reports, as: :owner
   has_many :workshop_resources, dependent: :destroy
   # Scopes
-  scope :featured, -> { where(featured: true ).order(created_at: :desc)}
+  scope :by_created, -> { order(created_at: :desc) }
+  scope :featured, -> { where(featured: true ).order(created_at: :desc) }
   scope :published, -> { where(inactive: false) }
-  scope :by_created, -> { order(created_at: :desc)}
+  scope :leader_spotlights, -> { where("kind like ?", "LeaderSpotlight" ) }
+  scope :recent, -> { published.by_created }
 
-  scope :for_search, -> { published.where('kind NOT IN (?)', ['SectorImpact', 'LeaderSpotlight', 'Theme']) }
-  scope :recent, -> { for_search.by_created }
+
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }
   validates :kind, presence: true
@@ -106,7 +107,7 @@ class Resource < ApplicationRecord
   end
 
   def self.search(params)
-    resources = for_search
+    resources = published
     resources = resources.where('title like ?', "%#{params[:query]}%")
     resources = resources.where('kind like ?', "%#{params[:kind]}%")
   end

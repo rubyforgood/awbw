@@ -75,8 +75,6 @@ class Workshop < ApplicationRecord
                                 allow_destroy: true
 
   # Scopes
-  scope :for_search, -> { published }
-
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
   scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }
@@ -95,6 +93,7 @@ class Workshop < ApplicationRecord
   validates_presence_of :title
   #validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
   validates_length_of :age_range, maximum: 16
+  validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
   # Nested Attributes
   accepts_nested_attributes_for :workshop_logs,
@@ -143,39 +142,45 @@ class Workshop < ApplicationRecord
       workshops = workshops.title(params[:title])
     end
     if params[:query].present?
-      workshops = workshops.filter_by_query(params[:query])
+      workshops = workshops.filter_by_query(params[:query], sort: params[:sort])
     end
     workshops
   end
 
-  def self.filter_by_query(query = nil)
+  def self.filter_by_query(query = nil, sort: nil)
     return all if query.blank?
 
     # Whitelisted, quoted column names to use in search
     cols = %w[title full_name objective materials introduction demonstration opening_circle
               warm_up creation closing notes tips misc1 misc2].
-           map { |c| connection.quote_column_name(c) }.join(", ")
+           map { |c| "workshops.#{ connection.quote_column_name(c) }" }.join(", ")
     # Prepare query for BOOLEAN MODE (prefix matching)
     terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
+
+    # rubocop:disable brakeman
     # Convert to Arel for safety
     match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
 
-    select(
+    workshops = select(
       sanitize_sql_array(["workshops.*, #{match_expr} AS all_score", terms])
     ).where(match_expr, terms)
+    # rubocop:enable brakeman
+
+    workshops.order("all_score DESC") if sort == "keywords"
+    workshops
   end
 
-  def self.search(params, super_user: false)
-    workshops = self.filter_by_params(params)
+  def self.search_and_sort(params, super_user: false)
+    workshops = all
+    workshops = workshops.filter_by_params(params)
+    workshops = workshops.published unless super_user # only show published results to regular users
+    workshops.order_by_params(params)
+  end
 
-    # only show published results to regular users
-    unless super_user
-      workshops = workshops.published
-    end
-
-    # sort by
-    if params[:sort] == 'created'
-      workshops = workshops.order(
+  def self.order_by_params(params)
+    workshops = self.all
+    if params[:sort] == "created"
+      workshops.order(
         Arel.sql("
           CASE
             WHEN year IS NOT NULL AND month IS NOT NULL THEN
@@ -183,21 +188,15 @@ class Workshop < ApplicationRecord
             ELSE workshops.created_at
           END DESC")
       )
-    elsif params[:sort] == 'led'
-      workshops = workshops.order(led_count: :desc)
+    elsif params[:sort] == "led"
+      workshops.order(led_count: :desc)
     elsif params[:sort] == "title"
-      workshops = workshops.order(title: :asc)
-    elsif params[:query].present? # params[:sort] == 'keywords'
-      workshops = workshops.order("all_score DESC")
+      workshops.order(title: :asc)
+    elsif params[:sort] == 'keywords' && params[:query].present? # only in the UI if params[:query] is present
+      workshops # keep same collection bc order was applied in filter_by_query
     else
-      workshops = workshops.order(title: :asc)
+      workshops.order(title: :asc)
     end
-
-    if params[:type] == 'led' # TODO - find wherever this gets used and change param name to :sort
-      workshops = workshops.order(led_count: :desc)
-    end
-
-    workshops
   end
 
   def self.search_by_categories(categories)

@@ -2,15 +2,17 @@
 
 class WorkshopsController < ApplicationController
 
-  layout "tailwind", only: :index
+  layout "tailwind", only: [:index, :show]
 
   def index
-    workshops = Workshop.includes(:categories, :sectors, :windows_type, :user, :images,
-                                  :workshop_age_ranges, :bookmarks)
-                        .references(:categories, :sectors, :windows_type, :user, :images,
-                                    :workshop_age_ranges, :bookmarks)
-                        .search(params, super_user: current_user.super_user?) # inactive and active results
-    @workshops = workshops.paginate(page: params[:page], per_page: params[:per_page] || 50)
+    workshop_ids = Workshop.search_and_sort(params, super_user: current_user.super_user?)
+                           .pluck(:id)
+    @workshops = Workshop
+                   .where(id: workshop_ids)
+                   .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
+                   .includes(:categories, :sectors, :windows_type, :user, :images,
+                             :workshop_age_ranges, :bookmarks)
+                   .paginate(page: params[:page], per_page: params[:per_page] || 50)
 
     load_sortable_fields
     load_metadata
@@ -160,11 +162,9 @@ class WorkshopsController < ApplicationController
 
   def set_show
     @workshop = Workshop.find(params[:id]).decorate
-    @bookmark = current_user.bookmarks.find_by(bookmarkable: @workshop)
-    @new_bookmark = @workshop.bookmarks.build
-    @quotes = @workshop.quotes.active
-    @leader_spotlights = @workshop.resources.published
-    @workshop_variations = @workshop.workshop_variations
+    @quotes = Quote.where(workshop_id: @workshop.id).active
+    @leader_spotlights = @workshop.resources.published.leader_spotlights
+    @workshop_variations = @workshop.workshop_variations.active
     @sectors = @workshop.sectorable_items.where(inactive: false).map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
   end
 

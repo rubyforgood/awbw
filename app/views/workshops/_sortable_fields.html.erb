@@ -1,29 +1,29 @@
 <div class="flex items-center gap-1">
-  <%= radio_button_tag :sort, "created",
-                       params[:sort] == "created",
-                       onclick: ("$('form').submit();") %>
-  <span class="text-sm">Newest</span>
+  <label class="flex items-center gap-1 cursor-pointer">
+    <%= radio_button_tag :sort, "created", params[:sort] == "created", onclick: "$('form').submit();" %>
+    <span class="text-sm">Newest</span>
+  </label>
 </div>
 
 <div class="flex items-center gap-1">
-  <%= radio_button_tag :sort, "title",
-                       params[:sort] == "title",
-                       onclick: ("$('form').submit();") %>
-  <span class="text-sm">Title</span>
+  <label class="flex items-center gap-1 cursor-pointer">
+    <%= radio_button_tag :sort, "title", params[:sort].nil? || params[:sort] == "title", onclick: "$('form').submit();" %>
+    <span class="text-sm">Title</span>
+  </label>
 </div>
 
 <div class="flex items-center gap-1">
-  <%= radio_button_tag :sort, "led",
-                       params[:sort] == "led",
-                       onclick: ("$('form').submit();") %>
-  <span class="text-sm">Most led</span>
+  <label class="flex items-center gap-1 cursor-pointer">
+    <%= radio_button_tag :sort, "led", params[:sort] == "led", onclick: "$('form').submit();" %>
+    <span class="text-sm">Most bookmarked</span>
+  </label>
 </div>
 
 <% if params[:query].present? %>
   <div class="flex items-center gap-1">
-    <%= radio_button_tag :sort, "keywords",
-                         params[:sort] == "keywords",
-                         onclick: ("$('form').submit();") %>
-    <span class="text-sm">Keywords</span>
+    <label class="flex items-center gap-1 cursor-pointer">
+      <%= radio_button_tag :sort, "keywords", params[:sort] == "keywords", onclick: "$('form').submit();" %>
+      <span class="text-sm">Keyword match</span>
+    </label>
   </div>
 <% end %>

@@ -26,9 +26,9 @@ class Search
         sector = Sector.find_by_name(query)
 
         if category
-          results << category.workshops.for_search
+          results << category.workshops.published
         elsif sector
-          results << sector.workshops.for_search
+          results << sector.workshops.published
         else
           results.unshift(klass.search(query).for_search)
         end
