@@ -1,29 +1,48 @@
-<%= form_for(@event) do |f| %>
-  <%= render 'shared/errors', resource: @event if @event.errors.any? %>
+<%= simple_form_for(@event) do |f| %>
+  <% if @event.errors.any? %>
+    <%= render 'shared/errors', resource: @event %>
+  <% end %>
 
-  <div class="form-group">
-    <%= f.label :title, class: 'bold' %>
-    <%= f.text_field :title, class: 'form-control' %>  
-
-    <%= f.label :description, class: 'bold' %>
-    <%= f.text_area :description, class: 'form-control' %>
-
-    <%= f.label :start_date, class: 'bold' %>
-    <%= f.text_field :start_date, type: 'datetime-local', class: 'form-control', value: @event.start_date&.strftime('%Y-%m-%dT%H:%M') %>
-
-    <%= f.label :end_date, class: 'bold' %>
-    <%= f.text_field :end_date, type: 'datetime-local', class: 'form-control', value: @event.end_date&.strftime('%Y-%m-%dT%H:%M') %>
-
-    <%= f.label :registration_close_date, class: 'bold' %>
-    <%= f.text_field :registration_close_date, type: 'datetime-local', class: 'form-control', value: @event.registration_close_date&.strftime('%Y-%m-%dT%H:%M') %>
-
-    <div style="display: flex; align-items: center; margin-top: 10px; column-gap: 10px;">
-      <%= f.label :publicly_visible, class: 'bold' %>
-      <%= f.check_box :publicly_visible, { class: 'bold mt-0' }, '1', '0' %>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div>
+      <%= f.input :title, label: "Event title", input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+    <div>
+      <%= f.input :description, input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+    <div class="flex items-center mt-6 md:mt-0">
+      <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?", wrapper_html: { class: "ml-2" } %>
     </div>
   </div>
 
-  <div class="form-actions">
-    <%= f.button :submit, class: 'btn btn-primary' %>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div>
+      <%= f.label :start_date, "Start time", class: "block font-medium mb-1" %>
+      <%= f.text_field :start_date, type: 'datetime-local',
+                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       value: @event.start_date&.strftime('%Y-%m-%dT%H:%M') %>
+    </div>
+
+    <div>
+      <%= f.label :end_date, "End time", class: "block font-medium mb-1" %>
+      <%= f.text_field :end_date, type: 'datetime-local',
+                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       value: @event.end_date&.strftime('%Y-%m-%dT%H:%M') %>
+    </div>
+
+    <div>
+      <%= f.label :registration_close_date, "Registration close time", class: "block font-medium mb-1" %>
+      <%= f.text_field :registration_close_date, type: 'datetime-local',
+                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       value: @event.registration_close_date&.strftime('%Y-%m-%dT%H:%M') %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-4">
+    <%= link_to_button "Delete", @event, variant: :danger_outline, method: :delete, data: { confirm: "Are you sure?" } %>
+    <%= link_to_button 'Cancel', events_path, variant: :secondary_outline %>
+    <%= f.button :submit, class: 'inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                    transition-colors duration-200 font-medium shadow-sm text-sm
+                    border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white' %>
   </div>
 <% end %>

@@ -32,7 +32,7 @@
                     method: :delete,
                     class: "inline-block",
                     data: { turbo_confirm: "Remove bookmark?" } do %>
-          <i class="fas fa-bookmark w-5 h-5 text-blue-500"></i>
+          <i class="fas fa-bookmark w-5 h-5 text-blue-500 hover:text-gray-400"></i>
         <% end %>
       <% else %>
         <%= link_to bookmarks_path(
@@ -43,7 +43,7 @@
                     ),
                     method: :post,
                     class: "inline-block" do %>
-          <i class="far fa-bookmark w-5 h-5 text-gray-400"></i>
+          <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
         <% end %>
       <% end %>
       <%= link_to "#{ "[UNPUBLISHED] " if workshop.inactive? }#{ workshop.title }", link_route, class: "hover:underline" %>

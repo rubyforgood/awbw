@@ -3,7 +3,7 @@
 
     <div class="flex justify-end mb-6">
       <% if current_user.super_user? %>
-        <%= link_to_button("Edit", edit_resource_path(@resource), variant: :primary) %>
+        <%= link_to_button("Edit", edit_resource_path(@resource), variant: :primary_outline) %>
       <% end %>
       <%= link_to_button("Download <span class='fa fa-download'></span>".html_safe,
                          @resource.attachments.first.file.url,

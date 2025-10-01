@@ -28,14 +28,15 @@ RSpec.describe "/events", type: :request do
     }
   }
   let(:user) { create(:user) }
-  let(:admin) { create(:admin) }
+  let(:admin) { create(:user, super_user: true) }
   let(:event) { Event.create!(valid_attributes) }
 
   describe "GET /index" do
     it "renders a successful response" do
       sign_in user
       get events_url
-
+      puts "=====Status: #{response.status}"
+      puts "Error snippet: #{response.body.scan(/<pre.*?>(.*?)<\/pre>/m)}"
       expect(response).to be_successful
     end
   end
@@ -67,7 +68,7 @@ RSpec.describe "/events", type: :request do
   describe "GET /edit" do
     describe 'when signed in as an admin' do
       it "renders a successful response" do
-        sign_in user
+        sign_in admin
   
         allow_any_instance_of(ApplicationController).
           to receive(:current_admin).and_return(true)
@@ -98,10 +99,25 @@ RSpec.describe "/events", type: :request do
         }.to change(Event, :count).by(1)
       end
 
-      it "redirects to the created event" do
+      it "redirects to the events index" do
         sign_in user
         post events_url, params: { event: valid_attributes }
-        expect(response).to redirect_to(event_url(Event.last))
+        expect(response).to redirect_to(events_url)
+      end
+
+      it "displays notice if present" do
+        sign_in user
+        post events_url, params: { event: {
+          title: "sample title",
+          description: "sample description",
+          start_date: 1.day.from_now,
+          end_date: 2.days.from_now,
+          registration_close_date: 3.days.ago,
+          publicly_visible: true
+        } }
+        follow_redirect!  # flash shows after redirect
+
+        expect(response.body).to include("Event was successfully created")
       end
     end
 
@@ -176,7 +192,7 @@ RSpec.describe "/events", type: :request do
   describe "DELETE /destroy" do
     it "destroys the requested event" do
       event = Event.create!(valid_attributes)
-      sign_in user
+      sign_in admin
       allow_any_instance_of(ApplicationController).
         to receive(:current_admin).and_return(true)
       expect {

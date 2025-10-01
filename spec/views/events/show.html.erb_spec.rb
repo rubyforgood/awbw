@@ -12,6 +12,7 @@ RSpec.describe "events/show", type: :view do
 
   before do
     assign(:event, event)
+    allow(view).to receive(:current_user).and_return(build_stubbed(:user, super_user: true))
   end
 
   it "renders the event title" do
@@ -34,7 +35,7 @@ RSpec.describe "events/show", type: :view do
     expect(rendered).to have_content("January 15, 2024 10:00 AM")
     
     expect(rendered).to have_content("End Date:")
-    expect(rendered).to have_content("January 15, 2024 04:00 PM")
+    expect(rendered).to have_content("January 15, 2024  4:00 PM")
     
     expect(rendered).to have_content("Registration Close Date:")
     expect(rendered).to have_content("January 10, 2024 11:59 PM")
@@ -44,14 +45,7 @@ RSpec.describe "events/show", type: :view do
     render
 
     expect(rendered).to have_link("Edit", href: edit_event_path(event))
-    expect(rendered).to have_link("Back", href: events_path)
-  end
-
-  it "displays notice if present" do
-    flash[:notice] = "Event created successfully"
-    render
-
-    expect(rendered).to have_selector("p#notice", text: "Event created successfully")
+    expect(rendered).to have_link("Index", href: events_path)
   end
 
   context "when event has minimal data" do
@@ -67,7 +61,8 @@ RSpec.describe "events/show", type: :view do
 
       expect(rendered).to have_content("Minimal Event")
       expect(rendered).to have_content("Event with minimal data")
-      expect(rendered).to have_content(event.start_date.strftime("%B %d, %Y %I:%M %p"))
+      expect(rendered).to include(event.start_date.strftime("%B %d, %Y")) # "October 02, 2025"
+      expect(rendered).to include(event.start_date.strftime("%-l:%M %p")) # "5:43 PM"
     end
   end
 

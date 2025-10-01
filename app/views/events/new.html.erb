@@ -1,5 +1,8 @@
-<h1>New Event</h1>
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <h1 class="text-3xl font-semibold text-gray-900 mb-4">New Event</h1>
+  <div class="border-b border-gray-300 mb-6"></div>
+  <div class="mt-4 pt-4">
+    <%= render 'form', event: @event %>
+  </div>
+</div>
 
-<%= render 'form', event: @event %>
-
-<%= link_to 'Back', events_path %>

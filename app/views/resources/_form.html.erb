@@ -143,8 +143,11 @@
 
   <!-- Form Actions -->
   <div class="flex gap-2 mt-4">
-    <%= link_to_button "Delete", @resource, variant: :danger, method: :delete, data: { confirm: "Are you sure?" } %><%= link_to 'Cancel', resources_path, class: 'px-4 py-2 border border-gray-400 text-gray-600 rounded-lg hover:bg-gray-600 hover:text-white text-sm font-medium' %>
-    <%= f.submit 'Submit', class: "px-4 py-2 border border-blue-600 text-gray-600 rounded-lg hover:bg-blue-600 hover:text-white text-sm font-medium" %>
+    <%= link_to_button "Delete", @resource, variant: :danger_outline, method: :delete, data: { confirm: "Are you sure?" } %>
+    <%= link_to_button 'Cancel', resources_path, variant: :secondary_outline %>
+    <%= f.submit 'Submit',
+                 class: "px-4 py-2 border border-blue-600 hover:text-gray-600 hover:bg-white
+                 rounded-lg bg-blue-600 text-white text-sm font-medium" %>
   </div>
 <% end %>
 
