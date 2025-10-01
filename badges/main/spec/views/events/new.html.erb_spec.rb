@@ -25,16 +25,16 @@ RSpec.describe "events/new", type: :view do
     expect(rendered).to have_selector("input[type='checkbox'][name='event[publicly_visible]']")
   end
 
-  it "renders the Back link" do
+  it "renders the Cancel link" do
     render
 
-    expect(rendered).to have_link("Back", href: events_path)
+    expect(rendered).to have_link("Cancel", href: events_path)
   end
 
   it "renders submit button" do
     render
 
-    expect(rendered).to have_selector("button[type='submit']")
+    expect(rendered).to have_selector("input[type='submit']")
   end
 
   context "when event has errors" do
@@ -48,7 +48,7 @@ RSpec.describe "events/new", type: :view do
     it "renders error messages" do
       render
 
-      expect(rendered).to have_selector(".form-group")
+      expect(rendered).to have_selector(".errors")
     end
   end
 end

@@ -261,10 +261,11 @@
 
 
     <div class="btn-container">
-      <%= link_to "Cancel",
-                  (action_name == "share_idea" ? root_path : workshops_path),
-                  class: "btn btn-secondary" %>
-      <%= f.submit 'Submit', class: 'btn btn-primary btn-outline-primary' %>
+      <%= link_to_button "Delete", @workshop, variant: :danger_outline, method: :delete, data: { confirm: "Are you sure?" } %>
+      <%= link_to_button 'Cancel', (action_name == "share_idea" ? root_path : workshops_path), variant: :secondary_outline %>
+      <%= f.submit 'Submit',
+                   class: "px-4 py-2 border border-blue-600 hover:text-gray-600 hover:bg-white
+                 rounded-lg bg-blue-600 text-white text-sm font-medium" %>
     </div>
   <% end %>
   </div>

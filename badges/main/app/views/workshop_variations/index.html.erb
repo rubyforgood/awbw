@@ -8,8 +8,9 @@
         </div>
         <div class="pull-right">
           <div>
-            <%= link_to 'New workshop variation',
-                        new_workshop_variation_path(from: "index"), class: 'btn btn-primary' %>
+            <%= link_to_button 'New workshop variation',
+                               new_workshop_variation_path(from: "index"),
+                               variant: :primary_outline %>
           </div>
         </div>
       </div>

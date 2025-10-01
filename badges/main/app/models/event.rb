@@ -3,4 +3,11 @@ class Event < ApplicationRecord
   
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :publicly_visible, in: [true, false]
+
+  scope :publicly_visible, -> { where(publicly_visible: true) }
+
+  def registerable?
+    publicly_visible &&
+      (registration_close_date.nil? || registration_close_date >= Time.current)
+  end
 end

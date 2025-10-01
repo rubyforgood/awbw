@@ -55,6 +55,17 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
+  def destroy
+    @event_registration = EventRegistration.find(params[:id])
+    if @event_registration
+      @event_registration.destroy
+      flash[:notice] = 'You are no longer registered.'
+      redirect_to events_path
+    else
+      flash[:alert] = 'Unable to find that registration.'
+    end
+  end
+
   private
 
   def event_registration_params

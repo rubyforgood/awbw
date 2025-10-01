@@ -1,16 +1,24 @@
 module ApplicationHelper
 
-  def link_to_button(text, url, variant: :secondary, **options)
+  def link_to_button(text, url, variant: :secondary_outline, **options)
     manual_classes = options.delete(:class)
     base_classes = "inline-flex items-center gap-2 px-4 py-2 rounded-lg
                     transition-colors duration-200 font-medium shadow-sm text-sm"
     variant_classes = {
-      primary:   "border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white",
-      secondary: "border border-gray-400 text-gray-600 hover:bg-gray-600 hover:text-white",
-      info:      "border border-sky-500 text-gray-600 hover:bg-sky-600 hover:text-white",
-      warning:   "border border-yellow-400 text-gray-600 hover:bg-yellow-500 hover:text-white",
-      danger:    "border border-red-600 text-gray-600 hover:bg-red-600 hover:text-white",
-      utility:   "border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
+      primary:   "border border-blue-600 bg-blue-600 text-white hover:text-grey-600 hover:bg-white",
+      secondary: "border border-gray-400 bg-gray-600 text-white hover:text-grey-600 hover:bg-white",
+      info:      "border border-sky-500 bg-sky-600 text-white hover:text-grey-600 hover:bg-white",
+      warning:   "border border-yellow-400 bg-yellow-600 text-white hover:text-grey-600 hover:bg-white",
+      danger:    "border border-red-600 bg-red-600 text-white hover:text-grey-600 hover:bg-white",
+      utility:   "border border-gray-200 bg-gray-200 text-gray-800 hover:text-gray-600 hover:bg-white",
+
+      primary_outline:   "border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white",
+      secondary_outline: "border border-gray-400 text-gray-600 hover:bg-gray-600 hover:text-white",
+      info_outline:      "border border-sky-500 text-gray-600 hover:bg-sky-600 hover:text-white",
+      warning_outline:   "border border-yellow-400 text-gray-600 hover:bg-yellow-500 hover:text-white",
+      danger_outline:    "border border-red-600 text-gray-600 hover:bg-red-600 hover:text-white",
+      utility_outline:   "border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
+                        # border border-gray-300 text-gray-700 bg-white hover:bg-gray-50
     }
     classes = [base_classes, variant_classes[variant.to_sym], manual_classes].join(" ")
     link_to text, url, options.merge(class: classes)

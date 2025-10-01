@@ -40,7 +40,7 @@ Rails.application.routes.draw do
   resources :workshop_logs
 
   resources :events
-  resources :event_registrations, only: [:create] do
+  resources :event_registrations, only: [:create, :destroy] do
     collection do
       post :bulk_create
     end

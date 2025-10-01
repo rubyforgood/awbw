@@ -18,7 +18,7 @@ RSpec.describe "events/edit", type: :view do
   it "renders the editing event heading" do
     render
 
-    expect(rendered).to have_selector("h1", text: "Editing Event")
+    expect(rendered).to have_selector("h1", text: "Edit Event")
   end
 
   it "renders the form partial with event data" do
@@ -33,14 +33,13 @@ RSpec.describe "events/edit", type: :view do
   it "renders action links" do
     render
 
-    expect(rendered).to have_link("Show", href: event_path(event))
-    expect(rendered).to have_link("Back", href: events_path)
+    expect(rendered).to have_link("View", href: event_path(event))
   end
 
   it "renders submit button" do
     render
 
-    expect(rendered).to have_selector("button[type='submit']")
+    expect(rendered).to have_selector("input[type='submit']")
   end
 
   context "when event has errors" do

@@ -22,28 +22,18 @@ RSpec.describe "events/_form", type: :view do
   it "renders all form labels" do
     render
 
-    expect(rendered).to have_selector("label", text: "Title")
+    expect(rendered).to have_selector("label", text: "Event title")
     expect(rendered).to have_selector("label", text: "Description")
-    expect(rendered).to have_selector("label", text: "Start date")
-    expect(rendered).to have_selector("label", text: "End date")
-    expect(rendered).to have_selector("label", text: "Registration close date")
+    expect(rendered).to have_selector("label", text: "Start time")
+    expect(rendered).to have_selector("label", text: "End time")
+    expect(rendered).to have_selector("label", text: "Registration close time")
     expect(rendered).to have_selector("label", text: "Publicly visible")
-  end
-
-  it "applies correct CSS classes" do
-    render
-
-    expect(rendered).to have_selector(".form-group")
-    expect(rendered).to have_selector("input.form-control")
-    expect(rendered).to have_selector("textarea.form-control")
-    expect(rendered).to have_selector("label.bold")
   end
 
   it "renders submit button" do
     render
 
-    expect(rendered).to have_selector("button[type='submit']")
-    expect(rendered).to have_selector(".btn.btn-primary")
+    expect(rendered).to have_selector("input[type='submit']")
   end
 
   context "when event has existing data" do
