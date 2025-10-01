@@ -5,7 +5,7 @@ class FaqsController < ApplicationController
 
   def index
     @faqs = if current_user.super_user?
-      Faq.all.by_order
+      Faq.by_order
     else
       Faq.active.by_order
     end
