@@ -15,7 +15,7 @@
 //= require bootstrap.min
 //= require cocoon
 //= require annotator-full.min
-//= require ckeditor/init
+
 //= require ckeditor/config
 //= require_tree ./components
 //= require_tree ./select-2
