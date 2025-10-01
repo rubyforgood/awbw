@@ -1,22 +1,30 @@
 <%%= simple_form_for(@<%= singular_table_name %>) do |f| %>
-  <%%= f.error_notification %>
-  <%%= render 'shared/errors', resource: @<%= singular_table_name %> if @<%= singular_table_name %>.errors.any? %>
+  <div class="form-body space-y-6">
 
-  <div class="row">
-    <%% @<%= singular_table_name %>.attribute_names.reject { |a| ["id", "created_at", "updated_at"].include?(a) }.each do |attr| %>
-      <div class="col-md-6 mb-3">
-        <%%= f.input attr.to_sym, input_html: { class: "form-control" } %>
-      </div>
-    <%% end %>
-  </div>
+    <!-- Form Errors -->
+    <%%= f.error_notification %>
+    <%%= render 'shared/errors', resource: @<%= singular_table_name %> if @<%= singular_table_name %>.errors.any? %>
 
-  <div class="form-actions flex justify-end gap-4 mt-3">
-    <%% if @<%= singular_table_name %>.persisted? && current_user.super_user? %>
-      <%%= link_to_button "Delete", @<%= singular_table_name %>, method: :delete, variant: :danger_outline, data: { confirm: "Are you sure?" } %>
-    <%% end %>
-    <%%= link_to_button "Cancel", <%= plural_table_name %>_path, variant: :secondary_outline %>
-    <%%= f.button :submit, class: 'inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                        transition-colors duration-200 font-medium shadow-sm text-sm
-                        border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white' %>
+    <!-- Form Fields -->
+    <div class="row">
+      <%% @<%= singular_table_name %>.attribute_names.reject { |a| ["id", "created_at", "updated_at"].include?(a) }.each do |attr| %>
+        <%% next if ['id', 'created_at', 'updated_at'].include?(attr) %>
+        <div class="col-md-6 mb-3">
+          <%%= f.input attr.to_sym, input_html: { class: "form-control" } %>
+        </div>
+      <%% end %>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
+      <%% if @<%= singular_table_name %>.persisted? && current_user.super_user? %>
+        <%%= link_to_button "Delete", @<%= singular_table_name %>, method: :delete,
+                            variant: :danger_outline, data: { confirm: "Are you sure?" } %>
+      <%% end %>
+      <%%= link_to_button 'Cancel', <%= plural_table_name %>_path, variant: :secondary_outline %>
+      <%%= f.button :submit,
+                  class: "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
+                          transition-colors duration-150" %>
+    </div>
   </div>
 <%% end %>
