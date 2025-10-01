@@ -1,4 +1,8 @@
-<div id="<%= dom_id faq %>" data-controller="dropdown">
+<div
+  id="<%= dom_id faq %>"
+  data-controller="dropdown"
+  data-sortable-id="<%= faq.id %>"
+>
 
   <div class="border-b border-gray-300">
     <button
@@ -35,7 +39,7 @@
           <%= faq.inactive %>
         </div>
 
-        <div class="self-center">
+        <div class="self-center" data-sortable-handle="" }>
           <strong>Ordering:</strong>
           <%= faq.ordering %>
         </div>

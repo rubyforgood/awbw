@@ -9,6 +9,11 @@
     </div>
 
   <% end %>
-  <%= render @faqs %>
+  <div
+    data-controller="sortable"
+    data-sortable-url-value="<%= faq_path(id: ":id") %>"
+  >
+    <%= render @faqs %>
+  </div>
 
 </div>
