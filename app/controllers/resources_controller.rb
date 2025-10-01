@@ -4,7 +4,7 @@ class ResourcesController < ApplicationController
 
   def index
     @resources = current_user.curriculum(Resource).by_created.search(params)
-                             .includes(:images)
+                             .includes(:images, :attachments)
                              .paginate(page: params[:page], per_page: 25)
 
     @sortable_fields = Resource::KINDS
