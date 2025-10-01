@@ -1,6 +1,6 @@
 class ResourcesController < ApplicationController
 
-  layout "tailwind", only: [:index, :edit]
+  layout "tailwind", only: [:index, :edit, :show]
 
   def index
     @resources = current_user.curriculum(Resource).by_created.search(params)
