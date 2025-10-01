@@ -1,6 +1,12 @@
-<div class="row">
-  <div class="col-md-12">
-    <h2>Edit <%%= @<%= singular_table_name %>.class.model_name.human %></h2>
-    <%%= render "form", locals: { <%= singular_table_name %>: @<%= singular_table_name %> } %>
+<div class="w-full">
+  <div class="flex items-start justify-between mb-6">
+    <div class="pr-6">
+      <h1 class="text-2xl font-semibold text-gray-900 mb-2">Edit <%%= @<%= singular_table_name %>.class.model_name.human %></h1>
+      <div class="border-b border-gray-300 mb-6"></div>
+      <div class="mt-4 pt-4">
+        <%%= render 'form', <%= singular_table_name %>: @<%= singular_table_name %> %>
+      </div>
+    </div>
+    <%%= link_to_button 'View', <%= singular_table_name %>_path(@<%= singular_table_name %>), variant: :secondary_outline %>
   </div>
 </div>

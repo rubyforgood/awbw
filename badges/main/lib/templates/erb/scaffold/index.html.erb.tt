@@ -1,43 +1,58 @@
-<div class="col-md-12">
-  <div class="row">
-    <div class="col-md-9 col-lg-8 width">
-      <div class="entry-content">
-        <h2 class="normal"><%%= <%= plural_table_name.classify %>.model_name.human.pluralize %></h2>
-      </div>
+<div class="w-full px-4">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900"><%%= <%= plural_table_name.classify %>.model_name.human.pluralize %></h2>
     </div>
-    <div class="col-md-3 col-lg-4 width">
-      <div class="entry-content">
-        <%%= link_to 'New ' + <%= singular_table_name.classify %>.model_name.human, new_<%= singular_table_name %>_path, class: "btn btn-outline-primary" %>
-      </div>
+    <div>
+      <%%= link_to_button('New ' + <%= singular_table_name.classify %>.model_name.human.downcase,
+                          new_<%= singular_table_name %>_path,
+                          variant: :primary_outline) %>
     </div>
   </div>
-</div>
+  <div class="border-b border-gray-300 mb-6"></div>
 
-<div class="col-md-12">
-  <table class="table table-striped table-bordered table-responsive">
-    <thead>
-      <tr>
-        <%% attributes = @<%= plural_table_name %>.first.attributes.keys if @<%= plural_table_name %>.any? %>
-        <%% attributes&.each do |attribute| %>
-          <th><%%= attribute.humanize %></th>
-        <%% end %>
-        <th>Edit</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      <%% @<%= plural_table_name %>.each do |<%= singular_table_name %>| %>
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full table-auto border-collapse border border-gray-200">
+      <thead class="bg-gray-100">
+        <%% if @<%= plural_table_name %>.any? %>
         <tr>
-          <%% attributes.each do |attribute| %>
-            <td><%%= <%= singular_table_name %>[attribute] %></td>
+          <%% attributes = @<%= plural_table_name %>.first.attributes.keys - ["id", "created_at", "updated_at"] if @<%= plural_table_name %>.any? %>
+          <%% attributes&.each do |attribute| %>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%%= attribute.humanize %></th>
           <%% end %>
-          <td><%%= link_to 'Edit', edit_<%= singular_table_name %>_path(<%= singular_table_name %>) %></td>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Edit</th>
         </tr>
-      <%% end %>
-    </tbody>
-  </table>
+        <%% end %>
+      </thead>
 
-  <div class="text-center">
-    <%<%= will_paginate @<%= plural_table_name %>, :previous_label => '<<', :next_label => '>>', :inner_window => 2 %>
+      <tbody class="divide-y divide-gray-200">
+        <%% @<%= plural_table_name %>.each do |<%= singular_table_name %>| %>
+          <tr class="hover:bg-gray-50 transition-colors duration-150">
+            <%% attributes.each do |attribute| %>
+              <td class="px-4 py-2 text-sm text-gray-800">
+                <%%= <%= singular_table_name %>[attribute] %>
+              </td>
+            <%% end %>
+            <td class="px-4 py-2 flex gap-2">
+              <%%= link_to_button 'Edit', edit_<%= singular_table_name %>_path(<%= singular_table_name %>),
+                          variant: :secondary_outline %>
+            </td>
+          </tr>
+        <%% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty state -->
+  <%% unless @<%= plural_table_name %>.any? %>
+    <p class="text-gray-500 text-center py-6">No <%%= <%= plural_table_name.classify %>.model_name.human.pluralize %> found.</p>
+  <%% end %>
+
+  <!-- Pagination -->
+  <div class="flex justify-center mt-6">
+    <%%= will_paginate @<%= plural_table_name %>, previous_label: '<<', next_label: '>>',
+                      class: 'flex space-x-2' %>
   </div>
 </div>

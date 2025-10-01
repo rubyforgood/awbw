@@ -1,23 +1,24 @@
-<div class="row mb-3">
-  <div class="col text-end">
-    <%%= link_to "Edit", edit_<%= singular_table_name %>_path(@<%= singular_table_name %>), class: "btn btn-outline-primary" if current_user.super_user? %>
-  </div>
-</div>
+<div class="detail py-6 min-h-screen">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="flex justify-end mb-6">
+      <%%= link_to_button("Index", <%= plural_table_name %>_path, variant: :secondary_outline) %>
+      <%% if current_user.super_user? %>
+        <%%= link_to_button("Edit", edit_<%= singular_table_name %>_path, variant: :primary_outline) %>
+      <%% end %>
+    </div>
+    <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+      <h1 class="text-2xl font-bold mb-4"><%%= <%= plural_table_name.classify %>.model_name.human %> Details</h1>
 
-<div class="row">
-  <div class="col-md-12">
-    <h2><%%= @<%= singular_table_name %>.class.model_name.human %> Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
 
-    <table class="table table-striped">
-      <tbody>
-        <%% attributes = @<%= singular_table_name %>.attributes.keys if @<%= singular_table_name %> %>
-        <%% attributes&.each do |attribute| -%>
-          <tr>
-            <th><%%= attribute.humanize %></th>
-            <td><%%= @<%= singular_table_name %>.send(attribute) %></td>
-          </tr>
-        <%% end -%>
-      </tbody>
-    </table>
+        <% attributes.each do |attribute| -%>
+          <div class="mb-3">
+            <p class="font-bold text-gray-700"><%= attribute.human_name %>:</p>
+            <p class="text-gray-900"><%%= @<%= singular_table_name %>.<%= attribute.name %> %></p>
+          </div>
+        <% end -%>
+
+      </div>
+    </div>
   </div>
 </div>

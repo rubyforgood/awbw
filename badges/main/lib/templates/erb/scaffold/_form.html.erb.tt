@@ -1,6 +1,6 @@
 <%%= simple_form_for(@<%= singular_table_name %>) do |f| %>
   <%%= f.error_notification %>
-  <%%= f.error_notification message: f.object.errors[:base].to_sentence if f.object.errors[:base].present? %>
+  <%%= render 'shared/errors', resource: @<%= singular_table_name %> if @<%= singular_table_name %>.errors.any? %>
 
   <div class="row">
     <%% @<%= singular_table_name %>.attribute_names.reject { |a| ["id", "created_at", "updated_at"].include?(a) }.each do |attr| %>
@@ -10,11 +10,13 @@
     <%% end %>
   </div>
 
-  <div class="form-actions mt-3">
-    <% if @<%= singular_table_name %>.persisted? && current_user.super_user? %>
-      <%%= link_to "Delete", @<%= singular_table_name %>, method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-outline-danger" %>
-    <% end %>
-    <%%= link_to "Cancel", <%= plural_table_name %>_path, class: "btn btn-outline-secondary" %>
-    <%%= f.button :submit, class: "btn btn-outline-primary ms-2" %>
+  <div class="form-actions flex justify-end gap-4 mt-3">
+    <%% if @<%= singular_table_name %>.persisted? && current_user.super_user? %>
+      <%%= link_to_button "Delete", @<%= singular_table_name %>, method: :delete, variant: :danger_outline, data: { confirm: "Are you sure?" } %>
+    <%% end %>
+    <%%= link_to_button "Cancel", <%= plural_table_name %>_path, variant: :secondary_outline %>
+    <%%= f.button :submit, class: 'inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                        transition-colors duration-200 font-medium shadow-sm text-sm
+                        border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white' %>
   </div>
 <%% end %>
