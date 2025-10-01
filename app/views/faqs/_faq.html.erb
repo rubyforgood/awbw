@@ -30,16 +30,16 @@
 
     <% if current_user.super_user? %>
       <div class="flex gap-4 px-4 pb-2">
-        <div>
+        <div class="self-center">
           <strong>Inactive:</strong>
           <%= faq.inactive %>
         </div>
 
-        <div>
+        <div class="self-center">
           <strong>Ordering:</strong>
           <%= faq.ordering %>
         </div>
-        <%= link_to "Edit", edit_faq_path(faq), class: "" %>
+        <%= link_to_button("Edit", edit_faq_path(faq)) %>
       </div>
 
     <% end %>
