@@ -89,10 +89,12 @@
                                  "Miscellaneous 2" => workshop.misc2 } %>
 
         <% workshop_sections.each do |title, content| %>
-          <% next if content.blank? %>
+          <% next if content.blank? ||
+            (title == "Suggested time frame" && content == "00:00") ||
+            (title == "Objective" && content == "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\" \"http://www.w3.org/TR/REC-html40/loose.dtd\">\n\n")%>
           <div class="workshop-<%= title %> single-workshop-detail mb-4">
             <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
-            <% if title == "Suggested time frame" && content != "00:00" %>
+            <% if title == "Suggested time frame" %>
               <%= render "show_time_frame", workshop: workshop,
                          title: title, content: content, language: "english" %>
             <% else %>
@@ -128,7 +130,10 @@
                                          "Misc 2" => workshop.misc2_spanish } %>
 
         <% workshop_sections_spanish.each do |title, content| %>
-          <% next if content.blank? %>
+          <% next if content.blank? ||
+            (title == "Tiempo sugerido" && content == "00:00") ||
+            (title == "Objetivo" && content == "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\" \"http://www.w3.org/TR/REC-html40/loose.dtd\">\n\n")%>
+
           <div class="workshop-<%= title %> single-workshop-detail mb-4">
             <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
             <% if title == "Tiempo sugerido" && content != "00:00" %>
