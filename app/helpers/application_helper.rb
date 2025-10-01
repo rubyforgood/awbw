@@ -10,6 +10,7 @@ module ApplicationHelper
       info:      "border border-sky-500 text-gray-600 hover:bg-sky-600 hover:text-white",
       warning:   "border border-yellow-400 text-gray-600 hover:bg-yellow-500 hover:text-white",
       danger:    "border border-red-600 text-gray-600 hover:bg-red-600 hover:text-white",
+      utility:   "border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
     }
     classes = [base_classes, variant_classes[variant.to_sym], manual_classes].join(" ")
     link_to text, url, options.merge(class: classes)
