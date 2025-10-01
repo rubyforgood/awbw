@@ -75,6 +75,7 @@
                   <%= check_box_tag "event_ids[]",
                                     event.id,
                                     false,
+                                    id: "event_ids_#{event.id}",
                                     class: "event-checkbox h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
                   <span class="text-gray-700">Register</span>
                 </label>
@@ -103,7 +104,7 @@
   <% else %>
     <!-- Empty State -->
     <div class="text-center py-12 text-gray-500">
-      No events available yet.
+      No events available.
     </div>
   <% end %>
 <% end %>

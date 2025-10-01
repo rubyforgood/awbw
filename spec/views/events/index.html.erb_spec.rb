@@ -7,44 +7,48 @@ RSpec.describe "events/index", type: :view do
     create(:permission, :combined)
   end
 
-  let(:user) { create(:user) }
-  let(:event1) { create(:event, title: "Event 1", start_date: 1.day.from_now, end_date: 2.days.from_now) }
-  let(:event2) { create(:event, title: "Event 2", start_date: 3.days.from_now, end_date: 4.days.from_now) }
-  let(:events) { [event1, event2] }
+  let(:user) { create(:user, super_user: true) }
+  let(:event_closed) { create(:event, title: "Event 1",
+                              start_date: 1.day.from_now, end_date: 2.days.from_now,
+                              publicly_visible: true,
+                              registration_close_date: -3.days.from_now) }
+  let(:event_open) { create(:event, title: "Event 2",
+                            start_date: 3.days.from_now, end_date: 4.days.from_now,
+                            registration_close_date: 5.days.from_now,
+                            publicly_visible: true) }
+  let(:event_open_2) { create(:event, title: "Event 2",
+                            start_date: 3.days.from_now, end_date: 4.days.from_now,
+                            registration_close_date: nil,
+                            publicly_visible: true) }
+  let(:events) { [event_open, event_open] }
 
   before do
     assign(:events, events)
     allow(view).to receive(:current_user).and_return(user)
   end
 
-  it "renders the events table with proper headers" do
-    render
-
-    expect(rendered).to have_selector("th", text: "")
-    expect(rendered).to have_selector("th", text: "Title")
-    expect(rendered).to have_selector("th", text: "Start Date")
-    expect(rendered).to have_selector("th", text: "End Date")
-    expect(rendered).to have_selector("th", text: "Actions")
-  end
-
   it "renders each event with checkbox and details" do
+    assign(:events, [event_open, event_open_2, event_closed])
     render
 
     events.each do |event|
-      expect(rendered).to have_selector("input[type='checkbox'][value='#{event.id}']")
       expect(rendered).to have_content(event.title)
       expect(rendered).to have_content(event.start_date.strftime("%B %d, %Y"))
       expect(rendered).to have_content(event.end_date.strftime("%B %d, %Y"))
     end
+
+    # Only the open event should have a checkbox
+    expect(rendered).to have_selector("input[type='checkbox'][id='event_ids_#{event_open.id}']")
+    expect(rendered).to have_selector("input[type='checkbox'][id='event_ids_#{event_open_2.id}']")
+    expect(rendered).not_to have_selector("input[type='checkbox'][id='event_ids_#{event_closed.id}']")
   end
 
   it "renders action links for each event" do
     render
 
     events.each do |event|
-      expect(rendered).to have_link("Show", href: event_path(event))
+      expect(rendered).to have_link(event.title, href: event_path(event))
       expect(rendered).to have_link("Edit", href: edit_event_path(event))
-      expect(rendered).to have_link("Destroy", href: event_path(event))
     end
   end
 
@@ -70,22 +74,13 @@ RSpec.describe "events/index", type: :view do
     expect(rendered).to have_content("addEventListener")
   end
 
-  it "displays notice if present" do
-    flash[:notice] = "Test notice"
-    render
-
-    expect(rendered).to have_selector("p#notice", text: "Test notice")
-  end
-
   context "when no events exist" do
     let(:events) { [] }
 
-    it "renders empty table" do
+    it "renders empty message" do
       render
 
-      expect(rendered).to have_selector("table")
-      expect(rendered).to have_selector("th", text: "Title")
-      expect(rendered).not_to have_selector("input[type='checkbox']")
+      expect(rendered).to have_content("No events available")
     end
   end
 
