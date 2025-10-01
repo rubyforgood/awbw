@@ -1,6 +1,6 @@
 class EventsController < ApplicationController
   before_action :set_event, only: %i[ show edit update destroy ]
-  before_action :authorize_admin!, only: %i[ new edit update destroy ]
+  before_action :authorize_admin!, only: %i[ edit update destroy ]
 
   def index
     @events = Event.all
@@ -9,7 +9,7 @@ class EventsController < ApplicationController
   def show
   end
 
-  def new
+  def new # all logged in users can create events
     @event = Event.new
   end
 
@@ -62,6 +62,6 @@ class EventsController < ApplicationController
   end
 
   def authorize_admin!
-    redirect_to events_path, alert: "You are not authorized to perform this action." unless current_admin
+    redirect_to events_path, alert: "You are not authorized to perform this action." unless current_user.super_user?
   end
 end
