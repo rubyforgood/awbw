@@ -6,9 +6,7 @@
         <h2 class="text-2xl font-semibold mb-2">Resources</h2>
       </div>
       <% if current_user.super_user? %>
-        <%= link_to 'New Resource', new_resource_path,
-                    class: "inline-block px-4 py-2 border border-blue-600 text-blue-600
-                    rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200 font-medium shadow-sm" %>
+        <%= link_to_button 'New Resource', new_resource_path, variant: :primary %>
       <% end %>
     </div>
   </div>
@@ -49,9 +47,7 @@
 
         <!-- Clear Filters -->
         <div>
-          <%= link_to 'Clear filters', resources_path,
-                      class: "inline-block px-4 py-2 bg-[#faf9f9] text-[#a6a7a8] rounded
-                        hover:bg-[#E8E8E8] hover:text-[#374151] transition-colors duration-200" %>
+          <%= link_to_button 'Clear filters', resources_path, variant: :utility %>
         </div>
 
       </div>
@@ -78,8 +74,11 @@
                 <div class="image max-w-[60px] flex-shrink-0">
                   <%= link_to resource_path(resource) do %>
                     <img class="h-10 w-auto rounded-md object-cover"
-                         src="<%= resource.main_image_url || asset_path('missing.png') %>"
-                         alt="<%= resource.title.truncate(25) %>">
+                         src="<%= resource.main_image_url || asset_path('workshop_default.png') %>"
+                         alt="<%= resource.title.truncate(25) %>"
+                         onerror="this.onerror=null;this.src='<%= asset_path('workshop_default.png') %>';
+                                  this.classList.add('w-auto', 'rounded-md', 'object-cover', 'object-contain');"
+                      />
                   <% end %>
                 </div>
 
@@ -92,12 +91,9 @@
                 <% unless resource.attachments.empty? %>
                   <!-- Download -->
                   <div class="download flex items-center gap-1">
-                    <%= link_to resource_download_path(resource),
-                                class: "inline-flex items-center gap-2 px-3 py-1 bg-[#faf9f9] text-[#a6a7a8] rounded
-                    hover:bg-[#E8E8E8] hover:text-[#374151] transition-colors duration-200" do %>
-                      <i class="fa fa-download" aria-hidden="true"></i>
-                      <span class="sr-only">Download <%= resource.title %></span>
-                    <% end %>
+                    <%= link_to_button "<span class='fa fa-download' title='#{resource.title}'</span>".html_safe,
+                                       resource_download_path(resource),
+                                       variant: :utility %>
                   </div>
                 <% end %>
               </div>

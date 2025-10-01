@@ -1,10 +1,11 @@
 class ResourcesController < ApplicationController
 
-  layout "tailwind", only: :index
+  layout "tailwind", only: [:index, :edit, :show]
 
   def index
-    @resources = current_user.curriculum(Resource).by_created.search(params).
-                    paginate(page: params[:page], per_page: 25)
+    @resources = current_user.curriculum(Resource).by_created.search(params)
+                             .includes(:images, :attachments)
+                             .paginate(page: params[:page], per_page: 25)
 
     @sortable_fields = Resource::KINDS
 
@@ -19,12 +20,10 @@ class ResourcesController < ApplicationController
 
   def new
     @resource = Resource.new
-    @sectors = Sector.pluck(:name, :id)
   end
 
   def edit
     @resource = Resource.find(resource_id_param).decorate
-    @sectors = Sector.pluck(:name, :id)
   end
 
   def show
@@ -45,6 +44,7 @@ class ResourcesController < ApplicationController
 
   def update
     @resource = Resource.find(params[:id])
+    @resource.user ||= current_user
     if @resource.update(resource_params)
       flash[:notice] = 'Resource updated.'
       redirect_to resources_path
@@ -83,9 +83,10 @@ class ResourcesController < ApplicationController
     params.require(:resource).permit(
       :text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
-      categorizable_items_attributes: [:_create, :category_id],
-      sectorable_items_attributes: [:_create, :sector_id],
-      images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
+      categorizable_items_attributes: [:id, :category_id, :_destroy], category_ids: [],
+      sectorable_items_attributes: [:id, :sector_id, :_destroy], sector_ids: [],
+      images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy],
+      attachments_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
     )
   end
 
