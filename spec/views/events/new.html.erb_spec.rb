@@ -5,6 +5,7 @@ RSpec.describe "events/new", type: :view do
 
   before do
     assign(:event, event)
+    allow(view).to receive(:current_user).and_return(build_stubbed(:user, super_user: true))
   end
 
   it "renders the new event heading" do
