@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   before_action :set_event, only: %i[ show edit update destroy ]
   before_action :authorize_admin!, only: %i[ edit update destroy ]
 
-  layout "tailwind", only: [:index, :edit, :new, :show]
+  layout "tailwind"
 
   def index
     @events = Event.order(start_date: :desc)
@@ -17,10 +17,14 @@ class EventsController < ApplicationController
   end
 
   def edit
+    unless @event.created_by == current_user || current_user.super_user?
+      redirect_to events_path, alert: "You are not authorized to edit this event."
+    end
   end
 
   def create
     @event = Event.new(event_params)
+    @event.created_by ||= current_user
 
     respond_to do |format|
       if @event.save
@@ -61,7 +65,7 @@ class EventsController < ApplicationController
   end
 
   def event_params
-    params.require(:event).permit(:title, :description, :start_date, :end_date,
+    params.require(:event).permit(:created_by_id, :title, :description, :start_date, :end_date,
                                   :registration_close_date, :publicly_visible)
   end
 

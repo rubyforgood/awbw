@@ -1,4 +1,5 @@
 class Event < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
   has_many :event_registrations, dependent: :destroy
   
   validates_presence_of :title, :start_date, :end_date

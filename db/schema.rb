@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_09_30_182435) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_01_204910) do
   create_table "addresses", charset: "utf8mb3", force: :cascade do |t|
     t.string "city", null: false
     t.string "country"
@@ -147,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_09_30_182435) do
 
   create_table "events", charset: "utf8mb3", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
     t.text "description"
     t.datetime "end_date", precision: nil
     t.boolean "publicly_visible", default: false, null: false
@@ -154,6 +155,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_09_30_182435) do
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_events_on_created_by_id"
   end
 
   create_table "facilitator_organizations", charset: "utf8mb3", force: :cascade do |t|
@@ -739,6 +741,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_09_30_182435) do
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "metadata"
   add_foreign_key "event_registrations", "events"
+  add_foreign_key "events", "users", column: "created_by_id"
   add_foreign_key "facilitator_organizations", "facilitators"
   add_foreign_key "facilitator_organizations", "organizations"
   add_foreign_key "form_builders", "windows_types"
