@@ -97,13 +97,14 @@
   >
     <strong class="sr-only">Answer:</strong>
 
-    <%= render "inline_edit", model: faq, attribute: :answer do %>
-
+    <%= render "inline_edit", model: faq, attribute: :answer, frame_class: "flex flex-col" do %>
       <% if current_user.super_user? %>
-        <%= link_to edit_faq_path(faq) do %>
-          <i class="far fa-edit text-primary hover:text-secondary"></i>
+        <%= link_to edit_faq_path(faq), class: "self-end flex items-center gap-2 border border-primary rounded-md px-2 py-1 text-primary hover:text-secondary hover:border-secondary transition-colors" do %>
+          Edit Answer
+          <i class="far fa-edit"></i>
         <% end %>
       <% end %>
+
       <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
     <% end %>
   </div>
