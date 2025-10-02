@@ -18,14 +18,17 @@
       <strong class="sr-only">Question:</strong>
 
       <%= render "inline_edit", model: faq, attribute: :question do %>
-        <%= link_to edit_faq_path(faq) do %>
+        <%= link_to edit_faq_path(faq), class: "peer" do %>
           <i class="far fa-edit text-primary hover:text-secondary"></i>
         <% end %>
 
-        <% if current_user.super_user? && faq.inactive %>
-          <span>[INACTIVE]</span>
-        <% end %>
-        <span class="text-lg"><%= faq.question %></span>
+        <span
+          class="
+            text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300
+            peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1
+          "
+        ><%= faq.question %></span>
+
       <% end %>
 
       <svg
@@ -53,7 +56,13 @@
           <%= faq.inactive %>
         </div>
 
-        <%= link_to_button("Edit", edit_faq_path(faq)) %>
+        <%= link_to_button "Delete",
+        faq,
+        method: :delete,
+        variant: :danger_outline,
+        data: {
+          confirm: "Are you sure?",
+        } %>
       </div>
 
     <% end %>
