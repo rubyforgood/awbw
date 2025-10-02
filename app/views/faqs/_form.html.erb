@@ -4,14 +4,13 @@
   <%= render "shared/errors", resource: @faq if @faq.errors.any? %>
   <!-- Form Fields -->
   <div class="flex flex-col">
-
-    <% frame_id = dom_id(@faq, :question_turbo_frame) %>
-    <%= turbo_frame_tag frame_id do %>
+    <%= render "inline_fields", form: f, attribute: :question do %>
       <%= f.input :question, label: (false if turbo_frame_request?) %>
-      <% if turbo_frame_request? %>
-        <%= f.button :submit, "save" %>
-        <%= link_to_button "cancel", faq_path(@faq), variant: :secondary_outline %>
-      <% end %>
+    <% end %>
+  </div>
+  <div class="flex flex-col">
+    <%= render "inline_fields", form: f, attribute: :answer do %>
+      <%= f.input :answer, label: (false if turbo_frame_request?) %>
     <% end %>
   </div>
   <!-- Form Actions -->
@@ -29,6 +28,6 @@
     <%= f.button :submit,
              class:
                "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
-                                                                                                                                                                                                                                                                                                                                                                                                                            transition-colors duration-150" %>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            transition-colors duration-150" %>
   </div>
 <% end %>

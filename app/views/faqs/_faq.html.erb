@@ -17,14 +17,11 @@
     >
       <strong class="sr-only">Question:</strong>
 
-      <% frame_id = dom_id(faq, :question_turbo_frame) %>
-      <%= form_with model: faq, data: {turbo: true, turbo_frame: frame_id}, class: "grow" do %>
-        <%= turbo_frame_tag frame_id, class: "" do %>
-          <span class="text-lg"><%= faq.question %></span>
-          <%= link_to edit_faq_path(faq) do %>
-            <i class="far fa-edit text-primary hover:text-secondary"></i>
-          <% end %>
+      <%= render "inline_edit", model: faq, attribute: :question do %>
+        <%= link_to edit_faq_path(faq) do %>
+          <i class="far fa-edit text-primary hover:text-secondary"></i>
         <% end %>
+        <span class="text-lg"><%= faq.question %></span>
       <% end %>
 
       <svg
@@ -63,7 +60,13 @@
     data-dropdown-target="content"
   >
     <strong class="sr-only">Answer:</strong>
-    <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
+
+    <%= render "inline_edit", model: faq, attribute: :answer do %>
+      <%= link_to edit_faq_path(faq) do %>
+        <i class="far fa-edit text-primary hover:text-secondary"></i>
+      <% end %>
+      <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
+    <% end %>
   </div>
 
 </div>

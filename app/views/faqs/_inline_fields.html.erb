@@ -1,0 +1,10 @@
+<% frame_id = dom_id(form.object, "#{attribute}_turbo_frame") %>
+<%= turbo_frame_tag frame_id do %>
+  <%= yield %>
+  <% if turbo_frame_request? %>
+    <%= form.button :submit, "save" %>
+    <%= link_to_button "cancel",
+    polymorphic_path(form.object),
+    variant: :secondary_outline %>
+  <% end %>
+<% end %>
