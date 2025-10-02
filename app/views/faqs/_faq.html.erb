@@ -6,45 +6,63 @@
 >
 
   <div class="border-b border-gray-300">
-    <div class="flex items-center justify-between w-full">
+    <div class="flex items-center w-full">
 
-      <i
-        class="fa-solid fa-sort cursor-move self-center pr-2"
-        data-sortable-handle=""
-      ></i>
-      <strong class="sr-only">Question:</strong>
+      <% if current_user.super_user? %>
+        <i
+          class="fa-solid fa-sort cursor-move self-center pr-2"
+          data-sortable-handle=""
+        ></i>
 
-      <%= render "inline_edit", model: faq, attribute: :question do %>
-        <span
-          class="
-            text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300
-            peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1
-          "
-        >
-
-          <%= faq.question %></span>
-
-        <% if current_user.super_user? %>
-          <%= link_to edit_faq_path(faq), class: "peer" do %>
-            <i class="far fa-edit text-primary hover:text-secondary"></i>
+        <%= render "inline_edit", model: faq, attribute: :inactive, form_class: "min-w-44" do %>
+          <%= button_to faq_path(faq),
+              method: :patch,
+              params: { faq: { inactive: !faq.inactive } },
+              class: "cursor-pointer pl-4" do %>
+            <% if faq.inactive? %>
+              <i class="fa-solid fa-toggle-off text-gray-400 text-2xl"></i>
+            <% else %>
+              <i class="fa-solid fa-toggle-on text-primary text-2xl"></i>
+            <% end %>
           <% end %>
-
+          <span class="pl-1"><%= faq.inactive? ? "[UNPUBLISHED]" : "[PUBLISHED]" %>
+          </span>
         <% end %>
       <% end %>
+      <strong class="sr-only">Question:</strong>
+      <div class="grow">
 
-      <div class="flex flex-col mx-3 ">
+        <%= render "inline_edit", model: faq, attribute: :question do %>
+          <span
+            class="
+              text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300
+              peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1
+            "
+          >
 
-        <%= faq.inactive %>
+            <%= faq.question %></span>
 
-        <%= link_to faq,
+          <% if current_user.super_user? %>
+            <%= link_to edit_faq_path(faq), class: "peer" do %>
+              <i class="far fa-edit text-primary hover:text-secondary"></i>
+            <% end %>
+
+          <% end %>
+        <% end %>
+      </div>
+
+      <% if current_user.super_user? %>
+        <div class="flex flex-col mx-3 ">
+          <%= link_to faq,
         method: :delete,
         variant: :danger_outline,
         data: {
           confirm: "Are you sure?",
         } do %>
-          <i class=" fa-solid fa-trash text-danger "></i>
-        <% end %>
-      </div>
+            <i class=" fa-solid fa-trash text-danger "></i>
+          <% end %>
+        </div>
+      <% end %>
 
       <button
         type="button"
