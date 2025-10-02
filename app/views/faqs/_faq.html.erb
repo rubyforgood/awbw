@@ -8,22 +8,43 @@
   <div class="border-b border-gray-300">
     <div class="flex items-center justify-between w-full">
 
+      <i
+        class="fa-solid fa-sort cursor-move self-center pr-2"
+        data-sortable-handle=""
+      ></i>
       <strong class="sr-only">Question:</strong>
 
       <%= render "inline_edit", model: faq, attribute: :question do %>
-        <% if current_user.super_user? %>
-          <%= link_to edit_faq_path(faq), class: "peer" do %>
-            <i class="far fa-edit text-primary hover:text-secondary"></i>
-          <% end %>
-        <% end %>
         <span
           class="
             text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300
             peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1
           "
-        ><%= faq.question %></span>
+        >
 
+          <%= faq.question %></span>
+
+        <% if current_user.super_user? %>
+          <%= link_to edit_faq_path(faq), class: "peer" do %>
+            <i class="far fa-edit text-primary hover:text-secondary"></i>
+          <% end %>
+
+        <% end %>
       <% end %>
+
+      <div class="flex flex-col mx-3 ">
+
+        <%= faq.inactive %>
+
+        <%= link_to faq,
+        method: :delete,
+        variant: :danger_outline,
+        data: {
+          confirm: "Are you sure?",
+        } do %>
+          <i class=" fa-solid fa-trash text-danger "></i>
+        <% end %>
+      </div>
 
       <button
         type="button"
@@ -49,25 +70,6 @@
       </button>
     </div>
 
-    <% if current_user.super_user? && !hide_options %>
-      <div class="flex gap-8 pb-2">
-        <i class="fa-solid fa-sort cursor-move self-center" data-sortable-handle=""></i>
-        <div class="self-center">
-          <strong>Inactive:</strong>
-
-          <%= faq.inactive %>
-        </div>
-
-        <%= link_to_button "Delete",
-        faq,
-        method: :delete,
-        variant: :danger_outline,
-        data: {
-          confirm: "Are you sure?",
-        } %>
-      </div>
-
-    <% end %>
   </div>
 
   <div
