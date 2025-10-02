@@ -1,4 +1,8 @@
-<div id="<%= dom_id faq %>" data-controller="dropdown">
+<div
+  id="<%= dom_id faq %>"
+  data-controller="dropdown"
+  data-sortable-id="<%= faq.id %>"
+>
 
   <div class="border-b border-gray-300">
     <button
@@ -29,16 +33,13 @@
     </button>
 
     <% if current_user.super_user? %>
-      <div class="flex gap-4 px-4 pb-2">
+      <div class="flex gap-4 pb-2">
+        <i class="fa-solid fa-sort cursor-move self-center" data-sortable-handle=""></i>
         <div class="self-center">
           <strong>Inactive:</strong>
           <%= faq.inactive %>
         </div>
 
-        <div class="self-center">
-          <strong>Ordering:</strong>
-          <%= faq.ordering %>
-        </div>
         <%= link_to_button("Edit", edit_faq_path(faq)) %>
       </div>
 

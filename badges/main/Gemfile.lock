@@ -263,6 +263,9 @@ GEM
       racc (~> 1.4)
     orm_adapter (0.5.0)
     polyglot (0.3.5)
+    positioning (0.4.7)
+      activerecord (>= 6.1)
+      activesupport (>= 6.1)
     pp (0.6.2)
       prettyprint
     premailer (1.27.0)
@@ -471,6 +474,7 @@ DEPENDENCIES
   jwt (~> 1.2.1)
   kt-paperclip (~> 7.1.1)
   listen
+  positioning (~> 0.4.7)
   premailer-rails
   pry-rails
   puma (~> 6.0)

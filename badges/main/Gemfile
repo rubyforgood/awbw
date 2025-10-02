@@ -63,3 +63,5 @@ group :development, :test do
   gem "shoulda-matchers", require: false
   gem "debug", "~> 1.11"
 end
+
+gem "positioning", "~> 0.4.7"

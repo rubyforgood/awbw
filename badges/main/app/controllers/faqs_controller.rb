@@ -4,11 +4,10 @@ class FaqsController < ApplicationController
   layout "tailwind", only: [:index]
 
   def index
-    if current_user.super_user?
-      per_page = params[:number_of_items_per_page].presence || 25
-      @faqs = Faq.all.by_order.paginate(page: params[:page], per_page: per_page)
+    @faqs = if current_user.super_user?
+      Faq.by_order
     else
-      @faqs = Faq.active.by_order
+      Faq.active.by_order
     end
   end
 

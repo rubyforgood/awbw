@@ -7,7 +7,9 @@
     "@fortawesome/fontawesome-free": "^7.0.1",
     "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo-rails": "^8.0.18",
+    "@rails/request.js": "^0.0.12",
     "@tailwindcss/vite": "^4.1.13",
+    "sortablejs": "^1.15.6",
     "tailwindcss": "^4.1.13",
     "vite-plugin-rails": "^0.5.0"
   }
