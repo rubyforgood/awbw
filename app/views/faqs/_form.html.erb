@@ -1,33 +1,34 @@
 <%= simple_form_for(@faq) do |f| %>
-  <div class="form-body space-y-6">
-    <!-- Form Errors -->
-    <%= f.error_notification %>
-    <%= render "shared/errors", resource: @faq if @faq.errors.any? %>
-    <!-- Form Fields -->
-    <div class="row">
-      <% @faq.attribute_names.reject { |a| ["id", "created_at", "updated_at"].include?(a) }.each do |attr| %>
-        <% next if ['id', 'created_at', 'updated_at'].include?(attr) %>
-        <div class="col-md-6 mb-3">
-          <%= f.input attr.to_sym, input_html: { class: "form-control" } %>
-        </div>
+  <!-- Form Errors -->
+  <%= f.error_notification %>
+  <%= render "shared/errors", resource: @faq if @faq.errors.any? %>
+  <!-- Form Fields -->
+  <div class="flex flex-col">
+
+    <% frame_id = dom_id(@faq, :question_turbo_frame) %>
+    <%= turbo_frame_tag frame_id do %>
+      <%= f.input :question, label: (false if turbo_frame_request?) %>
+      <% if turbo_frame_request? %>
+        <%= f.button :submit, "save" %>
+        <%= link_to_button "cancel", faq_path(@faq), variant: :secondary_outline %>
       <% end %>
-    </div>
-    <!-- Form Actions -->
-    <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
-      <% if @faq.persisted? && current_user.super_user? %>
-        <%= link_to_button "Delete",
-        @faq,
-        method: :delete,
-        variant: :danger_outline,
-        data: {
-          confirm: "Are you sure?",
-        } %>
-      <% end %>
-      <%= link_to_button "Cancel", faqs_path, variant: :secondary_outline %>
-      <%= f.button :submit,
-               class:
-                 "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
-                                transition-colors duration-150" %>
-    </div>
+    <% end %>
+  </div>
+  <!-- Form Actions -->
+  <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
+    <% if @faq.persisted? && current_user.super_user? %>
+      <%= link_to_button "Delete",
+      @faq,
+      method: :delete,
+      variant: :danger_outline,
+      data: {
+        confirm: "Are you sure?",
+      } %>
+    <% end %>
+    <%= link_to_button "Cancel", faqs_path, variant: :secondary_outline %>
+    <%= f.button :submit,
+             class:
+               "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
+                                                                                                                                                                                                                                                                                                                                                                                                                            transition-colors duration-150" %>
   </div>
 <% end %>
