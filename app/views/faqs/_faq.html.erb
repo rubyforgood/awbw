@@ -21,6 +21,10 @@
         <%= link_to edit_faq_path(faq) do %>
           <i class="far fa-edit text-primary hover:text-secondary"></i>
         <% end %>
+
+        <% if current_user.super_user? && faq.inactive %>
+          <span>[INACTIVE]</span>
+        <% end %>
         <span class="text-lg"><%= faq.question %></span>
       <% end %>
 
@@ -41,10 +45,11 @@
     </button>
 
     <% if current_user.super_user? && !hide_options %>
-      <div class="flex gap-4 pb-2">
+      <div class="flex gap-8 pb-2">
         <i class="fa-solid fa-sort cursor-move self-center" data-sortable-handle=""></i>
         <div class="self-center">
           <strong>Inactive:</strong>
+
           <%= faq.inactive %>
         </div>
 

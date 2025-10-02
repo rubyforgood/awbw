@@ -13,6 +13,11 @@
       <%= f.input :answer, label: (false if turbo_frame_request?) %>
     <% end %>
   </div>
+  <div class="flex flex-col">
+    <%= render "inline_fields", form: f, attribute: :inactive do %>
+      <%= f.input :inactive %>
+    <% end %>
+  </div>
   <!-- Form Actions -->
   <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
     <% if @faq.persisted? && current_user.super_user? %>
@@ -28,6 +33,6 @@
     <%= f.button :submit,
              class:
                "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            transition-colors duration-150" %>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                    transition-colors duration-150" %>
   </div>
 <% end %>
