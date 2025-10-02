@@ -6,22 +6,16 @@
 >
 
   <div class="border-b border-gray-300">
-    <button
-      type="button"
-      class="
-        flex items-center justify-between w-full py-5 font-medium text-left
-        cursor-pointer
-      "
-      data-action="dropdown#toggle"
-      data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]'
-    >
+    <div class="flex items-center justify-between w-full">
+
       <strong class="sr-only">Question:</strong>
 
       <%= render "inline_edit", model: faq, attribute: :question do %>
-        <%= link_to edit_faq_path(faq), class: "peer" do %>
-          <i class="far fa-edit text-primary hover:text-secondary"></i>
+        <% if current_user.super_user? %>
+          <%= link_to edit_faq_path(faq), class: "peer" do %>
+            <i class="far fa-edit text-primary hover:text-secondary"></i>
+          <% end %>
         <% end %>
-
         <span
           class="
             text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300
@@ -31,21 +25,29 @@
 
       <% end %>
 
-      <svg
-        id="<%= dom_id faq, :arrow %>"
-        class="w-6 h-6 shrink-0"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
+      <button
+        type="button"
+        class="py-5 font-medium text-left cursor-pointer"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]'
       >
-        <path
-          fill-rule="evenodd"
-          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-          clip-rule="evenodd"
-        ></path>
-      </svg>
 
-    </button>
+        <svg
+          id="<%= dom_id faq, :arrow %>"
+          class="w-6 h-6 shrink-0"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+
+      </button>
+    </div>
 
     <% if current_user.super_user? && !hide_options %>
       <div class="flex gap-8 pb-2">
@@ -76,8 +78,11 @@
     <strong class="sr-only">Answer:</strong>
 
     <%= render "inline_edit", model: faq, attribute: :answer do %>
-      <%= link_to edit_faq_path(faq) do %>
-        <i class="far fa-edit text-primary hover:text-secondary"></i>
+
+      <% if current_user.super_user? %>
+        <%= link_to edit_faq_path(faq) do %>
+          <i class="far fa-edit text-primary hover:text-secondary"></i>
+        <% end %>
       <% end %>
       <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
     <% end %>
