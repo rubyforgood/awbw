@@ -1,11 +1,14 @@
 <%= simple_form_for(@event) do |f| %>
+  <% f.input :created_by_id, as: :hidden, value: current_user.id %>
+
   <% if @event.errors.any? %>
-    <%= render 'shared/errors', resource: @event %>
+    <%= render 'shared/tailwind/errors', resource: @event %>
   <% end %>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <div>
-      <%= f.input :title, label: "Event title", input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= f.input :title, label: "Event title", required: true,
+                  input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
     </div>
     <div>
       <%= f.input :description, input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
@@ -17,17 +20,29 @@
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <div>
-      <%= f.label :start_date, "Start time", class: "block font-medium mb-1" %>
+      <%= f.label :start_date, "Start time", required: true, class: "block font-medium mb-1" %>
       <%= f.text_field :start_date, type: 'datetime-local',
                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.start_date&.strftime('%Y-%m-%dT%H:%M') %>
+                       value: @event.start_date&.strftime('%Y-%m-%dT%H:%M'),
+                       required: true %>
+      <% if f.object.errors[:start_date].any? %>
+        <p class="text-red-500 text-sm mt-1">
+          Start date <%= f.object.errors[:start_date].join(", ") %>
+        </p>
+      <% end %>
     </div>
 
     <div>
-      <%= f.label :end_date, "End time", class: "block font-medium mb-1" %>
+      <%= f.label :end_date, "End time", required: true, class: "block font-medium mb-1" %>
       <%= f.text_field :end_date, type: 'datetime-local',
                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.end_date&.strftime('%Y-%m-%dT%H:%M') %>
+                       value: @event.end_date&.strftime('%Y-%m-%dT%H:%M'),
+                       required: true %>
+      <% if f.object.errors[:end_date].any? %>
+        <p class="text-red-500 text-sm mt-1">
+          End date <%= f.object.errors[:end_date].join(", ") %>
+        </p>
+      <% end %>
     </div>
 
     <div>
@@ -35,14 +50,25 @@
       <%= f.text_field :registration_close_date, type: 'datetime-local',
                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                        value: @event.registration_close_date&.strftime('%Y-%m-%dT%H:%M') %>
+      <% if f.object.errors[:registration_close_date].any? %>
+        <p class="text-red-500 text-sm mt-1">
+          Registration close date <%= f.object.errors[:registration_close_date].join(", ") %>
+        </p>
+      <% end %>
     </div>
   </div>
 
-  <div class="flex justify-end gap-4">
-    <%= link_to_button "Delete", @event, variant: :danger_outline, method: :delete, data: { confirm: "Are you sure?" } %>
-    <%= link_to_button 'Cancel', events_path, variant: :secondary_outline %>
-    <%= f.button :submit, class: 'inline-flex items-center gap-2 px-4 py-2 rounded-lg
+  <div class="flex items-center justify-between gap-4">
+    <div>
+      <%= "Created by: #{f.object.created_by.name}" if f.object.created_by %>
+    </div>
+
+    <div class="flex gap-4">
+      <%= link_to_button "Delete", @event, variant: :danger_outline, method: :delete, data: { confirm: "Are you sure?" } %>
+      <%= link_to_button 'Cancel', events_path, variant: :secondary_outline %>
+      <%= f.button :submit, class: 'inline-flex items-center gap-2 px-4 py-2 rounded-lg
                     transition-colors duration-200 font-medium shadow-sm text-sm
                     border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white' %>
+    </div>
   </div>
 <% end %>

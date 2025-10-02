@@ -1,0 +1,17 @@
+<% if resource.errors.any? %>
+  <div class="errors">
+    <div class="rounded-lg border border-red-300 bg-red-50 p-4 mb-6">
+      <h2 class="text-red-700 font-semibold mb-2">
+        <%= pluralize(resource.errors.count, "error") %> prevented this <%= resource.model_name.human.downcase %> from being saved
+      </h2>
+    </div>
+
+    <% if resource.errors[:base].any? %>
+      <ul class="list-disc pl-5 space-y-1 text-sm text-red-600 mb-5">
+        <% resource.errors[:base].each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+<% end %>
