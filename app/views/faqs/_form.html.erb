@@ -8,7 +8,7 @@
       <%= f.label :question unless turbo_frame_request? %>
       <%= f.input_field :question,
                     class:
-                      "grow rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
+                      "w-full grow rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
     <% end %>
   </div>
   <div class="flex flex-col">
@@ -16,7 +16,7 @@
       <%= f.label :answer unless turbo_frame_request? %>
       <%= f.input_field :answer,
                     class:
-                      "grow rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
+                      "w-full grow rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
                     rows: "6" %>
     <% end %>
   </div>
@@ -43,6 +43,6 @@
     <%= f.button :submit,
              class:
                "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                transition-colors duration-150" %>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        transition-colors duration-150" %>
   </div>
 <% end %>
