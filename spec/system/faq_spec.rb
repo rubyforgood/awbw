@@ -3,6 +3,12 @@ require "rails_helper"
 RSpec.describe "FAQ", type: :system do
   include ActionView::RecordIdentifier
 
+  before do
+    create(:permission, :adult)
+    create(:permission, :children)
+    create(:permission, :combined)
+  end
+
   let!(:active_faq) { create(:faq, inactive: false) }
   let!(:inactive_faq) { create(:faq, inactive: true) }
 
