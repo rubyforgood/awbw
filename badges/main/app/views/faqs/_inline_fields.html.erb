@@ -1,0 +1,12 @@
+<% frame_id = dom_id(form.object, "#{attribute}_turbo_frame") %>
+<%= turbo_frame_tag frame_id do %>
+  <%= yield %>
+  <% if turbo_frame_request? %>
+    <div class="self-end p-2 flex gap-2">
+      <%= form.button :submit, "save", class: "bg-primary hover:bg-primary/90 transition" %>
+      <%= link_to_button "cancel",
+      polymorphic_path(form.object),
+      variant: :secondary_outline %>
+    </div>
+  <% end %>
+<% end %>

@@ -1,3 +1,4 @@
+<% hide_options ||= false %>
 <div
   id="<%= dom_id faq %>"
   data-controller="dropdown"
@@ -5,45 +6,115 @@
 >
 
   <div class="border-b border-gray-300">
-    <button
-      type="button"
-      class="
-        flex items-center justify-between w-full py-5 font-medium text-left
-        cursor-pointer
-      "
-      data-action="dropdown#toggle"
-      data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]'
-    >
-      <strong class="sr-only">Question:</strong>
-      <span class="text-lg"><%= faq.question %></span>
-      <svg
-        id="<%= dom_id faq, :arrow %>"
-        class="w-6 h-6 shrink-0"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fill-rule="evenodd"
-          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-          clip-rule="evenodd"
-        ></path>
-      </svg>
+    <div class="flex items-center w-full">
 
-    </button>
+      <% if current_user.super_user? %>
+        <i
+          class="fa-solid fa-sort cursor-move self-center pr-2"
+          data-sortable-handle=""
+        ></i>
 
-    <% if current_user.super_user? %>
-      <div class="flex gap-4 pb-2">
-        <i class="fa-solid fa-sort cursor-move self-center" data-sortable-handle=""></i>
-        <div class="self-center">
-          <strong>Inactive:</strong>
-          <%= faq.inactive %>
+        <div class="flex flex-col sm:flex-row grow sm:items-center">
+
+          <%= render "inline_edit", model: faq, attribute: :inactive, form_class: "min-w-44" do %>
+            <%= button_to faq_path(faq),
+              method: :patch,
+              params: { faq: { inactive: !faq.inactive } },
+              class: "cursor-pointer pl-4" do %>
+              <% if faq.inactive? %>
+                <i class="fa-solid fa-toggle-off text-gray-400 text-2xl"></i>
+              <% else %>
+                <i class="fa-solid fa-toggle-on text-primary text-2xl"></i>
+              <% end %>
+            <% end %>
+            <span class="pl-1"><%= faq.inactive? ? "[UNPUBLISHED]" : "[PUBLISHED]" %>
+            </span>
+          <% end %>
+
+          <strong class="sr-only">Question:</strong>
+
+          <div class="grow">
+
+            <%= render "inline_edit", model: faq, attribute: :question, form_class: "pl-14 sm:pl-0 flex", frame_class: "flex flex-wrap sm:flex-nowrap grow items-center gap-2" do %>
+              <span
+                class="
+                  text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300
+                  peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1
+                "
+              >
+
+                <%= faq.question %></span>
+
+              <%= link_to edit_faq_path(faq), class: "peer" do %>
+                <i class="far fa-edit text-primary hover:text-secondary"></i>
+              <% end %>
+
+            <% end %>
+          </div>
         </div>
+      <% else %>
+        <span
+          class="
+            w-full text-lg border-transparent peer-has-hover:border
+            peer-has-hover:border-gray-300 peer-has-hover:shadow-sm
+            peer-has-hover:rounded-md peer-has-hover:p-1
+          "
+        >
 
-        <%= link_to_button("Edit", edit_faq_path(faq)) %>
-      </div>
+          <%= faq.question %></span>
+      <% end %>
 
-    <% end %>
+      <% if current_user.super_user? %>
+        <div class="flex flex-col mx-3 ">
+          <%= link_to faq,
+        method: :delete,
+        variant: :danger_outline,
+        data: {
+          confirm: "Confirm: Delete FAQ?",
+        } do %>
+
+            <button class="p-1 rounded-md hover:bg-danger transition">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 200 200"
+                class="h-8 w-8 fill-current text-danger hover:text-white"
+              >
+                <path
+                  d="M119.032 145.698h-37.4c-6.2 0-11.3-5.1-11.3-11.3v-50.7c0-1.1.9-2 2-2h56c1.1 0 2 .9 2 2v50.7c0 6.2-5.1 11.3-11.3 11.3zm-44.7-60v48.7c0 4 3.3 7.3 7.3 7.3h37.3c4 0 7.3-3.3 7.3-7.3v-48.7h-51.9zM138.332 73.598h-76c-1.1 0-2-.9-2-2s.9-2 2-2h76c1.1 0 2 .9 2 2s-.9 2-2 2z"
+                />
+                <path
+                  d="M138.332 85.598h-76c-1.1 0-2-.9-2-2s.9-2 2-2h76c1.1 0 2 .9 2 2s-.9 2-2 2zM112.332 73.698h-24c-1.1 0-2-.9-2-2v-6c0-6.6 5.4-12 12-12h4c6.6 0 12 5.4 12 12v6c0 1.1-.9 2-2 2zm-22-4h20v-4c0-4.4-3.6-8-8-8h-4c-4.4 0-8 3.6-8 8v4zM88.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2zM100.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2zM112.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2z"
+                />
+              </svg>
+            </button>
+          <% end %>
+        </div>
+      <% end %>
+
+      <button
+        type="button"
+        class="py-5 font-medium text-left cursor-pointer"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]'
+      >
+
+        <svg
+          id="<%= dom_id faq, :arrow %>"
+          class="w-6 h-6 shrink-0"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+
+      </button>
+    </div>
+
   </div>
 
   <div
@@ -52,7 +123,15 @@
     data-dropdown-target="content"
   >
     <strong class="sr-only">Answer:</strong>
-    <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
+
+    <%= render "inline_edit", model: faq, attribute: :answer, frame_class: "flex flex-col" do %>
+      <% if current_user.super_user? %>
+        <%= link_to_button("Edit", edit_faq_path(faq), class: "self-end") %>
+
+      <% end %>
+
+      <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
+    <% end %>
   </div>
 
 </div>

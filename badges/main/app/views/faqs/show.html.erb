@@ -1,26 +1,31 @@
-<% if current_user.super_user? %>
-  <div class="row mb-3">
-    <div class="col text-end">
-      <%= link_to "Index", faqs_path, class: "btn btn-outline-secondary" %>
-      <%= link_to "Edit", edit_faq_path(@faq), class: "btn btn-outline-secondary" %>
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div
+      class="
+        max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg
+        hover:shadow-xl transition-shadow duration-200 p-6
+      "
+    >
+      <div class="flex items-center justify-between mb-6">
+        <!-- Title -->
+        <h1 class="text-2xl font-semibold text-gray-900">
+          <%= @faq.class.model_name.human %>
+          Details
+        </h1>
+        <!-- Buttons Group -->
+        <div class="flex items-center gap-2">
+          <%= link_to_button("Index", faqs_path, variant: :secondary_outline) %>
+          <% if current_user.super_user? %>
+            <%= link_to_button("Edit", edit_faq_path(@faq), variant: :primary_outline) %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="mt-4">
+          <%= render @faq, hide_options: true %>
+        </div>
+      </div>
     </div>
-  </div>
-<% end %>
-
-<div class="row">
-  <div class="col-md-12">
-    <h2><%= @faq.class.model_name.human %> Details</h2>
-
-    <table class="table table-striped">
-      <tbody>
-        <% attributes = @faq.attributes.keys if @faq %>
-        <% attributes&.each do |attribute| -%>
-          <tr>
-            <th><%= attribute.humanize %></th>
-            <td><%= @faq.send(attribute) %></td>
-          </tr>
-        <% end -%>
-      </tbody>
-    </table>
   </div>
 </div>

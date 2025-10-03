@@ -1,7 +1,7 @@
 class FaqsController < ApplicationController
   before_action :set_faq, only: [:show, :edit, :update, :destroy]
 
-  layout "tailwind", only: [:index]
+  layout "tailwind", only: [:index, :show, :new, :edit]
 
   def index
     @faqs = if current_user.super_user?
