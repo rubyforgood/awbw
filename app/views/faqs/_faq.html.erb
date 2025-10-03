@@ -14,7 +14,7 @@
           data-sortable-handle=""
         ></i>
 
-        <div class="flex flex-col sm:flex-row grow">
+        <div class="flex flex-col sm:flex-row grow sm:items-center">
 
           <%= render "inline_edit", model: faq, attribute: :inactive, form_class: "min-w-44" do %>
             <%= button_to faq_path(faq),
@@ -35,7 +35,7 @@
 
           <div class="grow">
 
-            <%= render "inline_edit", model: faq, attribute: :question, form_class: "pl-14 sm:pl-0" do %>
+            <%= render "inline_edit", model: faq, attribute: :question, form_class: "pl-14 sm:pl-0 flex", frame_class: "flex flex-wrap sm:flex-nowrap grow items-center gap-2" do %>
               <span
                 class="
                   text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300
