@@ -2,7 +2,7 @@
 
 class WorkshopsController < ApplicationController
 
-  layout "tailwind", only: [:index, :show]
+  layout "tailwind"
 
   def index
     workshop_ids = Workshop.search_and_sort(params, super_user: current_user.super_user?)
