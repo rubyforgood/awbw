@@ -1,30 +1,50 @@
-<div class="dropdown">
-  <div class="dropdown-compoments pull-right">
-    <a class="dropdown-toggle" role="button" data-toggle="dropdown">
-      <div class="col-xs-2 avatar">
-        <%= image_tag current_user.avatar.url(:thumb), class: "img-circle avatar" %>
-      </div>
-      <div class="col-xs-1 carot hidden-xs">
-        <i class="fa fa-angle-down"></i>
-      </div>
-    </a>
-    <ul class="dropdown-menu">
-      <li>
-        <%= link_to "My profile", user_path(current_user) %>
-      </li>
-      <li>
-        <%= link_to("My bookmarks", bookmarks_path) %>
-      </li>
-      <li>
-        <%= link_to("My workshop logs", workshop_logs_path(user_id: current_user.id)) %>
-      </li>
-      <li>
-        <%= link_to("Change password", change_password_path) %>
-      </li>
-      <li>
-        <%= link_to("Logout", destroy_user_session_path, method: :delete) %>
-      </li>
-    </ul>
+<div class="relative ml-3" id="avatar" data-controller="dropdown">
+  <button
+    type="button"
+    class="
+      relative flex rounded-full focus-visible:outline-2
+      focus-visible:outline-offset-2 focus-visible:outline-indigo-500
+    "
+    data-action="dropdown#toggle"
+    data-dropdown-payload-param='[{"avatar-dropdown":"hidden"}]'
+  >
+    <span class="sr-only">Open user menu</span>
+    <span class="absolute -inset-1.5"></span>
+    <%= image_tag current_user.avatar.url(:thumb),
+                  class:
+                    "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" %>
+  </button>
+  <!-- Dropdown menu -->
+  <div
+    class="
+      absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg outline
+      outline-black/5 transition hidden
+    "
+    id="avatar-dropdown"
+    data-dropdown-target="content"
+  >
+    <% if current_user.super_user? %>
+      <%= link_to "Admin",
+                  dashboard_admin_path,
+                  class:
+                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+    <% end %>
+    <%= link_to "My profile",
+                user_path(current_user),
+                class:
+                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+    <%= link_to "My bookmarks",
+                bookmarks_path,
+                class:
+                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+    <%= link_to "Change password",
+                change_password_path,
+                class:
+                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+    <%= link_to "Logout",
+                destroy_user_session_path,
+                method: :delete,
+                class:
+                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
   </div>
 </div>
-

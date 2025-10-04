@@ -1,67 +1,69 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>AWBW</title>
-    <link rel="stylesheet" href="/vendor/select-2/select2.min.css">
-    <%#= stylesheet_link_tag 'base', media: 'all', 'data-turbolinks-track' => true %>
-    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track' => true %>
-    <%= stylesheet_link_tag 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css' %>
-    <%= render partial: 'layouts/google_webfonts' %>
-    <%= javascript_include_tag 'https://code.jquery.com/jquery-1.8.3.min.js' %>
-    <%= javascript_include_tag 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js' %>
-    <%= stylesheet_link_tag '/vendor/fontawesome/css/all.min.css' %>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
-    <%= csrf_meta_tags %>
-    <meta content='width=device-width initial-scale=1 maximum-scale=1 user-scalable=no' name='viewport'>
-    <link rel="shortcut icon" type="image/png" href="<%= asset_path("favicon.png") %>"/>
-    <%= vite_client_tag %>
-    <%= vite_javascript_tag 'application' %>
-    <!--
-      If using a TypeScript entrypoint file:
-        vite_typescript_tag 'application'
+<head>
+  <title>AWBW</title>
+  <%= csrf_meta_tags %>
 
-      If using a .jsx or .tsx entrypoint, add the extension:
-        vite_javascript_tag 'application.jsx'
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link
+    rel="shortcut icon"
+    type="image/png"
+    href="<%= asset_path("favicon.png") %>"
+  >
 
-      Visit the guide for more information: https://vite-ruby.netlify.app/guide/rails
-    -->
+  <%= vite_stylesheet_tag "application.css" %>
+  <%= vite_client_tag %>
+  <%= vite_javascript_tag "application" %>
+  <!--
+     If using a TypeScript entrypoint file:
+       vite_typescript_tag 'application'
 
-  </head>
-  <body class='<%=controller.controller_name%> <%=controller.action_name%>'>
+     If using a .jsx or .tsx entrypoint, add the extension:
+       vite_javascript_tag 'application.jsx'
 
-    <div class='content container-fluid' id='main'>
-      <%= render 'shared/navbar' %>
-      <div class="header-printable">
-        <%= image_tag("awbw-print-logo.png",class:"img-responsive") %>
+     Visit the guide for more information: https://vite-ruby.netlify.app/guide/rails
+   -->
+</head>
+<body
+  class="
+      <%= controller.controller_name %> <%= controller.action_name %>
+      flex flex-col min-h-screen bg-gray-100
+    "
+>
+
+<div class="flex-grow" id="main">
+  <div class="sticky top-0 left-0 w-full z-50 print:hidden">
+    <!-- Navbar -->
+    <nav class="bg-primary text-white">
+      <%= render "shared/navbar" %>
+    </nav>
+    <!-- Banner -->
+    <%= render "shared/banner" %>
+  </div>
+
+  <div class="printed-logo hidden print:block">
+    <%= image_tag("awbw-print-logo.png", class: "print:w-36 m-3") %>
+    <hr>
+  </div>
+
+  <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+    <%# TODO handle printable area %>
+    <% if user_signed_in? %>
+      <div class="signed-in-user <%= main_content_classes %> my-3">
+        <%= render "shared/flash_messages" %>
+        <%= yield %>
       </div>
-
-      <div class='row main-content'>
-        <div class="col-md-12">
-          <% if user_signed_in? %>
-            <div class='signed-in-user <%= main_content_classes %> mt-3 mb-3'>
-              <%= render 'shared/flash_messages' %>
-              <%= yield %>
-            </div>
-          <% else %>
-            <div class='not-signed-in-user <%= main_content_classes %> mt-3 mb-3'>
-              <%= render 'shared/flash_messages' %>
-              <%= yield %>
-            </div>
-          <% end %>
-        </div>
+    <% else %>
+      <div class="not-signed-in-user <%= main_content_classes %> my-3">
+        <%= render "shared/flash_messages" %>
+        <%= yield %>
       </div>
-      </div>
-    <footer class='container-fluid'>
-      <div class='smaller u-textCenter white contact'>
-        <ul class='row'>
-          <li>
-            <dt>Contact Us</dt>
-            <dd><%= Footer.phone %></dd>
-            <dd><%= Footer.general_questions %></dd>
-          </li>
-        </ul>
-      </div>
-      <div class='smaller copyright u-textCenter white'>A Window Between Worlds ® ™</div>
-    </footer>
-  </body>
+    <% end %>
+  </div>
+</div>
+<div class="site-footer print:hidden">
+  <%= render "shared/footer" %>
+</div>
+</body>
 </html>

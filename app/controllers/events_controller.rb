@@ -2,8 +2,6 @@ class EventsController < ApplicationController
   before_action :set_event, only: %i[ show edit update destroy ]
   before_action :authorize_admin!, only: %i[ edit update destroy ]
 
-  layout "tailwind"
-
   def index
     @events = Event.order(start_date: :desc)
     @events = @events.publicly_visible unless current_user.super_user?
