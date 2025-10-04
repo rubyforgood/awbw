@@ -167,7 +167,7 @@ class WorkshopsController < ApplicationController
 
   def set_form_variables
     @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
-    @image    = @workshop.images.build
+    image = @workshop.images.first || @workshop.images.build # build an image if there isn't one
   end
 
   def workshops_per_page
