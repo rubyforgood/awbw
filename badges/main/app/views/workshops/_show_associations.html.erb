@@ -30,6 +30,11 @@
         <div class="pr-6">
           <h2 class="text-lg font-semibold mb-2">Quotes</h2>
         </div>
+        <% if current_user.super_user? %>
+          <div class="admin-only bg-blue-100 p-2">
+            <%#= link_to_button 'New quote', new_quote_path(workshop_id: @workshop.id) if @workshop.persisted? %>
+          </div>
+        <% end %>
       </div>
 
       <hr class="border-gray-300 mb-4">
@@ -49,7 +54,18 @@
 <% if @leader_spotlights.any? %>
   <div id="workshop-spotlights" class="flex-1 bg-white p-4 rounded-lg shadow-md mb-3">
     <section id="workshopLeaderSpotlights">
-      <h2 class="text-lg font-semibold mb-3">Related Facilitator Spotlight(s)</h2>
+      <div class="flex items-start justify-between mb-1">
+        <div class="pr-6">
+          <h2 class="text-lg font-semibold mb-2">Related Facilitator Spotlight(s)</h2>
+        </div>
+        <% if current_user.super_user? %>
+          <div class="admin-only bg-blue-100 p-2">
+            <%#= link_to_button 'New story', new_story_path(workshop_id: @workshop.id,
+            owner_id: @workshop_id, owner_type: "Workshop") if @workshop.persisted? %>
+          </div>
+        <% end %>
+      </div>
+
       <hr class="border-gray-300 mb-4">
       <div class="flex flex-wrap gap-4">
         <% @leader_spotlights.each do |spotlight| %>

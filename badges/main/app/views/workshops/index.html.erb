@@ -1,8 +1,4 @@
-<style>
-
-</style>
-
-<div class="w-full px-4 search-curriculum-page">
+<div class="search-curriculum-page max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
   <!-- Header -->
   <div class="w-full">
     <div class="flex items-start justify-between mb-6">
@@ -16,7 +12,9 @@
         </p>
       </div>
       <% if current_user.super_user? %>
-        <%= link_to_button "New workshop", new_workshop_path, variant: :primary_outline %>
+        <div class="admin-only bg-blue-100 p-3">
+          <%= link_to_button "New workshop", new_workshop_path, variant: :primary_outline %>
+        </div>
       <% end %>
     </div>
   </div>
@@ -67,7 +65,9 @@
         <%= render 'windows_type_fields', windows_types: @windows_types %>
         <%= render 'categories_fields', metadata: @metadata %>
         <%= render 'sectors_fields', sectors: @sectors %>
-        <%= render 'inactive_fields' if current_user.super_user? %>
+        <div class="admin-only bg-blue-100 p-3">
+          <%= render 'inactive_fields' if current_user.super_user? %>
+        </div>
       </div>
 
       <div>

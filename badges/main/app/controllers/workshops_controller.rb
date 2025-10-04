@@ -2,7 +2,7 @@
 
 class WorkshopsController < ApplicationController
 
-  layout "tailwind", only: [:index, :show]
+  layout "tailwind"
 
   def index
     workshop_ids = Workshop.search_and_sort(params, super_user: current_user.super_user?)
@@ -69,20 +69,17 @@ class WorkshopsController < ApplicationController
 
   def new
     @workshop = Workshop.new(user: current_user)
-    @potential_series_workshops = Workshop.published.order(:title)
-    @image    = @workshop.images.build
+    set_form_variables
   end
 
   def share_idea
     @workshop = current_user.workshops.build
-    @potential_series_workshops = Workshop.published.order(:title)
-    @image    = @workshop.images.build
+    set_form_variables
   end
 
   def edit
     @workshop = Workshop.find(params[:id])
-    @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
-    @image    = @workshop.images.build if @workshop.images.empty?
+    set_form_variables
   end
 
   def show
@@ -99,6 +96,7 @@ class WorkshopsController < ApplicationController
       flash[:notice] = 'Workshop updated successfully.'
       redirect_to workshops_path
     else
+      set_form_variables
       flash[:alert] = 'Unable to update the workshop.'
       render :edit
     end
@@ -125,10 +123,9 @@ class WorkshopsController < ApplicationController
       flash[:notice] = 'Workshop created successfully.'
       redirect_to workshops_path(sort: "created")
     else
+      set_form_variables
       flash.now[:alert] = 'Unable to save the workshop.'
-      @potential_series_workshops = Workshop.published.order(:title)
-      @image    = @workshop.images.build
-      render :share_idea
+      render :new
     end
   end
 
@@ -166,6 +163,11 @@ class WorkshopsController < ApplicationController
     @leader_spotlights = @workshop.resources.published.leader_spotlights
     @workshop_variations = @workshop.workshop_variations.active
     @sectors = @workshop.sectorable_items.where(inactive: false).map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
+  end
+
+  def set_form_variables
+    @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
+    image = @workshop.images.first || @workshop.images.build # build an image if there isn't one
   end
 
   def workshops_per_page
