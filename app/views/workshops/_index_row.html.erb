@@ -10,7 +10,8 @@
   <% description = workshop.formatted_objective(length: 600) %>
 <% end %>
 
-<div id="workshop-<%= workshop.id %>" class="flex flex-col md:flex-row border-b border-gray-200 py-4 list-group-item-custom gap-4">
+<div id="workshop-<%= workshop.id %>"
+     class="flex flex-col md:flex-row <%= "admin-only bg-blue-100" if workshop.inactive? %> border-b border-gray-200 py-4 list-group-item-custom gap-4">
   <div id="workshop-<%= workshop.id %>-anchor" style="position: relative; top: -200px;"></div>
   <!-- 1️⃣ Image -->
   <div class="flex-shrink-0 w-32 h-24 bg-gray-100 rounded overflow-hidden">
@@ -46,7 +47,8 @@
           <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
         <% end %>
       <% end %>
-      <%= link_to "#{ "[UNPUBLISHED] " if workshop.inactive? }#{ workshop.title }", link_route, class: "hover:underline" %>
+      <%= link_to "#{ "[UNPUBLISHED] " if workshop.inactive? }#{ workshop.title }",
+                  link_route, class: "hover:underline" %>
     </h3>
 
     <div class="text-sm text-gray-600">

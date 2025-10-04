@@ -1,11 +1,14 @@
-<div class="flex flex-col gap-6">
-  <!-- Main Workshop Show -->
-  <div id="show" class="flex-1">
-    <!-- Tabs -->
-    <%= render "show_actions_row", workshop: @workshop, sectors: @sectors %>
-    <%= render 'show_body', workshop: @workshop %>
-  </div>
-  <div class="print:hidden">
-    <%= render "show_associations" %>
+<div class="search-curriculum-page max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+
+  <div class="flex flex-col gap-6">
+    <!-- Main Workshop Show -->
+    <div id="show" class="flex-1">
+      <!-- Tabs -->
+      <%= render "show_actions_row", workshop: @workshop, sectors: @sectors %>
+      <%= render 'show_body', workshop: @workshop %>
+    </div>
+    <div class="print:hidden">
+      <%= render "show_associations" %>
+    </div>
   </div>
 </div>

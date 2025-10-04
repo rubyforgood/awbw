@@ -54,21 +54,12 @@
     <span class="text-gray-600 text-sm">(Bookmarked by <%= pluralize(workshop.led_count, "facilitator") %>)</span>
   </div>
 
-  <!-- Middle: Rating -->
-  <div class="text-yellow-400 text-lg">
-    <%= workshop.rating_as_stars %>
-  </div>
-
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
     <% if current_user.super_user? %>
-      <%= link_to edit_workshop_path(workshop),
-                  class: "inline-flex items-center gap-2 px-4 py-2 border border-gray-400 text-gray-600
-                          rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-200
-                          font-medium shadow-sm text-sm" do %>
-        <i class="fas fa-pencil-alt w-5 h-5"></i>
-        <span>Edit</span>
-      <% end %>
+      <div class="admin-only bg-blue-100 p-2">
+        <%= link_to_button "Edit", edit_workshop_path(workshop), variant: :secondary_outline %>
+      </div>
     <% end %>
 
     <%= link_to '#',

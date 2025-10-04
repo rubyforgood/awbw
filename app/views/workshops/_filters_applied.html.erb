@@ -22,9 +22,7 @@
     <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters applied</h3>
     <% if filters_applied.any? %>
       <%= filters_applied.to_sentence %>
-      <%= link_to 'Clear filters', workshops_path,
-                  class: "inline-block px-4 py-2 bg-[#faf9f9] text-[#a6a7a8] rounded
-                  hover:bg-[#E8E8E8] hover:text-[#374151] transition-colors duration-200" %>
+      <%= link_to_button 'Clear filters', workshops_path, variant: :primary %>
     <% else %>
       None
     <% end %>
