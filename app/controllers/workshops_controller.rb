@@ -125,7 +125,7 @@ class WorkshopsController < ApplicationController
     else
       set_form_variables
       flash.now[:alert] = 'Unable to save the workshop.'
-      render :share_idea
+      render :new
     end
   end
 
