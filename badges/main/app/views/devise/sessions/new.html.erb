@@ -1,29 +1,25 @@
-<h2 style="margin-top: 10%">Log in</h2>
-
-<%= form_for(resource, url: session_path(resource_name)) do |f| %>
-  <div class="field">
-    <%= f.label :email %>
-    <%= f.email_field :email, autofocus: true, class: "form-control" %>
-  </div>
-
-  <div class="field password-container" style="margin-top: 20px; margin-bottom: 20px;">
-    <%= f.label :password %>
-    <%= f.password_field :password, autocomplete: "off", class: "form-control password-field" %>
-    <span id="password-confirmation-container" class="toggle-password"><i class='fa fa-eye-slash'></i></span>
-  </div>
-
-  <% if devise_mapping.rememberable? -%>
-    <div class="field form-inline">
-      <label class="checkbox-inline">
-        <%= f.check_box :remember_me %>
-        <%= f.label :remember_me %>
-      </label>
+<div class="flex items-center justify-center">
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-lg mt-8 p-8">
+    <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Log in</h2>
+    <%= simple_form_for(resource, url: session_path(resource_name)) do |f| %>
+      <%= f.input :email,
+                  autofocus: true,
+                  required: true,
+                  input_html: { class: "w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" } %>
+      <%= f.input :password,
+                  required: true,
+                  input_html: {
+                    autocomplete: "off",
+                    class: "w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm password-field"
+                  },
+                  label_html: { class: "block font-medium text-gray-700 mb-1" } %>
+      <% if devise_mapping.rememberable? %>
+        <%= f.input :remember_me, as: :boolean, label: "Remember me" %>
+      <% end %>
+      <%= f.button :submit, "Log in", class: "w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg" %>
+    <% end %>
+    <div class="mt-6 text-center">
+      <%= render "devise/shared/links" %>
     </div>
-  <% end -%>
-
-  <div class="actions" style="margin-bottom: 10px;">
-    <%= f.submit "Log in", class: "btn btn-primary" %>
   </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>

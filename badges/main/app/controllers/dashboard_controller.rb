@@ -2,7 +2,6 @@ class DashboardController < ApplicationController
   skip_before_action :authenticate_user!, only: :help
 
   layout "help", only: :help
-  layout "tailwind", only: [:admin, :index]
 
   def index
     @user = current_user.decorate
