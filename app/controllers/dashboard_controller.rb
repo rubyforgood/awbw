@@ -41,19 +41,21 @@ class DashboardController < ApplicationController
 
       @reference_cards = [
 
-        { title: "Age ranges", path: root_path, icon: "👶" },
-        { title: "Categories", path: root_path, icon: "🗂️" },
-        { title: "Sectors", path: root_path, icon: "🏭" },
-        # { title: "WindowsTypes", path: root_path, icon: "🪟" },
-        # { title: "FormFields", path: root_path, icon: "✏️" },
-        # { title: "FormAnswerOptions", path: root_path, icon: "🗳️" },
+        { title: "Age ranges", path: authenticated_root_path, icon: "👶" },
+        { title: "Categories", path: authenticated_root_path, icon: "🗂️" },
+        { title: "Sectors", path: authenticated_root_path, icon: "🏭" },
+        # { title: "WindowsTypes", path: authenticated_root_path, icon: "🪟" },
+        # { title: "FormFields", path: authenticated_root_path, icon: "✏️" },
+        # { title: "FormAnswerOptions", path: authenticated_root_path, icon: "🗳️" },
       ]
     else
-      redirect_to root_path, alert: 'You do not have permission.'
+      redirect_to authenticated_root_path, alert: 'You do not have permission.'
     end
   end
 
-  def recent_activity
-    @recent_activity = current_user.recent_activity(20)
+  def recent_activities
+    @user = (current_user.super_user? && params[:user_id].present?) ? User.find(params[:user_id]) : current_user
+    @recent_activities = @user.recent_activity(params[:limit] || 20)
+                              .paginate(page: params[:page], per_page: params[:per_page] || 20)
   end
 end

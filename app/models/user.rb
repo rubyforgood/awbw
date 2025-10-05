@@ -69,15 +69,20 @@ class User < ApplicationRecord
                   windows_type: windows_type).last
   end
 
-  def recent_activity(limit=4)
-    recent_activity  = workshops.where(inactive: true).last(10)
-    recent_activity += workshop_logs.last(10)
-    recent_activity += reports.where("owner_type = 'MonthlyReport'").
-                       last(10)
-    recent_activity += reports.where("owner_id = '7'").
-                       last(10)
+  def recent_activity(activity_limit = 10)
+    recent = []
 
-    recent_activity.sort{|x,y| y.created_at <=> x.created_at}[0..(limit - 1)]
+    recent.concat(workshops.order(updated_at: :desc).limit(activity_limit))
+    recent.concat(workshop_logs.order(updated_at: :desc).limit(activity_limit))
+    # recent.concat(workshop_variations.order(updated_at: :desc).limit(activity_limit))
+    # recent.concat(stories.order(updated_at: :desc).limit(activity_limit))
+    # recent.concat(quotes.order(updated_at: :desc).limit(activity_limit))
+    recent.concat(resources.order(updated_at: :desc).limit(activity_limit))
+    recent.concat(reports.where(owner_type: 'MonthlyReport').order(updated_at: :desc).limit(activity_limit))
+    recent.concat(reports.where(owner_id: 7).order(updated_at: :desc).limit(activity_limit)) # TODO: remove hard-coded
+
+    # Sort by the most recent timestamp (updated_at preferred, fallback to created_at)
+    recent.sort_by { |item| item.try(:updated_at) || item.created_at }.reverse.first(activity_limit * 8)
   end
 
   def liaison_in_projects?(projects)

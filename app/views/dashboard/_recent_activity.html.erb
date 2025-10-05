@@ -1,0 +1,50 @@
+<% prefix = activity.created_at == activity.updated_at ? "New" : "Update" %>
+
+<tr class="border-b border-gray-200 hover:bg-gray-50">
+  <td class="px-4 py-2 text-sm text-gray-700">
+    <%= activity.updated_at.strftime("%b %-d, %Y %l:%M %p") %>
+  </td>
+  <td class="px-4 py-2 text-xl">
+    <span class="text-gray-500 text-sm"><%= prefix %> </span>
+    <% case activity.class.name %>
+    <% when "Workshop" %>
+      <span class="text-gray-500 text-sm">Workshop: </span>
+      <%= link_to "#{ activity.title}#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
+                  workshop_path(activity), class: "hover:underline" %>
+    <% when "WorkshopLog" %>
+      <span class="text-gray-500 text-sm">Log: </span>
+      <% if activity.workshop %>
+        <%= link_to activity.workshop.title,
+                    workshop_path(activity.workshop),
+                    class: "hover:underline" %>
+      <% else %>
+        <%= link_to activity.title,
+                    workshop_log_path(activity),
+                    class: "hover:underline" %>
+      <% end %>
+    <% when "Resource" %>
+      <span class="text-gray-500 text-sm"><%= activity.kind %>: </span>
+      <%= link_to "#{ activity.title}#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
+                  resource_path(activity),
+                  class: "hover:underline" %>
+    <% when "Report" %>
+      <span class="text-gray-500 text-sm">Report: </span>
+      <%= link_to activity.title,
+                  report_path(activity),
+                  class: "hover:underline"%>
+    <% when "MonthlyReport" %>
+      <span class="text-gray-500 text-sm">MonthlyReport: </span>
+      <%= link_to activity.title,
+                  report_path(activity),
+                  class: "hover:underline"%>
+    <% else %>
+      <span class="text-gray-500 text-sm"><%= activity.class.name %></span><%= activity.title %>
+    <% end %>
+  </td>
+  <td class="px-4 py-2 text-sm">
+    <% if activity.respond_to?(:id) %>
+      <%= link_to_button "Edit", edit_polymorphic_path(activity), variant: :secondary_outline %>
+      <%= link_to_button "View", polymorphic_path(activity), variant: :secondary_outline %>
+    <% end %>
+  </td>
+</tr>

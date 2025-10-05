@@ -78,7 +78,7 @@ Rails.application.routes.draw do
   get 'contact_us', to: 'contact_us#index'
   post 'contact_us', to: 'contact_us#create'
   get 'dashboard/admin', to: 'dashboard#admin'
-  get 'dashboard/recent_activity', to: 'dashboard#recent_activity'
+  get 'dashboard/recent_activities', to: 'dashboard#recent_activities'
   get 'dashboard/help', to: 'dashboard#help'
 
   resources :monthly_reports
