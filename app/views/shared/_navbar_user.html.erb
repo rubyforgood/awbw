@@ -44,6 +44,7 @@
     <%= link_to "Logout",
                 destroy_user_session_path,
                 method: :delete,
+                data: { turbo_method: :delete },
                 class:
                   "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
   </div>
