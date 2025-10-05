@@ -20,4 +20,16 @@
   </p>
 
   <br />
+
+  <!-- Dynamic Form Fields -->
+  <div class="row">
+    <div class="col-md-9">
+      <hr>
+      <% @report.report_form_field_answers.each do |rffa| %>
+        <p>
+          <b><%= rffa.form_field.question %>: </b><%= rffa.answer_option_id ? rffa.answer_option.name : rffa.answer %>
+        </p>
+      <% end %>
+    </div>
+  </div>
 </div>
