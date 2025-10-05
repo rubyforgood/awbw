@@ -3,7 +3,9 @@ Rails.application.routes.draw do
   apipie
   get 'cms', to: 'admins/base#show'
 
-  devise_for :users, controllers: { registrations: 'registrations', passwords: 'passwords' }
+  devise_for :users,
+             controllers: { registrations: 'registrations',
+                            passwords: 'passwords' }
 
   devise_for :admins
 
@@ -84,7 +86,6 @@ Rails.application.routes.draw do
   resources :project_users
   resources :workshops
   resources :workshop_variations
-  root 'dashboard#index'
 
   namespace :api do
     namespace :v1 do
@@ -93,6 +94,17 @@ Rails.application.routes.draw do
       resources :bookmarks do
         resources :annotations
       end
+    end
+  end
+
+  authenticated :user do
+    root to: "dashboard#index", as: :authenticated_root
+  end
+
+  # Wrap Devise routes in a scope for unauthenticated users
+  devise_scope :user do
+    unauthenticated do
+      root to: "devise/sessions#new", as: :unauthenticated_root
     end
   end
 end

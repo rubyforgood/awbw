@@ -16,10 +16,10 @@ class ApplicationController < ActionController::Base
   end
 
   def after_sign_in_path_for(resource)
-    root_path
+    user_signed_in? ? authenticated_root_path : unauthenticated_root_path
   end
 
   def after_sign_out_path_for(resource)
-    new_user_session_path
+    unauthenticated_root_path
   end
 end

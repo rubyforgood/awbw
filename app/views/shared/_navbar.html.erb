@@ -49,7 +49,7 @@
         "
       >
         <div class="flex shrink-0 items-center">
-          <%= link_to root_path, class: "relative group" do %>
+          <%= link_to root_link_path, class: "relative group" do %>
             <%= image_tag("logo.png", class: "h-8 sm:h-10 w-auto block") %>
             <%= image_tag(
                   "logo-color.png",
@@ -58,15 +58,15 @@
                   ) %>
           <% end %>
         </div>
-        <div class="hidden grow md:ml-6 md:block content-center">
-          <% if user_signed_in? %>
-            <div class="flex justify-between">
 
+        <% if user_signed_in? %>
+          <div class="hidden grow md:ml-6 md:block content-center">
+            <div class="flex justify-between">
               <%= render "shared/navbar_text" %>
               <%= render "shared/navbar_new_button" %>
             </div>
-          <% end %>
-        </div>
+          </div>
+        <% end %>
       </div>
       <div
         class="
@@ -75,7 +75,9 @@
         "
       >
         <!-- Profile dropdown -->
-        <%= render "shared/navbar_user" %>
+        <% if current_user %>
+          <%= render "shared/navbar_user" %>
+        <% end %>
       </div>
     </div>
   </div>

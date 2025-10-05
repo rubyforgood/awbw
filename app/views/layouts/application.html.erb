@@ -50,12 +50,12 @@
   <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
     <%# TODO handle printable area %>
     <% if user_signed_in? %>
-      <div class="signed-in-user <%= main_content_classes %> my-3">
+      <div class="signed-in-user my-3">
         <%= render "shared/flash_messages" %>
         <%= yield %>
       </div>
     <% else %>
-      <div class="not-signed-in-user <%= main_content_classes %> my-3">
+      <div class="not-signed-in-user min-h-screen flex flex-col">
         <%= render "shared/flash_messages" %>
         <%= yield %>
       </div>
