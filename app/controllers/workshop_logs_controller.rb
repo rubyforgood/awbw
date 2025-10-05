@@ -32,7 +32,7 @@ class WorkshopLogsController < ApplicationController
         file.save
       end
       flash[:notice] = 'Thanks for reporting on a workshop.'
-      redirect_to root_path
+      redirect_to authenticated_root_path
     else
       set_form_variables
       render :edit
@@ -45,7 +45,7 @@ class WorkshopLogsController < ApplicationController
 
     if @workshop_log.save
       flash[:notice] = 'Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile.'
-      redirect_to root_path
+      redirect_to authenticated_root_path
     else
       set_form_variables
       render :new, status: :unprocessable_entity
@@ -61,10 +61,10 @@ class WorkshopLogsController < ApplicationController
       if current_user.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
         render :show
       else
-        redirect_to root_path, error: 'You do not have permission to view this page.'
+        redirect_to authenticated_root_path, error: 'You do not have permission to view this page.'
       end
     else
-      redirect_to root_path, error: 'Unable to find that Workshop Log.'
+      redirect_to authenticated_root_path, error: 'Unable to find that Workshop Log.'
     end
   end
 

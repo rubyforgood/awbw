@@ -7,7 +7,7 @@ class WorkshopVariationsController < ApplicationController
         order('workshops.title, workshop_variations.name').
         paginate(page: params[:page], per_page: 25)
     else
-      redirect_to root_path
+      redirect_to authenticated_root_path
     end
   end
 
@@ -25,7 +25,7 @@ class WorkshopVariationsController < ApplicationController
       elsif params[:from] == "index"
         redirect_to workshop_variations_path
       else
-        redirect_to root_path
+        redirect_to authenticated_root_path
       end
     else
       render :new
