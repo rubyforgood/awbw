@@ -17,23 +17,23 @@ class DashboardController < ApplicationController
     if current_user.super_user?
       @user_content_cards = [
 
-        { title: "Bookmarks tally", path: root_path, icon: "🔖" },
-        { title: "Quotes", path: root_path, icon: "💬" },
-        { title: "Stories", path: root_path, icon: "🗣️" },
-        { title: "Vision Seeds", path: root_path, icon: "🌱" },
-        { title: "Annual Reports", path: root_path, icon: "📊" },
+        { title: "Bookmarks tally", path: authenticated_root_path, icon: "🔖" },
+        { title: "Quotes", path: authenticated_root_path, icon: "💬" },
+        { title: "Stories", path: authenticated_root_path, icon: "🗣️" },
+        { title: "Vision Seeds", path: authenticated_root_path, icon: "🌱" },
+        { title: "Annual Reports", path: authenticated_root_path, icon: "📊" },
         { title: "Workshop Logs", path: workshop_logs_path, icon: "📝" },
         { title: "Workshops", path: workshops_path, icon: "🎨" },
-        { title: "Workshop Ideas", path: root_path, icon: "💡" },
+        { title: "Workshop Ideas", path: authenticated_root_path, icon: "💡" },
         { title: "Workshop Variations", path: workshop_variations_path, icon: "🔀" },
       ]
 
       @system_cards = [
-        { title: "Banners", path: root_path, icon: "📣" },
+        { title: "Banners", path: authenticated_root_path, icon: "📣" },
         { title: "Events", path: events_path, icon: "📆" },
         { title: "FAQs", path: faqs_path, icon: "❔" },
-        { title: "Forms", path: root_path, icon: "📋" },
-        { title: "Organizations", path: root_path, icon: "🏫" },
+        { title: "Forms", path: authenticated_root_path, icon: "📋" },
+        { title: "Organizations", path: authenticated_root_path, icon: "🏫" },
         { title: "Resources", path: resources_path, icon: "📚" },
         { title: "Users", path: users_path, icon: "👥" },
 

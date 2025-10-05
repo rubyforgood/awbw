@@ -87,7 +87,7 @@ class MonthlyReportsController < ApplicationController
 
       if @saved
         flash[:notice] = 'Thanks for reporting on a update report. '
-        redirect_to root_path
+        redirect_to authenticated_root_path
       else
         @agencies  = current_user.projects.
                        where(windows_type_id: @report.windows_type_id)

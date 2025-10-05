@@ -107,7 +107,7 @@ class WorkshopsController < ApplicationController
 
     if @workshop.save
       flash[:notice] = 'Thank you for submitting your workshop idea.'
-      redirect_to root_path
+      redirect_to authenticated_root_path
     else
       flash[:alert] = 'Unable to save your workshop idea.'
       render :share_idea

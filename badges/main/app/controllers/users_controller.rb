@@ -4,7 +4,7 @@ class UsersController < ApplicationController
     if current_user.super_user?
       @users = User.paginate(page: params[:page], per_page: 25)
     else
-      redirect_to root_path
+      redirect_to authenticated_root_path
     end
   end
 
@@ -44,7 +44,7 @@ class UsersController < ApplicationController
     if @user.update_with_password(pass_params)
       bypass_sign_in(@user)
       flash[:notice] = 'Your Password was updated.'
-      redirect_to root_path
+      redirect_to authenticated_root_path
     else
       flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
       render "change_password"

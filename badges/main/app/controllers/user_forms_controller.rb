@@ -6,7 +6,7 @@ class UserFormsController < ApplicationController
     else
       flash[:alert] = 'There was a problem saving your form.'
     end
-    redirect_to root_path
+    redirect_to authenticated_root_path
   end
 
   private

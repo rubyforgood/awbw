@@ -21,7 +21,7 @@
   <br>
   <%= render 'comments_fields', f: f, report: @report %>
   <div class="btn-container">
-    <%= link_to 'Cancel', root_path, class: 'btn btn-submit cancel-btn' %>
+    <%= link_to 'Cancel', authenticated_root_path, class: 'btn btn-submit cancel-btn' %>
     <%= f.submit 'Submit' %>
   </div>
 <% end %> 
