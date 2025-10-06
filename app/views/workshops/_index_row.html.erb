@@ -47,7 +47,7 @@
           <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
         <% end %>
       <% end %>
-      <%= link_to "#{ "[UNPUBLISHED] " if workshop.inactive? }#{ workshop.title }",
+      <%= link_to "#{ "[NOT PUBLISHED] " if workshop.inactive? }#{ workshop.title }",
                   link_route, class: "hover:underline" %>
     </h3>
 
