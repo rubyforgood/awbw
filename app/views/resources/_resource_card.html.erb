@@ -1,7 +1,7 @@
 <% background_color = (resource.inactive? ? "bg-blue-100" : "bg-white") if controller_name == "resources" %>
 <% background_color = "bg-yellow-100" if resource.featured? && !resource.inactive && controller_name == "resources" %>
 
-<div class="flex flex-col md:flex-row bg-white
+<div class="flex flex-col md:flex-row <%= background_color %>
  border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden">
   <!-- Left Section: Icon or Image -->
   <div class="w-full md:w-1/4 <%= background_color == "bg-white" ? "bg-gray-100" : background_color %>
