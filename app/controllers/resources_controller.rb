@@ -5,7 +5,7 @@ class ResourcesController < ApplicationController
                              .includes(:images, :attachments)
                              .search(params)
                              .by_created
-                             .paginate(page: params[:page], per_page: 25)
+                             .paginate(page: params[:page], per_page: 24)
 
     @sortable_fields = Resource::KINDS
 
