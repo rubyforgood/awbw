@@ -76,11 +76,21 @@
           grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 overflow-visible p-4
         "
       >
-        <%= render "windows_type_fields", windows_types: @windows_types %>
-        <%# render 'categories_fields', metadata: @metadata %>
+        <%= render "dropdown_filter",
+        dom_id_prefix: "windows-types",
+        label_text: "Windows Type",
+        items: @windows_types,
+        param_name: :windows_types %>
+
         <%= render "categories_fields", metadata: @metadata %>
-        <%# render 'sectors_fields', sectors: @sectors %>
-        <%# render 'inactive_fields' if current_user.super_user? %>
+
+        <%= render "dropdown_filter",
+        dom_id_prefix: "sectors",
+        label_text: "Service Population",
+        items: @sectors.reject { |sector| sector.name == "Other" },
+        param_name: :sectors %>
+
+        <%= render "inactive_fields" if current_user.super_user? %>
       </div>
 
       <div>
