@@ -4,15 +4,15 @@
     class="inline-block w-full"
     data-dropdown-target="content"
   >
-    <!-- Trigger button -->
     <button
       id="published-button"
       type="button"
       data-action="dropdown#toggle"
       data-dropdown-payload-param='[{"published-dropdown":"hidden"},{"published-arrow":"rotate-180"},{"published-button":"rounded-md rounded-t-md"}]'
       class="
-        relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
-        border border-gray-300 cursor-pointer flex justify-between items-center
+        admin-only relative z-10 w-full bg-blue-100 text-gray-800 py-2 px-4 shadow-sm
+        rounded-md border border-gray-300 cursor-pointer flex justify-between
+        items-center
       "
     >
       <label class="mb-0 font-medium text-gray-700">Published</label>
@@ -50,7 +50,7 @@
         id: "inactive_true",
         class: "category-checkbox" %>
         <span class="text-sm text-gray-700">
-          Inactive/unpublished
+          Inactive/not published
         </span>
       </div>
     </div>
