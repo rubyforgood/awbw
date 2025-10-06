@@ -1,7 +1,7 @@
 <% background_color = (resource.inactive? ? "bg-blue-100" : "bg-white") if controller_name == "resources" %>
 <% background_color = "bg-yellow-100" if resource.featured? && !resource.inactive && controller_name == "resources" %>
 
-<div class="flex flex-col md:flex-row bg-white
+<div class="flex flex-col md:flex-row <%= background_color %>
  border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden">
   <!-- Left Section: Icon or Image -->
   <div class="w-full md:w-1/4 <%= background_color == "bg-white" ? "bg-gray-100" : background_color %>
@@ -34,8 +34,10 @@
     <div>
       <h3 class="text-lg font-semibold text-gray-900 leading-tight">
         <%= link_to "#{ resource.title.titleize }#{
-          "<span class='text-gray-500 text-sm font-normal'> (not published)</span>" if resource.inactive? }#{
-          "<span class='text-gray-500 text-sm font-normal'> (featured)</span>" if resource.featured? }".html_safe,
+          "<span class='text-gray-500 text-sm font-normal'> (not published)
+          </span>" if resource.inactive? && controller_name == "resources" }#{
+          "<span class='text-gray-500 text-sm font-normal'> (featured)
+          </span>" if resource.featured? && controller_name == "resources" }".html_safe,
                     resource.featured_url.present? ? resource.featured_url : resource_path(resource),
                     class: "hover:underline" %>
       </h3>
@@ -52,7 +54,7 @@
           <% if controller_name == "resources" %>
             <% if current_user.super_user? %>
               <span class="admin-only bg-blue-100 p-1">
-                <%= link_to_button "<span class='fa fa-edit'></span>".html_safe,
+                <%= link_to_button "<span class='far fa-edit'></span>".html_safe,
                                    edit_resource_path(resource),
                                    variant: :secondary_outline %>
               </span>
