@@ -1,0 +1,141 @@
+<script
+  type="text/javascript"
+  src="/vendor/tinycarousel/jquery.tinycarousel.min.js"
+></script>
+<link
+  rel="stylesheet"
+  href="/vendor/tinycarousel/tinycarousel.css"
+  type="text/css"
+  media="screen"
+>
+<script type="text/javascript">
+    $(document).ready(function()
+    {
+        $('#slider1').tinycarousel();
+    });
+</script>
+
+<style>
+    #slider1 .viewport {
+        height: 320px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    #slider1 .overview li {
+        border: 1px solid #dcdcdc;
+        float: left;
+        width: 236px; height: 320px;
+        margin: 0 10px 0 10px;
+        padding: 1px;
+    }
+
+    .tiny-label {
+        color: #4a4a4a;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        line-height: 1.83;
+        margin: 10px 0 6px 0;
+        padding: 0 10px;
+    }
+
+    .workshop p {
+        color: #464748;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+        line-height: 1.71;
+    }
+
+    .workshop { background-color: #fff;}
+
+    .ws-desc { padding: 0 10px 10px 10px;}
+
+    .ws-desc .ws-title{
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .ws-desc p {
+        padding-top: 10px;
+    }
+
+    #slider1 {
+        height: 1%;
+        overflow: hidden;
+        padding: 0 0px 0px;
+        position: relative;
+    }
+
+    #slider1 .buttons {
+        box-shadow: 3px 3px 3px 3px #ccc;
+        border: solid #ccc 1px;
+        padding-top: 14px;
+        padding-left: 0px;
+        margin-left: 0px;
+        color: #063b8d;
+        background: #fff none repeat scroll 0 0;
+        font-size: 25px;
+        width: 40px;
+        height: 65px;
+        z-index: 1;
+    }
+
+    #slider1 .prev {
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+        border-top-right-radius: 75px;
+        border-bottom-right-radius: 75px;
+        padding-left: 0px;
+        margin-left: 0px;
+        margin-right: 0px;
+        padding-right:0px;
+    }
+
+    #slider1 .next {
+        border-top-left-radius: 75px;
+        border-bottom-left-radius: 75px;
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
+        padding-left: 0px;
+        margin-left: 0px;
+        margin-right: 0px;
+        padding-right:0px;
+    }
+</style>
+<%# TODO Carousel and associated cards need to be updated to stimulus/tailwind %>
+<!--Carousel-->
+<div class="flex flex-col mb-16">
+  <h2 class="text-center text-4xl text-gray-700 font-medium pt-4">Featured Workshops</h2>
+  <hr class="w-48 h-1 mx-auto my-4 bg-primary border-0 rounded-sm">
+  <div class="px-6 lg:px-24 bg-gray-300 pb-8 rounded-lg">
+
+    <div id="slider1">
+      <a class="buttons prev" href="#">&#60;</a>
+
+      <div class="viewport">
+        <ul class="overview">
+          <% @featured_workshops.each do |workshop| %>
+            <li class="rounded-xl bg-white shadow-lg">
+              <%= link_to workshop_path(workshop), { class: "nodecor"}  do %>
+                <figure
+                  class="portrait-img"
+                  style="background-image: url(<%= workshop.thumbnail_image %>);"
+                >
+                </figure>
+                <div class="tiny-label"><%= workshop.windows_type.label if workshop.windows_type %>
+                  <span class="pull-right"><%= workshop.date %></span>
+                </div>
+
+                <div class="ws-desc">
+                  <span class="ws-title"><%= workshop.title %></span>
+                  <p><%= workshop.formatted_objective %></p>
+                </div>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+      <a class="buttons next" href="#">&#62;</a>
+    </div>
+  </div>
+</div>

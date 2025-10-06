@@ -1,11 +1,11 @@
 class ResourcesController < ApplicationController
 
-  layout "tailwind", only: [:index, :edit, :show]
-
   def index
-    @resources = current_user.curriculum(Resource).by_created.search(params)
+    @resources = current_user.curriculum(Resource)
                              .includes(:images, :attachments)
-                             .paginate(page: params[:page], per_page: 25)
+                             .search(params)
+                             .by_created
+                             .paginate(page: params[:page], per_page: 24)
 
     @sortable_fields = Resource::KINDS
 

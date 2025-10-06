@@ -26,7 +26,7 @@ class ImpersonateUsersController < ApplicationController
 
   def check_current_user_is_super_user
     unless devise_current_user.super_user?
-      redirect_to(root_path, status: 401)
+      redirect_to(authenticated_root_path, status: 401)
     end
   end
 end

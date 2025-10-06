@@ -24,6 +24,10 @@ module ApplicationHelper
     link_to text, url, options.merge(class: classes)
   end
 
+  def root_link_path
+    user_signed_in? ? authenticated_root_path : unauthenticated_root_path
+  end
+
   def search_page(params)
     params[:search] ? params[:search][:page] : 1
   end
@@ -147,21 +151,5 @@ module ApplicationHelper
     m ||= 'fa-file'
 
     "fas #{m}"
-  end
-
-  def main_content_classes
-    base_classes = "printable-area"
-
-    if user_signed_in?
-      content_classes = "col-md-12"
-      if params[:controller] == 'dashboard' && params[:action] == 'index'
-        specific_class = "dashboard-area"
-      else
-        specific_class = "printable-full-width"
-      end
-      "#{base_classes} #{content_classes} #{specific_class}"
-    else
-      "#{base_classes} col-md-4 col-md-offset-4"
-    end
   end
 end

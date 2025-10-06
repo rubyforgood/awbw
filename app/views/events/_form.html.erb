@@ -2,7 +2,7 @@
   <% f.input :created_by_id, as: :hidden, value: current_user.id %>
 
   <% if @event.errors.any? %>
-    <%= render 'shared/tailwind/errors', resource: @event %>
+    <%= render 'shared/errors', resource: @event %>
   <% end %>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

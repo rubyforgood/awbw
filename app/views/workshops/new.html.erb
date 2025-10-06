@@ -1,12 +1,23 @@
-<div class='entry-content'>
-  <h2 class='normal'>Create a new Workshop</h2>
-  <p>All fields below are optional</p>
-</div>
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
 
-<% if params[:workshop_idea] || !current_user.super_user? %>
-  <%= render 'form',
-             workshop: @workshop,
-             url: '/workshops/share_workshop_idea', inactive: true %>
-<% else %>
-  <%= render 'form', workshop: @workshop, url: '/workshops' %>
-<% end %>
+    <!-- Header + View Button -->
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-semibold text-gray-900">New Workshop</h1>
+    </div>
+
+    <div class="border-b border-gray-300 mb-6"></div>
+
+    <!-- Form -->
+    <div class="mt-4 pt-4">
+      <% if params[:workshop_idea] || !current_user.super_user? %>
+        <%= render 'form',
+                   workshop: @workshop,
+                   url: '/workshops/share_workshop_idea', inactive: true %>
+      <% else %>
+        <%= render 'form', workshop: @workshop, url: '/workshops' %>
+      <% end %>
+    </div>
+
+  </div>
+</div>

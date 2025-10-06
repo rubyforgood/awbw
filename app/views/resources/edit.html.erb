@@ -1,7 +1,18 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
-  <h2 class="text-3xl font-semibold text-gray-900 mb-4">Edit Resource</h2>
-  <div class="border-b border-gray-300 mb-6"></div>
-  <div class="mt-4 pt-4">
-    <%= render 'form', resource: @resource, url: resource_path(@resource) %>
+  <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+
+    <!-- Header + View Button -->
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-semibold text-gray-900">Edit Resource</h1>
+      <%= link_to_button 'View', resource_path(@resource), variant: :secondary_outline %>
+    </div>
+
+    <div class="border-b border-gray-300 mb-6"></div>
+
+    <!-- Form -->
+    <div class="mt-4">
+      <%= render 'form', resource: @resource %>
+    </div>
+
   </div>
 </div>
