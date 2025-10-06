@@ -1,0 +1,64 @@
+<% background_color = (resource.inactive? ? "bg-blue-100" : "bg-white") if controller_name == "resources" %>
+<% background_color = "bg-yellow-100" if resource.featured? && !resource.inactive && controller_name == "resources" %>
+
+<div class="flex flex-col md:flex-row bg-white
+ border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden">
+  <!-- Left Section: Icon or Image -->
+  <div class="w-full md:w-1/4 <%= background_color == "bg-white" ? "bg-gray-100" : background_color %>
+              flex flex-col items-center text-center justify-center p-4
+              border-b md:border-b-0 md:border-r border-gray-200">
+    <div class="relative w-12 h-12">
+      <%= link_to resource_path(resource), class: "block w-full h-full" do %>
+        <!-- Default icon, hidden initially -->
+        <div class="absolute inset-0 flex items-center justify-center text-gray-700 resource-icon">
+          <%= render "resources/resource_icon", kind: resource.kind %>
+        </div>
+
+        <!-- Main image -->
+        <img
+          src="<%= resource.main_image_url %>"
+          alt="<%= resource.title.truncate(25) %>"
+          class="w-full h-full object-cover rounded-lg shadow-sm"
+          onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';"
+          />
+      <% end %>
+    </div>
+
+    <span class="mt-2 text-xs font-medium text-gray-400 uppercase tracking-wide">
+      <%= resource.kind == "Scholarship" ? "Scholar-" + "ship" : resource.kind || "Resource" %>
+    </span>
+  </div>
+
+  <!-- Right Section: Content -->
+  <div class="flex-1 p-4 flex flex-col justify-between">
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+        <%= link_to "#{ resource.title.titleize }#{
+          "<span class='text-gray-500 text-sm font-normal'> (not published)</span>" if resource.inactive? }#{
+          "<span class='text-gray-500 text-sm font-normal'> (featured)</span>" if resource.featured? }".html_safe,
+                    resource.featured_url.present? ? resource.featured_url : resource_path(resource),
+                    class: "hover:underline" %>
+      </h3>
+    </div>
+
+
+      <div class="flex justify-end items-center mt-4 space-x-2">
+        <div class="flex items-center space-x-2">
+          <% if resource.attachments.any? %>
+            <%= link_to_button "<span class='fa fa-download' title='Download #{resource.kind}'></span>".html_safe,
+                               resource_download_path(resource),
+                               variant: :utility %>
+          <% end %>
+          <% if controller_name == "resources" %>
+            <% if current_user.super_user? %>
+              <span class="admin-only bg-blue-100 p-1">
+                <%= link_to_button "<span class='fa fa-edit'></span>".html_safe,
+                                   edit_resource_path(resource),
+                                   variant: :secondary_outline %>
+              </span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+  </div>
+</div>

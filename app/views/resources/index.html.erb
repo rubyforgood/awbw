@@ -65,46 +65,9 @@
   <% if @resources.any? %>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <% @resources.each do |resource| %>
-        <div class="bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg transition-shadow
-        p-4 flex flex-col relative min-h-[90px]">
-
-          <div class="flex gap-4">
-            <!-- Image -->
-            <div class="flex-shrink-0 w-10 h-10 justify-between text-center">
-              <%= link_to resource_path(resource) do %>
-                <img class="w-full h-full object-cover rounded-md"
-                     src="<%= resource.main_image_url || asset_path('workshop_default.png') %>"
-                     alt="<%= resource.title.truncate(25) %>"
-                     onerror="this.onerror=null;this.src='<%= asset_path('workshop_default.png') %>';" />
-              <% end %>
-
-              <!-- Kind below image -->
-              <div class="mt-1 text-gray-600 text-sm text-center"><%= resource.kind %></div>
-            </div>
-
-            <!-- Title + spacer -->
-            <div class="flex-1 flex flex-col justify-between">
-              <div class="font-medium text-gray-900 text-lg">
-                <%= link_to resource.title.titleize, resource_path(resource), class: "hover:underline" %>
-              </div>
-
-              <% if resource.attachments.any? %>
-                <!-- Spacer div ensures the button goes to bottom-right -->
-                <div class="flex justify-end mt-2">
-                  <%= link_to_button "<span class='fa fa-download' title='#{resource.title}'></span>".html_safe,
-                                     resource_download_path(resource),
-                                     variant: :utility %>
-                </div>
-              <% end %>
-            </div>
-          </div>
-
-        </div>
+        <%= render "resource_card", resource: resource.decorate %>
       <% end %>
     </div>
-
-
-
   <% else %>
     <p class="text-gray-500 text-center py-6">There are no resources that match your search. Please try again.</p>
   <% end %>
