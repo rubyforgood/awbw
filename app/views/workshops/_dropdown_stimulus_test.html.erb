@@ -1,0 +1,40 @@
+<% 8.times do |i| %>
+  <div class="relative">
+    <div
+      data-controller="dropdown"
+      class="inline-block w-full"
+      data-dropdown-target="content"
+    >
+      <!-- Trigger button -->
+      <button
+        id="<%= i %>-button"
+        type="button"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"<%= i %>-dropdown":"hidden"},{"<%= i %>-arrow":"rotate-180"},{"<%= i %>-button":"rounded-md rounded-t-md"}]'
+        class="
+          relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
+          border border-gray-300 cursor-pointer flex justify-between items-center
+        "
+      >
+
+        <label class="mb-0 font-medium text-gray-700">label
+          <%# metadatum.display_name %></label>
+        <i
+          id="<%= i %>-arrow"
+          class="
+            fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300
+          "
+        ></i>
+      </button>
+      <div
+        id="<%= i %>-dropdown"
+        class="
+          absolute left-0 top-full w-full shadow-sm bg-white border border-t-0
+          border-gray-300 rounded-b-md hidden z-40
+        "
+      >
+        <%# dropdown content %>
+      </div>
+    </div>
+  </div>
+<% end %>
