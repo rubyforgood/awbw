@@ -3,7 +3,9 @@
 
     <div class="flex justify-end mb-6">
       <% if current_user.super_user? %>
-        <%= link_to_button("Edit", edit_resource_path(@resource), variant: :primary_outline) %>
+        <span class="admin-only bg-blue-100 p-1">
+          <%= link_to_button("Edit", edit_resource_path(@resource), variant: :primary_outline) %>
+        </span>
       <% end %>
       <%= link_to_button("Download <span class='fa fa-download'></span>".html_safe,
                          @resource.attachments.first.file.url,
@@ -16,7 +18,15 @@
     <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
 
       <!-- Title -->
-      <h2 class="text-3xl font-semibold text-gray-900"><%= @resource.display_title %></h2>
+      <h2 class="text-3xl font-semibold text-gray-900">
+        <%= @resource.display_title %>
+      </h2>
+
+      <% if @resource.inactive? %>
+        <div class="text-red-500 mb-3">
+          [NOT PUBLISHED]
+        </div>
+      <% end %>
 
       <!-- Author and Date -->
       <div class="flex flex-col gap-1">
@@ -34,7 +44,7 @@
 
       <!-- Main Image -->
       <% if @resource.main_image.present? %>
-        <div class="flex justify-center">
+        <div class="flex justify-start">
           <% image_url = @resource.main_image rescue nil %>
           <% if image_url %>
             <% if @resource.kind == 'LeaderSpotlight' %>
@@ -47,22 +57,33 @@
             <% else %>
               <%= link_to image_url, download: @resource.images.first.file_file_name do %>
                 <%= image_tag image_url,
-                              class: 'w-full rounded-md shadow-sm object-cover',
+                              class: 'w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 object-cover',
                               alt: @resource.display_title,
                               onerror: "this.onerror=null;this.src='/assets/missing.png';" %>
               <% end %>
             <% end %>
           <% else %>
-            <div class="w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-400">
+            <div class="w-full h-24 bg-gray-200 rounded-md flex items-center justify-center text-gray-400">
               No image available
             </div>
           <% end %>
         </div>
       <% else %>
-        <div class="w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-400">
+        <div class="w-full h-24 bg-gray-200 rounded-md flex items-center justify-center text-gray-400">
           No image available
         </div>
       <% end %>
+
+
+      <!-- URL -->
+      <% if @resource.url.present? %>
+        <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
+          <%= link_to @resource.url, @resource.url, target: "_blank",
+                      rel: "noopener noreferrer",
+                      class: "text-blue-600 hover:underline break-words" %>
+        </div>
+      <% end %>
+
 
       <!-- Main Text -->
       <div class="prose mx-auto leading-relaxed text-gray-800 text-left">

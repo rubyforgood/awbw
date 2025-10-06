@@ -15,7 +15,7 @@ class Resource < ApplicationRecord
   has_many :workshop_resources, dependent: :destroy
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
-  scope :featured, -> { where(featured: true ).order(created_at: :desc) }
+  scope :featured, -> { where(featured: true ) }
   scope :published, -> { where(inactive: false) }
   scope :leader_spotlights, -> { where("kind like ?", "LeaderSpotlight" ) }
   scope :recent, -> { published.by_created }
@@ -41,6 +41,7 @@ class Resource < ApplicationRecord
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
 
   KINDS = ['Toolkit', 'Form', 'Template', 'Handout', 'Story']
+  POPULAR_KINDS = [nil, "Resource", "Template", "Handout", "Scholarship", "Toolkit", "Form"]
 
   # Search Cop
   include SearchCop
@@ -49,6 +50,7 @@ class Resource < ApplicationRecord
     attributes :title, :author, :text
   end
 
+  scope :popular, -> { where(kind: POPULAR_KINDS) }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
   scope :theme, -> { where(kind: "Theme") }
@@ -107,9 +109,11 @@ class Resource < ApplicationRecord
   end
 
   def self.search(params)
-    resources = published
-    resources = resources.where('title like ?', "%#{params[:query]}%")
-    resources = resources.where('kind like ?', "%#{params[:kind]}%")
+    resources = all
+    resources = resources.where('title like ?', "%#{params[:query]}%") if params[:title]
+    resources = resources.where('kind like ?', "%#{params[:kind]}%") if params[:kind]
+    resources = resources.where(featured: params[:featured]) if params[:featured]
+    resources
   end
   private
   def self.reject?(resource)

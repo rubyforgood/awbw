@@ -3,12 +3,16 @@ class DashboardController < ApplicationController
 
   def index
     workshops = current_user.curriculum(Workshop)
-      .featured.includes(:sectors).decorate
+                            .featured
+                            .includes(:sectors)
+                            .decorate
     @featured_workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
 
-    @popular_resources = Resource.published.featured.where(kind: [nil, "Resource",
-      "Template", "Handout", "Scholarship", "Toolkit", "Form"])
-      .decorate
+    @popular_resources = Resource.featured
+                                 .published
+                                 .popular
+                                 .order(ordering: :asc, created_at: :desc)
+                                 .decorate
 
     @stories = Resource.story.featured.decorate
   end

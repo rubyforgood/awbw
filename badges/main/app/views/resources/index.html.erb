@@ -63,63 +63,27 @@
 
   <!-- Results Table -->
   <% if @resources.any? %>
-    <div class="overflow-x-auto">
-      <table class="min-w-full border-collapse">
-        <tbody id="resources-list" class="divide-y divide-gray-200">
-        <% @resources.each do |resource| %>
-          <tr>
-            <td class="py-3">
-              <div class="flex items-center gap-3">
-                <!-- Image -->
-                <div class="image max-w-[60px] flex-shrink-0">
-                  <%= link_to resource_path(resource) do %>
-                    <img class="h-10 w-auto rounded-md object-cover"
-                         src="<%= resource.main_image_url || asset_path('workshop_default.png') %>"
-                         alt="<%= resource.title.truncate(25) %>"
-                         onerror="this.onerror=null;this.src='<%= asset_path('workshop_default.png') %>';
-                                  this.classList.add('w-auto', 'rounded-md', 'object-cover', 'object-contain');"
-                      />
-                  <% end %>
-                </div>
-
-                <!-- Title -->
-                <div class="title">
-                  <%= link_to resource.title.titleize, resource_path(resource),
-                              class: "text-gray-900 hover:underline font-medium block" %>
-                </div>
-
-                <% unless resource.attachments.empty? %>
-                  <!-- Download -->
-                  <div class="download flex items-center gap-1">
-                    <%= link_to_button "<span class='fa fa-download' title='#{resource.title}'</span>".html_safe,
-                                       resource_download_path(resource),
-                                       variant: :utility %>
-                  </div>
-                <% end %>
-              </div>
-            </td>
-
-          </tr>
-        <% end %>
-        </tbody>
-      </table>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @resources.each do |resource| %>
+        <%= render "resource_card", resource: resource.decorate %>
+      <% end %>
     </div>
   <% else %>
-    <p class="text-gray-500">There are no resources that match your search. Please try again.</p>
+    <p class="text-gray-500 text-center py-6">There are no resources that match your search. Please try again.</p>
   <% end %>
 
-  <!-- Pagination -->
-  <div class="pagination mt-6">
-    <div class="pagination mt-6">
-      <%= will_paginate @resources,
-                        previous_label: '<<',
-                        next_label: '>>',
-                        inner_window: 2,
-                        class: 'will-paginate-wrapper flex space-x-2 list-none p-0' %>
-    </div>
-  </div>
 
+  <!-- Pagination -->
+  <div class="pagination flex justify-center mt-6">
+    <%= will_paginate @resources,
+                      previous_label: '<<',
+                      next_label: '>>',
+                      inner_window: 2,
+                      class: 'will-paginate-wrapper flex space-x-2 list-none p-0' %>
+  </div>
 </div>
+
+
 
 <script>
   $('#submit-div').click(function() {

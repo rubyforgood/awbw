@@ -15,6 +15,7 @@
       <%= f.input :kind,
                   as: :select,
                   collection: Resource::KINDS,
+                  selected: f.object.kind,
                   input_html: { class: "w-full rounded border-gray-300" } %>
     </div>
 
@@ -26,7 +27,9 @@
             <%= f.input :featured, as: :boolean, wrapper: false, label_html: { class: "inline" } %>
           </div>
           <div>
-            <%= f.input :inactive, as: :boolean, wrapper: false, label_html: { class: "inline" } %>
+            <%= f.input :inactive, as: :boolean,
+                        label: "Not published",
+                        wrapper: false, label_html: { class: "inline" } %>
           </div>
         </div>
       </div>
@@ -50,6 +53,7 @@
     <div class="flex-[0_0_50%] min-w-[150px]">
       <%= f.input :url,
                   as: :text,
+                  hint: "Enter full url, e.g. https://example.com",
                   input_html: { class: "w-full rounded border-gray-300 px-2 py-1",
                                 rows: 1 },
                   label_html: { class: "font-medium mb-1 block" } %>
@@ -60,6 +64,7 @@
       <%= f.input :ordering,
                   as: :integer,
                   label: "Display order",
+                  hint: "For dashboard",
                   input_html: { class: "w-full rounded border-gray-300 px-2 py-1", min: 1, step: 1 },
                   label_html: { class: "font-medium mb-1 block" } %>
     </div>
