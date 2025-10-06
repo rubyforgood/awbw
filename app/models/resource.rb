@@ -110,9 +110,10 @@ class Resource < ApplicationRecord
 
   def self.search(params)
     resources = all
-    resources = resources.where('title like ?', "%#{params[:query]}%") if params[:title]
-    resources = resources.where('kind like ?', "%#{params[:kind]}%") if params[:kind]
-    resources = resources.where(featured: params[:featured]) if params[:featured]
+    resources = resources.where('title like ?', "%#{params[:query]}%") if params[:title].present?
+    resources = resources.where('kind like ?', "%#{params[:kind]}%") if params[:kind].present?
+    resources = resources.where(inactive: params[:published] == "true" ? false : true) if params[:published].present?
+    resources = resources.where(featured: params[:featured]) if params[:featured].present?
     resources
   end
   private
