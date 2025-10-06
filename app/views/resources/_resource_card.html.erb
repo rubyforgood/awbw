@@ -34,8 +34,10 @@
     <div>
       <h3 class="text-lg font-semibold text-gray-900 leading-tight">
         <%= link_to "#{ resource.title.titleize }#{
-          "<span class='text-gray-500 text-sm font-normal'> (not published)</span>" if resource.inactive? }#{
-          "<span class='text-gray-500 text-sm font-normal'> (featured)</span>" if resource.featured? }".html_safe,
+          "<span class='text-gray-500 text-sm font-normal'> (not published)
+          </span>" if resource.inactive? && controller_name == "resources" }#{
+          "<span class='text-gray-500 text-sm font-normal'> (featured)
+          </span>" if resource.featured? && controller_name == "resources" }".html_safe,
                     resource.featured_url.present? ? resource.featured_url : resource_path(resource),
                     class: "hover:underline" %>
       </h3>
