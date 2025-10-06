@@ -31,7 +31,7 @@
         border-gray-300 rounded-b-md hidden z-40
       "
     >
-      <div class="form-check flex items-center gap-2 mb-1 px-4">
+      <div class="flex items-center gap-2 mb-1 px-4">
 
         <%= check_box_tag "active",
         true,
@@ -43,6 +43,7 @@
         </span>
       </div>
 
+      <%# Class "category-checkbox" is used to submit on change %>
       <div class="input-group flex items-center gap-2 mb-1 px-4">
         <%= check_box_tag "inactive",
         true,

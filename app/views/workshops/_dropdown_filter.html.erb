@@ -31,16 +31,17 @@
         border-gray-300 rounded-b-md hidden z-40
       "
     >
+      <%# Class "category-checkbox" is used to submit on change %>
       <% items.each do |item| %>
-        <div class="form-check flex items-center gap-2 mb-1 px-4">
+        <div class="flex items-center gap-2 mb-1 px-4">
           <%= check_box_tag "#{param_name}[#{item.id}]",
           item.id,
           params.dig(param_name, item.id.to_s).to_s == item.id.to_s,
           id: "#{param_name}_#{item.id}",
-          class: "form-check-input category-checkbox" %>
+          class: "category-checkbox" %>
           <%= label_tag "#{param_name}_#{item.id}",
           item.name.titleize,
-          class: "form-check-label text-sm text-gray-700" %>
+          class: "text-sm text-gray-700" %>
         </div>
       <% end %>
     </div>

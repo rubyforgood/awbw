@@ -32,16 +32,18 @@
           border-gray-300 rounded-b-md hidden z-40
         "
       >
+
+        <%# Class "category-checkbox" is used to submit on change %>
         <% metadatum.categories.each do |category| %>
-          <div class="form-check flex items-center gap-2 mb-1 px-4">
+          <div class="flex items-center gap-2 mb-1 px-4">
             <%= check_box_tag "categories[#{category.id}]",
             category.id,
             params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
             id: "category_#{category.id}",
-            class: "form-check-input category-checkbox" %>
+            class: "category-checkbox" %>
             <%= label_tag "category_#{category.id}",
             category.name,
-            class: "form-check-label text-sm text-gray-700" %>
+            class: "text-sm text-gray-700" %>
           </div>
         <% end %>
       </div>
