@@ -34,7 +34,7 @@ export default class extends Controller {
     this.element.classList.add("opacity-0", "transition-opacity");
     this.element.style.transitionDuration = `${fadeDuration}ms`;
 
-    setTimeout(() => this.element.remove(), fadeDuration);
+    setTimeout(() => this.element.classList.add("hidden"), fadeDuration);
   }
   disconnect() {
     if (this.timeoutId) clearTimeout(this.timeoutId);
