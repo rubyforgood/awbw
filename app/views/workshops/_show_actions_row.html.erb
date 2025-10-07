@@ -32,7 +32,8 @@
   <!-- Left: Bookmark -->
   <div class="flex items-center gap-2">
 
-      <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
+    <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
+      <%= turbo_flash  %>
     <% if current_user.has_bookmarked_workshop?(workshop) %>
       <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
                   class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
