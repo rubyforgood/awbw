@@ -12,3 +12,5 @@
   --color-warning: var(--color-yellow-500);
   --color-info: var(--color-blue-500);
 }
+
+@import "./components/buttons";
