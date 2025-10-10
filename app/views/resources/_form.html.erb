@@ -148,8 +148,8 @@
 
   <!-- Form Actions -->
   <div class="flex gap-2 mt-4">
-    <%= link_to_button "Delete", @resource, variant: :danger_outline, method: :delete, data: { confirm: "Are you sure?" } %>
-    <%= link_to_button 'Cancel', resources_path, variant: :secondary_outline %>
+    <%= link_to "Delete", @resource, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
+    <%= link_to 'Cancel', resources_path, class: "btn btn-secondary-outline" %>
     <%= f.submit 'Submit',
                  class: "px-4 py-2 border border-blue-600 hover:text-gray-600 hover:bg-white
                  rounded-lg bg-blue-600 text-white text-sm font-medium" %>

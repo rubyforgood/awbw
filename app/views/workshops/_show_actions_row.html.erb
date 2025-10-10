@@ -64,7 +64,7 @@
   <div class="flex items-center gap-4">
     <% if current_user.super_user? %>
       <div class="admin-only bg-blue-100 p-2">
-        <%= link_to_button "Edit", edit_workshop_path(workshop), variant: :secondary_outline %>
+        <%= link_to "Edit", edit_workshop_path(workshop), class: "btn btn-secondary-outline" %>
       </div>
     <% end %>
 

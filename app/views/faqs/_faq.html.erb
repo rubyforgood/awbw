@@ -68,7 +68,6 @@
         <div class="flex flex-col mx-3 ">
           <%= link_to faq,
         method: :delete,
-        variant: :danger_outline,
         data: {
           confirm: "Confirm: Delete FAQ?",
         } do %>
@@ -126,7 +125,7 @@
 
     <%= render "inline_edit", model: faq, attribute: :answer, frame_class: "flex flex-col" do %>
       <% if current_user.super_user? %>
-        <%= link_to_button("Edit", edit_faq_path(faq), class: "self-end") %>
+        <%= link_to("Edit", edit_faq_path(faq), class: "btn btn-secondary-outline self-end") %>
 
       <% end %>
 

@@ -19,10 +19,10 @@
     <!-- Form Actions -->
     <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
       <%% if @<%= singular_table_name %>.persisted? && current_user.super_user? %>
-        <%%= link_to_button "Delete", @<%= singular_table_name %>, method: :delete,
-                            variant: :danger_outline, data: { confirm: "Are you sure?" } %>
+        <%%= link_to "Delete", @<%= singular_table_name %>, method: :delete,
+                            class: "btn btn-danger-outline", data: { confirm: "Are you sure?" } %>
       <%% end %>
-      <%%= link_to_button 'Cancel', <%= plural_table_name %>_path, variant: :secondary_outline %>
+      <%%= link_to 'Cancel', <%= plural_table_name %>_path, class: "btn btn-secondary-outline" %>
       <%%= f.button :submit,
                   class: "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
                           transition-colors duration-150" %>

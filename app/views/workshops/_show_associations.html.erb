@@ -6,7 +6,7 @@
         <h2 class="text-lg font-semibold mb-2">Variations of this Workshop</h2>
       </div>
       <% if current_user.super_user? %>
-        <%= link_to_button 'New variation', new_workshop_variation_path(from: "workshop_show") %>
+        <%= link_to 'New variation', new_workshop_variation_path(from: "workshop_show"), class: "btn btn-secondary-outline" %>
       <% end %>
     </div>
 
@@ -15,7 +15,7 @@
       <% @workshop_variations.each do |variation| %>
         <li>
           <%= link_to variation.name, workshop_variation_path(variation),
-                      class: "text-gray-900 hover:underline font-medium" %>
+                      class: "btn btn-secondary-outline text-gray-900 hover:underline font-medium" %>
         </li>
       <% end %>
     </ul>
@@ -32,7 +32,7 @@
         </div>
         <% if current_user.super_user? %>
           <div class="admin-only bg-blue-100 p-2">
-            <%#= link_to_button 'New quote', new_quote_path(workshop_id: @workshop.id) if @workshop.persisted? %>
+            <%#= link_to 'New quote', new_quote_path(workshop_id: @workshop.id), class: "btn btn-secondary-outline" if @workshop.persisted? %>
           </div>
         <% end %>
       </div>
@@ -60,8 +60,8 @@
         </div>
         <% if current_user.super_user? %>
           <div class="admin-only bg-blue-100 p-2">
-            <%#= link_to_button 'New story', new_story_path(workshop_id: @workshop.id,
-            owner_id: @workshop_id, owner_type: "Workshop") if @workshop.persisted? %>
+            <%#= link_to 'New story', new_story_path(workshop_id: @workshop.id,
+            owner_id: @workshop_id, owner_type: "Workshop"), class: "btn btn-secondary-outline" if @workshop.persisted? %>
           </div>
         <% end %>
       </div>

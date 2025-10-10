@@ -2,9 +2,9 @@
   <div class="max-w-5xl mx-auto px-4">
 
     <div class="flex justify-end mb-6">
-      <%= link_to_button("Index", events_path, variant: :secondary_outline) %>
+      <%= link_to("Index", events_path, class: "btn btn-secondary-outline") %>
       <% if current_user.super_user? %>
-        <%= link_to_button("Edit", edit_event_path(@event), variant: :primary_outline) %>
+        <%= link_to("Edit", edit_event_path(@event), class: "btn btn-primary-outline") %>
       <% end %>
     </div>
     <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">

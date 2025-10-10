@@ -22,7 +22,7 @@
     <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters applied</h3>
     <% if filters_applied.any? %>
       <%= filters_applied.to_sentence %>
-      <%= link_to_button 'Clear filters', workshops_path, variant: :primary %>
+      <%= link_to 'Clear filters', workshops_path, class: "btn btn-prmary" %>
     <% else %>
       None
     <% end %>
