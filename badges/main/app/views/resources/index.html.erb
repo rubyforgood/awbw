@@ -7,7 +7,7 @@
       </div>
       <% if current_user.super_user? %>
         <span class="admin-only bg-blue-100 p-1">
-          <%= link_to_button 'New Resource', new_resource_path, variant: :primary_outline %>
+          <%= link_to 'New Resource', new_resource_path, class: "btn btn-primary-outline" %>
         </span>
       <% end %>
     </div>
@@ -63,7 +63,7 @@
 
         <!-- Clear Filters -->
         <div>
-          <%= link_to_button 'Clear filters', resources_path, variant: :utility %>
+          <%= link_to 'Clear filters', resources_path, class: "btn btn-utility" %>
         </div>
 
       </div>

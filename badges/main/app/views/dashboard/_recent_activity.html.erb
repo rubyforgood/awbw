@@ -43,8 +43,8 @@
   </td>
   <td class="px-4 py-2 text-sm">
     <% if activity.respond_to?(:id) %>
-      <%= link_to_button "Edit", edit_polymorphic_path(activity), variant: :secondary_outline %>
-      <%= link_to_button "View", polymorphic_path(activity), variant: :secondary_outline %>
+      <%= link_to "Edit", edit_polymorphic_path(activity), class: "btn btn-secondary-outline" %>
+      <%= link_to "View", polymorphic_path(activity), class: "btn btn-secondary-outline" %>
     <% end %>
   </td>
 </tr>

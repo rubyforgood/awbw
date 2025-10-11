@@ -14,9 +14,9 @@
         </h1>
         <!-- Buttons Group -->
         <div class="flex items-center gap-2">
-          <%= link_to_button("Index", faqs_path, variant: :secondary_outline) %>
+          <%= link_to("Index", faqs_path, class: "btn btn-secondary-outline") %>
           <% if current_user.super_user? %>
-            <%= link_to_button("Edit", edit_faq_path(@faq), variant: :primary_outline) %>
+            <%= link_to("Edit", edit_faq_path(@faq), class: "btn btn-primary-outline") %>
           <% end %>
         </div>
       </div>

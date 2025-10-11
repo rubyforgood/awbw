@@ -4,13 +4,13 @@
     <div class="flex justify-end mb-6">
       <% if current_user.super_user? %>
         <span class="admin-only bg-blue-100 p-1">
-          <%= link_to_button("Edit", edit_resource_path(@resource), variant: :primary_outline) %>
+          <%= link_to("Edit", edit_resource_path(@resource), class: "btn btn-primary-outline") %>
         </span>
       <% end %>
-      <%= link_to_button("Download <span class='fa fa-download'></span>".html_safe,
+      <%= link_to("Download <span class='fa fa-download'></span>".html_safe,
                          @resource.attachments.first.file.url,
                          download: @resource.attachments.first.file_file_name,
-                         variant: :utility) if @resource.attachments.first %>
+                         class: "btn btn-utility") if @resource.attachments.first %>
     </div>
 
 

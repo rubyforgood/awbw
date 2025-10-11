@@ -8,9 +8,9 @@
             <%%= <%= plural_table_name.classify %>.model_name.human.pluralize %>
           </h1>
           <div class="flex gap-2">
-            <%%= link_to_button('New ' + <%= singular_table_name.classify %>.model_name.human.downcase,
+            <%%= link_to('New ' + <%= singular_table_name.classify %>.model_name.human.downcase,
                                 new_<%= singular_table_name %>_path,
-                                variant: :primary_outline) %>
+                                class: "btn btn-primary-outline") %>
           </div>
         </div>
 
@@ -41,8 +41,8 @@
                     </td>
                   <%% end %>
                   <td class="px-4 py-2 flex gap-2 justify-center">
-                    <%%= link_to_button 'Edit', edit_<%= singular_table_name %>_path(<%= singular_table_name %>),
-                                variant: :secondary_outline %>
+                    <%%= link_to 'Edit', edit_<%= singular_table_name %>_path(<%= singular_table_name %>),
+                                class: "btn btn-secondary-outline" %>
                   </td>
                 </tr>
               <%% end %>

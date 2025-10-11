@@ -31,15 +31,15 @@
   <!-- Form Actions -->
   <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
     <% if @faq.persisted? && current_user.super_user? %>
-      <%= link_to_button "Delete",
+      <%= link_to "Delete",
       @faq,
       method: :delete,
-      variant: :danger_outline,
+      class: "btn btn-danger-outline",
       data: {
         confirm: "Are you sure?",
       } %>
     <% end %>
-    <%= link_to_button "Cancel", faqs_path, variant: :secondary_outline %>
+    <%= link_to "Cancel", faqs_path, class: "btn btn-secondary-outline" %>
     <%= f.button :submit,
              class:
                "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700

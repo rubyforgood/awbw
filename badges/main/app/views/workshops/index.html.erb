@@ -20,7 +20,7 @@
       </div>
       <% if current_user.super_user? %>
         <div class="admin-only bg-blue-100 p-3">
-          <%= link_to_button "New workshop", new_workshop_path, variant: :primary_outline %>
+          <%= link_to "New workshop", new_workshop_path, class: "btn btn-primary-outline" %>
         </div>
       <% end %>
     </div>
