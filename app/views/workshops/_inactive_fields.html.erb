@@ -1,30 +1,59 @@
-<div class="categories-fields-wrapper border border-gray-300 rounded-lg overflow-hidden w-full max-w-md">
-  <!-- Header -->
-  <div class="categories-header flex justify-between items-center bg-white px-4 py-2 w-full cursor-pointer"
-       data-action="click->dropdown#toggle">
-    <label class="mb-0 font-medium text-gray-700">Published status</label>
-    <i class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"
-       data-dropdown-target="icon"></i>
-  </div>
+<div class="relative">
+  <div
+    data-controller="dropdown"
+    class="inline-block w-full"
+    data-dropdown-target="content"
+  >
+    <button
+      id="published-button"
+      type="button"
+      data-action="dropdown#toggle"
+      data-dropdown-payload-param='[{"published-dropdown":"hidden"},{"published-arrow":"rotate-180"},{"published-button":"rounded-md rounded-t-md"}]'
+      class="
+        admin-only relative z-10 w-full bg-blue-100 text-gray-800 py-2 px-4 shadow-sm
+        rounded-md border border-gray-300 cursor-pointer flex justify-between
+        items-center
+      "
+    >
+      <label class="mb-0 font-medium text-gray-700">Published</label>
+      <i
+        id="published-arrow"
+        class="
+          fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300
+        "
+      ></i>
+    </button>
 
-  <!-- Collapsible content -->
-  <div class="categories-fields mt-2 hidden" data-dropdown-target="content">
-    <div class="input-group flex items-center gap-2 mb-1 px-4">
-      <%= check_box_tag "active", true,
-                        (params[:active].present? && YAML.load(params[:active].to_s) == true),
-                        id: "inactive_false", class: "category-checkbox" %>
-      <span class="text-sm text-gray-700">
-        Active/published
-      </span>
-    </div>
+    <div
+      id="published-dropdown"
+      class="
+        absolute left-0 top-full w-full shadow-sm bg-white border border-t-0
+        border-gray-300 rounded-b-md hidden z-40
+      "
+    >
+      <div class="flex items-center gap-2 mb-1 px-4">
 
-    <div class="input-group flex items-center gap-2 mb-1 px-4">
-      <%= check_box_tag "inactive", true,
-                        (params[:inactive].present? && YAML.load(params[:inactive].to_s) == true),
-                        id: "inactive_true", class: "category-checkbox" %>
-      <span class="text-sm text-gray-700">
-        Inactive/not published
-      </span>
+        <%= check_box_tag "active",
+        true,
+        (params[:active].present? && YAML.load(params[:active].to_s) == true),
+        id: "inactive_false",
+        class: "category-checkbox" %>
+        <span class="text-sm text-gray-700">
+          Active/published
+        </span>
+      </div>
+
+      <%# Class "category-checkbox" is used to submit on change %>
+      <div class="input-group flex items-center gap-2 mb-1 px-4">
+        <%= check_box_tag "inactive",
+        true,
+        (params[:inactive].present? && YAML.load(params[:inactive].to_s) == true),
+        id: "inactive_true",
+        class: "category-checkbox" %>
+        <span class="text-sm text-gray-700">
+          Inactive/not published
+        </span>
+      </div>
     </div>
   </div>
 </div>
