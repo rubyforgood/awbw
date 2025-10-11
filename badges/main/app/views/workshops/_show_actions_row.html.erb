@@ -31,25 +31,28 @@
 <div class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden">
   <!-- Left: Bookmark -->
   <div class="flex items-center gap-2">
+
+    <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
+      <%= turbo_flash  %>
     <% if current_user.has_bookmarked_workshop?(workshop) %>
       <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
-                  method: :delete,
                   class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
                           rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
                           font-medium shadow-sm",
-                  data: { turbo_confirm: "Remove bookmark?" } do %>
+                  data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
         <i class="fas fa-bookmark w-5 h-5"></i>
         <span>Bookmark</span>
       <% end %>
     <% else %>
       <%= link_to bookmarks_path(bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" }),
-                  method: :post,
                   class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
                           rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
-                          font-medium shadow-sm" do %>
+                          font-medium shadow-sm",
+                          data: {turbo_method: :post } do %>
         <i class="far fa-bookmark w-5 h-5"></i>
         <span>Bookmark</span>
       <% end %>
+    <% end %>
     <% end %>
     <span class="text-gray-600 text-sm">(Bookmarked by <%= pluralize(workshop.led_count, "facilitator") %>)</span>
   </div>
