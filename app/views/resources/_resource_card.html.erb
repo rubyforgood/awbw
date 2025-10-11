@@ -49,7 +49,7 @@
           <% if resource.attachments.any? %>
             <%= link_to "<span class='fa fa-download' title='Download #{resource.kind}'></span>".html_safe,
                                resource_download_path(resource),
-                               variant: :utility %>
+                               class: "btn btn-utility" %>
           <% end %>
           <% if controller_name == "resources" %>
             <% if current_user.super_user? %>
