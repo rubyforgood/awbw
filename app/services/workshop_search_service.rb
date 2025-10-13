@@ -124,13 +124,16 @@ class WorkshopSearchService
 		when 'created'
 			# order by year/month desc, then created_at desc, then title asc
 			@workshops = @workshops.order(
-				Arel.sql("
-          CASE
-            WHEN year IS NOT NULL AND month IS NOT NULL THEN
-              STR_TO_DATE(CONCAT(year,'-',month,'-01'), '%Y-%m-%d')
-            ELSE workshops.created_at
-          END DESC, workshops.title ASC
-        ")
+				Arel.sql(<<~SQL.squish)
+      CASE
+        WHEN year IS NOT NULL AND month IS NOT NULL THEN 1
+        ELSE 2
+      END ASC,
+      year DESC,
+      month DESC,
+      created_at DESC,
+      title ASC
+    SQL
 			)
 		when 'led'
 			@workshops = @workshops.order(led_count: :desc, title: :asc)
