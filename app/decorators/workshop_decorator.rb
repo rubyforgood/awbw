@@ -195,7 +195,7 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def breadcrumbs_title
-    h.link_to 'Search Curriculum', h.workshops_path, class: 'underline'
+    h.link_to 'Workshops', h.workshops_path, class: 'underline'
   end
 
   def log_form_header

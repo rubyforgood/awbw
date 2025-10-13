@@ -60,7 +60,7 @@
             <% @workshops.each do |workshop| %>
               <%= render "workshops/index_row",
               workshop: workshop.decorate,
-              breadcrumb: "Search Curriculum",
+              breadcrumb: "Workshops",
               link_route: workshop_path(workshop) %>
             <% end %>
           </div>
