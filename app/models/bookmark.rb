@@ -58,7 +58,7 @@ class Bookmark < ApplicationRecord
     bookmarks = user.bookmarks
     bookmarks = bookmarks.filter_by_params(params)
 
-    if params[:sort] == "title" || params[:sort].nil? || params[:sort].empty?
+    if params[:sort].blank? || params[:sort] == "title"
       bookmarks = bookmarks.where(bookmarkable_type: "Workshop")
                            .joins("INNER JOIN workshops ON bookmarks.bookmarkable_id = workshops.id")
                            .order("workshops.title")
