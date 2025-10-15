@@ -24,6 +24,29 @@
       "note": ""
     },
     {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "36232c6ba9e85d80db3c804cbf6c04430a975215eeddf1cf636a237cdc0a40ad",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/workshop_search_service.rb",
+      "line": 93,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n \"workshops.#{Workshop.connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)}\"\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "WorkshopSearchService",
+        "method": "search_by_query"
+      },
+      "user_input": "Workshop.connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)",
+      "confidence": "High",
+      "cwe_id": [
+        89
+      ],
+      "note": ""
+    },
+    {
       "warning_type": "Remote Code Execution",
       "warning_code": 24,
       "fingerprint": "59ffdfd50cdef491cfd47d69eaa3edc1d3a291661c75c5f1b10c7afa173581af",
@@ -43,29 +66,6 @@
       "confidence": "High",
       "cwe_id": [
         470
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "SQL Injection",
-      "warning_code": 0,
-      "fingerprint": "87fb1f4501a3d156ffa9c00e02c8b239255a8190d8d5c8f3092d00c8e37bf2fe",
-      "check_name": "SQL",
-      "message": "Possible SQL injection",
-      "file": "app/models/workshop.rb",
-      "line": 160,
-      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
-      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n \"workshops.#{connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)}\"\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "Workshop",
-        "method": "Workshop.filter_by_query"
-      },
-      "user_input": "[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n \"workshops.#{connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)}\"\n end.join(\", \")",
-      "confidence": "Medium",
-      "cwe_id": [
-        89
       ],
       "note": ""
     },
