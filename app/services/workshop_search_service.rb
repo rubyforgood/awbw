@@ -90,6 +90,7 @@ class WorkshopSearchService
 						 .map { |c| "workshops.#{Workshop.connection.quote_column_name(c)}" }.join(", ")
 
 		terms = query.strip.split.map { |t| "#{t}*" }.join(" ")
+		# brakeman:ignore[SQL] reason: Columns are hardcoded and not user-supplied.
 		match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
 
 		workshops = workshops.select(
