@@ -1,0 +1,15 @@
+<div class="workshop-series-parents single-workshop-detail m-4 ml-2">
+  <h3 class="text-lg font-semibold mb-1">Associated Series</h3>
+  <hr class="border-gray-300 mb-2">
+  <div class="prose text-sm after:clear-both after:block after:content-['']">
+    This workshop is part of the following series.
+    <ul style="list-style: disc; margin-left: 2rem;"><!-- # Not sure why this is needed -->
+      <% workshop.workshop_series_parents.each do |workshop_series_membership| %>
+        <% workshop = workshop_series_membership.workshop_parent %>
+        <li style="padding: 0.5em;">
+          <%= link_to workshop.name, workshop_path(workshop), class: "hover:underline" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>

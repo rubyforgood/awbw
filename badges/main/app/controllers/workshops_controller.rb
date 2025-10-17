@@ -189,7 +189,7 @@ class WorkshopsController < ApplicationController
       :visualization_spanish, :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish,
       :misc1_spanish, :misc2_spanish, :extra_field_spanish,
 
-      workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id,
+      workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :series_order, :_destroy],
       images_attributes: %i[file owner_id owner_type id _destroy]

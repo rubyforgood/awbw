@@ -1,0 +1,28 @@
+<% spanish ||= false %>
+<% grouped_series_memberships = workshop.workshop_series_children
+  .includes(:workshop_child)
+  .sort_by { |m| [m.theme_name.to_s.downcase,
+                  m.series_order,
+                  m.workshop_child.title.to_s.downcase] }
+  .group_by(&:theme_name) %>
+
+<div class="workshop-series-children single-workshop-detail mb-4">
+  <h3 class="text-lg font-semibold mb-1">Series Workshops</h3>
+  <hr class="border-gray-300 mb-2">
+  <div class="prose text-sm after:clear-both after:block after:content-['']">
+    <% grouped_series_memberships.each do |theme_name, series_memberships| %>
+      <% if theme_name.present? %>
+        <h3 class="font-semibold mt-4 mb-2"><%= theme_name %></h3>
+      <% end %>
+      <% series_memberships.each do |series_membership| %>
+        <% child_workshop = series_membership.workshop_child %>
+        <%= render "workshops/index_row",
+                   workshop: child_workshop.decorate,
+                   workshop_series_membership: series_membership,
+                   link_route: workshop_path(child_workshop),
+                   hide_tags: true,
+                   spanish: spanish %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
