@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_01_204910) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_17_024255) do
   create_table "addresses", charset: "utf8mb3", force: :cascade do |t|
     t.string "city", null: false
     t.string "country"
@@ -626,6 +626,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_01_204910) do
     t.string "series_description"
     t.string "series_description_spanish"
     t.integer "series_order", default: 1, null: false
+    t.string "theme_name"
     t.datetime "updated_at", null: false
     t.integer "workshop_child_id", null: false
     t.integer "workshop_parent_id", null: false
