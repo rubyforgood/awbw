@@ -3,30 +3,42 @@
 
 <% if !spanish && workshop_series_membership&.series_description.present? %>
   <% description = workshop_series_membership.series_description %>
-<% elsif spanish && workshop_series_membership &&
+  <% elsif spanish && workshop_series_membership &&
   (workshop_series_membership.series_description_spanish || workshop_series_membership.series_description) %>
-  <% description = workshop_series_membership.series_description_spanish || workshop_series_membership.series_description %>
-<% else %>
-  <% description = workshop.formatted_objective(length: 600) %>
-<% end %>
+    <% description =
+      workshop_series_membership.series_description_spanish ||
+        workshop_series_membership.series_description %>
+  <% else %>
+    <% description = workshop.formatted_objective(length: 600) %>
+  <% end %>
 
-<div id="workshop-<%= workshop.id %>"
-     class="flex flex-col md:flex-row <%= "admin-only bg-blue-100" if workshop.inactive? %> border-b border-gray-200 py-4 list-group-item-custom gap-4">
-  <div id="workshop-<%= workshop.id %>-anchor" style="position: relative; top: -200px;"></div>
-  <!-- 1️⃣ Image -->
-  <div class="flex-shrink-0 w-32 h-24 bg-gray-100 rounded overflow-hidden">
-    <%= link_to workshop_path(workshop) do %>
-      <img class="object-cover w-full h-full" src="<%= workshop.images.last&.file&.url || asset_path('workshop_default.png') %>">
-    <% end %>
-  </div>
-
-  <!-- 2️⃣ Title / author / metadata -->
-  <div class="flex flex-col gap-1 min-w-[40ch] max-w-[40ch] break-words">
-    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-      <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
-        <%= turbo_flash  %> 
-      <% if workshop.bookmarks.any? { |b| b.user_id == current_user.id } %>
-        <%= link_to bookmark_path(
+  <div
+    id="workshop-<%= workshop.id %>"
+    class="
+      flex flex-col md:flex-row <%= "admin-only bg-blue-100" if workshop.inactive? %> border-b
+      border-gray-200 py-4 list-group-item-custom gap-4
+    "
+  >
+    <div
+      id="workshop-<%= workshop.id %>-anchor"
+      style="position: relative; top: -200px;"
+    ></div>
+    <!-- 1️⃣ Image -->
+    <div class="flex-shrink-0 w-32 h-24 bg-gray-100 rounded overflow-hidden">
+      <%= link_to workshop_path(workshop) do %>
+        <img
+          class="object-cover w-full h-full"
+          src="<%= workshop.images.last&.file&.url || asset_path('workshop_default.png') %>"
+        >
+      <% end %>
+    </div>
+    <!-- 2️⃣ Title / author / metadata -->
+    <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
+      <%= turbo_flash %>
+      <div class="flex flex-col gap-1 min-w-[40ch] max-w-[40ch] break-words">
+        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <% if workshop.bookmarks.any? { |b| b.user_id == current_user.id } %>
+            <%= link_to bookmark_path(
                       current_user.bookmark_for(workshop),
                       from: "workshops_index",
                       **request.query_parameters,
@@ -34,10 +46,10 @@
                     ),
                     class: "inline-block",
                     data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
-          <i class="fas fa-bookmark w-5 h-5 text-blue-500 hover:text-gray-400"></i>
-        <% end %>
-      <% else %>
-        <%= link_to bookmarks_path(
+              <i class="fas fa-bookmark w-5 h-5 text-blue-500 hover:text-gray-400"></i>
+            <% end %>
+          <% else %>
+            <%= link_to bookmarks_path(
                       bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" },
                       from: "workshops_index",
                       **request.query_parameters,
@@ -45,52 +57,72 @@
                     ),
                     class: "inline-block",
                     data: {turbo_method: :post} do %>
-          <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
-        <% end %>
-      <% end %>
-      <% end %>
-      <%= link_to "#{ "[NOT PUBLISHED] " if workshop.inactive? }#{ workshop.title }",
-                  link_route, class: "hover:underline" %>
-    </h3>
+              <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
+            <% end %>
+          <% end %>
+          <%= link_to "#{"[NOT PUBLISHED] " if workshop.inactive?}#{workshop.title}",
+          link_route,
+          class: "hover:underline",
+          data: {
+            turbo: false,
+          } %>
+        </h3>
 
-    <div class="text-sm text-gray-600">
-      Author:
-      <% if workshop.user %>
-        <%= link_to workshop.author_name, user_path(workshop.user), class: "hover:underline" %>
-      <% else %>
-        <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
-      <% end %>
-    </div>
+        <div class="text-sm text-gray-600">
+          Author:
+          <% if workshop.user %>
+            <%= link_to workshop.author_name,
+            user_path(workshop.user),
+            class: "hover:underline",
+            data: {
+              turbo: false,
+            } %>
+          <% else %>
+            <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
+          <% end %>
+        </div>
 
-    <div class="text-sm text-gray-600">
-    <span>
-      Type/date: <%= "#{workshop.windows_type.label} - #{workshop.date}" if workshop.windows_type.present? %>
-      <% if workshop.workshop_age_ranges.any? %>
-        (<%= workshop.workshop_age_ranges.to_sentence %>)
-      <% end %>
-    </span>
-    </div>
+        <div class="text-sm text-gray-600">
+          <span>
+            Type/date:
+            <%= if workshop.windows_type.present?
+              "#{workshop.windows_type.label} - #{workshop.date}"
+            end %>
+            <% if workshop.workshop_age_ranges.any? %>
+              (<%= workshop.workshop_age_ranges.to_sentence %>)
+            <% end %>
+          </span>
+        </div>
 
-    <div class="text-sm text-gray-600">
-      Bookmarked: <%= workshop.led_count %> <%= "time".pluralize(workshop.led_count) %>
-    </div>
-  </div>
-
-  <!-- 3️⃣ Description -->
-  <div class="flex-1 text-sm text-gray-700">
-    <p class="workshop-description">
-      <span title="<%= description %>">
-        <%= sanitize(truncate(CGI.unescapeHTML(description), length: 215, omission: '... ', separator: ' ')) %>
-      </span>
-    </p>
-    <!-- 4️⃣ Tags (optional) -->
-    <% if workshop.categories.any? %>
-      <p class="tags mt-3 italic">
-        Tags:
-        <span title="<%= workshop.categories.map(&:name).to_sentence %>">
-          <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
+        <div class="text-sm text-gray-600">
+          Bookmarked:
+          <%= workshop.led_count %>
+          <%= "time".pluralize(workshop.led_count) %>
+        </div>
+      </div>
+    <% end %>
+    <!-- 3️⃣ Description -->
+    <div class="flex-1 text-sm text-gray-700">
+      <p class="workshop-description">
+        <span title="<%= description %>">
+          <%= sanitize(
+            truncate(
+              CGI.unescapeHTML(description),
+              length: 215,
+              omission: "... ",
+              separator: " ",
+            ),
+          ) %>
         </span>
       </p>
-    <% end %>
+      <!-- 4️⃣ Tags (optional) -->
+      <% if workshop.categories.any? %>
+        <p class="tags mt-3 italic">
+          Tags:
+          <span title="<%= workshop.categories.map(&:name).to_sentence %>">
+            <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
+          </span>
+        </p>
+      <% end %>
+    </div>
   </div>
-</div>

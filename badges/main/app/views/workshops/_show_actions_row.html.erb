@@ -7,16 +7,22 @@
     } /* for tabs*/
 </style>
 
-<div class="relative bg-cover bg-center" style="background-image: url(<%= workshop.header_image %>)">
+<div
+  class="relative bg-cover bg-center"
+  style="background-image: url(<%= workshop.header_image %>)"
+>
   <div class="inner-hero bg-black/40 p-6 md:p-12">
     <h2 class="text-3xl md:text-4xl font-bold text-white mb-2 inline-block">
       <%= workshop.title %><%= " [UNPUBLISHED]" if workshop.inactive %>
     </h2>
 
     <div class="flex flex-wrap gap-4 text-sm text-gray-200 mt-2">
-      <span>Author: <%= workshop.author %></span>
-      <span>Category: <%= workshop.windows_type&.label %></span>
-      <span>Added: <%= workshop.date %></span>
+      <span>Author:
+        <%= workshop.author %></span>
+      <span>Category:
+        <%= workshop.windows_type&.label %></span>
+      <span>Added:
+        <%= workshop.date %></span>
       <% if sectors&.any? %>
         <span>Sectors:
           <% sectors.each do |sector| %>
@@ -28,41 +34,44 @@
   </div>
 </div>
 
-<div class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden">
-  <!-- Left: Bookmark -->
-  <div class="flex items-center gap-2">
+<div
+  class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden"
+>
 
-    <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
-      <%= turbo_flash  %>
-    <% if current_user.has_bookmarked_workshop?(workshop) %>
-      <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
+  <!-- Left: Bookmark -->
+  <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
+    <%= turbo_flash %>
+    <div class="flex items-center gap-2">
+
+      <% if current_user.has_bookmarked_workshop?(workshop) %>
+        <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
                   class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
                           rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
                           font-medium shadow-sm",
                   data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
-        <i class="fas fa-bookmark w-5 h-5"></i>
-        <span>Bookmark</span>
-      <% end %>
-    <% else %>
-      <%= link_to bookmarks_path(bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" }),
+          <i class="fas fa-bookmark w-5 h-5"></i>
+          <span>Bookmark</span>
+        <% end %>
+      <% else %>
+        <%= link_to bookmarks_path(bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" }),
                   class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
                           rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
                           font-medium shadow-sm",
                           data: {turbo_method: :post } do %>
-        <i class="far fa-bookmark w-5 h-5"></i>
-        <span>Bookmark</span>
+          <i class="far fa-bookmark w-5 h-5"></i>
+          <span>Bookmark</span>
+        <% end %>
       <% end %>
-    <% end %>
-    <% end %>
-    <span class="text-gray-600 text-sm">(Bookmarked by <%= pluralize(workshop.led_count, "facilitator") %>)</span>
-  </div>
+      <span class="text-gray-600 text-sm">(Bookmarked by
+        <%= pluralize(workshop.led_count, "facilitator") %>)</span>
+    </div>
+  <% end %>
 
   <% if workshop.inactive %>
     <div class="flex items-center gap-4 text-red-500">
       <%= "***THIS WORKSHOP IS NOT PUBLISHED***" %>
     </div>
   <% end %>
-
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
     <% if current_user.super_user? %>
@@ -81,5 +90,3 @@
     <% end %>
   </div>
 </div>
-
-
