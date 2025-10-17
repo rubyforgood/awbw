@@ -6,6 +6,7 @@
   pluck(:name) : [] %>
 <% active_applied = "Published" if params[:active] == "true" %>
 <% inactive_applied = "Not published" if params[:inactive] == "true" %>
+
 <% filters_applied = [
   *windows_types_applied,
   *categories_applied,
@@ -22,7 +23,7 @@
     <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters applied</h3>
     <% if filters_applied.any? %>
       <%= filters_applied.to_sentence %>
-      <%= link_to 'Clear filters', workshops_path, class: "btn btn-prmary" %>
+      <%= link_to 'Clear filters', workshops_path, class: "btn btn-primary" %>
     <% else %>
       None
     <% end %>

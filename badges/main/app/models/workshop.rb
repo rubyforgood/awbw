@@ -78,16 +78,8 @@ class Workshop < ApplicationRecord
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
   scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }
-  scope :recent, -> { for_search.by_year.order(led_count: :desc).uniq(&:title) }
-  scope :title, -> (title) { where("title like ?", "%#{ title }%") }
+  scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
-
-  scope :by_created_at, -> { order(created_at: :desc) }
-  scope :by_led_count, -> { order(led_count: :desc) }
-  scope :by_rating, -> { by_year.sort_by(&:rating)}
-  scope :by_warm_up_and_relaxation, -> { search('Warm Up Relaxation') }
-  scope :by_year, -> { order(year: :desc).order(month: :desc) }
-
 
   # Validations
   validates_presence_of :title
@@ -113,106 +105,6 @@ class Workshop < ApplicationRecord
 
   def self.grouped_by_sector
     Sector.all.map { |sector| Hash[sector.name, sector.workshops] }.flatten
-  end
-
-  def self.filter_by_params(params={})
-    workshops = self.all
-    # filter by
-    if params[:windows_types].present?
-      windows_type_ids = params[:windows_types].values.map(&:to_i) # windows_types param is like {"1"=>"1", "2"=>"1"}
-      workshops = workshops.windows_type_ids(windows_type_ids)
-    end
-    if params[:active].present? || params[:inactive].present?
-      active = params[:active] == "true"
-      inactive = params[:inactive] == "true"
-
-      if active && !inactive
-        workshops = workshops.published(true)
-      elsif !active || inactive
-        workshops = workshops.published(false)
-      end
-    end
-    if params[:categories].present?
-      workshops = workshops.search_by_categories( params[:categories] )
-    end
-    if params[:sectors].present?
-      workshops = workshops.search_by_sectors( params[:sectors] )
-    end
-    if params[:title].present?
-      workshops = workshops.title(params[:title])
-    end
-    if params[:query].present?
-      workshops = workshops.filter_by_query(params[:query], sort: params[:sort])
-    end
-    workshops
-  end
-
-  def self.filter_by_query(query = nil, sort: nil)
-    return all if query.blank?
-
-    # Whitelisted, quoted column names to use in search
-    cols = %w[title full_name objective materials introduction demonstration opening_circle
-              warm_up creation closing notes tips misc1 misc2].
-           map { |c| "workshops.#{ connection.quote_column_name(c) }" }.join(", ")
-    # Prepare query for BOOLEAN MODE (prefix matching)
-    terms = query.to_s.strip.split.map { |term| "#{term}*" }.join(" ")
-
-    # rubocop:disable brakeman
-    # Convert to Arel for safety
-    match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
-
-    workshops = select(
-      sanitize_sql_array(["workshops.*, #{match_expr} AS all_score", terms])
-    ).where(match_expr, terms)
-    # rubocop:enable brakeman
-
-    workshops.order("all_score DESC") if sort == "keywords"
-    workshops
-  end
-
-  def self.search_and_sort(params, super_user: false)
-    workshops = all
-    workshops = workshops.filter_by_params(params)
-    workshops = workshops.published unless super_user # only show published results to regular users
-    workshops.order_by_params(params)
-  end
-
-  def self.order_by_params(params)
-    workshops = self.all
-    if params[:sort] == "created"
-      workshops.order(
-        Arel.sql("
-          CASE
-            WHEN year IS NOT NULL AND month IS NOT NULL THEN
-              STR_TO_DATE(CONCAT(year,'-',month,'-01'), '%Y-%m-%d')
-            ELSE workshops.created_at
-          END DESC")
-      )
-    elsif params[:sort] == "led"
-      workshops.order(led_count: :desc)
-    elsif params[:sort] == "title"
-      workshops.order(title: :asc)
-    elsif params[:sort] == 'keywords' && params[:query].present? # only in the UI if params[:query] is present
-      workshops # keep same collection bc order was applied in filter_by_query
-    else
-      workshops.order(title: :asc)
-    end
-  end
-
-  def self.search_by_categories(categories)
-    category_ids = categories.to_unsafe_h.values.reject(&:blank?)
-    return all if category_ids.empty?
-    joins(:categorizable_items)
-      .where(categorizable_items: { categorizable_type: "Workshop", category_id: category_ids })
-      .distinct
-  end
-
-  def self.search_by_sectors(sectors)
-    sector_ids = sectors.to_unsafe_h.values.reject(&:blank?)
-    return all if sector_ids.empty?
-    joins(:sectorable_items)
-      .where(sectorable_items: { sectorable_type: "Workshop", sector_id: sector_ids })
-      .distinct
   end
 
   def author_name

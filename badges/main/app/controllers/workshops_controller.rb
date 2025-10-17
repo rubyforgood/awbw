@@ -3,17 +3,17 @@
 class WorkshopsController < ApplicationController
 
   def index
-    workshop_ids = Workshop.search_and_sort(params, super_user: current_user.super_user?)
-                           .pluck(:id)
-    @workshops = Workshop
-                   .where(id: workshop_ids)
-                   .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
-                   .includes(:categories, :sectors, :windows_type, :user, :images,
-                             :workshop_age_ranges, :bookmarks)
-                   .paginate(page: params[:page], per_page: params[:per_page] || 50)
+    search_service = WorkshopSearchService.new(params, super_user: current_user.super_user?).call
+    @sort = params[:sort] # search_service.default_sort
 
-    load_sortable_fields
-    load_metadata
+    @workshops = search_service.workshops
+                               .includes(:categories, :sectors, :windows_type, :user, :images,
+                                         :workshop_age_ranges, :bookmarks)
+                               .paginate(page: params[:page], per_page: params[:per_page] || 50)
+
+    @category_metadata = Metadatum.published.includes(:categories).decorate
+    @sectors = Sector.published
+    @windows_types = WindowsType.all
 
     respond_to do |format|
       format.html
@@ -202,7 +202,5 @@ class WorkshopsController < ApplicationController
 
   def load_metadata
     @metadata = Metadatum.published.includes(:categories).decorate
-    @sectors = Sector.published
-    @windows_types = WindowsType.all
   end
 end
