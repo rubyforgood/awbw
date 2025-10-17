@@ -22,9 +22,9 @@ RSpec.describe "Workshops" do
         visit workshops_path
 
         within('#workshops-list') do
-          expect(page).to have_content('The best workshop in the world')
-          expect(page).to have_content('The best workshop on mars')
-          expect(page).to have_content('oh hello!')
+          expect(page).to have_content(workshop_world.title)
+          expect(page).to have_content(workshop_mars.title)
+          expect(page).to have_content(workshop_hello.title)
         end
       end
 
