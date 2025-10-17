@@ -1,0 +1,17 @@
+<% spanish ||= false %>
+
+<div class="workshop-series-children single-workshop-detail mb-4">
+  <h3 class="text-lg font-semibold mb-1">Series Workshops</h3>
+  <hr class="border-gray-300 mb-2">
+  <div class="prose text-sm after:clear-both after:block after:content-['']">
+    <% workshop.workshop_series_children.each do |workshop_series_membership| %>
+      <% workshop = workshop_series_membership.workshop_child %>
+      <%= render "workshops/index_row",
+                 workshop: workshop.decorate,
+                 workshop_series_membership: workshop_series_membership,
+                 link_route: workshop_path(workshop),
+                 hide_tags: true,
+                 spanish: spanish %>
+    <% end %>
+  </div>
+</div>

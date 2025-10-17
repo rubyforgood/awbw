@@ -105,6 +105,12 @@
             <% end %>
           </div>
         <% end %>
+
+        <% if workshop.workshop_series_children.any? %>
+          <%= render "show_series_membership_children",
+                     workshop: workshop,
+                     spanish: false %>
+        <% end %>
       <% end %>
     </div>
 
@@ -147,8 +153,17 @@
             <% end %>
           </div>
         <% end %>
+
+        <% if workshop.workshop_series_children.any? %>
+          <%= render "show_series_membership_children",
+                     workshop: workshop,
+                     spanish: true %>
+        <% end %>
       </div>
     <% end %>
   </div>
 </div>
 
+<% if workshop.workshop_series_parents.any? %>
+  <%= render "show_series_membership_parents", workshop: workshop %>
+<% end %>
