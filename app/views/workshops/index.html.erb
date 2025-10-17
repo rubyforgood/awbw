@@ -59,18 +59,18 @@
           <div id="workshops-list" class="space-y-4">
             <% @workshops.each do |workshop| %>
               <%= render "workshops/index_row",
-              workshop: workshop.decorate,
-              breadcrumb: "Workshops",
-              link_route: workshop_path(workshop) %>
+                         workshop: workshop.decorate,
+                         breadcrumb: "Workshops",
+                         link_route: workshop_path(workshop) %>
             <% end %>
           </div>
 
           <div class="pagination mt-6">
             <%= will_paginate @workshops,
-            previous_label: "<<",
-            next_label: ">>",
-            inner_window: 2,
-            class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
+                              previous_label: "<<",
+                              next_label: ">>",
+                              inner_window: 2,
+                              class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
           </div>
 
         <% else %>
