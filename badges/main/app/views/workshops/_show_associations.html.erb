@@ -6,7 +6,10 @@
         <h2 class="text-lg font-semibold mb-2">Variations of this Workshop</h2>
       </div>
       <% if current_user.super_user? %>
-        <%= link_to 'New variation', new_workshop_variation_path(from: "workshop_show"), class: "btn btn-secondary-outline" %>
+        <%= link_to 'New variation',
+                    new_workshop_variation_path(from: "workshop_show",
+                                                workshop_id: workshop),
+                    class: "btn btn-secondary-outline" %>
       <% end %>
     </div>
 

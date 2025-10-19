@@ -13,7 +13,10 @@ class WorkshopVariationsController < ApplicationController
 
   def new
     @workshop_variation = WorkshopVariation.new
-    @workshops = Workshop.published.order(:title)
+    workshops = current_user.super_user? ? Workshop.all : Workshop.published
+    @workshops = workshops.order(:title)
+    @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
+      Workshop.where(id: params[:workshop_id]).last
   end
 
   def create
