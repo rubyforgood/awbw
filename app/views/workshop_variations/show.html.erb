@@ -8,7 +8,9 @@
         </span>
       <% end %>
       <div class="p-1">
-        <%= link_to("Back to Workshop", workshop_path(@workshop_variation.workshop), class: "btn btn-secondary-outline") %>
+        <%= link_to("Back to Workshop",
+                    workshop_path(@workshop_variation.workshop, anchor: "workshop-variations"),
+                    class: "btn btn-secondary-outline") %>
       </div>
 
     </div>
@@ -17,7 +19,8 @@
     <!-- Resource Card -->
     <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
       <div class="workshop">
-        Workshop: <%= link_to(@workshop_variation.workshop.name, workshop_path(@workshop_variation.workshop)) %>
+        Workshop: <%= link_to(@workshop_variation.workshop.name,
+                              workshop_path(@workshop_variation.workshop), class: "hover:underline") %>
       </div>
 
       <!-- Title -->
