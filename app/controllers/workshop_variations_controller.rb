@@ -24,7 +24,7 @@ class WorkshopVariationsController < ApplicationController
     if @workshop_variation.save
       flash[:notice] = 'Workshop Variation has been created.'
       if params[:from] == "workshop_show"
-        redirect_to workshop_path(@workshop_variation.workshop)
+        redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
       elsif params[:from] == "index"
         redirect_to workshop_variations_path
       else
