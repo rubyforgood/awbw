@@ -1,20 +1,82 @@
-<div class="curriculum-detail">
-  <div class="row">
-    <div class="col-md-10 col-lg-8">
-      <div class="bc">
-        <%= @workshop_variation.breadcrumbs %>
+<div class="workshop-variation-detail py-6 min-h-screen">
+  <div class="max-w-5xl mx-auto px-4">
+
+    <div class="flex justify-end mb-6">
+      <% if current_user.super_user? || current_user == @workshop_variation.created_by %>
+        <span class="<%= "admin-only bg-blue-100" if current_user.super_user? %> p-1">
+          <%= link_to("Edit", edit_workshop_variation_path(@workshop_variation), class: "btn btn-primary-outline") %>
+        </span>
+      <% end %>
+      <div class="p-1">
+        <%= link_to("Back to Workshop",
+                    workshop_path(@workshop_variation.workshop, anchor: "workshop-variations"),
+                    class: "btn btn-secondary-outline") %>
       </div>
-      <br/>
-      <h2 class="normal inline-block no-margin">
+
+    </div>
+
+
+    <!-- Resource Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+      <div class="workshop">
+        Workshop: <%= link_to(@workshop_variation.workshop.name,
+                              workshop_path(@workshop_variation.workshop), class: "hover:underline") %>
+      </div>
+
+      <!-- Title -->
+      <h2 class="text-3xl font-semibold text-gray-900">
         <%= @workshop_variation.name %>
+        <% if @workshop_variation.inactive? %>
+        <span class="text-lg font-normal text-red-500 mb-3">
+          [NOT PUBLISHED]
+        </span>
+        <% end %>
       </h2>
-      <div class="back-to-worshop">
-        <br/>
-        <%= link_to '<- Back to Workshop', workshop_path(@workshop), class: 'underline' %>
+
+
+
+      <!-- Author and Date -->
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center text-gray-600 text-sm gap-2">
+          <span><%= @workshop_variation.created_by %></span>
+          <span class="<%= "border-l border-gray-400 pl-2" if @workshop_variation.created_by.present? %>">
+            <%= @workshop_variation.created_at.strftime('%B %e, %Y') %>
+          </span>
+        </div>
       </div>
-      <div class="wysiwyg-content wysiwyg-content--lists-fixed">
-        <%= @workshop_variation.display_code.html_safe %>
+
+      <!-- Main Image -->
+      <%# if @workshop_variation.main_image.present? %>
+<!--        <div class="flex justify-start">-->
+          <%# image_url = @workshop_variation.main_image rescue nil %>
+          <%# if image_url %>
+            <%#= link_to image_url, download: @workshop_variation.main_image.file_file_name do %>
+              <%#= image_tag image_url,
+                            class: 'w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 object-cover',
+                            alt: @workshop_variation.name,
+                            onerror: "this.onerror=null;this.src='/assets/missing.png';" %>
+            <%# end %>
+          <%# end %>
+<!--        </div>-->
+      <%# end %>
+
+
+      <!-- URL -->
+      <% if @workshop_variation.reference_url.present? %>
+        <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
+          <%= link_to @workshop_variation.reference_url, @workshop_variation.reference_url, target: "_blank",
+                      rel: "noopener noreferrer",
+                      class: "text-blue-600 hover:underline break-words" %>
+        </div>
+      <% end %>
+
+
+      <!-- Main Text -->
+      <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
+        <%= sanitize(@workshop_variation.code,
+                     tags: %w(p br strong em a ul ol li), attributes: %w(href target)) %>
       </div>
+
     </div>
   </div>
 </div>

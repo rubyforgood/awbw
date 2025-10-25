@@ -1,48 +1,83 @@
 <%= simple_form_for @workshop_variation, html: { multipart: true } do |f| %>
+  <%= hidden_field_tag(:from, params[:from]) %>
+
   <%= render 'shared/errors', resource: workshop_variation if workshop_variation.errors.any? %>
 
-  <div class="row">
-    <div class="col-md-6">
-      <% if @workshop %>
-        <%= f.hidden_field :workshop_id, value: @workshop.id %>
-
-        <div class="my-3">
-          Variant of: <span class="text-lg font-bold">
-          <%= link_to(@workshop.name,
-                      workshop_path(@workshop)) %></span>
-        </div>
-      <% else %>
-        <%= f.input :workshop_id,
-                    as: :select,
-                    collection: @workshops,
-                    prompt: "Select a Workshop" %>
-      <% end %>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-6">
-      <%= f.input :name, label: "Variation name" %>
-      <%= f.input :code, as: :text,
-                  label: "Share a little bit about your workshop variation, how you modified the workshop to fit your population/setting/facilitation style, and/or anything about how the workshop was received by participants, things you would do differently next time, etc.",
-                  input_html: { rows: 10 } %>
-    </div>
-    <% if current_user.super_user? %>
-      <div class="col-md-6 flex items-start gap-6 bg-blue-100 admin-only p-3">
-        <%= f.input :inactive, as: :boolean, label: "Not published?",
-                    input_html: { checked: f.object.id ? f.object.inactive : false } %>
-  
-        <%= f.input :ordering, as: :integer,
-                    input_html: { class: "w-24" } %>
+  <!-- Workshop selection / reference -->
+  <div class="mb-6">
+    <% if @workshop %>
+      <%= f.hidden_field :workshop_id, value: @workshop.id %>
+      <div class="text-lg font-semibold mb-2">
+        Variant of workshop:
+        <span class="text-2xl font-bold">
+          <%= link_to(@workshop.name, workshop_path(@workshop), class: "hover:underline") %>
+        </span>
       </div>
+    <% else %>
+      <%= f.input :workshop_id,
+                  as: :select,
+                  collection: @workshops,
+                  required: true,
+                  prompt: "Select a Workshop",
+                  input_html: { class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
     <% end %>
   </div>
 
-  <div class="mt-3">
-    <%= link_to "Delete", @workshop_variation, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
-    <%= link_to 'Cancel', workshop_variations_path, class: "btn btn-secondary-outline" %>
+  <!-- Variation fields -->
+  <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+    <div>
+      <%= f.input :name, label: "Variation name", input_html: { class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+
+      <%= f.input :code,
+                  as: :text,
+                  required: true,
+                  label: "Share a little bit about your workshop variation, how you modified the workshop to fit your population/setting/facilitation style, and/or anything about how the workshop was received by participants, things you would do differently next time, etc.",
+                  input_html: { rows: 10, class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+
+      <%= f.input :reference_url,
+                  label: "Reference url <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
+                  hint: "Link to any external resource (e.g., a blog post, video, or website) that showcases or provides more information.",
+                  input_html: { class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+
+    <% if current_user.super_user? %>
+      <div class="flex items-start gap-6 bg-blue-50 p-4 rounded-lg">
+        <%= f.input :inactive, as: :boolean, label: "Not published?", input_html: { checked: f.object.id ? f.object.inactive : false } %>
+
+        <%= f.input :ordering, as: :integer, label: "Ordering", input_html: { class: "w-24 border border-gray-300 rounded-lg px-2 py-1 focus:ring-blue-500 focus:border-blue-500" } %>
+
+        <%= f.input :created_by, as: :select,
+                    collection: User.order(:first_name, :last_name),
+                    selected: (f.object.created_by_id || current_user.id),
+                    input_html: { class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+      </div>
+    <% else %>
+      <%= f.hidden_field :created_by_id, value: current_user.id %>
+    <% end %>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="mt-6 flex flex-wrap gap-3">
+    <% if @workshop_variation.persisted? %>
+      <%= link_to "Delete", @workshop_variation,
+                  method: :delete,
+                  data: { confirm: "Are you sure?" },
+                  class: "px-4 py-2 border border-red-600 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700" %>
+    <% end %>
+
+    <% cancel_path =
+         if params[:workshop_id].present?
+           workshop_path(@workshop, anchor: "workshop-variations")
+         elsif current_user.super_user?
+           workshop_variations_path
+         else
+           authenticated_root_path
+         end
+    %>
+    <%= link_to 'Cancel', cancel_path,
+                class: "btn btn-secondary-outline" %>
+
     <%= f.submit 'Submit',
-                 class: "px-4 py-2 border border-blue-600 hover:text-gray-600 hover:bg-white
-                 rounded-lg bg-blue-600 text-white text-sm font-medium" %>
+                 class: "btn btn-primary" %>
   </div>
 <% end %>

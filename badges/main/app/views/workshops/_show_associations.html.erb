@@ -8,7 +8,7 @@
       <% if current_user.super_user? %>
         <%= link_to 'New variation',
                     new_workshop_variation_path(from: "workshop_show",
-                                                workshop_id: workshop),
+                                                workshop_id: workshop.id),
                     class: "btn btn-secondary-outline" %>
       <% end %>
     </div>
@@ -18,7 +18,7 @@
       <% @workshop_variations.each do |variation| %>
         <li>
           <%= link_to variation.name, workshop_variation_path(variation),
-                      class: "btn btn-secondary-outline text-gray-900 hover:underline font-medium" %>
+                      class: "btn btn-secondary-outline" %>
         </li>
       <% end %>
     </ul>
