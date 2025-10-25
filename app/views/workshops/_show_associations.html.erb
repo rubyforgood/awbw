@@ -8,7 +8,7 @@
       <% if current_user.super_user? %>
         <%= link_to 'New variation',
                     new_workshop_variation_path(from: "workshop_show",
-                                                workshop_id: workshop),
+                                                workshop_id: workshop.id),
                     class: "btn btn-secondary-outline" %>
       <% end %>
     </div>

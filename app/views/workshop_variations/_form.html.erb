@@ -7,7 +7,7 @@
         <%= f.hidden_field :workshop_id, value: @workshop.id %>
 
         <div class="my-3">
-          Variant of: <span class="text-lg font-bold">
+          Variant of workshop: <span class="text-2xl font-bold">
           <%= link_to(@workshop.name,
                       workshop_path(@workshop)) %></span>
         </div>
@@ -31,7 +31,7 @@
       <div class="col-md-6 flex items-start gap-6 bg-blue-100 admin-only p-3">
         <%= f.input :inactive, as: :boolean, label: "Not published?",
                     input_html: { checked: f.object.id ? f.object.inactive : false } %>
-  
+
         <%= f.input :ordering, as: :integer,
                     input_html: { class: "w-24" } %>
       </div>
