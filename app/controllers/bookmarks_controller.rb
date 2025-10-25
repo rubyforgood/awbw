@@ -2,7 +2,23 @@ class BookmarksController < ApplicationController
   before_action :set_breadcrumb
 
   def index
-    @bookmarks = Bookmark.search(params, current_user).paginate(page: params[:page], per_page: 25)
+    bookmarks = Bookmark.search(params)
+    @bookmarks = bookmarks.paginate(page: params[:page], per_page: 25)
+    @bookmarks_count = bookmarks.size
+
+    load_sortable_fields
+    respond_to do |format|
+      format.html
+      format.js
+    end
+  end
+
+  def personal
+    user = User.where(id: params[:user_id]).first if params[:user_id].present?
+    user ||= current_user
+    @user_name = user.full_name if user
+    @viewing_self = user == current_user
+    @bookmarks = Bookmark.search(params, user: user).paginate(page: params[:page], per_page: 25)
 
     load_sortable_fields
     respond_to do |format|
@@ -49,6 +65,17 @@ class BookmarksController < ApplicationController
     else
       flash[:alert] = 'Unable to find that bookmark.'
     end
+  end
+
+  def tally
+    search_params = params.to_unsafe_h.merge({ sort: "bookmark_count" })
+    @bookmark_counts = Bookmark.search(search_params)
+                               .group(:bookmarkable_type, :bookmarkable_id)
+                               .order('count_id DESC')
+                               .count('id')
+                               .map{ |(type, id), count| [type.constantize.find(id), count] rescue nil}
+                               .compact
+    @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
   end
 
   private

@@ -36,6 +36,10 @@ Rails.application.routes.draw do
   resources :bookmarks do
     post :search
     resources :annotations
+    collection do
+      get :tally
+      get :personal
+    end
   end
 
   resources :workshop_log_creation_wizard

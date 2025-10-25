@@ -1,0 +1,54 @@
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-6">
+  <!-- Title -->
+  <div>
+    <%= label_tag :title, "Title", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <div class="relative">
+      <%= text_field_tag :title, params[:title],
+                         class: "block w-full rounded-md border-gray-300 shadow-sm
+                                 focus:ring-blue-500 focus:border-blue-500 pr-10" %>
+      <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+           onclick="this.closest('form').submit()">
+        <i class="fa fa-search text-gray-500"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Username -->
+  <div>
+    <%= label_tag :user_name, "Username", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <div class="relative">
+      <%= text_field_tag :user_name, params[:user_name],
+                         class: "block w-full rounded-md border-gray-300 shadow-sm
+                                 focus:ring-blue-500 focus:border-blue-500 pr-10" %>
+      <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+           onclick="this.closest('form').submit()">
+        <i class="fa fa-search text-gray-500"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Type Dropdown -->
+  <div>
+    <%= label_tag :bookmarkable_type, "Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <div class="relative">
+      <%= select_tag :bookmarkable_type,
+                     options_for_select([["All types", ""],
+                                         ["Workshops", "Workshop"],
+                                         ["Stories", "Story"],
+                                         ["Resources", "Resource"],
+                                         ["Events", "Event"]],
+                                        params[:bookmarkable_type]),
+                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10",
+                     onchange: "this.form.submit()" %>
+      <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <i class="fa fa-chevron-down text-gray-500"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear filters / placeholder for additional fields -->
+  <div class="flex items-center space-x-2">
+    <%#= render 'workshops/windows_type_fields', windows_types: @windows_types %>
+    <%= link_to 'Clear filters', bookmarks_path, class: "text-blue-600 hover:underline" %>
+  </div>
+</div>
