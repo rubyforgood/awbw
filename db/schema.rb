@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_17_024255) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_25_164126) do
   create_table "addresses", charset: "utf8mb3", force: :cascade do |t|
     t.string "city", null: false
     t.string "country"
@@ -637,13 +637,16 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_17_024255) do
   create_table "workshop_variations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.text "code", size: :medium
     t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
     t.boolean "inactive", default: true
     t.boolean "legacy", default: false
     t.string "name"
     t.integer "ordering"
+    t.string "reference_url"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "variation_id"
     t.integer "workshop_id"
+    t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
   end
 
@@ -787,6 +790,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_17_024255) do
   add_foreign_key "workshop_resources", "workshops"
   add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_child_id"
   add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_parent_id"
+  add_foreign_key "workshop_variations", "users", column: "created_by_id"
   add_foreign_key "workshop_variations", "workshops"
   add_foreign_key "workshops", "users"
   add_foreign_key "workshops", "windows_types"
