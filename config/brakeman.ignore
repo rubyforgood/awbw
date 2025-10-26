@@ -53,7 +53,7 @@
       "check_name": "SQL",
       "message": "Possible SQL injection",
       "file": "app/services/workshop_search_service.rb",
-      "line": 94,
+      "line": 95,
       "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
       "code": "Arel.sql(\"FIELD(id, #{search_by_sectors(search_by_categories(search_by_author_name((Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published or (Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published(true) or if ActiveModel::Type::Boolean.new.cast(params[:inactive]) and (not ActiveModel::Type::Boolean.new.cast(params[:active])) then\n  Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published(false)\nelse\n  Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i))\nend)), params[:author_name]), params[:categories]), params[:sectors]).title(params[:title]).search(params[:query]).map(&:id).join(\",\")})\")",
       "render_path": null,
