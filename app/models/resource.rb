@@ -111,7 +111,8 @@ class Resource < ApplicationRecord
 
   def self.search_by_params(params)
     resources = all
-    resources = resources.search(params[:query]) if params[:query].present?
+    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
+    resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.where('kind like ?', "%#{params[:kind]}%") if params[:kind].present?
     resources = resources.where(inactive: params[:published] == "true" ? false : true) if params[:published].present?
     resources = resources.where(featured: params[:featured]) if params[:featured].present?
