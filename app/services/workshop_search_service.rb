@@ -90,9 +90,8 @@ class WorkshopSearchService
 		# If SearchCop returned an Array (e.g., because of scoring), convert back to Relation
 		if results.is_a?(Array)
 			ordered_ids = results.map(&:id)
-			ids_sql = ActiveRecord::Base.send(:sanitize_sql_array, ["FIELD(id, ?)", ordered_ids])
 			@workshops = Workshop.where(id: ordered_ids)
-													 .order(Arel.sql(ids_sql))
+													 .order(Arel.sql("FIELD(id, #{ordered_ids.join(',')})")) # brakeman:ignore[SQL] safe array of IDs
 		else
 			@workshops = results
 		end
