@@ -19,9 +19,10 @@ class WorkshopSearchService
 
 	# Compute the effective sort
 	def default_sort
-		return params[:sort] if params[:sort].present?
+		params[:sort].presence || 'title'
+		# return params[:sort] if params[:sort].present?
 		# return 'keywords' if params[:query].present? # only when returning weighted results from # search_by_query
-		'title'
+		# 'title'
 	end
 
 	private
@@ -49,13 +50,14 @@ class WorkshopSearchService
 			active   = ActiveModel::Type::Boolean.new.cast(params[:active])   if params.key?(:active)
 			inactive = ActiveModel::Type::Boolean.new.cast(params[:inactive]) if params.key?(:inactive)
 
-			@workshops = if active && !inactive
-										 @workshops.published(true)
-									 elsif inactive && !active
-										 @workshops.published(false)
-									 else
-										 @workshops
-									 end
+			@workshops =
+				if active && !inactive
+					@workshops.published(true)
+				elsif inactive && !active
+					@workshops.published(false)
+				else
+					@workshops
+				end
 		else
 			@workshops = @workshops.published
 		end
@@ -83,17 +85,16 @@ class WorkshopSearchService
 
 	def filter_by_query
 		return unless params[:query].present?
-		# @workshops = search_by_query(@workshops, query: params[:query], sort: sort)
 
 		results = @workshops.search(params[:query]) # Use the SearchCop search scope directly on the relation
 
 		# If SearchCop returned an Array (e.g., because of scoring), convert back to Relation
 		if results.is_a?(Array)
 			ordered_ids = results.map(&:id)
-			# brakeman:ignore[SQL]
+			# brakeman:ignore[SQL] start
 			@workshops = Workshop.where(id: ordered_ids)
 													 .order(Arel.sql("FIELD(id, #{ordered_ids.join(',')})"))
-			# brakeman:enable[SQL]
+			# brakeman:ignore[SQL] end
 		else
 			@workshops = results
 		end
@@ -101,37 +102,19 @@ class WorkshopSearchService
 
 	# --- Search methods ---
 
-	# def search_by_query(workshops, query:, sort:) # defaulting to using SearchCop to avoid complex SQL
-	# 	return if query.blank?
-	#
-	# 	cols = %w[title full_name objective materials introduction demonstration opening_circle
-  #             warm_up creation closing notes tips misc1 misc2]
-	# 					 .map { |c| "workshops.#{Workshop.connection.quote_column_name(c)}" }.join(", ")
-	#
-	# 	terms = query.strip.split.map { |t| "#{t}*" }.join(" ")
-	# 	# brakeman:ignore[SQL] reason: Columns are hardcoded and not user-supplied.
-	# 	match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
-	#
-	# 	workshops = workshops.select(
-	# 		Workshop.send(:sanitize_sql_array, ["workshops.*, #{match_expr} AS all_score", terms])
-	# 	).where(match_expr, terms)
-	#
-	# 	# Order by keyword score
-	# 	workshops = workshops.order("all_score DESC") if sort == "keywords"
-	# 	workshops
-	# end
-
 	def search_by_author_name(workshops, author_name)
-		return workshops if author_name.empty?
-		author_name_sanitized = author_name.strip.gsub(/\s+/, '')
+		return workshops if author_name.blank?
+
+		sanitized = author_name.strip.gsub(/\s+/, '')
 		workshops.left_outer_joins(:user)
-							.where("LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
-											OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
-											OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
-											OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
-                      OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name",
-										 name: "%#{author_name_sanitized}%"
-								 )
+						 .where(
+							 "LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
+                OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
+                OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
+                OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
+                OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name",
+							 name: "%#{sanitized}%"
+						 )
 	end
 
 	def search_by_categories(workshops, categories)
@@ -158,15 +141,12 @@ class WorkshopSearchService
 			# order by year/month desc, then created_at desc, then title asc
 			@workshops = @workshops.order(
 				Arel.sql(<<~SQL.squish)
-      CASE
-        WHEN year IS NOT NULL AND month IS NOT NULL THEN 1
-        ELSE 2
-      END ASC,
-      year DESC,
-      month DESC,
-      created_at DESC,
-      title ASC
-    SQL
+          CASE WHEN year IS NOT NULL AND month IS NOT NULL THEN 1 ELSE 2 END ASC,
+          year DESC,
+          month DESC,
+          created_at DESC,
+          title ASC
+        SQL
 			)
 		when 'led'
 			@workshops = @workshops.order(led_count: :desc, title: :asc)
@@ -192,9 +172,9 @@ class WorkshopSearchService
 									 end
 
 		workshop_ids = @workshops.select(*sort_columns).pluck(:id)
-		# brakeman:ignore[SQL]
+		# brakeman:ignore[SQL] start
 		@workshops = Workshop.where(id: workshop_ids)
 												 .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
-		# brakeman:enable[SQL]
+		# brakeman:ignore[SQL] end
 	end
 end
