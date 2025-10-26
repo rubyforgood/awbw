@@ -22,23 +22,17 @@ class Bookmark < ApplicationRecord
                   SQL
                     .order(Arel.sql("COALESCE(workshops.title, resources.title, events.title) ASC")) # stories.title,
     when "led"
-      # Sort by number of bookmarks each object has (across all types)
-      subquery = select("bookmarkable_type, bookmarkable_id, COUNT(*) AS total_bookmarks")
-                   .group("bookmarkable_type, bookmarkable_id")
-      bookmarks = bookmarks
-                    .joins("INNER JOIN (#{subquery.to_sql}) AS counts ON
-                            counts.bookmarkable_type = bookmarks.bookmarkable_type AND
-                            counts.bookmarkable_id = bookmarks.bookmarkable_id")
-                    .order("counts.total_bookmarks DESC")
+      bookmarks = bookmarks.where(bookmarkable_type: "Workshop")
+                           .joins("INNER JOIN workshops ON bookmarks.bookmarkable_id = workshops.id")
+                           .order("workshops.led_count DESC")
     when "bookmark_count"
-      # Sort by number of bookmarks each object has (across all types)
-      subquery = select("bookmarkable_type, bookmarkable_id, COUNT(*) AS total_bookmarks")
-                   .group("bookmarkable_type, bookmarkable_id")
+      counts = bookmarks.group(:bookmarkable_type, :bookmarkable_id)
+                       .select(:bookmarkable_type, :bookmarkable_id, "COUNT(*) AS total_bookmarks")
       bookmarks = bookmarks
-                    .joins("INNER JOIN (#{subquery.to_sql}) AS counts ON
-                            counts.bookmarkable_type = bookmarks.bookmarkable_type AND
-                            counts.bookmarkable_id = bookmarks.bookmarkable_id")
-                    .order("counts.total_bookmarks DESC")
+                    .joins("LEFT JOIN (#{counts.to_sql}) AS counts
+                        ON counts.bookmarkable_type = bookmarks.bookmarkable_type
+                        AND counts.bookmarkable_id = bookmarks.bookmarkable_id")
+                    .order(Arel.sql("COALESCE(counts.total_bookmarks,0) DESC"))
     when "created"
       bookmarks = bookmarks.order(created_at: :desc)
     end
