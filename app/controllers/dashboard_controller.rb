@@ -2,10 +2,10 @@ class DashboardController < ApplicationController
   skip_before_action :authenticate_user!, only: :help
 
   def index
-    workshops = current_user.curriculum(Workshop)
-                            .featured
-                            .includes(:sectors)
-                            .decorate
+    workshops = Workshop.published
+                        .featured
+                        .includes(:sectors)
+                        .decorate
     @featured_workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
 
     @popular_resources = Resource.featured
