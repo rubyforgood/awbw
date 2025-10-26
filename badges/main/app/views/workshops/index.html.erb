@@ -8,7 +8,7 @@
   <div class="w-full">
     <div class="flex items-start justify-between mb-6">
       <div class="pr-6">
-        <h2 class="text-2xl font-semibold mb-2">Workshops</h2>
+        <h2 class="text-2xl font-semibold mb-2">Workshops (<%= @workshops_count %>)</h2>
         <p class="text-gray-700">
           Search by emotional theme, materials needed, ease of set-up and
           clean-up, and more.
@@ -51,6 +51,11 @@
 
       <div>
         <hr class="border-gray-300 my-6">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="filters-applied" style="display: flex; gap: 0.5rem; align-items: center;">
+            <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Workshops (<%= @workshops_count %>)</h3>
+          </div>
+        </div>
       </div>
 
       <!-- Workshops List -->

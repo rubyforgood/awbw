@@ -96,11 +96,20 @@ class Workshop < ApplicationRecord
 
   # Search Cop
   include SearchCop
-
   search_scope :search do
-    attributes :title
-    attributes category: ['categories.name']
-    attributes sector: ['sectors.name']
+    attributes all: [:title, :full_name, # no spanish alternatives
+
+                     :objective, :materials, :setup, :introduction,
+                     :demonstration, :opening_circle, :warm_up, :opening_circle,
+                     :creation, :closing, :notes, :tips, :misc1, :misc2,
+
+                     :objective_spanish, :materials_spanish, :setup_spanish, :introduction_spanish,
+                     :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish, :opening_circle_spanish,
+                     :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish, :misc2_spanish]
+    # attributes category: ["categories.name"]
+    # attributes sector: ["sectors.name"]
+    # attributes user: ["first_name", "last_name"]
+    options :all, type: :text, default: true#, default_operator: :or
   end
 
   def self.grouped_by_sector

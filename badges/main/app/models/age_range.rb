@@ -1,6 +1,8 @@
 class AgeRange < ApplicationRecord
   belongs_to :windows_type
 
+  validates :name, presence: true, uniqueness: true
+
   def self.create_defaults
     AgeRange.defaults.each do |windows, ranges|
       windows_type = WindowsType.find_by(name: windows)

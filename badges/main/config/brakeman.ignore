@@ -24,29 +24,6 @@
       "note": ""
     },
     {
-      "warning_type": "SQL Injection",
-      "warning_code": 0,
-      "fingerprint": "36232c6ba9e85d80db3c804cbf6c04430a975215eeddf1cf636a237cdc0a40ad",
-      "check_name": "SQL",
-      "message": "Possible SQL injection",
-      "file": "app/services/workshop_search_service.rb",
-      "line": 93,
-      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
-      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n \"workshops.#{Workshop.connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)}\"\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "WorkshopSearchService",
-        "method": "search_by_query"
-      },
-      "user_input": "Workshop.connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)",
-      "confidence": "High",
-      "cwe_id": [
-        89
-      ],
-      "note": ""
-    },
-    {
       "warning_type": "Remote Code Execution",
       "warning_code": 24,
       "fingerprint": "59ffdfd50cdef491cfd47d69eaa3edc1d3a291661c75c5f1b10c7afa173581af",
@@ -70,6 +47,29 @@
       "note": ""
     },
     {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "a724323441f79b7912916ff769f3e8f0ae3a3e5f55c5f30a8283d6653f84c95e",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/workshop_search_service.rb",
+      "line": 95,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "Arel.sql(\"FIELD(id, #{search_by_sectors(search_by_categories(search_by_author_name((Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published or (Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published(true) or if ActiveModel::Type::Boolean.new.cast(params[:inactive]) and (not ActiveModel::Type::Boolean.new.cast(params[:active])) then\n  Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published(false)\nelse\n  Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i))\nend)), params[:author_name]), params[:categories]), params[:sectors]).title(params[:title]).search(params[:query]).map(&:id).join(\",\")})\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "WorkshopSearchService",
+        "method": "filter_by_query"
+      },
+      "user_input": "params[:query]",
+      "confidence": "High",
+      "cwe_id": [
+        89
+      ],
+      "note": ""
+    },
+    {
       "warning_type": "Mass Assignment",
       "warning_code": 70,
       "fingerprint": "abea946803acd0f0fe12c3bcd54e9b5b04d04f78ff6672e38a6cb8db02e3b5eb",
@@ -89,40 +89,6 @@
       "confidence": "Medium",
       "cwe_id": [
         915
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "Cross-Site Scripting",
-      "warning_code": 2,
-      "fingerprint": "b10de889c20028842db9a1821e6214044ff9adf7cd90f2ee6621a66c9c03a162",
-      "check_name": "CrossSiteScripting",
-      "message": "Unescaped model attribute",
-      "file": "app/views/workshop_variations/show.html.erb",
-      "line": 16,
-      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
-      "code": "WorkshopVariation.find(params[:id]).decorate.display_code",
-      "render_path": [
-        {
-          "type": "controller",
-          "class": "WorkshopVariationsController",
-          "method": "show",
-          "line": 43,
-          "file": "app/controllers/workshop_variations_controller.rb",
-          "rendered": {
-            "name": "workshop_variations/show",
-            "file": "app/views/workshop_variations/show.html.erb"
-          }
-        }
-      ],
-      "location": {
-        "type": "template",
-        "template": "workshop_variations/show"
-      },
-      "user_input": null,
-      "confidence": "High",
-      "cwe_id": [
-        79
       ],
       "note": ""
     }
