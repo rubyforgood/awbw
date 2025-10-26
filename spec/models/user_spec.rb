@@ -51,7 +51,7 @@ RSpec.describe User do
     # it { should validate_length_of(:password).is_at_least(Devise.password_length.first).is_at_most(Devise.password_length.last) }
 
     # Manual presence tests (using build is fine here)
-    let(:user) { build(:user) } 
+    let(:user) { build(:user) }
     it 'is valid with valid attributes' do
       expect(user).to be_valid
     end
@@ -115,7 +115,7 @@ RSpec.describe User do
 
   describe '#full_name' do
     # These tests remain relevant
-    let(:user) { build(:user) } 
+    let(:user) { build(:user) }
     context 'when first_name is present' do
       it 'returns the full name' do
         user.first_name = "John"
@@ -155,4 +155,4 @@ RSpec.describe User do
 
   # Add tests for other methods like #active_for_authentication?, #has_liaison_position_for?, etc.
   # Test callbacks like :set_default_values, :before_destroy
-end 
+end

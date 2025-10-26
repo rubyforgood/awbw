@@ -33,7 +33,8 @@ class User < ApplicationRecord
   accepts_nested_attributes_for :project_users, reject_if: :all_blank, allow_destroy: true
 
   # Validations
-  # validates :first_name, :last_name, presence: true
+  validates :first_name, :last_name, presence: true
+  validates :email, presence: true, uniqueness: { case_sensitive: false }
 
   after_create :set_default_values
 
@@ -42,6 +43,21 @@ class User < ApplicationRecord
     orphaned_user.reports << record.reports unless record.reports.nil?
     orphaned_user.workshop_logs << record.workshop_logs unless record.workshop_logs.nil?
   }
+
+  # Search Cop
+  include SearchCop
+  search_scope :search do
+    attributes [:email, :first_name, :last_name, :phone]
+    attributes user: "projects.name"
+  end
+
+  def self.search_by_params(params)
+    results = User.all
+    results = results.search(params[:search]) if params[:search].present?
+    results = results.where(super_user: params[:super_user]) if params[:super_user].present?
+    results = results.where(inactive: params[:inactive]) if params[:inactive].present?
+    results
+  end
 
   def has_liasion_position_for?(project_id)
     !project_users.where(project_id: project_id, position: 1).first.nil?
@@ -149,11 +165,12 @@ class User < ApplicationRecord
   end
 
   def set_default_values
-    update(inactive: false)
+    self.inactive = false if inactive.nil?
+    self.confirmed = true if confirmed.nil?
+
     combined_perm = Permission.find_by(security_cat: "Combined Adult and Children's Windows")
     adult_perm = Permission.find_by(security_cat: "Adult Windows")
     children_perm = Permission.find_by(security_cat: "Children's Windows")
-
 
     self.permissions << combined_perm
     self.permissions << adult_perm
