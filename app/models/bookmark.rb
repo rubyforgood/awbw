@@ -54,13 +54,13 @@ class Bookmark < ApplicationRecord
       title = "%#{params[:title]}%"
       bookmarks = bookmarks.joins(<<~SQL)
         LEFT JOIN workshops ON workshops.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'
-        LEFT JOIN stories   ON stories.id   = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
+--      LEFT JOIN stories   ON stories.id   = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
         LEFT JOIN resources ON resources.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
         LEFT JOIN events    ON events.id    = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
       SQL
 
       bookmarks = bookmarks.where(
-        "workshops.title ILIKE :title OR events.title ILIKE :title OR resources.title ILIKE :title OR stories.title ILIKE :title",
+        "workshops.title LIKE :title OR events.title LIKE :title OR resources.title LIKE :title", # OR stories.title LIKE :title
         title: title
       )
     end
