@@ -3,9 +3,9 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :recoverable,
          :rememberable, :trackable, :validatable
-  # Avatar
-  has_attached_file :avatar, styles: { medium: "300x300>", thumb: "100x100>" }, default_url: "/images/missing.png"
-  validates_attachment_content_type :avatar, content_type: /\Aimage\/.*\z/
+
+  after_create :set_default_values
+  before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Associations
   belongs_to :facilitator, optional: true
@@ -28,20 +28,32 @@ class User < ApplicationRecord
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
   has_many :notifications, as: :noticeable
 
+  # Avatar
+  has_attached_file :avatar, styles: { medium: "300x300>", thumb: "100x100>" }, default_url: "/images/missing.png"
+  validates_attachment_content_type :avatar, content_type: /\Aimage\/.*\z/
+
   # Nested
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :project_users, reject_if: :all_blank, allow_destroy: true
 
   # Validations
-  # validates :first_name, :last_name, presence: true
+  validates :first_name, :last_name, presence: true
+  validates :email, presence: true, uniqueness: { case_sensitive: false }
 
-  after_create :set_default_values
+  # Search Cop
+  include SearchCop
+  search_scope :search do
+    attributes [:email, :first_name, :last_name, :phone]
+    attributes user: "projects.name"
+  end
 
-  before_destroy { |record|
-    orphaned_user = User.find_by(email: "orphaned_reports@awbw.org")
-    orphaned_user.reports << record.reports unless record.reports.nil?
-    orphaned_user.workshop_logs << record.workshop_logs unless record.workshop_logs.nil?
-  }
+  def self.search_by_params(params)
+    results = User.all
+    results = results.search(params[:search]) if params[:search].present?
+    results = results.where(super_user: params[:super_user]) if params[:super_user].present?
+    results = results.where(inactive: params[:inactive]) if params[:inactive].present?
+    results
+  end
 
   def has_liasion_position_for?(project_id)
     !project_users.where(project_id: project_id, position: 1).first.nil?
@@ -149,14 +161,26 @@ class User < ApplicationRecord
   end
 
   def set_default_values
-    update(inactive: false)
+    self.inactive = false if inactive.nil?
+    self.confirmed = true if confirmed.nil?
+
     combined_perm = Permission.find_by(security_cat: "Combined Adult and Children's Windows")
     adult_perm = Permission.find_by(security_cat: "Adult Windows")
     children_perm = Permission.find_by(security_cat: "Children's Windows")
 
-
     self.permissions << combined_perm
     self.permissions << adult_perm
     self.permissions << children_perm
+  end
+
+  def reassign_reports_and_logs_to_orphaned_user
+    orphaned_user = User.find_by(email: "orphaned_reports@awbw.org")
+    return unless orphaned_user
+
+    # Reassign reports
+    reports.update_all(user_id: orphaned_user.id)
+
+    # Reassign workshop_logs
+    workshop_logs.update_all(user_id: orphaned_user.id)
   end
 end

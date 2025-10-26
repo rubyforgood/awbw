@@ -16,7 +16,10 @@
       <% if devise_mapping.rememberable? %>
         <%= f.input :remember_me, as: :boolean, label: "Remember me" %>
       <% end %>
-      <%= f.button :submit, "Log in", class: "w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg" %>
+      <div class="text-center">
+        <%= f.button :submit, "Log in", class: "btn btn-primary" %>
+      </div>
+
     <% end %>
     <div class="mt-6 text-center">
       <%= render "devise/shared/links" %>

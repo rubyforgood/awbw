@@ -1,101 +1,142 @@
-<%= simple_form_for @user, html: { multipart: true } do |f| %>
+<%= simple_form_for @user, html: { multipart: true, class: "space-y-8" } do |f| %>
   <%= render 'shared/errors', resource: user if user.errors.any? %>
-  <div class="row">
-    <div class="col-md-6">
-      <%= f.label :avatar, class: 'bold' %>
-      <%= image_tag user.avatar.url(:thumb), class: "img-rounded avatar" %>
-      <%= f.file_field :avatar %>
+
+  <!-- Basic Info + Avatar -->
+  <!-- Container -->
+  <div class="flex gap-8 items-start">
+    <!-- LEFT COLUMN: 75% -->
+    <div class="flex-1" style="flex: 0 0 75%;">
+      <div class="space-y-6">
+        <div class="flex flex-col md:flex-row gap-4">
+          <%= f.input :first_name, input_html: { class: "w-full" }, wrapper_html: { class: "w-full" } %>
+          <%= f.input :last_name, input_html: { class: "w-full" }, wrapper_html: { class: "w-full" } %>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4">
+          <%= f.input :email, input_html: { class: "w-full" }, wrapper_html: { class: "w-full" } %>
+          <div class="w-full md:w-auto">
+            <%= f.label :birthday, "Birthday", required: true, class: "block font-medium mb-1" %>
+            <%= f.text_field :birthday, type: 'date',
+                             class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                             value: @user.birthday&.strftime('%Y-%m-%d'),
+                             required: true,
+                             autocomplete: "bday" %>
+          </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4">
+          <%= f.input :inactive %>
+          <%= f.input :super_user %>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4">
+          <%= f.input :phone %>
+          <%= f.input :phone2 %>
+          <%= f.input :phone3 %>
+          <%= f.input :best_time_to_call %>
+        </div>
+      </div>
     </div>
-    <div class="col-md-6">
-      <%= f.input :super_user, as: :boolean %>
+
+    <!-- RIGHT COLUMN: 25% -->
+    <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
+      <%= f.label :avatar, class: "block font-medium mb-1 text-gray-700 string required" %>
+
+      <% if @user.avatar.present? %>
+        <%= image_tag @user.avatar.url(:thumb),
+                      id: "avatar-preview",
+                      class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm" %>
+      <% else %>
+        <%= image_tag "missing.png",
+                      id: "avatar-preview",
+                      class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
+      <% end %>
+      <div id="avatar-filename" class="text-center text-sm text-gray-500">
+        <%= @user.avatar_file_name %>
+      </div>
+
+      <div class="relative w-36">
+        <%= f.file_field :avatar, id: "avatar-input",
+                         class: "absolute inset-0 w-full h-full opacity-0 cursor-pointer" %>
+        <button type="button"
+                class="w-full py-2 px-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50">
+          Choose file
+        </button>
+      </div>
     </div>
   </div>
 
-
-  <div class="row">
-    <div class="col-md-6">
-      <%= f.input :email %>
-    </div>
-    <div class="col-md-6">
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6">
-      <%= f.input :first_name %>
-    </div>
-    <div class="col-md-6">
-      <%= f.input :last_name %>
-    </div>
+  <!-- Primary Address Choice -->
+  <div class="flex flex-col md:flex-row gap-4">
+    <%= f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %>
   </div>
 
-
-
-  <div class="row">
-    <div class="col-md-3">
-      <%= f.input :phone, label: 'Work phone' %>
-    </div>
-    <div class="col-md-3">
-      <%= f.input :phone2, label: 'Home phone' %>
-    </div>
-    <div class="col-md-3">
-      <%= f.input :phone3, value: 'Cell phone' %>
-    </div>
-    <div class="col-md-3">
-      <%= f.input :best_time_to_call %>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-6">
-      <%= f.input :primary_address, collection: [['work', 1], ['home', 2]] %>
-    </div>
-    <div class="col-md-6">
-
-    </div>
-  </div>
-
-  <div class="row">
-    <label class="bold">Work Address</label>
-    <div class="col-md-3">
-      <%= f.input :address, value: 'Street' %>
-    </div>
-    <div class="col-md-3">
-      <%= f.input :city %>
-    </div>
-    <div class="col-md-3">
+  <!-- Work Address -->
+  <div>
+    <h3 class="font-semibold text-gray-700 mb-2">Work Address</h3>
+    <div class="flex flex-col md:flex-row gap-6 w-full">
+      <%= f.input :address, label: 'Street', as: :text, input_html: { rows: 1 } %>
+      <%= f.input :city, as: :text, input_html: { rows: 1 } %>
       <%= f.input :state %>
-    </div>
-    <div class="col-md-3">
       <%= f.input :zip %>
     </div>
   </div>
 
-
-  <div class="row">
-    <label class="bold">Home Address</label>
-    <div class="col-md-3">
-      <%= f.input :address2, value: 'street' %>
-    </div>
-    <div class="col-md-3">
-      <%= f.input :city2 %>
-    </div>
-    <div class="col-md-3">
+  <!-- Home Address -->
+  <div>
+    <h3 class="font-semibold text-gray-700 mb-2">Home Address</h3>
+    <div class="flex flex-col md:flex-row gap-6 w-full">
+      <%= f.input :address2, label: 'Street2', as: :text, input_html: { rows: 1 } %>
+      <%= f.input :city2, as: :text, input_html: { rows: 1 } %>
       <%= f.input :state2 %>
-    </div>
-    <div class="col-md-3">
       <%= f.input :zip2 %>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-md-12">
-      <%= f.input :notes, as: :text, input_html: { rows: 2 } %>
-    </div>
+  <!-- Notes -->
+  <div>
+    <%= f.input :notes, as: :text, input_html: { rows: 3, class: "w-full" } %>
   </div>
 
-  <%= link_to "Delete", @user, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
-  <%= link_to 'Cancel', users_path, class: "btn btn-secondary-outline" %>
-  <%= f.submit 'Submit',
-               class: "px-4 py-2 border border-blue-600 hover:text-gray-600 hover:bg-white
-                 rounded-lg bg-blue-600 text-white text-sm font-medium" %>
-<% end %> 
+  <!-- Actions -->
+  <!-- Action buttons -->
+  <div class="mt-6 flex flex-wrap gap-3">
+    <% if @user.persisted? %>
+      <%= link_to "Delete", @user,
+                  method: :delete,
+                  data: { confirm: "Are you sure?" },
+                  class: "btn btn-danger-outline" %>
+    <% end %>
+
+    <%= link_to 'Cancel', users_path,
+                class: "btn btn-secondary-outline" %>
+
+    <%= f.submit 'Submit',
+                 class: "btn btn-primary" %>
+  </div>
+<% end %>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const input = document.getElementById("avatar-input");
+        const filenameDisplay = document.getElementById("avatar-filename");
+
+        input.addEventListener("change", function() {
+            if (input.files.length > 0) {
+                filenameDisplay.textContent = input.files[0].name;
+
+                // preview the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById("avatar-preview");
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                filenameDisplay.textContent = "";
+            }
+        });
+    });
+</script>
+

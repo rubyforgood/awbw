@@ -8,6 +8,7 @@ end
 
 Admin.create!(first_name: "Amy", last_name: "Admin", email: "amy.admin@example.com", password: "password")
 User.create!(first_name: "Umberto", last_name: "User", email: "umberto.user@example.com", password: "password")
+User.create!(first_name: "Orphaned Reports", last_name: "User", email: "orphaned_reports@awbw.org", password: "password")
 
 adult_type = WindowsType.where(name: "ADULT WORKSHOP").first_or_create!
 childrens_type = WindowsType.where(name: "CHILDREN WORKSHOP").first_or_create!

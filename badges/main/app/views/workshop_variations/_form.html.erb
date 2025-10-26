@@ -19,37 +19,37 @@
                   collection: @workshops,
                   required: true,
                   prompt: "Select a Workshop",
-                  input_html: { class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+                  input_html: { class: "w-full" } %>
     <% end %>
   </div>
 
   <!-- Variation fields -->
   <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
     <div>
-      <%= f.input :name, label: "Variation name", input_html: { class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= f.input :name, label: "Variation name", input_html: { class: "w-full" } %>
 
       <%= f.input :code,
                   as: :text,
                   required: true,
                   label: "Share a little bit about your workshop variation, how you modified the workshop to fit your population/setting/facilitation style, and/or anything about how the workshop was received by participants, things you would do differently next time, etc.",
-                  input_html: { rows: 10, class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+                  input_html: { rows: 10, class: "w-full" } %>
 
       <%= f.input :reference_url,
                   label: "Reference url <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
                   hint: "Link to any external resource (e.g., a blog post, video, or website) that showcases or provides more information.",
-                  input_html: { class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+                  input_html: { class: "w-full" } %>
     </div>
 
     <% if current_user.super_user? %>
       <div class="flex items-start gap-6 bg-blue-50 p-4 rounded-lg">
         <%= f.input :inactive, as: :boolean, label: "Not published?", input_html: { checked: f.object.id ? f.object.inactive : false } %>
 
-        <%= f.input :ordering, as: :integer, label: "Ordering", input_html: { class: "w-24 border border-gray-300 rounded-lg px-2 py-1 focus:ring-blue-500 focus:border-blue-500" } %>
+        <%= f.input :ordering, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
 
         <%= f.input :created_by, as: :select,
                     collection: User.order(:first_name, :last_name),
                     selected: (f.object.created_by_id || current_user.id),
-                    input_html: { class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+                    input_html: { class: "w-full rounded-lg px-3 py-2" } %>
       </div>
     <% else %>
       <%= f.hidden_field :created_by_id, value: current_user.id %>
