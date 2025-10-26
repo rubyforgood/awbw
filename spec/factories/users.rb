@@ -41,5 +41,14 @@ FactoryBot.define do
     # avatar_file_size { 1 }
     # avatar_updated_at { "2025-10-25 22:57:35" }
     # subscribecode { "MyString" }
+
+    trait :admin do
+      super_user { true }
+    end
+
+    trait :orphaned_reports do
+      email { "orphaned_reports@awbw.org" }
+      super_user { true }
+    end
   end
 end
