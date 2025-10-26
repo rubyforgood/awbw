@@ -90,8 +90,10 @@ class WorkshopSearchService
 		# If SearchCop returned an Array (e.g., because of scoring), convert back to Relation
 		if results.is_a?(Array)
 			ordered_ids = results.map(&:id)
+			# brakeman:ignore[SQL]
 			@workshops = Workshop.where(id: ordered_ids)
-													 .order(Arel.sql("FIELD(id, #{ordered_ids.join(',')})")) # brakeman:ignore[SQL] safe array of IDs
+													 .order(Arel.sql("FIELD(id, #{ordered_ids.join(',')})"))
+			# brakeman:enable[SQL]
 		else
 			@workshops = results
 		end
@@ -190,7 +192,9 @@ class WorkshopSearchService
 									 end
 
 		workshop_ids = @workshops.select(*sort_columns).pluck(:id)
+		# brakeman:ignore[SQL]
 		@workshops = Workshop.where(id: workshop_ids)
-												 .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})")) # brakeman:ignore[SQL] safe array of IDs
+												 .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
+		# brakeman:enable[SQL]
 	end
 end
