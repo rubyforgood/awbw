@@ -8,7 +8,8 @@
       <%= f.select :month_and_year, @month_year_options,
                    { include_blank: "All months",
                      selected: params[:month_and_year] },
-                   class: "form-select form-select-sm" %>
+                   class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
     </div>
 
     <div class="col-auto">
@@ -16,7 +17,8 @@
       <%= f.select :year, @year_options,
                    { include_blank: "All years",
                      selected: params[:year] },
-                   class: "form-select form-select-sm" %>
+                   class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
     </div>
 
 <!--    <div class="col-auto">-->
@@ -32,7 +34,8 @@
       <%= f.collection_select :user_id, @facilitators, :id, :name,
                               { include_blank: "All facilitators",
                                 selected: params[:user_id] },
-                              class: "form-select form-select-sm" %>
+                              class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
     </div>
   </div>
 <% end %>

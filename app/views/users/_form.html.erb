@@ -46,14 +46,14 @@
         <%= image_tag @user.avatar.url(:thumb),
                       id: "avatar-preview",
                       class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm" %>
-        <div id="avatar-filename" class="text-center text-sm text-gray-500">
-          <%= @user.avatar_file_name %>
-        </div>
       <% else %>
         <%= image_tag "missing.png",
                       id: "avatar-preview",
                       class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
       <% end %>
+      <div id="avatar-filename" class="text-center text-sm text-gray-500">
+        <%= @user.avatar_file_name %>
+      </div>
 
       <div class="relative w-36">
         <%= f.file_field :avatar, id: "avatar-input",
