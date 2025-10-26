@@ -22,22 +22,12 @@ RSpec.describe "users/new", type: :view do
       best_time_to_call: "MyString",
       comment: "MyText",
       notes: "MyText",
-      confirmed: false,
       inactive: false,
       legacy: false,
-      legacy_id: 1,
       super_user: false,
-      agency_id: 1,
-      facilitator_id: "",
-      created_by_id: 1,
-      updated_by_id: 1,
-      reset_password_token: "MyString",
       sign_in_count: 1,
       current_sign_in_ip: "MyString",
       last_sign_in_ip: "MyString",
-      avatar_file_name: "MyString",
-      avatar_content_type: "MyString",
-      avatar_file_size: 1,
       subscribecode: "MyString"
     ))
   end
