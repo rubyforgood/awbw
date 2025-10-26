@@ -11,6 +11,8 @@ class WorkshopsController < ApplicationController
                                          :workshop_age_ranges, :bookmarks)
                                .paginate(page: params[:page], per_page: params[:per_page] || 50)
 
+    @workshops_count = search_service.workshops.size
+
     @category_metadata = Metadatum.published.includes(:categories).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
@@ -166,6 +168,8 @@ class WorkshopsController < ApplicationController
   def set_form_variables
     @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
     image = @workshop.images.first || @workshop.images.build # build an image if there isn't one
+
+    @age_ranges = AgeRange.all
   end
 
   def workshops_per_page

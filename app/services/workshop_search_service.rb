@@ -20,7 +20,7 @@ class WorkshopSearchService
 	# Compute the effective sort
 	def default_sort
 		return params[:sort] if params[:sort].present?
-		return 'keywords' if params[:query].present?
+		# return 'keywords' if params[:query].present? # only when returning weighted results from # search_by_query
 		'title'
 	end
 
@@ -31,6 +31,7 @@ class WorkshopSearchService
 	def filter_by_params
 		filter_by_windows_type
 		filter_by_published_status
+		filter_by_author_name
 		filter_by_categories
 		filter_by_sectors
 		filter_by_title
@@ -60,6 +61,11 @@ class WorkshopSearchService
 		end
 	end
 
+	def filter_by_author_name
+		return unless params[:author_name].present?
+		@workshops = search_by_author_name(@workshops, params[:author_name])
+	end
+
 	def filter_by_categories
 		return unless params[:categories].present?
 		@workshops = search_by_categories(@workshops, params[:categories])
@@ -77,29 +83,53 @@ class WorkshopSearchService
 
 	def filter_by_query
 		return unless params[:query].present?
-		@workshops = search_by_query(@workshops, query: params[:query], sort: sort)
+		# @workshops = search_by_query(@workshops, query: params[:query], sort: sort)
+
+		results = @workshops.search(params[:query]) # Use the SearchCop search scope directly on the relation
+
+		# If SearchCop returned an Array (e.g., because of scoring), convert back to Relation
+		if results.is_a?(Array)
+			ordered_ids = results.map(&:id)
+			@workshops = Workshop.where(id: ordered_ids)
+													 .order(Arel.sql("FIELD(id, #{ordered_ids.join(',')})"))
+		else
+			@workshops = results
+		end
 	end
 
 	# --- Search methods ---
 
-	def search_by_query(workshops, query:, sort:)
-		return if query.blank?
+	# def search_by_query(workshops, query:, sort:) # defaulting to using SearchCop to avoid complex SQL
+	# 	return if query.blank?
+	#
+	# 	cols = %w[title full_name objective materials introduction demonstration opening_circle
+  #             warm_up creation closing notes tips misc1 misc2]
+	# 					 .map { |c| "workshops.#{Workshop.connection.quote_column_name(c)}" }.join(", ")
+	#
+	# 	terms = query.strip.split.map { |t| "#{t}*" }.join(" ")
+	# 	# brakeman:ignore[SQL] reason: Columns are hardcoded and not user-supplied.
+	# 	match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
+	#
+	# 	workshops = workshops.select(
+	# 		Workshop.send(:sanitize_sql_array, ["workshops.*, #{match_expr} AS all_score", terms])
+	# 	).where(match_expr, terms)
+	#
+	# 	# Order by keyword score
+	# 	workshops = workshops.order("all_score DESC") if sort == "keywords"
+	# 	workshops
+	# end
 
-		cols = %w[title full_name objective materials introduction demonstration opening_circle
-              warm_up creation closing notes tips misc1 misc2]
-						 .map { |c| "workshops.#{Workshop.connection.quote_column_name(c)}" }.join(", ")
-
-		terms = query.strip.split.map { |t| "#{t}*" }.join(" ")
-		# brakeman:ignore[SQL] reason: Columns are hardcoded and not user-supplied.
-		match_expr = Arel.sql("MATCH(#{cols}) AGAINST(? IN BOOLEAN MODE)")
-
-		workshops = workshops.select(
-			Workshop.send(:sanitize_sql_array, ["workshops.*, #{match_expr} AS all_score", terms])
-		).where(match_expr, terms)
-
-		# Order by keyword score
-		workshops = workshops.order("all_score DESC") if sort == "keywords"
-		workshops
+	def search_by_author_name(workshops, author_name)
+		return workshops if author_name.empty?
+		author_name_sanitized = author_name.strip.gsub(/\s+/, '')
+		workshops.left_outer_joins(:user)
+							.where("LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
+											OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
+											OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
+											OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
+                      OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name",
+										 name: "%#{author_name_sanitized}%"
+								 )
 	end
 
 	def search_by_categories(workshops, categories)
@@ -159,7 +189,7 @@ class WorkshopSearchService
 									 else [:id, :title]
 									 end
 
-		workshop_ids = @workshops.select(*sort_columns).map(&:id)
+		workshop_ids = @workshops.select(*sort_columns).pluck(:id)
 		@workshops = Workshop.where(id: workshop_ids)
 												 .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
 	end

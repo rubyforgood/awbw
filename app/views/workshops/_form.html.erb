@@ -55,10 +55,12 @@
                       collection: User.order(:last_name, :first_name),
                       input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
         </div>
+      <% else %>
+        <%= f.hidden_field :user_id, value: current_user&.id %>
       <% end %>
 
       <%= f.input :age_range, as: :select,
-                  collection: AgeRange.pluck(:name).sort_by(&:first),
+                  collection: @age_ranges,
                   input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
     </div>
 
@@ -243,7 +245,7 @@
     <div class="flex gap-x-3 mt-6">
       <%= link_to "Delete", @workshop, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
       <%= link_to "Cancel", (action_name == "share_idea" ? authenticated_root_path : workshops_path), class: "btn btn-secondary-outline" %>
-      <%= f.submit "Submit", class: "px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium" %>
+      <%= f.submit "Submit", class: "btn btn-primary" %>
     </div>
   <% end %>
 </div>

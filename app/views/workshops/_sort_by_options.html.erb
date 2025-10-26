@@ -10,7 +10,7 @@
 <div class="flex items-center gap-1">
   <label class="flex items-center gap-1 cursor-pointer">
     <%= radio_button_tag :sort, "title",
-                         @sort == "title",
+                         @sort == "title" || !params[:sort].present?,
                          onclick: "$('form').submit();" %>
     <span class="text-sm">Title</span>
   </label>
@@ -25,13 +25,13 @@
   </label>
 </div>
 
-<% if params[:query].present? %>
-  <div class="flex items-center gap-1">
-    <label class="flex items-center gap-1 cursor-pointer">
-      <%= radio_button_tag :sort, "keywords",
-                           @sort == "keywords" || (!params[:sort].present? && params[:query].present?),
+<%# if params[:query].present? %>
+<!--  <div class="flex items-center gap-1">-->
+<!--    <label class="flex items-center gap-1 cursor-pointer">-->
+      <%#= radio_button_tag :sort, "keywords",
+                           @sort == "keywords", # || (!params[:sort].present? && params[:query].present?),
                            onclick: "$('form').submit();" %>
-      <span class="text-sm">Keyword match</span>
-    </label>
-  </div>
-<% end %>
+<!--      <span class="text-sm">Keyword match</span>-->
+<!--    </label>-->
+<!--  </div>-->
+<%# end %>
