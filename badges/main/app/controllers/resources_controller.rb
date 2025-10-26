@@ -1,12 +1,14 @@
 class ResourcesController < ApplicationController
 
   def index
-    @resources = current_user.curriculum(Resource)
-                             .includes(:images, :attachments)
-                             .search(params)
-                             .by_created
-                             .paginate(page: params[:page], per_page: 24)
+    unpaginated = Resource.where(kind: ['Template','Handout', 'Scholarship',
+                                        'Toolkit', 'Form', 'Resource', 'Story']) #TODO - #FIXME brittle
+                          .includes(:images, :attachments)
+                          .search_by_params(params)
+                          .by_created
+    @resources = unpaginated.paginate(page: params[:page], per_page: 24)
 
+    @resources_count = unpaginated.size
     @sortable_fields = Resource::KINDS
 
     respond_to do |format|

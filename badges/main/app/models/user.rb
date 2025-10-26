@@ -124,14 +124,6 @@ class User < ApplicationRecord
     result
   end
 
-  def curriculum(klass = Workshop)
-    results = super_user? ? klass.all : klass.where(inactive: false)
-    results = results.where(kind: ['Template','Handout', 'Scholarship',
-                                   'Toolkit', 'Form', 'Resource', 'Story']) if klass == Resource
-
-    results
-  end
-
   def name
     return email if !first_name || first_name.empty?
     "#{first_name} #{last_name}"

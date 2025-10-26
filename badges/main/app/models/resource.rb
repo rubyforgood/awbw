@@ -54,6 +54,7 @@ class Resource < ApplicationRecord
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
   scope :theme, -> { where(kind: "Theme") }
+  scope :title, -> (title) { where("title like ?", "%#{ title }%") }
   scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
   scope :leader_spotlight, -> { where(kind: "LeaderSpotlight") }
 
@@ -108,14 +109,16 @@ class Resource < ApplicationRecord
     created_at.month
   end
 
-  def self.search(params)
+  def self.search_by_params(params)
     resources = all
-    resources = resources.where('title like ?', "%#{params[:query]}%") if params[:title].present?
+    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
+    resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.where('kind like ?', "%#{params[:kind]}%") if params[:kind].present?
     resources = resources.where(inactive: params[:published] == "true" ? false : true) if params[:published].present?
     resources = resources.where(featured: params[:featured]) if params[:featured].present?
     resources
   end
+
   private
   def self.reject?(resource)
     resource['_create'] == '0'
