@@ -3,9 +3,9 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :recoverable,
          :rememberable, :trackable, :validatable
-  # Avatar
-  has_attached_file :avatar, styles: { medium: "300x300>", thumb: "100x100>" }, default_url: "/images/missing.png"
-  validates_attachment_content_type :avatar, content_type: /\Aimage\/.*\z/
+
+  after_create :set_default_values
+  before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Associations
   belongs_to :facilitator, optional: true
@@ -28,6 +28,10 @@ class User < ApplicationRecord
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
   has_many :notifications, as: :noticeable
 
+  # Avatar
+  has_attached_file :avatar, styles: { medium: "300x300>", thumb: "100x100>" }, default_url: "/images/missing.png"
+  validates_attachment_content_type :avatar, content_type: /\Aimage\/.*\z/
+
   # Nested
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :project_users, reject_if: :all_blank, allow_destroy: true
@@ -35,14 +39,6 @@ class User < ApplicationRecord
   # Validations
   validates :first_name, :last_name, presence: true
   validates :email, presence: true, uniqueness: { case_sensitive: false }
-
-  after_create :set_default_values
-
-  before_destroy { |record|
-    orphaned_user = User.find_by(email: "orphaned_reports@awbw.org")
-    orphaned_user.reports << record.reports unless record.reports.nil?
-    orphaned_user.workshop_logs << record.workshop_logs unless record.workshop_logs.nil?
-  }
 
   # Search Cop
   include SearchCop
@@ -175,5 +171,16 @@ class User < ApplicationRecord
     self.permissions << combined_perm
     self.permissions << adult_perm
     self.permissions << children_perm
+  end
+
+  def reassign_reports_and_logs_to_orphaned_user
+    orphaned_user = User.find_by(email: "orphaned_reports@awbw.org")
+    return unless orphaned_user
+
+    # Reassign reports
+    reports.update_all(user_id: orphaned_user.id)
+
+    # Reassign workshop_logs
+    workshop_logs.update_all(user_id: orphaned_user.id)
   end
 end
