@@ -191,6 +191,6 @@ class WorkshopSearchService
 
 		workshop_ids = @workshops.select(*sort_columns).pluck(:id)
 		@workshops = Workshop.where(id: workshop_ids)
-												 .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
+												 .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})")) # brakeman:ignore[SQL] safe array of IDs
 	end
 end
