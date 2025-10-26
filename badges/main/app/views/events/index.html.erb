@@ -33,10 +33,15 @@
         <div class="relative bg-white border border-gray-200 rounded-xl shadow hover:shadow-md transition p-4 flex flex-col">
           <!-- Event Title -->
           <h3 class="text-lg font-semibold text-gray-900 mb-2">
-            <%= link_to "#{ event.title}#{ " [HIDDEN]" if current_user.super_user? && !event.publicly_visible }",
-                        event_path(event),
-                        class: "text-gray-900 hover:underline font-medium block" %>
+            <div class="flex items-center space-x-2">
+              <!-- Bookmark icon -->
+              <%= render "bookmarks/editable_bookmark_icon", resource: event %>
 
+              <!-- Title link -->
+              <%= link_to "#{event.title}#{ ' [HIDDEN]' if current_user.super_user? && !event.publicly_visible }",
+                          event_path(event),
+                          class: "text-gray-900 hover:underline font-medium" %>
+            </div>
           </h3>
           <% if event.event_registrations.where(email: current_user.email).exists? %>
             <span class="absolute top-2 right-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
@@ -57,7 +62,9 @@
           <div class="mt-3 flex gap-2">
             <!-- Admin Edit -->
             <% if current_user.super_user %>
-              <%= link_to 'Edit', edit_event_path(event), class: "btn btn-secondary-outline" %>
+              <div class="mt-2">
+                <%= link_to 'Edit', edit_event_path(event), class: "btn btn-secondary-outline" %>
+              </div>
             <% end %>
 
             <% if event.event_registrations.where(email: current_user.email).exists? %>

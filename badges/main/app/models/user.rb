@@ -10,13 +10,13 @@ class User < ApplicationRecord
   # Associations
   belongs_to :facilitator, optional: true
   has_many :workshops
-
-  # has_many :curriculum_workshops, -> (user) {  }, class_name: 'Workshop'
   has_many :workshop_logs
   has_many :reports
   has_many :communal_reports, through: :projects, source: :reports
   has_many :bookmarks, dependent: :destroy
   has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: 'Workshop'
+  has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: 'Resource'
+  has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: 'Event'
   has_many :project_users, dependent: :destroy
   has_many :projects, through: :project_users
   has_many :windows_types, through: :projects
@@ -141,12 +141,13 @@ class User < ApplicationRecord
    agency ? agency.name : 'No agency.'
   end
 
-  def has_bookmarked_workshop?(workshop)
-    bookmarked_workshop_ids.include?(workshop.id)
+  def has_bookmarkable?(bookmarkable, type: nil)
+    bookmarkable_ids(bookmarkable_type: type || bookmarkable.object.class.name).include?(bookmarkable.id)
   end
 
-  def bookmarked_workshop_ids
-    bookmarked_workshops.pluck(:id)
+  def bookmarkable_ids(bookmarkable_type:)
+    public_send("bookmarked_#{bookmarkable_type.downcase.pluralize}")
+      .pluck(:id)
   end
 
   private

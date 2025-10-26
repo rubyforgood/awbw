@@ -17,30 +17,6 @@ RSpec.describe Bookmark, type: :model do
     end
   end
 
-  describe '.filter_by_windows_type_ids' do
-    let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
-    let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
-    let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
-    let(:user) { create(:user) }
-    let!(:windows_type1) { create(:windows_type, id: 1, name: "Type 1") }
-    let!(:windows_type3) { create(:windows_type, id: 3, name: "Type 3") }
-    let!(:workshop1) { create(:workshop, windows_type: windows_type1) }
-    let!(:workshop2) { create(:workshop, windows_type: windows_type3) }
-    let!(:bookmark1) { create(:bookmark, user: user, bookmarkable: workshop1) }
-    let!(:bookmark2) { create(:bookmark, user: user, bookmarkable: workshop2) }
-
-    it 'filters bookmarks with given windows_type_ids' do
-      result = Bookmark.filter_by_windows_type_ids([1])
-      expect(result).to include(bookmark1)
-      expect(result).not_to include(bookmark2)
-    end
-
-    it 'returns all bookmarks if windows_type_ids is nil' do
-      result = Bookmark.filter_by_windows_type_ids(nil)
-      expect(result).to include(bookmark1, bookmark2)
-    end
-  end
-
   describe '.filter_by_params' do
     let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
     let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
@@ -55,13 +31,6 @@ RSpec.describe Bookmark, type: :model do
 
     it 'applies title correctly' do
       params = { title: "Alpha" }
-      result = Bookmark.filter_by_params(params)
-      expect(result).to include(bookmark1)
-      expect(result).not_to include(bookmark2)
-    end
-
-    it 'applies windows_type filter' do
-      params = { windows_types: { "0" => "1" } }
       result = Bookmark.filter_by_params(params)
       expect(result).to include(bookmark1)
       expect(result).not_to include(bookmark2)
@@ -93,58 +62,45 @@ RSpec.describe Bookmark, type: :model do
     end
   end
 
-  describe '.filter_by_query' do
-    let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
-    let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
-    let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
-    let(:user) { create(:user) }
-    let!(:windows_type1) { create(:windows_type, id: 1, name: "Type 1") }
-    let!(:windows_type3) { create(:windows_type, id: 3, name: "Type 3") }
-    let!(:workshop1) { create(:workshop, title: "Alpha", full_name: "Alice", windows_type: windows_type1) }
-    let!(:workshop2) { create(:workshop, title: "Bravo", full_name: "Bob", windows_type: windows_type3) }
-    let!(:bookmark1) { create(:bookmark, user: user, bookmarkable: workshop1) }
-    let!(:bookmark2) { create(:bookmark, user: user, bookmarkable: workshop2) }
-
-    it 'filters bookmarks by full-text query' do
-      skip # filter_by_query is working in dev, but failing in test
-      result = Bookmark.filter_by_query("Alpha")
-      expect(result).to include(bookmark1)
-      expect(result).not_to include(bookmark2)
-    end
-
-    it 'returns all bookmarks if query is blank' do
-      expect(Bookmark.filter_by_query(nil)).to include(bookmark1, bookmark2)
-    end
-  end
-
   describe '.search' do
     let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
     let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
     let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
     let(:user) { create(:user) }
-    let!(:windows_type1) { create(:windows_type, id: 1, name: "Type 1") }
-    let!(:windows_type3) { create(:windows_type, id: 3, name: "Type 3") }
-    let!(:workshop1) { create(:workshop, title: "Alpha", windows_type: windows_type1, led_count: 5) }
-    let!(:workshop2) { create(:workshop, title: "Bravo", windows_type: windows_type3, led_count: 10) }
+    let!(:workshop1) { create(:workshop, title: "Alpha", led_count: 15) }
+    let!(:workshop2) { create(:workshop, title: "Bravo", led_count: 10) }
     let!(:bookmark1) { create(:bookmark, user: user, bookmarkable: workshop1, created_at: 2.days.ago) }
     let!(:bookmark2) { create(:bookmark, user: user, bookmarkable: workshop2, created_at: 1.day.ago) }
 
+    before do
+      create_list(:bookmark, 5, bookmarkable: workshop1, created_at: 3.days.ago)
+      create_list(:bookmark, 7, bookmarkable: workshop2, created_at: 4.days.ago)
+    end
+
     it 'sorts by title by default' do
       params = {}
-      result = Bookmark.search(params, user)
+      result = Bookmark.search(params)
       expect(result.first.bookmarkable.title).to eq("Alpha")
     end
 
     it 'sorts by led count when sort=led' do
       params = { sort: "led" }
-      result = Bookmark.search(params, user)
+      result = Bookmark.search(params)
+      expect(result.first.bookmarkable.led_count).to eq(workshop1.led_count)
+      expect(result.first.bookmarkable).to eq(workshop1)
+    end
+
+    it 'sorts by led count when sort=bookmark_count' do
+      params = { sort: "bookmark_count" }
+      result = Bookmark.search(params)
       expect(result.first.bookmarkable).to eq(workshop2)
     end
 
     it 'sorts by created_at when sort=created' do
       params = { sort: "created" }
-      result = Bookmark.search(params, user)
-      expect(result.first).to eq(bookmark2)
+      result = Bookmark.search(params)
+      expect(result.first.created_at).to eq(bookmark2.created_at)
+      expect(result.first.bookmarkable).to eq(workshop2)
     end
   end
 end

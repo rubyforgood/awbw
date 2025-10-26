@@ -1,0 +1,70 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+    <h1 class="text-2xl font-semibold text-gray-900 mb-4"><%= @viewing_self ? "My" : "#{@user_name}'s" %> Bookmarks</h1>
+    <div class="border-b border-gray-300 mb-6"></div>
+    <div class="mt-4 pt-4">
+
+      <!-- Filter form -->
+      <%= form_tag('/bookmarks/personal', method: :get, class: "space-y-4") do %>
+        <%= render "search_fields" %>
+
+        <!-- Sort options -->
+        <div class="mt-4 flex flex-wrap items-center gap-4">
+          <span class="font-semibold">Sort by:</span>
+          <div class="flex flex-wrap gap-2">
+            <%= render 'sortable_fields', sortable_fields: @sortable_fields %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Bookmarks list -->
+      <div class="mt-6">
+        <% if @bookmarks.any? %>
+          <div id="bookmarks-list" class="space-y-4">
+            <% @bookmarks.each do |bookmark| %>
+              <%= render 'bookmarks/personal_row',
+                         bookmark: bookmark,
+                         breadcrumb: 'My Bookmarks',
+                         link_route: workshop_path(bookmark.bookmarkable_id) %>
+            <% end %>
+          </div>
+
+          <!-- Pagination -->
+          <div class="mt-6 flex flex-col items-center space-y-4">
+            <div id="infinite-scrolling" class="hidden">
+              <%= will_paginate @bookmarks %>
+            </div>
+
+            <% if @bookmarks.next_page %>
+              <div id="load_more">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow">
+                  Load More
+                </button>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-600">Your search returned no results. Please try again.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    // Search icon click
+    document.querySelectorAll('.fa-search').forEach(icon => {
+        icon.closest('div').addEventListener('click', () => {
+            icon.closest('form').submit();
+        });
+    });
+
+    // Category checkboxes submit on change
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".category-checkbox").forEach(function(checkbox) {
+            checkbox.addEventListener("change", function() {
+                this.form.submit();
+            });
+        });
+    });
+</script>

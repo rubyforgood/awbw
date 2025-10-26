@@ -1,0 +1,107 @@
+<% bookmarkable = bookmark.bookmarkable.decorate %>
+
+<div
+  id="bookmarkable-<%= bookmarkable.id %>"
+  class="
+    flex flex-col md:flex-row <%= "admin-only bg-blue-100" if bookmarkable.inactive? %> border-b
+    border-gray-200 list-group-item-custom gap-4 py-4 mb-0
+  "
+>
+  <div
+    id="bookmarkable-<%= bookmarkable.id %>-anchor"
+    style="position: relative; top: -200px;"
+  ></div>
+  <!-- 1️⃣ Bookmark -->
+  <%= turbo_frame_tag dom_id(bookmarkable, :bookmark) do %>
+    <%= turbo_flash %>
+    <div class="flex flex-col gap-1">
+      <% if bookmarkable.bookmarks.any? { |b| b.user_id == current_user.id } %>
+        <%= link_to bookmark_path(current_user.bookmark_for(bookmarkable),
+                                  from: "bookmarkables_index",
+                                  **request.query_parameters,
+                                  anchor: "bookmarkable-#{bookmarkable.id}-anchor"),
+                    class: "inline-block",
+                    title: "Remove bookmark",
+                    data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
+          <i class="fas fa-bookmark w-5 h-5 text-blue-500 hover:text-gray-400"></i>
+        <% end %>
+      <% else %>
+        <%= link_to bookmarks_path(bookmark: { bookmarkable_id: bookmarkable.id,
+                                               bookmarkable_type: "Workshop" },
+                                   from: "workshops_index",
+                                   **request.query_parameters,
+                                   anchor: "bookmarkable-#{bookmarkable.id}-anchor"),
+                    class: "inline-block",
+                    title: "Create bookmark",
+                    data: {turbo_method: :post} do %>
+          <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- 1️⃣ Image -->
+  <div class="flex flex-col items-center w-12">
+    <!-- Image -->
+    <div class="w-12 h-8 bg-gray-100 rounded overflow-hidden">
+      <%= link_to polymorphic_path(bookmarkable) do %>
+        <% if bookmarkable.respond_to?(:images) %>
+          <img
+            class="object-cover w-full h-full"
+            src="<%= bookmarkable.images.last&.file&.url || asset_path('workshop_default.png') %>"
+            alt="<%= bookmarkable.object.class.name %> image"
+          >
+        <% end %>
+      <% end %>
+    </div>
+
+    <!-- Type -->
+    <div class="mt-1 text-xs text-gray-600 font-medium text-center">
+      <%= bookmarkable.object.class.name.upcase %>
+    </div>
+  </div>
+
+
+  <!-- 2️⃣ Title / author / metadata -->
+  <div class="flex flex-col gap-1 min-w-[40ch] max-w-[40ch] break-words">
+    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+      <%= link_to "#{bookmarkable.title}#{" [NOT PUBLISHED]" if bookmarkable.inactive?}",
+                  polymorphic_path(bookmarkable),
+                  class: "hover:underline",
+                  data: { turbo: false, } %>
+    </h3>
+  </div>
+
+ <!-- 3️⃣ Description -->
+ <div class="flex-1 text-sm text-gray-700">
+   <div class="text-sm text-gray-600">
+     Author:
+     <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.user %>
+       <%= link_to bookmarkable.author_name,
+                   user_path(bookmarkable.user),
+                   class: "hover:underline",
+                   data: { turbo: false, } %>
+     <% elsif bookmark.bookmarkable_type == "Workshop" %>
+       <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Facilitator" %>
+     <% elsif bookmarkable.respond_to?(:created_by) %>
+       <%= bookmarkable.created_by.present? ? bookmarkable.created_by.name : "User" %>
+     <% end %>
+   </div>
+
+   <div class="text-sm text-gray-600">
+      <span>
+        Type/date:
+        <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.windows_type.present? %>
+          <%= "#{bookmarkable.windows_type.label} - #{bookmarkable.date}" %>
+        <% elsif bookmark.bookmarkable_type == "Event" %>
+          <%= bookmarkable.date %>
+        <% else %>
+          <%= bookmarkable.created_at.strftime("%B %d, %Y") %>
+        <% end %>
+        <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.workshop_age_ranges.any? %>
+          (<%= bookmarkable.workshop_age_ranges.to_sentence %>)
+        <% end %>
+      </span>
+   </div>
+ </div>
+</div>

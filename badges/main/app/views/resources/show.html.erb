@@ -1,16 +1,19 @@
-<div class="curriculum-detail py-6 min-h-screen">
+<div class="resource-detail py-6 min-h-screen">
   <div class="max-w-5xl mx-auto px-4">
 
     <div class="flex justify-end mb-6">
       <% if current_user.super_user? %>
-        <span class="admin-only bg-blue-100 p-1">
+        <span class="admin-only bg-blue-100">
           <%= link_to("Edit", edit_resource_path(@resource), class: "btn btn-primary-outline") %>
         </span>
       <% end %>
+
       <%= link_to("Download <span class='fa fa-download'></span>".html_safe,
-                         @resource.attachments.first.file.url,
-                         download: @resource.attachments.first.file_file_name,
-                         class: "btn btn-utility") if @resource.attachments.first %>
+                  @resource.attachments.first.file.url,
+                  download: @resource.attachments.first.file_file_name,
+                  class: "btn btn-utility") if @resource.attachments.first %>
+
+      <%= render "bookmarks/editable_bookmark_button", resource: @resource %>
     </div>
 
 
@@ -106,7 +109,6 @@
           </ul>
         </div>
       <% end %>
-
     </div>
   </div>
 </div>

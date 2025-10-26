@@ -3,6 +3,7 @@ class Resource < ApplicationRecord
   belongs_to :user
   belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :images, as: :owner, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :categories, through: :categorizable_items
@@ -45,7 +46,6 @@ class Resource < ApplicationRecord
 
   # Search Cop
   include SearchCop
-
   search_scope :search do
     attributes :title, :author, :text
   end

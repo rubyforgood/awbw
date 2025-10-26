@@ -21,7 +21,7 @@ class DashboardController < ApplicationController
     if current_user.super_user?
       @user_content_cards = [
 
-        { title: "Bookmarks tally", path: authenticated_root_path, icon: "🔖" },
+        { title: "Bookmarks tally", path: tally_bookmarks_path, icon: "🔖" },
         { title: "Quotes", path: authenticated_root_path, icon: "💬" },
         { title: "Stories", path: authenticated_root_path, icon: "🗣️" },
         { title: "Vision Seeds", path: authenticated_root_path, icon: "🌱" },

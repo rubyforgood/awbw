@@ -55,26 +55,26 @@ RSpec.describe WorkshopSearchService, type: :service do
 			end
 		end
 
-		context "sorting by keywords" do
-			it "returns workshops matching the query" do
-				# Stub filter_by_query to return a deterministic set
-				# This avoids relying on full-text search behavior in tests, which is unavailable
-				allow_any_instance_of(WorkshopSearchService)
-					.to receive(:filter_by_query) do |instance|
-					instance.instance_variable_set(:@workshops, [workshop_3])
-				end
-
-				service = WorkshopSearchService.new({query: 'Keyword'}).call
-				workshops = service.workshops
-
-				# Check inclusion or first element
-				expect(workshops).to include(workshop_3)
-				expect(workshops.first).to eq(workshop_3)
-			end
-		end
+		# context "sorting by keywords" do # turned sorting by keywords off
+		# 	it "returns workshops matching the query" do
+		# 		# Stub filter_by_query to return a deterministic set
+		# 		# This avoids relying on full-text search behavior in tests, which is unavailable
+		# 		allow_any_instance_of(WorkshopSearchService)
+		# 			.to receive(:filter_by_query) do |instance|
+		# 			instance.instance_variable_set(:@workshops, [workshop_3])
+		# 		end
+		#
+		# 		service = WorkshopSearchService.new({query: 'Keyword'}).call
+		# 		workshops = service.workshops
+		#
+		# 		# Check inclusion or first element
+		# 		expect(workshops).to include(workshop_3)
+		# 		expect(workshops.first).to eq(workshop_3)
+		# 	end
+		# end
 
 		context "default sort" do
-			it "defaults to keywords if query is present" do
+			xit "defaults to keywords if query is present" do # only if using keyword sort
 				service = WorkshopSearchService.new({ query: 'Keyword' }).call
 				expect(service.sort).to eq('keywords')
 			end
