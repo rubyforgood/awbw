@@ -32,11 +32,11 @@ class WorkshopSearchService
 	def filter_by_params
 		filter_by_windows_type
 		filter_by_published_status
+		filter_by_title
+		filter_by_query
 		filter_by_author_name
 		filter_by_categories
 		filter_by_sectors
-		filter_by_title
-		filter_by_query
 	end
 
 	def filter_by_windows_type
