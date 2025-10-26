@@ -43,7 +43,7 @@
     <%= turbo_flash %>
     <div class="flex items-center gap-2">
 
-      <% if current_user.has_bookmarked_workshop?(workshop) %>
+      <% if current_user.has_bookmarkable?(workshop) %>
         <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
                   class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
                           rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200

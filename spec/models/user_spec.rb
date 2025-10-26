@@ -21,7 +21,9 @@ RSpec.describe User do
     # Through associations require more setup, test manually if complex
     # it { should have_many(:communal_reports).through(:projects).source(:reports) }
     it { should have_many(:bookmarks).dependent(:destroy) }
-    it { should have_many(:bookmarked_workshops).through(:bookmarks).source(:bookmarkable) }
+    it { should have_many(:bookmarked_workshops).through(:bookmarks).source(:bookmarkable).source_type("Workshop") }
+    it { should have_many(:bookmarked_resources).through(:bookmarks).source(:bookmarkable).source_type("Resource") }
+    it { should have_many(:bookmarked_events).through(:bookmarks).source(:bookmarkable).source_type("Event") }
     it { should have_many(:project_users).dependent(:destroy) }
     it { should have_many(:projects).through(:project_users) }
     it { should have_many(:windows_types).through(:projects) }
