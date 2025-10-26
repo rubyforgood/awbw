@@ -14,14 +14,13 @@
     </div>
 
     <hr class="border-gray-300 mb-4">
-    <ul class="list-disc list-inside">
+    <div class="d-flex flex-wrap gap-2">
       <% @workshop_variations.each do |variation| %>
-        <li>
-          <%= link_to variation.name, workshop_variation_path(variation),
-                      class: "btn btn-secondary-outline" %>
-        </li>
+        <%= link_to variation.name,
+                    workshop_variation_path(variation),
+                    class: "btn btn-secondary-outline" %>
       <% end %>
-    </ul>
+    </div>
   </section>
 </div>
 <%# end %>

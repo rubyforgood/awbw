@@ -44,14 +44,12 @@
         <section class="workshop-variations">
           <h2 class='normal custom-h2'>Variations of this Workshop</h2>
           <hr>
-          <div class="container-fluid">
-            <div class="row">
-              <% @workshop_variations.each do |variation| %>
-                <div class="col-sm-3 col-xs-6">
-                  <%= link_to variation.name, workshop_variation_path(variation), class: 'workshop-variation' %>
-                </div>
-              <% end %>
-            </div>
+          <div class="d-flex flex-wrap gap-2">
+            <% @workshop_variations.each do |variation| %>
+              <%= link_to variation.name,
+                          workshop_variation_path(variation),
+                          class: "workshop-variation" %>
+            <% end %>
           </div>
         </section>
       <% end %>
