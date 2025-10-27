@@ -67,5 +67,3 @@ group :development, :test do
 end
 
 gem "positioning", "~> 0.4.7"
-
-gem "active_storage_validations", "~> 3.0"
