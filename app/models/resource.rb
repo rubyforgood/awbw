@@ -84,9 +84,19 @@ class Resource < ApplicationRecord
 
   def main_image_url
     if main_image&.file&.attached?
-      url_for(main_image.file)
+      Rails.application.routes.url_helpers.url_for(main_image.file)
     else
       ActionController::Base.helpers.asset_path("workshop_default.png")
+    end
+  end
+
+  def main_attachment
+    attachments.first
+  end
+
+  def main_attachment_url
+    if main_attachment&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(main_attachment.file)
     end
   end
 

@@ -24,7 +24,7 @@ class ResourceDecorator < Draper::Decorator
 
   def main_image(size = nil)
     return if kind == 'Theme'
-    images.first.file.url if images.any?
+    Rails.application.routes.url_helpers.url_for(images.first.file) if images.any? && images.first.file&.attached?
   end
 
   def flex_text
