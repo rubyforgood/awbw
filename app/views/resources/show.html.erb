@@ -48,17 +48,17 @@
       <!-- Main Image -->
       <% if @resource.main_image.present? %>
         <div class="flex justify-start">
-          <% image_url = @resource.main_image rescue nil %>
+          <% image_url = @resource.main_image_url rescue nil %>
           <% if image_url %>
             <% if @resource.kind == 'LeaderSpotlight' %>
-              <%= link_to image_url, download: @resource.images.first.file_file_name do %>
+              <%= link_to image_url, download: @resource.main_image.file_file_name do %>
                 <%= image_tag image_url,
                               class: 'max-h-[400px] w-auto rounded-lg shadow-lg mb-4 object-cover',
                               alt: @resource.display_title,
                               onerror: "this.onerror=null;this.src='/assets/missing.png';" %>
               <% end %>
             <% else %>
-              <%= link_to image_url, download: @resource.images.first.file_file_name do %>
+              <%= link_to image_url, download: @resource.main_image.file_file_name do %>
                 <%= image_tag image_url,
                               class: 'w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 object-cover',
                               alt: @resource.display_title,

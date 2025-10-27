@@ -74,7 +74,7 @@
           <div class="flex flex-col items-center space-y-2 max-w-[120px] mb-3">
             <%= link_to resource_path(spotlight), class: "flex flex-col items-center text-center" do %>
               <img
-                src="<%= spotlight.decorate.main_image || asset_path('missing.png') %>"
+                src="<%= spotlight.main_image_url %>"
                 alt="<%= spotlight.title.truncate(25) %>"
                 class="block w-10 h-10 rounded-md object-cover"
                 onerror="this.onerror=null;this.src='<%= asset_path('missing.png') %>';
