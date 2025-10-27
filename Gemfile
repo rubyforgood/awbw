@@ -2,7 +2,7 @@ source "https://rubygems.org"
 
 ruby "3.3.8"
 
-gem "rails", "8.1.0.beta1"
+gem "rails", "~> 8.1.0"
 gem "bootsnap", require: false
 
 gem "sprockets-rails", "~> 3.2.2"
