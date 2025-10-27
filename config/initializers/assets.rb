@@ -13,3 +13,7 @@ Rails.application.config.assets.paths << Rails.root.join('node_modules')
 # folder are already added.
 Rails.application.config.assets.precompile += %w( admin.js admin.css foundation_emails.css )
 Rails.application.config.assets.precompile += %w[awbw/foundation_emails-20250913.css]
+
+Rails.application.config.assets.precompile += %w[
+  workshop_default.png
+]
