@@ -1,13 +1,16 @@
 <div class="nested-fields">
   <div class="smaller links right">
-    <%= link_to_remove_association 'remove role', f %>
+    <%= link_to_remove_association "remove role", f %>
   </div>
   <div class="field">
     <%= f.label :project_id %>
-    <%= f.select :project_id, current_user.projects.map { |p| [p.name, p.id ] } %>
+    <%= f.select :project_id, current_user.projects.map { |p| [p.name, p.id] } %>
   </div>
   <div class="field">
     <%= f.label :position %>
-    <%= f.select :position, ProjectUser.positions, selected: f.object.position ? ProjectUser.positions[f.object.position] : 1 %>
+    <%= f.select :position,
+             ProjectUser.positions.keys.map { |k| [k.humanize, k] },
+             selected: f.object.position.presence || "liaison" %>
   </div>
-</div> 
+</div>
+

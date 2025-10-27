@@ -1,4 +1,6 @@
 class Resource < ApplicationRecord
+  include Rails.application.routes.url_helpers
+
   # Associations
   belongs_to :user
   belongs_to :workshop, optional: true
@@ -81,12 +83,10 @@ class Resource < ApplicationRecord
   end
 
   def main_image_url
-    return main_image.file.url if main_image
-
-    if self.kind == "Theme"
-      ActionController::Base.helpers.asset_path("workshop_default.png")
+    if main_image&.file&.attached?
+      url_for(main_image.file)
     else
-      "/images/workshop_default.jpg"
+      ActionController::Base.helpers.asset_path("workshop_default.png")
     end
   end
 

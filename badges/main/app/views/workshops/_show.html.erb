@@ -1,4 +1,6 @@
-<div class='hero-workshop' style='<%="background-image: url(#{workshop.header_image})"%>'>
+<% header_image = url_for(workshop.header_image) %>
+
+<div class='hero-workshop' style='background-image: url(<%= header_image %>)'>
 
   <div class='inner-hero'>
     <h2 class='normal inline-block no-margin'>
@@ -34,6 +36,7 @@
 </div>
 
 <div class='links' id='links'>
+
   <% if current_user.has_bookmarked_workshop?(workshop) %>
     <div class='btn-bookmark bookmark-inline'>
       <%= link_to '', bookmark_path(@bookmark), method: :delete, class: 'btn-bookmark__unmark-layer' %>
@@ -59,19 +62,11 @@
     <%= image_tag("printer.png", class:"img-responsive") %>
     <span><%= 'Print' %></span>
   </div>
-
-  <div class='btn-bookmark bookmark-inline'>
-    <% if current_user.super_user? %>
-      <%= link_to '', edit_workshop_path(workshop), class: 'btn-bookmark__unmark-layer' %>
-      <%= image_tag("pencil.png", class:"img-responsive") %>
-      <div><%= 'Edit' %></div>
-    <% end %>
-  </div>
   
   <div class="workshop-actions">
 
     <%= link_to 'Submit Workshop Log', new_workshop_log_path(windows_type_id: workshop.windows_type_id, workshop_id: workshop.id, breadcrumb: 'Search Curriculum'), class: 'btn btn-small' %>
-
+    
     <a href="#workshopVariations" class="btn btn-small <% if !@workshop_variations.any? %>btn--disabled<% end %>">Workshop Variations</a>
     
     <a href="#workshopQuotes" class="btn btn-small <% if !@quotes.any? %>btn--disabled<% end %>">Related Quotes</a>
@@ -88,7 +83,7 @@
   <li class='tab-header-and-content'>
 
     <a class='is-active tab-link' href='javascript:void(0)' id='english'>
-      <%= workshop.has_spanish_fields? ? "English" : "Details" %>
+      English
     </a>
 
     <div class='tab-content reset-list-items' id='english-content'>
@@ -358,28 +353,6 @@
         <% end %>
 
       <% end %>
-
-      <% if workshop.workshop_series_children.any? %>
-        <div class="single-workshop-detail">
-          <h3 class='normal curriculum-title'>Series workshops</h3>
-          <hr>
-          <div id="series-workshops-list">
-            <% workshop.workshop_series_children.each do |workshop_series_membership| %>
-              <%= render 'workshops/flex',
-                         workshop: workshop_series_membership.workshop_child.decorate,
-                         link_route: workshop_path(workshop_series_membership.workshop_child),
-                         workshop_series_membership: workshop_series_membership
-              %>
-            <% end %>
-          </div>
-
-          <div class='small wysiwyg-content clearfix'>
-            <div class="wysiwyg-content__inner-wrapper">
-              <p><%= workshop.age_range.html_safe %></p>
-            </div>
-          </div>
-        </div>
-      <% end %>
     </div>
   </li>
 
@@ -602,29 +575,6 @@
             </div>
           </div>
         <% end %>
-
-      <% if workshop.workshop_series_children.any? %>
-        <div class="single-workshop-detail">
-          <h3 class='normal curriculum-title'>Series workshops</h3>
-          <hr>
-          <div id="series-workshops-list">
-            <% workshop.workshop_series_children.each do |workshop_series_membership| %>
-              <%= render 'workshops/flex',
-                         workshop: workshop_series_membership.workshop_child.decorate,
-                         link_route: workshop_path(workshop_series_membership.workshop_child),
-                         workshop_series_membership: workshop_series_membership,
-                         spanish: true
-              %>
-            <% end %>
-          </div>
-
-          <div class='small wysiwyg-content clearfix'>
-            <div class="wysiwyg-content__inner-wrapper">
-              <p><%= workshop.age_range.html_safe %></p>
-            </div>
-          </div>
-        </div>
-      <% end %>
     </div>
   </li>
 <% end %>

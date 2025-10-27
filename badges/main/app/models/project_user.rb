@@ -3,7 +3,7 @@ class ProjectUser < ApplicationRecord
   belongs_to :project
   belongs_to :user
 
-  scope :liaisons, -> { where(position: 1) }
+  scope :liaisons, -> { where(position: "liaison") }
   # Validations
   validates_presence_of :project_id
 

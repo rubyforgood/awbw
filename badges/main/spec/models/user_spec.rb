@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe User do
   # Use FactoryBot
@@ -10,11 +10,11 @@ RSpec.describe User do
       create(:permission, :combined)
   end
 
-  describe 'associations' do
+  describe "associations" do
     # Need create for association tests to work correctly with callbacks
     subject { create(:user) }
 
-    it { should belong_to(:facilitator).optional}
+    it { should belong_to(:facilitator).optional }
     it { should have_many(:workshops) }
     it { should have_many(:workshop_logs) }
     it { should have_many(:reports) }
@@ -44,7 +44,7 @@ RSpec.describe User do
     it { should accept_nested_attributes_for(:project_users).allow_destroy(true) }
   end
 
-  describe 'validations' do
+  describe "validations" do
     # Devise validations (presence tested manually below, uniqueness tested with subject)
     subject { create(:user) } # Use create for uniqueness tests
     it { should validate_uniqueness_of(:email).case_insensitive }
@@ -52,17 +52,17 @@ RSpec.describe User do
 
     # Manual presence tests (using build is fine here)
     let(:user) { build(:user) }
-    it 'is valid with valid attributes' do
+    it "is valid with valid attributes" do
       expect(user).to be_valid
     end
 
-    it 'is invalid without an email' do
+    it "is invalid without an email" do
       user.email = nil
       expect(user).not_to be_valid
       expect(user.errors[:email]).to include("can't be blank")
     end
 
-    it 'is invalid without a password' do
+    it "is invalid without a password" do
       user.password = nil
       expect(user).not_to be_valid
       expect(user.errors[:password]).to include("can't be blank")
@@ -72,8 +72,9 @@ RSpec.describe User do
     # it { should validate_presence_of(:first_name) }
     # it { should validate_presence_of(:last_name) }
 
-    # Paperclip avatar validations
-    # it { should validate_attachment_content_type(:avatar).allowing('image/png', 'image/jpeg', 'image/gif').rejecting('text/plain', 'application/pdf') }
+    # Avatar validations
+    it { should validate_content_type_of(:avatar).allowing(User::ACCEPTED_CONTENT_TYPES) }
+    it { should validate_content_type_of(:avatar).rejecting("text/plain", "text/xml") }
   end
 
   describe "bookmark_associations" do
@@ -113,26 +114,26 @@ RSpec.describe User do
     end
   end
 
-  describe '#full_name' do
+  describe "#full_name" do
     # These tests remain relevant
     let(:user) { build(:user) }
-    context 'when first_name is present' do
-      it 'returns the full name' do
+    context "when first_name is present" do
+      it "returns the full name" do
         user.first_name = "John"
         user.last_name = "Doe"
         expect(user.full_name).to eq("John Doe")
       end
     end
 
-    context 'when first_name is nil' do
-      it 'returns the email' do
+    context "when first_name is nil" do
+      it "returns the email" do
         user.first_name = nil
         expect(user.full_name).to eq(user.email)
       end
     end
 
-    context 'when first_name is empty' do
-      it 'returns the email' do
+    context "when first_name is empty" do
+      it "returns the email" do
         user.first_name = ""
         expect(user.full_name).to eq(user.email)
       end

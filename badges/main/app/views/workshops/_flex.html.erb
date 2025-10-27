@@ -1,51 +1,25 @@
-<% workshop_series_membership ||= nil %>
-<% spanish ||= false %>
-
-<% if !spanish && workshop_series_membership&.series_description.present? %>
-  <% description = workshop_series_membership.series_description %>
-<% elsif spanish && workshop_series_membership &&
-  (workshop_series_membership.series_description_spanish || workshop_series_membership.series_description) %>
-  <% description = workshop_series_membership.series_description_spanish || workshop_series_membership.series_description %>
-<% else %>
-  <% description = workshop.formatted_objective(length: 215) %>
-<% end %>
+<% thumbnail_image = url_for(workshop.thumbnail_image) %>
 
 <div class='list-group-item list-group-item-custom'>
   <div class='row'>
-    <div class='col-md-9'>
-      <div class='col-md-3'>
-        <div class='portrait-img content-img-popular popular-img'
-             style="background-image: url(<%= workshop.thumbnail_image %>);
-               max-height: 100px;" ></div>
-      </div>
-      <div class="<%= workshop_series_membership ? "col-md-9" : "col-md-6 col-xs-6-custom" %> content-heading span">
-        <h3><%= link_to workshop.title, link_route %></h3>
-        <small>
-          <%= "#{workshop.windows_type.label unless workshop.windows_type.nil?} - #{workshop.date}" %>
-          &nbsp;<%= "(#{ workshop.age_range.strip })" if workshop.age_range.present? %>
-        </small>
-        <br/>
-        <small>Author: <%= workshop.user ? link_to(workshop.author, user_path(workshop.user)) : workshop.author %></small>
-        <br>
-        <small>Favorited: <%= workshop.led_count %> times</small>
-      </div>
-      <div class="col-md-12">
-        <p class='workshop-description'>
-        <span title="<%= workshop.formatted_objective(length: 600) %>">
-          <%= truncate(description, :length => 215, :omission => '... ', :separator => ' ') %>
-        </span>
-        </p>
-      </div>
+    <div class='col-xs-4 fixed-width'>
+      <div
+        class='portrait-img content-img-popular popular-img'
+        style="background-image: url(<%= thumbnail_image %>)"
+      ></div>
     </div>
-
-    <% unless workshop_series_membership %>
-      <div class="col-md-3">
-        <small>
-          <span title="<%= workshop.categories.map(&:name).to_sentence %>">
-            <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
-          </span>
-        </small>
-      </div>
-    <% end %>
+    <div class='col-xs-8 col-xs-6-custom content-heading span'>
+      <h3><%= link_to workshop.title, link_route %></h3>
+      <small><%= "#{workshop.windows_type.label unless workshop.windows_type.nil?} - #{workshop.date}" %></small><br/>
+      <small>Author:
+        <%= workshop.author %></small>
+      <p class='workshop-description'><%= truncate(
+          workshop.formatted_objective,
+          length: 120,
+          omission: "... ",
+          separator: " ",
+        ) %></p>
+      <a><%= link_to "Read more", link_route, target: "blank" %></a>
+    </div>
   </div>
 </div>

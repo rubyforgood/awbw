@@ -42,10 +42,10 @@
     <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
       <%= f.label :avatar, class: "block font-medium mb-1 text-gray-700 string required" %>
 
-      <% if @user.avatar.present? %>
-        <%= image_tag @user.avatar.url(:thumb),
+      <% if @user.avatar.attached? %>
+        <%= image_tag url_for(@user.avatar),
                       id: "avatar-preview",
-                      class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm" %>
+                      class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm img-rounded avatar" %>
       <% else %>
         <%= image_tag "missing.png",
                       id: "avatar-preview",
@@ -98,6 +98,24 @@
     <%= f.input :notes, as: :text, input_html: { rows: 3, class: "w-full" } %>
   </div>
 
+  <div class="form-group">
+    <%= f.fields_for :project_users do |project_user_form| %>
+      <%= render "project_user_fields",
+                 f: project_user_form,
+                 projects: @user.projects,
+                 user: @user %>
+    <% end %>
+    <%= link_to_add_association "add role",
+                                f,
+                                :project_users,
+                                html_options: {
+                                  locals: {
+                                    projects: @user.projects,
+                                  },
+                                },
+                                class: "smaller" %>
+  </div>
+
   <!-- Actions -->
   <!-- Action buttons -->
   <div class="mt-6 flex flex-wrap gap-3">
@@ -139,4 +157,3 @@
         });
     });
 </script>
-

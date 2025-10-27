@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Workshop do
   # pending "add some examples to (or delete) #{__FILE__}"
@@ -8,7 +8,7 @@ RSpec.describe Workshop do
     create(:permission, :combined)
   end
 
-  describe 'associations' do
+  describe "associations" do
     # Need create for association tests to work correctly with callbacks/scopes
     subject { create(:workshop) } # Assumes functional factory
 
@@ -45,7 +45,7 @@ RSpec.describe Workshop do
     # it { should have_attached_file(:header) }
   end
 
-  describe 'validations' do
+  describe "validations" do
     # Requires associations for create
     subject { build(:workshop, user: create(:user), windows_type: create(:windows_type)) }
 
@@ -56,24 +56,31 @@ RSpec.describe Workshop do
     # it { should validate_attachment_content_type(:thumbnail).allowing('image/png', 'image/jpeg', 'image/gif') }
     # it { should validate_attachment_content_type(:header).allowing('image/png', 'image/jpeg', 'image/gif') }
 
+    it { should validate_content_type_of(:header).allowing(Workshop::ACCEPTED_CONTENT_TYPES) }
+    it { should validate_content_type_of(:header).rejecting("text/plain", "text/xml") }
+
+    it { should validate_content_type_of(:thumbnail).allowing(Workshop::ACCEPTED_CONTENT_TYPES) }
+    it { should validate_content_type_of(:thumbnail).rejecting("text/plain", "text/xml") }
+
     # Conditional presence validation for legacy workshops (month, year)
-    context 'when legacy is true' do
+    context "when legacy is true" do
       before { allow(subject).to receive(:legacy).and_return(true) }
       # Cannot easily test conditional validation with shoulda-matchers, test manually
       # it { should validate_presence_of(:month) }
       # it { should validate_presence_of(:year) }
     end
-    context 'when legacy is false' do
+    context "when legacy is false" do
       before { allow(subject).to receive(:legacy).and_return(false) }
       # it { should_not validate_presence_of(:month) }
       # it { should_not validate_presence_of(:year) }
     end
   end
 
-  it 'is valid with valid attributes' do
+  it "is valid with valid attributes" do
     # Note: Factory needs associations uncommented for create
     # expect(build(:workshop)).to be_valid
   end
 
   # Add tests for scopes, methods like #rating, #log_count, SearchCop etc.
-end 
+end
+

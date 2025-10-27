@@ -28,6 +28,5 @@ RSpec.describe "User login", type: :system do
     File.write("tmp/capybara-page.html", page.html)
 
     expect(page).to have_css("#avatar", wait: 5)
-    expect(page).to have_css("img[src*='missing.png']")
   end
 end

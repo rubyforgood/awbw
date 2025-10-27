@@ -46,6 +46,8 @@ gem "country_select"
 gem "turbo-rails", "~> 2.0"
 gem "stimulus-rails", "~> 1.3"
 
+gem "active_storage_validations", "~> 3.0"
+
 group :development, :test do
   gem "better_errors"
   gem "brakeman", require: false

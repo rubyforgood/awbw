@@ -7,6 +7,11 @@ class User < ApplicationRecord
   after_create :set_default_values
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
+  # Avatar
+  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
+  has_one_attached :avatar
+  validates :avatar, content_type: ACCEPTED_CONTENT_TYPES
+
   # Associations
   belongs_to :facilitator, optional: true
   has_many :workshops
@@ -14,9 +19,9 @@ class User < ApplicationRecord
   has_many :reports
   has_many :communal_reports, through: :projects, source: :reports
   has_many :bookmarks, dependent: :destroy
-  has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: 'Workshop'
-  has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: 'Resource'
-  has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: 'Event'
+  has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: "Workshop"
+  has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: "Resource"
+  has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: "Event"
   has_many :project_users, dependent: :destroy
   has_many :projects, through: :project_users
   has_many :windows_types, through: :projects
@@ -27,10 +32,6 @@ class User < ApplicationRecord
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
   has_many :notifications, as: :noticeable
-
-  # Avatar
-  has_attached_file :avatar, styles: { medium: "300x300>", thumb: "100x100>" }, default_url: "/images/missing.png"
-  validates_attachment_content_type :avatar, content_type: /\Aimage\/.*\z/
 
   # Nested
   accepts_nested_attributes_for :user_forms
@@ -142,7 +143,7 @@ class User < ApplicationRecord
   end
 
   def agency_name
-   agency ? agency.name : 'No agency.'
+    agency ? agency.name : "No agency."
   end
 
   def has_bookmarkable?(bookmarkable, type: nil)
@@ -167,6 +168,7 @@ class User < ApplicationRecord
     combined_perm = Permission.find_by(security_cat: "Combined Adult and Children's Windows")
     adult_perm = Permission.find_by(security_cat: "Adult Windows")
     children_perm = Permission.find_by(security_cat: "Children's Windows")
+
 
     self.permissions << combined_perm
     self.permissions << adult_perm

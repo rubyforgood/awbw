@@ -148,18 +148,17 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def thumbnail_image
-    if legacy && !thumbnail.exists?
-      main_image
-    else
+    # TODO Figure out if we need main_image
+    if thumbnail.attached?
       thumbnail
     end
   end
 
   def header_image
-    if !header.exists?
-      thumbnail_image
-    else
+    if header.attached?
       header
+    elsif thumbnail.attached?
+      thumbnail
     end
   end
 

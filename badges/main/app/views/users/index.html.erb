@@ -39,7 +39,7 @@
                 <!-- Avatar -->
                 <td class="px-4 py-2 text-center">
                   <% if user.avatar.present? %>
-                    <%= image_tag user.avatar.url(:thumb), class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm mx-auto" %>
+                    <%= image_tag url_for(user.avatar), class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm mx-auto" %>
                   <% else %>
                     <%= image_tag "missing.png", class: "w-10 h-10 rounded-full object-cover border border-dashed border-gray-300 mx-auto" %>
                   <% end %>

@@ -117,11 +117,11 @@
           <% @featured_workshops.each do |workshop| %>
             <li class="rounded-xl bg-white shadow-lg">
               <%= link_to workshop_path(workshop), { class: "nodecor"}  do %>
+                <% thumbnail_image = url_for(workshop.thumbnail_image) %>
                 <figure
-                  class="portrait-img"
-                  style="background-image: url(<%= workshop.thumbnail_image %>);"
-                >
-                </figure>
+                    class="portrait-img"
+                    style="background-image: url(<%= thumbnail_image %>);"
+                ></figure>
                 <div class="tiny-label"><%= workshop.windows_type.label if workshop.windows_type %>
                   <span class="pull-right"><%= workshop.date %></span>
                 </div>

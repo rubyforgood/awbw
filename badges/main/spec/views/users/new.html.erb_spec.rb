@@ -1,35 +1,13 @@
+# spec/views/users/new.html.erb_spec.rb
 require 'rails_helper'
 
-RSpec.describe "users/new", type: :view do
-  before(:each) do
-    assign(:user, User.new(
-      first_name: "MyString",
-      last_name: "MyString",
-      email: "MyString@example.com",
-      password: "MyString",
-      password_confirmation: "MyString",
-      address: "MyString",
-      address2: "MyString",
-      city: "MyString",
-      city2: "MyString",
-      state: "MyString",
-      state2: "MyString",
-      zip: "MyString",
-      zip2: "MyString",
-      phone: "MyString",
-      phone2: "MyString",
-      phone3: "MyString",
-      best_time_to_call: "MyString",
-      comment: "MyText",
-      notes: "MyText",
-      inactive: false,
-      legacy: false,
-      super_user: false,
-      sign_in_count: 1,
-      current_sign_in_ip: "MyString",
-      last_sign_in_ip: "MyString",
-      subscribecode: "MyString"
-    ))
+RSpec.describe "users/new.html.erb", type: :view do
+  let(:user) { build_stubbed(:user) }
+
+  before do
+    allow(view).to receive(:current_user).and_return(user)
+    assign(:user, User.new)
+    render
   end
 
   it "renders new user form" do
