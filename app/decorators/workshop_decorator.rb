@@ -148,33 +148,17 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def thumbnail_image
-    if ENV['ACTIVE_STORAGE'].present?
-      # TODO Figure out if we need main_image
-      if thumbnail.attached?
-        thumbnail
-      end
-    else
-      if legacy && !thumbnail.exists?
-        main_image
-      else
-        thumbnail
-      end
+    # TODO Figure out if we need main_image
+    if thumbnail.attached?
+      thumbnail
     end
   end
 
   def header_image
-    if ENV['ACTIVE_STORAGE'].present?
-      if header.attached?
-        header
-      elsif thumbnail.attached?
-        thumbnail
-      end
-    else
-      if !header.exists?
-        thumbnail_image
-      else
-        header
-      end
+    if header.attached?
+      header
+    elsif thumbnail.attached?
+      thumbnail
     end
   end
 
