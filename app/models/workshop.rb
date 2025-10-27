@@ -7,7 +7,7 @@ class Workshop < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :windows_type
 
-  ACCEPTED_CONTENT_TYPES = ["image/jpg", "image/jpeg", "image/png" ].freeze
+  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
   has_one_attached :thumbnail
   validates :thumbnail, content_type: ACCEPTED_CONTENT_TYPES
 

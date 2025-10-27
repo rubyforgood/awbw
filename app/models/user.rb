@@ -8,7 +8,7 @@ class User < ApplicationRecord
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Avatar
-  ACCEPTED_CONTENT_TYPES = ["image/jpg", "image/jpeg", "image/png" ].freeze
+  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
   has_one_attached :avatar
   validates :avatar, content_type: ACCEPTED_CONTENT_TYPES
 
