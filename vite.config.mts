@@ -1,15 +1,8 @@
 import { defineConfig } from 'vite'
-import RailsPlugin from 'vite-plugin-rails'
-import tailwindcss from '@tailwindcss/vite'
+import RubyPlugin from 'vite-plugin-ruby'
 
 export default defineConfig({
   plugins: [
-    tailwindcss(),
-    RailsPlugin({
-      envVars: { RAILS_ENV: "development" }
-    }),
+    RubyPlugin(),
   ],
-  server: {
-    allowedHosts: ["localhost", "vite"],
-  }
 })
