@@ -26,7 +26,7 @@
     <%= link_to workshop_path(workshop) do %>
       <img
         class="object-cover w-full h-full"
-        src="<%= workshop.images.last&.file&.url || asset_path('workshop_default.png') %>"
+        src="<%= workshop.main_image_url %>"
       >
     <% end %>
   </div>

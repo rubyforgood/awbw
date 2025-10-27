@@ -1,0 +1,66 @@
+<% f ||= nil %>
+<% resource ||= nil %>
+<% field_name ||= :image %>
+<% label ||= field_name.to_s.titleize %>
+<% hint ||= nil %>
+<% rounded ||= false %>
+
+<%= f.label label, class: "block font-medium gap-1 text-gray-700 string required" %>
+<% if hint %>
+  <%= f.hint hint.html_safe, wrap_with: { tag: :p, class: "text-gray-500 text-sm" } %>
+<% end %>
+<% if resource.public_send(field_name).attached? %>
+  <%= image_tag url_for(resource.public_send(field_name)),
+                alt: "#{label} Image",
+                id: "#{field_name}-preview",
+                class: "w-32 h-32 #{"rounded" if rounded }-full object-cover
+                border border-gray-300 shadow-sm img-#{"rounded" if rounded } #{field_name}" %>
+<% else %>
+  <%= image_tag "missing.png",
+                id: "#{field_name}-preview",
+                class: "w-32 h-32 #{"rounded" if rounded }-full object-cover border border-dashed border-gray-300" %>
+<% end %>
+<div id="<%= field_name %>-filename" class="text-center text-sm text-gray-500">
+  <%= resource.public_send(field_name).attachment&.filename.to_s %>
+</div>
+
+<div class="relative w-36">
+  <%= f.file_field field_name, id: "#{field_name}-input",
+                   class: "absolute inset-0 w-36 h-full opacity-0 cursor-pointer" %>
+  <button type="button"
+          class="w-full py-2 px-3 w-36 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50">
+    Choose file
+  </button>
+</div>
+<%#= f.input :remove_image, as: :boolean,
+            label: "Remove file",
+            wrapper_html: { class: "flex justify-center items-center mb-0" },
+            label_html: { class: "text-sm text-gray-700 ml-2" } %>
+
+<%= f.error :file, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" } %>
+
+
+
+<script>
+    document.addEventListener("turbo:load", function() {
+        const input = document.getElementById("<%= field_name %>-input");
+        const filenameDisplay = document.getElementById("<%= field_name %>-filename");
+        const preview = document.getElementById("<%= field_name %>-preview");
+
+        if (!input) return;
+
+        input.addEventListener("change", function() {
+            if (input.files.length > 0) {
+                filenameDisplay.textContent = input.files[0].name;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                filenameDisplay.textContent = "";
+            }
+        });
+    });
+</script>
