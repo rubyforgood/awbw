@@ -50,16 +50,14 @@ class Resource < ApplicationRecord
   scope :featured, -> (featured=nil) { featured.present? ? where(featured: featured) : where(featured: true) }
   scope :kind, -> (kind) { where("kind like ?", kind ) }
   scope :leader_spotlights, -> { kind("LeaderSpotlight") }
+  scope :popular, -> { where(kind: POPULAR_KINDS) }
   scope :published, -> (published=nil) { published.present? ? where(inactive: !published) : where(inactive: false) }
   scope :recent, -> { published.by_created }
+  scope :sector_impact, -> { where(kind: "SectorImpact") }
+  scope :scholarship, -> { where(kind: "Scholarship") }
+  scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
+  scope :theme, -> { where(kind: "Theme") }
   scope :title, -> (title) { where("title like ?", "%#{ title }%") }
-  # scope :popular, -> { where(kind: POPULAR_KINDS) }
-  # scope :sector_impact, -> { where(kind: "SectorImpact") }
-  # scope :scholarship, -> { where(kind: "Scholarship") }
-  # scope :theme, -> { where(kind: "Theme") }
-  # scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
-  # scope :leader_spotlight, -> { where(kind: "LeaderSpotlight") }
-
 
   def story?
     ["Story", "LeaderSpotlight"].include? self.kind
