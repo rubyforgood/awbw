@@ -118,14 +118,7 @@
                 <% @workshops.each do |w| %>
                   <li class="workshop">
                     <%= link_to workshop_path(w), { class: "nodecor"}  do %>
-                      <% thumbnail_image =
-                           (
-                             if ENV["ACTIVE_STORAGE"].present?
-                               url_for(w.thumbnail_image)
-                             else
-                               w.thumbnail_image
-                             end
-                           ) %>
+                      <% thumbnail_image = url_for(w.thumbnail_image) %>
                       <figure
                           class="portrait-img"
                           style="background-image: url(<%= thumbnail_image %>);"

@@ -131,15 +131,8 @@ class Report < ApplicationRecord
   private
 
   def set_has_attachament
-    if ENV["ACTIVE_STORAGE"].present?
-      self.has_attachment = image.attached? || form_file.attached? || media_files.any? { |media_file| media_file.file.attached? }
-    else
-      self.has_attachment = false
-
-      unless image.blank? && media_files.empty? && form_file.blank?
-        self.has_attachment = true
-      end
-    end
+    self.has_attachment = image.attached? || form_file.attached? ||
+      media_files.any? { |media_file| media_file.file.attached? }
   end
 
   def set_windows_type

@@ -24,22 +24,8 @@ RSpec.describe Report do
   end
 
   describe "validations" do
-    if ENV["ACTIVE_STORAGE"].present?
-      it { should validate_content_type_of(:form_file).allowing(Report::FORM_FILE_CONTENT_TYPES) }
-      it { should validate_content_type_of(:form_file).rejecting("text/plain", "text/xml") }
-    else
-      # Paperclip validation for form_file
-      it { should have_attached_file(:form_file) }
-      it { should validate_attachment_content_type(:form_file).allowing(Report::FORM_FILE_CONTENT_TYPES).rejecting("text/plain", "text/html") }
-
-      # Custom validation for image would need a more involved test
-      context "with invalid image" do
-        it "validates associated image" do
-          report = build(:report, image: build(:image, :invalid_format))
-          expect(report).not_to be_valid
-        end
-      end
-    end
+    it { should validate_content_type_of(:form_file).allowing(Report::FORM_FILE_CONTENT_TYPES) }
+    it { should validate_content_type_of(:form_file).rejecting("text/plain", "text/xml") }
   end
 end
 

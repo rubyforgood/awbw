@@ -16,10 +16,8 @@ RSpec.describe Image do
     #              .rejecting('text/plain', 'application/pdf') }
     # Presence validation for file itself is usually handled by Paperclip/ActiveStorage
 
-    if ENV["ACTIVE_STORAGE"].present?
-      it { should validate_content_type_of(:file).allowing(Image::ACCEPTED_CONTENT_TYPES) }
-      it { should validate_content_type_of(:file).rejecting("text/plain", "text/xml") }
-    end
+    it { should validate_content_type_of(:file).allowing(Image::ACCEPTED_CONTENT_TYPES) }
+    it { should validate_content_type_of(:file).rejecting("text/plain", "text/xml") }
   end
 
   # it 'is valid with valid attributes' do

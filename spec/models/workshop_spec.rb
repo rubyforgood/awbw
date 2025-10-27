@@ -56,13 +56,11 @@ RSpec.describe Workshop do
     # it { should validate_attachment_content_type(:thumbnail).allowing('image/png', 'image/jpeg', 'image/gif') }
     # it { should validate_attachment_content_type(:header).allowing('image/png', 'image/jpeg', 'image/gif') }
 
-    if ENV["ACTIVE_STORAGE"].present?
-      it { should validate_content_type_of(:header).allowing(Workshop::ACCEPTED_CONTENT_TYPES) }
-      it { should validate_content_type_of(:header).rejecting("text/plain", "text/xml") }
+    it { should validate_content_type_of(:header).allowing(Workshop::ACCEPTED_CONTENT_TYPES) }
+    it { should validate_content_type_of(:header).rejecting("text/plain", "text/xml") }
 
-      it { should validate_content_type_of(:thumbnail).allowing(Workshop::ACCEPTED_CONTENT_TYPES) }
-      it { should validate_content_type_of(:thumbnail).rejecting("text/plain", "text/xml") }
-    end
+    it { should validate_content_type_of(:thumbnail).allowing(Workshop::ACCEPTED_CONTENT_TYPES) }
+    it { should validate_content_type_of(:thumbnail).rejecting("text/plain", "text/xml") }
 
     # Conditional presence validation for legacy workshops (month, year)
     context "when legacy is true" do

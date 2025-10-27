@@ -10,14 +10,8 @@ RSpec.describe MediaFile do
   end
 
   describe "validations" do
-    if ENV["ACTIVE_STORAGE"].present?
-      it { should validate_content_type_of(:file).allowing(MediaFile::FORM_FILE_CONTENT_TYPES) }
-      it { should validate_content_type_of(:file).rejecting("text/plain", "text/xml") }
-    else
-      # Using shoulda matchers for Paperclip validations
-      it { should have_attached_file(:file) }
-      it { should validate_attachment_content_type(:file).allowing(MediaFile::FORM_FILE_CONTENT_TYPES).rejecting("text/plain", "text/html") }
-    end
+    it { should validate_content_type_of(:file).allowing(MediaFile::FORM_FILE_CONTENT_TYPES) }
+    it { should validate_content_type_of(:file).rejecting("text/plain", "text/xml") }
   end
 
   it "is valid with valid attributes" do

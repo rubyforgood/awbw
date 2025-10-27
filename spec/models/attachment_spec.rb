@@ -18,10 +18,8 @@ RSpec.describe Attachment do
     # subject { build(:attachment, owner: create(:user)) } # Requires owner for validity
     # it { should validate_presence_of(:owner) } # Testing polymorphic presence can be tricky
 
-    if ENV["ACTIVE_STORAGE"].present?
-      it { should validate_content_type_of(:file).allowing(Attachment::ACCEPTED_CONTENT_TYPES) }
-      it { should validate_content_type_of(:file).rejecting("text/plain", "text/xml") }
-    end
+    it { should validate_content_type_of(:file).allowing(Attachment::ACCEPTED_CONTENT_TYPES) }
+    it { should validate_content_type_of(:file).rejecting("text/plain", "text/xml") }
   end
 
   # it 'is valid with an owner' do
