@@ -106,20 +106,8 @@
               <p class="text-gray-900"><%= @user.notes %></p>
             </div>
             <div class="mb-3">
-              <p class="font-bold text-gray-700">Confirmed:</p>
-              <p class="text-gray-900"><%= @user.confirmed %></p>
-            </div>
-            <div class="mb-3">
               <p class="font-bold text-gray-700">Inactive:</p>
               <p class="text-gray-900"><%= @user.inactive %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Legacy:</p>
-              <p class="text-gray-900"><%= @user.legacy %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Legacy:</p>
-              <p class="text-gray-900"><%= @user.legacy_id %></p>
             </div>
             <div class="mb-3">
               <p class="font-bold text-gray-700">Super user:</p>
@@ -165,31 +153,11 @@
               <p class="font-bold text-gray-700">Last sign in ip:</p>
               <p class="text-gray-900"><%= @user.last_sign_in_ip %></p>
             </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Avatar file name:</p>
-              <p class="text-gray-900"><%= @user.avatar_file_name %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Avatar content type:</p>
-              <p class="text-gray-900"><%= @user.avatar_content_type %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Avatar file size:</p>
-              <p class="text-gray-900"><%= @user.avatar_file_size %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Avatar updated at:</p>
-              <p class="text-gray-900"><%= @user.avatar_updated_at %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Subscribecode:</p>
-              <p class="text-gray-900"><%= @user.subscribecode %></p>
-            </div>
 
             <hr>
             <h5 class="normal upcase">associated projects:</h5>
             <h4 class="normal">
-              <%= @user.display_agencies %>
+              <%= @user.decorate.display_agencies %>
             </h4>
           </div>
         </div>
