@@ -16,12 +16,19 @@
         </div>
       </div>
 
-      <h3 class="normal inline-block">
-        <% if @user.avatar.attached?  %>
-          <%= image_tag url_for(@user.avatar), class: "img-rounded avatar" %>
-        <% end %>
+      <div class="fontweight-bold text-3xl">
         <%= @user.name %>
-      </h3>
+      </div>
+
+      <% if @user.avatar.attached? %>
+        <%= image_tag url_for(@user.avatar),
+                      id: "avatar-preview",
+                      class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm img-rounded avatar" %>
+      <% else %>
+        <%= image_tag "missing.png",
+                      id: "avatar-preview",
+                      class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
+      <% end %>
 
       <div class="space-y-6">
         <div class="mt-4">

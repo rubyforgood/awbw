@@ -1,4 +1,6 @@
 class Workshop < ApplicationRecord
+  include Rails.application.routes.url_helpers
+
   attr_accessor :time_hours, :time_minutes
 
   before_save :set_time_frame
@@ -172,10 +174,10 @@ class Workshop < ApplicationRecord
   end
 
   def main_image_url
-    if legacy
-      decorate.main_image
-    elsif images.first
-      "http://awbw-production.herokuapp.com#{images.first.file.url}"
+    if images.attached? && images.first.present?
+      url_for(images.first)
+    else
+      ActionController::Base.helpers.asset_path("workshop_default.png")
     end
   end
 
