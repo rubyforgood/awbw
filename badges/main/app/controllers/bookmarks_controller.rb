@@ -68,13 +68,27 @@ class BookmarksController < ApplicationController
   end
 
   def tally
-    search_params = params.to_unsafe_h.merge({ sort: "bookmark_count" })
-    @bookmark_counts = Bookmark.search(search_params)
-                               .group(:bookmarkable_type, :bookmarkable_id)
-                               .order('count_id DESC')
-                               .count('id')
-                               .map{ |(type, id), count| [type.constantize.find(id), count] rescue nil}
-                               .compact
+    bookmark_ids = Bookmark.filter_by_params(params).pluck(:id)
+
+    # Aggregate counts cleanly
+    grouped_counts = Bookmark.where(id: bookmark_ids)
+                             .group(:bookmarkable_type, :bookmarkable_id)
+                             .pluck(:bookmarkable_type, :bookmarkable_id,
+                               Arel.sql("COUNT(*) AS total_bookmarks")
+                             )
+
+    # Resolve polymorphic objects + sort desc
+    @bookmark_counts = grouped_counts.group_by(&:first).flat_map do |type, rows|
+      ids = rows.map { |_, id, _| id }
+      found = type.constantize.where(id: ids).index_by(&:id)
+
+      rows.filter_map do |(_, id, count)|
+        [found[id], count] if found[id]
+      end
+    end.sort_by { |_, count| -count }
+
+    @windows_types_array = ["", "Adult", "Child", "Family"]
+
     @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
   end
 
