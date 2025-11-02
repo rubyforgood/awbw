@@ -15,5 +15,5 @@ Rails.application.config.assets.precompile += %w( admin.js admin.css foundation_
 Rails.application.config.assets.precompile += %w[awbw/foundation_emails-20250913.css]
 
 Rails.application.config.assets.precompile += %w[
-  workshop_default.png
+  workshop_default.jpg
 ]

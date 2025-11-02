@@ -177,7 +177,7 @@ class Workshop < ApplicationRecord
     if images&.first&.file&.attached?
       Rails.application.routes.url_helpers.url_for(images.first.file)
     else
-      ActionController::Base.helpers.asset_path("workshop_default.png")
+      ActionController::Base.helpers.asset_path("workshop_default.jpg")
     end
   end
 

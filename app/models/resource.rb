@@ -84,7 +84,7 @@ class Resource < ApplicationRecord
     if main_image&.file&.attached?
       Rails.application.routes.url_helpers.url_for(main_image.file)
     else
-      ActionController::Base.helpers.asset_path("workshop_default.png")
+      ActionController::Base.helpers.asset_path("theme_default.png")
     end
   end
 

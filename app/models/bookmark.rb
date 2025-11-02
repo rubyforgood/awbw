@@ -57,6 +57,7 @@ class Bookmark < ApplicationRecord
     bookmarks
   end
 
+<<<<<<< HEAD
   def self.title(title)
     return all unless title.present?
 
@@ -132,5 +133,15 @@ class Bookmark < ApplicationRecord
       SQL
       name: "%#{user_name_sanitized}%"
     )
+  end
+
+  def bookmarkable_image_url(fallback: 'missing.png')
+    if bookmarkable.respond_to?(:images) && bookmarkable.images.first&.file&.attached?
+      Rails.application.routes.url_helpers.rails_blob_path(bookmarkable.images.first.file, only_path: true)
+    elsif bookmarkable_type == "Workshop"
+      ActionController::Base.helpers.asset_path("workshop_default.jpg")
+    else
+      ActionController::Base.helpers.asset_path(fallback)
+    end
   end
 end

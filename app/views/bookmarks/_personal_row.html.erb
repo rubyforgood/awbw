@@ -45,13 +45,8 @@
     <!-- Image -->
     <div class="w-12 h-8 bg-gray-100 rounded overflow-hidden">
       <%= link_to polymorphic_path(bookmarkable) do %>
-        <% if bookmarkable.respond_to?(:images) %>
-          <img
-            class="object-cover w-full h-full"
-            src="<%= bookmarkable.images.last&.file&.url || asset_path('workshop_default.png') %>"
-            alt="<%= bookmarkable.object.class.name %> image"
-          >
-        <% end %>
+        <%= image_tag(bookmark.bookmarkable_image_url, class: "object-cover w-full h-full",
+                        alt: "#{ bookmarkable.object.class.name } image") %>
       <% end %>
     </div>
 
