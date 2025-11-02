@@ -13,7 +13,7 @@ class Api::V1::AnnotationsController < Api::V1::ApiController
     if @annotation.save
       render json: @annotation, status: :ok
     else
-      render json: {}, status: :unprocessable_entity
+      render json: {}, status: :unprocessable_content
     end
   end
 
@@ -22,7 +22,7 @@ class Api::V1::AnnotationsController < Api::V1::ApiController
     if @annotation.update(annotation: params[:annotation])
       render json: @annotation, status: :ok
     else
-      render json: {}, status: :unprocessable_entity
+      render json: {}, status: :unprocessable_content
     end
   end
 
@@ -32,7 +32,7 @@ class Api::V1::AnnotationsController < Api::V1::ApiController
       @annotation.destroy
       render json: @annotation, status: :ok
     else
-      render json: {}, status: :unprocessable_entity
+      render json: {}, status: :unprocessable_content
     end
   end
 end

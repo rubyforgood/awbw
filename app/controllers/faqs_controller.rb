@@ -28,7 +28,7 @@ class FaqsController < ApplicationController
       redirect_to faqs_path, notice: "FAQ was successfully created."
     else
       set_form_variables
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -37,7 +37,7 @@ class FaqsController < ApplicationController
       redirect_to faqs_path, notice: "FAQ was successfully updated.", status: :see_other
     else
       set_form_variables
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

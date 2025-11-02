@@ -48,7 +48,7 @@ class WorkshopLogsController < ApplicationController
       redirect_to authenticated_root_path
     else
       set_form_variables
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
