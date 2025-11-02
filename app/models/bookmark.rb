@@ -4,6 +4,10 @@ class Bookmark < ApplicationRecord
   has_many :bookmark_annotations, dependent: :destroy
 
   scope :for_workshops, -> { where(bookmarkable_type: 'Workshop') }
+  scope :bookmarkable_type, -> (bookmarkable_type) { bookmarkable_type.present? ? where(bookmarkable_type: bookmarkable_type) : all }
+  scope :bookmarkable_attributes, -> (bookmarkable_type, bookmarkable_id) {
+    bookmarkable_type.present? && bookmarkable_id.present? ? where(bookmarkable_type: bookmarkable_type,
+                                                                   bookmarkable_id: bookmarkable_id) : all }
 
   def self.search(params, user: nil)
     bookmarks = user ? user.bookmarks : self.all
@@ -42,39 +46,91 @@ class Bookmark < ApplicationRecord
 
   def self.filter_by_params(params={})
     bookmarks = self.all
-    # filter by
-    if params[:bookmarkable_id].present? && params[:bookmarkable_type].present?
-      bookmarks = bookmarks.where(bookmarkable_id: params[:bookmarkable_id],
-                                  bookmarkable_type: params[:bookmarkable_type])
-    end
-    if params[:bookmarkable_type].present?
-      bookmarks = bookmarks.where(bookmarkable_type: params[:bookmarkable_type])
-    end
-    if params[:title].present?
-      title = "%#{params[:title]}%"
-      bookmarks = bookmarks.joins(<<~SQL)
-        LEFT JOIN workshops ON workshops.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'
---      LEFT JOIN stories   ON stories.id   = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
-        LEFT JOIN resources ON resources.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
-        LEFT JOIN events    ON events.id    = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
-      SQL
 
-      bookmarks = bookmarks.where(
-        "workshops.title LIKE :title OR events.title LIKE :title OR resources.title LIKE :title", # OR stories.title LIKE :title
-        title: title
-      )
-    end
-    if params[:user_name].present?
-      user_name_sanitized = params[:user_name].strip.gsub(/\s+/, '')
-      bookmarks = bookmarks.left_outer_joins(:user)
-                           .where("LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
-                                  OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
-                                  OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
-                                  OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
-                                  OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name",
-                                  name: "%#{user_name_sanitized}%")
-    end
+    bookmarks = bookmarks.bookmarkable_type(params[:bookmarkable_type])
+    bookmarks = bookmarks.bookmarkable_attributes(params[:bookmarkable_type],
+                                                  params[:bookmarkable_id])
+    bookmarks = bookmarks.title(params[:title])
+    bookmarks = bookmarks.user_name(params[:user_name])
+    bookmarks = bookmarks.windows_type(params[:windows_type])
 
     bookmarks
+  end
+
+  def self.title(title)
+    return all unless title.present?
+
+    bookmarks = self.all
+    bookmarks = bookmarks.joins(<<~SQL)
+      LEFT JOIN workshops ON workshops.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'
+--      LEFT JOIN stories   ON stories.id   = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
+      LEFT JOIN resources ON resources.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
+      LEFT JOIN events    ON events.id    = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
+    SQL
+
+    bookmarks.where(
+      "workshops.title LIKE :title OR events.title LIKE :title OR resources.title LIKE :title", # OR stories.title LIKE :title
+      title: "%#{title}%"
+    )
+  end
+
+  def self.windows_type(windows_type)
+    return all unless windows_type.present?
+
+    pattern = "%#{windows_type}%"
+
+    # Resources with a windows_type
+    resources = joins(
+      <<~SQL
+      INNER JOIN resources
+        ON resources.id = bookmarks.bookmarkable_id
+       AND bookmarks.bookmarkable_type = 'Resource'
+      INNER JOIN windows_types
+        ON windows_types.id = resources.windows_type_id
+        AND resources.windows_type_id IS NOT NULL
+    SQL
+    ).where("windows_types.name LIKE ?", pattern)
+
+    # Workshops (optional windows_type)
+    workshops = joins(
+      <<~SQL
+      LEFT JOIN workshops
+        ON workshops.id = bookmarks.bookmarkable_id
+       AND bookmarks.bookmarkable_type = 'Workshop'
+      LEFT JOIN windows_types
+        ON windows_types.id = workshops.windows_type_id
+        AND workshops.windows_type_id IS NOT NULL
+    SQL
+    ).where("windows_types.name LIKE ?", pattern)
+
+    # Combine results in a single relation
+    self.where(id: resources.select(:id)).or(self.where(id: workshops.select(:id)))
+  end
+
+  def self.user_name(user_name)
+    return all unless user_name.present?
+
+    user_name_sanitized = user_name.strip.gsub(/\s+/, '')
+
+    bookmarks = self.left_outer_joins(:user)
+
+    # Join workshops only if we might filter by them
+    bookmarks = bookmarks.joins(
+      "LEFT JOIN workshops ON workshops.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'"
+    )
+
+    bookmarks.where(
+      <<~SQL.squish,
+        LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
+        OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name
+        OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
+        OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
+        OR (
+          bookmarks.bookmarkable_type = 'Workshop'
+          AND LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
+        )
+      SQL
+      name: "%#{user_name_sanitized}%"
+    )
   end
 end

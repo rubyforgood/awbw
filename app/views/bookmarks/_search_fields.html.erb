@@ -41,9 +41,19 @@
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                      onchange: "this.form.submit()" %>
-      <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-        <i class="fa fa-chevron-down text-gray-500"></i>
-      </div>
+    </div>
+  </div>
+
+  <!-- Type Dropdown -->
+  <div>
+    <%= label_tag :windows_type, "Windows Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <div class="relative">
+      <%= select_tag :windows_type,
+                     options_for_select(@windows_types_array,
+                                        params[:windows_type]),
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     onchange: "this.form.submit()" %>
     </div>
   </div>
 
