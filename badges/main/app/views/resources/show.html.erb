@@ -6,11 +6,10 @@
         <%= link_to("Edit", edit_resource_path(@resource), class: "btn btn-primary-outline admin-only bg-blue-100") %>
       <% end %>
 
-      <%= link_to("Download <span class='fa fa-download'></span>".html_safe,
-                  url_for(@resource.main_attachment.file),
-                  download: @resource.main_attachment.file_file_name,
-                  class: "btn btn-utility") if @resource.main_attachment&.file&.attached? %>
-
+      <%= link_to ("<span title='Download #{@resource.kind} image'>" +
+        " Download <span class='fa fa-download'></span></span>").html_safe,
+                  resource_download_path(@resource),
+                  class: "btn btn-utility" if @resource.download_attachment&.file&.attached? %>
       <%= render "bookmarks/editable_bookmark_button", resource: @resource %>
     </div>
 
@@ -49,14 +48,16 @@
           <% image_url = @resource.main_image_url rescue nil %>
           <% if image_url %>
             <% if @resource.kind == 'LeaderSpotlight' %>
-              <%= link_to image_url, download: @resource.main_image.file_file_name do %>
+              <%= link_to image_url,
+                          download: @resource.main_image.file_file_name do %>
                 <%= image_tag image_url,
                               class: 'max-h-[400px] w-auto rounded-lg shadow-lg mb-4 object-cover',
                               alt: @resource.display_title,
                               onerror: "this.onerror=null;this.src='/assets/missing.png';" %>
               <% end %>
             <% else %>
-              <%= link_to image_url, download: @resource.main_image.file_file_name do %>
+              <%= link_to image_url,
+                          download: @resource.main_image.file_file_name do %>
                 <%= image_tag image_url,
                               class: 'w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 object-cover',
                               alt: @resource.display_title,
@@ -99,11 +100,11 @@
             <% @resource.attachments.each do |attachment| %>
               <% if attachment.file&.attached? %>
                 <li>
-                  <%= link_to("#{ attachment.file_file_name } <span class='fa fa-download'></span>".html_safe,
-                              url_for(attachment.file),
-                              download: attachment.file_file_name,
-                              class: "inline-block px-3 py-1 bg-gray-100 rounded
-                              hover:bg-gray-200 text-xl text-gray-700 transition") if attachment&.file&.attached? %>
+                  <%= link_to ("<span title='Download #{@resource.kind}'>" +
+                                " #{ attachment.file_file_name } <span class='fa fa-download'></span></span>").html_safe,
+                              resource_download_path(@resource,
+                                                     attachment_id: attachment.id),
+                              class: "btn btn-utility" if attachment&.file&.attached? %>
                 </li>
               <% end %>
             <% end %>

@@ -47,11 +47,13 @@
 
       <div class="flex justify-end items-center mt-4 space-x-2">
         <div class="flex items-center space-x-2">
-          <% if resource.main_attachment&.file&.attached? %>
+          <% if resource.download_attachment&.file&.attached? %>
+            <% from = controller_name == "resources" &&
+              action_name == "index" ? "resources_index" : (controller_name == "dashboard" &&
+              action_name == "index" ? "dashboard_index" : "unknown") %>
             <%= link_to "<span class='fa fa-download' title='Download #{resource.kind}'></span>".html_safe,
                                resource_download_path(resource,
-                                                      from: controller_name == "resources" &&
-                                                        action_name == "index" ? "resources_index" : "unknown"),
+                                                      from: from),
                                class: "btn btn-utility" %>
           <% end %>
           <% if controller_name == "resources" %>

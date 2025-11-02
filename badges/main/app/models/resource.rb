@@ -98,6 +98,10 @@ class Resource < ApplicationRecord
     end
   end
 
+  def download_attachment
+    main_attachment || main_image
+  end
+
   def type_enum
     types.map { |title| [title.titleize, title ]}
   end
