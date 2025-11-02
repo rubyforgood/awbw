@@ -64,11 +64,22 @@ class ResourcesController < ApplicationController
   end
 
   def download
-    attachment = Resource.find(params[:resource_id]).main_attachment
+    if params[:attachment_id].to_i > 0
+      attachment = Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
+    else
+      attachment = Resource.find(params[:resource_id]).download_attachment
+    end
+
     if attachment&.file&.blob.present?
       redirect_to rails_blob_url(attachment.file, disposition: "attachment")
     else
-      path = params[:from] == "resources_index" ? resources_path : resource_path(params[:resource_id])
+      if params[:from] == "resources_index"
+        path = resources_path
+			elsif params[:from] == "dashboard_index"
+				path = authenticated_root_path
+			else
+				resource_path(params[:resource_id])
+			end
       redirect_to path,
                   alert: "File not found or not attached."
     end
