@@ -9,27 +9,31 @@
     <div class="flex items-center w-full">
 
       <% if current_user.super_user? %>
-        <i
-          class="fa-solid fa-sort cursor-move self-center pr-2"
-          data-sortable-handle=""
-        ></i>
+        <span class="admin-only bg-blue-100">
+          <i
+            class="fa-solid fa-sort cursor-move self-center pr-2"
+            data-sortable-handle=""
+          ></i>
+        </span>
 
         <div class="flex flex-col sm:flex-row grow sm:items-center">
 
-          <%= render "inline_edit", model: faq, attribute: :inactive, form_class: "min-w-44" do %>
-            <%= button_to faq_path(faq),
-              method: :patch,
-              params: { faq: { inactive: !faq.inactive } },
-              class: "cursor-pointer pl-4" do %>
-              <% if faq.inactive? %>
-                <i class="fa-solid fa-toggle-off text-gray-400 text-2xl"></i>
-              <% else %>
-                <i class="fa-solid fa-toggle-on text-primary text-2xl"></i>
+          <span class="admin-only bg-blue-100">
+            <%= render "inline_edit", model: faq, attribute: :inactive, form_class: "min-w-44" do %>
+              <%= button_to faq_path(faq),
+                method: :patch,
+                params: { faq: { inactive: !faq.inactive } },
+                class: "cursor-pointer pl-4" do %>
+                <% if faq.inactive? %>
+                  <i class="fa-solid fa-toggle-off text-gray-400 text-2xl"></i>
+                <% else %>
+                  <i class="fa-solid fa-toggle-on text-primary text-2xl"></i>
+                <% end %>
               <% end %>
+              <span class="pl-1"><%= faq.inactive? ? "[NOT PUBLISHED]" : "[PUBLISHED]" %>
+              </span>
             <% end %>
-            <span class="pl-1"><%= faq.inactive? ? "[NOT PUBLISHED]" : "[PUBLISHED]" %>
-            </span>
-          <% end %>
+          </span>
 
           <strong class="sr-only">Question:</strong>
 
@@ -46,7 +50,9 @@
                 <%= faq.question %></span>
 
               <%= link_to edit_faq_path(faq), class: "peer" do %>
-                <i class="far fa-edit text-primary hover:text-secondary"></i>
+                <span class="admin-only bg-blue-100">
+                  <i class="far fa-edit text-primary hover:text-secondary"></i>
+                </span>
               <% end %>
 
             <% end %>
@@ -66,26 +72,28 @@
 
       <% if current_user.super_user? %>
         <div class="flex flex-col mx-3 ">
-          <%= link_to faq,
-        method: :delete,
-        data: {
-          confirm: "Confirm: Delete FAQ?",
-        } do %>
+          <span class="admin-only bg-blue-100">
+            <%= link_to faq,
+          method: :delete,
+          data: {
+            confirm: "Confirm: Delete FAQ?",
+          } do %>
 
-            <button class="p-1 rounded-md hover:bg-danger transition">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 200 200"
-                class="h-8 w-8 fill-current text-danger hover:text-white"
-              >
-                <path
-                  d="M119.032 145.698h-37.4c-6.2 0-11.3-5.1-11.3-11.3v-50.7c0-1.1.9-2 2-2h56c1.1 0 2 .9 2 2v50.7c0 6.2-5.1 11.3-11.3 11.3zm-44.7-60v48.7c0 4 3.3 7.3 7.3 7.3h37.3c4 0 7.3-3.3 7.3-7.3v-48.7h-51.9zM138.332 73.598h-76c-1.1 0-2-.9-2-2s.9-2 2-2h76c1.1 0 2 .9 2 2s-.9 2-2 2z"
-                />
-                <path
-                  d="M138.332 85.598h-76c-1.1 0-2-.9-2-2s.9-2 2-2h76c1.1 0 2 .9 2 2s-.9 2-2 2zM112.332 73.698h-24c-1.1 0-2-.9-2-2v-6c0-6.6 5.4-12 12-12h4c6.6 0 12 5.4 12 12v6c0 1.1-.9 2-2 2zm-22-4h20v-4c0-4.4-3.6-8-8-8h-4c-4.4 0-8 3.6-8 8v4zM88.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2zM100.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2zM112.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2z"
-                />
-              </svg>
-            </button>
+              <button class="p-1 rounded-md hover:bg-danger transition">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 200 200"
+                  class="h-8 w-8 fill-current text-danger hover:text-white"
+                >
+                  <path
+                    d="M119.032 145.698h-37.4c-6.2 0-11.3-5.1-11.3-11.3v-50.7c0-1.1.9-2 2-2h56c1.1 0 2 .9 2 2v50.7c0 6.2-5.1 11.3-11.3 11.3zm-44.7-60v48.7c0 4 3.3 7.3 7.3 7.3h37.3c4 0 7.3-3.3 7.3-7.3v-48.7h-51.9zM138.332 73.598h-76c-1.1 0-2-.9-2-2s.9-2 2-2h76c1.1 0 2 .9 2 2s-.9 2-2 2z"
+                  />
+                  <path
+                    d="M138.332 85.598h-76c-1.1 0-2-.9-2-2s.9-2 2-2h76c1.1 0 2 .9 2 2s-.9 2-2 2zM112.332 73.698h-24c-1.1 0-2-.9-2-2v-6c0-6.6 5.4-12 12-12h4c6.6 0 12 5.4 12 12v6c0 1.1-.9 2-2 2zm-22-4h20v-4c0-4.4-3.6-8-8-8h-4c-4.4 0-8 3.6-8 8v4zM88.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2zM100.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2zM112.732 131.698c-1.1 0-2-.9-2-2v-32c0-1.1.9-2 2-2s2 .9 2 2v32c0 1.1-.9 2-2 2z"
+                  />
+                </svg>
+              </button>
+            </span>
           <% end %>
         </div>
       <% end %>
@@ -125,7 +133,7 @@
 
     <%= render "inline_edit", model: faq, attribute: :answer, frame_class: "flex flex-col" do %>
       <% if current_user.super_user? %>
-        <%= link_to("Edit", edit_faq_path(faq), class: "btn btn-secondary-outline self-end") %>
+        <%= link_to("Edit", edit_faq_path(faq), class: "btn btn-secondary-outline self-end admin-only bg-blue-100") %>
 
       <% end %>
 

@@ -5,6 +5,7 @@ class Resource < ApplicationRecord
   belongs_to :user
   belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
+  has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :images, as: :owner, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
@@ -13,17 +14,8 @@ class Resource < ApplicationRecord
   has_many :sectors, through: :sectorable_items, source: :sector
   has_many :related_workshops, through: :sectors, source: :workshops
   has_many :attachments, as: :owner, dependent: :destroy
-  has_one :form, as: :owner
   has_many :reports, as: :owner
   has_many :workshop_resources, dependent: :destroy
-  # Scopes
-  scope :by_created, -> { order(created_at: :desc) }
-  scope :featured, -> { where(featured: true ) }
-  scope :published, -> { where(inactive: false) }
-  scope :leader_spotlights, -> { where("kind like ?", "LeaderSpotlight" ) }
-  scope :recent, -> { published.by_created }
-
-
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }
   validates :kind, presence: true
@@ -52,14 +44,20 @@ class Resource < ApplicationRecord
     attributes :title, :author, :text
   end
 
+
+  # Scopes
+  scope :by_created, -> { order(created_at: :desc) }
+  scope :featured, -> (featured=nil) { featured.present? ? where(featured: featured) : where(featured: true) }
+  scope :kind, -> (kind) { where("kind like ?", kind ) }
+  scope :leader_spotlights, -> { kind("LeaderSpotlight") }
   scope :popular, -> { where(kind: POPULAR_KINDS) }
+  scope :published, -> (published=nil) { published.present? ? where(inactive: !published) : where(inactive: false) }
+  scope :recent, -> { published.by_created }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
+  scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
   scope :theme, -> { where(kind: "Theme") }
   scope :title, -> (title) { where("title like ?", "%#{ title }%") }
-  scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
-  scope :leader_spotlight, -> { where(kind: "LeaderSpotlight") }
-
 
   def story?
     ["Story", "LeaderSpotlight"].include? self.kind
@@ -84,9 +82,19 @@ class Resource < ApplicationRecord
 
   def main_image_url
     if main_image&.file&.attached?
-      url_for(main_image.file)
+      Rails.application.routes.url_helpers.url_for(main_image.file)
     else
       ActionController::Base.helpers.asset_path("workshop_default.png")
+    end
+  end
+
+  def main_attachment
+    attachments.first
+  end
+
+  def main_attachment_url
+    if main_attachment&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(main_attachment.file)
     end
   end
 
@@ -113,9 +121,9 @@ class Resource < ApplicationRecord
     resources = all
     resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
     resources = resources.title(params[:title]) if params[:title].present?
-    resources = resources.where('kind like ?', "%#{params[:kind]}%") if params[:kind].present?
-    resources = resources.where(inactive: params[:published] == "true" ? false : true) if params[:published].present?
-    resources = resources.where(featured: params[:featured]) if params[:featured].present?
+    resources = resources.kind(params[:kind]) if params[:kind].present?
+    resources = resources.published(params[:published]) if params[:published].present?
+    resources = resources.featured(params[:featured]) if params[:featured].present?
     resources
   end
 

@@ -5,7 +5,7 @@
 
   <% if current_user.super_user? %>
     <div class="self-end pb-3 pr-6">
-      <%= link_to("New", new_faq_path, class: "btn btn-secondary-outline") %>
+      <%= link_to("New", new_faq_path, class: "btn btn-secondary-outline admin-only bg-blue-100") %>
     </div>
 
   <% end %>

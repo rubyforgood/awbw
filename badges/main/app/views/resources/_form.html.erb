@@ -77,68 +77,25 @@
       <%= f.simple_fields_for :images, f.object.images.first || f.object.images.build do |mi| %>
         <div class="nested-fields flex flex-col gap-2">
           <div class="mb-4">
-            <%= mi.label :file, "Main Image", class: "block mb-1 font-medium text-gray-700" %>
-            <label class="relative cursor-pointer inline-block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2 hover:border-gray-400">
-              <%= mi.file_field :file, class: "absolute inset-0 w-full h-full opacity-0 cursor-pointer" %>
-              <span class="pointer-events-none text-gray-700">Choose new file</span>
-            </label>
-            <%= mi.error :file, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" } %>
-            <%= mi.hint :file, wrap_with: { tag: :p, class: "text-gray-500 text-sm mt-1" } %>
-          </div>
-
-          <% if mi.object.persisted? && mi.object.file.present? %>
-            <div class="flex flex-col items-center mb-4">
-              <div class="w-full max-w-[250px] h-[250px] overflow-hidden rounded-md border mb-2">
-                <%= image_tag mi.object.file.url(:medium),
-                              alt: "Main Image",
-                              class: "w-full h-full object-contain rounded-md" %>
-              </div>
-
-              <%= mi.input :_destroy, as: :boolean,
-                           label: "Remove",
-                           wrapper_html: { class: "flex justify-center items-center mb-0" },
-                           label_html: { class: "text-sm text-gray-700 ml-2" } %>
+            <div class="flex flex-col items-start gap-4" style="flex: 0 0 25%;">
+              <%= render 'shared/form_image_field', f: mi, resource: mi.object, field_name: :file,
+                         label: "Main image" %>
             </div>
-          <% end %>
-
+          </div>
         </div>
       <% end %>
     </div>
 
     <!-- Attachment -->
     <div class="flex-1 min-w-[200px] flex flex-col gap-2">
-      <%= f.simple_fields_for :attachments, f.object.attachments.first || f.object.attachments.build do |att| %>
+      <%= f.simple_fields_for :attachments, f.object.main_attachment || f.object.attachments.build do |att| %>
         <div class="nested-fields flex flex-col gap-2">
           <div class="mb-4">
-            <%= att.label :file, "Attachment", class: "block mb-1 font-medium text-gray-700" %>
-            <label class="relative cursor-pointer inline-block w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2 hover:border-gray-400">
-              <%= att.file_field :file, class: "absolute inset-0 w-full h-full opacity-0 cursor-pointer" %>
-              <span class="pointer-events-none text-gray-700">Choose new file</span>
-            </label>
-            <%= att.error :file, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" } %>
-            <%= att.hint :file, wrap_with: { tag: :p, class: "text-gray-500 text-sm mt-1" } %>
-          </div>
-
-          <% if att.object.persisted? && att.object.file.present? %>
-            <div class="flex flex-col items-center mb-4">
-              <% if att.object.file_content_type.start_with?('image/') %>
-                <div class="w-full max-w-[200px] h-[150px] overflow-hidden rounded-md border mb-2">
-                  <%= image_tag att.object.file.url(:medium),
-                                alt: "Attachment",
-                                class: "w-full h-full object-contain rounded-md" %>
-                </div>
-              <% else %>
-      <span class="text-lg text-gray-700 mb-2 block text-center">
-        <%= att.object.file_file_name %>
-      </span>
-              <% end %>
-
-              <%= att.input :_destroy, as: :boolean,
-                            label: "Remove",
-                            wrapper_html: { class: "flex justify-center items-center mb-0" },
-                            label_html: { class: "text-sm text-gray-700 ml-2" } %>
+            <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
+              <%= render 'shared/form_image_field', f: att, resource: att.object,
+                         field_name: :file, label: "Attachment" %>
             </div>
-          <% end %>
+          </div>
         </div>
       <% end %>
     </div>

@@ -27,7 +27,8 @@
               <% @leader_spotlights.each do |spotlight| %>
                 <div class='spacing-tight col-sm-3 col-xs-6'>
                   <%= link_to resource_path(spotlight) do %>
-                    <%= image_tag spotlight.decorate.main_image, class: 'block' %>
+                    <%= image_tag url_for(spotlight.main_image.file),
+                                  class: 'block' if spotlight.main_image.file&.attached? %>
                     <span class='small'>
                       <%= spotlight.author %>
                       <br>

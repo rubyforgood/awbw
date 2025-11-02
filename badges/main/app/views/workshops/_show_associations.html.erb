@@ -33,9 +33,7 @@
           <h2 class="text-lg font-semibold mb-2">Quotes</h2>
         </div>
         <% if current_user.super_user? %>
-          <div class="admin-only bg-blue-100 p-2">
-            <%#= link_to 'New quote', new_quote_path(workshop_id: @workshop.id), class: "btn btn-secondary-outline" if @workshop.persisted? %>
-          </div>
+          <%#= link_to 'New quote', new_quote_path(workshop_id: @workshop.id), class: "btn btn-secondary-outline admin-only bg-blue-100" if @workshop.persisted? %>
         <% end %>
       </div>
 
@@ -61,10 +59,8 @@
           <h2 class="text-lg font-semibold mb-2">Related Facilitator Spotlight(s)</h2>
         </div>
         <% if current_user.super_user? %>
-          <div class="admin-only bg-blue-100 p-2">
-            <%#= link_to 'New story', new_story_path(workshop_id: @workshop.id,
-            owner_id: @workshop_id, owner_type: "Workshop"), class: "btn btn-secondary-outline" if @workshop.persisted? %>
-          </div>
+          <%#= link_to 'New story', new_story_path(workshop_id: @workshop.id,
+            owner_id: @workshop_id, owner_type: "Workshop"), class: "btn btn-secondary-outline admin-only bg-blue-100" if @workshop.persisted? %>
         <% end %>
       </div>
 
@@ -74,7 +70,7 @@
           <div class="flex flex-col items-center space-y-2 max-w-[120px] mb-3">
             <%= link_to resource_path(spotlight), class: "flex flex-col items-center text-center" do %>
               <img
-                src="<%= spotlight.decorate.main_image || asset_path('missing.png') %>"
+                src="<%= spotlight.main_image_url %>"
                 alt="<%= spotlight.title.truncate(25) %>"
                 class="block w-10 h-10 rounded-md object-cover"
                 onerror="this.onerror=null;this.src='<%= asset_path('missing.png') %>';

@@ -6,9 +6,7 @@
         <h2 class="text-2xl font-semibold mb-2">Resources (<%= @resources_count %>)</h2>
       </div>
       <% if current_user.super_user? %>
-        <span class="admin-only bg-blue-100 p-1">
-          <%= link_to 'New Resource', new_resource_path, class: "btn btn-primary-outline" %>
-        </span>
+        <%= link_to 'New Resource', new_resource_path, class: "btn btn-primary-outline admin-only bg-blue-100" %>
       <% end %>
     </div>
   </div>

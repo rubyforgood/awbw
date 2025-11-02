@@ -64,9 +64,14 @@ class ResourcesController < ApplicationController
   end
 
   def download
-    attachment = Resource.find(params[:resource_id]).attachments.last
-    extension = File.extname(attachment.file_file_name)
-    send_data open("#{attachment.file.expiring_url(10000, :original)}").read, filename: "original_#{attachment.id}#{extension}", type: attachment.file_content_type
+    attachment = Resource.find(params[:resource_id]).main_attachment
+    if attachment&.file&.blob.present?
+      redirect_to rails_blob_url(attachment.file, disposition: "attachment")
+    else
+      path = params[:from] == "resources_index" ? resources_path : resource_path(params[:resource_id])
+      redirect_to path,
+                  alert: "File not found or not attached."
+    end
   end
 
   private

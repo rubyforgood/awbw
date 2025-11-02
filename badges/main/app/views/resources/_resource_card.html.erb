@@ -47,18 +47,18 @@
 
       <div class="flex justify-end items-center mt-4 space-x-2">
         <div class="flex items-center space-x-2">
-          <% if resource.attachments.any? %>
+          <% if resource.main_attachment&.file&.attached? %>
             <%= link_to "<span class='fa fa-download' title='Download #{resource.kind}'></span>".html_safe,
-                               resource_download_path(resource),
+                               resource_download_path(resource,
+                                                      from: controller_name == "resources" &&
+                                                        action_name == "index" ? "resources_index" : "unknown"),
                                class: "btn btn-utility" %>
           <% end %>
           <% if controller_name == "resources" %>
             <% if current_user.super_user? %>
-              <span class="admin-only bg-blue-100 p-1">
-                <%= link_to "<span class='far fa-edit'></span>".html_safe,
-                                   edit_resource_path(resource),
-                                   class: "btn btn-secondary-outline" %>
-              </span>
+              <%= link_to "<span class='far fa-edit'></span>".html_safe,
+                          edit_resource_path(resource),
+                          class: "btn btn-secondary-outline admin-only bg-blue-100" %>
             <% end %>
           <% end %>
         </div>
