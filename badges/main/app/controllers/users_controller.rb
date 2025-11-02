@@ -35,7 +35,7 @@ class UsersController < ApplicationController
       redirect_to users_path, notice: "User was successfully created."
     else
       set_form_variables
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -54,7 +54,7 @@ class UsersController < ApplicationController
     else
       flash[:alert] = 'Unable to update user.'
       set_form_variables
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

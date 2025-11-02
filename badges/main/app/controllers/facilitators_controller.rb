@@ -30,7 +30,7 @@ class FacilitatorsController < ApplicationController
       if @facilitator.save
         format.html { redirect_to @facilitator, notice: "Facilitator was successfully created." }
       else
-        format.html { render :new, status: :unprocessable_entity }
+        format.html { render :new, status: :unprocessable_content }
       end
     end
   end
@@ -40,7 +40,7 @@ class FacilitatorsController < ApplicationController
       if @facilitator.update(facilitator_params)
         format.html { redirect_to @facilitator, notice: "Facilitator was successfully updated." }
       else
-        format.html { render :edit, status: :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_content }
       end
     end
   end
