@@ -9,10 +9,8 @@
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold text-gray-900">Edit
           <%= @faq.class.model_name.human %></h1>
-        <%= link_to "View",
-        faq_path(@faq),
-        class: "btn btn-secondary-outline",
-        class: "h-10 px-4 py-2 text-sm font-medium" %>
+        <%= link_to "View", faq_path(@faq),
+                    class: "btn btn-secondary-outline h-10 px-4 py-2 text-sm font-medium" %>
       </div>
 
       <div class="space-y-6">
