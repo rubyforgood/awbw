@@ -57,7 +57,6 @@ class Bookmark < ApplicationRecord
     bookmarks
   end
 
-<<<<<<< HEAD
   def self.title(title)
     return all unless title.present?
 
