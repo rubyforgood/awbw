@@ -6,9 +6,13 @@ User.in_batches do |batch|
   batch.update_all(encrypted_password: user_password)
 end
 
-Admin.create!(first_name: "Amy", last_name: "Admin", email: "amy.admin@example.com", password: "password")
-User.create!(first_name: "Umberto", last_name: "User", email: "umberto.user@example.com", password: "password")
-User.create!(first_name: "Orphaned Reports", last_name: "User", email: "orphaned_reports@awbw.org", password: "password")
+Permission.where(security_cat: "Children's Windows").first_or_create!
+Permission.where(security_cat: "Adult Windows").first_or_create!
+Permission.where(security_cat: "Combined Adult and Children's Windows").first_or_create!
+
+Admin.where(first_name: "Amy", last_name: "Admin", email: "amy.admin@example.com").first_or_create!(password: "password")
+User.where(first_name: "Umberto", last_name: "User", email: "umberto.user@example.com").first_or_create!(password: "password")
+User.where(first_name: "Orphaned Reports", last_name: "User", email: "orphaned_reports@awbw.org").first_or_create!(password: "password")
 
 adult_type = WindowsType.where(name: "ADULT WORKSHOP").first_or_create!
 childrens_type = WindowsType.where(name: "CHILDREN WORKSHOP").first_or_create!
@@ -113,18 +117,19 @@ dataset = [
 
 dataset.each do |metadata_name, category_name|
   unless metadata_name.nil?
-    metadata = Metadata.find_or_create_by!(name: metadata_name)
+    metadata = Metadatum.find_or_create_by!(name: metadata_name)
     metadata.categories.find_or_create_by!(name: category_name)
   end
 end
 
-[
-  "Share a Story",
-  "Family Workshop Log",
-  "Adult Monthly Report",
-  "Adult Workshop Log",
-  "Children's Monthly Report",
-  "Children's Workshop Log"
-].each do |form_name|
-  Form.find_or_create_by!(name: form_name)
-end
+wt = WindowsType.where(name: "ADULT WORKSHOP LOG", legacy_id: 1, short_name: "ADULT").first_or_create!
+wt.form_builders.where(name: "Adult Monthly Report").first_or_create!
+wt.form_builders.where(name: "Adult Workshop Log").first_or_create!
+
+wt = WindowsType.where(name: "CHILDREN WORKSHOP LOG", legacy_id: 2, short_name: "CHILDREN").first_or_create!
+wt.form_builders.where(name: "Children's Monthly Report").first_or_create!
+wt.form_builders.where(name: "Children's Workshop Log").first_or_create!
+
+wt = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) LOG", legacy_id: 3, short_name: "COMBINED").first_or_create!
+wt.form_builders.where(name: "Share a Story").first_or_create!
+wt.form_builders.where(name: "Family Workshop Log").first_or_create!
