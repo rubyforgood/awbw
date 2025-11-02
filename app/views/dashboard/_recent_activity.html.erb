@@ -9,7 +9,7 @@
     <% case activity.class.name %>
     <% when "Workshop" %>
       <span class="text-gray-500 text-sm">Workshop: </span>
-      <%= link_to "#{ activity.title}#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
+      <%= link_to "#{ activity.name }#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
                   workshop_path(activity), class: "hover:underline" %>
     <% when "WorkshopLog" %>
       <span class="text-gray-500 text-sm">Log: </span>
@@ -24,7 +24,7 @@
       <% end %>
     <% when "Resource" %>
       <span class="text-gray-500 text-sm"><%= activity.kind %>: </span>
-      <%= link_to "#{ activity.title}#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
+      <%= link_to "#{ activity.name }#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
                   resource_path(activity),
                   class: "hover:underline" %>
     <% when "Report" %>
@@ -38,7 +38,8 @@
                   report_path(activity),
                   class: "hover:underline"%>
     <% else %>
-      <span class="text-gray-500 text-sm"><%= activity.class.name %></span><%= activity.title %>
+      <span class="text-gray-500 text-sm"><%= activity.class.name %>: </span>
+      <%= link_to activity.name, polymorphic_path(activity), class: "hover:underline" %>
     <% end %>
   </td>
   <td class="px-4 py-2 text-sm">

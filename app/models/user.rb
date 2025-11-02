@@ -33,6 +33,8 @@ class User < ApplicationRecord
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
   has_many :notifications, as: :noticeable
 
+  has_many :workshop_variations_as_creator, foreign_key: :created_by_id, class_name: "WorkshopVariation"
+
   # Nested
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :project_users, reject_if: :all_blank, allow_destroy: true
@@ -85,9 +87,10 @@ class User < ApplicationRecord
   def recent_activity(activity_limit = 10)
     recent = []
 
+    # recent.concat(events.order(updated_at: :desc).limit(activity_limit))
     recent.concat(workshops.order(updated_at: :desc).limit(activity_limit))
     recent.concat(workshop_logs.order(updated_at: :desc).limit(activity_limit))
-    # recent.concat(workshop_variations.order(updated_at: :desc).limit(activity_limit))
+    recent.concat(workshop_variations_as_creator.order(updated_at: :desc).limit(activity_limit))
     # recent.concat(stories.order(updated_at: :desc).limit(activity_limit))
     # recent.concat(quotes.order(updated_at: :desc).limit(activity_limit))
     recent.concat(resources.order(updated_at: :desc).limit(activity_limit))
