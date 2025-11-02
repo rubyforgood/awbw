@@ -46,7 +46,8 @@
 
         <%= f.input :ordering, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
 
-        <%= f.input :created_by, as: :select,
+        <%= f.input :created_by_id,
+                    as: :select,
                     collection: User.order(:first_name, :last_name),
                     selected: (f.object.created_by_id || current_user.id),
                     input_html: { class: "w-full rounded-lg px-3 py-2" } %>
