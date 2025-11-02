@@ -33,9 +33,7 @@
           <h2 class="text-lg font-semibold mb-2">Quotes</h2>
         </div>
         <% if current_user.super_user? %>
-          <div class="admin-only bg-blue-100 p-2">
-            <%#= link_to 'New quote', new_quote_path(workshop_id: @workshop.id), class: "btn btn-secondary-outline" if @workshop.persisted? %>
-          </div>
+          <%#= link_to 'New quote', new_quote_path(workshop_id: @workshop.id), class: "btn btn-secondary-outline admin-only bg-blue-100" if @workshop.persisted? %>
         <% end %>
       </div>
 
@@ -61,10 +59,8 @@
           <h2 class="text-lg font-semibold mb-2">Related Facilitator Spotlight(s)</h2>
         </div>
         <% if current_user.super_user? %>
-          <div class="admin-only bg-blue-100 p-2">
-            <%#= link_to 'New story', new_story_path(workshop_id: @workshop.id,
-            owner_id: @workshop_id, owner_type: "Workshop"), class: "btn btn-secondary-outline" if @workshop.persisted? %>
-          </div>
+          <%#= link_to 'New story', new_story_path(workshop_id: @workshop.id,
+            owner_id: @workshop_id, owner_type: "Workshop"), class: "btn btn-secondary-outline admin-only bg-blue-100" if @workshop.persisted? %>
         <% end %>
       </div>
 

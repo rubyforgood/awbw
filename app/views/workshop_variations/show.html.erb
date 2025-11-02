@@ -3,9 +3,11 @@
 
     <div class="flex justify-end mb-6">
       <% if current_user.super_user? || current_user == @workshop_variation.created_by %>
-        <span class="<%= "admin-only bg-blue-100" if current_user.super_user? %> p-1">
-          <%= link_to("Edit", edit_workshop_variation_path(@workshop_variation), class: "btn btn-primary-outline") %>
-        </span>
+        <div class="p-1">
+          <%= link_to("Edit",
+                      edit_workshop_variation_path(@workshop_variation),
+                      class: "btn btn-primary-outline #{ "admin-only bg-blue-100" if current_user.super_user? }") %>
+        </div>
       <% end %>
       <div class="p-1">
         <%= link_to("Back to Workshop",

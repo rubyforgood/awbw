@@ -56,11 +56,9 @@
           <% end %>
           <% if controller_name == "resources" %>
             <% if current_user.super_user? %>
-              <span class="admin-only bg-blue-100 p-1">
-                <%= link_to "<span class='far fa-edit'></span>".html_safe,
-                                   edit_resource_path(resource),
-                                   class: "btn btn-secondary-outline" %>
-              </span>
+              <%= link_to "<span class='far fa-edit'></span>".html_safe,
+                          edit_resource_path(resource),
+                          class: "btn btn-secondary-outline admin-only bg-blue-100" %>
             <% end %>
           <% end %>
         </div>
