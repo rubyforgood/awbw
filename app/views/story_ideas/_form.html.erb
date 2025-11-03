@@ -1,0 +1,135 @@
+<%= simple_form_for(story_idea, html: { multipart: true }) do |f| %>
+  <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
+
+  <div class="flex flex-col md:flex-row md:space-x-4">
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :windows_type_id, collection: @windows_types, label_method: :name,
+                  value_method: :id, prompt: "Select Windows Type" %>
+    </div>
+
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :workshop_id, collection: @workshops, label_method: :title,
+                  value_method: :id, prompt: "Select Workshop" %>
+    </div>
+
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :project_id, collection: @projects, label_method: :name,
+                  value_method: :id, prompt: "Select Project" %>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.input :title %>
+  </div>
+
+  <div class="flex flex-wrap gap-4 justify-start">
+    <!-- Main image -->
+    <div class="flex flex-col items-center gap-4 w-1/4">
+      <%= render 'shared/form_image_field',
+                 f: f,
+                 resource: @story_idea,
+                 field_name: :main_image %>
+    </div>
+
+    <!-- Existing gallery images -->
+    <% @story_idea.images.each_with_index do |image, idx| %>
+      <div class="flex flex-col items-center gap-4 w-1/4" id="images-field-<%= idx %>">
+        <%= render 'shared/form_image_field',
+                   f: f,
+                   resource: @story_idea,
+                   field_name: :images,
+                   image: image,
+                   multiple: true,
+                   show_file_field: false %>
+      </div>
+    <% end %>
+
+    <!-- Single uploader for new images -->
+    <div class="flex flex-col items-center gap-4 w-1/4">
+      <%= render 'shared/form_image_field',
+                 f: f,
+                 resource: @story_idea,
+                 field_name: :images,
+                 multiple: true,
+                 show_existing: true,
+                 image: @story_idea.images.build,
+                 label: "Additional Image" %>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.input :body, as: :text, input_html: { rows: 5 } %>
+  </div>
+
+  <div class="mb-6">
+    <%= f.input :youtube_url %>
+  </div>
+
+  <div class="mb-6">
+    <%= f.input :permission_given,
+                as: :boolean,
+                required: true,
+                label: "I give A Window Between Worlds permission to share the words and images I am submitting" +
+                  " online, via social media, and in external communications, including with my fellow " +
+                  "Windows Facilitators. If there is any identifying information in my images, " +
+                  "such as names or faces, I certify that I have received permission from the subject, " +
+                  "or their caregiver, to display their likeness online." %>
+  </div>
+
+  <div class="flex flex-col md:flex-row md:space-x-4">
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :publish_preferences,
+                  as: :select,
+                  required: true,
+                  collection: [
+                    "I would like my full name published with the story",
+                    "I would like only my first name published",
+                    "I do not want my name published with my story"
+                  ],
+                  include_blank: "Select a preference",
+                  selected: f.object.publish_preferences %>
+    </div>
+  </div>
+
+  <% if current_user.super_user? && !@user %>
+    <div class="admin-only bg-blue-100 p-3">
+      <div class="flex flex-col md:flex-row md:space-x-4">
+        <div class="flex-1 mb-4 md:mb-0">
+          <% checked = @story_idea.stories.any? %>
+          <div class="flex items-center space-x-2">
+            <input type="checkbox"
+                   disabled
+                   <%= "checked" if checked %>
+                   class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <label class="text-gray-700">
+              Promoted to
+              <% if f.object.stories.none? %>
+                Story
+              <% else %>
+                <% f.object.stories.each do |story| %>
+                  <%= link_to "Story", story_path(story) %>
+                <% end %>
+              <% end %>
+            </label>
+          </div>
+        </div>
+        <div class="flex-1 mb-4 md:mb-0">
+          <%= f.input :created_by_id, collection: @users, label_method: :full_name,
+                      value_method: :id, prompt: "Select User" %>
+        </div>
+        <div class="flex-1 mb-4 md:mb-0">
+          <%= f.input :updated_by_id, collection: @users, label_method: :full_name,
+                      value_method: :id, prompt: "Select User" %>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <% f.hidden_field :created_by_id, value: (@user || current_user)&.id %>
+    <% f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
+  <% end %>
+
+  <div class="form-actions mt-3">
+    <%= link_to "Cancel", story_ideas_path, class: "btn btn-secondary-outline ms-2" %>
+    <%= f.button :submit, class: "btn btn-primary" %>
+  </div>
+<% end %>

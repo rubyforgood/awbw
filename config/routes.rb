@@ -79,6 +79,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :story_ideas
+
   get 'contact_us', to: 'contact_us#index'
   post 'contact_us', to: 'contact_us#create'
   get 'dashboard/admin', to: 'dashboard#admin'

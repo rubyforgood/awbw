@@ -1,0 +1,72 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-semibold text-gray-900">
+            <%= StoryIdea.model_name.human.pluralize %> (<%= @story_ideas_count %>)
+          </h1>
+          <div class="flex gap-2">
+            <%= link_to('New ' + StoryIdea.model_name.human.downcase,
+                                new_story_idea_path,
+                                class: "btn btn-primary-outline") %>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Title</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Windows Type</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Project</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Workshop</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Author</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Updated At</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+            <% @story_ideas.each do |story_idea| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <%= link_to story_idea.title, story_idea_path(story_idea), class: "text-blue-600 hover:underline" %>
+                </td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.windows_type&.name %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.windows_type&.name %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.project&.name %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.workshop&.title %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.created_by.name %></td>
+                <td class="px-4 py-2 text-sm text-gray-500"><%= story_idea.updated_at.strftime("%b %d, %Y") %></td>
+                <td class="px-4 py-2 text-sm text-gray-500">
+                  <%= link_to 'Edit', edit_story_idea_path(story_idea), class: "btn btn-secondary-outline" %>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </div>
+
+
+        <!-- Empty state -->
+        <% unless @story_ideas.any? %>
+          <p class="text-gray-500 text-center py-6">
+            No <%= StoryIdea.model_name.human.pluralize %> found.
+          </p>
+        <% end %>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex justify-center">
+          <div class="pagination mt-6">
+            <%= will_paginate @story_ideas,
+                              previous_label: "<<",
+                              next_label: ">>",
+                              inner_window: 2,
+                              class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
