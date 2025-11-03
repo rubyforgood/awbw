@@ -1,0 +1,87 @@
+<% story_url = story_url(@story) %>
+<% story_title = ERB::Util.url_encode(@story.title) %>
+
+<div class="max-w-3xl mx-auto px-6 py-10 text-gray-800">
+  <!-- Title -->
+  <h1 class="text-3xl sm:text-4xl font-bold leading-tight mb-2 text-gray-900 mt-6">
+    <%= @story.title %>
+  </h1>
+
+  <!-- Organization and Workshop (muted gray, smaller) -->
+  <div class="text-sm text-gray-600 mb-8">
+    <p>
+      <strong>Author:</strong>
+      <%= @story.story_idea&.author_credit || @story.created_by.full_name %>
+    </p>
+    <p>
+      <strong>Organization Name:</strong>
+      <%= @story.organization_description %>
+    </p>
+    <p>
+      <strong>Workshop:</strong>
+      <%= @story.workshop.title %>
+    </p>
+  </div>
+
+  <!-- Image -->
+  <% if @story.images.attached? %>
+    <div class="mb-10">
+      <%= image_tag @story.images.first, class: "w-full rounded-lg shadow-md border border-gray-200" %>
+    </div>
+  <% end %>
+
+  <!-- Story Body -->
+  <div class="prose prose-lg max-w-none text-gray-700 mb-10">
+    <%= simple_format(@story.body) %>
+  </div>
+
+  <!-- Share Section -->
+  <div class="border-t border-gray-300 mt-6 pt-6">
+    <h2 class="font-semibold text-lg my-3">Share this Story:</h2>
+
+    <div class="flex space-x-4 mb-6">
+      <!-- Facebook -->
+      <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{story_url}",
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "text-blue-600 hover:text-blue-800",
+                  aria: { label: "Share on Facebook" } do %>
+        <i class="fab fa-facebook-square fa-lg"></i>
+      <% end %>
+
+      <!-- X / Twitter -->
+      <%= link_to "https://twitter.com/intent/tweet?url=#{story_url}&text=#{story_title}",
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "text-sky-500 hover:text-sky-700",
+                  aria: { label: "Share on X" } do %>
+        <i class="fab fa-x-twitter fa-lg"></i>
+      <% end %>
+
+      <!-- LinkedIn -->
+      <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{story_url}",
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "text-blue-700 hover:text-blue-900",
+                  aria: { label: "Share on LinkedIn" } do %>
+        <i class="fab fa-linkedin fa-lg"></i>
+      <% end %>
+
+      <!-- Pinterest -->
+      <%= link_to "https://pinterest.com/pin/create/button/?url=#{story_url}&description=#{story_title}",
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "text-red-600 hover:text-red-800",
+                  aria: { label: "Share on Pinterest" } do %>
+        <i class="fab fa-pinterest-square fa-lg"></i>
+      <% end %>
+    </div>
+
+    <p class="text-sm text-gray-500 leading-relaxed">
+      <strong>A Window Between Worlds (AWBW)</strong> supports hundreds of art workshop facilitators across the
+      country to incorporate creative expression into their work with trauma survivors. These Windows
+      Facilitators serve over 140,000 adults, teens, and children each year. Through these stories, we invite
+      you to explore and share their journeys toward transformation and healing.
+    </p>
+  </div>
+</div>

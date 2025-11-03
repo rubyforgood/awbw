@@ -1,0 +1,128 @@
+<%= simple_form_for(story, html: { multipart: true }) do |f| %>
+  <%= render 'shared/errors', resource: story if story.errors.any? %>
+
+  <% story_idea = @story_idea || f.object.story_idea %>
+
+  <div class="admin-only bg-blue-100 p-3">
+
+
+    <div class="flex flex-col md:flex-row md:space-x-4">
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :windows_type_id,
+                    collection: @windows_types, label_method: :name,
+                    value_method: :id,
+                    selected: f.object.windows_type_id || @story_idea&.windows_type_id,
+                    prompt: "Select Windows Type" %>
+      </div>
+
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :workshop_id,
+                    collection: @workshops, label_method: :title, value_method: :id,
+                    selected: f.object.workshop_id || @story_idea&.workshop_id,
+                    prompt: "Select Workshop" %>
+      </div>
+
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :project_id, collection: @projects, label_method: :name,
+                    value_method: :id,
+                    selected: f.object.project_id || @story_idea&.project_id,
+                    prompt: "Select Project" %>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <%= f.input :title, input_html: { value: f.object.title || @story_idea&.title } %>
+    </div>
+
+    <div class="flex flex-wrap gap-4 justify-start">
+      <!-- Main image -->
+      <div class="flex flex-col items-center gap-4 w-1/4">
+        <%= render 'shared/form_image_field',
+                   f: f,
+                   resource: @story,
+                   field_name: :main_image,
+                   image: @story.main_image || @story_idea&.main_image %>
+      </div>
+
+      <!-- Existing gallery images -->
+      <% @story.images.each_with_index do |image, idx| %>
+        <div class="flex flex-col items-center gap-4 w-1/4" id="images-field-<%= idx %>">
+          <%= render 'shared/form_image_field',
+                     f: f,
+                     resource: @story,
+                     field_name: :images,
+                     image: image,
+                     multiple: true,
+                     show_file_field: false %>
+        </div>
+      <% end %>
+
+      <!-- Single uploader for new images -->
+      <div class="flex flex-col items-center gap-4 w-1/4">
+        <%= render 'shared/form_image_field',
+                   f: f,
+                   resource: @story,
+                   field_name: :images,
+                   multiple: true,
+                   show_existing: true,
+                   image: @story.images.build,
+                   label: "Additional Image" %>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <%= f.input :body, as: :text,
+                  input_html: { rows: 20, value: f.object.body || @story_idea&.body } %>
+    </div>
+
+    <div class="mb-6">
+      <%= f.input :youtube_url, input_html: { value: f.object.youtube_url || @story_idea&.youtube_url } %>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:space-x-4">
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :story_idea_id,
+                    collection: @story_ideas, label_method: :full_name,
+                    value_method: :id,
+                    selected: f.object.story_idea_id || @story_idea&.id,
+                    label: (f.object.story_idea ? (link_to "Story idea",
+                      story_idea_path(story_idea), class: "hover:underline") : "Story idea").html_safe,
+                    prompt: "Select idea" %>
+        <%= f.input :published, as: :boolean %>
+      </div>
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :created_by_id,
+                    collection: @users, label_method: :full_name,
+                    value_method: :id,
+                    selected: f.object.project_id || @story_idea&.project_id,
+                    label: (f.object.created_by ? (link_to "Story author",
+                           user_path(f.object.created_by), class: "hover:underline") : "Story author").html_safe,
+                    prompt: "Select User" %>
+        <% if story_idea %>
+          <div class="flex-1 mb-4 md:mb-0">
+            Story idea author credit:<br>
+            <%= story_idea.author_credit %>
+            <br><br>
+            Story idea "publish preferences":<br>
+            <div class="italic">
+              <%= story_idea.publish_preferences %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <%= f.hidden_field :updated_by_id, value: current_user.id %>
+      <%= f.hidden_field :updated_at, value: Time.now.utc %>
+      <% if f.object.persisted? %>
+        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3">
+          Last updated by: <br>
+          <%= f.object.updated_by&.full_name %> @ <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="form-actions mt-3">
+      <%= link_to "Cancel", stories_path, class: "btn btn-secondary-outline ms-2" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>
