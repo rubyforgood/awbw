@@ -63,12 +63,11 @@
           <% end %>
         </span>
       </div>
-
-      <div class="text-sm text-gray-600">
+      <%= tag.div id: dom_id(workshop, :bookmark_count ), class:  "text-sm text-gray-600" do %>
         Bookmarked:
         <%= workshop.led_count %>
         <%= "time".pluralize(workshop.led_count) %>
-      </div>
+      <% end %>
     </div>
 
  <!-- 3️⃣ Description -->
