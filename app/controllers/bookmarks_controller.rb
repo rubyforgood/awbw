@@ -33,7 +33,7 @@ class BookmarksController < ApplicationController
     @bookmarkable.update(led_count: @bookmarkable.led_count + 1) if @bookmarkable.has_attribute?(:led_count)
     respond_to do |format|
       format.html {
-        redirect_to root_path, notice: "#{@bookmark.bookmarkable_type} added to your bookmarks."
+        redirect_to authenticated_root_path, notice: "#{@bookmark.bookmarkable_type} added to your bookmarks."
       }
       format.turbo_stream {
         flash.now[:notice] = "#{@bookmark.bookmarkable_type} added to your bookmarks."
@@ -55,7 +55,7 @@ class BookmarksController < ApplicationController
       @bookmarkable.update(led_count: @bookmarkable.led_count - 1) if @bookmarkable.has_attribute?(:led_count)
       respond_to do |format|
         format.html {
-          redirect_to root_path, notice: "Bookmark has been deleted."
+          redirect_to authenticated_root_path, notice: "Bookmark has been deleted."
         }
         format.turbo_stream {
           flash.now[:notice] = "Bookmark has been deleted."

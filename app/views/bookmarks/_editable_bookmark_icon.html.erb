@@ -8,7 +8,7 @@
   <% else %>
     <%= button_to bookmarks_path(bookmark: { bookmarkable_id: resource.id,
                                              bookmarkable_type: resource.class.name }),
-                  class: "inline-block" do %>
+                                             class: "inline-block" do %>
       <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
     <% end %>
   <% end %>
