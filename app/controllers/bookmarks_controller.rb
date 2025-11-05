@@ -35,9 +35,10 @@ class BookmarksController < ApplicationController
       format.html {
         redirect_to authenticated_root_path, notice: "#{@bookmark.bookmarkable_type} added to your bookmarks."
       }
-      format.turbo_stream {
+      format.turbo_stream do
         flash.now[:notice] = "#{@bookmark.bookmarkable_type} added to your bookmarks."
-      }
+        render :update
+      end
     end
   end
 
@@ -57,9 +58,10 @@ class BookmarksController < ApplicationController
         format.html {
           redirect_to authenticated_root_path, notice: "Bookmark has been deleted."
         }
-        format.turbo_stream {
+        format.turbo_stream do
           flash.now[:notice] = "Bookmark has been deleted."
-        }
+          render :update
+        end
       end
     else
       flash[:alert] = "Unable to find that bookmark."

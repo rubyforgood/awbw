@@ -1,30 +1,20 @@
-<% resource ||= nil %>
-
-<% if resource %>
-  <% klass = resource.class %>
-
-  <%= turbo_frame_tag dom_id(resource, :bookmark) do %>
-    <%= turbo_flash %>
-    <div class="flex items-center gap-2">
-      <% if current_user.has_bookmarkable?(resource) %>
-        <%= link_to bookmark_path(current_user.bookmark_for(resource)),
+<%= tag.div id: dom_id(resource, :bookmark_button), class: "flex items-center gap-2" do %>
+  <% if resource.bookmarks.any? { |b| b.user_id == current_user.id } %>
+    <%= link_to bookmark_path(current_user.bookmark_for(resource)),
                     class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
                                   rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
                                   font-medium shadow-sm",
                     data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
-          <i class="fas fa-bookmark w-5 h-5"></i>
-          <span>Bookmark</span>
-        <% end %>
-      <% else %>
-        <%= link_to bookmarks_path(bookmark: { bookmarkable_id: resource.id, bookmarkable_type: klass.model_name }),
+      <i class="fas fa-bookmark w-5 h-5"></i>
+      <span>Bookmark</span>
+    <% end %>
+  <% else %>
+    <%= button_to bookmarks_path(bookmark: { bookmarkable_id: resource.id, bookmarkable_type: resource.class.name }),
                     class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
                                   rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
-                                  font-medium shadow-sm",
-                    data: {turbo_method: :post } do %>
-          <i class="far fa-bookmark w-5 h-5"></i>
-          <span>Bookmark</span>
-        <% end %>
-      <% end %>
-    </div>
+                                  font-medium shadow-sm" do %>
+      <i class="far fa-bookmark w-5 h-5"></i>
+      <span>Bookmark</span>
+    <% end %>
   <% end %>
 <% end %>

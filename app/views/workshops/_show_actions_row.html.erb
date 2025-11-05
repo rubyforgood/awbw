@@ -37,35 +37,15 @@
 <div
   class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden"
 >
-
   <!-- Left: Bookmark -->
-  <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
-    <%= turbo_flash %>
-    <div class="flex items-center gap-2">
+  <div class="flex items-center gap-2">
 
-      <% if current_user.has_bookmarkable?(workshop) %>
-        <%= link_to bookmark_path(current_user.bookmark_for(workshop)),
-                  class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
-                          rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
-                          font-medium shadow-sm",
-                  data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
-          <i class="fas fa-bookmark w-5 h-5"></i>
-          <span>Bookmark</span>
-        <% end %>
-      <% else %>
-        <%= link_to bookmarks_path(bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" }),
-                  class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
-                          rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200
-                          font-medium shadow-sm",
-                          data: {turbo_method: :post } do %>
-          <i class="far fa-bookmark w-5 h-5"></i>
-          <span>Bookmark</span>
-        <% end %>
-      <% end %>
-      <span class="text-gray-600 text-sm">(Bookmarked by
-        <%= pluralize(workshop.led_count, "facilitator") %>)</span>
-    </div>
-  <% end %>
+    <%= render "bookmarks/editable_bookmark_button", resource: workshop.object %>
+    <%= tag.span id: dom_id(workshop, :bookmark_count_facilitator), class: "text-gray-600 text-sm" do %>
+      (Bookmarked by
+      <%= pluralize(workshop.led_count, "facilitator") %>)
+    <% end %>
+  </div>
 
   <% if workshop.inactive %>
     <div class="flex items-center gap-4 text-red-500">
@@ -75,7 +55,9 @@
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
     <% if current_user.super_user? %>
-      <%= link_to "Edit", edit_workshop_path(workshop), class: "btn btn-secondary-outline admin-only bg-blue-100" %>
+      <%= link_to "Edit",
+      edit_workshop_path(workshop),
+      class: "btn btn-secondary-outline admin-only bg-blue-100" %>
     <% end %>
 
     <%= link_to '#',
