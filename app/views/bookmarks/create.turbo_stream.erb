@@ -1,0 +1,2 @@
+<%= turbo_stream.replace dom_id(@bookmarkable, :bookmark), partial: "editable_bookmark_icon", locals: {resource: @bookmarkable} %>
+<%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>
