@@ -1,7 +1,5 @@
 <%%= simple_form_for(@<%= singular_table_name %>) do |f| %>
   <div class="form-body space-y-6">
-    <%%= render 'shared/errors', resource: @<%= singular_table_name %> if @<%= singular_table_name %>.errors.any? %>
-
     <!-- Form Errors -->
     <%%= f.error_notification %>
     <%%= render 'shared/errors', resource: @<%= singular_table_name %> if @<%= singular_table_name %>.errors.any? %>
