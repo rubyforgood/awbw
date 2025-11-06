@@ -5,6 +5,17 @@
       <%= render 'shared/errors', resource: workshop_idea %>
     <% end %>
 
+    <% if current_user.super_user && f.object.workshops.any? %>
+      <div class="admin-only bg-yellow-100 m-3 p-3">
+        This workshops idea has been promoted to a
+        <% f.object.workshops.each do |workshop| %>
+          <%= link_to "Workshop ##{workshop.id}",
+                      workshop_path(workshop), class: "btn btn-secondary-outline" %>
+        <% end %>
+        and should not be edited here.
+      </div>
+    <% end %>
+
     <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
     <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
