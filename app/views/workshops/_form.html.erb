@@ -80,11 +80,8 @@
       <% else %>
         <%= f.hidden_field :user_id, value: current_user&.id %>
       <% end %>
-
-      <%= f.input :age_range, as: :select,
-                  collection: @age_ranges,
-                  input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
     </div>
+
 
     <!-- Row 3 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -92,21 +89,32 @@
                   placeholder: "List all materials needed to create the workshop",
                   input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Timeframe/duration</label>
-        <div class="flex gap-x-2">
-          <%= f.input :time_hours, as: :select, label: false,
-                      collection: (0..5).to_a, prompt: "Hour",
-                      input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-          <%= f.input :time_minutes, as: :select, label: false,
-                      collection: [0, 15, 30, 45], prompt: "Minutes",
-                      input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-        </div>
-      </div>
+      <%= f.input :optional_materials, as: :text, label: "Optional materials",
+                  placeholder: "List other optional materials",
+                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
       <%= f.input :setup, as: :text, label: "Set Up Instructions",
                   placeholder: "Include any tips needed to prep the workshop",
                   input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+    </div>
+
+    <!-- Opening circle -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :opening_circle,
+                      as: :text,
+                      label: "Opening circle",
+                      placeholder: "Include a description of the opening circle",
+                      input_html: { rows: 2,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_opening_circle,
+                      label: "Minutes",
+                      input_html: { class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+      </div>
     </div>
 
     <!-- Demonstration / Warm-up / Creation / Closing -->

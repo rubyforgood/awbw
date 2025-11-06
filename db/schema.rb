@@ -841,6 +841,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_192601) do
     t.integer "time_demonstration"
     t.integer "time_intro"
     t.integer "time_opening"
+    t.integer "time_opening_circle"
     t.integer "time_warm_up"
     t.text "timeframe", size: :medium
     t.text "timeframe_spanish", size: :medium
@@ -855,6 +856,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_192601) do
     t.text "warm_up", size: :medium
     t.text "warm_up_spanish", size: :medium
     t.integer "windows_type_id"
+    t.bigint "workshop_idea_id"
     t.integer "year"
     t.index ["created_at"], name: "index_workshops_on_created_at"
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
@@ -864,6 +866,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_192601) do
     t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext
     t.index ["user_id"], name: "index_workshops_on_user_id"
     t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
+    t.index ["workshop_idea_id"], name: "index_workshops_on_workshop_idea_id"
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
@@ -924,6 +927,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_192601) do
   add_foreign_key "users", "projects", column: "agency_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
+  add_foreign_key "workshop_ideas", "users", column: "created_by_id"
+  add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
+  add_foreign_key "workshop_ideas", "windows_types"
   add_foreign_key "workshop_logs", "projects"
   add_foreign_key "workshop_logs", "users"
   add_foreign_key "workshop_logs", "workshops"
@@ -935,4 +941,5 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_192601) do
   add_foreign_key "workshop_variations", "workshops"
   add_foreign_key "workshops", "users"
   add_foreign_key "workshops", "windows_types"
+  add_foreign_key "workshops", "workshop_ideas"
 end
