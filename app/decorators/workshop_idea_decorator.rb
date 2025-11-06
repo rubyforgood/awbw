@@ -13,10 +13,10 @@ class WorkshopIdeaDecorator < Draper::Decorator
   def display_spanish_fields
     [
       :objective_spanish, :materials_spanish, :optional_materials_spanish,
-      :timeframe_spanish, :age_range_spanish, :setup_spanish,
+      :age_range_spanish, :setup_spanish,
       :introduction_spanish, :demonstration_spanish, :opening_circle_spanish,
       :warm_up_spanish, :visualization_spanish, :creation_spanish,
-      :closing_spanish, :notes_spanish, :tips_spanish
+      :closing_spanish, :notes_spanish, :tips_spanish # :timeframe_spanish,
     ]
   end
 

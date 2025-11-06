@@ -224,10 +224,10 @@ class Workshop < ApplicationRecord
 
   def self.anchors_spanish_admin
     %w[extra_field_spanish objective_spanish materials_spanish optional_materials_spanish
-      timeframe_spanish age_range_spanish setup_spanish introduction_spanish
+      age_range_spanish setup_spanish introduction_spanish
       demonstration_spanish opening_circle_spanish warm_up_spanish visualization_spanish
       creation_spanish closing_spanish notes_spanish tips_spanish misc1_spanish
-      misc2_spanish].map { |field|
+      misc2_spanish].map { |field| # timeframe_spanish
       "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |" }.join(" ").html_safe
   end
 end
