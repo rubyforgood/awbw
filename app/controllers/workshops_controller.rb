@@ -72,21 +72,12 @@ class WorkshopsController < ApplicationController
     set_form_variables
   end
 
-  def share_idea
-    @workshop = current_user.workshops.build
-    set_form_variables
-  end
-
   def edit
     @workshop = Workshop.find(params[:id])
     set_form_variables
   end
 
   def show
-    set_show
-  end
-
-  def share_idea_show
     set_show
   end
 
@@ -99,20 +90,6 @@ class WorkshopsController < ApplicationController
       set_form_variables
       flash[:alert] = 'Unable to update the workshop.'
       render :edit
-    end
-  end
-
-  def create_workshop_idea
-    @workshop = current_user.workshops.build(workshop_params)
-
-    @workshop.inactive = true # Workshop ideas are workshops with inactive == true
-
-    if @workshop.save
-      flash[:notice] = 'Thank you for submitting your workshop idea.'
-      redirect_to authenticated_root_path
-    else
-      flash[:alert] = 'Unable to save your workshop idea.'
-      render :share_idea
     end
   end
 

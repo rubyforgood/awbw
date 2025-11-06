@@ -12,12 +12,7 @@ Rails.application.routes.draw do
   get 'users/change_password', to: 'users#change_password', as:'change_password'
   post 'users/update_password', to: 'users#update_password', as: 'update_password'
 
-  get 'workshops/share_idea', to: 'workshops#share_idea'
   get 'workshops/summary', to: 'workshops#summary'
-  get 'workshops/:id/share_idea_show', to: 'workshops#share_idea_show',
-      as: 'share_idea_show'
-
-  post 'workshops/create_workshop_idea', to: 'workshops#create_workshop_idea'
   post 'workshops/create_dummy_workshop', to: 'workshops#create_dummy_workshop'
 
   post 'workshop_logs/validate_new', to: 'workshop_logs#validate_new'
@@ -26,6 +21,13 @@ Rails.application.routes.draw do
   post 'impersonate_users', to: 'impersonate_users#impersonate'
   post 'impersonate_users_back', to: 'impersonate_users#back'
   get 'impersonate_users/help', to: 'impersonate_users#help'
+
+
+  get 'contact_us', to: 'contact_us#index'
+  post 'contact_us', to: 'contact_us#create'
+  get 'dashboard/admin', to: 'dashboard#admin'
+  get 'dashboard/recent_activities', to: 'dashboard#recent_activities'
+  get 'dashboard/help', to: 'dashboard#help'
 
   resources :workshops do
     collection do
@@ -42,8 +44,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :workshop_log_creation_wizard
-  resources :workshop_logs
+
 
   resources :events
   resources :event_registrations, only: [:create, :destroy] do
@@ -51,6 +52,10 @@ Rails.application.routes.draw do
       post :bulk_create
     end
   end
+
+  resources :faqs
+  resources :monthly_reports
+  resources :project_users
 
   resources :users
   resources :user_forms
@@ -79,18 +84,11 @@ Rails.application.routes.draw do
 
   resources :story_ideas
   resources :stories
-
-  get 'contact_us', to: 'contact_us#index'
-  post 'contact_us', to: 'contact_us#create'
-  get 'dashboard/admin', to: 'dashboard#admin'
-  get 'dashboard/recent_activities', to: 'dashboard#recent_activities'
-  get 'dashboard/help', to: 'dashboard#help'
-
-  resources :monthly_reports
-  resources :faqs
-  resources :project_users
-  resources :workshops
+  resources :workshop_ideas
+  resources :workshop_logs
+  resources :workshop_log_creation_wizard
   resources :workshop_variations
+  resources :workshops
 
   namespace :api do
     namespace :v1 do
