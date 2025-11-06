@@ -10,6 +10,7 @@ class WorkshopIdea < ApplicationRecord
   has_one_attached :header
   validates :header, content_type: ACCEPTED_CONTENT_TYPES
   has_many :images, as: :owner, dependent: :destroy
+  validate :images_must_be_valid_type
 
   has_many :workshop_series_children, # When this workshop is the parent in a series
            -> { order(:series_order) },
@@ -21,6 +22,7 @@ class WorkshopIdea < ApplicationRecord
            foreign_key: "workshop_child_id",
            dependent: :destroy
 
+  accepts_nested_attributes_for :images, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
                                 allow_destroy: true
@@ -56,7 +58,19 @@ class WorkshopIdea < ApplicationRecord
     end
   end
 
+  private
+
   def set_time_frame
     self.timeframe = time_frame_total
+  end
+
+  def images_must_be_valid_type
+    return if images.none?
+
+    images.each do |image|
+      unless ACCEPTED_CONTENT_TYPES.include?(image.file.content_type)
+        errors.add(:images, "must be a JPEG or PNG (#{image.filename})")
+      end
+    end
   end
 end

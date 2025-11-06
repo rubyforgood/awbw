@@ -68,7 +68,12 @@ class WorkshopsController < ApplicationController
   end
 
   def new
-    @workshop = Workshop.new(user: current_user)
+    if params[:workshop_idea_id].present?
+      @workshop_idea = WorkshopIdea.find(params[:workshop_idea_id])
+      @workshop = WorkshopFromIdeaService.new(@workshop_idea, user: current_user).call
+    else
+      @workshop = Workshop.new(user: current_user)
+    end
     set_form_variables
   end
 
@@ -147,6 +152,9 @@ class WorkshopsController < ApplicationController
     image = @workshop.images.first || @workshop.images.build # build an image if there isn't one
 
     @age_ranges = AgeRange.all
+    @workshop_ideas = WorkshopIdea.order(created_at: :desc)
+                                  .map { |wi| ["#{wi.created_at.strftime("%Y-%m-%d")} - (#{wi.created_by.full_name}): #{wi.title}",
+                                               wi.id] }
   end
 
   def workshops_per_page
