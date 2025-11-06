@@ -1,9 +1,25 @@
 FactoryBot.define do
-  # Workshop factory is defined in workshops.rb
+  factory :workshop_idea do
+    title { "MyString" }
+    description { "MyText" }
+    staff_notes { "MyText" }
+    association :windows_type
+    tips { "MyText" }
+    objective { "MyText" }
+    materials { "MyText" }
+    introduction { "MyText" }
+    creation { "MyText" }
+    closing { "MyText" }
+    visualization { "MyText" }
+    warm_up { "MyText" }
+    opening_circle { "MyText" }
+    demonstration { "MyText" }
+    setup { "MyText" }
+    instructions { "MyText" }
+    optional_materials { "MyText" }
+    notes { "MyText" }
 
-  # Specific factory for WorkshopIdea inheriting from Workshop
-  factory :workshop_idea, parent: :workshop, class: 'WorkshopIdea' do
-    inactive { true } # Default scope for WorkshopIdea
-    # Add specific attributes or associations for WorkshopIdea if needed
+    association :created_by, factory: :user
+    association :updated_by, factory: :user
   end
-end 
+end
