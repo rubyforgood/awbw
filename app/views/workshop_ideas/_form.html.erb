@@ -257,22 +257,25 @@
         </div>
       </div>
 
-      <div>
-        <button type="button" class="w-full bg-gray-600 text-white px-3 py-2 rounded-t-md accordion-toggle">Series workshops</button>
-        <div class="accordion-content <%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md">
-          <p class="mb-2 text-sm text-gray-600">
-            If this Workshop is a series, add the other "series workshops" below.
-            You can also add a series-specific description for each workshop in the series, and the order in which they should appear.
-            (The main workshop description will appear if you don't add a "series description".)
-          </p>
-          <%= f.fields_for :workshop_series_children do |child_workshop_membership| %>
-            <%= render "workshop_series_child_fields", f: child_workshop_membership %>
-          <% end %>
-          <div class="mt-2">
-            <%= link_to_add_association "Add another Workshop to this Series", f, :workshop_series_children, partial: "workshop_series_child_fields", class: "text-blue-600 hover:underline" %>
-          </div>
-        </div>
-      </div>
+<!--      <div>-->
+<!--        <button type="button" class="w-full bg-gray-600 text-white px-3 py-2 rounded-t-md accordion-toggle">Series workshops</button>-->
+<!--        <div class="accordion-content <%##= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md">-->
+<!--          <p class="mb-2 text-sm text-gray-600">-->
+<!--            If this Workshop is a series, add the other "series workshops" below.-->
+<!--            You can also add a series-specific description for each workshop in the series, and the order in which they should appear.-->
+<!--            (The main workshop description will appear if you don't add a "series description".)-->
+<!--          </p>-->
+          <%#= f.fields_for :workshop_series_children do |child_workshop_membership| %>
+            <%#= render "workshop_series_child_fields", f: child_workshop_membership %>
+          <%# end %>
+<!--          <div class="mt-2">-->
+            <%#= link_to_add_association "Add another Workshop to this Series", f,
+                                        :workshop_series_children,
+                                        partial: "workshop_series_child_fields",
+                                        class: "text-blue-600 hover:underline" %>
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
     </div>
 
     <!-- Actions -->
