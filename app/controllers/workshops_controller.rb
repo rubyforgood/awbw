@@ -168,7 +168,7 @@ class WorkshopsController < ApplicationController
   def workshop_params
     params.require(:workshop).permit(
       :title, :featured, :inactive,
-      :full_name, :user_id, :windows_type_id,
+      :full_name, :user_id, :windows_type_id, :workshop_idea_id,
       :month, :year,
 
       :time_intro, :time_closing, :time_creation, :time_demonstration,
