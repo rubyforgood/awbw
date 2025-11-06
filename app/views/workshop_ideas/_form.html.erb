@@ -74,6 +74,13 @@
         </p>
       </div>
 
+      <%= f.input :description, as: :text, label: "Workshop description",
+                  hint: "Describe the workshop",
+                  input_html: { rows: 1,
+                                class: "block w-full rounded-md border-gray-300 shadow-sm
+                                focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+
+
       <% if current_user.super_user %>
         <div class="admin-only bg-blue-100 flex gap-x-2 items-center p-3">
           <%= f.input :created_by_id,
@@ -224,14 +231,20 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <%= f.input :notes, as: :text,
                   hint: "Anything else you'd like us to know",
-                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+                  input_html: { rows: 2,
+                                class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
+                                focus:border-blue-500 sm:text-sm" } %>
       <%= f.input :tips, as: :text,
                   hint: "Any tips on how to make this workshop a success",
-                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+                  input_html: { rows: 2,
+                                class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
+                                focus:border-blue-500 sm:text-sm" } %>
       <% if current_user.super_user? %>
         <div class="admin-only bg-blue-100 p-3">
           <%= f.input :staff_notes, as: :text,
-                      input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+                      input_html: { rows: 2,
+                                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
+                                    focus:border-blue-500 sm:text-sm" } %>
         </div>
       <% end %>
 

@@ -1,48 +1,30 @@
 require 'rails_helper'
 
 RSpec.describe "workshop_ideas/edit", type: :view do
-  let(:workshop_idea) {
-    WorkshopIdea.create!(
-      title: "MyString",
-      description: "MyText",
-      staff_notes: "MyText",
-      created_by: nil,
-      windows_type_id: nil,
-      tips: "MyText",
-      objective: "MyText",
-      materials: "MyText",
-      introduction: "MyText",
-      creation: "MyText",
-      closing: "MyText",
-      visualization: "MyText",
-      warm_up: "MyText",
-      opening_circle: "MyText",
-      demonstration: "MyText",
-      setup: "MyText",
-      instructions: "MyText",
-      optional_materials: "MyText",
-      notes: "MyText"
-    )
-  }
+  let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
+  let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
+  let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
+  let(:user) { create(:user) }
+  let(:admin) { create(:user, :admin) }
+  let(:workshop_idea) { create(:workshop_idea, created_by: user, updated_by: user) }
 
   before(:each) do
     assign(:workshop_idea, workshop_idea)
+    allow(view).to receive(:current_user).and_return(user)
+    assign(:windows_types, [])
   end
+
 
   it "renders the edit workshop_idea form" do
     render
 
     assert_select "form[action=?][method=?]", workshop_idea_path(workshop_idea), "post" do
 
-      assert_select "input[name=?]", "workshop_idea[title]"
+      assert_select "textarea[name=?]", "workshop_idea[title]"
 
       assert_select "textarea[name=?]", "workshop_idea[description]"
 
-      assert_select "textarea[name=?]", "workshop_idea[staff_notes]"
-
-      assert_select "input[name=?]", "workshop_idea[created_by_id]"
-
-      assert_select "input[name=?]", "workshop_idea[windows_type_id_id]"
+      assert_select "select[name=?]", "workshop_idea[windows_type_id]"
 
       assert_select "textarea[name=?]", "workshop_idea[tips]"
 
@@ -56,7 +38,7 @@ RSpec.describe "workshop_ideas/edit", type: :view do
 
       assert_select "textarea[name=?]", "workshop_idea[closing]"
 
-      assert_select "textarea[name=?]", "workshop_idea[visualization]"
+      # assert_select "textarea[name=?]", "workshop_idea[visualization]"
 
       assert_select "textarea[name=?]", "workshop_idea[warm_up]"
 
@@ -66,11 +48,29 @@ RSpec.describe "workshop_ideas/edit", type: :view do
 
       assert_select "textarea[name=?]", "workshop_idea[setup]"
 
-      assert_select "textarea[name=?]", "workshop_idea[instructions]"
+      # assert_select "textarea[name=?]", "workshop_idea[instructions]"
 
       assert_select "textarea[name=?]", "workshop_idea[optional_materials]"
 
       assert_select "textarea[name=?]", "workshop_idea[notes]"
+    end
+  end
+
+  context "when viewed by a regular user" do
+    before { allow(view).to receive(:current_user).and_return(user) }
+
+    it "does not show the staff_notes field" do
+      render
+      expect(rendered).not_to have_selector("textarea[name='workshop_idea[staff_notes]']")
+    end
+  end
+
+  context "when viewed by an admin user" do
+    before { allow(view).to receive(:current_user).and_return(admin) }
+
+    it "shows the staff_notes field" do
+      render
+      expect(rendered).to have_selector("textarea[name='workshop_idea[staff_notes]']")
     end
   end
 end

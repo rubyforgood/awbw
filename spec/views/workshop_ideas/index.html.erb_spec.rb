@@ -1,74 +1,26 @@
 require 'rails_helper'
 
 RSpec.describe "workshop_ideas/index", type: :view do
+  let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
+  let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
+  let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
+  let(:user) { create(:user) }
+  let(:workshop_idea1) { create(:workshop_idea, created_by: user, updated_by: user, title: "MyStory1") }
+  let(:workshop_idea2) { create(:workshop_idea, created_by: user, updated_by: user, title: "MyStory2") }
+
   before(:each) do
-    assign(:workshop_ideas, [
-      WorkshopIdea.create!(
-        title: "Title",
-        description: "MyText",
-        staff_notes: "MyText",
-        created_by: nil,
-        windows_type_id: nil,
-        tips: "MyText",
-        objective: "MyText",
-        materials: "MyText",
-        introduction: "MyText",
-        creation: "MyText",
-        closing: "MyText",
-        visualization: "MyText",
-        warm_up: "MyText",
-        opening_circle: "MyText",
-        demonstration: "MyText",
-        setup: "MyText",
-        instructions: "MyText",
-        optional_materials: "MyText",
-        notes: "MyText"
-      ),
-      WorkshopIdea.create!(
-        title: "Title",
-        description: "MyText",
-        staff_notes: "MyText",
-        created_by: nil,
-        windows_type_id: nil,
-        tips: "MyText",
-        objective: "MyText",
-        materials: "MyText",
-        introduction: "MyText",
-        creation: "MyText",
-        closing: "MyText",
-        visualization: "MyText",
-        warm_up: "MyText",
-        opening_circle: "MyText",
-        demonstration: "MyText",
-        setup: "MyText",
-        instructions: "MyText",
-        optional_materials: "MyText",
-        notes: "MyText"
-      )
-    ])
+    assign(:workshop_ideas, paginated([workshop_idea1, workshop_idea2]))
+    allow(view).to receive(:current_user).and_return(user)
   end
 
-  it "renders a list of workshop_ideas" do
+  it "renders a list of story_ideas" do
     render
-    cell_selector = 'div>p'
-    assert_select cell_selector, text: Regexp.new("Title".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(nil.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(nil.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
+    expect(rendered).to include(workshop_idea1.title, workshop_idea2.title)
+  end
+
+  it "renders a friendly message when no story_ideas exist" do
+    assign(:workshop_ideas, paginated([]))
+    render
+    expect(rendered).to match(/No Workshop ideas found/)
   end
 end

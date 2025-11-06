@@ -1,50 +1,21 @@
 require 'rails_helper'
 
 RSpec.describe "workshop_ideas/show", type: :view do
+  let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
+  let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
+  let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
+  let(:user) { create(:user) }
+  let(:workshop_idea) { create(:workshop_idea, created_by: user, updated_by: user,
+                               title: "MyTitle", description: "MyDescription") }
+
   before(:each) do
-    assign(:workshop_idea, WorkshopIdea.create!(
-      title: "Title",
-      description: "MyText",
-      staff_notes: "MyText",
-      created_by: nil,
-      windows_type_id: nil,
-      tips: "MyText",
-      objective: "MyText",
-      materials: "MyText",
-      introduction: "MyText",
-      creation: "MyText",
-      closing: "MyText",
-      visualization: "MyText",
-      warm_up: "MyText",
-      opening_circle: "MyText",
-      demonstration: "MyText",
-      setup: "MyText",
-      instructions: "MyText",
-      optional_materials: "MyText",
-      notes: "MyText"
-    ))
+    assign(:workshop_idea, workshop_idea)
+    allow(view).to receive(:current_user).and_return(user)
   end
 
   it "renders attributes in <p>" do
     render
-    expect(rendered).to match(/Title/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(//)
-    expect(rendered).to match(//)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
+    expect(rendered).to include(/MyTitle/)
+    expect(rendered).to include(/MyDescription/)
   end
 end
