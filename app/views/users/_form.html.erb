@@ -13,7 +13,28 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-4">
-          <%= f.input :email, input_html: { class: "w-full" }, wrapper_html: { class: "w-full" } %>
+          <% if current_user.super_user? %>
+            <div class="admin-only bg-blue-100 w-full">
+              <%= f.input :email,
+                          hint: "Only editable by admins",
+                          input_html: { class: "w-full" },
+                          wrapper_html: { class: "w-full" } %>
+            </div>
+          <% else %>
+            <div class="w-full">
+              <label class="block text-md font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <div class="flex gap-x-2 items-center">
+                <span class="text-gray-900 font-medium">
+                  <%= f.object.email %>
+                </span>
+              </div>
+              <p class="text-sm text-gray-500 mt-1">
+                Only editable by admins
+              </p>
+            </div>
+          <% end %>
           <div class="w-full md:w-auto">
             <%= f.label :birthday, "Birthday", required: true, class: "block font-medium mb-1" %>
             <%= f.text_field :birthday, type: 'date',
@@ -24,10 +45,14 @@
           </div>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-4">
-          <%= f.input :inactive %>
-          <%= f.input :super_user %>
-        </div>
+        <% if current_user.super_user? %>
+          <div class="admin-only bg-blue-100 w-full p-3">
+            <div class="flex flex-col md:flex-row gap-4">
+              <%= f.input :inactive %>
+              <%= f.input :super_user %>
+            </div>
+          </div>
+        <% end %>
 
         <div class="flex flex-col md:flex-row gap-4">
           <%= f.input :phone %>
@@ -72,27 +97,32 @@
   </div>
 
   <!-- Notes -->
-  <div>
-    <%= f.input :notes, as: :text, input_html: { rows: 3, class: "w-full" } %>
-  </div>
+  <% if current_user.super_user? %>
+    <div class="admin-only bg-blue-100 p-3">
+      <%= f.input :notes, as: :text, input_html: { rows: 3, class: "w-full" } %>
+    </div>
+  <% end %>
 
-  <div class="form-group">
+  <div class="form-group space-y-4">
+    <h4 class="text-sm font-semibold text-gray-700">Organization Connections</h4>
     <%= f.fields_for :project_users do |project_user_form| %>
       <%= render "project_user_fields",
                  f: project_user_form,
                  projects: @user.projects,
                  user: @user %>
     <% end %>
-    <%= link_to_add_association "add role",
-                                f,
-                                :project_users,
-                                html_options: {
-                                  locals: {
-                                    projects: @user.projects,
+
+    <div>
+      <%= link_to_add_association "➕ Add Role",
+                                  f,
+                                  :project_users,
+                                  html_options: {
+                                    locals: { projects: @user.projects }
                                   },
-                                },
-                                class: "smaller" %>
+                                  class: "inline-flex items-center rounded-md bg-blue-600 text-white px-3 py-2 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition" %>
+    </div>
   </div>
+
 
   <!-- Actions -->
   <!-- Action buttons -->

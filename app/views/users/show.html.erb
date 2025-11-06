@@ -1,167 +1,62 @@
 <div class="min-h-screen py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
-      <div class="flex items-center justify-between mb-6">
-        <!-- Title -->
-        <h1 class="text-2xl font-semibold text-gray-900">
-          <%= @user.class.model_name.human %> Details
-        </h1>
 
-        <!-- Buttons Group -->
-        <div class="flex items-center gap-2">
-          <%= link_to("Index", users_path, class: "btn btn-secondary-outline") %>
-          <% if current_user.super_user? %>
-            <%= link_to("Edit", edit_user_path(@user), class: "btn btn-primary-outline") %>
+      <!-- Top buttons -->
+      <div class="flex justify-end mb-6">
+        <% if current_user.super_user? %>
+          <%= link_to "Users", users_path, class: "btn btn-secondary-outline mr-2" %>
+          <%= link_to "Edit", edit_user_path(@user), class: "btn btn-primary-outline" %>
+        <% end %>
+      </div>
+
+      <!-- Main two-column layout -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <!-- Left column: name + avatar -->
+        <div class="flex flex-col items-center md:items-start text-center md:text-left">
+          <h2 class="font-bold text-3xl text-gray-900 mb-4"><%= @user.name %></h2>
+
+          <% if @user.avatar.attached? %>
+            <%= image_tag url_for(@user.avatar),
+                          id: "avatar-preview",
+                          class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm" %>
+          <% else %>
+            <%= image_tag "missing.png",
+                          id: "avatar-preview",
+                          class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
           <% end %>
         </div>
-      </div>
 
-      <div class="fontweight-bold text-3xl">
-        <%= @user.name %>
-      </div>
-
-      <% if @user.avatar.attached? %>
-        <%= image_tag url_for(@user.avatar),
-                      id: "avatar-preview",
-                      class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm img-rounded avatar" %>
-      <% else %>
-        <%= image_tag "missing.png",
-                      id: "avatar-preview",
-                      class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
-      <% end %>
-
-      <div class="space-y-6">
-        <div class="mt-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">First name:</p>
-              <p class="text-gray-900"><%= @user.first_name %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Last name:</p>
-              <p class="text-gray-900"><%= @user.last_name %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Email:</p>
-              <p class="text-gray-900"><%= @user.email %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Address:</p>
-              <p class="text-gray-900"><%= @user.address %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Address2:</p>
-              <p class="text-gray-900"><%= @user.address2 %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">City:</p>
-              <p class="text-gray-900"><%= @user.city %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">City2:</p>
-              <p class="text-gray-900"><%= @user.city2 %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">State:</p>
-              <p class="text-gray-900"><%= @user.state %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">State2:</p>
-              <p class="text-gray-900"><%= @user.state2 %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Zip:</p>
-              <p class="text-gray-900"><%= @user.zip %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Zip2:</p>
-              <p class="text-gray-900"><%= @user.zip2 %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Phone:</p>
-              <p class="text-gray-900"><%= @user.phone %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Phone2:</p>
-              <p class="text-gray-900"><%= @user.phone2 %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Phone3:</p>
-              <p class="text-gray-900"><%= @user.phone3 %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Birthday:</p>
-              <p class="text-gray-900"><%= @user.birthday %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Best time to call:</p>
-              <p class="text-gray-900"><%= @user.best_time_to_call %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Comment:</p>
-              <p class="text-gray-900"><%= @user.comment %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Notes:</p>
-              <p class="text-gray-900"><%= @user.notes %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Inactive:</p>
-              <p class="text-gray-900"><%= @user.inactive %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Super user:</p>
-              <p class="text-gray-900"><%= @user.super_user %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Agency:</p>
-              <p class="text-gray-900"><%= @user.agency_id %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Facilitator:</p>
-              <p class="text-gray-900"><%= @user.facilitator_id %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Reset password token:</p>
-              <p class="text-gray-900"><%= @user.reset_password_token %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Reset password sent at:</p>
-              <p class="text-gray-900"><%= @user.reset_password_sent_at %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Remember created at:</p>
-              <p class="text-gray-900"><%= @user.remember_created_at %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Sign in count:</p>
-              <p class="text-gray-900"><%= @user.sign_in_count %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Current sign in at:</p>
-              <p class="text-gray-900"><%= @user.current_sign_in_at %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Current sign in ip:</p>
-              <p class="text-gray-900"><%= @user.current_sign_in_ip %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Last sign in at:</p>
-              <p class="text-gray-900"><%= @user.last_sign_in_at %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Last sign in ip:</p>
-              <p class="text-gray-900"><%= @user.last_sign_in_ip %></p>
-            </div>
-
-            <hr>
-            <h5 class="normal upcase">associated projects:</h5>
-            <h4 class="normal">
-              <%= @user.decorate.display_agencies %>
-            </h4>
-          </div>
+        <!-- Right column: organizations -->
+        <div>
+          <h5 class="text-sm font-semibold uppercase text-gray-700 mb-2">
+            Organization affiliations:
+          </h5>
+          <ul class="text-gray-800">
+            <% @user.project_users.each do |project_user| %>
+              <li>
+                <%= "#{project_user.project.name} - #{project_user.position}" %>
+              </li>
+            <% end %>
+          </ul>
         </div>
       </div>
+
+      <!-- Workshops authored -->
+      <div class="mt-10">
+        <h5 class="text-sm font-semibold uppercase text-gray-700 mb-2">
+          Workshops authored:
+        </h5>
+        <ul class="text-gray-800 space-y-2">
+          <% @user.workshops.each do |workshop| %>
+            <%= render "workshops/index_row",
+                       workshop: workshop.decorate,
+                       link_route: workshop_path(workshop),
+                       hide_tags: true %>
+          <% end %>
+        </ul>
+      </div>
+
     </div>
   </div>
 </div>

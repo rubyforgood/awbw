@@ -87,8 +87,13 @@ class UsersController < ApplicationController
   end
 
   def set_form_variables
-    @user.project_users.build
-    @projects = current_user.projects
+    @user.project_users.first || @user.project_users.build
+    projects = if current_user.super_user?
+                 Project.active
+               else
+                 current_user.projects
+               end
+    @projects_array = projects.order(:name).pluck(:name, :id)
   end
 
   def password_param
@@ -106,7 +111,9 @@ class UsersController < ApplicationController
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :comment,
       :notes, :primary_address, :avatar, :subscribecode,
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
-      :confirmed, :inactive, :super_user, :legacy, :legacy_id
+      :confirmed, :inactive, :super_user, :legacy, :legacy_id,
+
+      project_users_attributes: [:id, :project_id, :position, :_destroy]
     )
   end
 end

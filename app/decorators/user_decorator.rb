@@ -9,11 +9,6 @@ class UserDecorator < Draper::Decorator
     end
   end
 
-  def display_agencies
-    project_users.map { |u| "#{u.project.name} - #{u.position}" }
-      .join(h.content_tag :li).html_safe
-  end
-
   def last_logged_in
     return 'never' unless last_sign_in_at
     "#{h.time_ago_in_words(last_sign_in_at)} ago"

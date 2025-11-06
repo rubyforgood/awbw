@@ -8,6 +8,8 @@ class Project < ApplicationRecord
   has_many :workshop_logs, through: :users
   belongs_to :project_status
 
+  scope :active, -> { where(inactive: false) }
+
   # Methods
   def led_by?(user)
     return false unless leader
