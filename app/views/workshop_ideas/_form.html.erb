@@ -280,7 +280,10 @@
 
     <!-- Actions -->
     <div class="flex gap-x-3 mt-6">
-      <% if current_user.super_user? %>
+      <% if current_user.super_user? && f.object.persisted? %>
+        <%= link_to "Promote to Workshop",
+                    new_workshop_path(workshop_idea_id: f.object.id),
+                    class: "btn btn-secondary-outline" %>
         <%= link_to "Delete", @workshop_idea, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
       <% end %>
       <%= link_to "Cancel", authenticated_root_path, class: "btn btn-secondary-outline" %>
