@@ -42,9 +42,9 @@
                     label: "Agency",
                     required: true,
                     hint: "Please contact AWBW if your agency is not listed.",
-                    prompt: (@agencies.size > 1 ? "Please select the relevant agency" : nil), # only show prompt if multiple
+                    prompt: (@agencies.count > 1 ? "Please select the relevant agency" : nil), # only show prompt if multiple
                     input_html: { class: "form-control form-control-custom" },
-                    selected: (@agencies.size == 1 ? @agencies.first.id : nil) %>
+                    selected: (@agencies.count == 1 ? @agencies.first.id : nil) %>
       </div>
 
       <!-- Workshop Date -->

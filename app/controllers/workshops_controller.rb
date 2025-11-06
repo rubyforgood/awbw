@@ -11,7 +11,7 @@ class WorkshopsController < ApplicationController
                                          :workshop_age_ranges, :bookmarks)
                                .paginate(page: params[:page], per_page: params[:per_page] || 50)
 
-    @workshops_count = search_service.workshops.size
+    @workshops_count = search_service.workshops.count
 
     @category_metadata = Metadatum.published.includes(:categories).decorate
     @sectors = Sector.published

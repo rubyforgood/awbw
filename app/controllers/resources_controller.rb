@@ -8,7 +8,7 @@ class ResourcesController < ApplicationController
                           .by_created
     @resources = unpaginated.paginate(page: params[:page], per_page: 24)
 
-    @resources_count = unpaginated.size
+    @resources_count = unpaginated.count
     @sortable_fields = Resource::KINDS
 
     respond_to do |format|
