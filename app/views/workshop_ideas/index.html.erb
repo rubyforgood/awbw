@@ -23,6 +23,7 @@
             <tr>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Main Image</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Title</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Timeframe</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Author</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Promoted?</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
@@ -33,17 +34,18 @@
             <% @workshop_ideas.each do |workshop_idea| %>
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2 text-center">
-                  <% if workshop_idea.header.present? %>
-                    <%= image_tag url_for(workshop_idea.header),
-                                  class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm mx-auto" %>
+                  <% if workshop_idea.header.present? || workshop_idea.images.any? %>
+                    <%= image_tag url_for(workshop_idea.header&.file || workshop_idea.images.first.file),
+                                  class: "w-10 h-10 object-cover border border-gray-300 shadow-sm mx-auto" %>
                   <% else %>
                     <%= image_tag "missing.png",
-                                  class: "w-10 h-10 rounded-full object-cover border border-dashed border-gray-300 mx-auto" %>
+                                  class: "w-10 h-10 object-cover border border-dashed border-gray-300 mx-auto" %>
                   <% end %>
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.title %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.time_frame_total %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.created_by.full_name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.workshops.any? %></td>
+                <td class="px-4 py-2 text-sm text-gray-800 text-center"><%= workshop_idea.workshops.any? %></td>
 
                 <!-- Actions -->
                 <td class="px-4 py-2 flex justify-center gap-2">
