@@ -45,7 +45,13 @@
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.title %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.time_frame_total %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.created_by.full_name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800 text-center"><%= workshop_idea.workshops.any? %></td>
+                <td class="px-4 py-2 text-sm text-gray-800 text-center">
+                  <% if workshop_idea.workshops.any? %>
+                    <span class='fa fa-check-circle text-green-500'></span>
+                  <% else %>
+                    <span>--</span>
+                  <% end %>
+                </td>
 
                 <!-- Actions -->
                 <td class="px-4 py-2 flex justify-center gap-2">
