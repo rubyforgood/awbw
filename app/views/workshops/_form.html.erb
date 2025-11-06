@@ -1,8 +1,8 @@
-<div class="w-full mx-auto">
+<div class="w-full mx-auto" data-controller="timeframe">
   <%= simple_form_for @workshop do |f| %>
     <!-- Errors -->
     <% if workshop.errors.any? %>
-      <%= render 'shared/tailwind/errors', resource: workshop %>
+      <%= render 'shared/errors', resource: workshop %>
     <% end %>
 
     <!-- Row 1 -->
@@ -11,6 +11,7 @@
         <%= f.input :title,
                     as: :text,
                     label: "Workshop title",
+                    required: true,
                     input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" },
                     wrapper: false,
                     label_html: { class: 'block text-sm font-medium text-gray-700 mb-1' } %>
@@ -26,9 +27,36 @@
                     input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
       </div>
 
-      <% if request.path == workshops_share_idea_path %>
-        <%= f.hidden_field :inactive, value: true %>
-      <% elsif current_user.super_user? %>
+      <div>
+        <%= f.input :age_range, as: :select,
+                    collection: @age_ranges,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <%= f.input :objective, as: :text, label: "Workshop objective",
+                  placeholder: "Indicate goals of the workshop",
+                  input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+
+      <div>
+        <label class="block text-md font-medium text-gray-700 mb-1">
+          Timeframe / Duration
+        </label>
+        <div class="flex gap-x-2 items-center">
+          <span data-timeframe-target="output"
+                class="text-gray-900 font-medium">
+            <%= f.object.time_frame_total %>
+          </span>
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Automatic total time, in 15min increments
+        </p>
+      </div>
+
+      <% if current_user.super_user? %>
+        <br>
         <div class="admin-only bg-blue-100">
           <label class="block text-sm font-medium text-gray-700 mb-1">Flags</label>
           <div class="flex gap-x-6 items-center">
@@ -37,13 +65,7 @@
           </div>
         </div>
       <% end %>
-    </div>
 
-    <!-- Row 2 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <%= f.input :objective, as: :text, label: "Workshop objective",
-                  placeholder: "Indicate goals of the workshop",
-                  input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
       <% if current_user.super_user %>
         <div class="admin-only bg-blue-100 flex gap-x-2 items-center">
