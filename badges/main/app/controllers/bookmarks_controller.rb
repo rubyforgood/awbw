@@ -30,21 +30,22 @@ class BookmarksController < ApplicationController
   def create
     @bookmark = current_user.bookmarks.find_or_create_by(bookmark_params)
     @bookmarkable = @bookmark.bookmarkable
-    @bookmarkable.update(led_count: @bookmarkable.led_count + 1)
-    flash[:notice] = "#{@bookmark.bookmarkable_type} added to your bookmarks."
-    if params[:from] == "workshops_index"
-      redirect_to workshops_path(params.permit(:title, :query, :sort, :page, :active).to_h),
-                  anchor: "workshop-#{@bookmark.bookmarkable.id}-anchor"
-    else
-      redirect_to workshop_path(@bookmark.bookmarkable)
+    @bookmarkable.update(led_count: @bookmarkable.led_count + 1) if @bookmarkable.has_attribute?(:led_count)
+    respond_to do |format|
+      format.html {
+        redirect_to authenticated_root_path, notice: "#{@bookmark.bookmarkable_type} added to your bookmarks."
+      }
+      format.turbo_stream do
+        flash.now[:notice] = "#{@bookmark.bookmarkable_type} added to your bookmarks."
+        render :update
+      end
     end
-
   end
 
   def show
     @bookmark = Bookmark.find(params[:id]).decorate
     @bookmarkable = @bookmark.bookmarkable
-    load_workshop_data if @bookmark.bookmarkable_class_name == 'Workshop'
+    load_workshop_data if @bookmark.bookmarkable_class_name == "Workshop"
   end
 
   def destroy
@@ -52,18 +53,18 @@ class BookmarksController < ApplicationController
     if @bookmark
       @bookmark.destroy
       @bookmarkable = @bookmark.bookmarkable
-      @bookmarkable.update(led_count: @bookmarkable.led_count - 1)
-      flash[:notice] = 'Bookmark has been deleted.'
-      if params[:from] == "index"
-        redirect_to bookmarks_path
-      elsif params[:from] == "workshops_index"
-        redirect_to workshops_path(params.permit(:title, :query, :sort, :page, :active).to_h),
-                    anchor: "workshop-#{@bookmark.bookmarkable.id}-anchor"
-      else
-        redirect_to workshop_path(@bookmark.bookmarkable)
+      @bookmarkable.update(led_count: @bookmarkable.led_count - 1) if @bookmarkable.has_attribute?(:led_count)
+      respond_to do |format|
+        format.html {
+          redirect_to authenticated_root_path, notice: "Bookmark has been deleted."
+        }
+        format.turbo_stream do
+          flash.now[:notice] = "Bookmark has been deleted."
+          render :update
+        end
       end
     else
-      flash[:alert] = 'Unable to find that bookmark.'
+      flash[:alert] = "Unable to find that bookmark."
     end
   end
 
@@ -72,10 +73,9 @@ class BookmarksController < ApplicationController
 
     # Aggregate counts cleanly
     grouped_counts = Bookmark.where(id: bookmark_ids)
-                             .group(:bookmarkable_type, :bookmarkable_id)
-                             .pluck(:bookmarkable_type, :bookmarkable_id,
-                               Arel.sql("COUNT(*) AS total_bookmarks")
-                             )
+      .group(:bookmarkable_type, :bookmarkable_id)
+      .pluck(:bookmarkable_type, :bookmarkable_id,
+        Arel.sql("COUNT(*) AS total_bookmarks"))
 
     # Resolve polymorphic objects + sort desc
     @bookmark_counts = grouped_counts.group_by(&:first).flat_map do |type, rows|

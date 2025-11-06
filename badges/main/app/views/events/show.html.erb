@@ -7,9 +7,15 @@
         <%= link_to("Edit", edit_event_path(@event), class: "btn btn-primary-outline") %>
       <% end %>
     </div>
-    <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
-      <h1 class="text-2xl font-bold mb-4">Event Details</h1>
-
+    <div
+      class="
+        max-w-3xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6
+      "
+    >
+      <div class="flex gap-3">
+        <h1 class="pt-4 text-2xl font-bold mb-4">Event Details</h1>
+        <%= render "bookmarks/editable_bookmark_button", resource: @event %>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
         <div>
           <p class="font-bold text-gray-700">Title:</p>

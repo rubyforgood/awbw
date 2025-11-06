@@ -1,0 +1,16 @@
+<%= turbo_stream.replace dom_id(@bookmarkable, :bookmark_icon), partial: "editable_bookmark_icon", locals: {resource: @bookmarkable} %>
+<%= turbo_stream.replace dom_id(@bookmarkable, :bookmark_button), partial: "editable_bookmark_button", locals: {resource: @bookmarkable} %>
+
+<% if @bookmarkable.has_attribute?(:led_count)  %>
+  <%= turbo_stream.update dom_id(@bookmarkable, :bookmark_count) do  %>
+       Bookmarked:
+       <%= @bookmarkable.led_count %>
+       <%= "time".pluralize(@bookmarkable.led_count) %>
+  <% end  %>
+  <%= turbo_stream.update dom_id(@bookmarkable, :bookmark_count_facilitator) do  %>
+      (Bookmarked by
+      <%= pluralize(@bookmarkable.led_count, "facilitator") %>)
+  <% end  %>
+<% end  %>
+
+<%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>

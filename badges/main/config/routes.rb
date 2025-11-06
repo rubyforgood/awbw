@@ -52,8 +52,6 @@ Rails.application.routes.draw do
     end
   end
 
-  get 'stories', to: 'resources#stories'
-
   resources :users
   resources :user_forms
   resources :facilitators
@@ -78,6 +76,9 @@ Rails.application.routes.draw do
       post :search
     end
   end
+
+  resources :story_ideas
+  resources :stories
 
   get 'contact_us', to: 'contact_us#index'
   post 'contact_us', to: 'contact_us#create'

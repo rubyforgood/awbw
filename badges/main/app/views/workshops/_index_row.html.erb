@@ -31,30 +31,9 @@
     <% end %>
   </div>
   <!-- 2️⃣ Title / author / metadata -->
-  <%= turbo_frame_tag dom_id(workshop, :bookmark) do %>
-    <%= turbo_flash %>
     <div class="flex flex-col gap-1 min-w-[40ch] max-w-[40ch] break-words">
       <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-        <% if workshop.bookmarks.any? { |b| b.user_id == current_user.id } %>
-          <%= link_to bookmark_path(current_user.bookmark_for(workshop),
-                                    from: "workshops_index",
-                                    **request.query_parameters,
-                                    anchor: "workshop-#{workshop.id}-anchor"),
-                      class: "inline-block",
-                      data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
-            <i class="fas fa-bookmark w-5 h-5 text-blue-500 hover:text-gray-400"></i>
-          <% end %>
-        <% else %>
-          <%= link_to bookmarks_path(bookmark: { bookmarkable_id: workshop.id,
-                                                 bookmarkable_type: "Workshop" },
-                                     from: "workshops_index",
-                                     **request.query_parameters,
-                                     anchor: "workshop-#{workshop.id}-anchor"),
-                      class: "inline-block",
-                      data: {turbo_method: :post} do %>
-            <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
-          <% end %>
-        <% end %>
+        <%= render "bookmarks/editable_bookmark_icon", resource: workshop.object %>
         <%= link_to "#{"[NOT PUBLISHED] " if workshop.inactive?}#{workshop.title}",
                     link_route,
                     class: "hover:underline",
@@ -84,14 +63,12 @@
           <% end %>
         </span>
       </div>
-
-      <div class="text-sm text-gray-600">
+      <%= tag.div id: dom_id(workshop, :bookmark_count ), class:  "text-sm text-gray-600" do %>
         Bookmarked:
         <%= workshop.led_count %>
         <%= "time".pluralize(workshop.led_count) %>
-      </div>
+      <% end %>
     </div>
-  <% end %>
 
  <!-- 3️⃣ Description -->
  <div class="flex-1 text-sm text-gray-700">

@@ -2,7 +2,7 @@
   <label class="flex items-center gap-1 cursor-pointer">
     <%= radio_button_tag :sort, "created",
                          @sort == "created",
-                         onclick: "$('form').submit();" %>
+                         onclick: "this.form.submit();" %>
     <span class="text-sm">Newest</span>
   </label>
 </div>
@@ -11,7 +11,7 @@
   <label class="flex items-center gap-1 cursor-pointer">
     <%= radio_button_tag :sort, "title",
                          @sort == "title" || !params[:sort].present?,
-                         onclick: "$('form').submit();" %>
+                         onclick: "this.form.submit();" %>
     <span class="text-sm">Title</span>
   </label>
 </div>
@@ -20,7 +20,7 @@
   <label class="flex items-center gap-1 cursor-pointer">
     <%= radio_button_tag :sort, "led",
                          @sort == "led",
-                         onclick: "$('form').submit();" %>
+                         onclick: "this.form.submit();" %>
     <span class="text-sm">Most bookmarked</span>
   </label>
 </div>

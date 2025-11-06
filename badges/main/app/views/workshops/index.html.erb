@@ -19,7 +19,9 @@
         </p>
       </div>
       <% if current_user.super_user? %>
-        <%= link_to "New workshop", new_workshop_path, class: "btn btn-primary-outline admin-only bg-blue-100" %>
+        <%= link_to "New workshop",
+        new_workshop_path,
+        class: "btn btn-primary-outline admin-only bg-blue-100" %>
       <% end %>
     </div>
   </div>
@@ -40,7 +42,6 @@
       <div>
         <hr class="border-gray-300 my-6">
       </div>
-
       <!-- Sort Options -->
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 font-medium">
         <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Sort by</h3>
@@ -49,38 +50,43 @@
 
       <div>
         <hr class="border-gray-300 my-6">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div class="filters-applied" style="display: flex; gap: 0.5rem; align-items: center;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center;"
+        >
+          <div
+            class="filters-applied"
+            style="display: flex; gap: 0.5rem; align-items: center;"
+          >
             <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Workshops (<%= @workshops_count %>)</h3>
           </div>
         </div>
       </div>
-
-      <!-- Workshops List -->
-      <div class="mt-6">
-        <% if @workshops.any? %>
-          <div id="workshops-list" class="space-y-4">
-            <% @workshops.each do |workshop| %>
-              <%= render "workshops/index_row",
-                         workshop: workshop.decorate,
-                         breadcrumb: "Workshops",
-                         link_route: workshop_path(workshop) %>
-            <% end %>
-          </div>
-
-          <div class="pagination mt-6">
-            <%= will_paginate @workshops,
-                              previous_label: "<<",
-                              next_label: ">>",
-                              inner_window: 2,
-                              class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
-          </div>
-
-        <% else %>
-          <p class="text-gray-600">Your search returned no results. Please try again.</p>
-        <% end %>
-      </div>
     <% end %>
+    <!-- Workshops List -->
+    <div class="mt-6">
+      <% if @workshops.any? %>
+
+        <div id="workshops-list" class="space-y-4">
+          <% @workshops.each do |workshop| %>
+            <%= render "workshops/index_row",
+            workshop: workshop.decorate,
+            breadcrumb: "Workshops",
+            link_route: workshop_path(workshop) %>
+          <% end %>
+        </div>
+
+        <div class="pagination mt-6">
+          <%= will_paginate @workshops,
+          previous_label: "<<",
+          next_label: ">>",
+          inner_window: 2,
+          class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
+        </div>
+
+      <% else %>
+        <p class="text-gray-600">Your search returned no results. Please try again.</p>
+      <% end %>
+    </div>
   </div>
 </div>
 
