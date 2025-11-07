@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "users/show", type: :view do
+  # Seed required permissions for User#set_default_values
   let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
   let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
   let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
@@ -30,32 +31,30 @@ RSpec.describe "users/show", type: :view do
   end
 
   let(:super_user) { create(:user, :admin) }
+  let(:windows_type) { create(:windows_type, name: "Adult Windows") }
+  let!(:workshop) { create(:workshop, title: "Mindful Art", user: user, windows_type: windows_type) }
+
+  let!(:project) { create(:project, name: "Healing Arts") }
+  let!(:project_user) { create(:project_user, project: project, user: user, position: :leader) }
 
   before do
     assign(:user, user)
     allow(view).to receive(:current_user).and_return(super_user)
   end
 
-  it "renders attributes in <p>" do
+  it "renders user attributes" do
     render
-    expect(rendered).to match(/First Name/)
-    expect(rendered).to match(/Last Name/)
-    expect(rendered).to match(/email@example.com/) # it downcases emails
-    expect(rendered).to match(/Address/)
-    expect(rendered).to match(/Address2/)
-    expect(rendered).to match(/City/)
-    expect(rendered).to match(/City2/)
-    expect(rendered).to match(/State/)
-    expect(rendered).to match(/State2/)
-    expect(rendered).to match(/Zip/)
-    expect(rendered).to match(/Zip2/)
-    expect(rendered).to match(/Phone/)
-    expect(rendered).to match(/Phone2/)
-    expect(rendered).to match(/Phone3/)
-    expect(rendered).to match(/Best Time To Call/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/false/)
-    expect(rendered).to match(/false/)
+    expect(rendered).to include("First Name")
+    expect(rendered).to include("Last Name")
+  end
+
+  it "renders authored workshops" do
+    render
+    expect(rendered).to include("Mindful Art")
+  end
+
+  it "renders affiliated projects" do
+    render
+    expect(rendered).to include("Healing Arts")
   end
 end

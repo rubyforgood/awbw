@@ -6,7 +6,7 @@ RSpec.describe "users/new.html.erb", type: :view do
   let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
   let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
 
-  let(:user) { build_stubbed(:user) }
+  let(:user) { build_stubbed(:user, :admin) }
 
   before do
     allow(view).to receive(:current_user).and_return(user)
