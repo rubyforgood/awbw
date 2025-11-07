@@ -1,21 +1,33 @@
-<!-- Floating Action Button -->
-<div id="fab-container" class="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-2">
+<!-- Floating Help Button -->
+<div id="fab-container"
+     class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+
   <!-- Hidden menu items -->
-  <div id="fab-menu" class="hidden flex-col items-end space-y-2 mb-2">
+  <div id="fab-menu"
+       class="hidden flex flex-col items-end space-y-2 mb-2 transition-all duration-300">
+    <%= link_to "FAQs",
+                faqs_path,
+                class: "block bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100
+                        border border-gray-300 text-sm font-medium transition w-max" %>
+
     <%= link_to "Contact Us",
-                contact_path,
-                class: "bg-white text-gray-800 px-4 py-2 rounded-full shadow-md hover:bg-gray-100 border border-gray-300 text-sm font-medium transition" %>
+                contact_us_path,
+                class: "block bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100
+                        border border-gray-300 text-sm font-medium transition w-max" %>
 
     <%= link_to "Public Site",
-                root_url,
-                class: "bg-white text-gray-800 px-4 py-2 rounded-full shadow-md hover:bg-gray-100 border border-gray-300 text-sm font-medium transition" %>
+                "https://www.awbw.org",
+                target: "_blank",
+                class: "block bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100
+                        border border-gray-300 text-sm font-medium transition w-max" %>
   </div>
 
   <!-- Main round button -->
   <button id="fab-button"
           type="button"
-          class="bg-blue-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-blue-700 transition">
-    +
+          class="bg-primary text-white w-10 h-10 rounded-full shadow-lg flex items-center
+                 justify-center text-lg font-bold hover:bg-blue-700 transition">
+    ?
   </button>
 </div>
 
@@ -26,10 +38,10 @@
 
         if (!fabButton || !fabMenu) return;
 
-        fabButton.addEventListener("click", () => {
+        // Remove any previous event listener to prevent duplicates
+        fabButton.onclick = () => {
             fabMenu.classList.toggle("hidden");
             fabButton.classList.toggle("rotate-45");
-        });
+        };
     });
 </script>
-
