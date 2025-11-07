@@ -1,7 +1,12 @@
 <div class="flex items-center justify-center">
   <div class="w-full max-w-md bg-white rounded-2xl shadow-lg mt-8 p-8">
     <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Log in</h2>
-    <%= simple_form_for(resource, url: session_path(resource_name)) do |f| %>
+
+    <%= simple_form_for(resource, url: session_path(resource_name), data: { turbo: false }) do |f| %>
+      <% if resource.errors.any? %>
+        <%= render 'shared/errors', resource: resource %>
+      <% end %>
+
       <%= f.input :email,
                   autofocus: true,
                   required: true,
