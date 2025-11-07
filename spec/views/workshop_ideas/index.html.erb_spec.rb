@@ -18,7 +18,7 @@ RSpec.describe "workshop_ideas/index", type: :view do
     expect(rendered).to include(workshop_idea1.title, workshop_idea2.title)
   end
 
-  it "renders a friendly message when no story_ideas exist" do
+  it "renders a friendly message when no workshop_ideas exist" do
     assign(:workshop_ideas, paginated([]))
     render
     expect(rendered).to match(/No Workshop ideas found/)

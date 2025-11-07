@@ -33,7 +33,7 @@ Rails.application.routes.draw do
       post :search
     end
   end
-
+  resources :banners
   resources :bookmarks do
     post :search
     resources :annotations
@@ -42,9 +42,6 @@ Rails.application.routes.draw do
       get :personal
     end
   end
-
-
-
   resources :events
   resources :event_registrations, only: [:create, :destroy] do
     collection do

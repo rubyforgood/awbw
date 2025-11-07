@@ -33,7 +33,7 @@ class DashboardController < ApplicationController
       ]
 
       @system_cards = [
-        { title: "Banners", path: authenticated_root_path, icon: "📣" },
+        { title: "Banners", path: banners_path, icon: "📣" },
         { title: "Events", path: events_path, icon: "📆" },
         { title: "FAQs", path: faqs_path, icon: "❔" },
         { title: "Forms", path: authenticated_root_path, icon: "📋" },
