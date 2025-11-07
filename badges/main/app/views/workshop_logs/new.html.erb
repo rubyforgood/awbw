@@ -1,25 +1,43 @@
-<div class="container-fluid workshop-logs">
-  <div class="row">
-    <div class="col-md-12 col-lg-8">
-      <div class="entry-content">
-        <!-- new workshop message -->
-        <div class="alert alert-success hide" id='notification_monthly'>
-          <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-          A monthly report has already been submitted for this month. To submit an additional workshop log please
-          contact your program manager.
+<div class="min-h-screen bg-gray-50 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-8">
+
+      <!-- Header -->
+      <div class="mb-8 space-y-4">
+        <!-- Alert -->
+        <div id="notification_monthly"
+             class="hidden relative rounded-md border border-green-300 bg-green-50 text-green-800 px-4 py-3 text-sm flex items-start justify-between">
+          <span>
+            A monthly report has already been submitted for this month.
+            To submit an additional workshop log, please contact your program manager.
+          </span>
+          <button type="button"
+                  class="text-green-700 hover:text-green-900 font-semibold ml-4"
+                  data-dismiss="alert"
+                  aria-label="Close">
+            &times;
+          </button>
         </div>
 
-        <h2 class="normal">Submit Workshop Log</h2>
-        <p>
+        <!-- Title -->
+        <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
+          Submit <%= @workshop_log.class.model_name.human %>
+        </h1>
+
+        <!-- Description -->
+        <p class="text-gray-700 leading-relaxed">
           Please submit a workshop log after each workshop you lead.
-          Select your workshop type from the options below. Then,
-          select the workshop name in the dropdown. If you don’t see your
-          workshop title in the dropdown because you led an original workshop
-          or a variation, choose "New Workshop."
+          Select your workshop type from the options below, then choose the workshop name
+          in the dropdown. If you don’t see your title (for an original or variation),
+          select <span class="font-semibold text-blue-700">“New Workshop.”</span>
         </p>
       </div>
+
+      <!-- Form -->
+      <div class="mt-6">
+        <%= render 'form', workshop_log: @workshop_log %>
+      </div>
+
     </div>
   </div>
-
-  <%= render 'form', workshop: @workshop %>
 </div>

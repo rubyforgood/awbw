@@ -10,59 +10,57 @@
   <% image ||= nil %>
   <% show_file_field = local_assigns.fetch(:show_file_field, true) %>
   <% show_existing   = local_assigns.fetch(:show_existing, true) %>
-  <% unique_id = "#{field_name}-#{SecureRandom.hex(4)}" %>
 
-  <%= f.label label, class: "block font-medium gap-1 text-gray-700 string required" %>
-  <% if hint %>
-    <%= f.hint hint.html_safe, wrap_with: { tag: :p, class: "text-gray-500 text-sm" } %>
-  <% end %>
+  <div data-controller="file-preview">
+    <%= f.label label, class: "block font-medium gap-1 text-gray-700 string required" %>
+    <% if hint %>
+      <%= f.hint hint.html_safe, wrap_with: { tag: :p, class: "text-gray-500 text-sm" } %>
+    <% end %>
 
-  <div class="flex flex-col items-center gap-2">
-    <% if show_existing %>
-      <% image_to_show =
-           if image.present?
-             image
-           else
-             attached = resource.public_send(field_name)
-             if attached.is_a?(ActiveStorage::Attached::One)
-               attached.attachment
-             elsif attached.is_a?(ActiveStorage::Attached::Many)
-               attached.attachments.first
-             end
-           end %>
+    <div class="flex flex-col items-center gap-2">
+      <% if show_existing %>
+        <% image_to_show =
+             if image.present?
+               image
+             else
+               attached = resource.public_send(field_name)
+               if attached.is_a?(ActiveStorage::Attached::One)
+                 attached.attachment
+               elsif attached.is_a?(ActiveStorage::Attached::Many)
+                 attached.attachments.first
+               end
+             end %>
 
-      <% if image_to_show&.blob.present? %>
-        <%= image_tag url_for(image_to_show),
-                      alt: "#{field_name.to_s.humanize} Image",
-                      id: "#{unique_id}-preview",
-                      class: "w-32 h-32 #{'rounded-full' if rounded} object-cover border border-gray-300 shadow-sm" %>
-      <% else %>
-        <%= image_tag "missing.png",
-                      id: "#{unique_id}-preview",
-                      class: "w-32 h-32 #{'rounded-full' if rounded} object-cover border border-dashed border-gray-300" %>
+        <% if image_to_show&.blob.present? %>
+          <%= image_tag url_for(image_to_show),
+                        alt: "#{field_name.to_s.humanize} Image",
+                        data: { file_preview_target: "preview" },
+                        class: "w-32 h-32 #{'rounded-full' if rounded} object-cover border border-gray-300 shadow-sm" %>
+        <% else %>
+          <%= image_tag "missing.png",
+                        data: { file_preview_target: "preview" },
+                        class: "w-32 h-32 #{'rounded-full' if rounded} object-cover border border-dashed border-gray-300" %>
+        <% end %>
+
+        <div data-file-preview-target="filename"
+             class="text-center text-sm text-gray-500">
+          <%= image_to_show&.blob.present? ? image_to_show.filename.to_s : "No file selected" %>
+        </div>
       <% end %>
 
-      <div id="<%= unique_id %>-filename" class="text-center text-sm text-gray-500">
-        <%= if image_to_show&.blob.present?
-              image_to_show.filename.to_s
-            else
-              "No file selected"
-            end %>
-      </div>
-    <% end %>
-
-    <% if show_file_field %>
-      <div class="relative w-36">
-        <%= f.file_field field_name,
-                         id: "#{unique_id}-input",
-                         multiple: multiple,
-                         class: "absolute inset-0 w-36 h-full opacity-0 cursor-pointer" %>
-        <button type="button"
-                class="w-full py-2 px-3 w-36 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50">
-          Choose file
-        </button>
-      </div>
-    <% end %>
+      <% if show_file_field %>
+        <div class="relative w-36">
+          <%= f.file_field field_name,
+                           data: { file_preview_target: "input" },
+                           multiple: multiple,
+                           class: "absolute inset-0 w-36 h-full opacity-0 cursor-pointer" %>
+          <button type="button"
+                  class="w-full py-2 px-3 w-36 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50">
+            Choose file
+          </button>
+        </div>
+      <% end %>
+    </div>
   </div>
 
   <%#= link_to "🗑 Remove",
@@ -77,29 +75,4 @@
 
   <%= f.error :file, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" } %>
 
-
-
-  <script>
-      document.addEventListener("turbo:load", function() {
-          const input = document.getElementById("<%= unique_id %>-input");
-          const filenameDisplay = document.getElementById("<%= unique_id %>-filename");
-          const preview = document.getElementById("<%= unique_id %>-preview");
-
-          if (!input) return;
-
-          input.addEventListener("change", function() {
-              if (input.files.length > 0) {
-                  filenameDisplay.textContent = input.files[0].name;
-
-                  const reader = new FileReader();
-                  reader.onload = function(e) {
-                      preview.src = e.target.result;
-                  };
-                  reader.readAsDataURL(input.files[0]);
-              } else {
-                  filenameDisplay.textContent = "";
-              }
-          });
-      });
-  </script>
 <% end %>

@@ -12,7 +12,6 @@ Rails.application.routes.draw do
   get 'users/change_password', to: 'users#change_password', as:'change_password'
   post 'users/update_password', to: 'users#update_password', as: 'update_password'
 
-  get 'workshops/summary', to: 'workshops#summary'
   post 'workshops/create_dummy_workshop', to: 'workshops#create_dummy_workshop'
 
   post 'workshop_logs/validate_new', to: 'workshop_logs#validate_new'

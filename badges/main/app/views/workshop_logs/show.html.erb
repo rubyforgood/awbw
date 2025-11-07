@@ -1,73 +1,106 @@
-<h4 class='light upcase'><%= @workshop.log_form_header %></h4>
-<hr />
-<h3 class='normal no-margin-bottom'>
-  <%= "#{@workshop.title} - #{@workshop.windows_type.label if @workshop.windows_type}" %>
-</h3>
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 space-y-6">
 
-<br/><br/>
-<p><b>Facilitator: </b> <%= @workshop_log.user.name %></p>
-<p><b>Workshop Date: </b> <%= @workshop_log.date %></p>
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-900">
+          <%= @workshop_log.workshop&.title || "Workshop Log" %>
+        </h1>
 
-<hr>
+        <div class="flex gap-2">
+          <%= link_to "Back to Logs", workshop_logs_path, class: "btn btn-secondary-outline" %>
+          <%= link_to "Edit Log", edit_workshop_log_path(@workshop_log), class: "btn btn-primary-outline" %>
+        </div>
+      </div>
 
-<h5>Participant Counts</h5>
-<table class="table table-sm table-bordered w-auto">
-  <thead>
-  <tr>
-    <th>Category</th>
-    <th>Children (0-12)</th>
-    <th>Teens (13-17)</th>
-    <th>Adults (18+)</th>
-    <th>Total</th>
-  </tr>
-  </thead>
-  <tbody>
-  <% # Row: Ongoing %>
-  <tr>
-    <td>Ongoing Participants</td>
-    <td><%= @workshop_log.children_ongoing || 0 %></td>
-    <td><%= @workshop_log.teens_ongoing || 0 %></td>
-    <td><%= @workshop_log.adults_ongoing || 0 %></td>
-    <td><%= (@workshop_log.children_ongoing || 0) + (@workshop_log.teens_ongoing || 0) + (@workshop_log.adults_ongoing || 0) %></td>
-  </tr>
+      <!-- Workshop Info -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800">
+        <div>
+          <p><span class="font-semibold text-gray-700">Facilitator:</span> <%= @workshop_log.user&.name || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Organization:</span> <%= @workshop_log.project&.name || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Workshop Type:</span> <%= @workshop_log.workshop&.windows_type&.label || "—" %></p>
+        </div>
+        <div>
+          <p><span class="font-semibold text-gray-700">Workshop date:</span> <%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Log created:</span> <%= @workshop_log.created_at.strftime("%b %d, %Y") %></p>
+          <p><span class="font-semibold text-gray-700">Log updated:</span> <%= @workshop_log.updated_at.strftime("%b %d, %Y") %></p>
+        </div>
+      </div>
 
-  <% # Row: First-Time %>
-  <tr>
-    <td>First-Time Participants</td>
-    <td><%= @workshop_log.children_first_time || 0 %></td>
-    <td><%= @workshop_log.teens_first_time || 0 %></td>
-    <td><%= @workshop_log.adults_first_time || 0 %></td>
-    <td><%= (@workshop_log.children_first_time || 0) + (@workshop_log.teens_first_time || 0) + (@workshop_log.adults_first_time || 0) %></td>
-  </tr>
+      <!-- Participant Counts -->
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Participant Counts</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+            <thead>
+            <tr class="bg-gray-100">
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Category</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Children</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Teens</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Adults</th>
+              <th class="px-4 py-2 text-center text-sm font-bold text-gray-800 bg-gray-300 uppercase">Total</th>
+            </tr>
+            </thead>
 
-  <% # Row: Column Totals %>
-  <tr class="fw-bold">
-    <td>Subtotals</td>
-    <% children_total = (@workshop_log.children_ongoing || 0) + (@workshop_log.children_first_time || 0) %>
-    <% teens_total    = (@workshop_log.teens_ongoing || 0) + (@workshop_log.teens_first_time || 0) %>
-    <% adults_total   = (@workshop_log.adults_ongoing || 0) + (@workshop_log.adults_first_time || 0) %>
-    <td class="text-bold fw-bold"><%= children_total %></td>
-    <td class="text-bold fw-bold"><%= teens_total %></td>
-    <td class="text-bold fw-bold"><%= adults_total %></td>
-    <td class="text-bold fw-bold"><%= children_total + teens_total + adults_total %></td>
-  </tr>
+            <tbody class="divide-y divide-gray-200">
+            <!-- Ongoing -->
+            <tr>
+              <td class="px-4 py-2 font-medium text-gray-700">Ongoing Participants</td>
+              <td class="text-center bg-blue-100"><%= display_count(@workshop_log.children_ongoing) %></td>
+              <td class="text-center bg-blue-100"><%= display_count(@workshop_log.teens_ongoing) %></td>
+              <td class="text-center bg-blue-100"><%= display_count(@workshop_log.adults_ongoing) %></td>
+              <td class="text-center font-semibold bg-blue-200">
+                <%= display_count(@workshop_log.children_ongoing.to_i +
+                                    @workshop_log.teens_ongoing.to_i +
+                                    @workshop_log.adults_ongoing.to_i) %>
+              </td>
+            </tr>
 
-  <tr>
-    <td><strong>Grand Total: <%= (@workshop_log.children_ongoing || 0) + (@workshop_log.teens_ongoing || 0) + (@workshop_log.adults_ongoing || 0) +
-                                   (@workshop_log.children_first_time || 0) + (@workshop_log.teens_first_time || 0) + (@workshop_log.adults_first_time || 0) %></strong></td>
-    <td colspan="4">
+            <!-- First-time -->
+            <tr>
+              <td class="px-4 py-2 font-medium text-gray-700">First-Time Participants</td>
+              <td class="text-center bg-green-100"><%= display_count(@workshop_log.children_first_time) %></td>
+              <td class="text-center bg-green-100"><%= display_count(@workshop_log.teens_first_time) %></td>
+              <td class="text-center bg-green-100"><%= display_count(@workshop_log.adults_first_time) %></td>
+              <td class="text-center font-semibold bg-green-200">
+                <%= display_count(@workshop_log.children_first_time.to_i +
+                                    @workshop_log.teens_first_time.to_i +
+                                    @workshop_log.adults_first_time.to_i) %>
+              </td>
+            </tr>
 
-    </td>
-  </tr>
-  </tbody>
-</table>
+            <!-- Subtotals -->
+            <% children_total = @workshop_log.children_ongoing.to_i + @workshop_log.children_first_time.to_i %>
+            <% teens_total    = @workshop_log.teens_ongoing.to_i + @workshop_log.teens_first_time.to_i %>
+            <% adults_total   = @workshop_log.adults_ongoing.to_i + @workshop_log.adults_first_time.to_i %>
+            <tr class="font-semibold">
+              <td class="px-4 py-2 text-right text-sm font-bold text-gray-800 uppercase">Subtotal</td>
+              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(children_total) %></td>
+              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(teens_total) %></td>
+              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(adults_total) %></td>
+              <td class="text-center text-lg font-bold bg-purple-200">
+                <%= display_count(children_total + teens_total + adults_total) %>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-<hr>
+      <!-- Responses -->
+      <% if @answers.any? %>
+        <div class="mt-8 space-y-3">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Responses</h2>
+          <% @answers.each do |answer| %>
+            <div class="border-b border-gray-200 pb-2">
+              <p class="text-sm font-semibold text-gray-700"><%= answer.form_field.question %></p>
+              <p class="text-gray-800"><%= answer.response.presence || "—" %></p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
 
-<% @answers.each do |answer| %>
-  <p>
-    <b><%= answer.form_field.question %>: </b>
-    <%= answer.response %>
-  </p>
-<% end %>
-
+    </div>
+  </div>
+</div>

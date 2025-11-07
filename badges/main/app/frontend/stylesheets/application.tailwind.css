@@ -1,9 +1,16 @@
 @import "tailwindcss";
 @import "./pagination.css";
 
-@source "../../../app/views/**/*.html.erb";
-@source "../../../app/views/**/*.rb";
-@source "../../../app/helpers/**/*.rb";
+@source "../../views/**/*.html.erb";
+@source "../../javascript/**/*.js";
+@source "../../helpers/**/*.rb";
+
+@safelist bg-blue-500;
+@safelist bg-green-500;
+@safelist bg-purple-100;
+@safelist bg-purple-200;
+@safelist bg-purple-500;
+@safelist bg-gray-200;
 
 @theme {
   --color-primary: #063b8d;

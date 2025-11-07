@@ -73,6 +73,7 @@ class Workshop < ApplicationRecord
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
   # Scopes
+  scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
   scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }

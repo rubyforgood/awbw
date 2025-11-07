@@ -5,7 +5,7 @@ class BookmarksController < ApplicationController
     bookmarks = Bookmark.search(params)
     @bookmarks = bookmarks.paginate(page: params[:page], per_page: 25)
     @bookmarks_count = bookmarks.count
-
+    @windows_types_array = ["", "Adult", "Child", "Family"]
     load_sortable_fields
     respond_to do |format|
       format.html
@@ -19,6 +19,7 @@ class BookmarksController < ApplicationController
     @user_name = user.full_name if user
     @viewing_self = user == current_user
     @bookmarks = Bookmark.search(params, user: user).paginate(page: params[:page], per_page: 25)
+    @windows_types_array = ["", "Adult", "Child", "Family"]
 
     load_sortable_fields
     respond_to do |format|
