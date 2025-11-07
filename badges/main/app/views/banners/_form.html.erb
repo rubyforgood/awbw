@@ -1,0 +1,48 @@
+<%= simple_form_for(@banner) do |f| %>
+  <div class="space-y-6">
+    <!-- Validation Errors -->
+    <%= render 'shared/errors', resource: @banner if @banner.errors.any? %>
+
+    <!-- Hidden Tracking Fields -->
+    <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
+    <%= f.hidden_field :updated_by_id, value: current_user&.id %>
+
+    <!-- Content -->
+    <%= f.input :content,
+                as: :text,
+                label: "Banner Content",
+                input_html: {
+                  rows: 2,
+                  class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
+                },
+                hint: "You can include limited HTML (e.g. <b>, <i>, <a>)." %>
+
+    <!-- Show Checkbox -->
+    <%= f.input :show,
+                as: :boolean,
+                label: "Published?",
+                input_html: {
+                  class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                },
+                wrapper_html: { class: "flex items-center space-x-2" } %>
+
+    <!-- Form Actions -->
+    <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
+      <% if @banner.persisted? && current_user.super_user? %>
+        <%= link_to "Delete",
+                    @banner,
+                    method: :delete,
+                    class: "btn btn-danger-outline",
+                    data: { confirm: "Are you sure you want to delete this banner?" } %>
+      <% end %>
+
+      <%= link_to "Cancel", banners_path, class: "btn btn-secondary-outline" %>
+
+      <%= f.button :submit,
+                   (@banner.new_record? ? "Create Banner" : "Update Banner"),
+                   class: "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
+                           transition-colors duration-150" %>
+    </div>
+  </div>
+<% end %>

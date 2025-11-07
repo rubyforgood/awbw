@@ -86,7 +86,7 @@ RSpec.describe "/workshop_ideas", type: :request do
 
       it "renders a response with 422 status" do
         post workshop_ideas_url, params: { workshop_idea: invalid_attributes }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
   end
@@ -111,7 +111,7 @@ RSpec.describe "/workshop_ideas", type: :request do
     context "with invalid parameters" do
       it "renders a response with 422 status" do
         patch workshop_idea_url(workshop_idea), params: { workshop_idea: invalid_attributes }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
   end

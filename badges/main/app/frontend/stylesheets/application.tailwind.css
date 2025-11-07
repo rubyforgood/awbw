@@ -11,6 +11,7 @@
 @safelist bg-purple-200;
 @safelist bg-purple-500;
 @safelist bg-gray-200;
+@safelist bg-yellow-200;
 
 @theme {
   --color-primary: #063b8d;

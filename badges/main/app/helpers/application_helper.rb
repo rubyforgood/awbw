@@ -41,16 +41,22 @@ module ApplicationHelper
   end
 
   def display_banner
-    banner = Banner.last
-    return unless banner&.show
+    banners = Banner.all
+    return unless banners.any?(&:show)
 
-    safe_content = sanitize(
-      banner.content,
-      tags: %w[a],
-      attributes: %w[href]
-    )
+    safe_content_array = []
 
-    content_tag(:div, id: "banner-news", class: "bg-yellow-400 text-black text-center px-4 py-2") do
+    banners.published.each do |banner|
+      safe_content_array << sanitize(
+        banner.content,
+        tags: %w[a],
+        attributes: %w[href]
+      )
+    end
+
+    safe_content = safe_content_array.join("<br>")
+
+    content_tag(:div, id: "banner-news", class: "bg-yellow-200 text-black text-center px-4 py-2") do
       content_tag(:div, safe_content.html_safe, class: "font-medium")
     end
   end

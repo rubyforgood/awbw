@@ -1,7 +1,7 @@
 require 'rails_helper'
 
-RSpec.describe Banner do
-  # let(:banner) { build(:banner) } # Keep if needed for other tests
+RSpec.describe Banner, type: :model do
+  let(:banner) { build(:banner) } # Keep if needed for other tests
 
   describe 'associations' do
     # Add association tests if any
@@ -16,4 +16,4 @@ RSpec.describe Banner do
   # it 'is valid with valid attributes' do
   #   expect(build(:banner)).to be_valid
   # end
-end 
+end
