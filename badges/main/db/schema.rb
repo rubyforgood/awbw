@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_02_184793) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_06_192601) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -658,6 +658,63 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_02_184793) do
     t.index ["workshop_id"], name: "index_workshop_age_ranges_on_workshop_id"
   end
 
+  create_table "workshop_ideas", charset: "utf8mb3", force: :cascade do |t|
+    t.text "age_range"
+    t.text "age_range_spanish"
+    t.text "closing"
+    t.text "closing_spanish"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id", null: false
+    t.text "creation"
+    t.text "creation_spanish"
+    t.text "demonstration"
+    t.text "demonstration_spanish"
+    t.text "description"
+    t.text "description_spanish"
+    t.text "instructions"
+    t.text "instructions_spanish"
+    t.text "introduction"
+    t.text "introduction_spanish"
+    t.text "materials"
+    t.text "materials_spanish"
+    t.text "misc_instructions_spanish"
+    t.text "notes"
+    t.text "notes_spanish"
+    t.text "objective"
+    t.text "objective_spanish"
+    t.text "opening_circle"
+    t.text "opening_circle_spanish"
+    t.text "optional_materials"
+    t.text "optional_materials_spanish"
+    t.text "setup"
+    t.text "setup_spanish"
+    t.text "staff_notes"
+    t.integer "time_closing"
+    t.integer "time_creation"
+    t.integer "time_demonstration"
+    t.integer "time_hours"
+    t.integer "time_intro"
+    t.integer "time_minutes"
+    t.integer "time_opening"
+    t.integer "time_opening_circle"
+    t.integer "time_warm_up"
+    t.text "timeframe"
+    t.text "timeframe_spanish"
+    t.text "tips"
+    t.text "tips_spanish"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id", null: false
+    t.text "visualization"
+    t.text "visualization_spanish"
+    t.text "warm_up"
+    t.text "warm_up_spanish"
+    t.integer "windows_type_id", null: false
+    t.index ["created_by_id"], name: "index_workshop_ideas_on_created_by_id"
+    t.index ["updated_by_id"], name: "index_workshop_ideas_on_updated_by_id"
+    t.index ["windows_type_id"], name: "index_workshop_ideas_on_windows_type_id"
+  end
+
   create_table "workshop_logs", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.text "challenges", size: :medium
     t.text "comments", size: :medium
@@ -784,6 +841,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_02_184793) do
     t.integer "time_demonstration"
     t.integer "time_intro"
     t.integer "time_opening"
+    t.integer "time_opening_circle"
     t.integer "time_warm_up"
     t.text "timeframe", size: :medium
     t.text "timeframe_spanish", size: :medium
@@ -798,6 +856,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_02_184793) do
     t.text "warm_up", size: :medium
     t.text "warm_up_spanish", size: :medium
     t.integer "windows_type_id"
+    t.bigint "workshop_idea_id"
     t.integer "year"
     t.index ["created_at"], name: "index_workshops_on_created_at"
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
@@ -807,6 +866,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_02_184793) do
     t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext
     t.index ["user_id"], name: "index_workshops_on_user_id"
     t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
+    t.index ["workshop_idea_id"], name: "index_workshops_on_workshop_idea_id"
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
@@ -867,6 +927,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_02_184793) do
   add_foreign_key "users", "projects", column: "agency_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
+  add_foreign_key "workshop_ideas", "users", column: "created_by_id"
+  add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
+  add_foreign_key "workshop_ideas", "windows_types"
   add_foreign_key "workshop_logs", "projects"
   add_foreign_key "workshop_logs", "users"
   add_foreign_key "workshop_logs", "workshops"
@@ -878,4 +941,5 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_02_184793) do
   add_foreign_key "workshop_variations", "workshops"
   add_foreign_key "workshops", "users"
   add_foreign_key "workshops", "windows_types"
+  add_foreign_key "workshops", "workshop_ideas"
 end

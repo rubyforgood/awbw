@@ -1,0 +1,16 @@
+<div class="nested-fields display-flex gap-2 items-center" style="display: flex">
+  <%= f.input :workshop_parent_id, as: :hidden,
+              input_html: { value: f.object.workshop_parent_id } %>
+  <%= f.input :workshop_child_id,
+              as: :select,
+              label: "Select Series Workshops",
+              collection: @potential_series_workshops,
+              label_method: :title, # display title in options
+              value_method: :id %>
+
+  <%= f.input :series_description, as: :text, input_html: { rows: 1 } %>
+  <%= f.input :series_description_spanish, as: :text, input_html: { rows: 1 } %>
+  <%= f.input :theme_name, as: :text, input_html: { rows: 1 } %>
+  <%= f.input :series_order, as: :integer %>
+  <%= link_to_remove_association "Remove", f , class:"btn-underline" %>
+</div>

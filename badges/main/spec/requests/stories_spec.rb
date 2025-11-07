@@ -17,9 +17,9 @@ RSpec.describe "/stories", type: :request do
   # This should return the minimal set of attributes required to create a valid
   # Story. As you add validations to Story, be sure to
   # adjust the attributes here as well.
-  let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
-  let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
-  let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
   let(:user) { create(:user) }
   let(:windows_type) { create(:windows_type) }
   let(:workshop) { create(:workshop) }

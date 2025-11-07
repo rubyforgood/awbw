@@ -1,14 +1,12 @@
 require "rails_helper"
 
 RSpec.describe "User login", type: :system do
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
   let(:user) { create(:user) }
 
   before do
-    # Permissions or other setup if needed
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-
     driven_by :selenium_chrome_headless
     Capybara.current_session.driver.browser.manage.window.resize_to(1400, 900) # desktop
   end

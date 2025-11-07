@@ -24,10 +24,21 @@
   <% unless workshop.time_opening.to_i == 0 %>
     <div class="flex-1 p-4 text-center">
       <h3 class="text-sm font-semibold text-gray-700">
-        <%= language == "english" ? "Opening" : "Apertura<" %>
+        <%= language == "english" ? "Opening" : "Apertura" %>
       </h3>
       <div class="text-sm text-gray-600">
         <span><%= workshop.time_opening.to_i %></span> <span>min</span>
+      </div>
+    </div>
+  <% end %>
+
+  <% unless workshop.time_opening_circle.to_i == 0 %>
+    <div class="flex-1 p-4 text-center">
+      <h3 class="text-sm font-semibold text-gray-700">
+        <%= language == "english" ? "Opening Circle" : "Círculo de Apertura" %>
+      </h3>
+      <div class="text-sm text-gray-600">
+        <span><%= workshop.time_opening_circle.to_i %></span> <span>min</span>
       </div>
     </div>
   <% end %>

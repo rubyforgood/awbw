@@ -1,56 +1,46 @@
 class Workshop < ApplicationRecord
   include Rails.application.routes.url_helpers
 
-  attr_accessor :time_hours, :time_minutes
-
   before_save :set_time_frame
 
   # Associations
-  belongs_to :user, optional: true
   belongs_to :windows_type
+  belongs_to :user, optional: true
+  belongs_to :workshop_idea, optional: true
 
   ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
   has_one_attached :thumbnail
   validates :thumbnail, content_type: ACCEPTED_CONTENT_TYPES
-
   has_one_attached :header
   validates :header, content_type: ACCEPTED_CONTENT_TYPES
-
-  has_many :sectorable_items, dependent: :destroy,
-           inverse_of: :sectorable, as: :sectorable
-
-  has_many :sectors, through: :sectorable_items
-
-  has_many :images, as: :owner, dependent: :destroy
-  has_many :workshop_logs, dependent: :destroy, as: :owner
-  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :workshop_variations, dependent: :destroy
-
-  has_many :categorizable_items, dependent: :destroy, as: :categorizable
-  has_many :categories, through: :categorizable_items
-
-  has_many :metadata, through: :categories
-  has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
-  has_many :quotes, through: :quotable_item_quotes
-
-  has_many :workshop_resources, dependent: :destroy
-  has_many :resources, through: :workshop_resources
-
   has_many :attachments, as: :owner, dependent: :destroy
-  has_many :workshop_age_ranges
+  has_many :images, as: :owner, dependent: :destroy
 
-  # When this workshop is the parent in a series
-  has_many :workshop_series_children,
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :categorizable_items, dependent: :destroy, as: :categorizable
+  has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
+  has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
+  has_many :workshop_age_ranges
+  has_many :workshop_logs, dependent: :destroy, as: :owner
+  has_many :workshop_resources, dependent: :destroy
+  has_many :workshop_series_children, # When this workshop is the parent in a series
            -> { order(:series_order) },
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_parent_id",
            dependent: :destroy
-
-  # When this workshop is the child in a series
-  has_many :workshop_series_parents,
+  has_many :workshop_series_parents, # When this workshop is the child in a series
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_child_id",
            dependent: :destroy
+  has_many :workshop_variations, dependent: :destroy
+
+  # has_many through
+  has_many :categories, through: :categorizable_items
+  has_many :metadata, through: :categories
+  has_many :quotes, through: :quotable_item_quotes
+  has_many :resources, through: :workshop_resources
+  has_many :sectors, through: :sectorable_items
+
 
   # Nested Attributes
   accepts_nested_attributes_for :images, reject_if: :all_blank, allow_destroy: true
@@ -76,6 +66,12 @@ class Workshop < ApplicationRecord
                                 reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
                                 allow_destroy: true
 
+  # Validations
+  validates_presence_of :title
+  # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
+  validates_length_of :age_range, maximum: 16
+  validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
+
   # Scopes
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
@@ -83,18 +79,10 @@ class Workshop < ApplicationRecord
   scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
 
-  # Validations
-  validates_presence_of :title
-  # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
-  validates_length_of :age_range, maximum: 16
-  validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
-
   # Nested Attributes
   accepts_nested_attributes_for :workshop_logs,
     reject_if: :all_blank,
     allow_destroy: true
-
-  attr_writer :time_hours, :time_minutes
 
   # Search Cop
   include SearchCop
@@ -204,19 +192,26 @@ class Workshop < ApplicationRecord
   end
 
   def time_frame_total
-    total_time = time_intro.to_i + time_demonstration.to_i +
-      time_opening.to_i + time_warm_up.to_i +
+    total_minutes = time_intro.to_i + time_demonstration.to_i +
+      time_opening.to_i + time_opening_circle.to_i + time_warm_up.to_i +
       time_creation.to_i + time_closing.to_i
 
-    return "00:00" if total_time == 0
+    return "00:00" if total_minutes == 0
 
-    Time.at(total_time * 60).utc # .strftime("%H:%M")
+    # Custom rounding: minimum 15 min, then nearest 15
+    total_minutes = [15, (total_minutes / 15.0).round * 15].max
+
+    hours, minutes = total_minutes.divmod(60)
+
+    if hours.positive?
+      "#{hours}:#{format('%02d', minutes)}"
+    else
+      "#{minutes}m"
+    end
   end
 
   def set_time_frame
-    unless @time_hours.blank? && @time_minutes.blank?
-      self.timeframe = "#{@time_hours}:#{@time_minutes}"
-    end
+    self.timeframe = time_frame_total
   end
 
   def self.anchors_english_admin
@@ -229,10 +224,10 @@ class Workshop < ApplicationRecord
 
   def self.anchors_spanish_admin
     %w[extra_field_spanish objective_spanish materials_spanish optional_materials_spanish
-      timeframe_spanish age_range_spanish setup_spanish introduction_spanish
+      age_range_spanish setup_spanish introduction_spanish
       demonstration_spanish opening_circle_spanish warm_up_spanish visualization_spanish
       creation_spanish closing_spanish notes_spanish tips_spanish misc1_spanish
-      misc2_spanish].map { |field|
+      misc2_spanish].map { |field| # timeframe_spanish
       "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |" }.join(" ").html_safe
   end
 end

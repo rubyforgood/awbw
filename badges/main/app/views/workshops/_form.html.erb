@@ -1,8 +1,8 @@
-<div class="w-full mx-auto">
+<div class="w-full mx-auto" data-controller="timeframe">
   <%= simple_form_for @workshop do |f| %>
     <!-- Errors -->
     <% if workshop.errors.any? %>
-      <%= render 'shared/tailwind/errors', resource: workshop %>
+      <%= render 'shared/errors', resource: workshop %>
     <% end %>
 
     <!-- Row 1 -->
@@ -11,9 +11,11 @@
         <%= f.input :title,
                     as: :text,
                     label: "Workshop title",
-                    input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" },
+                    required: true,
+                    input_html: { rows: 2,
+                                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                     wrapper: false,
-                    label_html: { class: 'block text-sm font-medium text-gray-700 mb-1' } %>
+                    label_html: { class: "font-medium block text-gray-700 mb-1" } %>
       </div>
 
       <div>
@@ -26,9 +28,36 @@
                     input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
       </div>
 
-      <% if request.path == workshops_share_idea_path %>
-        <%= f.hidden_field :inactive, value: true %>
-      <% elsif current_user.super_user? %>
+      <div>
+        <%= f.input :age_range, as: :select,
+                    collection: @age_ranges,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <%= f.input :objective, as: :text, label: "Workshop objective",
+                  hint: "Indicate goals of the workshop",
+                  input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+
+      <div>
+        <label class="block text-md font-medium text-gray-700 mb-1">
+          Timeframe / Duration
+        </label>
+        <div class="flex gap-x-2 items-center">
+          <span data-timeframe-target="output"
+                class="text-gray-900 font-medium">
+            <%= f.object.time_frame_total %>
+          </span>
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Automatic total time, in 15min increments
+        </p>
+      </div>
+
+      <% if current_user.super_user? %>
+        <br>
         <div class="admin-only bg-blue-100">
           <label class="block text-sm font-medium text-gray-700 mb-1">Flags</label>
           <div class="flex gap-x-6 items-center">
@@ -37,54 +66,96 @@
           </div>
         </div>
       <% end %>
-    </div>
 
-    <!-- Row 2 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <%= f.input :objective, as: :text, label: "Workshop objective",
-                  placeholder: "Indicate goals of the workshop",
-                  input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
       <% if current_user.super_user %>
         <div class="admin-only bg-blue-100 flex gap-x-2 items-center">
-          <%= f.input :full_name, as: :text, label: "Author's first & last name",
-                      input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+          <%= f.input :full_name, as: :text,
+                      label: "Author's name",
+                      hint: "Display name",
+                      input_html: {
+                        rows: 1,
+                        class: "block w-full rounded-md border-gray-300 shadow-sm
+                        focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
           <%= f.input :user_id,
                       as: :select,
                       label: "Author",
                       collection: User.order(:last_name, :first_name),
-                      input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+                      hint: "aka Created By",
+                      input_html: {
+                        class: "block w-full rounded-md border-gray-300 shadow-sm
+                        focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+        </div>
+        <div class="admin-only bg-blue-100 flex gap-x-2 items-center">
+          <%= f.input :workshop_idea_id,
+                      as: :select,
+                      label: "Workshop Idea parent",
+                      collection: @workshop_ideas,
+                      selected: f.object.workshop_idea_id,
+                      include_blank: true,
+                      hint: "If this workshop was created from a Workshop Idea, select it here.",
+                      input_html: { value: f.object.workshop_idea_id,
+                                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+
         </div>
       <% else %>
         <%= f.hidden_field :user_id, value: current_user&.id %>
       <% end %>
-
-      <%= f.input :age_range, as: :select,
-                  collection: @age_ranges,
-                  input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
     </div>
+
 
     <!-- Row 3 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <%= f.input :materials, as: :text, label: "Materials needed",
-                  placeholder: "List all materials needed to create the workshop",
+                  hint: "List all materials needed to create the workshop",
                   input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Timeframe/duration</label>
-        <div class="flex gap-x-2">
-          <%= f.input :time_hours, as: :select, label: false,
-                      collection: (0..5).to_a, prompt: "Hour",
-                      input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-          <%= f.input :time_minutes, as: :select, label: false,
-                      collection: [0, 15, 30, 45], prompt: "Minutes",
-                      input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+      <%= f.input :optional_materials, as: :text, label: "Optional materials",
+                  # hint: "List other optional materials",
+                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+
+      <%= f.input :setup, as: :text, label: "Set Up Instructions",
+                  hint: "Include any tips needed to prep",
+                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+    </div>
+
+    <!-- Intro/opening -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :introduction,
+                      as: :text,
+                      label: "Introduction",
+                      hint: "Include a description of the introduction",
+                      input_html: { rows: 2,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_intro,
+                      label: "Minutes",
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
       </div>
 
-      <%= f.input :setup, as: :text, label: "Set Up Instructions",
-                  placeholder: "Include any tips needed to prep the workshop",
-                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :opening_circle,
+                      as: :text,
+                      label: "Opening circle",
+                      hint: "Include a description of the opening circle",
+                      input_html: { rows: 2,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_opening_circle,
+                      label: "Minutes",
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+      </div>
     </div>
 
     <!-- Demonstration / Warm-up / Creation / Closing -->
@@ -95,14 +166,16 @@
           <%= f.input :demonstration,
                       as: :text,
                       label: "Demonstration Instructions",
-                      placeholder: "Include a description of a demonstration of the activity",
+                      hint: "Include a description of a demonstration of the activity",
                       input_html: { rows: 2,
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
         <div class="w-24">
           <%= f.input :time_demonstration,
                       label: "Minutes",
-                      input_html: { class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
       </div>
 
@@ -112,14 +185,16 @@
           <%= f.input :warm_up,
                       as: :text,
                       label: "Warm-up / relaxation / meditation",
-                      placeholder: "Include a warm-up or relaxation activity",
+                      hint: "Include a warm-up or relaxation activity",
                       input_html: { rows: 2,
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
         <div class="w-24">
           <%= f.input :time_warm_up,
                       label: "Minutes",
-                      input_html: { class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
       </div>
 
@@ -129,14 +204,16 @@
           <%= f.input :creation,
                       as: :text,
                       label: "Creation",
-                      placeholder: "Step by step how to create the workshop",
+                      hint: "Step-by-step how to create the workshop",
                       input_html: { rows: 3,
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
         <div class="w-24">
           <%= f.input :time_creation,
                       label: "Minutes",
-                      input_html: { class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
       </div>
 
@@ -146,14 +223,16 @@
           <%= f.input :closing,
                       as: :text,
                       label: "Closing",
-                      placeholder: "Step by step how to close the workshop",
+                      hint: "Step-by-step how to close the workshop",
                       input_html: { rows: 3,
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
         <div class="w-24">
           <%= f.input :time_closing,
                       label: "Minutes",
-                      input_html: { class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
         </div>
       </div>
     </div>
@@ -162,37 +241,32 @@
     <!-- Notes / Tips / Date -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <%= f.input :notes, as: :text,
-                  placeholder: "Anything else you'd like us to know",
+                  hint: "Anything else you'd like us to know",
                   input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
       <%= f.input :tips, as: :text,
-                  placeholder: "Any tips on how to make this workshop a success",
+                  hint: "Any tips on how to make this workshop a success",
                   input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
-      <% if request.path == workshops_share_idea_path %>
-        <%= f.hidden_field :month, value: Date.today.month %>
-        <%= f.hidden_field :year, value: Date.today.year %>
-      <% else %>
-        <% if current_user.super_user %>
-          <div class="admin-only bg-blue-100">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date created</label>
-            <div class="flex gap-x-2">
-              <%= f.input :month, as: :select,
-                          collection: Date::MONTHNAMES.compact.each_with_index.map { |m, i| [m, i + 1] },
-                          selected: f.object.month || Date.today.month,
-                          wrapper: false, label: false,
-                          input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-              <%= f.input :year,
-                          as: :integer,
-                          wrapper: false,
-                          label: false,
-                          input_html: {
-                            value: f.object.year || Date.today.year,
-                            class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          } %>
-            </div>
+      <% if current_user.super_user %>
+        <div class="admin-only bg-blue-100">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Date created</label>
+          <div class="flex gap-x-2">
+            <%= f.input :month, as: :select,
+                        collection: Date::MONTHNAMES.compact.each_with_index.map { |m, i| [m, i + 1] },
+                        selected: f.object.month || Date.today.month,
+                        wrapper: false, label: false,
+                        input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+            <%= f.input :year,
+                        as: :integer,
+                        wrapper: false,
+                        label: false,
+                        input_html: {
+                          value: f.object.year || Date.today.year,
+                          class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        } %>
           </div>
-        <% end %>
+        </div>
       <% end %>
 
 
@@ -249,8 +323,13 @@
 
     <!-- Actions -->
     <div class="flex gap-x-3 mt-6">
-      <%= link_to "Delete", @workshop, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
-      <%= link_to "Cancel", (action_name == "share_idea" ? authenticated_root_path : workshops_path), class: "btn btn-secondary-outline" %>
+      <% if f.object.persisted? && current_user.super_user? %>
+        <%= link_to "Delete", @workshop, class: "btn btn-danger-outline",
+                    method: :delete, data: { confirm: "Are you sure?" } %>
+      <% end %>
+      <%= link_to "Cancel",
+                  (current_user.super_user? ? workshops_path : authenticated_root_path),
+                  class: "btn btn-secondary-outline" %>
       <%= f.submit "Submit", class: "btn btn-primary" %>
     </div>
   <% end %>

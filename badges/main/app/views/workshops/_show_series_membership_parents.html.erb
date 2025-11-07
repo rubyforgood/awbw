@@ -7,7 +7,7 @@
       <% workshop.workshop_series_parents.each do |workshop_series_membership| %>
         <% workshop = workshop_series_membership.workshop_parent %>
         <li style="padding: 0.5em;">
-          <%= link_to workshop.name, workshop_path(workshop), class: "hover:underline" %>
+          <%= link_to workshop.name, workshop_path(workshop), class: "text-blue-500 hover:underline" %>
         </li>
       <% end %>
     </ul>

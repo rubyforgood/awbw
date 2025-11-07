@@ -11,7 +11,7 @@ class WorkshopsController < ApplicationController
                                          :workshop_age_ranges, :bookmarks)
                                .paginate(page: params[:page], per_page: params[:per_page] || 50)
 
-    @workshops_count = search_service.workshops.size
+    @workshops_count = search_service.workshops.count
 
     @category_metadata = Metadatum.published.includes(:categories).decorate
     @sectors = Sector.published
@@ -68,12 +68,12 @@ class WorkshopsController < ApplicationController
   end
 
   def new
-    @workshop = Workshop.new(user: current_user)
-    set_form_variables
-  end
-
-  def share_idea
-    @workshop = current_user.workshops.build
+    if params[:workshop_idea_id].present?
+      @workshop_idea = WorkshopIdea.find(params[:workshop_idea_id])
+      @workshop = WorkshopFromIdeaService.new(@workshop_idea, user: current_user).call
+    else
+      @workshop = Workshop.new(user: current_user)
+    end
     set_form_variables
   end
 
@@ -86,10 +86,6 @@ class WorkshopsController < ApplicationController
     set_show
   end
 
-  def share_idea_show
-    set_show
-  end
-
   def update
     @workshop = Workshop.find(params[:id])
     if @workshop.update(workshop_params)
@@ -99,20 +95,6 @@ class WorkshopsController < ApplicationController
       set_form_variables
       flash[:alert] = 'Unable to update the workshop.'
       render :edit
-    end
-  end
-
-  def create_workshop_idea
-    @workshop = current_user.workshops.build(workshop_params)
-
-    @workshop.inactive = true # Workshop ideas are workshops with inactive == true
-
-    if @workshop.save
-      flash[:notice] = 'Thank you for submitting your workshop idea.'
-      redirect_to authenticated_root_path
-    else
-      flash[:alert] = 'Unable to save your workshop idea.'
-      render :share_idea
     end
   end
 
@@ -170,6 +152,9 @@ class WorkshopsController < ApplicationController
     image = @workshop.images.first || @workshop.images.build # build an image if there isn't one
 
     @age_ranges = AgeRange.all
+    @workshop_ideas = WorkshopIdea.order(created_at: :desc)
+                                  .map { |wi| ["#{wi.created_at.strftime("%Y-%m-%d")} - (#{wi.created_by.full_name}): #{wi.title}",
+                                               wi.id] }
   end
 
   def workshops_per_page
@@ -182,16 +167,31 @@ class WorkshopsController < ApplicationController
 
   def workshop_params
     params.require(:workshop).permit(
-      :title, :full_name, :objective, :featured,
-      :materials, :optional_materials, :time_hours, :time_minutes, :age_range, :setup,
-      :introduction, :demonstration, :opening_circle, :warm_up,
-      :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2,
-      :windows_type_id, :inactive, :month, :year, :extra_field, :user_id,
-      :time_demonstration, :time_warm_up, :time_creation, :time_closing, :objective_spanish,
-      :materials_spanish, :optional_materials_spanish, :timeframe_spanish, :age_range_spanish,
-      :setup_spanish, :introduction_spanish, :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish,
-      :visualization_spanish, :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish,
-      :misc1_spanish, :misc2_spanish, :extra_field_spanish,
+      :title, :featured, :inactive,
+      :full_name, :user_id, :windows_type_id, :workshop_idea_id,
+      :month, :year,
+
+      :time_intro, :time_closing, :time_creation, :time_demonstration,
+      :time_warm_up, :time_opening, :time_opening_circle,
+
+      :age_range, :age_range_spanish,
+      :closing, :closing_spanish,
+      :creation, :creation_spanish,
+      :demonstration, :demonstration_spanish,
+      :extra_field, :extra_field_spanish,
+      :introduction, :introduction_spanish,
+      :materials, :materials_spanish,
+      :misc1, :misc1_spanish,
+      :misc2, :misc2_spanish,
+      :notes, :notes_spanish,
+      :objective, :objective_spanish,
+      :opening_circle, :opening_circle_spanish,
+      :optional_materials, :optional_materials_spanish,
+      :setup, :setup_spanish,
+      :tips, :tips_spanish,
+      :timeframe_spanish,
+      :visualization, :visualization_spanish,
+      :warm_up, :warm_up_spanish,
 
       workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
