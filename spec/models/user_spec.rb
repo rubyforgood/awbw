@@ -4,11 +4,9 @@ RSpec.describe User do
   # Use FactoryBot
   # let(:user) { build(:user) } # Keep build for simple validation tests
   # Create permissions needed by the after_create callback
-  before(:all) do
-      create(:permission, :adult)
-      create(:permission, :children)
-      create(:permission, :combined)
-  end
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
 
   describe "associations" do
     # Need create for association tests to work correctly with callbacks

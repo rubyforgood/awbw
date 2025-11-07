@@ -1,6 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe "/workshop_ideas", type: :request do
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
   let(:user) { create(:user) }
   let(:windows_type) { create(:windows_type) }
 

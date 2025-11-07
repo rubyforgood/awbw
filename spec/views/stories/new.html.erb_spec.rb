@@ -1,9 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe "stories/new", type: :view do
-  let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
-  let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
-  let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
   let(:user) { create(:user) }
 
   before(:each) do
