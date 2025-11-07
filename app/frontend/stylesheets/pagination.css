@@ -35,7 +35,7 @@
 
 /* Remove border for active or ellipsis */
 .will-paginate-wrapper ul.pagination li.active a,
-.will-paginate-wrapper ul.pagination li span:contains('…') {
+.will-paginate-wrapper ul.pagination li:last-child span {
     border: none;
 }
 

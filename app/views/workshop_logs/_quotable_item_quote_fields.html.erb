@@ -1,30 +1,44 @@
-<div class="nested-fields row mb-2">
+<div class="nested-fields mb-4 p-4 bg-gray-50 border border-gray-200 rounded-md">
   <%= f.input :quotable_type, as: :hidden, input_html: { value: "WorkshopLog" } %>
   <%= f.input :quotable_id, as: :hidden, input_html: { value: f.object.quotable_id || @workshop_log.id } if @workshop_log.persisted? %>
 
-  <div class="col-md-10">
-    <% f.object.build_quote if f.object.quote.nil? %>
-    <%= f.simple_fields_for :quote do |quote_form| %>
-      <%= quote_form.input :workshop_id, as: :hidden, input_html: { value: f.object.quotable.workshop_id || @workshop&.id || @workshop_log.workshop_id } %>
-      <div class="col-md-12">
-        <div class="col-md-8">
-          <%= quote_form.input :quote,
-                               label: "Quote",
-                               required: false,
-                               placeholder: "Ex. 'Coming here makes me feel happy!'",
-                               input_html: { rows: 3 } %>
-        </div>
-        <div class="col-md-4">
-          <%= quote_form.input :age,
-                               label: "<span style='wrap: no-wrap;'>Participant age</span>".html_safe,
-                               required: false,
-                               hint: "If unknown, enter: child, teen, or adult." %>
-        </div>
-      </div>
-    <% end %>
-  </div>
+  <% f.object.build_quote if f.object.quote.nil? %>
 
-  <div class="col-md-2 d-flex align-items-center">
-    <%= link_to_remove_association "Delete", f %>
+  <%= f.simple_fields_for :quote do |quote_form| %>
+    <%= quote_form.input :workshop_id, as: :hidden, input_html: { value: f.object.quotable.workshop_id || @workshop&.id || @workshop_log.workshop_id } %>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+      <!-- Quote Text -->
+      <div class="md:col-span-2">
+        <%= quote_form.input :quote,
+                             label: "Quote",
+                             placeholder: "Ex. 'Coming here makes me feel happy!'",
+                             wrapper: false,
+                             input_html: {
+                               rows: 3,
+                               class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                             },
+                             label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+      </div>
+
+      <!-- Age Field -->
+      <div>
+        <%= quote_form.input :age,
+                             label: "Participant age",
+                             hint: "If unknown, enter: child, teen, or adult.",
+                             wrapper: false,
+                             input_html: {
+                               class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                             },
+                             label_html: { class: "block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap" } %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Delete Button -->
+  <div class="flex justify-end mt-3">
+    <%= link_to_remove_association "Delete",
+                                   f,
+                                   class: "text-sm text-red-600 hover:text-red-800 font-medium underline" %>
   </div>
 </div>

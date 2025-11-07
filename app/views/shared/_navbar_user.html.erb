@@ -31,12 +31,16 @@
                   class:
                     "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
     <% end %>
+    <%= link_to "My bookmarks",
+                personal_bookmarks_path,
+                class:
+                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
     <%= link_to "My profile",
                 user_path(current_user),
                 class:
                   "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-    <%= link_to "My bookmarks",
-                personal_bookmarks_path,
+    <%= link_to "Workshop logs",
+                workshop_logs_path,
                 class:
                   "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
     <%= link_to "Change password",

@@ -1,0 +1,35 @@
+<!-- Floating Action Button -->
+<div id="fab-container" class="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-2">
+  <!-- Hidden menu items -->
+  <div id="fab-menu" class="hidden flex-col items-end space-y-2 mb-2">
+    <%= link_to "Contact Us",
+                contact_path,
+                class: "bg-white text-gray-800 px-4 py-2 rounded-full shadow-md hover:bg-gray-100 border border-gray-300 text-sm font-medium transition" %>
+
+    <%= link_to "Public Site",
+                root_url,
+                class: "bg-white text-gray-800 px-4 py-2 rounded-full shadow-md hover:bg-gray-100 border border-gray-300 text-sm font-medium transition" %>
+  </div>
+
+  <!-- Main round button -->
+  <button id="fab-button"
+          type="button"
+          class="bg-blue-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-blue-700 transition">
+    +
+  </button>
+</div>
+
+<script>
+    document.addEventListener("turbo:load", () => {
+        const fabButton = document.getElementById("fab-button");
+        const fabMenu = document.getElementById("fab-menu");
+
+        if (!fabButton || !fabMenu) return;
+
+        fabButton.addEventListener("click", () => {
+            fabMenu.classList.toggle("hidden");
+            fabButton.classList.toggle("rotate-45");
+        });
+    });
+</script>
+

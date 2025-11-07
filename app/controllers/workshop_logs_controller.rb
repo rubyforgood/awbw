@@ -2,11 +2,19 @@ class WorkshopLogsController < ApplicationController
   before_action :set_workshop, only: [:index]
 
   def index
-    # If @workshop is present, set params[:workshop_id] so search handles it
+    @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    @workshop_logs_unpaginated = WorkshopLog.includes(:workshop, :user, :windows_type)
+    permitted_logs =
+      if current_user.super_user?
+        WorkshopLog.all
+      else
+        WorkshopLog.where(created_by_id: current_user.id)
+                   .or(WorkshopLog.project_id(current_user.project_ids))
+      end
+    @workshop_logs_unpaginated = permitted_logs.includes(:workshop, :user, :windows_type)
                                             .search(params)
-    @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: 25)
+    @workshop_logs_count = @workshop_logs_unpaginated.count
+    @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
     set_index_variables
   end
 
@@ -17,25 +25,34 @@ class WorkshopLogsController < ApplicationController
 
   def update
     set_default_values
-    @workshop_log = WorkshopLog.find params[:id]
+    @workshop_log = WorkshopLog.find(params[:id])
+
+    success = false
 
     ActiveRecord::Base.transaction do
-      @workshop_log.update(workshop_log_params)
-      @saved = @workshop_log.delete_and_update_all(params[:quotes_attributes], params[:report_form_field_answers_attributes])
+      success = @workshop_log.update(workshop_log_params)
+
+      if success
+        # Maintain consistency with other dependent updates
+        quotes_ok = @workshop_log.delete_and_update_all(
+          params[:quotes_attributes],
+          params[:report_form_field_answers_attributes]
+        )
+
+        # If delete_and_update_all returns false or nil, treat as failure
+        success &&= quotes_ok.present?
+      end
+
+      raise ActiveRecord::Rollback unless success
     end
 
-    if @saved
-      # TODO - why are we iterating over files params after the fact?
-      params[:files].each do |file|
-        file = MediaFile.new(file: file)
-        file.update(report_id: @workshop_log.id, owner_type: @workshop_log.owner_type, owner_id: @workshop_log.owner_id)
-        file.save
-      end
+    if success
       flash[:notice] = 'Thanks for reporting on a workshop.'
       redirect_to authenticated_root_path
     else
+      flash.now[:alert] = 'Failed to update workshop log.'
       set_form_variables
-      render :edit
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -47,6 +64,7 @@ class WorkshopLogsController < ApplicationController
       flash[:notice] = 'Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile.'
       redirect_to authenticated_root_path
     else
+      flash.now[:alert] = 'Failed to create workshop log.'
       set_form_variables
       render :new, status: :unprocessable_content
     end
@@ -95,9 +113,9 @@ class WorkshopLogsController < ApplicationController
       @workshop = Workshop.new
     end
 
-    @workshops = current_user.curriculum(Workshop)
-                             .where(inactive: false)
-                             .order(title: :asc)
+    @workshops = Workshop.created_by_id(current_user.id)
+                         .where(inactive: false)
+                         .order(title: :asc)
 
     # Build one blank quote if none exists
     @workshop_log.quotable_item_quotes.each do |qiq|
@@ -156,6 +174,11 @@ class WorkshopLogsController < ApplicationController
     @facilitators = User.joins(:workshop_logs)
                         .distinct
                         .order(:last_name, :first_name)
+    @projects = if current_user.super_user?
+                  Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
+                else
+                  current_user.projects.order(:name)
+                end
     # @workshops = Workshop.joins(:workshop_logs)
     #                      .order(:title)
   end

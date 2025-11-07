@@ -128,4 +128,8 @@ module ApplicationHelper
 
     "fas #{m}"
   end
+
+  def display_count(value)
+    value.to_i.zero? ? "--" : number_with_delimiter(value)
+  end
 end

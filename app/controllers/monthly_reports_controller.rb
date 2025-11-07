@@ -111,9 +111,9 @@ class MonthlyReportsController < ApplicationController
   end
 
   def render_form
-    @workshop_list = current_user.curriculum.
-                       where(inactive: false, windows_type: 3).
-                       order(title: :asc)
+    @workshop_list = Workshop.created_by_id(current_user.id)
+                             .where(inactive: false, windows_type: 3)
+                             .order(title: :asc)
 
     build_month_and_year
     build_report

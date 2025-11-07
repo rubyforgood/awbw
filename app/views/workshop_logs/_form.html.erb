@@ -2,228 +2,137 @@
   <%= f.input :user_id, as: :hidden, input_html: { value: current_user.id } %>
   <%= f.input :windows_type_id, as: :hidden, input_html: { value: @windows_type_id } %>
 
-  <div class="row">
-    <div class="col-md-12 mb-3">
-      <%= f.error_notification %>
-      <span class="text-danger">
-        <%= f.object.errors.full_messages.to_sentence %>
-      </span>
+  <!-- Error messages -->
+  <% if f.object.errors.any? %>
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+      <%= f.object.errors.full_messages.to_sentence %>
     </div>
+  <% end %>
+
+  <!-- Workshop Selection -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <%= f.input :workshop_id,
+                as: :select,
+                collection: @workshops,
+                label_method: @title,
+                value_method: :id,
+                label: "Workshop",
+                prompt: "Select a Workshop",
+                required: true,
+                input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+
+    <%= f.input :project_id,
+                as: :select,
+                collection: @agencies,
+                label_method: @agency_title,
+                value_method: :id,
+                label: "Agency",
+                required: true,
+                hint: "Please contact AWBW if your agency is not listed.",
+                prompt: (@agencies.count > 1 ? "Please select the relevant agency" : nil),
+                selected: (@agencies.count == 1 ? @agencies.first.id : nil),
+                input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+    <%= f.input :date,
+                label: "Workshop Date",
+                as: :string,
+                required: true,
+                input_html: { type: 'date', value: f.object.date&.strftime('%Y-%m-%d'),
+                              class: "block w-fullrounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
   </div>
 
-  <div class="row">
-    <div class="col-md-12 col-lg-8">
-
-      <% if params[:action] != 'new' %>
-        <h2 class="normal"><%= @workshop_log.title %></h2>
-      <% end %>
-
-      <!-- Workshop Select -->
-      <%= f.input :workshop_id,
-                  as: :select,
-                  collection: @workshops,
-                  label_method: @title,   # method to display in dropdown
-                  value_method: :id,      # value submitted
-                  label: "Enter workshop name or select from dropdown",
-                  prompt: "Select a Workshop",
-                  required: true,
-                  input_html: { class: "form-control form-control-custom" } %>
-      <%= f.hidden_field :workshop_name, id: "workshop_title" %>
-      <%= f.input :owner_type, as: :hidden, input_html: { value: "Workshop" } %>
-      <%= f.input :owner_id, as: :hidden, input_html: { value:  @workshop&.id || f.object.workshop_id } %>
-
-      <!-- Agency Select -->
-      <div class="form-group">
-        <%= f.input :project_id,
-                    as: :select,
-                    collection: @agencies,
-                    label_method: @agency_title,       # method to show in dropdown
-                    value_method: :id,          # method for value
-                    label: "Agency",
-                    required: true,
-                    hint: "Please contact AWBW if your agency is not listed.",
-                    prompt: (@agencies.count > 1 ? "Please select the relevant agency" : nil), # only show prompt if multiple
-                    input_html: { class: "form-control form-control-custom" },
-                    selected: (@agencies.count == 1 ? @agencies.first.id : nil) %>
-      </div>
-
-      <!-- Workshop Date -->
-      <div class="form-group has-feedback">
-        <%= f.input :date,
-                    label: "Workshop Date",
-                    required: true,
-                    as: :string,
-                    input_html: {
-                      required: true,
-                      type: 'date',
-                      class: 'form-control',
-                      value: @workshop_log.date&.strftime('%Y-%m-%d')
-                    } %>
-      </div>
-
-      <!-- Other Sector Description -->
-      <div class="row hide" id="other_sector_description_content">
-        <div class="col-md-8 col-lg-8">
-          <%= f.input :other_description, as: :string, placeholder: 'Enter other population(s) served',
-                      input_html: { class: "form-control" } %>
-        </div>
-      </div>
-
-    </div>
-  </div>
 
   <!-- Participants Section -->
-  <div class="row">
-    <div class="col-md-9">
-      <hr>
-      <div class="label-plus-comment">
-        <label>Participants</label>
-      </div>
-    </div>
-  </div>
+  <hr class="my-6 border-gray-200">
+  <h2 class="text-lg font-semibold text-gray-800 mb-2">Participants</h2>
 
   <!-- Ongoing Participants -->
-  <div class="row form-group">
-    <div class="col-md-9">
-      <div class="mb-3">
-        <label>Ongoing participants<span class="custom-smaller"> (have attended a workshop with you or another facilitator at least once before)</span></label>
-      </div>
-      <div class="col-md-4">
-        <%= f.input :children_ongoing,
-                    as: :integer,
-                    placeholder: 0,
-                    label: "Children (0-12)",
-                    input_html: { min: 0, value: @workshop_log&.children_ongoing, class: "form-control" },
-                    wrapper: false %>
-      </div>
-
-      <div class="col-md-4">
-        <%= f.input :teens_ongoing,
-                    as: :integer,
-                    placeholder: 0,
-                    label: "Teens (13-17)",
-                    input_html: { min: 0, value: @workshop_log&.teens_ongoing, class: "form-control" },
-                    wrapper: false %>
-      </div>
-
-      <div class="col-md-4">
-        <%= f.input :adults_ongoing,
-                    as: :integer,
-                    placeholder: 0,
-                    label: "Adults (18+)",
-                    input_html: { min: 0, value: @workshop_log&.adults_ongoing, class: "form-control" },
-                    wrapper: false %>
-      </div>
+  <div class="mb-6">
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+      Ongoing participants
+      <span class="text-xs text-gray-500">(have attended an AWBW workshop before)</span>
+    </label>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <%= f.input :children_ongoing, as: :integer, label: "Children (0–12)",
+                  input_html: {
+                    min: 0,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= f.input :teens_ongoing, as: :integer, label: "Teens (13–17)",
+                  input_html: {
+                    min: 0,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= f.input :adults_ongoing, as: :integer, label: "Adults (18+)",
+                  input_html: {
+                    min: 0,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
     </div>
   </div>
 
   <!-- First-Time Participants -->
-  <div class="row form-group">
-    <div class="col-md-9">
-      <div class="small bold mb-3">
-        <label>First-time participants<span class="custom-smaller"> (have never attended a workshop with you or another facilitator before)</span></label>
-      </div>
-      <div class="col-md-4">
-        <%= f.input :children_first_time,
-                    as: :integer,
-                    placeholder: 0,
-                    label: "Children (0-12)",
-                    input_html: { min: 0, value: @workshop_log&.children_first_time, class: "form-control" },
-                    wrapper: false %>
-      </div>
-
-      <div class="col-md-4">
-        <%= f.input :teens_first_time,
-                    as: :integer,
-                    placeholder: 0,
-                    label: "Teens (13-17)",
-                    input_html: { min: 0, value: @workshop_log&.teens_first_time, class: "form-control" },
-                    wrapper: false %>
-      </div>
-
-      <div class="col-md-4">
-        <%= f.input :adults_first_time,
-                    as: :integer,
-                    placeholder: 0,
-                    label: "Adults (18+)",
-                    input_html: { min: 0, value: @workshop_log&.adults_first_time, class: "form-control" },
-                    wrapper: false %>
-      </div>
+  <div class="mb-6">
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+      First-time participants
+      <span class="text-xs text-gray-500">(have never attended an AWBW workshop)</span>
+    </label>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <%= f.input :children_first_time, as: :integer, label: "Children (0–12)", input_html: { min: 0, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= f.input :teens_first_time, as: :integer, label: "Teens (13–17)", input_html: { min: 0, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= f.input :adults_first_time, as: :integer, label: "Adults (18+)", input_html: { min: 0, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
     </div>
   </div>
 
-  <!-- Dynamic Form Fields -->
-  <div class="row">
-    <div class="col-md-9">
-      <hr>
-      <% @report_field_answers.each do |rffa| %>
-        <%= f.simple_fields_for :report_form_field_answers, rffa do |rffa_form| %>
-          <% field = rffa_form.object.form_field %>
-          <% skip_ids = [5,6,7,8,9,10,11,25,26,27,28,44,45,46,47,48,49,50,83,84,20,21,22,113,115,116,117,118,119,120,
-                         38, 39, 40,41,42,123,43,124,125,126,127,128, 101] %>
-          <% next if skip_ids.include?(field.id) %>
-          <%= render 'report_form_field_answer_fields', field: field, report_id: f.object.id || @workshop_log&.id, f: rffa_form %>
-        <% end %>
-      <% end %>
-    </div>
+  <!-- Quotes Section -->
+  <hr class="my-6 border-gray-200">
+  <h2 class="text-lg font-semibold text-gray-800 mb-2">Quotes from participants</h2>
+  <p class="text-sm text-gray-600 mb-3">
+    What did your participants share about their experience? Please write quotes in first person.
+  </p>
+  <div id="quotes" class="space-y-3">
+    <%= f.simple_fields_for :quotable_item_quotes do |qiq_form| %>
+      <%= render 'quotable_item_quote_fields', f: qiq_form %>
+    <% end %>
+    <%= link_to_add_association "Add Quote", f, :quotable_item_quotes, class: "text-blue-600 hover:underline text-sm" %>
   </div>
 
-
-
-  <!-- Quotes -->
-  <div class="row form-group">
-    <div class="col-md-8 col-lg-8">
-      <hr>
-      <div class="label-plus-comment">
-        <label>Quotes from participants</label>
+  <!-- Upload Section -->
+  <hr class="my-6 border-gray-200">
+  <h2 class="text-lg font-semibold text-gray-800 mb-2">Upload Images / Media Releases</h2>
+  <p class="text-sm text-gray-600 mb-3">
+    Click <a href="https://bit.ly/AWBWartmedia" target="_blank" class="text-blue-600 hover:underline">here to download</a> the Art/Media Release.
+  </p>
+  <div id="media-files" class="space-y-4">
+    <%= f.simple_fields_for :media_files do |mf_form| %>
+      <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
+        <%= render "shared/form_image_field",
+                   f: mf_form,
+                   resource: mf_form.object,
+                   field_name: :file,
+                   label: "Upload File",
+                   hint: "Attach photos, PDFs, or signed media release forms" %>
       </div>
-      What did your participants share about their experience? Please write quotes in first person. For confidentiality, do not disclose names.
-      <div id="quotes">
-        <%= f.simple_fields_for :quotable_item_quotes do |qiq_form| %>
-          <%= render 'quotable_item_quote_fields', f: qiq_form %>
-          <% if qiq_form.object.errors.any? %>
-            <div class="text-danger">
-              <%= qiq_form.object.errors.full_messages.join(', ') %>
-            </div>
-          <% end %>
-        <% end %>
+    <% end %>
 
-        <%= link_to_add_association "Add Quote", f, :quotable_item_quotes %>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-8 col-lg-8">
-      <hr>
-      <div class="label-plus-comment">
-        <label>Upload Images / Media Releases</label>
-      </div>
-      <p>
-        Click <a href="https://bit.ly/AWBWartmedia" target="_blank">here to download</a> the Art/Media Release in English and Spanish.
-      </p>
-
-      <div id="media-files">
-        <%= f.simple_fields_for :media_files do |mf_form| %>
-          <%= render 'media_file_fields', f: mf_form %>
-          <% if mf_form.object.errors.any? %>
-            <div class="text-danger">
-              <%= mf_form.object.errors.full_messages.join(', ') %>
-            </div>
-          <% end %>
-        <% end %>
-
-        <%= link_to_add_association "Add another file", f, :media_files %>
-      </div>
+    <div class="pt-2">
+      <%= link_to_add_association "Add another file",
+                                  f,
+                                  :media_files,
+                                  partial: "shared/form_image_field",
+                                  render_options: { locals: { field_name: :file,    # <- pass locals here
+                                                              label: "Upload File",
+                                                              hint: "Attach photos, PDFs, or signed media release forms" } },
+                                  class: "text-blue-600 hover:text-blue-800 font-medium text-sm" %>
     </div>
   </div>
 
   <!-- Submit -->
-  <div class="submit-row btn-container text-center">
-    <% if @workshop_log.persisted? && current_user.super_user? %>
-      <%= link_to "Delete", @workshop_log, method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-outline-danger" %>
+  <div class="mt-8 flex justify-center gap-3">
+    <% if  @workshop_log.persisted? && current_user.super_user? %>
+      <%= link_to "Delete", @workshop_log, class: "btn btn-danger-outline",
+                  method: :delete, data: { confirm: "Are you sure?" } %>
     <% end %>
-    <%= link_to "Cancel", workshop_logs_path, class: "btn btn-outline-secondary" %>
-    <%= f.button :submit, class: "btn btn-primary" %>
+    <%= link_to "Cancel", workshop_logs_path, class: "btn btn-secondary-outline" %>
+    <%= f.button :submit, "Save Log", class: "btn btn-primary" %>
   </div>
 <% end %>
