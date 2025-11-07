@@ -1,101 +1,143 @@
-<div class="container-fluid workshop-logs">
-  <div class="row">
-    <div class="col-md-12 col-lg-6 printable-full-width">
-      <div class="entry-content">
-        <h2 class="normal">
-          Contact Us
-        </h2>
-        <p>Have questions, comments, or concerns? Use the contact form or see our contact information below.</p>
+<div class="max-w-5xl mx-auto px-4 py-8 space-y-8" id="contact-us-container">
 
-        <br/><b>Email</b>
+  <!-- Contact Info Card -->
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-3">Contact Us</h2>
+    <div class="text-gray-700 mt-3">
+      Have questions, comments, or concerns?
+    </div>
 
-        <p>programs@awbw.org</p>
+    <div class="mt-6 space-y-3 text-gray-800">
+      <div class="font-semibold text-gray-900">Email: <%= mail_to "programs@awbw.org",
+                                                                  subject: "Website question",
+                                                                  class: "text-blue-500 hover:text-blue-700" %></div>
+      <div class="font-semibold text-gray-900">Phone: <%= link_to "310-396-0317",
+                                                                  "tel:310-396-0317",
+                                                                  class: "text-blue-500 hover:text-blue-700" %></div>
+      <div class="font-semibold text-gray-900">Fax: <%= link_to "310-396-9698",
+                                                                  "tel:310-396-9698",
+                                                                  class: "text-blue-500 hover:text-blue-700" %></div>
 
-        <b>Phone</b>
-        <P>310-396-0317</P>
+      <div>
+        <div class="font-semibold text-gray-900 mb-3">
+          Form Submission:
+          <span class="font-normal text-sm text-gray-900 mb-3">
+            Which program is your question about?
+          </span>
+        </div>
+        <!-- Select Program Buttons -->
+        <div class="">
+          <div class="flex flex-wrap gap-3 justify-start">
+            <%= link_to "?q=adult#contact-form",
+                        class: "px-5 py-2.5 rounded-full text-white text-sm font-medium transition
+                           #{params[:q] == 'adult' ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}" do %>
+              Adult Program
+            <% end %>
 
-        <b>Fax</b>
-        <p>310-396-9698</p>
+            <%= link_to "?q=children#contact-form",
+                        class: "px-5 py-2.5 rounded-full text-white text-sm font-medium transition
+                           #{params[:q] == 'children' ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}" do %>
+              Children's Program
+            <% end %>
+
+            <%= link_to "?q=general#contact-form",
+                        class: "px-5 py-2.5 rounded-full text-white text-sm font-medium transition
+                           #{params[:q] == 'general' ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}" do %>
+              General Questions
+            <% end %>
+          </div>
+
+          <% if params[:q].present? %>
+            <!-- Prompt -->
+            <div id="contact-form" class="mt-6 border-t border-gray-200 pt-6">
+              <p class="text-gray-700 mb-4">
+                Great — you selected the
+                <strong><%= params[:q] == "children" ? "Children's" : params[:q].humanize %></strong> program.
+                Please complete the short form below and our team will respond as soon as possible.
+              </p>
+
+              <!-- Contact Form -->
+              <%= form_tag("/contact_us", method: "POST", class: "space-y-6") do %>
+                <input type="hidden" name="contact_us[q]" value="<%= params[:q] %>">
+
+                <!-- Name Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                    <input type="text"
+                           name="contact_us[first_name]"
+                           required
+                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
+                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <input type="text"
+                           name="contact_us[last_name]"
+                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
+                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email"
+                           name="contact_us[from]"
+                           required
+                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
+                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Agency / Organization *</label>
+                    <input type="text"
+                           name="contact_us[agency]"
+                           required
+                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
+                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
+                  </div>
+                </div>
+
+                <!-- Subject -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Subject Line *</label>
+                  <input type="text"
+                         name="contact_us[subject]"
+                         required
+                         class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
+                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
+                </div>
+
+                <!-- Message -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Your Message *</label>
+                  <textarea name="contact_us[message]"
+                            required
+                            rows="5"
+                            class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
+                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Submit -->
+                <div class="flex justify-end">
+                  <input type="submit"
+                         value="Submit"
+                         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow-sm transition">
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
-
-  <div class="row form-group">
-    <div class="col-md-12 col-lg-12">
-     <div class="btn-container windows-type">
-      <a href="?q=adult" class="btn btn-primary btn-blue <%= "btn-active" if params[:q] == "adult" %>">
-        Adult Program
-      </a>
-
-
-      <a href="?q=children" class="btn btn-primary btn-blue <%= "btn-active" if params[:q] == "children" %>">
-        Children's Program
-      </a>
-
-
-      <a href="?q=general" class="btn btn-primary btn-blue <%= "btn-active" if params[:q] == "general" %>">
-        General Questions
-      </a>
-      </div>
-    </div>
-  </div>
-
-  <% if params[:q] %>
-
-    <div class="row">
-      <div class="col-md-12 col-lg-6">
-
-        <%= form_tag("/contact_us", method: "POST") do %>
-
-        <div class="row">
-
-          <div class="col-md-6 col-lg-6">
-            <input type="hidden" name="contact_us[q]" value="<%= params[:q] %>">
-
-            <div class="form-group">
-              <label>First Name*</label>
-              <input type="text" name="contact_us[first_name]" class="form-control" required>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label>Last Name</label>
-              <input type="text" name="contact_us[last_name]" class="form-control">
-            </div>
-          </div>
-
-        </div>
-        <div class="form-group">
-          <label>Agency/Organization *</label>
-          <input type="text" name="contact_us[agency]" class="form-control form-control-lg" required>
-        </div>
-
-        <div class="form-group">
-          <label>Email*</label>
-          <input type="text" name="contact_us[from]" class="form-control form-control-lg" required>
-        </div>
-
-        <div class="form-group">
-          <label>Subject Line*</label>
-          <input type="text" name="contact_us[subject]" class="form-control form-control-lg" required>
-        </div>
-
-        <div class="form-group">
-          <label>Your Message*</label>
-          <textarea type="text" name="contact_us[message]" class="form-control form-control-lg" required>
-          </textarea>
-        </div>
-
-        <div class="submit-row btn-container pull-right">
-          <input class="btn btn-primary btn-blue" type="submit" value="Submit">
-        </div>
-
-  <% end %>
-
-  </div>
-  </div>
-
-<% end %>
-
 </div>
+
+<script>
+    document.addEventListener("turbo:load", () => {
+        const hash = window.location.hash;
+        if (hash === "#contact-form") {
+            const target = document.querySelector(hash);
+            if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        }
+    });
+</script>
