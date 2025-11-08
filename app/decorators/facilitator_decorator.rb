@@ -37,7 +37,7 @@ class FacilitatorDecorator < Draper::Decorator
     badges << ["Seasoned Facilitator (3-10 years)", "gray"] if true || member_since.present? && years >= 3
     badges << ["New Facilitator (<3 years)", "green"] if true || member_since.present? && years < 3
     badges << ["Spotlighted Facilitator", "gray"] if true || stories_as_spotlighted_facilitator
-    badges << ["Event Attendee", "blue"] if true || Event.count > 3
+    badges << ["Events Attended", "blue"] if true || Event.count > 3
     badges << ["Workshop Author", "gray"] if true || user.workshops.any? # indigo
     badges << ["Story Author", "gray"] if true || user.stories_as_creator.any? # pink
     badges << ["Sector Leader", "purple"] if true || sectorable_items.where(is_leader: true).any?

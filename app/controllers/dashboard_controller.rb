@@ -23,13 +23,15 @@ class DashboardController < ApplicationController
 
         { title: "Bookmarks tally", path: tally_bookmarks_path, icon: "🔖" },
         { title: "Quotes", path: authenticated_root_path, icon: "💬" },
-        { title: "Stories", path: authenticated_root_path, icon: "🗣️" },
+        { title: "Stories", path: stories_path, icon: "🗣️" },
+        { title: "Story Ideas", path: story_ideas_path, icon: "✍️️" },
         { title: "Vision Seeds", path: authenticated_root_path, icon: "🌱" },
         { title: "Annual Reports", path: authenticated_root_path, icon: "📊" },
         { title: "Workshop Logs", path: workshop_logs_path, icon: "📝" },
         { title: "Workshops", path: workshops_path, icon: "🎨" },
-        { title: "Workshop Ideas", path: authenticated_root_path, icon: "💡" },
+        { title: "Workshop Ideas", path: workshop_ideas_path, icon: "💡" },
         { title: "Workshop Variations", path: workshop_variations_path, icon: "🔀" },
+        { title: "Recent Activity", path: dashboard_recent_activities_path, icon: "🧭" },
       ]
 
       @system_cards = [
@@ -40,6 +42,7 @@ class DashboardController < ApplicationController
         { title: "Organizations", path: authenticated_root_path, icon: "🏫" },
         { title: "Resources", path: resources_path, icon: "📚" },
         { title: "Users", path: users_path, icon: "👥" },
+        { title: "Facilitators", path: facilitators_path, icon: "🧑‍🎨" },
 
       ]
 
@@ -59,7 +62,34 @@ class DashboardController < ApplicationController
 
   def recent_activities
     @user = (current_user.super_user? && params[:user_id].present?) ? User.find(params[:user_id]) : current_user
-    @recent_activities = @user.recent_activity(params[:limit] || 20)
-                              .paginate(page: params[:page], per_page: params[:per_page] || 20)
+    if params[:user_id] && params[:user_id].empty?
+      recent = []
+      recent.concat(User.order(updated_at: :desc).limit(10))
+      recent.concat(Facilitator.order(updated_at: :desc).limit(10))
+      recent.concat(Banner.order(updated_at: :desc).limit(10))
+      recent.concat(Faq.order(updated_at: :desc).limit(10))
+      recent.concat(Event.order(updated_at: :desc).limit(10))
+      recent.concat(EventRegistration.order(updated_at: :desc).limit(10))
+      recent.concat(Workshop.order(updated_at: :desc).limit(10))
+      recent.concat(WorkshopIdea.order(updated_at: :desc).limit(10))
+      recent.concat(WorkshopLog.order(updated_at: :desc).limit(10))
+      recent.concat(WorkshopVariation.order(updated_at: :desc).limit(10))
+      recent.concat(Story.order(updated_at: :desc).limit(10))
+      recent.concat(StoryIdea.order(updated_at: :desc).limit(10))
+      recent.concat(Quote.order(updated_at: :desc).limit(10))
+      recent.concat(Resource.order(updated_at: :desc).limit(10))
+      recent.concat(Report.where(owner_type: 'MonthlyReport').order(updated_at: :desc).limit(10))
+      # recent.concat(Report.where(owner_id: 7).order(updated_at: :desc).limit(10)) # TODO: remove hard-coded
+
+      # Sort by the most recent timestamp (updated_at preferred, fallback to created_at)
+      recent_activities = recent.sort_by { |item|
+        item.try(:updated_at) || item.created_at }
+                                 .reverse.first(10 * 8)
+    else
+      recent_activities = @user.recent_activity(params[:limit] || 20)
+    end
+    @recent_activities = recent_activities
+                           .paginate(page: params[:page],
+                                     per_page: params[:per_page] || 20)
   end
 end

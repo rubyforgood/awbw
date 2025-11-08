@@ -8,4 +8,8 @@ class Quote < ApplicationRecord
   def speaker
     speaker_name.nil? || speaker_name.empty?  ? "Participant" : speaker_name
   end
+
+  def name
+    quote.truncate(30)
+  end
 end

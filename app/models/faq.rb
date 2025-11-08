@@ -9,4 +9,8 @@ class Faq < ApplicationRecord
   # Scopes
   scope :active, -> { where(inactive: false) }
   scope :by_order, -> { order(ordering: :asc) }
+
+  def name
+    question
+  end
 end

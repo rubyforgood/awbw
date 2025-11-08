@@ -9,6 +9,7 @@ class Facilitator < ApplicationRecord
 
   validates :first_name, presence: true
   validates :last_name, presence: true
+
   CONTACT_TYPES = [nil, "Work", "Personal"].freeze
   validates :primary_email_address_type, inclusion: {in: CONTACT_TYPES}
   validates :mailing_address_type, inclusion: {in: CONTACT_TYPES}
@@ -16,7 +17,6 @@ class Facilitator < ApplicationRecord
   # TODO: add validation for zip code containing only numbers
   # TODO: add validation on STATE
   # TODO: add validation on phone number type
-
 
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs['sector_id'].blank? }
