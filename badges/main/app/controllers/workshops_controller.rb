@@ -111,15 +111,6 @@ class WorkshopsController < ApplicationController
     end
   end
 
-  def create_dummy_workshop
-    @workshop = current_user.workshops.build(title: params[:title], windows_type_id: params[:windows_type_id], inactive: false)
-    if @workshop.save
-      render json: { id: @workshop.id }
-    else
-      render json: { error: @workshop.errors }
-    end
-  end
-
   def search
     @params = params[:search]
     @query = params[:search][:query] if @params

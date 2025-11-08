@@ -42,6 +42,17 @@
       <%= link_to activity.name, polymorphic_path(activity), class: "hover:underline" %>
     <% end %>
   </td>
+  <% if params[:user_id] && params[:user_id].empty? %>
+    <td>
+      <%=
+        if activity.respond_to?(:user) && activity.user
+          activity.user.full_name
+        elsif activity.respond_to?(:created_by) && activity.created_by
+          activity.created_by.full_name
+        end
+      %>
+    </td>
+  <% end %>
   <td class="px-4 py-2 text-sm">
     <% if activity.respond_to?(:id) %>
       <%= link_to "Edit", edit_polymorphic_path(activity),

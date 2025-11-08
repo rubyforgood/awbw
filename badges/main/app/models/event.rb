@@ -16,4 +16,8 @@ class Event < ApplicationRecord
     publicly_visible &&
       (registration_close_date.nil? || registration_close_date >= Time.current)
   end
+
+  def name
+    title
+  end
 end

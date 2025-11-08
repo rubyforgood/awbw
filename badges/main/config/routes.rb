@@ -12,8 +12,6 @@ Rails.application.routes.draw do
   get 'users/change_password', to: 'users#change_password', as:'change_password'
   post 'users/update_password', to: 'users#update_password', as: 'update_password'
 
-  post 'workshops/create_dummy_workshop', to: 'workshops#create_dummy_workshop'
-
   post 'workshop_logs/validate_new', to: 'workshop_logs#validate_new'
 
   get 'impersonate_users', to: 'impersonate_users#index'
@@ -61,6 +59,7 @@ Rails.application.routes.draw do
   resources :user_forms
   resources :facilitators
   resources :organizations
+  resources :quotes
 
   get 'reports/:id/edit_story', to: 'reports#edit_story', as: 'reports_edit_story'
   put 'reports/update_story/:id', to: 'reports#update_story', as: 'reports_update_story'
