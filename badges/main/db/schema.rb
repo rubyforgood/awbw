@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_07_063513) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_07_200324) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -201,20 +201,49 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_063513) do
   end
 
   create_table "facilitators", charset: "utf8mb3", force: :cascade do |t|
-    t.string "city", null: false
-    t.string "country", null: false
+    t.text "bio"
+    t.string "city"
+    t.string "country"
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.string "display_name_preference"
+    t.string "facebook_url"
     t.string "first_name", null: false
+    t.string "instagram_url"
     t.string "last_name", null: false
-    t.string "mailing_address_type", null: false
-    t.string "phone_number", null: false
-    t.string "phone_number_type", null: false
-    t.string "primary_email_address", null: false
-    t.string "primary_email_address_type", null: false
-    t.string "state", null: false
-    t.string "street_address", null: false
+    t.string "linked_in_url"
+    t.string "mailing_address_type"
+    t.date "member_since"
+    t.string "phone_number"
+    t.string "phone_number_type"
+    t.string "primary_email_address"
+    t.string "primary_email_address_type"
+    t.boolean "profile_is_searchable", default: true, null: false
+    t.boolean "profile_show_bio", default: true, null: false
+    t.boolean "profile_show_email", default: true, null: false
+    t.boolean "profile_show_events_registered", default: true, null: false
+    t.boolean "profile_show_member_since", default: true, null: false
+    t.boolean "profile_show_organizations", default: true, null: false
+    t.boolean "profile_show_phone", default: true, null: false
+    t.boolean "profile_show_pronouns", default: true, null: false
+    t.boolean "profile_show_sectors", default: true, null: false
+    t.boolean "profile_show_social_media", default: true, null: false
+    t.boolean "profile_show_stories", default: true, null: false
+    t.boolean "profile_show_story_ideas", default: true, null: false
+    t.boolean "profile_show_workshop_ideas", default: true, null: false
+    t.boolean "profile_show_workshop_logs", default: true, null: false
+    t.boolean "profile_show_workshop_variations", default: true, null: false
+    t.boolean "profile_show_workshops", default: true, null: false
+    t.string "pronouns"
+    t.string "state"
+    t.string "street_address"
+    t.string "twitter_url"
     t.datetime "updated_at", null: false
-    t.string "zip", null: false
+    t.integer "updated_by_id"
+    t.string "youtube_url"
+    t.string "zip"
+    t.index ["created_by_id"], name: "index_facilitators_on_created_by_id"
+    t.index ["updated_by_id"], name: "index_facilitators_on_updated_by_id"
   end
 
   create_table "faqs", id: :integer, charset: "utf8mb3", force: :cascade do |t|
@@ -874,7 +903,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_063513) do
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "addresses", "organizations"
   add_foreign_key "age_ranges", "windows_types"
@@ -887,6 +915,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_063513) do
   add_foreign_key "events", "users", column: "created_by_id"
   add_foreign_key "facilitator_organizations", "facilitators"
   add_foreign_key "facilitator_organizations", "organizations"
+  add_foreign_key "facilitators", "users", column: "created_by_id"
+  add_foreign_key "facilitators", "users", column: "updated_by_id"
   add_foreign_key "form_builders", "windows_types"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"

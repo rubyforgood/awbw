@@ -36,7 +36,7 @@
                 class:
                   "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
     <%= link_to "My profile",
-                user_path(current_user),
+                current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user),
                 class:
                   "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
     <%= link_to "Workshop logs",

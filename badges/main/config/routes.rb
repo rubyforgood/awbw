@@ -53,7 +53,11 @@ Rails.application.routes.draw do
   resources :monthly_reports
   resources :project_users
 
-  resources :users
+  resources :users do
+    member do
+      post :generate_facilitator
+    end
+  end
   resources :user_forms
   resources :facilitators
   resources :organizations

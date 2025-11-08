@@ -5,13 +5,18 @@
 @source "../../javascript/**/*.js";
 @source "../../helpers/**/*.rb";
 
-@safelist bg-blue-500;
-@safelist bg-green-500;
-@safelist bg-purple-100;
-@safelist bg-purple-200;
-@safelist bg-purple-500;
-@safelist bg-gray-200;
-@safelist bg-yellow-200;
+/* ✅ Safelist dynamically generated colors */
+@layer utilities {
+  /* prettier-ignore */
+  ._safelist {
+    /* background colors */
+    @apply bg-pink-100 bg-pink-800 bg-indigo-100 bg-indigo-800 bg-red-800
+    bg-blue-500 bg-green-500 bg-purple-100 bg-purple-200 bg-purple-500 bg-gray-200 bg-yellow-200;
+
+    /* text colors */
+    @apply text-pink-800 text-indigo-800 text-green-800 text-yellow-800 text-red-800 text-purple-800;
+  }
+}
 
 @theme {
   --color-primary: #063b8d;

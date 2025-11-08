@@ -1,8 +1,8 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [:show, :edit, :update, :destroy]
+  before_action :set_user, only: [:show, :edit, :update, :destroy, :generate_facilitator]
 
   def index
-     return redirect_to authenticated_root_path unless current_user.super_user?
+    return redirect_to authenticated_root_path unless current_user.super_user?
 
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)
@@ -77,6 +77,32 @@ class UsersController < ApplicationController
     else
       flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
       render "change_password"
+    end
+  end
+
+  def generate_facilitator
+    if @user.facilitator.present?
+      redirect_to @user.facilitator, alert: "Facilitator already exists for this user."
+    else
+      @facilitator = Facilitator.new(
+        user: @user,
+        first_name: @user.first_name,
+        last_name: @user.last_name,
+        primary_email_address: @user.email,
+        phone_number: @user.phone,
+        street_address: @user.street_address,
+        city: @user.city,
+        state: @user.state,
+        zip: @user.zip,
+        country: @user.country,
+        created_by: current_user,
+        updated_by: current_user
+      )
+      if @facilitator.save
+        redirect_to @facilitator, notice: "Facilitator was successfully created for this user."
+      else
+        redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}"
+      end
     end
   end
 
