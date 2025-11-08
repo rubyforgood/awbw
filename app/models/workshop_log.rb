@@ -59,6 +59,10 @@ class WorkshopLog < Report
     "#{user.name}"
   end
 
+  def full_name
+    "#{ date.strftime("%m-%d-%Y") if date }: #{workshop_title} - #{type_title}"
+  end
+
   def workshop_title
     title = owner.nil? ? workshop_name : owner.title
     return "" unless title

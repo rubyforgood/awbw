@@ -2,7 +2,7 @@ class UsersController < ApplicationController
   before_action :set_user, only: [:show, :edit, :update, :destroy]
 
   def index
-     return redirect_to authenticated_root_path unless current_user.super_user?
+    return redirect_to authenticated_root_path unless current_user.super_user?
 
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)

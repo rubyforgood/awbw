@@ -1,24 +1,154 @@
-  <%= simple_form_for @facilitator do |f| %>
-  <%= f.input :first_name %>
-  <%= f.input :last_name %>
-  <%= f.input :primary_email_address %>
-  <%= f.input :primary_email_address_type, 
-    as: :radio_buttons,
-    collection: Facilitator::CONTACT_TYPES,
-    item_wrapper_class: 'form-check' %>
-  <%= f.input :street_address %>
-  <%= f.input :city %>
-  <%= f.input :state %>
-  <%= f.input :zip %>
-  <%= f.input :country %>
-  <%= f.input :mailing_address_type, 
-    as: :radio_buttons,
-    collection: Facilitator::CONTACT_TYPES,
-    item_wrapper_class: 'form-check' %>
-  <%= f.input :phone_number%>
-  <%= f.input :phone_number_type,
-    as: :radio_buttons,
-    collection: Facilitator::CONTACT_TYPES,
-    item_wrapper_class: 'form-check' %>
-  <%= f.button :submit %>
+<%= simple_form_for @facilitator, html: { multipart: true, class: "space-y-8" } do |f| %>
+  <%= render 'shared/errors', resource: @facilitator if @facilitator.errors.any? %>
+  <%= f.object.errors.full_messages %>
+
+  <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
+  <%= f.hidden_field :updated_by_id, value: current_user&.id %>
+
+  <!-- USER FIELDS -->
+  <%= f.fields_for :user do |u| %>
+    <%= u.hidden_field :facilitator_id, value: f.object.id %>
+
+    <div class="flex gap-8 items-start">
+      <div class="flex-1" style="flex: 0 0 75%;">
+        <div class="space-y-6">
+          <div class="flex flex-col md:flex-row gap-4">
+            <%= u.input :first_name %>
+            <%= u.input :last_name %>
+
+            <div>
+              <label class="block text-md font-medium text-gray-700 mb-1">Email</label>
+              <span class="text-gray-900 font-medium"><%= u.object.email %></span>
+              <p class="text-sm text-gray-500 mt-1">Only
+              <%= current_user.super_user? && u.object.persisted? ? (link_to "editable by admins", edit_user_path(u.object)) : "editable by admins" %></p>
+            </div>
+          </div>
+
+          <div class="flex flex-col md:flex-row gap-4">
+            <%= u.input :phone %>
+            <%= u.input :phone2 %>
+            <%= u.input :phone3 %>
+            <%= u.input :best_time_to_call %>
+          </div>
+
+          <div class="flex flex-col md:flex-row gap-4">
+            <%= f.input :pronouns %>
+            <%= u.input :birthday,
+                        as: :string,
+                        input_html: {
+                          type: "date",
+                          class: "w-full rounded-md border-gray-300 shadow-sm
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        } %>
+            <%= f.input :member_since,
+                        as: :string,
+                        hint: "Pick Jan 1 if you only know the year",
+                        input_html: {
+                          type: "date",
+                          class: "w-full rounded-md border-gray-300 shadow-sm
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avatar -->
+      <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
+        <%= render 'shared/form_image_field', f: u, resource: u.object,
+                   field_name: :avatar, rounded: true %>
+      </div>
+    </div>
+
+    <!-- Organization Connections (PROJECT_USERS) -->
+    <div class="form-group space-y-4">
+      <h4 class="text-sm font-semibold text-gray-700">Organization affiliations</h4>
+      <%= u.fields_for :project_users do |project_user_form| %>
+        <%= render "project_user_fields",
+                   f: project_user_form,
+                   projects: u.object.projects,
+                   user: u.object %>
+      <% end %>
+
+      <div>
+        <%= link_to_add_association "➕ Add Role",
+                                    u,
+                                    :project_users,
+                                    html_options: { locals: { projects: u.object.projects } },
+                                    class: "inline-flex items-center rounded-md bg-blue-600 text-white px-3 py-2 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition" %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="space-y-3">
+    <%= f.simple_fields_for :sectorable_items do |sfi| %>
+      <div class="flex items-center gap-4 border p-3 rounded-md bg-gray-50">
+        <%= render "sectorable_item_fields", f: sfi %>
+      </div>
+    <% end %>
+
+    <%= link_to_add_association "➕ Add Sector",
+                                f,
+                                :sectorable_items,
+                                class: "btn btn-secondary-outline" %>
+  </div>
+
+  <!-- FACILITATOR FIELDS -->
+  <div class="space-y-6">
+    <%= f.input :bio,
+                as: :text,
+                input_html: {
+                  rows: 2,
+                  maxlength: 250,
+                  class: "w-full rounded-md border-gray-300 shadow-sm
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                },
+                hint: "Maximum 250 characters" %>
+  </div>
+
+  <div class="flex flex-col md:flex-row gap-4">
+    <%= f.input :linked_in_url, as: :text, input_html: { rows: 1 } %>
+    <%= f.input :facebook_url, as: :text, input_html: { rows: 1 } %>
+    <%= f.input :instagram_url, as: :text, input_html: { rows: 1 } %>
+    <%= f.input :youtube_url, as: :text, input_html: { rows: 1 } %>
+    <%= f.input :twitter_url, as: :text, input_html: { rows: 1 } %>
+  </div>
+
+  <span class="font-medium text-gray-700 mb-3">
+    Set your Profile preferences:
+  </span>
+  <div class="flex flex-col md:flex-row gap-4 mt-3">
+    <%= f.input :profile_is_searchable,
+                hint: "Display in facilitators index" %>
+    <%= f.input :display_name_preference,
+                as: :select,
+                collection: [
+                  ["First and Last Name", "full_name"],
+                  ["First Name and Last Initial", "first_name_last_initial"],
+                  ["First Name Only", "first_name_only"],
+                  ["Last Name Only", "last_name_only"]
+                ],
+                selected: f.object.display_name_preference || "full_name" %>
+    <%= f.input :profile_show_pronouns %>
+    <%= f.input :profile_show_member_since %>
+    <%= f.input :profile_show_bio %>
+  </div>
+  <div class="flex flex-col md:flex-row gap-4 mt-3">
+    <%= f.input :profile_show_social_media %>
+    <%= f.input :profile_show_organizations %>
+    <%= f.input :profile_show_sectors %>
+    <%= f.input :profile_show_email %>
+    <%= f.input :profile_show_phone %>
+  </div>
+
+  <!-- Actions -->
+  <div class="mt-6 flex flex-wrap gap-3">
+    <% if @facilitator.persisted? && current_user.super_user? %>
+      <%= link_to "Delete", @facilitator, method: :delete,
+                  data: { confirm: "Are you sure?" },
+                  class: "btn btn-danger-outline" %>
+    <% end %>
+
+    <%= link_to "Cancel", facilitators_path, class: "btn btn-secondary-outline" %>
+    <%= f.submit "Submit", class: "btn btn-primary" %>
+  </div>
 <% end %>

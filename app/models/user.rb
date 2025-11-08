@@ -33,7 +33,10 @@ class User < ApplicationRecord
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
   has_many :notifications, as: :noticeable
 
+  has_many :stories_as_creator, foreign_key: :created_by_id, class_name: "Story"
+  has_many :story_ideas_as_creator, foreign_key: :created_by_id, class_name: "StoryIdea"
   has_many :workshop_variations_as_creator, foreign_key: :created_by_id, class_name: "WorkshopVariation"
+  has_many :workshops_as_creator, foreign_key: :created_by_id, class_name: "Workshop"
 
   # Nested
   accepts_nested_attributes_for :user_forms

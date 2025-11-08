@@ -1,13 +1,230 @@
-<p id="notice"><%= notice %></p>
+<div class="min-h-screen py-10">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-8">
+      <!-- Header actions -->
+      <div class="flex justify-end mb-6">
+        <%= link_to "Facilitators", facilitators_path, class: "btn btn-secondary-outline mr-2" %>
+        <% if current_user.super_user? || current_user == @facilitator.user %>
+          <%= link_to "Edit", edit_facilitator_path(@facilitator),
+                      class: "admin-only bg-green-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
 
-<% @facilitator.display_fields.each do |field| %>
-  <p>
-    <strong><%= field[:label] %>:</strong>
-    <%= field[:value].presence || "N/A" %>
-  </p>
-<% end %>
+      <!-- Header: avatar + name + pronouns -->
+      <div class="flex flex-col md:flex-row md:items-center md:gap-8 mb-10">
+        <div class="flex-shrink-0 flex justify-center md:justify-start">
+          <% if @facilitator.user.avatar.attached? %>
+            <%= image_tag url_for(@facilitator.user.avatar),
+                          class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
+          <% else %>
+            <%= image_tag "missing.png",
+                          class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
+          <% end %>
+        </div>
 
+        <div class="flex-1 text-center md:text-left mt-4 md:mt-0">
+          <h1 class="text-3xl font-bold text-gray-900">
+            <%= @facilitator.name %>
+            <% if @facilitator.pronouns.present? && @facilitator.profile_show_pronouns? %>
+              <span class="text-gray-600 font-normal text-sm italic mt-1">(<%= @facilitator.pronouns %>)</span>
+            <% end %>
+          </h1>
 
+          <% if @facilitator.member_since_year.present? && @facilitator.profile_show_member_since? %>
+            <p class="mt-3 text-gray-700 text-sm">
+              Member since
+              <span class="font-medium"><%= @facilitator.member_since_year %></span>
+            </p>
+          <% end %>
 
-<%= link_to 'Edit', edit_facilitator_path(@facilitator) %> |
-<%= link_to 'Back', facilitators_path %>
+          <!-- Optional social links -->
+          <% if @facilitator.profile_show_social_media? %>
+            <div class="mt-4">
+              <%= render "facilitators/social_media_buttons", facilitator: @facilitator %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="flex-1">
+          <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
+            <% @facilitator.badges.each do |(label, color)| %>
+                <span class="px-3 py-1 bg-<%= color %>-100 text-<%= color %>-800 text-sm font-semibold rounded-full">
+                  <%= label %>
+                </span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-8 border-gray-200">
+
+      <!-- Info grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Organization affiliations -->
+        <% if @facilitator.profile_show_organizations? %>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Organization Affiliations</h2>
+            <% if @facilitator.user.project_users.any? %>
+              <ul class="space-y-2">
+                <% @facilitator.user.project_users.each do |pu| %>
+                  <li>
+                    <%= link_to pu.project.name, authenticated_root_path(pu.project),
+                                class: "text-blue-600 hover:underline font-medium" %>
+                    <% if pu.position.present? %>
+                      <span class="text-gray-600">– <%= pu.position.humanize %></span>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="text-gray-500 italic">No affiliations listed.</p>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Sectors -->
+        <% if @facilitator.profile_show_sectors? %>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+            <p>
+              <% if @facilitator.sectorable_items.any? %>
+                <%= @facilitator.sectorable_items.map { |item| item.sector.name }.join(", ") %>
+              <% else %>
+                <span class="text-gray-500 italic">No sectors selected.</span>
+              <% end %>
+            </p>
+          </div>
+        <% end %>
+
+        <!-- Contact info -->
+        <div>
+          <% if @facilitator.profile_show_email? || @facilitator.profile_show_phone? %>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h2>
+            <% if @facilitator.profile_show_email? %>
+              <p class="text-gray-700 mb-1">
+                📧 <%= mail_to @facilitator.user.email, @facilitator.user.email,
+                              class: "text-blue-600 hover:underline" %>
+              </p>
+            <% end %>
+            <% if @facilitator.profile_show_phone? && @facilitator.user.phone.present? %>
+              <p class="text-gray-700 mb-1">
+                📞 <%= link_to @facilitator.user.phone, "tel:#{@facilitator.user.phone}",
+                              class: "text-blue-600 hover:underline" %>
+              </p>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
+      <hr class="my-8 border-gray-200">
+
+      <!-- Workshops authored -->
+      <% if @facilitator.profile_show_workshops? %>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
+          <% if @facilitator.user.workshops.any? %>
+            <% @facilitator.user.workshops.each do |workshop| %>
+              <%= link_to workshop.name, workshop_path(workshop), class: "btn btn-secondary-outline" %>
+            <% end %>
+          <% else %>
+            <p class="text-gray-500 italic">No workshops authored yet.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Workshop variations  -->
+      <% if @facilitator.profile_show_workshop_variations? %>
+        <div class="mt-10">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Variations submitted</h2>
+          <% if @facilitator.user.workshop_variations_as_creator.any? %>
+            <% @facilitator.user.workshop_variations_as_creator.each do |workshop_variation| %>
+              <%= link_to workshop_variation.name, workshop_variation_path(workshop_variation),
+                          class: "btn btn-secondary-outline" %>
+            <% end %>
+          <% else %>
+            <p class="text-gray-500 italic">No workshop variations submitted yet.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Stories authored -->
+      <% if @facilitator.profile_show_stories? %>
+        <div class="mt-10">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories authored</h2>
+          <% if @facilitator.user.stories_as_creator.any? %>
+            <% @facilitator.user.stories_as_creator.each do |story| %>
+              <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
+            <% end %>
+          <% else %>
+            <p class="text-gray-500 italic">No stories yet.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Events registered -->
+      <% if @facilitator.profile_show_events_registered? %>
+        <div class="mt-10">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Events registered</h2>
+          <% if Event.all.any? %>
+            <% Event.all.each do |event| %>
+              <% event_name = "#{event.title} - #{event.start_date.strftime("%b %Y") rescue nil}" %>
+              <%= link_to event_name, event_path(event), class: "btn btn-secondary-outline" %>
+            <% end %>
+          <% else %>
+            <p class="text-gray-500 italic">No events recorded.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <hr class="my-8 border-gray-200">
+
+      <% if current_user.super_user || current_user == @facilitator.user %>
+        <div class="facilitator-only bg-green-100">
+        <!-- Workshop ideas -->
+        <% if @facilitator.profile_show_workshop_ideas? %>
+          <div class="mt-6 p-3">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Ideas submitted</h2>
+            <% if @facilitator.user.story_ideas_as_creator.any? %>
+              <% @facilitator.user.story_ideas_as_creator.each do |idea| %>
+                <%= link_to idea.title, story_idea_path(idea), class: "btn btn-secondary-outline" %>
+              <% end %>
+            <% else %>
+              <p class="text-gray-500 italic">No ideas submitted yet.</p>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Story ideas authored -->
+        <% if @facilitator.profile_show_story_ideas? %>
+          <div class="mt-6 p-3">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Story Ideas submitted</h2>
+            <% if @facilitator.user.story_ideas_as_creator.any? %>
+              <% @facilitator.user.story_ideas_as_creator.each do |story_idea| %>
+                <%= link_to story_idea.title, story_idea_path(story_idea),
+                            class: "btn btn-secondary-outline" %>
+              <% end %>
+            <% else %>
+              <p class="text-gray-500 italic">No story ideas yet.</p>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Workshop logs -->
+        <% if @facilitator.profile_show_workshop_logs? %>
+          <div class="mt-6 p-3">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Logs submitted</h2>
+            <% if @facilitator.user.workshop_logs.any? %>
+              <% @facilitator.user.workshop_logs.order(date: :desc, created_at: :desc).each do |workshop_log| %>
+                <%= link_to workshop_log.full_name,
+                            workshop_log_path(workshop_log), class: "btn btn-secondary-outline" %>
+              <% end %>
+            <% else %>
+              <p class="text-gray-500 italic">No workshops logged yet.</p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <% end %>
+    </div>
+  </div>
+</div>
