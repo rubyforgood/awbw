@@ -4,6 +4,8 @@ class Facilitator < ApplicationRecord
   has_many :organizations, through: :facilitator_organizations
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :sectors, through: :sectorable_items
+  has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
+           dependent: :restrict_with_error
 
   validates :first_name, presence: true
   validates :last_name, presence: true
@@ -16,7 +18,8 @@ class Facilitator < ApplicationRecord
   # TODO: add validation on phone number type
 
 
-  accepts_nested_attributes_for :sectorable_items, allow_destroy: true
+  accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs['sector_id'].blank? }
   accepts_nested_attributes_for :user, update_only: true
 
   # Search Cop
@@ -36,12 +39,23 @@ class Facilitator < ApplicationRecord
       .where("projects.name LIKE ?", "%#{sanitize_sql_like(project_name)}%")
       .distinct
   }
+  scope :sector_name, ->(sector_name) {
+    return all if sector_name.blank?
+    left_joins(sectorable_items: :sector)
+      .where("sectors.name LIKE ?", "%#{sanitize_sql_like(sector_name)}%")
+      .distinct
+  }
 
   def self.search_by_params(params)
     results = self.all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
+    results = results.sector_name(params[:sector_name]) if params[:sector_name].present?
     results = results.project_name(params[:project_name]) if params[:project_name].present?
     results
+  end
+
+  def sector_list
+    sectors.pluck(:name)
   end
 
   def name
@@ -57,5 +71,9 @@ class Facilitator < ApplicationRecord
     else
       user.full_name
     end
+  end
+
+  def full_name
+    user.full_name
   end
 end

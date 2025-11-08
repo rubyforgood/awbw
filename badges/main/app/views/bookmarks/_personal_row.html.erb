@@ -73,7 +73,7 @@
      Author:
      <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.user %>
        <%= link_to bookmarkable.author_name,
-                   user_path(bookmarkable.user),
+                   generate_facilitator_user_path(bookmarkable.user),
                    class: "hover:underline",
                    data: { turbo: false, } %>
      <% elsif bookmark.bookmarkable_type == "Workshop" %>

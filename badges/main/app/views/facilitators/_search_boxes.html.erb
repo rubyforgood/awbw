@@ -15,6 +15,22 @@
     </div>
   </div>
 
+  <!-- Sector name -->
+  <div class="flex-1">
+    <%= label_tag :sector_name, "Sector name(s)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <div class="relative">
+      <%= text_field_tag :sector_name, params[:sector_name],
+                         class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                         placeholder: "Type and hit Enter",
+                         onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
+      <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+           onclick="this.closest('form').submit()">
+        <i class="fa fa-search text-gray-500"></i>
+      </div>
+    </div>
+  </div>
+
   <!-- Project name -->
   <div class="flex-1">
     <%= label_tag :project_name, "Organization", class: "block text-sm font-medium text-gray-700 mb-1" %>

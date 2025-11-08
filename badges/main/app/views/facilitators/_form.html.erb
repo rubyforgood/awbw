@@ -79,18 +79,23 @@
     </div>
   <% end %>
 
-  <div class="space-y-3">
-    <%= f.simple_fields_for :sectorable_items do |sfi| %>
-      <div class="flex items-center gap-4 border p-3 rounded-md bg-gray-50">
+  <div>
+    <div class="flex flex-wrap items-center gap-4 p-3">
+      <%= f.simple_fields_for :sectorable_items do |sfi| %>
         <%= render "sectorable_item_fields", f: sfi %>
-      </div>
-    <% end %>
-
+      <% end %>
+    </div>
     <%= link_to_add_association "➕ Add Sector",
                                 f,
                                 :sectorable_items,
+                                render_options: {
+                                  locals: {
+                                    collection: Sector.published.where.not(name: f.object.sector_list)
+                                  }
+                                },
                                 class: "btn btn-secondary-outline" %>
   </div>
+
 
   <!-- FACILITATOR FIELDS -->
   <div class="space-y-6">
@@ -98,7 +103,7 @@
                 as: :text,
                 input_html: {
                   rows: 2,
-                  maxlength: 250,
+                  maxlength: 1650,
                   class: "w-full rounded-md border-gray-300 shadow-sm
                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 },

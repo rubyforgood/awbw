@@ -8,6 +8,6 @@ class ProjectUsersController < ApplicationController
     else
       flash[:alert] = 'Unable to delete project user.  Please contact AWBW.'
     end
-    redirect_to user_path(user)
+    redirect_to generate_facilitator_user_path(user)
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_07_200324) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_08_064935) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -414,6 +414,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_200324) do
     t.integer "agency_id"
     t.datetime "created_at", precision: nil, null: false
     t.string "filemaker_code"
+    t.boolean "inactive", default: false, null: false
     t.integer "position"
     t.integer "project_id"
     t.datetime "updated_at", precision: nil, null: false
@@ -539,6 +540,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_200324) do
   create_table "sectorable_items", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.boolean "inactive", default: true
+    t.boolean "is_leader", default: false, null: false
     t.integer "sector_id"
     t.integer "sectorable_id"
     t.string "sectorable_type"
@@ -561,6 +563,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_200324) do
     t.boolean "permission_given"
     t.integer "project_id", null: false
     t.boolean "published", default: false, null: false
+    t.bigint "spotlighted_facilitator_id"
     t.bigint "story_idea_id"
     t.string "title"
     t.datetime "updated_at", null: false
@@ -571,6 +574,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_200324) do
     t.index ["created_by_id"], name: "index_stories_on_created_by_id"
     t.index ["project_id"], name: "index_stories_on_project_id"
     t.index ["published"], name: "index_stories_on_published"
+    t.index ["spotlighted_facilitator_id"], name: "index_stories_on_spotlighted_facilitator_id"
     t.index ["story_idea_id"], name: "index_stories_on_story_idea_id"
     t.index ["updated_by_id"], name: "index_stories_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_stories_on_windows_type_id"
@@ -942,6 +946,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_200324) do
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
   add_foreign_key "sectorable_items", "sectors"
+  add_foreign_key "stories", "facilitators", column: "spotlighted_facilitator_id"
   add_foreign_key "stories", "projects"
   add_foreign_key "stories", "story_ideas"
   add_foreign_key "stories", "users", column: "created_by_id"

@@ -64,9 +64,9 @@
         <% if @facilitator.profile_show_organizations? %>
           <div>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Organization Affiliations</h2>
-            <% if @facilitator.user.project_users.any? %>
+            <% if @facilitator.user.project_users.active.any? %>
               <ul class="space-y-2">
-                <% @facilitator.user.project_users.each do |pu| %>
+                <% @facilitator.user.project_users.active.each do |pu| %>
                   <li>
                     <%= link_to pu.project.name, authenticated_root_path(pu.project),
                                 class: "text-blue-600 hover:underline font-medium" %>
@@ -88,7 +88,9 @@
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
             <p>
               <% if @facilitator.sectorable_items.any? %>
-                <%= @facilitator.sectorable_items.map { |item| item.sector.name }.join(", ") %>
+                <%= @facilitator.sectorable_items.joins(:sector).order("sectors.name").map do |item| %>
+                  <% "#{item.sector.name}#{ " (Leader)" if item.is_leader? }" %>
+                <% end.join(", ") %>
               <% else %>
                 <span class="text-gray-500 italic">No sectors selected.</span>
               <% end %>
@@ -119,6 +121,13 @@
       <hr class="my-8 border-gray-200">
 
       <!-- Workshops authored -->
+      <% if @facilitator.profile_show_bio? && @facilitator.bio.present? %>
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">Bio</h2>
+        <%= sanitize(@facilitator.bio, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
+        <hr class="my-8 border-gray-200">
+      <% end %>
+
+      <!-- Workshops authored -->
       <% if @facilitator.profile_show_workshops? %>
         <div>
           <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
@@ -135,7 +144,7 @@
       <!-- Workshop variations  -->
       <% if @facilitator.profile_show_workshop_variations? %>
         <div class="mt-10">
-          <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Variations submitted</h2>
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Variations authored</h2>
           <% if @facilitator.user.workshop_variations_as_creator.any? %>
             <% @facilitator.user.workshop_variations_as_creator.each do |workshop_variation| %>
               <%= link_to workshop_variation.name, workshop_variation_path(workshop_variation),
@@ -150,9 +159,10 @@
       <!-- Stories authored -->
       <% if @facilitator.profile_show_stories? %>
         <div class="mt-10">
-          <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories authored</h2>
-          <% if @facilitator.user.stories_as_creator.any? %>
-            <% @facilitator.user.stories_as_creator.each do |story| %>
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories authored/featured</h2>
+          <% stories = @facilitator.user.stories_as_creator + @facilitator.stories_as_spotlighted_facilitator %>
+          <% if stories.any? %>
+            <% stories.each do |story| %>
               <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
             <% end %>
           <% else %>

@@ -82,7 +82,7 @@ class UsersController < ApplicationController
 
   def generate_facilitator
     if @user.facilitator.present?
-      redirect_to @user.facilitator, alert: "Facilitator already exists for this user."
+      redirect_to @user.facilitator and return
     else
       @facilitator = Facilitator.new(
         user: @user,
@@ -90,18 +90,17 @@ class UsersController < ApplicationController
         last_name: @user.last_name,
         primary_email_address: @user.email,
         phone_number: @user.phone,
-        street_address: @user.street_address,
+        street_address: @user.address,
         city: @user.city,
         state: @user.state,
         zip: @user.zip,
-        country: @user.country,
         created_by: current_user,
         updated_by: current_user
       )
       if @facilitator.save
-        redirect_to @facilitator, notice: "Facilitator was successfully created for this user."
+        redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
       else
-        redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}"
+        redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}" and return
       end
     end
   end
@@ -139,7 +138,7 @@ class UsersController < ApplicationController
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
       :confirmed, :inactive, :super_user, :legacy, :legacy_id,
 
-      project_users_attributes: [:id, :project_id, :position, :_destroy]
+      project_users_attributes: [:id, :project_id, :position, :inactive, :_destroy]
     )
   end
 end
