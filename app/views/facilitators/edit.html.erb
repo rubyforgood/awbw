@@ -4,7 +4,7 @@
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @facilitator.class.model_name.human %></h1>
         <div class="flex space-x-2">
-          <% if current_user == @facilitator.user %>
+          <% if current_user.super_user? || current_user == @facilitator.user %>
             <%= link_to "Change password",
                         change_password_path,
                         class: "btn btn-secondary-outline" %>
