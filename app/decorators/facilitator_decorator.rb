@@ -33,14 +33,14 @@ class FacilitatorDecorator < Draper::Decorator
   def badges
     years = member_since ? (Time.zone.now.year - member_since.year) : 0
     badges = []
-    badges << ["Legacy Facilitator (10+ years)", "yellow"] if years >= 10
+    badges << ["Legacy Facilitator (10+ years)", "yellow"] if true || years >= 10
     badges << ["Seasoned Facilitator (3-10 years)", "gray"] if true || member_since.present? && years >= 3
     badges << ["New Facilitator (<3 years)", "green"] if true || member_since.present? && years < 3
-    badges << ["Spotlighted Facilitator", "gray"] if true # TBD
-    badges << ["Events Attended", "blue"] if true || Event.count > 3
+    badges << ["Spotlighted Facilitator", "gray"] if true || stories_as_spotlighted_facilitator
+    badges << ["Event Attendee", "blue"] if true || Event.count > 3
     badges << ["Workshop Author", "gray"] if true || user.workshops.any? # indigo
     badges << ["Story Author", "gray"] if true || user.stories_as_creator.any? # pink
-    badges << ["Sector Leader", "purple"] if true || sectorable_items.any?
+    badges << ["Sector Leader", "purple"] if true || sectorable_items.where(is_leader: true).any?
     badges << ["Blog Contributor", "gray"] if true # || user.respond_to?(:blogs) && user.blogs.any? # red
     badges
   end

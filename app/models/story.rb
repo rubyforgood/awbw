@@ -6,7 +6,8 @@ class Story < ApplicationRecord
   belongs_to :project
   belongs_to :windows_type
   belongs_to :workshop
-
+  belongs_to :spotlighted_facilitator, class_name: "Facilitator",
+             foreign_key: "spotlighted_facilitator_id", optional: true
   validates :windows_type_id, presence: true
   validates :project_id, presence: true
   validates :workshop_id, presence: true

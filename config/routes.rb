@@ -55,7 +55,7 @@ Rails.application.routes.draw do
 
   resources :users do
     member do
-      post :generate_facilitator
+      get :generate_facilitator
     end
   end
   resources :user_forms

@@ -95,8 +95,32 @@
                     collection: @users, label_method: :full_name,
                     value_method: :id,
                     selected: f.object.project_id || @story_idea&.project_id,
-                    label: (f.object.created_by ? (link_to "Story author",
-                           user_path(f.object.created_by), class: "hover:underline") : "Story author").html_safe,
+                    label: (f.object.created_by ? (
+                      link_to "Story author",
+                              generate_facilitator_user_path(f.object.created_by),
+                              class: "hover:underline") : "Story author").html_safe,
+                    prompt: "Select User" %>
+        <% if story_idea %>
+          <div class="flex-1 mb-4 md:mb-0">
+            Story idea author credit:<br>
+            <%= story_idea.author_credit %>
+            <br><br>
+            Story idea "publish preferences":<br>
+            <div class="italic">
+              <%= story_idea.publish_preferences %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :spotlighted_facilitator_id,
+                    collection: Facilitator.joins(:user).order("users.first_name, users.last_name"),
+                    label_method: :full_name,
+                    value_method: :id,
+                    selected: f.object.spotlighted_facilitator_id || @story_idea&.spotlighted_facilitator_id,
+                    label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
+                                                                           facilitator_path(f.object.spotlighted_facilitator_id),
+                                                                           class: "hover:underline") : "Story spotlighted facilitator").html_safe,
                     prompt: "Select User" %>
         <% if story_idea %>
           <div class="flex-1 mb-4 md:mb-0">

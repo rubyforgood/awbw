@@ -55,7 +55,7 @@
                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                   <td class="px-2 text-left text-xs whitespace-nowrap"><%= link_to (log.date || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %></td>
                   <td class="px-2 text-left text-sm font-bold"><%= log.workshop ? link_to(log.workshop.title, workshop_path(log.workshop)) : "-" %></td>
-                  <td class="px-2 text-left text-xs"><%= log.user ? link_to(log.user.name, user_path(log.user)) : "—" %></td>
+                  <td class="px-2 text-left text-xs"><%= log.user ? link_to(log.user.name, generate_facilitator_user_path(log.user)) : "—" %></td>
 
                   <td class="text-center font-bold text-lg bg-purple-100"><%= display_count(log.total_attendance) %></td>
 

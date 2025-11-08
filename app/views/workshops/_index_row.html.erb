@@ -44,7 +44,7 @@
         Author:
         <% if workshop.user %>
           <%= link_to workshop.author_name,
-                      user_path(workshop.user),
+                      generate_facilitator_user_path(workshop.user),
                       class: "hover:underline",
                       data: { turbo: false, } %>
         <% else %>

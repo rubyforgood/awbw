@@ -120,7 +120,7 @@ class FacilitatorsController < ApplicationController
         :youtube_url,
         :twitter_url,
 
-        sectorable_items_attributes: [:id, :sector_id, :_destroy],
+        sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy],
         user_attributes: [
           :id, :facilitator_id,
           :first_name,
@@ -143,7 +143,7 @@ class FacilitatorsController < ApplicationController
           :state2,
           :zip2,
           :notes,
-          project_users_attributes: [:id, :project_id, :position, :_destroy]
+          project_users_attributes: [:id, :project_id, :position, :inactive, :_destroy]
         ],
       )
     end

@@ -26,6 +26,7 @@
                 <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Avatar</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Name</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Member since</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Sector(s)</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/3">Organization(s)</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Socials</th>
                 <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
@@ -63,12 +64,17 @@
                   <%= facilitator.member_since_year %>
                 </td>
 
+                <!-- Sectors -->
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <%= facilitator.sector_list.join(", ") %>
+                </td>
+
                 <!-- Organizations -->
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <% if facilitator.user.projects.any? %>
                     <% user_project_names = facilitator.user.projects.map(&:name).join(", ") %>
                     <span title="<%= user_project_names %>">
-                      <%= truncate(user_project_names, length: 60) %>
+                      <%= truncate(user_project_names, length: 120) %>
                     </span>
                   <% else %>
                     <span>--</span>
@@ -81,7 +87,7 @@
                 </td>
 
                 <!-- Actions -->
-                <td class="px-4 py-2 flex justify-center gap-2">
+                <td class="px-4 py-2 justify-center gap-2">
                   <%= link_to "Profile", facilitator_path(facilitator),
                               class: "btn btn-secondary-outline" %>
                   <%= link_to "Edit", edit_facilitator_path(facilitator),
