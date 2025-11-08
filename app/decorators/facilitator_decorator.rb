@@ -22,21 +22,6 @@ class FacilitatorDecorator < Draper::Decorator
     end
   end
 
-  def name
-    case display_name_preference
-    when "full_name"
-      user.full_name
-    when "first_name_last_initial"
-      "#{user.first_name} #{user.last_name.first}"
-    when "first_name_only"
-      user.first_name
-    when "last_name_only"
-      user.last_name
-    else
-      user.full_name
-    end
-  end
-
   def pronouns_display
     profile_show_pronouns ? pronouns : nil
   end
