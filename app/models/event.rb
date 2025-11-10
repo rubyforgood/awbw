@@ -2,7 +2,8 @@ class Event < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
-  
+  has_many :users, through: :event_registrations
+
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :publicly_visible, in: [true, false]
 

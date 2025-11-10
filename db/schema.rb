@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_10_160522) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_10_163405) do
   create_table "active_storage_attachments", charset: "utf8mb3", collation: "utf8mb3_general_ci", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -173,6 +173,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_10_160522) do
     t.datetime "updated_at", null: false
     t.integer "user_id"
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
+    t.index ["user_id", "event_id"], name: "index_event_registrations_on_user_and_event", unique: true
     t.index ["user_id"], name: "index_event_registrations_on_user_id"
   end
 
