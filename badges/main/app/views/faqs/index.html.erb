@@ -1,19 +1,32 @@
 <div class="flex flex-col mb-16 px-2 sm:px-4">
   <h2 class="hidden sm:block text-center text-4xl text-gray-700 font-medium pt-4">Frequently Asked Questions</h2>
   <h2 class="sm:hidden text-center text-4xl text-gray-700 font-medium pt-4">FAQ's</h2>
+
   <hr class="w-48 h-1 mx-auto my-4 bg-primary border-0 rounded-sm">
+
+  <!-- Filter form -->
+  <div class="mt-6">
+    <%= form_tag(faqs_path, method: :get, class: "space-y-4") do %>
+      <%= render "search_boxes" %>
+    <% end %>
+  </div>
 
   <% if current_user.super_user? %>
     <div class="self-end pb-3 pr-6">
-      <%= link_to("New", new_faq_path, class: "btn btn-secondary-outline admin-only bg-blue-100") %>
+      <%= link_to("New FAQ", new_faq_path, class: "btn btn-secondary-outline admin-only bg-blue-100") %>
     </div>
 
   <% end %>
   <div
     data-controller="sortable"
     data-sortable-url-value="<%= faq_path(id: ":id") %>"
+    data-testid="faq-list"
   >
-    <%= render @faqs %>
+    <% if @faqs.present? %>
+      <%= render partial: "faq", collection: @faqs, as: :faq %>
+    <% else %>
+      <p class="text-start text-gray-500 mt-6">No FAQs found.</p>
+    <% end %>
   </div>
 
 </div>

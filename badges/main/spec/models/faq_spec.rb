@@ -34,5 +34,36 @@ RSpec.describe Faq do
       end
     end
   end
+
+  describe ".search_by_params" do
+    let!(:active_faq)   { create(:faq, question: "How to reset password?", inactive: false) }
+    let!(:inactive_faq) { create(:faq, question: "Admin only FAQ", inactive: true) }
+
+    it "returns all when no params" do
+      expect(Faq.search_by_params({})).to match_array([active_faq, inactive_faq])
+    end
+
+    it "filters by query (case-insensitive substring)" do
+      results = Faq.search_by_params({ query: "reset" })
+      expect(results).to include(active_faq)
+      expect(results).not_to include(inactive_faq)
+    end
+
+    it "filters by inactive param when true" do
+      results = Faq.search_by_params({ inactive: true })
+      expect(results).to contain_exactly(inactive_faq)
+    end
+
+    it "filters by inactive param when false" do
+      results = Faq.search_by_params({ inactive: false })
+      expect(results).to contain_exactly(active_faq)
+    end
+
+    it "chains query and inactive filters" do
+      results = Faq.search_by_params({ query: "Admin", inactive: true })
+      expect(results).to contain_exactly(inactive_faq)
+    end
+  end
 end
+
 
