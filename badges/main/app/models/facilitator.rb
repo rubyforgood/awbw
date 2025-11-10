@@ -1,4 +1,7 @@
 class Facilitator < ApplicationRecord
+  belongs_to :created_by, class_name: "User"
+  belongs_to :updated_by, class_name: "User"
+
   has_one :user, inverse_of: :facilitator, dependent: :nullify
   has_many :facilitator_organizations, dependent: :restrict_with_exception
   has_many :organizations, through: :facilitator_organizations

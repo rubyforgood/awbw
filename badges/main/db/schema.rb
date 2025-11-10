@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_08_064935) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_09_132157) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -48,7 +48,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_064935) do
     t.integer "la_service_planning_area"
     t.integer "la_supervisorial_district"
     t.string "locality"
-    t.bigint "organization_id", null: false
+    t.integer "organization_id", null: false
     t.string "state", null: false
     t.string "street", null: false
     t.datetime "updated_at", null: false
@@ -192,15 +192,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_064935) do
 
   create_table "facilitator_organizations", charset: "utf8mb3", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "facilitator_id", null: false
-    t.bigint "organization_id", null: false
+    t.integer "facilitator_id", null: false
+    t.integer "organization_id", null: false
     t.datetime "updated_at", null: false
     t.index ["facilitator_id", "organization_id"], name: "index_facilitator_organizations_on_ids", unique: true
     t.index ["facilitator_id"], name: "index_facilitator_organizations_on_facilitator_id"
     t.index ["organization_id"], name: "index_facilitator_organizations_on_organization_id"
   end
 
-  create_table "facilitators", charset: "utf8mb3", force: :cascade do |t|
+  create_table "facilitators", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.text "bio"
     t.string "city"
     t.string "country"
@@ -376,7 +376,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_064935) do
     t.datetime "updated_at", precision: nil, null: false
   end
 
-  create_table "organizations", charset: "utf8mb3", force: :cascade do |t|
+  create_table "organization_workshops", charset: "utf8mb3", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "organization_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "workshop_id", null: false
+    t.index ["organization_id", "workshop_id"], name: "index_organization_workshops_on_ids", unique: true
+    t.index ["organization_id"], name: "index_organization_workshops_on_organization_id"
+    t.index ["workshop_id"], name: "index_organization_workshops_on_workshop_id"
+  end
+
+  create_table "organizations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "agency_type", null: false
     t.string "agency_type_other"
     t.date "close_date"
@@ -563,7 +573,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_064935) do
     t.boolean "permission_given"
     t.integer "project_id", null: false
     t.boolean "published", default: false, null: false
-    t.bigint "spotlighted_facilitator_id"
+    t.integer "spotlighted_facilitator_id"
     t.bigint "story_idea_id"
     t.string "title"
     t.datetime "updated_at", null: false
@@ -648,7 +658,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_064935) do
     t.string "current_sign_in_ip"
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
-    t.bigint "facilitator_id"
+    t.integer "facilitator_id"
     t.string "first_name", default: ""
     t.boolean "inactive", default: false
     t.string "last_name", default: ""
@@ -928,6 +938,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_064935) do
   add_foreign_key "forms", "form_builders"
   add_foreign_key "monthly_reports", "project_users"
   add_foreign_key "monthly_reports", "projects"
+  add_foreign_key "organization_workshops", "organizations"
+  add_foreign_key "organization_workshops", "workshops"
   add_foreign_key "project_users", "projects"
   add_foreign_key "project_users", "projects", column: "agency_id"
   add_foreign_key "project_users", "users"

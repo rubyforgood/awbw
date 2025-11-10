@@ -15,5 +15,10 @@ FactoryBot.define do
     thumbnail_file_name { nil }
     header_file_name { nil }
 
+    trait :with_organization do
+      after(:create) do |workshop|
+        workshop.organizations << create(:organization)
+      end
+    end
   end
 end

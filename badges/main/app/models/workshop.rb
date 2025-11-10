@@ -19,6 +19,7 @@ class Workshop < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
+  has_many :organization_workshops, dependent: :restrict_with_exception
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :workshop_age_ranges
   has_many :workshop_logs, dependent: :destroy, as: :owner
@@ -38,9 +39,9 @@ class Workshop < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :metadata, through: :categories
   has_many :quotes, through: :quotable_item_quotes
+  has_many :organizations, through: :organization_workshops
   has_many :resources, through: :workshop_resources
   has_many :sectors, through: :sectorable_items
-
 
   # Nested Attributes
   accepts_nested_attributes_for :images, reject_if: :all_blank, allow_destroy: true
