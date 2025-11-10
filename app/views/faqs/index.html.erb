@@ -6,7 +6,7 @@
 
   <!-- Filter form -->
   <div class="mt-6">
-    <%= form_tag('/faqs', method: :get, class: "space-y-4") do %>
+    <%= form_tag(faqs_path, method: :get, class: "space-y-4") do %>
       <%= render "search_boxes" %>
     <% end %>
   </div>
@@ -20,11 +20,12 @@
   <div
     data-controller="sortable"
     data-sortable-url-value="<%= faq_path(id: ":id") %>"
+    data-testid="faq-list"
   >
-    <% if @faqs.any? %>
-      <%= render @faqs %>
+    <% if @faqs.present? %>
+      <%= render partial: "faq", collection: @faqs, as: :faq %>
     <% else %>
-      No faqs found.
+      <p class="text-start text-gray-500 mt-6">No FAQs found.</p>
     <% end %>
   </div>
 
