@@ -7,8 +7,7 @@ class FaqsController < ApplicationController
     else
       Faq.active
     end
-    @faqs = faqs.search_by_params({ query: params[:query],
-                                    inactive: params[:inactive] })
+    @faqs = faqs.search_by_params(params.to_h.slice("query", "inactive"))
                 .by_order
                 .page(params[:page])
   end
