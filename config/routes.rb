@@ -41,11 +41,7 @@ Rails.application.routes.draw do
     end
   end
   resources :events
-  resources :event_registrations, only: [:create, :destroy] do
-    collection do
-      post :bulk_create
-    end
-  end
+  resource :event_registrations, only: [:create, :destroy]
 
   resources :faqs
   resources :monthly_reports
