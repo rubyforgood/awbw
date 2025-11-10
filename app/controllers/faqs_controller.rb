@@ -2,11 +2,7 @@ class FaqsController < ApplicationController
   before_action :set_faq, only: [:show, :edit, :update, :destroy]
 
   def index
-    faqs = if current_user.super_user?
-      Faq.all
-    else
-      Faq.active
-    end
+    faqs = current_user.super_user? ? Faq.all : Faq.active
     @faqs = faqs.search_by_params(params.to_h.slice("query", "inactive"))
                 .by_order
                 .page(params[:page])
