@@ -39,8 +39,8 @@
                 current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user),
                 class:
                   "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-    <%= link_to "Workshop logs",
-                workshop_logs_path,
+    <%= link_to "My workshop logs",
+                workshop_logs_path(user_id: current_user.id),
                 class:
                   "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
     <%= link_to "Change password",

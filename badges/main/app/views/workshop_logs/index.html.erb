@@ -49,7 +49,23 @@
             </thead>
 
             <tbody class="divide-y divide-gray-200">
+              <% page_totals = {
+                children_ongoing: 0,
+                teens_ongoing: 0,
+                adults_ongoing: 0,
+                children_first_time: 0,
+                teens_first_time: 0,
+                adults_first_time: 0
+              } %>
+
               <% @workshop_logs.each do |log| %>
+                <% page_totals[:children_ongoing]  += log.children_ongoing.to_i %>
+                <% page_totals[:teens_ongoing]     += log.teens_ongoing.to_i %>
+                <% page_totals[:adults_ongoing]    += log.adults_ongoing.to_i %>
+                <% page_totals[:children_first_time] += log.children_first_time.to_i %>
+                <% page_totals[:teens_first_time]    += log.teens_first_time.to_i %>
+                <% page_totals[:adults_first_time]   += log.adults_first_time.to_i %>
+
                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                   <td class="px-2 text-left text-xs whitespace-nowrap"><%= link_to (log.date || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %></td>
                   <td class="px-2 text-left text-sm font-bold"><%= log.workshop ? link_to(log.workshop.title, workshop_path(log.workshop)) : "-" %></td>
@@ -77,38 +93,58 @@
                   </td>
                 </tr>
               <% end %>
+
             </tbody>
 
             <tfoot>
-            <tr class="bold small">
-              <td colspan="3" class="text-right">Total:</td>
-              <td class="text-center font-bold text-xl bg-purple-200">
-                <%= @workshop_logs_unpaginated.sum(:children_ongoing) +
-                    @workshop_logs_unpaginated.sum(:teens_ongoing) +
-                    @workshop_logs_unpaginated.sum(:adults_ongoing) +
-                    @workshop_logs_unpaginated.sum(:children_first_time) +
-                    @workshop_logs_unpaginated.sum(:teens_first_time) +
-                    @workshop_logs_unpaginated.sum(:adults_first_time) %>
-              </td>
-              <td class="text-center font-bold text-xl bg-blue-200">
-                <%= @workshop_logs_unpaginated.sum(:children_ongoing) %>
-              </td>
-              <td class="text-center font-bold text-xl bg-blue-200">
-                <%= @workshop_logs_unpaginated.sum(:teens_ongoing) %>
-              </td>
-              <td class="text-center font-bold text-xl bg-blue-200">
-                <%= @workshop_logs_unpaginated.sum(:adults_ongoing) %>
-              </td>
-              <td class="text-center font-bold text-xl bg-green-200">
-                <%= @workshop_logs_unpaginated.sum(:children_first_time) %>
-              </td>
-              <td class="text-center font-bold text-xl bg-green-200">
-                <%= @workshop_logs_unpaginated.sum(:teens_first_time) %>
-              </td>
-              <td class="text-center font-bold text-xl bg-green-200">
-                <%= @workshop_logs_unpaginated.sum(:adults_first_time) %>
-              </td>
-            </tr>
+              <% if @workshop_logs_count > @per_page.to_i %>
+                <!-- Subtotal for this page -->
+                <tr class="font-semibold text-sm bg-gray-50 border-t border-gray-300">
+                <td colspan="3" class="text-right pr-2 text-sm font-semibold text-gray-700">Subtotal (this page):</td>
+                <td class="text-center font-bold text-lg bg-purple-200 text-gray-900">
+                  <%= page_totals.values.sum %>
+                </td>
+
+                <td class="text-center font-bold text-lg bg-blue-200 text-gray-900"><%= page_totals[:children_ongoing] %></td>
+                <td class="text-center font-bold text-lg bg-blue-200 text-gray-900"><%= page_totals[:teens_ongoing] %></td>
+                <td class="text-center font-bold text-lg bg-blue-200 text-gray-900"><%= page_totals[:adults_ongoing] %></td>
+
+                <td class="text-center font-bold text-lg bg-green-200 text-gray-900"><%= page_totals[:children_first_time] %></td>
+                <td class="text-center font-bold text-lg bg-green-200 text-gray-900"><%= page_totals[:teens_first_time] %></td>
+                <td class="text-center font-bold text-lg bg-green-200 text-gray-900"><%= page_totals[:adults_first_time] %></td>
+              </tr>
+              <% end %>
+              <!-- Grant total -->
+              <tr class="bold small">
+                <% grand_total_text = "Grand Total#{ " (all pages)" if @workshop_logs_count > @per_page.to_i }" %>
+                <td colspan="3" class="text-right pr-2 text-sm font-semibold"><%= grand_total_text %>:</td>
+                <td class="text-center font-bold text-xl text-white bg-purple-500">
+                  <%= @workshop_logs_unpaginated.sum(:children_ongoing) +
+                      @workshop_logs_unpaginated.sum(:teens_ongoing) +
+                      @workshop_logs_unpaginated.sum(:adults_ongoing) +
+                      @workshop_logs_unpaginated.sum(:children_first_time) +
+                      @workshop_logs_unpaginated.sum(:teens_first_time) +
+                      @workshop_logs_unpaginated.sum(:adults_first_time) %>
+                </td>
+                <td class="text-center font-bold text-xl text-white bg-blue-500">
+                  <%= @workshop_logs_unpaginated.sum(:children_ongoing) %>
+                </td>
+                <td class="text-center font-bold text-xl text-white bg-blue-500">
+                  <%= @workshop_logs_unpaginated.sum(:teens_ongoing) %>
+                </td>
+                <td class="text-center font-bold text-xl text-white bg-blue-500">
+                  <%= @workshop_logs_unpaginated.sum(:adults_ongoing) %>
+                </td>
+                <td class="text-center font-bold text-xl text-white bg-green-500">
+                  <%= @workshop_logs_unpaginated.sum(:children_first_time) %>
+                </td>
+                <td class="text-center font-bold text-xl text-white bg-green-500">
+                  <%= @workshop_logs_unpaginated.sum(:teens_first_time) %>
+                </td>
+                <td class="text-center font-bold text-xl text-white bg-green-500">
+                  <%= @workshop_logs_unpaginated.sum(:adults_first_time) %>
+                </td>
+              </tr>
             </tfoot>
           </table>
         </div>
