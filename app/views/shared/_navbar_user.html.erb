@@ -39,6 +39,14 @@
                 current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user),
                 class:
                   "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+    <% if current_user.project_users.any? %>
+      <% current_user.project_users.each do |project_user| %>
+        <%= link_to "My team#{ " (" + project_user.project.name.truncate(12) + ")" if current_user.project_users.many? }",
+                    projects_path(project_user.project),
+                    class:
+                      "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+      <% end %>
+    <% end %>
     <%= link_to "My workshop logs",
                 workshop_logs_path(user_id: current_user.id),
                 class:
