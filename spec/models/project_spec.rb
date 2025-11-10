@@ -26,6 +26,4 @@ RSpec.describe Project do
     # Note: Factory needs associations uncommented for create
     # expect(build(:project)).to be_valid
   end
-
-  # Add tests for methods like #led_by?, #log_title
-end 
+end

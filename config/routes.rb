@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :projects
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
   get 'cms', to: 'admins/base#show'
