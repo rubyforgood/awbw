@@ -6,9 +6,7 @@
 
   <!-- Filter form -->
   <div class="mt-6">
-    <%= form_tag(faqs_path, method: :get, class: "space-y-4") do %>
-      <%= render "search_boxes" %>
-    <% end %>
+    <%= render "search_boxes" %>
   </div>
 
   <% if current_user.super_user? %>
