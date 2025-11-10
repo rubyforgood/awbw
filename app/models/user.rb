@@ -40,7 +40,9 @@ class User < ApplicationRecord
 
   # Nested
   accepts_nested_attributes_for :user_forms
-  accepts_nested_attributes_for :project_users, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :project_users,
+                                reject_if: proc { |attrs| attrs["organization_id"].blank? },
+                                allow_destroy: true
 
   # Validations
   validates :first_name, :last_name, presence: true
