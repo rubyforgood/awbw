@@ -15,9 +15,7 @@
         </div>
 
         <!-- Filter form -->
-        <%= form_tag('/facilitators', method: :get, class: "space-y-4") do %>
-          <%= render "search_boxes" %>
-        <% end %>
+        <%= render "search_boxes" %>
 
         <div class="overflow-x-auto">
           <table class="w-full border-collapse border border-gray-200">

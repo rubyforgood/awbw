@@ -8,6 +8,7 @@ class UsersController < ApplicationController
     users = User.search_by_params(params).order(:first_name, :last_name)
     @users_count = users.count
     @users = users.paginate(page: params[:page], per_page: per_page)
+
   end
 
   def new
