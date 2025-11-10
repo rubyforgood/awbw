@@ -22,9 +22,8 @@ RSpec.describe "FAQ", type: :system do
       end
 
       it "shows only active FAQs" do
-        expect(page).to have_selector("##{dom_id(active_faq)}")
-
-        expect(page).not_to have_selector("##{dom_id(inactive_faq)}")
+        expect(page).to have_content(active_faq.question)
+        expect(page).not_to have_content(inactive_faq.question)
       end
     end
 

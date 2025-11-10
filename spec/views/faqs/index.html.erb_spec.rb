@@ -13,17 +13,15 @@ RSpec.describe "faqs/index", type: :view do
   end
 
   context "as a super user" do
-    let(:super_user) { build_stubbed(:user, super_user: true) }
+    let(:super_user) { build_stubbed(:user, :admin) }
 
     before do
       allow(view).to receive(:current_user).and_return(super_user)
-
       assign(:faqs, paginate_faqs([faq1, faq2, inactive_faq]))
+      render
     end
 
     it "renders all FAQ divs including the inactive status for inactive FAQs" do
-      render
-
       expect(rendered).to have_css("##{dom_id(faq1)}", text: faq1.question)
       expect(rendered).to have_css("##{dom_id(faq2)}", text: faq2.question)
 
@@ -34,6 +32,10 @@ RSpec.describe "faqs/index", type: :view do
         expect(rendered).to include(inactive_faq.inactive.to_s)
       end
     end
+
+    it "shows New FAQ button for super_user" do
+      expect(rendered).to include("New FAQ")
+    end
   end
 
   context "as a regular user" do
@@ -43,15 +45,32 @@ RSpec.describe "faqs/index", type: :view do
       allow(view).to receive(:current_user).and_return(regular_user)
 
       assign(:faqs, paginate_faqs([faq1, faq2]))
+      render
     end
 
     it "renders only active FAQ divs" do
-      render
-
       expect(rendered).to have_css("##{dom_id(faq1)}", text: faq1.question)
       expect(rendered).to have_css("##{dom_id(faq2)}", text: faq2.question)
 
       expect(rendered).not_to have_css("##{dom_id(inactive_faq)}", text: inactive_faq.question)
+    end
+
+    it "does not New FAQ button for regular_user" do
+      expect(rendered).to_not include("New FAQ")
+    end
+  end
+
+  context "as any user" do
+    let(:regular_user) { build_stubbed(:user, super_user: false) }
+
+    before do
+      allow(view).to receive(:current_user).and_return(regular_user)
+      assign(:faqs, paginate_faqs([faq1, faq2]))
+      render
+    end
+
+    it "renders search form" do
+      expect(rendered).to have_selector("form[action='#{faqs_path}'][method='get']")
     end
   end
 end
