@@ -3,5 +3,6 @@ FactoryBot.define do
     name { Faker::Company.name }
     association :windows_type
     association :location
+    association :project_status
   end
 end

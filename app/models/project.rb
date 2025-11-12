@@ -17,6 +17,9 @@ class Project < ApplicationRecord
   has_one_attached :logo
   validates :logo, content_type: ACCEPTED_CONTENT_TYPES
 
+  validates :name, presence: true
+  validates :project_status_id, presence: true
+
   # Methods
   def led_by?(user)
     return false unless leader

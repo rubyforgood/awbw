@@ -15,7 +15,7 @@ RSpec.describe "facilitators/show", type: :view do
     render
   end
 
-  it "renders attributes in <p>" do
+  it "renders attributes" do
     expect(rendered).to match(facilitator.user.first_name)
     expect(rendered).to match(facilitator.user.last_name)
     expect(rendered).to match(facilitator.user.email)
