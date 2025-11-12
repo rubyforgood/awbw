@@ -22,15 +22,15 @@ class DashboardController < ApplicationController
       @user_content_cards = [
 
         { title: "Bookmarks tally", path: tally_bookmarks_path, icon: "🔖" },
-        { title: "Quotes", path: authenticated_root_path, icon: "💬" },
+        { title: "!!!Quotes", path: authenticated_root_path, icon: "💬" },
         { title: "Stories", path: stories_path, icon: "🗣️" },
         { title: "Story Ideas", path: story_ideas_path, icon: "✍️️" },
-        { title: "Vision Seeds", path: authenticated_root_path, icon: "🌱" },
-        { title: "Annual Reports", path: authenticated_root_path, icon: "📊" },
-        { title: "Workshop Logs", path: workshop_logs_path, icon: "📝" },
+        { title: "!!!Vision Seeds", path: authenticated_root_path, icon: "🌱" },
         { title: "Workshops", path: workshops_path, icon: "🎨" },
         { title: "Workshop Ideas", path: workshop_ideas_path, icon: "💡" },
         { title: "Workshop Variations", path: workshop_variations_path, icon: "🔀" },
+        { title: "Workshop Logs", path: workshop_logs_path, icon: "📝" },
+        { title: "!!!Annual Reports", path: authenticated_root_path, icon: "📊" },
         { title: "Recent Activity", path: dashboard_recent_activities_path, icon: "🧭" },
       ]
 
@@ -38,8 +38,8 @@ class DashboardController < ApplicationController
         { title: "Banners", path: banners_path, icon: "📣" },
         { title: "Events", path: events_path, icon: "📆" },
         { title: "FAQs", path: faqs_path, icon: "❔" },
-        { title: "Forms", path: authenticated_root_path, icon: "📋" },
-        { title: "Organizations", path: authenticated_root_path, icon: "🏫" },
+        { title: "!!!Forms", path: authenticated_root_path, icon: "📋" },
+        { title: "Organizations", path: projects_path, icon: "🏫" },
         { title: "Resources", path: resources_path, icon: "📚" },
         { title: "Users", path: users_path, icon: "👥" },
         { title: "Facilitators", path: facilitators_path, icon: "🧑‍🎨" },
@@ -48,9 +48,10 @@ class DashboardController < ApplicationController
 
       @reference_cards = [
 
-        { title: "Age ranges", path: authenticated_root_path, icon: "👶" },
-        { title: "Categories", path: authenticated_root_path, icon: "🗂️" },
-        { title: "Sectors", path: authenticated_root_path, icon: "🏭" },
+        { title: "!!!Age ranges", path: authenticated_root_path, icon: "👶" },
+        { title: "!!!Categories", path: authenticated_root_path, icon: "🗂️" },
+        { title: "!!!Sectors", path: authenticated_root_path, icon: "🏭" },
+        { title: "!!!Project Statuses", path: authenticated_root_path, icon: "🧮️" },
         # { title: "WindowsTypes", path: authenticated_root_path, icon: "🪟" },
         # { title: "FormFields", path: authenticated_root_path, icon: "✏️" },
         # { title: "FormAnswerOptions", path: authenticated_root_path, icon: "🗳️" },
