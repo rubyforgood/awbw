@@ -2,65 +2,41 @@
 require "fileutils"
 
 APP_ROOT = File.expand_path("..", __dir__)
-DB_USER = ENV.fetch("DB_USER", "root")
-DB_NAME = ENV.fetch("DB_NAME", "awbw_development")
-DB_PASS = ENV["DB_PASS"]
 
 def system!(*args)
   system(*args, exception: true)
 end
 
-# This script is a way to set up or update your development environment automatically.
-# This script is idempotent, so that you can run it at any time and get an expectable outcome.
-# Add necessary setup steps to this file.
-# Detect Docker vs local DB by inspecting .env
-def docker_db?
-  env_path = File.join(APP_ROOT, ".env")
-  return false unless File.exist?(env_path)
-  env_content = File.read(env_path)
-  env_content.include?("docker compose port database 3306")
-end
-
-# Choose mariadb or mysql client (prefer mariadb if present)
-def db_client
-  if system("command -v mariadb > /dev/null")
-    "mariadb"
-  elsif system("command -v mysql > /dev/null")
-    "mysql"
-  else
-    raise "No MySQL/MariaDB client found on PATH. Install mariadb-clients or mysql-client."
-  end
-end
-
-# Run an .sql file against the database
 def run_sql_file(path)
   puts "== Running SQL file: #{path} =="
 
-  sql = File.read(path).gsub("utf8mb4_0900_ai_ci", "utf8mb4_general_ci")
+  config = ActiveRecord::Base.connection_db_config.configuration_hash
 
-  # Determine host and port
-  if docker_db?
-    db_host_port = `docker compose port database 3306`.strip
-    raise "Could not determine Docker DB port (is the container running?)" if db_host_port.empty?
-    host, port = db_host_port.split(":")
+  command = [
+    db_client,
+    "-h", config[:host] || "127.0.0.1",
+    "-P", (config[:port] || 3306).to_s,
+    "-u", config[:username] || "root",
+    "-D", config[:database]
+  ].join(" ")
+
+  command << " -p#{config[:password]}" if config[:password]
+
+  # Use shell input redirection
+  system!("#{command} < #{path}")
+  puts "✓ Successfully executed #{path}"
+rescue => e
+  puts "Warning: failed to run #{path}: #{e.message}"
+end
+
+# Choose mariadb or mysql client
+def db_client
+  if system("command -v mariadb > /dev/null", out: File::NULL)
+    "mariadb"
+  elsif system("command -v mysql > /dev/null", out: File::NULL)
+    "mysql"
   else
-    puts "→ Using local MariaDB/MySQL"
-    host = ENV.fetch("DB_HOST", "127.0.0.1")
-    port = ENV.fetch("DB_PORT", "3306")
-  end
-
-  args = [db_client, "-h", host, "-P", port, "-u", DB_USER]
-  args << "-p#{DB_PASS}" if DB_PASS
-  args << DB_NAME
-
-  begin
-    IO.popen(args, "r+") do |io|
-      io.puts sql
-      io.close_write
-      puts io.read
-    end
-  rescue => e
-    puts "Warning: failed to run #{path}: #{e.message}"
+    raise "No MySQL/MariaDB client found on PATH. Install mariadb-clients or mysql-client."
   end
 end
 
@@ -68,6 +44,8 @@ end
 # Main setup sequence
 # ------------------------------------------------------------------------------
 FileUtils.chdir APP_ROOT do
+  require_relative "../config/environment"
+
   puts "== Installing dependencies =="
   system("bundle check") || system!("bundle install")
 
