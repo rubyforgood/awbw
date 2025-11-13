@@ -147,10 +147,24 @@ class WorkshopDecorator < Draper::Decorator
     end
   end
 
+  def dashboard_image_url
+    if thumbnail&.attached?
+      Rails.application.routes.url_helpers.url_for(thumbnail)
+    elsif header&.attached?
+      Rails.application.routes.url_helpers.url_for(header)
+    elsif images&.first&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(images.first.file)
+    else
+      default_image_url
+    end
+  end
+
   def thumbnail_image
     # TODO Figure out if we need main_image
     if thumbnail.attached?
       thumbnail
+    elsif header.attached?
+      header
     end
   end
 

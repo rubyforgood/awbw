@@ -1,12 +1,12 @@
 <div class="m-2 p-4 bg-gray-300 rounded-lg">
-  <%= link_to community_news_item.reference_url, target: :blank, class: "flex flex-col md:flex-row" do %>
+  <%= link_to event_path(event), target: :blank, class: "flex flex-col md:flex-row" do %>
     <div class="grow">
-      <h3 class="text-lg pb-2 font-medium text-gray-700"><%= community_news_item.title %></h3>
+      <h3 class="text-lg pb-2 font-medium text-gray-700"><%= event.title %></h3>
       <p class="px-2 text-gray-700">
-        <span class="line-clamp-3"><%= strip_tags(community_news_item.body).truncate(250) %></span>
+        <span class="line-clamp-3"><%= strip_tags(event.description).truncate(250) %></span>
       </p>
     </div>
-    <%# TODO conditionally show community_news_item image if attached %>
+    <%# TODO conditionally show event image if attached %>
     <div
       class="
               self-center mt-2 md:mt-0 grow-0 shrink-0 flex items-center justify-center w-24
