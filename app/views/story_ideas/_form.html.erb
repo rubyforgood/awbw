@@ -123,6 +123,13 @@
   <% end %>
 
   <div class="form-actions mt-3">
+    <% if current_user.super_user? %>
+      <span class="admin-only bg-blue-100 p-3">
+        <%= link_to "Delete", @story_idea,
+                    class: "btn btn-danger-outline",
+                    method: :delete, data: { confirm: "Are you sure?" } %>
+      </span>
+    <% end %>
     <%= link_to "Cancel", story_ideas_path, class: "btn btn-secondary-outline ms-2" %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
