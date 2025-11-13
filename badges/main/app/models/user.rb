@@ -2,13 +2,13 @@ class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :recoverable,
-         :rememberable, :trackable, :validatable
+    :rememberable, :trackable, :validatable
 
   after_create :set_default_values
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Avatar
-  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
+  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png"].freeze
   has_one_attached :avatar
   validates :avatar, content_type: ACCEPTED_CONTENT_TYPES
 
@@ -32,6 +32,8 @@ class User < ApplicationRecord
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
   has_many :notifications, as: :noticeable
+  has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
+  has_many :events, through: :event_registrations
 
   has_many :stories_as_creator, foreign_key: :created_by_id, class_name: "Story"
   has_many :story_ideas_as_creator, foreign_key: :created_by_id, class_name: "StoryIdea"
@@ -41,15 +43,16 @@ class User < ApplicationRecord
   # Nested
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :project_users,
-                                reject_if: proc { |attrs| attrs["organization_id"].blank? },
-                                allow_destroy: true
+    reject_if: proc { |attrs| attrs["organization_id"].blank? },
+    allow_destroy: true
 
   # Validations
   validates :first_name, :last_name, presence: true
-  validates :email, presence: true, uniqueness: { case_sensitive: false }
+  validates :email, presence: true, uniqueness: {case_sensitive: false}
 
   # Search Cop
   include SearchCop
+
   search_scope :search do
     attributes [:email, :first_name, :last_name, :phone]
     attributes user: "projects.name"
@@ -68,7 +71,7 @@ class User < ApplicationRecord
   end
 
   def active_for_authentication?
-    super && !self.inactive?
+    super && !inactive?
   end
 
   def bookmark_for(record)
@@ -84,9 +87,8 @@ class User < ApplicationRecord
   end
 
   def submitted_monthly_report(submitted_date = Date.today, windows_type, project_id)
-
     Report.where(project_id: project_id, type: "MonthlyReport", date: submitted_date,
-                  windows_type: windows_type).last
+      windows_type: windows_type).last
   end
 
   def recent_activity(activity_limit = 10)
@@ -99,7 +101,7 @@ class User < ApplicationRecord
     # recent.concat(stories.order(updated_at: :desc).limit(activity_limit))
     # recent.concat(quotes.order(updated_at: :desc).limit(activity_limit))
     recent.concat(resources.order(updated_at: :desc).limit(activity_limit))
-    recent.concat(reports.where(owner_type: 'MonthlyReport').order(updated_at: :desc).limit(activity_limit))
+    recent.concat(reports.where(owner_type: "MonthlyReport").order(updated_at: :desc).limit(activity_limit))
     recent.concat(reports.where(owner_id: 7).order(updated_at: :desc).limit(activity_limit)) # TODO: remove hard-coded
 
     # Sort by the most recent timestamp (updated_at preferred, fallback to created_at)
@@ -111,24 +113,24 @@ class User < ApplicationRecord
   end
 
   def project_monthly_workshop_logs(date, *windows_type)
-    where = windows_type.map do |wt| 'windows_type_id = ?' end
+    where = windows_type.map { |wt| "windows_type_id = ?" }
 
     logs = projects.map do |project|
-      project.workshop_logs.where(where.join(' OR '), *windows_type)
+      project.workshop_logs.where(where.join(" OR "), *windows_type)
     end.flatten
     logs = logs.select do |log|
-      log.date && log.date.month == date.month.to_i && \
-      log.date.year == date.year.to_i
+      log.date && log.date.month == date.month.to_i &&
+        log.date.year == date.year.to_i
     end.flatten
     logs.uniq.group_by { |log| log.date }
   end
 
   def project_workshop_logs(date, windows_type, project_id)
-   if project_id
+    if project_id
       logs = workshop_logs.where(project_id: project_id, windows_type_id: windows_type.id)
       logs = logs.select do |log|
-        log.date && log.date.month == date.month.to_i && \
-        log.date.year == date.year.to_i
+        log.date && log.date.month == date.month.to_i &&
+          log.date.year == date.year.to_i
       end.flatten
       logs.uniq.group_by { |log| log.date }
     end
@@ -177,10 +179,9 @@ class User < ApplicationRecord
     adult_perm = Permission.find_by(security_cat: "Adult Windows")
     children_perm = Permission.find_by(security_cat: "Children's Windows")
 
-
-    self.permissions << combined_perm
-    self.permissions << adult_perm
-    self.permissions << children_perm
+    permissions << combined_perm
+    permissions << adult_perm
+    permissions << children_perm
   end
 
   def reassign_reports_and_logs_to_orphaned_user
