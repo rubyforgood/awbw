@@ -3,7 +3,7 @@ class Project < ApplicationRecord
   belongs_to :location, optional: true
   belongs_to :project_status
   belongs_to :windows_type, optional: true
-  has_many :project_users
+  has_many :project_users, dependent: :restrict_with_error
   has_many :users, through: :project_users
   has_many :reports, through: :users
   has_many :workshop_logs, through: :users
@@ -28,6 +28,10 @@ class Project < ApplicationRecord
 
   def log_title
     "#{name} #{windows_type.log_label if windows_type}"
+  end
+
+  def sector_list
+    sectors.pluck(:name)
   end
 
   private

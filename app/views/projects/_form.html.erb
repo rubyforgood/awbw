@@ -1,8 +1,8 @@
 <%= simple_form_for(@project) do |f| %>
   <%= render 'shared/errors', resource: @project if @project.errors.any? %>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-    <!-- Name -->
+  <!-- NAME + ACTIVE -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <%= f.input :name,
                 label: "Project Name",
                 required: true,
@@ -10,22 +10,22 @@
                   autofocus: true,
                   class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                 } %>
-    <%= f.input :inactive,
-                as: :boolean,
-                label: "Hidden?",
-                input_html: { class: "mr-2 rounded focus:ring-blue-500 text-blue-600" } %>
-  </div>
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <!-- Windows Type -->
-    <%= f.association :windows_type,
-                      label: "Windows Type",
-                      include_blank: "Select a Windows Type",
-                      required: true,
-                      input_html: {
-                        class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                      } %>
+    <%= f.input :agency_type,
+                label: "Agency Type",
+                as: :select,
+                required: true,
+                collection: [
+                  "501c3/nonprofit",
+                  "For-profit",
+                  "Government agency",
+                  "Other (please specify below)"
+                ],
+                selected: f.object.agency_type,
+                input_html: {
+                  value: f.object.agency_type,
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
 
-    <!-- Project Status -->
     <%= f.input :project_status_id,
                 as: :select,
                 collection: @project_statuses,
@@ -35,65 +35,207 @@
                 input_html: {
                   class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                 } %>
+    <%= f.input :inactive,
+                as: :boolean,
+                label: "Hidden?",
+                input_html: { class: "mr-2 rounded focus:ring-blue-500 text-blue-600" } %>
+  </div>
+
+  <!-- WINDOWS / STATUS / START / END -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <%= f.input :start_date,
                 label: "Start date",
                 as: :string,
-                input_html: { type: 'date', value: f.object.start_date&.strftime('%Y-%m-%d'),
-                              class: "block w-fullrounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
-                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+                input_html: {
+                  type: 'date',
+                  value: f.object.start_date&.strftime('%Y-%m-%d'),
+                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+
     <%= f.input :end_date,
                 label: "End date",
                 as: :string,
-                input_html: { type: 'date', value: f.object.end_date&.strftime('%Y-%m-%d'),
-                              class: "block w-fullrounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
-                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+                input_html: {
+                  type: 'date',
+                  value: f.object.end_date&.strftime('%Y-%m-%d'),
+                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+    <%= f.association :windows_type,
+                      label: "Windows Type",
+                      include_blank: "Select a Windows Type",
+                      required: false,
+                      input_html: {
+                        class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      } %>
+    <%= f.input :internal_id,
+                label: "Internal Project ID",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
   </div>
 
-  <!-- Additional fields -->
+  <!-- LOCATION + DISTRICT + LOCALITY -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <!-- Location -->
     <%= f.association :location,
                       include_blank: "Select a Location",
                       input_html: {
                         class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                       } %>
-    <%= f.input :district,
-                label: "District",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
-
     <%= f.input :locality,
                 label: "Locality",
                 input_html: {
                   class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                 } %>
+    <%= f.input :district,
+                label: "District",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
   </div>
 
-  <!-- Notes -->
-  <div class="mb-6">
+
+  <!-- LA-SPECIFIC FIELDS -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <%= f.input :la_city_council_district,
+                label: "LA City Council District",
+                as: :select,
+                collection: (1..15).to_a,
+                selected: f.object.la_city_council_district,
+                include_blank: true,
+                input_html: {
+                  min: 1, max: 15,
+                  value:  f.object.la_city_council_district,
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+    <%= f.input :la_supervisorial_district,
+                label: "LA Supervisorial District",
+                as: :select,
+                collection: (1..5).to_a,
+                selected: f.object.la_supervisorial_district,
+                include_blank: true,
+                input_html: {
+                  min: 1, max: 5,
+                  value:  f.object.la_supervisorial_district,
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+    <%= f.input :la_service_planning_area,
+                label: "LA Service Planning Area",
+                as: :select,
+                collection: (1..8).to_a,
+                selected: f.object.la_service_planning_area,
+                include_blank: true,
+                input_html: {
+                  min: 1, max: 8,
+                  value:  f.object.la_service_planning_area,
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+  </div>
+
+  <!-- ADDRESS BLOCK -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <%= f.input :street_address,
+                label: "Street Address",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+
+    <%= f.input :city,
+                label: "City",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+
+    <%= f.input :state,
+                label: "State",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+    <%= f.input :zip_code,
+                label: "ZIP Code",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <%= f.input :county,
+                label: "County",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+
+    <%= f.input :country,
+                label: "Country",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+    <%= f.input :phone,
+                label: "Phone",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+
+    <%= f.input :website_url,
+                label: "Website URL",
+                as: :string,
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+  </div>
+
+  <!-- INTERNAL + MVV -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
     <%= f.input :description,
                 as: :text,
                 label: "Description",
                 input_html: {
                   rows: 4,
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
                 } %>
+    <%= f.input :mission_vision_values,
+                label: "Mission / Vision / Values",
+                as: :text,
+                input_html: {
+                  rows: 4,
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+  </div>
 
+  <div class="mb-10">
+    <span class="font-medium text-gray-700 mb-3">Sectors</span>
+    <div class="flex flex-wrap items-center gap-4 p-3">
+      <%= f.simple_fields_for :sectorable_items do |sfi| %>
+        <%= render "sectorable_item_fields", f: sfi %>
+      <% end %>
+    </div>
+    <%= link_to_add_association "➕ Add Sector",
+                                f,
+                                :sectorable_items,
+                                render_options: {
+                                  locals: {
+                                    collection: Sector.published.where.not(name: f.object.sector_list)
+                                  }
+                                },
+                                class: "btn btn-secondary-outline" %>
+  </div>
+
+  <!-- DESCRIPTION + NOTES -->
+  <div class="mb-6">
     <%= f.input :notes,
                 as: :text,
                 label: "Internal Notes",
                 input_html: {
                   rows: 3,
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
                 } %>
   </div>
 
-  <!-- Actions -->
+  <!-- ACTIONS -->
   <div class="flex justify-end gap-3">
-    <%= link_to "Cancel", projects_path,
-                class: "btn btn-utility-outline" %>
-
+    <% if  @project.persisted? && current_user.super_user? %>
+      <%= link_to "Delete", @project, class: "btn btn-danger-outline",
+                  method: :delete, data: { confirm: "Are you sure?" } %>
+    <% end %>
+    <%= link_to "Cancel", projects_path, class: "btn btn-utility-outline" %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 <% end %>
