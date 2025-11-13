@@ -16,7 +16,6 @@ RSpec.describe "community_news/show", type: :view do
       reference_url: "Reference Url",
       project: nil,
       windows_type: nil,
-      workshop: nil,
       created_by: create(:user),
       updated_by: create(:user),
     ))
