@@ -20,6 +20,19 @@ class Project < ApplicationRecord
   validates :name, presence: true
   validates :project_status_id, presence: true
 
+  # SearchCop
+  include SearchCop
+  search_scope :search do
+    attributes :name, :street_address, :city, :state, :county, :country, :district, :locality, :notes
+    attributes location: [:city, :state, :country]
+  end
+
+  def self.search_by_params(params)
+    projects = Project.all
+    projects = projects.search(params[:query]) if params[:query].present?
+    projects
+  end
+
   # Methods
   def led_by?(user)
     return false unless leader
