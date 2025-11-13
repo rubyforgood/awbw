@@ -9,13 +9,13 @@ RSpec.describe "community_news/new", type: :view do
       published: false,
       featured: false,
       inactive: false,
-      author: "MyString",
+      author: create(:user),
       reference_url: "MyString",
       project: nil,
       windows_type: nil,
       workshop: nil,
-      created_by: nil,
-      updated_by: nil
+      created_by: create(:user),
+      updated_by: create(:user),
     ))
   end
 
