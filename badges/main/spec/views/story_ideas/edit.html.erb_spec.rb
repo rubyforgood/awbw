@@ -14,39 +14,35 @@ RSpec.describe "story_ideas/edit", type: :view do
     assign(:workshops, [])
     assign(:projects, [])
     assign(:users, [])
+    allow(view).to receive(:current_user).and_return(user)
+    render
   end
 
   context "when current_user is a regular user" do
-    before do
-      allow(view).to receive(:current_user).and_return(user)
-    end
-
     it "renders the edit story_idea form without created_by_id field" do
-      render
-
       assert_select "form[action=?][method=?]", story_idea_path(story_idea), "post" do
         assert_select "select[name=?]", "story_idea[windows_type_id]"
         assert_select "select[name=?]", "story_idea[project_id]"
         assert_select "select[name=?]", "story_idea[workshop_id]"
         assert_select "textarea[name=?]", "story_idea[body]"
-        assert_select "input[name=?]", "story_idea[youtube_url]"
+        assert_select "textarea[name=?]", "story_idea[youtube_url]"
         assert_select "select[name=?]", "story_idea[publish_preferences]"
-        assert_select "select[name=?]", "story_idea[created_by_id]", count: 0
       end
+    end
+
+    it "does not render promote to story button" do
+      expect(rendered).not_to have_link("Promote to Story")
     end
   end
 
   context "when current_user is an admin" do
     before do
       allow(view).to receive(:current_user).and_return(admin)
+      render
     end
 
-    it "renders the edit story_idea form with created_by_id field" do
-      render
-
-      assert_select "form[action=?][method=?]", story_idea_path(story_idea), "post" do
-        assert_select "select[name=?]", "story_idea[created_by_id]", count: 1
-      end
+    it "renders promote to story button" do
+      expect(rendered).to have_link("Promote to Story")
     end
   end
 end

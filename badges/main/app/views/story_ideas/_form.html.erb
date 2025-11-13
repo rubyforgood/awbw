@@ -1,4 +1,7 @@
 <%= simple_form_for(story_idea, html: { multipart: true }) do |f| %>
+  <% f.hidden_field :created_by_id, value: (@user || current_user)&.id %>
+  <% f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
+
   <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
 
   <div class="flex flex-col md:flex-row md:space-x-4">
@@ -20,9 +23,11 @@
     </div>
   </div>
 
-  <div class="mb-3">
-    <%= f.input :title %>
-  </div>
+  <% if current_user.super_user? %>
+    <div class="admin-only bg-blue-100 mb-3 p-3">
+      <%= f.input :title %>
+    </div>
+  <% end %>
 
   <div class="flex flex-wrap gap-4 justify-start">
     <!-- Main image -->
@@ -63,8 +68,18 @@
     <%= f.input :body, as: :text, input_html: { rows: 5 } %>
   </div>
 
-  <div class="mb-6">
-    <%= f.input :youtube_url %>
+  <div class="flex gap-4">
+    <%= f.input :publish_preferences,
+                as: :select,
+                required: true,
+                collection: [
+                  "I would like my full name published with the story",
+                  "I would like only my first name published",
+                  "I do not want my name published with my story"
+                ],
+                include_blank: "Select a preference",
+                selected: f.object.publish_preferences %>
+    <%= f.input :youtube_url, as: :text, input_html: { rows: 1 } %>
   </div>
 
   <div class="mb-6">
@@ -76,21 +91,6 @@
                   "Windows Facilitators. If there is any identifying information in my images, " +
                   "such as names or faces, I certify that I have received permission from the subject, " +
                   "or their caregiver, to display their likeness online." %>
-  </div>
-
-  <div class="flex flex-col md:flex-row md:space-x-4">
-    <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :publish_preferences,
-                  as: :select,
-                  required: true,
-                  collection: [
-                    "I would like my full name published with the story",
-                    "I would like only my first name published",
-                    "I do not want my name published with my story"
-                  ],
-                  include_blank: "Select a preference",
-                  selected: f.object.publish_preferences %>
-    </div>
   </div>
 
   <% if current_user.super_user? && !@user %>
@@ -114,23 +114,22 @@
               <% end %>
             </label>
           </div>
-        </div>
-        <div class="flex-1 mb-4 md:mb-0">
-          <%= f.input :created_by_id, collection: @users, label_method: :full_name,
-                      value_method: :id, prompt: "Select User" %>
-        </div>
-        <div class="flex-1 mb-4 md:mb-0">
-          <%= f.input :updated_by_id, collection: @users, label_method: :full_name,
-                      value_method: :id, prompt: "Select User" %>
+
+          <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
+                      class: "btn btn-secondary-outline ms-2" if f.object.persisted? %>
         </div>
       </div>
     </div>
-  <% else %>
-    <% f.hidden_field :created_by_id, value: (@user || current_user)&.id %>
-    <% f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
   <% end %>
 
   <div class="form-actions mt-3">
+    <% if current_user.super_user? %>
+      <span class="admin-only bg-blue-100 p-3">
+        <%= link_to "Delete", @story_idea,
+                    class: "btn btn-danger-outline",
+                    method: :delete, data: { confirm: "Are you sure?" } %>
+      </span>
+    <% end %>
     <%= link_to "Cancel", story_ideas_path, class: "btn btn-secondary-outline ms-2" %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
