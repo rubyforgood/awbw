@@ -14,7 +14,9 @@ class DashboardController < ApplicationController
                                  .order(ordering: :asc, created_at: :desc)
                                  .decorate
 
-    @stories = Resource.story.featured.decorate
+    @stories = Resource.story.published.featured.decorate
+    @community_news = CommunityNews.published.featured.decorate
+    @events = Event.publicly_visible.decorate
   end
 
   def admin
