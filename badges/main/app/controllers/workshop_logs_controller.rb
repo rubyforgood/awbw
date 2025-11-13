@@ -102,6 +102,27 @@ class WorkshopLogsController < ApplicationController
     render json: { :validate => @report.nil? }.to_json
   end
 
+  def set_index_variables # needs to not be private
+    @month_year_options = WorkshopLog.where.not(date: nil)
+                                     .group("DATE_FORMAT(COALESCE(date, created_at), '%Y-%m')")
+                                     .select("DATE_FORMAT(COALESCE(date, created_at), '%Y-%m') AS ym, MAX(COALESCE(date, created_at)) AS max_dt")
+                                     .order("max_dt DESC")
+                                     .map { |record| [Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym] }
+    @year_options = WorkshopLog.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at))"))
+                               .sort
+                               .reverse
+    @facilitators = User.joins(:workshop_logs)
+                        .distinct
+                        .order(:last_name, :first_name)
+    @projects = if current_user.super_user?
+                  Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
+                else
+                  current_user.projects.order(:name)
+                end
+    # @workshops = Workshop.joins(:workshop_logs)
+    #                      .order(:title)
+  end
+
   private
 
   def set_form_variables
@@ -160,27 +181,6 @@ class WorkshopLogsController < ApplicationController
         workshop_log[k] = 0 if v.nil? || v.blank?
       end
     end
-  end
-
-  def set_index_variables
-    @month_year_options = WorkshopLog.where.not(date: nil)
-                                     .group("DATE_FORMAT(COALESCE(date, created_at), '%Y-%m')")
-                                     .select("DATE_FORMAT(COALESCE(date, created_at), '%Y-%m') AS ym, MAX(COALESCE(date, created_at)) AS max_dt")
-                                     .order("max_dt DESC")
-                                     .map { |record| [Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym] }
-    @year_options = WorkshopLog.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at))"))
-                               .sort
-                               .reverse
-    @facilitators = User.joins(:workshop_logs)
-                        .distinct
-                        .order(:last_name, :first_name)
-    @projects = if current_user.super_user?
-                  Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
-                else
-                  current_user.projects.order(:name)
-                end
-    # @workshops = Workshop.joins(:workshop_logs)
-    #                      .order(:title)
   end
 
   def set_workshop
