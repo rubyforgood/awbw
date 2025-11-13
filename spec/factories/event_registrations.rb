@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :event_registration do
-    association :user
+    association :registrant, factory: :user
     association :event
   end
 end

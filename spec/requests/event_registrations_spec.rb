@@ -30,7 +30,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         registration = EventRegistration.last
         expect(registration.event_id).to eq(event.id)
-        expect(registration.user).to eq(user)
+        expect(registration.registrant).to eq(user)
       end
     end
 
