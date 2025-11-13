@@ -17,13 +17,40 @@ RSpec.describe "/community_news", type: :request do
   # This should return the minimal set of attributes required to create a valid
   # CommunityNews. As you add validations to CommunityNews, be sure to
   # adjust the attributes here as well.
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
+  let(:admin) { create(:user, super_user: true) }
+
   let(:valid_attributes) {
-    skip("Add a hash of attributes valid for your model")
+    {
+      title: "Title2",
+      body: "MyText",
+      youtube_url: "Youtube Url",
+      published: false,
+      featured: false,
+      author_id: admin.id,
+      reference_url: "Reference Url",
+      project: nil,
+      windows_type: nil,
+      created_by_id: admin.id,
+      updated_by_id: admin.id,
+    }
   }
 
   let(:invalid_attributes) {
-    skip("Add a hash of attributes invalid for your model")
+    {
+      title: nil,
+      body: nil,
+      author_id: nil,
+      created_by_id: nil,
+      updated_by_id: nil,
+    }
   }
+
+  before do
+    sign_in admin
+  end
 
   describe "GET /index" do
     it "renders a successful response" do
@@ -64,9 +91,9 @@ RSpec.describe "/community_news", type: :request do
         }.to change(CommunityNews, :count).by(1)
       end
 
-      it "redirects to the created community_news" do
+      it "redirects to community_news index" do
         post community_news_index_url, params: { community_news: valid_attributes }
-        expect(response).to redirect_to(community_news_url(CommunityNews.last))
+        expect(response).to redirect_to(community_news_index_url)
       end
     end
 
@@ -97,11 +124,11 @@ RSpec.describe "/community_news", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the community_news" do
+      it "redirects to the community_news index" do
         community_news = CommunityNews.create! valid_attributes
         patch community_news_url(community_news), params: { community_news: new_attributes }
         community_news.reload
-        expect(response).to redirect_to(community_news_url(community_news))
+        expect(response).to redirect_to(community_news_index_url)
       end
     end
 

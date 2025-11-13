@@ -34,7 +34,7 @@
                 as: :select,
                 label: "Organization",
                 required: false,
-                collection: Project.pluck(:name, :id).sort_by(&:first),
+                collection: @organizations,
                 selected: f.object.project_id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
@@ -42,7 +42,7 @@
                 as: :select,
                 required: false,
                 include_blank: true,
-                collection: WindowsType.pluck(:name, :id).sort_by(&:first),
+                collection: @windows_types,
                 selected: f.object.windows_type_id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
@@ -50,7 +50,7 @@
                 as: :select,
                 label: "Display author",
                 required: true,
-                collection: User.all.map{|u| [u.full_name, u.id]}.sort_by(&:first),
+                collection: @authors,
                 selected: f.object.author_id ||
                   User.where("first_name like 'awbw%' or last_name like 'awbw%'").last&.id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>

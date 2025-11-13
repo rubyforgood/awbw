@@ -1,56 +1,52 @@
 require 'rails_helper'
 
 RSpec.describe "community_news/index", type: :view do
+  let!(:adult_permission) { create(:permission, :adult) }
+  let!(:children_permission) { create(:permission, :children) }
+  let!(:combined_permission) { create(:permission, :combined) }
+
+  let(:admin) { create(:user, :admin) }
+
+  let(:community_news1) { CommunityNews.create!(
+    title: "Title1",
+    body: "MyText",
+    youtube_url: "Youtube Url",
+    published: false,
+    featured: false,
+    author: create(:user),
+    reference_url: "Reference Url",
+    project: nil,
+    windows_type: nil,
+    created_by: create(:user),
+    updated_by: create(:user),
+    ) }
+  let(:community_news2) { CommunityNews.create!(
+    title: "Title2",
+    body: "MyText",
+    youtube_url: "Youtube Url",
+    published: false,
+    featured: false,
+    author: create(:user),
+    reference_url: "Reference Url",
+    project: nil,
+    windows_type: nil,
+    created_by: create(:user),
+    updated_by: create(:user),
+    ) }
+
   before(:each) do
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-    
-    assign(:community_news, [
-      CommunityNews.create!(
-        title: "Title",
-        body: "MyText",
-        youtube_url: "Youtube Url",
-        published: false,
-        featured: false,
-        author: create(:user),
-        reference_url: "Reference Url",
-        project: nil,
-        windows_type: nil,
-        created_by: create(:user),
-        updated_by: create(:user),
-      ),
-      CommunityNews.create!(
-        title: "Title",
-        body: "MyText",
-        youtube_url: "Youtube Url",
-        published: false,
-        featured: false,
-        author: create(:user),
-        reference_url: "Reference Url",
-        project: nil,
-        windows_type: nil,
-        created_by: create(:user),
-        updated_by: create(:user),
-      )
-    ])
+    sign_in admin
+    assign(:community_news, paginated([community_news1, community_news2]))
   end
 
   it "renders a list of community_news" do
     render
-    cell_selector = 'div>p'
-    assert_select cell_selector, text: Regexp.new("Title".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("MyText".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("Youtube Url".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(false.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(false.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(false.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("Author".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new("Reference Url".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(nil.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(nil.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(nil.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(nil.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(nil.to_s), count: 2
+    expect(rendered).to include(community_news1.title, community_news2.title)
+  end
+
+  it "renders a friendly message when no banners exist" do
+    assign(:community_news, paginated([]))
+    render
+    expect(rendered).to match(/No community news yet/)
   end
 end

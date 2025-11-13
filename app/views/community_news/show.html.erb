@@ -9,7 +9,7 @@
 
         <!-- Buttons Group -->
         <div class="flex items-center gap-2">
-          <%= link_to("Index", community_news_path, class: "btn btn-secondary-outline") %>
+          <%= link_to("Index", community_news_index_path, class: "btn btn-secondary-outline") %>
           <% if current_user.super_user? %>
             <%= link_to("Edit", edit_community_news_path(@community_news), class: "btn btn-primary-outline") %>
           <% end %>
@@ -41,10 +41,6 @@
                 <p class="text-gray-900"><%= @community_news.featured %></p>
               </div>
                           <div class="mb-3">
-                <p class="font-bold text-gray-700">Inactive:</p>
-                <p class="text-gray-900"><%= @community_news.inactive %></p>
-              </div>
-                          <div class="mb-3">
                 <p class="font-bold text-gray-700">Author:</p>
                 <p class="text-gray-900"><%= @community_news.author %></p>
               </div>
@@ -59,10 +55,6 @@
                           <div class="mb-3">
                 <p class="font-bold text-gray-700">Windows type:</p>
                 <p class="text-gray-900"><%= @community_news.windows_type %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Workshop:</p>
-                <p class="text-gray-900"><%= @community_news.workshop %></p>
               </div>
                           <div class="mb-3">
                 <p class="font-bold text-gray-700">Created by:</p>

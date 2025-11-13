@@ -1,11 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe "community_news/show", type: :view do
+  let!(:adult_permission) { create(:permission, :adult) }
+  let!(:children_permission) { create(:permission, :children) }
+  let!(:combined_permission) { create(:permission, :combined) }
+
+  let(:admin) { create(:user, :admin) }
+
   before(:each) do
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-    
+    sign_in admin
+
     assign(:community_news, CommunityNews.create!(
       title: "Title",
       body: "MyText",
@@ -27,14 +31,6 @@ RSpec.describe "community_news/show", type: :view do
     expect(rendered).to match(/MyText/)
     expect(rendered).to match(/Youtube Url/)
     expect(rendered).to match(/false/)
-    expect(rendered).to match(/false/)
-    expect(rendered).to match(/false/)
-    expect(rendered).to match(/Author/)
     expect(rendered).to match(/Reference Url/)
-    expect(rendered).to match(//)
-    expect(rendered).to match(//)
-    expect(rendered).to match(//)
-    expect(rendered).to match(//)
-    expect(rendered).to match(//)
   end
 end

@@ -24,7 +24,8 @@ class CommunityNewsController < ApplicationController
     @community_news = CommunityNews.new(community_news_params)
 
     if @community_news.save
-      redirect_to community_news_index_path, notice: "Community news was successfully created."
+      redirect_to community_news_index_path,
+                  notice: "Community news was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -33,7 +34,8 @@ class CommunityNewsController < ApplicationController
 
   def update
     if @community_news.update(community_news_params)
-      redirect_to community_news_index_path, notice: "Community news was successfully updated.", status: :see_other
+      redirect_to community_news_index_path,
+                  notice: "Community news was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content
@@ -47,6 +49,9 @@ class CommunityNewsController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
+    @organizations = Project.pluck(:name, :id).sort_by(&:first)
+    @windows_types = WindowsType.pluck(:name, :id).sort_by(&:first)
+    @authors = User.all.map{|u| [u.full_name, u.id]}.sort_by(&:first)
   end
 
   private
