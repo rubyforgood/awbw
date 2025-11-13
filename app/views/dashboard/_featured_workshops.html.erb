@@ -130,7 +130,10 @@
                 </div>
 
                 <div class="ws-desc">
-                  <span class="ws-title font-bold"><%= workshop.title %></span>
+                  <div class="flex">
+                    <%= render "bookmarks/editable_bookmark_icon", resource: workshop %>
+                    <span class="ws-title font-bold"><%= workshop.title %></span>
+                  </div>
                   <p><%= workshop.title.length > 25 ? workshop.formatted_objective.truncate(75) : workshop.formatted_objective %></p>
                 </div>
               <% end %>
