@@ -1,7 +1,6 @@
 class EventRegistration < ApplicationRecord
+  belongs_to :registrant, class_name: "User", foreign_key: :registrant_id
   belongs_to :event
-  
-  validates_presence_of :first_name, :last_name, :email, :event_id
-  validates_uniqueness_of :email, scope: :event_id, message: 'is already registered for this event', case_sensitive: false
-  validates_format_of :email, with: URI::MailTo::EMAIL_REGEXP
+
+  validates :registrant_id, uniqueness: {scope: :event_id}
 end

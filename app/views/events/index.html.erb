@@ -1,5 +1,5 @@
 <div class="w-full">
-  <div class="flex items-start justify-between mb-6">
+  <div class="flex items-start justify-between m-6">
     <div class="pr-6">
       <h1 class="text-2xl font-semibold mb-2">Community of Practice Events</h1>
 
@@ -41,97 +41,9 @@
 </div>
 
 <% if @events.any? %>
-  <% if @events.length > 10 %>
-    <div class="flex justify-center mb-6">
-      <%= form.submit "Register for Selected Events",
-                  class:
-                    "inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                                    transition-colors duration-200 font-medium shadow-sm text-sm
-                                    border border-blue-600 bg-blue-600 text-white
-                                    enabled:hover:bg-white enabled:hover:text-blue-600
-                                    disabled:opacity-50 disabled:cursor-not-allowed",
-                  id: "register-button",
-                  disabled: true %>
-    </div>
-  <% end %>
-
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     <% @events.each do |event| %>
-      <div
-        class="
-          relative bg-white border border-gray-200 rounded-xl shadow hover:shadow-md
-          transition p-4 flex flex-col
-        "
-      >
-        <!-- Event Title -->
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-          <div class="flex items-center space-x-2">
-            <!-- Bookmark icon -->
-            <%= render "bookmarks/editable_bookmark_icon", resource: event %>
-            <!-- Title link -->
-            <%= link_to "#{event.title}#{" [HIDDEN]" if current_user.super_user? && !event.publicly_visible}",
-            event_path(event),
-            class: "text-gray-900 hover:underline font-medium" %>
-          </div>
-        </h3>
-        <% if event.event_registrations.where(email: current_user.email).exists? %>
-          <span
-            class="
-              absolute top-2 right-2 text-xs bg-green-100 text-green-700 px-2 py-0.5
-              rounded-full
-            "
-          >
-            Registered
-          </span>
-        <% end %>
-        <!-- Dates -->
-        <p class="text-sm text-gray-600 mb-1">
-          <span class="font-medium">Start:</span>
-          <%= event.start_date&.strftime("%B %d, %Y") %>
-        </p>
-        <p class="text-sm text-gray-600 mb-3">
-          <span class="font-medium">End:</span>
-          <%= event.end_date&.strftime("%B %d, %Y") %>
-        </p>
-
-        <div class="mt-3 flex gap-2">
-          <!-- Admin Edit -->
-          <% if current_user.super_user %>
-            <div class="mt-2">
-              <%= link_to "Edit", edit_event_path(event), class: "btn btn-secondary-outline" %>
-            </div>
-          <% end %>
-
-          <% if event.event_registrations.where(email: current_user.email).exists? %>
-            <% registration = event.event_registrations.where(email: current_user.email).last %>
-            <div class="mt-2 ml-auto">
-              <%= link_to "De-register",
-              event_registration_path(registration),
-              class: "btn btn-secondary-outline",
-              method: :delete,
-              data: {
-                confirm: "Are you sure you want to de-register?",
-              } %>
-            </div>
-          <% elsif event.registerable? %>
-            <div class="mt-2 ml-auto">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <%= check_box_tag "event_ids[]",
-                event.id,
-                false,
-                id: "event_ids_#{event.id}",
-                class:
-                  "event-checkbox h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
-                <span class="text-gray-700">Register</span>
-              </label>
-            </div>
-          <% else %>
-            <div class="mt-2 ml-auto">
-              <span class="text-sm text-gray-500 italic">Registration closed</span>
-            </div>
-          <% end %>
-        </div>
-      </div>
+      <%= render "card", event: event %>
     <% end %>
   </div>
 
@@ -141,35 +53,3 @@
     No events available.
   </div>
 <% end %>
-
-<%= form_with url: bulk_create_event_registrations_path, method: :post, local: true, id: 'bulk-registration-form' do |form| %>
-  <div class="flex justify-start m-6">
-    <%= form.submit "Register for Selected Events",
-                class:
-                  "inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                                transition-colors duration-200 font-medium shadow-sm text-sm
-                                border border-blue-600 bg-blue-600 text-white
-                                enabled:hover:bg-white enabled:hover:text-blue-600
-                                disabled:opacity-50 disabled:cursor-not-allowed",
-                id: "register-button",
-                disabled: true %>
-  </div>
-<% end %>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const checkboxes = document.querySelectorAll('.event-checkbox');
-        const registerButton = document.getElementById('register-button');
-
-        function updateRegisterButton() {
-            const checkedBoxes = document.querySelectorAll('.event-checkbox:checked');
-            registerButton.disabled = checkedBoxes.length === 0;
-        }
-
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updateRegisterButton);
-        });
-
-        updateRegisterButton();
-    });
-</script>
