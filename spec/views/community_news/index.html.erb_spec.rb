@@ -2,6 +2,10 @@ require 'rails_helper'
 
 RSpec.describe "community_news/index", type: :view do
   before(:each) do
+    create(:permission, :adult)
+    create(:permission, :children)
+    create(:permission, :combined)
+    
     assign(:community_news, [
       CommunityNews.create!(
         title: "Title",
@@ -9,14 +13,12 @@ RSpec.describe "community_news/index", type: :view do
         youtube_url: "Youtube Url",
         published: false,
         featured: false,
-        inactive: false,
-        author: "Author",
+        author: create(:user),
         reference_url: "Reference Url",
         project: nil,
         windows_type: nil,
-        workshop: nil,
-        created_by: nil,
-        updated_by: nil
+        created_by: create(:user),
+        updated_by: create(:user),
       ),
       CommunityNews.create!(
         title: "Title",
@@ -24,14 +26,12 @@ RSpec.describe "community_news/index", type: :view do
         youtube_url: "Youtube Url",
         published: false,
         featured: false,
-        inactive: false,
-        author: "Author",
+        author: create(:user),
         reference_url: "Reference Url",
         project: nil,
         windows_type: nil,
-        workshop: nil,
-        created_by: nil,
-        updated_by: nil
+        created_by: create(:user),
+        updated_by: create(:user),
       )
     ])
   end

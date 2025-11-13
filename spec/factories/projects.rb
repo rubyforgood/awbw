@@ -1,13 +1,8 @@
 FactoryBot.define do
   factory :project do
-    sequence(:name) { |n| "Project Name #{n}" }
-
-    association :location
+    name { Faker::Company.name }
     association :windows_type
+    association :location
     association :project_status
-
-    start_date { Date.today - 1.month }
-    end_date { nil }
-    description { Faker::Lorem.paragraph }
   end
-end 
+end

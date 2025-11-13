@@ -1,0 +1,223 @@
+<div class="min-h-screen py-10">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-8">
+      <!-- Header actions -->
+      <div class="flex justify-end mb-6">
+        <%= link_to "Organizations", projects_path, class: "btn btn-secondary-outline mr-2" %>
+        <% if current_user.super_user? %>
+          <%= link_to "Edit", edit_project_path(@project),
+                      class: "admin-only bg-green-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
+
+      <!-- Header: avatar + name + pronouns -->
+      <div class="flex flex-col md:flex-row md:items-center md:gap-8 mb-10">
+        <div class="flex-shrink-0 flex justify-center md:justify-start">
+          <% if @project.logo.attached? %>
+            <%= image_tag url_for(@project.logo),
+                          class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
+          <% else %>
+            <%= image_tag "missing.png",
+                          class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
+          <% end %>
+        </div>
+
+        <div class="flex-1 text-center md:text-left mt-4 md:mt-0">
+          <h1 class="text-3xl font-bold text-gray-900">
+            <%= @project.name %>
+          </h1>
+
+          <% if @project.location %>
+            <p class="mt-3 text-gray-700 text-sm">
+              Location:
+              <span class="font-medium">
+                <%= @project.location.name %>
+              </span>
+              <% if @project.district.present? %>
+                <br>
+                District:
+                <span class="font-medium">
+                <%= @project.district %>
+              </span>
+              <% end %>
+
+              <% if @project.locality.present? %>
+                <br>
+                Locality:
+                <span class="font-medium">
+                  <%= @project.locality %>
+                </span>
+              <% end %>
+            </p>
+          <% end %>
+
+          <% if @project.start_date.present? %>
+            <p class="mt-3 text-gray-700 text-sm">
+              Member since
+              <span class="font-medium"><%= @project.start_date.year %></span>
+            </p>
+          <% end %>
+
+          <!-- Optional social links -->
+          <div class="mt-4">
+            <%= render "projects/social_media_buttons", project: @project if false %>
+          </div>
+        </div>
+
+        <div class="flex-1">
+          <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
+            <% @project.decorate.badges.each do |(label, color)| %>
+                <span class="px-3 py-1 bg-<%= color %>-100 text-<%= color %>-800 text-sm font-semibold rounded-full">
+                  <%= label %>
+                </span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-8 border-gray-200">
+
+      <!-- Info grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Organization affiliations -->
+        <% if true || @project.profile_show_facilitator? %>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Windows facilitators</h2>
+            <% if @project.project_users.active.any? %>
+              <ul class="space-y-2">
+                <% @project.project_users.active.each do |pu| %>
+                  <li>
+                    <%= link_to pu.user.facilitator.name, facilitator_path(pu.user.facilitator),
+                                class: "text-blue-600 hover:underline font-medium" %>
+                    <% if pu.position.present? %>
+                      <span class="text-gray-600">– <%= pu.position.humanize %></span>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="text-gray-500 italic">No facilitators listed.</p>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Sectors -->
+        <% if true || @project.profile_show_sectors? %>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+            <p>
+              <% if @project.sectorable_items.any? %>
+                <%= @project.sectorable_items.joins(:sector).order("sectors.name").map do |item| %>
+                  <% "#{item.sector.name}#{ " (Leader)" if item.is_leader? }" %>
+                <% end.join(", ") %>
+              <% else %>
+                <span class="text-gray-500 italic">No sectors selected.</span>
+              <% end %>
+            </p>
+          </div>
+        <% end %>
+
+        <!-- Contact info -->
+        <div>
+          <% if true || @project.profile_show_email? || @project.profile_show_phone? %>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h2>
+            <% if true || @project.profile_show_email? %>
+              <p class="text-gray-700 mb-1">
+                📧 <%#= mail_to @project.email, @project.email,
+                              class: "text-blue-600 hover:underline" %>
+              </p>
+            <% end %>
+            <% if true || @project.profile_show_phone? && @project.phone.present? %>
+              <p class="text-gray-700 mb-1">
+                📞 <%#= link_to @project.phone, "tel:#{@project.phone}",
+                              class: "text-blue-600 hover:underline" %>
+              </p>
+            <% end %>
+            <% if true || @project.profile_show_website? && @project.website_url.present? %>
+              <p class="text-gray-700 mb-1">
+                🌎 <%#= link_to @project.website_url,
+                              class: "text-blue-600 hover:underline" %>
+              </p>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
+      <hr class="my-8 border-gray-200">
+
+      <!-- Workshops authored -->
+      <% if true || @project.profile_show_description? && @project.description.present? %>
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">Description</h2>
+        <%= sanitize(@project.description, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
+        <hr class="my-8 border-gray-200">
+      <% end %>
+
+      <!-- Workshops authored -->
+      <% if true || @project.profile_show_workshops? %>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
+          <% if false && @project.workshops.any? %>
+            <% @project.workshops.each do |workshop| %>
+              <%= link_to workshop.name, workshop_path(workshop), class: "btn btn-secondary-outline" %>
+            <% end %>
+          <% else %>
+            <p class="text-gray-500 italic">No workshops authored yet.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Stories authored -->
+      <% if true || @project.profile_show_stories? %>
+        <div class="mt-10">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories</h2>
+          <%# stories = @project.stories_as_creator + @project.stories_as_spotlighted_project %>
+          <%# if stories.any? %>
+            <%# stories.each do |story| %>
+              <%#= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
+            <%# end %>
+          <%# else %>
+            <p class="text-gray-500 italic">No stories yet.</p>
+          <%# end %>
+        </div>
+      <% end %>
+
+      <!-- Events registered -->
+      <% if true || @project.profile_show_events_registered? %>
+        <div class="mt-10">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Events hosted</h2>
+          <%# if Event.all.any? %>
+            <%# Event.all.each do |event| %>
+              <%# event_name = "#{event.title} - #{event.start_date.strftime("%b %Y") rescue nil}" %>
+              <%#= link_to event_name, event_path(event), class: "btn btn-secondary-outline" %>
+            <%# end %>
+          <%# else %>
+            <p class="text-gray-500 italic">No events recorded.</p>
+          <%# end %>
+        </div>
+      <% end %>
+
+      <hr class="my-8 border-gray-200">
+
+      <% if current_user.super_user || @project.project_users.pluck(:user_id).include?(current_user.id) %>
+        <div class="project-only bg-green-100">
+          <!-- Workshop logs -->
+          <% if true || @project.profile_show_workshop_logs? %>
+            <div class="mt-6 p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Logs submitted</h2>
+              <% if false && @project.workshop_logs.any? %>
+                <% @project.workshop_logs.order(date: :desc, created_at: :desc).each do |workshop_log| %>
+                  <%= link_to workshop_log.full_name,
+                              workshop_log_path(workshop_log), class: "btn btn-secondary-outline" %>
+                <% end %>
+              <% else %>
+                <p class="text-gray-500 italic">No workshops logged yet.</p>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%= render "workshop_logs/index" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
