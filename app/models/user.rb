@@ -32,7 +32,7 @@ class User < ApplicationRecord
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
   has_many :notifications, as: :noticeable
-  has_many :event_registrations, dependent: :destroy
+  has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :events, through: :event_registrations
 
   has_many :stories_as_creator, foreign_key: :created_by_id, class_name: "Story"
