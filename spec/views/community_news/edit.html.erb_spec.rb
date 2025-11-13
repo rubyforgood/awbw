@@ -1,13 +1,11 @@
 require 'rails_helper'
 
 RSpec.describe "community_news/edit", type: :view do
+  let(:adult_permission) { create(:permission, :adult) }
+  let(:children_permission) { create(:permission, :children) }
+  let(:combined_permission) { create(:permission, :combined) }
 
-  before(:each) do
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-    assign(:community_news, community_news)
-  end
+  let(:admin) { create(:user, :admin) }
 
   let(:community_news) {
     CommunityNews.create!(
@@ -26,6 +24,7 @@ RSpec.describe "community_news/edit", type: :view do
   }
 
   before(:each) do
+    sign_in admin
     assign(:community_news, community_news)
   end
 
@@ -34,11 +33,11 @@ RSpec.describe "community_news/edit", type: :view do
 
     assert_select "form[action=?][method=?]", community_news_path(community_news), "post" do
 
-      assert_select "input[name=?]", "community_news[title]"
+      assert_select "textarea[name=?]", "community_news[title]"
 
       assert_select "textarea[name=?]", "community_news[body]"
 
-      assert_select "input[name=?]", "community_news[youtube_url]"
+      assert_select "textarea[name=?]", "community_news[youtube_url]"
 
       assert_select "input[name=?]", "community_news[published]"
 
@@ -46,7 +45,7 @@ RSpec.describe "community_news/edit", type: :view do
 
       assert_select "select[name=?]", "community_news[author_id]"
 
-      assert_select "input[name=?]", "community_news[reference_url]"
+      assert_select "textarea[name=?]", "community_news[reference_url]"
 
       assert_select "select[name=?]", "community_news[project_id]"
 
