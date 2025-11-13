@@ -13,7 +13,8 @@
       class: "text-gray-900 hover:underline font-medium" %>
     </div>
   </h3>
-  <% if event.event_registrations.exists?(user_id: current_user.id) %>
+
+  <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
     <span
       class="
         absolute top-2 right-2 text-xs bg-green-100 text-green-700 px-2 py-0.5
@@ -23,11 +24,13 @@
       Registered
     </span>
   <% end %>
+
   <!-- Dates -->
   <p class="text-sm text-gray-600 mb-1">
     <span class="font-medium">Start:</span>
     <%= event.start_date&.strftime("%B %d, %Y") %>
   </p>
+
   <p class="text-sm text-gray-600 mb-3">
     <span class="font-medium">End:</span>
     <%= event.end_date&.strftime("%B %d, %Y") %>
@@ -41,7 +44,7 @@
       </div>
     <% end %>
 
-    <% if event.event_registrations.exists?(user_id: current_user.id) %>
+    <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
       <div class="mt-2 ml-auto">
         <%= link_to "De-register",
         event_registrations_path(event_id: event.id),
@@ -52,7 +55,6 @@
         } %>
       </div>
     <% elsif event.registerable? %>
-
       <div class="mt-2 ml-auto">
         <%= button_to "Register",
         event_registrations_path(event_id: event),

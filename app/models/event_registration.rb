@@ -1,6 +1,6 @@
 class EventRegistration < ApplicationRecord
-  belongs_to :user
+  belongs_to :registrant, class_name: "User", foreign_key: :registrant_id
   belongs_to :event
 
-  validates :user_id, uniqueness: {scope: :event_id}
+  validates :registrant_id, uniqueness: {scope: :event_id}
 end
