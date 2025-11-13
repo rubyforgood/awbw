@@ -2,6 +2,10 @@ require 'rails_helper'
 
 RSpec.describe "community_news/new", type: :view do
   before(:each) do
+    create(:permission, :adult)
+    create(:permission, :children)
+    create(:permission, :combined)
+    
     assign(:community_news, CommunityNews.new(
       title: "MyString",
       body: "MyText",
