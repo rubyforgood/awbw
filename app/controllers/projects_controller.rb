@@ -3,7 +3,7 @@ class ProjectsController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Project.all
+    unpaginated = Project.search_by_params(params).order(:name)
     @projects_count = unpaginated.count
     @projects = unpaginated.paginate(page: params[:page], per_page: per_page)
     set_index_variables
@@ -93,6 +93,7 @@ class ProjectsController < ApplicationController
       :name, :description, :start_date, :end_date,
       :district, :locality, :inactive, :notes,
       :project_status_id, :location_id, :windows_type_id,
+      :agency_type_other,
 
       :street_address,
       :city,
