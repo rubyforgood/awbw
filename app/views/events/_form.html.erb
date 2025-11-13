@@ -13,9 +13,11 @@
     <div>
       <%= f.input :description, input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
     </div>
-    <div class="flex items-center mt-6 md:mt-0">
-      <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?", wrapper_html: { class: "ml-2" } %>
-    </div>
+    <% if current_user.super_user? %>
+      <div class="admin-only bg-blue-100 flex items-center mt-6 md:mt-0">
+        <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?", wrapper_html: { class: "ml-2" } %>
+      </div>
+    <% end %>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

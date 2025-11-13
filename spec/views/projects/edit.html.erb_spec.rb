@@ -45,7 +45,7 @@ RSpec.describe "projects/edit", type: :view do
 
       assert_select "input[name=?]", "project[district]"
 
-      assert_select "input[name=?]", "project[locality]"
+      assert_select "select[name=?]", "project[locality]"
 
       assert_select "input[name=?]", "project[inactive]"
 

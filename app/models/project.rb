@@ -3,7 +3,7 @@ class Project < ApplicationRecord
   belongs_to :location, optional: true
   belongs_to :project_status
   belongs_to :windows_type, optional: true
-  has_many :project_users
+  has_many :project_users, dependent: :restrict_with_error
   has_many :users, through: :project_users
   has_many :reports, through: :users
   has_many :workshop_logs, through: :users
@@ -20,6 +20,19 @@ class Project < ApplicationRecord
   validates :name, presence: true
   validates :project_status_id, presence: true
 
+  # SearchCop
+  include SearchCop
+  search_scope :search do
+    attributes :name, :street_address, :city, :state, :county, :country, :district, :locality, :notes
+    attributes location: [:city, :state, :country]
+  end
+
+  def self.search_by_params(params)
+    projects = Project.all
+    projects = projects.search(params[:query]) if params[:query].present?
+    projects
+  end
+
   # Methods
   def led_by?(user)
     return false unless leader
@@ -28,6 +41,10 @@ class Project < ApplicationRecord
 
   def log_title
     "#{name} #{windows_type.log_label if windows_type}"
+  end
+
+  def sector_list
+    sectors.pluck(:name)
   end
 
   private
