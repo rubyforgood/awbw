@@ -8,13 +8,13 @@ RSpec.describe "community_news/edit", type: :view do
       youtube_url: "MyString",
       published: false,
       featured: false,
-      author: nil,
+      author: create(:user),
       reference_url: "MyString",
       project: nil,
       windows_type: nil,
       workshop: nil,
-      created_by: nil,
-      updated_by: nil
+      created_by: create(:user),
+      updated_by: create(:user),
     )
   }
 
