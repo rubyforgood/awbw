@@ -1,6 +1,13 @@
 require 'rails_helper'
 
 RSpec.describe "community_news/edit", type: :view do
+  before(:each) do
+    create(:permission, :adult)
+    create(:permission, :children)
+    create(:permission, :combined)
+    assign(:community_news, community_news)
+  end
+  
   let(:community_news) {
     CommunityNews.create!(
       title: "MyString",
