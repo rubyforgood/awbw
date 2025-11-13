@@ -23,10 +23,11 @@
       </div>
 
       <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :project_id, collection: @projects, label_method: :name,
+        <%= f.input :project_id,
+                    label: "Organization",
+                    collection: @projects, label_method: :name,
                     value_method: :id,
-                    selected: f.object.project_id || @story_idea&.project_id,
-                    prompt: "Select Project" %>
+                    selected: f.object.project_id || @story_idea&.project_id %>
       </div>
     </div>
 
