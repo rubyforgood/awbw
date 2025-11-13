@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_09_132157) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_12_141449) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -165,6 +165,27 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_09_132157) do
     t.integer "width"
     t.index ["assetable_type", "assetable_id"], name: "idx_ckeditor_assetable"
     t.index ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type"
+  end
+
+  create_table "community_news", charset: "utf8mb3", force: :cascade do |t|
+    t.integer "author_id", null: false
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id", null: false
+    t.boolean "featured"
+    t.integer "project_id"
+    t.boolean "published"
+    t.string "reference_url"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id", null: false
+    t.integer "windows_type_id"
+    t.string "youtube_url"
+    t.index ["author_id"], name: "index_community_news_on_author_id"
+    t.index ["created_by_id"], name: "index_community_news_on_created_by_id"
+    t.index ["project_id"], name: "index_community_news_on_project_id"
+    t.index ["updated_by_id"], name: "index_community_news_on_updated_by_id"
+    t.index ["windows_type_id"], name: "index_community_news_on_windows_type_id"
   end
 
   create_table "event_registrations", charset: "utf8mb3", force: :cascade do |t|
@@ -925,6 +946,11 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_09_132157) do
   add_foreign_key "bookmark_annotations", "bookmarks"
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "metadata"
+  add_foreign_key "community_news", "projects"
+  add_foreign_key "community_news", "users", column: "author_id"
+  add_foreign_key "community_news", "users", column: "created_by_id"
+  add_foreign_key "community_news", "users", column: "updated_by_id"
+  add_foreign_key "community_news", "windows_types"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "events", "users", column: "created_by_id"
   add_foreign_key "facilitator_organizations", "facilitators"

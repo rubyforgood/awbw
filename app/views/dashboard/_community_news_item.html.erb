@@ -1,0 +1,51 @@
+<section class="px-8">
+  <div class="flex flex-col items-start ">
+    <div class="inline-block ml-12">
+      <h2 class="text-2xl text-gray-700 font-medium m-2">Community News</h2>
+      <hr class="h-1 bg-primary border-0 rounded-sm my-2 mx-4">
+    </div>
+  </div>
+
+  <div class="flex flex-col">
+    <% resources.each do |resource| %>
+      <div class="m-2 p-4 bg-gray-300 rounded-lg">
+        <%= link_to resource.featured_url, target: :blank, class: "flex flex-col md:flex-row" do %>
+          <div class="grow">
+            <h3 class="text-lg pb-2 font-medium text-gray-700"><%= resource.title %></h3>
+            <p class="px-2 text-gray-700">
+              <span class="line-clamp-3"><%= strip_tags(resource.text).truncate(250) %></span>
+            </p>
+          </div>
+          <%# TODO conditionally show resource image if attached %>
+          <div
+            class="
+              self-center mt-2 md:mt-0 grow-0 shrink-0 flex items-center justify-center w-24
+              h-20 bg-gray-400 rounded-sm
+            "
+          >
+            <svg
+              class="w-10 h-10 text-gray-200 dark:text-gray-600"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              viewBox="0 0 20 18"
+            >
+              <path
+                d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z"
+              />
+            </svg>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    <a
+      href="/stories"
+      class="
+        ml-8 mt-2 self-start rounded-md px-3 py-2 text-lg font-medium text-gray-600
+        border border-gray-600 hover:bg-primary/10 hover:text-gray-900
+      "
+    >
+      View All
+    </a>
+  </div>
+</section>

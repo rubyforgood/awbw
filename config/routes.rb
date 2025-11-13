@@ -40,6 +40,7 @@ Rails.application.routes.draw do
       get :personal
     end
   end
+  resources :community_news
   resources :events
   resources :event_registrations, only: [:create, :destroy] do
     collection do

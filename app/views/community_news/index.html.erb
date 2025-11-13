@@ -1,0 +1,106 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Community News</h1>
+      <%= link_to "New Post",
+                  new_community_news_path,
+                  class: "inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition" %>
+    </div>
+
+    <% if @community_news.any? %>
+      <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Title</th>
+            <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Published</th>
+            <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Featured</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Author</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Project</th>
+            <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Updated</th>
+            <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
+          </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+          <% @community_news.each do |news| %>
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4">
+                <%= link_to news.title,
+                            news,
+                            class: "text-indigo-600 hover:text-indigo-800 font-medium" %>
+              </td>
+
+              <td class="px-6 py-4 text-center">
+                <% if news.published? %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      <i class="fa-solid fa-circle-check text-green-500"></i> Yes
+                    </span>
+                <% else %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium text-gray-700">
+                      <i class="fa-regular fa-circle-xmark text-gray-500"></i> No
+                    </span>
+                <% end %>
+              </td>
+
+              <td class="px-6 py-4 text-center">
+                <% if news.featured? %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                      🌟 Featured
+                    </span>
+                <% else %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium text-gray-700">
+                      —
+                    </span>
+                <% end %>
+              </td>
+
+              <td class="px-6 py-4 text-gray-800">
+                <%= news.author&.full_name || "—" %>
+              </td>
+
+              <td class="px-6 py-4 text-gray-600">
+                <%= news.project&.name || "—" %>
+              </td>
+
+              <td class="px-6 py-4 text-center text-sm text-gray-500">
+                <%= news.updated_at.strftime("%b %d, %Y") %>
+              </td>
+
+              <td class="px-6 py-4 text-right">
+                <div class="inline-flex gap-2">
+                  <%= link_to "Edit",
+                              edit_community_news_path(news),
+                              class: "btn btn-secondary-outline" %>
+
+                  <%= link_to "View",
+                              community_news_path(news),
+                              class: "btn btn-secondary-outline" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="mt-6 flex justify-center">
+        <div class="pagination mt-6">
+          <%= will_paginate @community_news,
+                            previous_label: "<<",
+                            next_label: ">>",
+                            inner_window: 2,
+                            class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
+        </div>
+      </div>
+    <% else %>
+      <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <h2 class="text-gray-600 text-lg mb-2">No community news yet</h2>
+        <%= link_to "Create your first post",
+                    new_community_news_path,
+                    class: "inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 transition" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+

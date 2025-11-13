@@ -1,0 +1,81 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <!-- Title -->
+        <h1 class="text-2xl font-semibold text-gray-900">
+          <%= @community_news.class.model_name.human %> Details
+        </h1>
+
+        <!-- Buttons Group -->
+        <div class="flex items-center gap-2">
+          <%= link_to("Index", community_news_path, class: "btn btn-secondary-outline") %>
+          <% if current_user.super_user? %>
+            <%= link_to("Edit", edit_community_news_path(@community_news), class: "btn btn-primary-outline") %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="mt-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Title:</p>
+                <p class="text-gray-900"><%= @community_news.title %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Body:</p>
+                <p class="text-gray-900"><%= @community_news.body %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Youtube url:</p>
+                <p class="text-gray-900"><%= @community_news.youtube_url %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Published:</p>
+                <p class="text-gray-900"><%= @community_news.published %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Featured:</p>
+                <p class="text-gray-900"><%= @community_news.featured %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Inactive:</p>
+                <p class="text-gray-900"><%= @community_news.inactive %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Author:</p>
+                <p class="text-gray-900"><%= @community_news.author %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Reference url:</p>
+                <p class="text-gray-900"><%= @community_news.reference_url %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Project:</p>
+                <p class="text-gray-900"><%= @community_news.project %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Windows type:</p>
+                <p class="text-gray-900"><%= @community_news.windows_type %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Workshop:</p>
+                <p class="text-gray-900"><%= @community_news.workshop %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Created by:</p>
+                <p class="text-gray-900"><%= @community_news.created_by %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Updated by:</p>
+                <p class="text-gray-900"><%= @community_news.updated_by %></p>
+              </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
