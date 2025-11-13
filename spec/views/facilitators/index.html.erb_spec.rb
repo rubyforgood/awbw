@@ -16,7 +16,6 @@ RSpec.describe "facilitators/index", type: :view do
   end
 
   it "renders a list of facilitators" do
-    assign(:workshop_ideas, paginated([]))
     render
     expect(rendered).to match(facilitator.user.first_name)
     expect(rendered).to match(facilitator_2.user.first_name)
