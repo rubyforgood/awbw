@@ -1,0 +1,126 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
+        <h1 class="text-2xl font-semibold text-gray-900">
+          Projects (<%= number_with_delimiter(@projects_count) %>)
+        </h1>
+
+        <%= link_to "New Project",
+                    new_project_path,
+                    class: "btn btn-primary-outline w-full sm:w-auto text-center" %>
+      </div>
+
+      <!-- Optional filters -->
+      <div class="mb-4">
+        <%= form_with url: projects_path, method: :get, local: true, class: "flex flex-wrap items-end gap-3" do %>
+          <div>
+            <%= label_tag :query, "Search", class: "text-sm font-medium text-gray-700 mb-1 block" %>
+            <%= text_field_tag :query, params[:query],
+                               class: "w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                               placeholder: "Name or Location",
+                               onkeypress: "if(event.key === 'Enter'){ this.form.requestSubmit(); }" %>
+          </div>
+
+          <div>
+            <%= label_tag :status, "Status", class: "text-sm font-medium text-gray-700 mb-1 block" %>
+            <%= select_tag :project_status,
+                           options_for_select(@project_statuses, params[:project_status]),
+                           include_blank: "All",
+                           class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                                   focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                           onchange: "this.form.requestSubmit()" %>
+          </div>
+
+          <%= link_to "Clear filters", projects_path,
+                      class: "btn btn-utility-outline w-full sm:w-auto" %>
+        <% end %>
+      </div>
+
+      <!-- Projects table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-200 rounded-lg divide-y divide-gray-200">
+          <thead class="bg-gray-100">
+          <tr>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Windows Type</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Location</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Dates</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Active?</th>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+          </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-100">
+          <% @projects.each do |project| %>
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-4 py-2 font-medium text-blue-700">
+                <%= link_to project.name, project_path(project), class: "hover:underline" %>
+              </td>
+
+              <td class="px-4 py-2 text-sm text-gray-700">
+                <%= project.windows_type&.short_name&.titleize || "—" %>
+              </td>
+
+              <td class="px-4 py-2 text-sm text-gray-700">
+                <%= project.location&.name || project.locality || "—" %>
+              </td>
+
+              <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
+                <% if project.start_date || project.end_date %>
+                  <%= project.start_date&.strftime("%b %Y") %> –
+                  <%= project.end_date&.strftime("%b %Y") || "Present" %>
+                <% else %>
+                  —
+                <% end %>
+              </td>
+
+              <td class="px-4 py-2 text-sm">
+                  <span class="inline-block px-2 py-1 rounded text-xs font-semibold
+                                <%= case project.project_status&.name
+                                    when "Active" then 'bg-green-100 text-green-800'
+                                    when "Completed" then 'bg-blue-100 text-blue-800'
+                                    when "Draft" then 'bg-yellow-100 text-yellow-800'
+                                    when nil then ''
+                                    else 'bg-gray-100 text-gray-800'
+                                    end %>">
+                    <%= project.project_status&.name %>
+                  </span>
+              </td>
+
+              <td class="px-4 py-2 text-center">
+                <% if project.inactive? %>
+                  <span class="text-red-500 fa fa-ban"></span>
+                <% else %>
+                  <span class="text-green-200 font-semibold fa fa-check-circle"></span>
+                <% end %>
+              </td>
+
+              <td class="px-4 py-2 text-center whitespace-nowrap">
+                <%= link_to "Edit", edit_project_path(project),
+                            class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+                <%= link_to "Profile", project_path(project),
+                            class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="mt-6 flex justify-center">
+        <div class="pagination mt-6">
+          <%= will_paginate @projects,
+                            previous_label: "<<",
+                            next_label: ">>",
+                            inner_window: 2,
+                            class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

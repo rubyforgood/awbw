@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :projects
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
   get 'cms', to: 'admins/base#show'
@@ -40,6 +41,7 @@ Rails.application.routes.draw do
       get :personal
     end
   end
+  resources :community_news
   resources :events
   resource :event_registrations, only: [:create, :destroy]
 

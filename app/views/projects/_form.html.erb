@@ -1,0 +1,99 @@
+<%= simple_form_for(@project) do |f| %>
+  <%= render 'shared/errors', resource: @project if @project.errors.any? %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <!-- Name -->
+    <%= f.input :name,
+                label: "Project Name",
+                required: true,
+                input_html: {
+                  autofocus: true,
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
+    <%= f.input :inactive,
+                as: :boolean,
+                label: "Hidden?",
+                input_html: { class: "mr-2 rounded focus:ring-blue-500 text-blue-600" } %>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <!-- Windows Type -->
+    <%= f.association :windows_type,
+                      label: "Windows Type",
+                      include_blank: "Select a Windows Type",
+                      required: true,
+                      input_html: {
+                        class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      } %>
+
+    <!-- Project Status -->
+    <%= f.input :project_status_id,
+                as: :select,
+                collection: @project_statuses,
+                include_blank: "Select status",
+                label: "Status",
+                required: true,
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
+    <%= f.input :start_date,
+                label: "Start date",
+                as: :string,
+                input_html: { type: 'date', value: f.object.start_date&.strftime('%Y-%m-%d'),
+                              class: "block w-fullrounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+    <%= f.input :end_date,
+                label: "End date",
+                as: :string,
+                input_html: { type: 'date', value: f.object.end_date&.strftime('%Y-%m-%d'),
+                              class: "block w-fullrounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+  </div>
+
+  <!-- Additional fields -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Location -->
+    <%= f.association :location,
+                      include_blank: "Select a Location",
+                      input_html: {
+                        class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      } %>
+    <%= f.input :district,
+                label: "District",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
+
+    <%= f.input :locality,
+                label: "Locality",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
+  </div>
+
+  <!-- Notes -->
+  <div class="mb-6">
+    <%= f.input :description,
+                as: :text,
+                label: "Description",
+                input_html: {
+                  rows: 4,
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
+
+    <%= f.input :notes,
+                as: :text,
+                label: "Internal Notes",
+                input_html: {
+                  rows: 3,
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-3">
+    <%= link_to "Cancel", projects_path,
+                class: "btn btn-utility-outline" %>
+
+    <%= f.button :submit, class: "btn btn-primary" %>
+  </div>
+<% end %>
