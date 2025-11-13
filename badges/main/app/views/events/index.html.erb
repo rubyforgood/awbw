@@ -1,11 +1,38 @@
 <div class="w-full">
   <div class="flex items-start justify-between mb-6">
     <div class="pr-6">
-      <h1 class="text-2xl font-semibold mb-2">Events</h1>
-      Click 'Register' and then 'Register for Selected Events' to sign up for
-      multiple events at once.
+      <h1 class="text-2xl font-semibold mb-2">Community of Practice Events</h1>
+
+     <div>
+       Mark your calendars for a year of exciting events! They are
+       designed to expand your knowledge, ignite your passion, and foster connections within our network of
+       Windows Facilitators. Whether you’re a seasoned facilitator or just starting out,
+       we think you’ll find something to inspire and empower you.
+       <br><br>
+       <span class="font-bold">Stay Updated & Connected!</span>
+       <br>
+       To ensure you don’t miss a thing, follow these simple steps:
+       <br>
+       <ul class="list-disc pl-5">
+         <li><span class="font-bold">Register:</span> Click "Register"
+           (event dates/times are subject to change -- we will keep you informed by email)
+         </li>
+         <li><span class="font-bold">Calendar:</span> Click "Add to calendar" (remote event invites will include a Zoom link)</li>
+         <li>
+           <span class="font-bold">Confirm:</span> Check your inbox for confirmation emails
+         </li>
+         <li>
+           <span class="font-bold">Wait:</span> As each event approaches, you’ll receive an email with more information.
+         </li>
+         <li>
+           <span class="font-bold">Ask:</span>
+           For questions, reach out to us at <%= mail_to "programs@awbw.org",
+                                                         class: "underline" %>
+         </li>
+       </ul>
+     </div>
     </div>
-    <%= link_to "New Event", new_event_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "New Event", new_event_path, class: "whitespace-nowrap btn btn-secondary-outline" %>
   </div>
 </div>
 <!-- Divider -->
