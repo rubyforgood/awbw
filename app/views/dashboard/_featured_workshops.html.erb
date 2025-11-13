@@ -125,17 +125,13 @@
                     class="portrait-img"
                     src="<%= workshop.main_image_url %>"
                 >
-
-                <figure class="portrait-img"
-                        style="background-image: url('<%= workshop.dashboard_image_url %>')">
-                </figure>
                 <div class="tiny-label"><%= workshop.windows_type.label if workshop.windows_type %>
                   <span class="pull-right"><%= workshop.date %></span>
                 </div>
 
                 <div class="ws-desc">
-                  <span class="ws-title"><%= workshop.title %></span>
-                  <p><%= workshop.formatted_objective %></p>
+                  <span class="ws-title font-bold"><%= workshop.title %></span>
+                  <p><%= workshop.title.length > 25 ? workshop.formatted_objective.truncate(75) : workshop.formatted_objective %></p>
                 </div>
               <% end %>
             </li>
