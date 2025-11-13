@@ -19,7 +19,6 @@ RSpec.describe "community_news/edit", type: :view do
       reference_url: "MyString",
       project: nil,
       windows_type: nil,
-      workshop: nil,
       created_by: create(:user),
       updated_by: create(:user),
     )
