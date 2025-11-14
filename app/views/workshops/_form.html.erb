@@ -291,9 +291,34 @@
 
     <!-- Accordions -->
     <div class="space-y-4">
-      <div>
-        <button type="button" class="w-full bg-gray-600 text-white px-3 py-2 rounded-t-md accordion-toggle">Spanish Translations</button>
-        <div class="accordion-content hidden border border-gray-300 p-4 rounded-b-md">
+
+      <div data-controller="dropdown">
+
+      <button
+        type="button"
+        id="translations_button"
+        class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"translations":"hidden"}, {"translations_arrow":"rotate-180"}, {"translations_button":"rounded-md rounded-t-md"}]'
+      >
+       Spanish Translations
+
+        <svg
+          id="translations_arrow"
+          class="w-6 h-6 shrink-0"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+      </button>
+
+        <div id="translations" class="hidden border border-gray-300 p-4 rounded-b-md">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <% workshop.decorate.display_spanish_fields.each do |field| %>
               <%= f.input field, as: :text,
@@ -302,10 +327,32 @@
           </div>
         </div>
       </div>
-
       <div>
-        <button type="button" class="w-full bg-gray-600 text-white px-3 py-2 rounded-t-md accordion-toggle">Series workshops</button>
-        <div class="accordion-content <%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md">
+
+      <div data-controller="dropdown">
+      <button
+        type="button"
+        id="series_button"
+        class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"series":"hidden"}, {"series_arrow":"rotate-180"}, {"series_button":"rounded-md rounded-t-md"}]'
+      >
+        Series workshops
+        <svg
+          id="series_arrow"
+          class="w-6 h-6 shrink-0"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+      </button>
+        <div id="series" class="hidden <%# "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md">
           <p class="mb-2 text-sm text-gray-600">
             If this Workshop is a series, add the other "series workshops" below.
             You can also add a series-specific description for each workshop in the series, and the order in which they should appear.
@@ -319,6 +366,7 @@
           </div>
         </div>
       </div>
+    </div>
     </div>
 
     <!-- Actions -->
@@ -336,33 +384,3 @@
 </div>
 
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll('.accordion-toggle').forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const content = toggle.nextElementSibling;
-                content.classList.toggle("hidden");
-            });
-        });
-    });
-</script>
-
-<style>
-    .accordion-toggle {
-        width: 100%;
-        background: #7C7C7C;
-        color: white;
-        padding: 8px 12px;
-        border: none;
-        text-align: left;
-        cursor: pointer;
-        border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
-        margin-bottom: 2px;
-        text-transform: none;
-    }
-
-    .accordion-toggle:hover {
-        background: #ccc;
-    }
-</style>
