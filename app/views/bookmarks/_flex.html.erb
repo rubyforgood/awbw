@@ -116,7 +116,7 @@
             <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
           <% end %>
         <% end %>
-        <%= link_to "#{workshop.title}#{" [NOT PUBLISHED]" if workshop.inactive?}",
+        <%= link_to "#{workshop.title}#{" [HIDDEN]" if workshop.inactive?}",
                     link_route,
                     class: "hover:underline",
                     data: { turbo: false, } %>

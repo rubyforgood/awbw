@@ -22,7 +22,7 @@
   </div>
   <div class="flex flex-col">
     <%= render "inline_fields", form: f, attribute: :inactive do %>
-      <%= f.input :inactive %>
+      <%= f.input :inactive, label: "Hidden?" %>
     <% end %>
   </div>
   <div class="flex">
