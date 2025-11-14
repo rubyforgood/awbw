@@ -1,0 +1,105 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <!-- Title -->
+        <h1 class="text-2xl font-semibold text-gray-900">
+          <%= @workshop_idea.class.model_name.human %> Details
+        </h1>
+
+        <!-- Buttons Group -->
+        <div class="flex items-center gap-2">
+          <%= link_to("Index", workshop_ideas_path, class: "btn btn-secondary-outline") %>
+          <% if current_user.super_user? %>
+            <%= link_to("Edit", edit_workshop_idea_path(@workshop_idea), class: "btn btn-primary-outline") %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="mt-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Title:</p>
+                <p class="text-gray-900"><%= @workshop_idea.title %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Description:</p>
+                <p class="text-gray-900"><%= @workshop_idea.description %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Staff notes:</p>
+                <p class="text-gray-900"><%= @workshop_idea.staff_notes %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Created by:</p>
+                <p class="text-gray-900"><%= @workshop_idea.created_by %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Windows type:</p>
+                <p class="text-gray-900"><%= @workshop_idea.windows_type_id %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Tips:</p>
+                <p class="text-gray-900"><%= @workshop_idea.tips %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Objective:</p>
+                <p class="text-gray-900"><%= @workshop_idea.objective %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Materials:</p>
+                <p class="text-gray-900"><%= @workshop_idea.materials %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Introduction:</p>
+                <p class="text-gray-900"><%= @workshop_idea.introduction %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Creation:</p>
+                <p class="text-gray-900"><%= @workshop_idea.creation %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Closing:</p>
+                <p class="text-gray-900"><%= @workshop_idea.closing %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Visualization:</p>
+                <p class="text-gray-900"><%= @workshop_idea.visualization %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Warm up:</p>
+                <p class="text-gray-900"><%= @workshop_idea.warm_up %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Opening circle:</p>
+                <p class="text-gray-900"><%= @workshop_idea.opening_circle %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Demonstration:</p>
+                <p class="text-gray-900"><%= @workshop_idea.demonstration %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Setup:</p>
+                <p class="text-gray-900"><%= @workshop_idea.setup %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Instructions:</p>
+                <p class="text-gray-900"><%= @workshop_idea.instructions %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Optional materials:</p>
+                <p class="text-gray-900"><%= @workshop_idea.optional_materials %></p>
+              </div>
+                          <div class="mb-3">
+                <p class="font-bold text-gray-700">Notes:</p>
+                <p class="text-gray-900"><%= @workshop_idea.notes %></p>
+              </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

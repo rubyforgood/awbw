@@ -9,7 +9,7 @@
     <% case activity.class.name %>
     <% when "Workshop" %>
       <span class="text-gray-500 text-sm">Workshop: </span>
-      <%= link_to "#{ activity.title}#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
+      <%= link_to "#{ activity.name }#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
                   workshop_path(activity), class: "hover:underline" %>
     <% when "WorkshopLog" %>
       <span class="text-gray-500 text-sm">Log: </span>
@@ -24,7 +24,7 @@
       <% end %>
     <% when "Resource" %>
       <span class="text-gray-500 text-sm"><%= activity.kind %>: </span>
-      <%= link_to "#{ activity.title}#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
+      <%= link_to "#{ activity.name }#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
                   resource_path(activity),
                   class: "hover:underline" %>
     <% when "Report" %>
@@ -38,13 +38,26 @@
                   report_path(activity),
                   class: "hover:underline"%>
     <% else %>
-      <span class="text-gray-500 text-sm"><%= activity.class.name %></span><%= activity.title %>
+      <span class="text-gray-500 text-sm"><%= activity.class.name %>: </span>
+      <%= link_to activity.name, polymorphic_path(activity), class: "hover:underline" %>
     <% end %>
   </td>
+  <% if params[:user_id] && params[:user_id].empty? %>
+    <td>
+      <%=
+        if activity.respond_to?(:user) && activity.user
+          activity.user.full_name
+        elsif activity.respond_to?(:created_by) && activity.created_by
+          activity.created_by.full_name
+        end
+      %>
+    </td>
+  <% end %>
   <td class="px-4 py-2 text-sm">
     <% if activity.respond_to?(:id) %>
-      <%= link_to_button "Edit", edit_polymorphic_path(activity), variant: :secondary_outline %>
-      <%= link_to_button "View", polymorphic_path(activity), variant: :secondary_outline %>
+      <%= link_to "Edit", edit_polymorphic_path(activity),
+                  class: "btn btn-secondary-outline admin-only bg-blue-100" if current_user.super_user? %>
+      <%= link_to "View", polymorphic_path(activity), class: "btn btn-secondary-outline" %>
     <% end %>
   </td>
 </tr>

@@ -2,11 +2,10 @@ class FaqsController < ApplicationController
   before_action :set_faq, only: [:show, :edit, :update, :destroy]
 
   def index
-    @faqs = if current_user.super_user?
-      Faq.by_order
-    else
-      Faq.active.by_order
-    end
+    faqs = current_user.super_user? ? Faq.all : Faq.active
+    @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "inactive"))
+                .by_order
+                .page(params[:page])
   end
 
   def show
@@ -28,7 +27,7 @@ class FaqsController < ApplicationController
       redirect_to faqs_path, notice: "FAQ was successfully created."
     else
       set_form_variables
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -37,7 +36,7 @@ class FaqsController < ApplicationController
       redirect_to faqs_path, notice: "FAQ was successfully updated.", status: :see_other
     else
       set_form_variables
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

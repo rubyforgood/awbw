@@ -4,9 +4,9 @@
   <% if turbo_frame_request? %>
     <div class="self-end p-2 flex gap-2">
       <%= form.button :submit, "save", class: "bg-primary hover:bg-primary/90 transition" %>
-      <%= link_to_button "cancel",
+      <%= link_to "cancel",
       polymorphic_path(form.object),
-      variant: :secondary_outline %>
+      class: "btn btn-secondary-outline" %>
     </div>
   <% end %>
 <% end %>

@@ -1,0 +1,70 @@
+@layer components {
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg
+           transition-colors duration-200 font-medium shadow-sm text-sm
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* solid */
+  .btn-primary {
+    @apply border border-primary bg-primary text-white
+           hover:bg-white hover:text-primary;
+  }
+
+  .btn-secondary {
+    @apply border border-secondary bg-secondary text-white
+           hover:bg-white hover:text-secondary;
+  }
+
+  .btn-info {
+    @apply border border-info bg-info text-white
+           hover:bg-white hover:text-info;
+  }
+
+  .btn-warning {
+    @apply border border-warning bg-warning text-white
+           hover:bg-white hover:text-warning;
+  }
+
+  .btn-danger {
+    @apply border border-danger bg-danger text-white
+           hover:bg-white hover:text-danger;
+  }
+
+  .btn-utility {
+    @apply border border-gray-200 bg-gray-200 text-gray-800
+           hover:bg-white hover:text-gray-600;
+  }
+
+  /* outline */
+  .btn-primary-outline {
+    @apply border border-primary text-primary
+           hover:bg-primary hover:text-white;
+  }
+
+  .btn-secondary-outline {
+    @apply border border-secondary text-secondary
+           hover:bg-secondary hover:text-white;
+  }
+
+  .btn-info-outline {
+    @apply border border-info text-info
+           hover:bg-info hover:text-white;
+  }
+
+  .btn-warning-outline {
+    @apply border border-warning text-warning
+           hover:bg-warning hover:text-white;
+  }
+
+  .btn-danger-outline {
+    @apply border border-danger text-danger
+           hover:bg-danger hover:text-white;
+  }
+
+  .btn-utility-outline {
+    @apply border border-gray-200 text-gray-600
+           hover:bg-gray-200 hover:text-gray-800;
+  }
+}

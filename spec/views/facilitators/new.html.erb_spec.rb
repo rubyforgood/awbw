@@ -1,10 +1,17 @@
 require 'rails_helper'
 
 RSpec.describe "facilitators/new", type: :view do
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
+  let(:user) { create(:user) }
+  let(:admin) { create(:user, :admin) }
+
   let(:facilitator) { create(:facilitator)}
 
   before do
     assign(:facilitator, facilitator)
+    allow(view).to receive(:current_user).and_return(admin)
     render
   end
 
@@ -15,10 +22,10 @@ RSpec.describe "facilitators/new", type: :view do
   it "has a form with the facilitator fields" do
     expect(rendered).to have_field('First name')
     expect(rendered).to have_field('Last name')
-    expect(rendered).to have_field('Primary email address')
+    expect(rendered).to have_field('Pronouns')
   end
 
   it "has a link back to the index page" do
-    expect(rendered).to have_link('Back', href: facilitators_path)
+    expect(rendered).to have_link('Cancel', href: facilitators_path)
   end
 end

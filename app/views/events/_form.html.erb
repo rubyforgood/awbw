@@ -13,9 +13,11 @@
     <div>
       <%= f.input :description, input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
     </div>
-    <div class="flex items-center mt-6 md:mt-0">
-      <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?", wrapper_html: { class: "ml-2" } %>
-    </div>
+    <% if current_user.super_user? %>
+      <div class="admin-only bg-blue-100 flex items-center mt-6 md:mt-0">
+        <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?", wrapper_html: { class: "ml-2" } %>
+      </div>
+    <% end %>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -64,11 +66,12 @@
     </div>
 
     <div class="flex gap-4">
-      <%= link_to_button "Delete", @event, variant: :danger_outline, method: :delete, data: { confirm: "Are you sure?" } %>
-      <%= link_to_button 'Cancel', events_path, variant: :secondary_outline %>
-      <%= f.button :submit, class: 'inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                    transition-colors duration-200 font-medium shadow-sm text-sm
-                    border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white' %>
+      <%= link_to "Delete", @event, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
+      <%= link_to 'Cancel', events_path, class: "btn btn-secondary-outline" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
+<!--                   class: 'inline-flex items-center gap-2 px-4 py-2 rounded-lg-->
+<!--                    transition-colors duration-200 font-medium shadow-sm text-sm-->
+<!--                    border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white'-->
     </div>
   </div>
 <% end %>

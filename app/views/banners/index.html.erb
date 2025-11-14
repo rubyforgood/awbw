@@ -1,0 +1,69 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-semibold text-gray-900">
+            📣 <%= Banner.model_name.human.pluralize %> (<%= @banners_count %>)
+          </h1>
+          <div class="flex gap-2">
+            <%= link_to('New ' + Banner.model_name.human.downcase,
+                                new_banner_path,
+                                class: "btn btn-primary-outline") %>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse border border-gray-200">
+            <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-[60px]">Content</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/6">Published?</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
+            </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-200">
+            <% @banners.each do |banner| %>
+              <tr class="hover:bg-gray-50 transition-colors duration-150">
+                <td class="px-4 py-2 text-sm text-gray-800"><%= h(banner.content) %></td>
+                <td class="px-4 py-2 text-center">
+                  <% if banner.show? %>
+                    <span class="fa fa-check-circle text-green-500"></span>
+                  <% else %>
+                    <span>--</span>
+                  <% end %>
+                </td>
+
+                <!-- Actions -->
+                <td class="px-4 py-2 flex justify-center gap-2">
+                  <%= link_to 'Edit', edit_banner_path(banner), class: "btn btn-secondary-outline" %>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty state -->
+        <% unless @banners.any? %>
+          <p class="text-gray-500 text-center py-6">
+            No <%= Banner.model_name.human.pluralize %> found.
+          </p>
+        <% end %>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex justify-center">
+          <div class="pagination mt-6">
+            <%= will_paginate @banners,
+                              previous_label: "<<",
+                              next_label: ">>",
+                              inner_window: 2,
+                              class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

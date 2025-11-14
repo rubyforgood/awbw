@@ -17,11 +17,11 @@ class WorkshopDecorator < Draper::Decorator
   def display_spanish_fields
     [
       :objective_spanish, :materials_spanish, :optional_materials_spanish,
-      :timeframe_spanish, :age_range_spanish, :setup_spanish,
+      :age_range_spanish, :setup_spanish,
       :introduction_spanish, :demonstration_spanish, :opening_circle_spanish,
       :warm_up_spanish, :visualization_spanish, :creation_spanish,
       :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish,
-      :misc2_spanish, :extra_field_spanish
+      :misc2_spanish, :extra_field_spanish # :timeframe_spanish,
     ]
   end
 
@@ -147,19 +147,32 @@ class WorkshopDecorator < Draper::Decorator
     end
   end
 
-  def thumbnail_image
-    if legacy && !thumbnail.exists?
-      main_image
+  def dashboard_image_url
+    if thumbnail&.attached?
+      Rails.application.routes.url_helpers.url_for(thumbnail)
+    elsif header&.attached?
+      Rails.application.routes.url_helpers.url_for(header)
+    elsif images&.first&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(images.first.file)
     else
+      default_image_url
+    end
+  end
+
+  def thumbnail_image
+    # TODO Figure out if we need main_image
+    if thumbnail.attached?
       thumbnail
+    elsif header.attached?
+      header
     end
   end
 
   def header_image
-    if !header.exists?
-      thumbnail_image
-    else
+    if header.attached?
       header
+    elsif thumbnail.attached?
+      thumbnail
     end
   end
 
@@ -195,7 +208,7 @@ class WorkshopDecorator < Draper::Decorator
   end
 
   def breadcrumbs_title
-    h.link_to 'Search Curriculum', h.workshops_path, class: 'underline'
+    h.link_to 'Workshops', h.workshops_path, class: 'underline'
   end
 
   def log_form_header

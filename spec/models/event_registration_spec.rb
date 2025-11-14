@@ -1,19 +1,14 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe EventRegistration, type: :model do
-  subject { build(:event_registration) }
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm) { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
 
-  describe 'associations' do
-    it { should belong_to(:event) }
-  end
+  subject { create(:event_registration) }
 
-  describe 'validations' do
-    it { should validate_presence_of(:event_id) }
-    it { should validate_presence_of(:first_name) }
-    it { should validate_presence_of(:last_name) }
-    it { should validate_presence_of(:email) }
-    it { should validate_uniqueness_of(:email).scoped_to(:event_id).with_message('is already registered for this event').case_insensitive }
-    it { should allow_value('user@example.com').for(:email) }
-    it { should_not allow_value('invalid_email').for(:email) }
+  describe "associations" do
+    it { should belong_to(:event).required }
+    it { should belong_to(:registrant).required }
   end
 end

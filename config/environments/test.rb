@@ -18,8 +18,16 @@ Rails.application.configure do
   # Configure public file server for tests with cache-control for performance.
   config.public_file_server.headers = { "cache-control" => "public, max-age=3600" }
 
-  # Show full error reports.
+  # Configure public file server for tests with Cache-Control for performance.
+  config.public_file_server.enabled = true
+  config.public_file_server.headers = {
+    "Cache-Control" => "public, max-age=#{1.hour.to_i}"
+  }
+
+  # Show full error reports and disable caching.
   config.consider_all_requests_local = true
+  config.action_controller.perform_caching = false
+
   config.cache_store = :null_store
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.
@@ -30,6 +38,7 @@ Rails.application.configure do
 
   # Store uploaded files on the local file system in a temporary directory.
   config.active_storage.service = :test
+  Rails.application.routes.default_url_options[:host] ||= "http://localhost:3000"
 
   # Tell Action Mailer not to deliver emails to the real world.
   # The :test delivery method accumulates sent emails in the
@@ -50,4 +59,7 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+  # config.action_view.raise_on_missing_translations = true
+  feature_flag_variables = File.join(Rails.root, "config", "feature_flag_variables.rb")
+  load(feature_flag_variables) if File.exist?(feature_flag_variables)
 end

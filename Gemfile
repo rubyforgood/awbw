@@ -29,7 +29,6 @@ gem "search_cop", "~> 1.0.6"
 gem "jwt", "~> 1.2.1"
 gem "httparty"
 gem "will_paginate", "~> 3.1.7"
-gem "bootstrap-will_paginate"
 gem "apipie-rails", "~> 1.5.0"
 gem "rack-cors", require: "rack/cors"
 # gem "ckeditor", "~> 4.3.0" # removed given gh security scan results. still need a replacement.
@@ -46,9 +45,11 @@ gem "country_select"
 gem "turbo-rails", "~> 2.0"
 gem "stimulus-rails", "~> 1.3"
 
+gem "active_storage_validations", "~> 3.0"
+
 group :development, :test do
   gem "better_errors"
-  gem "brakeman", require: false
+  gem "brakeman", "~> 7.1.1", require: false
   gem "bundler-audit", require: false
   gem "capybara", "~> 3.36"
   gem "dotenv-rails"

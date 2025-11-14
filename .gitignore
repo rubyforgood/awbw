@@ -48,3 +48,5 @@ node_modules
 *.local
 
 .vite
+# Ignore local Active Storage
+storage

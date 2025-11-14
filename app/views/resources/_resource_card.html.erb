@@ -33,6 +33,7 @@
   <div class="flex-1 p-4 flex flex-col justify-between">
     <div>
       <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+        <%= render "bookmarks/editable_bookmark_icon", resource: resource.object %>
         <%= link_to "#{ resource.title.titleize }#{
           "<span class='text-gray-500 text-sm font-normal'> (not published)
           </span>" if resource.inactive? && controller_name == "resources" }#{
@@ -46,18 +47,20 @@
 
       <div class="flex justify-end items-center mt-4 space-x-2">
         <div class="flex items-center space-x-2">
-          <% if resource.attachments.any? %>
-            <%= link_to_button "<span class='fa fa-download' title='Download #{resource.kind}'></span>".html_safe,
-                               resource_download_path(resource),
-                               variant: :utility %>
+          <% if resource.download_attachment&.file&.attached? %>
+            <% from = controller_name == "resources" &&
+              action_name == "index" ? "resources_index" : (controller_name == "dashboard" &&
+              action_name == "index" ? "dashboard_index" : "unknown") %>
+            <%= link_to "<span class='fa fa-download' title='Download #{resource.kind}'></span>".html_safe,
+                               resource_download_path(resource,
+                                                      from: from),
+                               class: "btn btn-utility" %>
           <% end %>
           <% if controller_name == "resources" %>
             <% if current_user.super_user? %>
-              <span class="admin-only bg-blue-100 p-1">
-                <%= link_to_button "<span class='far fa-edit'></span>".html_safe,
-                                   edit_resource_path(resource),
-                                   variant: :secondary_outline %>
-              </span>
+              <%= link_to "<span class='far fa-edit'></span>".html_safe,
+                          edit_resource_path(resource),
+                          class: "btn btn-secondary-outline admin-only bg-blue-100" %>
             <% end %>
           <% end %>
         </div>

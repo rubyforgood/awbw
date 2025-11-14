@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :projects
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
   get 'cms', to: 'admins/base#show'
@@ -12,14 +13,6 @@ Rails.application.routes.draw do
   get 'users/change_password', to: 'users#change_password', as:'change_password'
   post 'users/update_password', to: 'users#update_password', as: 'update_password'
 
-  get 'workshops/share_idea', to: 'workshops#share_idea'
-  get 'workshops/summary', to: 'workshops#summary'
-  get 'workshops/:id/share_idea_show', to: 'workshops#share_idea_show',
-      as: 'share_idea_show'
-
-  post 'workshops/create_workshop_idea', to: 'workshops#create_workshop_idea'
-  post 'workshops/create_dummy_workshop', to: 'workshops#create_dummy_workshop'
-
   post 'workshop_logs/validate_new', to: 'workshop_logs#validate_new'
 
   get 'impersonate_users', to: 'impersonate_users#index'
@@ -27,33 +20,44 @@ Rails.application.routes.draw do
   post 'impersonate_users_back', to: 'impersonate_users#back'
   get 'impersonate_users/help', to: 'impersonate_users#help'
 
+
+  get 'contact_us', to: 'contact_us#index'
+  post 'contact_us', to: 'contact_us#create'
+  get 'dashboard/admin', to: 'dashboard#admin'
+  get 'dashboard/recent_activities', to: 'dashboard#recent_activities'
+  get 'dashboard/help', to: 'dashboard#help'
+
   resources :workshops do
     collection do
       post :search
     end
   end
-
+  resources :banners
   resources :bookmarks do
     post :search
     resources :annotations
-  end
-
-  resources :workshop_log_creation_wizard
-  resources :workshop_logs
-
-  resources :events
-  resources :event_registrations, only: [:create, :destroy] do
     collection do
-      post :bulk_create
+      get :tally
+      get :personal
     end
   end
+  resources :community_news
+  resources :events
+  resource :event_registrations, only: [:create, :destroy]
 
-  get 'stories', to: 'resources#stories'
+  resources :faqs
+  resources :monthly_reports
+  resources :project_users
 
-  resources :users
+  resources :users do
+    member do
+      get :generate_facilitator
+    end
+  end
   resources :user_forms
   resources :facilitators
   resources :organizations
+  resources :quotes
 
   get 'reports/:id/edit_story', to: 'reports#edit_story', as: 'reports_edit_story'
   put 'reports/update_story/:id', to: 'reports#update_story', as: 'reports_update_story'
@@ -75,17 +79,13 @@ Rails.application.routes.draw do
     end
   end
 
-  get 'contact_us', to: 'contact_us#index'
-  post 'contact_us', to: 'contact_us#create'
-  get 'dashboard/admin', to: 'dashboard#admin'
-  get 'dashboard/recent_activities', to: 'dashboard#recent_activities'
-  get 'dashboard/help', to: 'dashboard#help'
-
-  resources :monthly_reports
-  resources :faqs
-  resources :project_users
-  resources :workshops
+  resources :story_ideas
+  resources :stories
+  resources :workshop_ideas
+  resources :workshop_logs
+  resources :workshop_log_creation_wizard
   resources :workshop_variations
+  resources :workshops
 
   namespace :api do
     namespace :v1 do

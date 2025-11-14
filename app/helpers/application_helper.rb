@@ -1,29 +1,5 @@
 module ApplicationHelper
 
-  def link_to_button(text, url, variant: :secondary_outline, **options)
-    manual_classes = options.delete(:class)
-    base_classes = "inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                    transition-colors duration-200 font-medium shadow-sm text-sm"
-    variant_classes = {
-      primary:   "border border-blue-600 bg-blue-600 text-white hover:text-grey-600 hover:bg-white",
-      secondary: "border border-gray-400 bg-gray-600 text-white hover:text-grey-600 hover:bg-white",
-      info:      "border border-sky-500 bg-sky-600 text-white hover:text-grey-600 hover:bg-white",
-      warning:   "border border-yellow-400 bg-yellow-600 text-white hover:text-grey-600 hover:bg-white",
-      danger:    "border border-red-600 bg-red-600 text-white hover:text-grey-600 hover:bg-white",
-      utility:   "border border-gray-200 bg-gray-200 text-gray-800 hover:text-gray-600 hover:bg-white",
-
-      primary_outline:   "border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white",
-      secondary_outline: "border border-gray-400 text-gray-600 hover:bg-gray-600 hover:text-white",
-      info_outline:      "border border-sky-500 text-gray-600 hover:bg-sky-600 hover:text-white",
-      warning_outline:   "border border-yellow-400 text-gray-600 hover:bg-yellow-500 hover:text-white",
-      danger_outline:    "border border-red-600 text-gray-600 hover:bg-red-600 hover:text-white",
-      utility_outline:   "border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
-                        # border border-gray-300 text-gray-700 bg-white hover:bg-gray-50
-    }
-    classes = [base_classes, variant_classes[variant.to_sym], manual_classes].join(" ")
-    link_to text, url, options.merge(class: classes)
-  end
-
   def root_link_path
     user_signed_in? ? authenticated_root_path : unauthenticated_root_path
   end
@@ -52,29 +28,23 @@ module ApplicationHelper
     Date.today
   end
 
-  def show_time(time)
-    if time.kind_of? Time
-      if time.hour > 0
-        return "<span> #{time.strftime("%H:%M")} </span><span>hr</span>".html_safe
-      else
-        return "<span> #{time.strftime("%H:%M")} </span><span>min</span>".html_safe
-      end
+  def display_banner
+    banners = Banner.all
+    return unless banners.any?(&:show)
+
+    safe_content_array = []
+
+    banners.published.each do |banner|
+      safe_content_array << sanitize(
+        banner.content,
+        tags: %w[a],
+        attributes: %w[href]
+      )
     end
 
-    "<span> #{time.to_i} </span><span>min</span>".html_safe
-  end
+    safe_content = safe_content_array.join("<br>")
 
-  def display_banner
-    banner = Banner.last
-    return unless banner&.show
-
-    safe_content = sanitize(
-      banner.content,
-      tags: %w[a],
-      attributes: %w[href]
-    )
-
-    content_tag(:div, id: "banner-news", class: "bg-yellow-400 text-black text-center px-4 py-2") do
+    content_tag(:div, id: "banner-news", class: "bg-yellow-200 text-black text-center px-4 py-2") do
       content_tag(:div, safe_content.html_safe, class: "font-medium")
     end
   end
@@ -151,5 +121,9 @@ module ApplicationHelper
     m ||= 'fa-file'
 
     "fas #{m}"
+  end
+
+  def display_count(value)
+    value.to_i.zero? ? "--" : number_with_delimiter(value)
   end
 end

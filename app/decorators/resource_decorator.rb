@@ -22,11 +22,6 @@ class ResourceDecorator < Draper::Decorator
     title || kind
   end
 
-  def main_image(size = nil)
-    return if kind == 'Theme'
-    images.first.file.url if images.any?
-  end
-
   def flex_text
     h.truncate(html.text, length: 200)
   end

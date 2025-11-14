@@ -3,17 +3,19 @@
 class WorkshopsController < ApplicationController
 
   def index
-    workshop_ids = Workshop.search_and_sort(params, super_user: current_user.super_user?)
-                           .pluck(:id)
-    @workshops = Workshop
-                   .where(id: workshop_ids)
-                   .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
-                   .includes(:categories, :sectors, :windows_type, :user, :images,
-                             :workshop_age_ranges, :bookmarks)
-                   .paginate(page: params[:page], per_page: params[:per_page] || 50)
+    search_service = WorkshopSearchService.new(params, super_user: current_user.super_user?).call
+    @sort = params[:sort] # search_service.default_sort
 
-    load_sortable_fields
-    load_metadata
+    @workshops = search_service.workshops
+                               .includes(:categories, :sectors, :windows_type, :user, :images,
+                                         :workshop_age_ranges, :bookmarks)
+                               .paginate(page: params[:page], per_page: params[:per_page] || 50)
+
+    @workshops_count = search_service.workshops.count
+
+    @category_metadata = Metadatum.published.includes(:categories).decorate
+    @sectors = Sector.published
+    @windows_types = WindowsType.all
 
     respond_to do |format|
       format.html
@@ -66,12 +68,12 @@ class WorkshopsController < ApplicationController
   end
 
   def new
-    @workshop = Workshop.new(user: current_user)
-    set_form_variables
-  end
-
-  def share_idea
-    @workshop = current_user.workshops.build
+    if params[:workshop_idea_id].present?
+      @workshop_idea = WorkshopIdea.find(params[:workshop_idea_id])
+      @workshop = WorkshopFromIdeaService.new(@workshop_idea, user: current_user).call
+    else
+      @workshop = Workshop.new(user: current_user)
+    end
     set_form_variables
   end
 
@@ -81,10 +83,6 @@ class WorkshopsController < ApplicationController
   end
 
   def show
-    set_show
-  end
-
-  def share_idea_show
     set_show
   end
 
@@ -100,20 +98,6 @@ class WorkshopsController < ApplicationController
     end
   end
 
-  def create_workshop_idea
-    @workshop = current_user.workshops.build(workshop_params)
-
-    @workshop.inactive = true # Workshop ideas are workshops with inactive == true
-
-    if @workshop.save
-      flash[:notice] = 'Thank you for submitting your workshop idea.'
-      redirect_to authenticated_root_path
-    else
-      flash[:alert] = 'Unable to save your workshop idea.'
-      render :share_idea
-    end
-  end
-
   def create
     @workshop = current_user.workshops.build(workshop_params)
 
@@ -124,15 +108,6 @@ class WorkshopsController < ApplicationController
       set_form_variables
       flash.now[:alert] = 'Unable to save the workshop.'
       render :new
-    end
-  end
-
-  def create_dummy_workshop
-    @workshop = current_user.workshops.build(title: params[:title], windows_type_id: params[:windows_type_id], inactive: false)
-    if @workshop.save
-      render json: { id: @workshop.id }
-    else
-      render json: { error: @workshop.errors }
     end
   end
 
@@ -166,6 +141,11 @@ class WorkshopsController < ApplicationController
   def set_form_variables
     @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
     image = @workshop.images.first || @workshop.images.build # build an image if there isn't one
+
+    @age_ranges = AgeRange.all
+    @workshop_ideas = WorkshopIdea.order(created_at: :desc)
+                                  .map { |wi| ["#{wi.created_at.strftime("%Y-%m-%d")} - (#{wi.created_by.full_name}): #{wi.title}",
+                                               wi.id] }
   end
 
   def workshops_per_page
@@ -178,18 +158,33 @@ class WorkshopsController < ApplicationController
 
   def workshop_params
     params.require(:workshop).permit(
-      :title, :full_name, :objective, :featured,
-      :materials, :optional_materials, :time_hours, :time_minutes, :age_range, :setup,
-      :introduction, :demonstration, :opening_circle, :warm_up,
-      :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2,
-      :windows_type_id, :inactive, :month, :year, :extra_field, :user_id,
-      :time_demonstration, :time_warm_up, :time_creation, :time_closing, :objective_spanish,
-      :materials_spanish, :optional_materials_spanish, :timeframe_spanish, :age_range_spanish,
-      :setup_spanish, :introduction_spanish, :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish,
-      :visualization_spanish, :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish,
-      :misc1_spanish, :misc2_spanish, :extra_field_spanish,
+      :title, :featured, :inactive,
+      :full_name, :user_id, :windows_type_id, :workshop_idea_id,
+      :month, :year,
 
-      workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id,
+      :time_intro, :time_closing, :time_creation, :time_demonstration,
+      :time_warm_up, :time_opening, :time_opening_circle,
+
+      :age_range, :age_range_spanish,
+      :closing, :closing_spanish,
+      :creation, :creation_spanish,
+      :demonstration, :demonstration_spanish,
+      :extra_field, :extra_field_spanish,
+      :introduction, :introduction_spanish,
+      :materials, :materials_spanish,
+      :misc1, :misc1_spanish,
+      :misc2, :misc2_spanish,
+      :notes, :notes_spanish,
+      :objective, :objective_spanish,
+      :opening_circle, :opening_circle_spanish,
+      :optional_materials, :optional_materials_spanish,
+      :setup, :setup_spanish,
+      :tips, :tips_spanish,
+      :timeframe_spanish,
+      :visualization, :visualization_spanish,
+      :warm_up, :warm_up_spanish,
+
+      workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :series_order, :_destroy],
       images_attributes: %i[file owner_id owner_type id _destroy]
@@ -202,7 +197,5 @@ class WorkshopsController < ApplicationController
 
   def load_metadata
     @metadata = Metadatum.published.includes(:categories).decorate
-    @sectors = Sector.published
-    @windows_types = WindowsType.all
   end
 end

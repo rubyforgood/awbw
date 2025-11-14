@@ -3,12 +3,10 @@
   <div class="w-full">
     <div class="flex items-start justify-between mb-6">
       <div class="pr-6">
-        <h2 class="text-2xl font-semibold mb-2">Resources</h2>
+        <h2 class="text-2xl font-semibold mb-2">Resources (<%= @resources_count %>)</h2>
       </div>
       <% if current_user.super_user? %>
-        <span class="admin-only bg-blue-100 p-1">
-          <%= link_to_button 'New Resource', new_resource_path, variant: :primary_outline %>
-        </span>
+        <%= link_to 'New Resource', new_resource_path, class: "btn btn-primary-outline admin-only bg-blue-100" %>
       <% end %>
     </div>
   </div>
@@ -63,7 +61,7 @@
 
         <!-- Clear Filters -->
         <div>
-          <%= link_to_button 'Clear filters', resources_path, variant: :utility %>
+          <%= link_to 'Clear filters', resources_path, class: "btn btn-utility" %>
         </div>
 
       </div>

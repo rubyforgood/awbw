@@ -1,5 +1,9 @@
-<div class='entry-content'>
-  <h2 class='normal'>Create a new Workshop Variation</h2>
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+    <h1 class="text-2xl font-semibold text-gray-900 mb-4">New Workshop Variation</h1>
+    <div class="border-b border-gray-300 mb-6"></div>
+    <div class="mt-4 pt-4">
+      <%= render 'form', workshop_variation: @workshop_variation %>
+    </div>
+  </div>
 </div>
-
-<%= render 'form', workshop_variation: @workshop_variation %>

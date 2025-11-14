@@ -9,9 +9,9 @@
 
         <!-- Buttons Group -->
         <div class="flex items-center gap-2">
-          <%%= link_to_button("Index", <%= plural_table_name %>_path, variant: :secondary_outline) %>
+          <%%= link_to("Index", <%= plural_table_name %>_path, class: "btn btn-secondary-outline") %>
           <%% if current_user.super_user? %>
-            <%%= link_to_button("Edit", edit_<%= singular_table_name %>_path(@<%= singular_table_name %>), variant: :primary_outline) %>
+            <%%= link_to("Edit", edit_<%= singular_table_name %>_path(@<%= singular_table_name %>), class: "btn btn-primary-outline") %>
           <%% end %>
         </div>
       </div>

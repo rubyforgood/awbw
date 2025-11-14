@@ -1,0 +1,70 @@
+<h1 class="text-2xl font-bold mb-4">Bookmarks Tally</h1>
+
+<!-- Filter form -->
+<%= form_tag('/bookmarks/tally', method: :get, class: "space-y-4") do %>
+  <%= render "search_fields" %>
+<% end %>
+
+<div class="flex gap-4">
+  <div class="flex-1 bg-gray-100 p-4">
+    <table class="w-full border border-gray-200 rounded-lg shadow-sm">
+      <thead>
+        <tr>
+          <th colspan="2" class="bg-gray-400 px-4 py-2 text-white">Bookmarks</th>
+        </tr>
+        <tr class="bg-gray-400">
+          <th class="px-4 py-2 text-left">Count</th>
+          <th class="px-4 py-2 text-left">Type</th>
+          <th class="px-4 py-2 text-left">Item</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% @bookmark_counts.each do |bookmarkable, count| %>
+        <tr class="border-t border-gray-200 hover:bg-gray-50">
+          <td class="px-4 py-2 font-bold"><%= link_to count,
+                                                      bookmarks_path(bookmarkable_type: bookmarkable.class.name,
+                                                                     bookmarkable_id: bookmarkable.id),
+                                                      class: "hover:underline" %></td>
+          <td>
+            <%= bookmarkable.class.name %>
+          </td>
+          <td class="px-4 py-2">
+            <% if bookmarkable.is_a?(Workshop) || (bookmarkable.is_a?(Resource) && bookmarkable.windows_type_id) %>
+              <% windows_type_designation = " (#{bookmarkable.windows_type&.short_name&.titleize})" %>
+            <% end %>
+            <%= link_to "#{bookmarkable.title}#{windows_type_designation}",
+                        polymorphic_path(bookmarkable),
+                        class: "text-blue-600 hover:underline" %>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="flex-1 p-4">
+    <table class="w-full border border-gray-200 bg-gray-300 rounded-lg shadow-sm">
+      <thead>
+        <tr>
+          <th colspan="2" class="bg-gray-400 px-4 py-2 text-white">Workshop Led Counts</th>
+        </tr>
+        <tr class="bg-gray-400">
+          <th class="px-4 py-2 text-left">Count</th>
+          <th class="px-4 py-2 text-left">Item</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% @workshops.each do |workshop| %>
+        <tr class="border-t border-gray-200 hover:bg-gray-50">
+          <td class="px-4 py-2 font-bold"><%= workshop.led_count %></td>
+          <td class="px-4 py-2">
+            <%= link_to "#{workshop.title} (#{workshop.windows_type&.short_name&.titleize})",
+                        workshop_path(workshop),
+                        class: "text-blue-600 hover:underline" %>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+

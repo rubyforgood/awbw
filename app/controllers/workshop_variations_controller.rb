@@ -13,7 +13,10 @@ class WorkshopVariationsController < ApplicationController
 
   def new
     @workshop_variation = WorkshopVariation.new
-    @workshops = Workshop.published.order(:title)
+    workshops = current_user.super_user? ? Workshop.all : Workshop.published
+    @workshops = workshops.order(:title)
+    @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
+      Workshop.where(id: params[:workshop_id]).last
   end
 
   def create
@@ -21,7 +24,7 @@ class WorkshopVariationsController < ApplicationController
     if @workshop_variation.save
       flash[:notice] = 'Workshop Variation has been created.'
       if params[:from] == "workshop_show"
-        redirect_to workshop_path(@workshop_variation.workshop)
+        redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
       elsif params[:from] == "index"
         redirect_to workshop_variations_path
       else
@@ -61,7 +64,7 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [:name, :code, :inactive, :ordering, :workshop_id])
+      [:name, :code, :inactive, :ordering, :reference_url, :created_by_id, :workshop_id])
   end
 
 end

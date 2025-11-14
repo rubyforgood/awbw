@@ -2,14 +2,17 @@
   <!-- Button wrapper is relative so dropdown anchors here -->
   <div class="relative flex items-center">
     <button
+      type="button"
       class="
-        rounded-md px-3 py-2 text-lg font-medium text-gray-300 hover:bg-white/5
-        hover:text-white
-      "
+        flex items-center gap-2 rounded-md bg-white px-4 py-1 mt-1 text-sm font-semibold text-gray-900
+        shadow-sm border border-gray-200 hover:bg-gray-50 active:bg-gray-100
+        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        transition"
       data-action="dropdown#toggle"
       data-dropdown-payload-param='[{"workshop-dropdown":"hidden"}]'
     >
-      + NEW
+      <span class="text-base font-bold text-blue-600">+</span>
+      <span>New</span>
     </button>
     <!-- Dropdown menu -->
     <div
@@ -20,12 +23,20 @@
       "
       data-dropdown-target="content"
     >
-      <%= link_to "New workshop idea",
-                  workshops_share_idea_path,
-                  class:
-                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
       <%= link_to "New workshop variation",
                   new_workshop_variation_path,
+                  class:
+                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+      <%= link_to "New workshop idea",
+                  new_workshop_idea_path,
+                  class:
+                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+      <%= link_to "New workshop log",
+                  new_workshop_log_path,
+                  class:
+                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+      <%= link_to "New story idea",
+                  new_story_idea_path,
                   class:
                     "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
     </div>

@@ -1,0 +1,33 @@
+<form id="per-page-form" action="<%= workshop_logs_path %>" method="get" class="flex items-center space-x-2">
+  <%# Preserve existing search parameters %>
+  <% request.query_parameters.each do |key, value| %>
+    <% next if key == "number_of_items_per_page" %>
+    <%= hidden_field_tag key, value %>
+  <% end %>
+
+  <label for="number_of_items_per_page" class="text-sm font-medium text-gray-700">
+    Items per page:
+  </label>
+
+  <select name="number_of_items_per_page"
+          id="number_of_items_per_page"
+          class="rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                   focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
+    <% [10, 25, 50, 100, 250].each do |n| %>
+      <option value="<%= n %>" <%= 'selected' if @per_page.to_i == n %>>
+        <%= n %>
+      </option>
+    <% end %>
+  </select>
+</form>
+
+<script>
+    document.addEventListener("turbo:load", () => {
+        const perPageSelect = document.getElementById("number_of_items_per_page");
+        if (perPageSelect) {
+            perPageSelect.addEventListener("change", () => {
+                perPageSelect.form.requestSubmit();
+            });
+        }
+    });
+</script>

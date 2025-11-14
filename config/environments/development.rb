@@ -30,6 +30,7 @@ Rails.application.configure do
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
+  Rails.application.routes.default_url_options[:host] ||= "http://localhost:3000"
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
@@ -70,4 +71,10 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # needed for codespaces
+  config.hosts << ".app.github.dev"
+
+  feature_flag_variables = File.join(Rails.root, 'config', 'feature_flag_variables.rb')
+  load(feature_flag_variables) if File.exist?(feature_flag_variables)
 end

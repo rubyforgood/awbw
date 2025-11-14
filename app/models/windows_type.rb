@@ -25,8 +25,21 @@ class WindowsType < ApplicationRecord
     end
   end
 
+  def short_name
+    if name.include?("COMBINED")
+      "Family"
+    else
+      name.gsub("LOG", "").gsub("WORKSHOP", "").strip
+    end
+  end
+
   def label
-    label = name.gsub("LOG", "").gsub("WORKSHOP", "WINDOWS").titleize.strip
+    label = ""
+    if name.downcase.include?("combined")
+      label = "Family Windows"
+    else
+      label = name.gsub("LOG", "").gsub("WORKSHOP", "WINDOWS").titleize.strip
+    end
     label.gsub("Children", "Children's")
   end
 

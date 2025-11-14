@@ -49,21 +49,21 @@
     {
       "warning_type": "SQL Injection",
       "warning_code": 0,
-      "fingerprint": "87fb1f4501a3d156ffa9c00e02c8b239255a8190d8d5c8f3092d00c8e37bf2fe",
+      "fingerprint": "a724323441f79b7912916ff769f3e8f0ae3a3e5f55c5f30a8283d6653f84c95e",
       "check_name": "SQL",
       "message": "Possible SQL injection",
-      "file": "app/models/workshop.rb",
-      "line": 160,
+      "file": "app/services/workshop_search_service.rb",
+      "line": 95,
       "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
-      "code": "Arel.sql(\"MATCH(#{[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n \"workshops.#{connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)}\"\n end.join(\", \")}) AGAINST(? IN BOOLEAN MODE)\")",
+      "code": "Arel.sql(\"FIELD(id, #{search_by_sectors(search_by_categories(search_by_author_name((Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published or (Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published(true) or if ActiveModel::Type::Boolean.new.cast(params[:inactive]) and (not ActiveModel::Type::Boolean.new.cast(params[:active])) then\n  Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published(false)\nelse\n  Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i))\nend)), params[:author_name]), params[:categories]), params[:sectors]).title(params[:title]).search(params[:query]).map(&:id).join(\",\")})\")",
       "render_path": null,
       "location": {
         "type": "method",
-        "class": "Workshop",
-        "method": "Workshop.filter_by_query"
+        "class": "WorkshopSearchService",
+        "method": "filter_by_query"
       },
-      "user_input": "[\"title\", \"full_name\", \"objective\", \"materials\", \"introduction\", \"demonstration\", \"opening_circle\", \"warm_up\", \"creation\", \"closing\", \"notes\", \"tips\", \"misc1\", \"misc2\"].map do\n \"workshops.#{connection.quote_column_name(:BRAKEMAN_SAFE_LITERAL)}\"\n end.join(\", \")",
-      "confidence": "Medium",
+      "user_input": "params[:query]",
+      "confidence": "High",
       "cwe_id": [
         89
       ],
@@ -89,40 +89,6 @@
       "confidence": "Medium",
       "cwe_id": [
         915
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "Cross-Site Scripting",
-      "warning_code": 2,
-      "fingerprint": "b10de889c20028842db9a1821e6214044ff9adf7cd90f2ee6621a66c9c03a162",
-      "check_name": "CrossSiteScripting",
-      "message": "Unescaped model attribute",
-      "file": "app/views/workshop_variations/show.html.erb",
-      "line": 16,
-      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
-      "code": "WorkshopVariation.find(params[:id]).decorate.display_code",
-      "render_path": [
-        {
-          "type": "controller",
-          "class": "WorkshopVariationsController",
-          "method": "show",
-          "line": 43,
-          "file": "app/controllers/workshop_variations_controller.rb",
-          "rendered": {
-            "name": "workshop_variations/show",
-            "file": "app/views/workshop_variations/show.html.erb"
-          }
-        }
-      ],
-      "location": {
-        "type": "template",
-        "template": "workshop_variations/show"
-      },
-      "user_input": null,
-      "confidence": "High",
-      "cwe_id": [
-        79
       ],
       "note": ""
     }

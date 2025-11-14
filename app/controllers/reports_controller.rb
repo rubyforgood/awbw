@@ -31,9 +31,9 @@ class ReportsController < ApplicationController
   end
 
   def render_form
-    @workshop_list = current_user.curriculum.
-                       where(inactive: false).
-                       order(title: :asc)
+    @workshop_list = Workshop.created_by_id(current_user.id)
+                             .where(inactive: false)
+                             .order(title: :asc)
 
     build_month_and_year
     find_form_builder
@@ -55,8 +55,9 @@ class ReportsController < ApplicationController
   end
 
   def edit_story
-    @workshop_list    = current_user.curriculum.
-                        where(inactive: false, windows_type: 3).order(title: :asc)
+    @workshop_list = Workshop.created_by_id(current_user.id)
+                             .where(inactive: false, windows_type: 3)
+                             .order(title: :asc)
 
     @report    = Report.find(params[:id])
     @agencies  = current_user.projects.

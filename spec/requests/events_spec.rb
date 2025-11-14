@@ -1,11 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe "/events", type: :request do
-  before do
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-  end
+  let!(:combined_perm) { create(:permission, :combined) }
+  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:children_perm) { create(:permission, :children) }
 
   let(:valid_attributes) {
     {
@@ -132,7 +130,7 @@ RSpec.describe "/events", type: :request do
       it "renders a response with validation errors (i.e. to display the 'new' template)" do
         sign_in user
         post events_url, params: { event: invalid_attributes }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
   end

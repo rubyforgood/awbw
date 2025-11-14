@@ -1,5 +1,5 @@
 <% @workshops.each do |w| %>
-  $('#workshops-list').append('<%= j render 'flex', workshop: w.decorate, breadcrumb: 'Search Curriculum', link_route: workshop_path(w) %>');
+  $('#workshops-list').append('<%= j render 'flex', workshop: w.decorate, breadcrumb: 'Workshops', link_route: workshop_path(w) %>');
 <% end %>
 
 <% if @workshops.next_page %>

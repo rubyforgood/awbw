@@ -1,0 +1,15 @@
+<%= tag.div id: dom_id(resource, :bookmark_icon), class: "inline-block" do %>
+  <% if resource.bookmarks.any? { |b| b.user_id == current_user.id } %>
+    <%= link_to bookmark_path(current_user.bookmark_for(resource)),
+                  class: "inline-block",
+                  data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
+      <i class="fas fa-bookmark w-5 h-5 text-blue-500 hover:text-gray-400"></i>
+    <% end %>
+  <% else %>
+    <%= button_to bookmarks_path(bookmark: { bookmarkable_id: resource.id,
+                                             bookmarkable_type: resource.class.name }),
+                                             class: "inline-block" do %>
+      <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
+    <% end %>
+  <% end %>
+<% end %>

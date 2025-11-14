@@ -1,0 +1,70 @@
+<%= tag.div id: dom_id(event, :card), class: "
+    relative bg-white border border-gray-200 rounded-xl shadow hover:shadow-md
+    transition p-4 flex flex-col
+  " do %>
+  <!-- Event Title -->
+  <h3 class="text-lg font-semibold text-gray-900 mb-2">
+    <div class="flex items-center space-x-2">
+      <!-- Bookmark icon -->
+      <%= render "bookmarks/editable_bookmark_icon", resource: event %>
+      <!-- Title link -->
+      <%= link_to "#{event.title}#{" [HIDDEN]" if current_user.super_user? && !event.publicly_visible}",
+      event_path(event),
+      class: "text-gray-900 hover:underline font-medium" %>
+    </div>
+  </h3>
+
+  <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
+    <span
+      class="
+        absolute top-2 right-2 text-xs bg-green-100 text-green-700 px-2 py-0.5
+        rounded-full
+      "
+    >
+      Registered
+    </span>
+  <% end %>
+
+  <!-- Dates -->
+  <p class="text-sm text-gray-600 mb-1">
+    <span class="font-medium">Start:</span>
+    <%= event.start_date&.strftime("%B %d, %Y") %>
+  </p>
+
+  <p class="text-sm text-gray-600 mb-3">
+    <span class="font-medium">End:</span>
+    <%= event.end_date&.strftime("%B %d, %Y") %>
+  </p>
+
+  <div class="mt-3 flex gap-2">
+    <!-- Admin Edit -->
+    <% if current_user.super_user %>
+      <div class="mt-2">
+        <%= link_to "Edit", edit_event_path(event), class: "btn btn-secondary-outline" %>
+      </div>
+    <% end %>
+
+    <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
+      <div class="mt-2 ml-auto">
+        <%= link_to "De-register",
+        event_registrations_path(event_id: event.id),
+        class: "btn btn-secondary-outline",
+        method: :delete,
+        data: {
+          confirm: "Are you sure you want to de-register?",
+        } %>
+      </div>
+    <% elsif event.registerable? %>
+      <div class="mt-2 ml-auto">
+        <%= button_to "Register",
+        event_registrations_path(event_id: event),
+        method: :post,
+        class: "btn btn-primary-outline" %>
+      </div>
+    <% else %>
+      <div class="mt-2 ml-auto">
+        <span class="text-sm text-gray-500 italic">Registration closed</span>
+      </div>
+    <% end %>
+  </div>
+<% end %>

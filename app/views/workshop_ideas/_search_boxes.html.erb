@@ -1,0 +1,43 @@
+<%= form_tag(workshop_ideas_path, method: :get, class: "space-y-4") do |f| %>
+  <!-- Filters Header -->
+  <div>
+    <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Search Filters</h3>
+  </div>
+  <!-- Search Fields -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 py-0 mb-0">
+    <% [:title, :author_name].each do |field| %>
+      <div class="relative">
+        <%= text_field_tag field,
+                           params[field],
+                           placeholder: field == :query ? "Keywords" : field.to_s.humanize,
+                           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-blue-500 focus:border-blue-500" %>
+        <button
+          type="submit"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        >
+          <i class="fa fa-search"></i>
+        </button>
+      </div>
+    <% end %>
+  </div>
+  <!-- Checkboxes -->
+  <!--<div-->
+  <!--  class="-->
+  <!--          grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 overflow-visible p-4-->
+  <!--        "-->
+  <!--
+  <%#= render "workshops/dropdown_filter",
+             dom_id_prefix: "windows-types",
+             label_text: "Windows Type",
+             items: @windows_types,
+             param_name: :windows_types %>
+
+  <%#= render "workshops/categories_fields", metadata: @category_metadata %>
+
+  <%#= render "workshops/dropdown_filter",
+             dom_id_prefix: "sectors",
+             label_text: "Service Population",
+             items: @sectors.reject { |sector| sector.name == "Other" },
+             param_name: :sectors %>
+</div>-->
+<% end %>

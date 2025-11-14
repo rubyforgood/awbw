@@ -1,12 +1,14 @@
 class ResourcesController < ApplicationController
 
   def index
-    @resources = current_user.curriculum(Resource)
-                             .includes(:images, :attachments)
-                             .search(params)
-                             .by_created
-                             .paginate(page: params[:page], per_page: 24)
+    unpaginated = Resource.where(kind: ['Template','Handout', 'Scholarship',
+                                        'Toolkit', 'Form', 'Resource', 'Story']) #TODO - #FIXME brittle
+                          .includes(:images, :attachments)
+                          .search_by_params(params)
+                          .by_created
+    @resources = unpaginated.paginate(page: params[:page], per_page: 24)
 
+    @resources_count = unpaginated.count
     @sortable_fields = Resource::KINDS
 
     respond_to do |format|
@@ -54,6 +56,12 @@ class ResourcesController < ApplicationController
     end
   end
 
+  def destroy
+    @resource = Resource.find(params[:id])
+    @resource.destroy!
+    redirect_to resources_path, notice: "Resource was successfully destroyed."
+  end
+
 
   def search
     process_search
@@ -62,9 +70,25 @@ class ResourcesController < ApplicationController
   end
 
   def download
-    attachment = Resource.find(params[:resource_id]).attachments.last
-    extension = File.extname(attachment.file_file_name)
-    send_data open("#{attachment.file.expiring_url(10000, :original)}").read, filename: "original_#{attachment.id}#{extension}", type: attachment.file_content_type
+    if params[:attachment_id].to_i > 0
+      attachment = Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
+    else
+      attachment = Resource.find(params[:resource_id]).download_attachment
+    end
+
+    if attachment&.file&.blob.present?
+      redirect_to rails_blob_url(attachment.file, disposition: "attachment")
+    else
+      if params[:from] == "resources_index"
+        path = resources_path
+			elsif params[:from] == "dashboard_index"
+				path = authenticated_root_path
+			else
+				resource_path(params[:resource_id])
+			end
+      redirect_to path,
+                  alert: "File not found or not attached."
+    end
   end
 
   private
@@ -84,7 +108,7 @@ class ResourcesController < ApplicationController
       :text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
       categorizable_items_attributes: [:id, :category_id, :_destroy], category_ids: [],
-      sectorable_items_attributes: [:id, :sector_id, :_destroy], sector_ids: [],
+      sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy], sector_ids: [],
       images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy],
       attachments_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
     )
