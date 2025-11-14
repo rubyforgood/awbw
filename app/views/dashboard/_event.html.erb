@@ -3,7 +3,7 @@
     <div class="grow">
       <h3 class="text-lg pb-2 font-medium text-gray-700"><%= event.title %></h3>
       <p class="px-2 text-gray-700">
-        <span class="line-clamp-3"><%= strip_tags(event.description).truncate(250) %></span>
+        <span class="line-clamp-3"><%= strip_tags(event.description)&.truncate(250) %></span>
       </p>
     </div>
     <%# TODO conditionally show event image if attached %>
