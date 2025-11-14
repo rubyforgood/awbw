@@ -357,7 +357,7 @@
           </button>
           <div
             id="series"
-            class="hidden <%# "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md"
+            class="<%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md"
           >
             <p class="mb-2 text-sm text-gray-600">
               If this Workshop is a series, add the other "series workshops"
