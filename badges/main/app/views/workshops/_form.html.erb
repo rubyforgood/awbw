@@ -42,15 +42,17 @@
                   input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
       <div>
-        <label class="block text-md font-medium text-gray-700 mb-1">
-          Timeframe / Duration
-        </label>
+        <label class="block text-md font-medium text-gray-700 mb-1">Timeframe / Duration</label>
+
         <div class="flex gap-x-2 items-center">
-          <span data-timeframe-target="output"
-                class="text-gray-900 font-medium">
+          <span
+            data-timeframe-target="output"
+            class="text-gray-900 font-medium"
+          >
             <%= f.object.time_frame_total %>
           </span>
         </div>
+
         <p class="text-sm text-gray-500 mt-1">
           Automatic total time, in 15min increments
         </p>
@@ -66,7 +68,6 @@
           </div>
         </div>
       <% end %>
-
 
       <% if current_user.super_user %>
         <div class="admin-only bg-blue-100 flex gap-x-2 items-center">
@@ -96,13 +97,11 @@
                       hint: "If this workshop was created from a Workshop Idea, select it here.",
                       input_html: { value: f.object.workshop_idea_id,
                                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
         </div>
       <% else %>
         <%= f.hidden_field :user_id, value: current_user&.id %>
       <% end %>
     </div>
-
 
     <!-- Row 3 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -237,7 +236,6 @@
       </div>
     </div>
 
-
     <!-- Notes / Tips / Date -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <%= f.input :notes, as: :text,
@@ -268,8 +266,6 @@
           </div>
         </div>
       <% end %>
-
-
     </div>
 
     <div class="main-image">
@@ -284,16 +280,45 @@
                                "http://dashboard.awbw.org/resources/859"}" %>
         </div>
       <% end %>
+
       <div class="mt-2">
-        <%#= link_to_add_association "Add another Image", f, :images, partial: "image_fields", class: "text-blue-600 hover:underline" %>
+        <%# = link_to_add_association "Add another Image", f, :images, partial: "image_fields", class: "text-blue-600 hover:underline" %>
       </div>
     </div>
 
     <!-- Accordions -->
     <div class="space-y-4">
-      <div>
-        <button type="button" class="w-full bg-gray-600 text-white px-3 py-2 rounded-t-md accordion-toggle">Spanish Translations</button>
-        <div class="accordion-content hidden border border-gray-300 p-4 rounded-b-md">
+      <div data-controller="dropdown">
+        <button
+          type="button"
+          id="translations_button"
+          class="
+            flex items-center justify-between cursor-pointer w-full
+            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+          "
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"translations":"hidden"}, {"translations_arrow":"rotate-180"}, {"translations_button":"rounded-md rounded-t-md"}]'
+        >
+          Spanish Translations
+          <svg
+            id="translations_arrow"
+            class="w-6 h-6 shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+        </button>
+
+        <div
+          id="translations"
+          class="hidden border border-gray-300 p-4 rounded-b-md"
+        >
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <% workshop.decorate.display_spanish_fields.each do |field| %>
               <%= f.input field, as: :text,
@@ -303,19 +328,52 @@
         </div>
       </div>
 
-      <div>
-        <button type="button" class="w-full bg-gray-600 text-white px-3 py-2 rounded-t-md accordion-toggle">Series workshops</button>
-        <div class="accordion-content <%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md">
-          <p class="mb-2 text-sm text-gray-600">
-            If this Workshop is a series, add the other "series workshops" below.
-            You can also add a series-specific description for each workshop in the series, and the order in which they should appear.
-            (The main workshop description will appear if you don't add a "series description".)
-          </p>
-          <%= f.fields_for :workshop_series_children do |child_workshop_membership| %>
-            <%= render "workshop_series_child_fields", f: child_workshop_membership %>
-          <% end %>
-          <div class="mt-2">
-            <%= link_to_add_association "Add another Workshop to this Series", f, :workshop_series_children, partial: "workshop_series_child_fields", class: "text-blue-600 hover:underline" %>
+      <div data-controller="dropdown">
+        <div>
+          <button
+            type="button"
+            id="series_button"
+            class="
+              flex items-center justify-between cursor-pointer w-full
+              bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+            "
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"series":"hidden"}, {"series_arrow":"rotate-180"}, {"series_button":"rounded-md rounded-t-md"}]'
+          >
+            Series workshops
+            <svg
+              id="series_arrow"
+              class="w-6 h-6 shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          </button>
+          <div
+            id="series"
+            class="<%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md"
+          >
+            <p class="mb-2 text-sm text-gray-600">
+              If this Workshop is a series, add the other "series workshops"
+              below. You can also add a series-specific description for each
+              workshop in the series, and the order in which they should appear.
+              (The main workshop description will appear if you don't add a
+              "series description".)
+            </p>
+
+            <%= f.fields_for :workshop_series_children do |child_workshop_membership| %>
+              <%= render "workshop_series_child_fields", f: child_workshop_membership %>
+            <% end %>
+
+            <div class="mt-2">
+              <%= link_to_add_association "Add another Workshop to this Series", f, :workshop_series_children, partial: "workshop_series_child_fields", class: "text-blue-600 hover:underline" %>
+            </div>
           </div>
         </div>
       </div>
@@ -327,6 +385,7 @@
         <%= link_to "Delete", @workshop, class: "btn btn-danger-outline",
                     method: :delete, data: { confirm: "Are you sure?" } %>
       <% end %>
+
       <%= link_to "Cancel",
                   (current_user.super_user? ? workshops_path : authenticated_root_path),
                   class: "btn btn-secondary-outline" %>
@@ -335,34 +394,3 @@
   <% end %>
 </div>
 
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll('.accordion-toggle').forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const content = toggle.nextElementSibling;
-                content.classList.toggle("hidden");
-            });
-        });
-    });
-</script>
-
-<style>
-    .accordion-toggle {
-        width: 100%;
-        background: #7C7C7C;
-        color: white;
-        padding: 8px 12px;
-        border: none;
-        text-align: left;
-        cursor: pointer;
-        border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
-        margin-bottom: 2px;
-        text-transform: none;
-    }
-
-    .accordion-toggle:hover {
-        background: #ccc;
-    }
-</style>
