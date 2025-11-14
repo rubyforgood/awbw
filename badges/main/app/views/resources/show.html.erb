@@ -10,7 +10,7 @@
         " Download <span class='fa fa-download'></span></span>").html_safe,
                   resource_download_path(@resource),
                   class: "btn btn-utility" if @resource.download_attachment&.file&.attached? %>
-      <%= render "bookmarks/editable_bookmark_button", resource: @resource %>
+      <%= render "bookmarks/editable_bookmark_button", resource: @resource.object %>
     </div>
 
 
