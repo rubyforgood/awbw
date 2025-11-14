@@ -28,18 +28,6 @@ module ApplicationHelper
     Date.today
   end
 
-  def show_time(time)
-    if time.kind_of? Time
-      if time.hour > 0
-        return "<span> #{time.strftime("%H:%M")} </span><span>hr</span>".html_safe
-      else
-        return "<span> #{time.strftime("%H:%M")} </span><span>min</span>".html_safe
-      end
-    end
-
-    "<span> #{time.to_i} </span><span>min</span>".html_safe
-  end
-
   def display_banner
     banners = Banner.all
     return unless banners.any?(&:show)
