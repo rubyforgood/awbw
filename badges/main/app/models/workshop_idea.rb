@@ -53,9 +53,9 @@ class WorkshopIdea < ApplicationRecord
     hours, minutes = total_minutes.divmod(60)
 
     if hours.positive?
-      "#{hours}:#{format('%02d', minutes)}"
+      "#{hours}:#{format('%02d', minutes)} hours"
     else
-      "#{minutes}m"
+      "#{minutes} min"
     end
   end
 
