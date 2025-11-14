@@ -68,6 +68,7 @@
 
     <!-- Workshops List -->
     <%= turbo_frame_tag "frame_list" do %>
+      <%= turbo_stream.replace("filters_applied", partial: "filters_applied") %>
       <div class="mt-6">
         <% if @workshops.any? %>
           <div id="workshops-list" class="space-y-4 animate-fade">
