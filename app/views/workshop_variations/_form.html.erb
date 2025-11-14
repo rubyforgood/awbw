@@ -42,7 +42,7 @@
 
     <% if current_user.super_user? %>
       <div class="flex items-start gap-6 bg-blue-50 p-4 rounded-lg">
-        <%= f.input :inactive, as: :boolean, label: "Not published?", input_html: { checked: f.object.id ? f.object.inactive : false } %>
+        <%= f.input :inactive, as: :boolean, label: "Hidden?", input_html: { checked: f.object.id ? f.object.inactive : false } %>
 
         <%= f.input :ordering, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
 

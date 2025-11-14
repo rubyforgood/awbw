@@ -60,7 +60,7 @@
   <!-- 2️⃣ Title / author / metadata -->
   <div class="flex flex-col gap-1 min-w-[40ch] max-w-[40ch] break-words">
     <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-      <%= link_to "#{bookmarkable.title}#{" [NOT PUBLISHED]" if bookmarkable.inactive?}",
+      <%= link_to "#{bookmarkable.title}#{" [HIDDEN]" if bookmarkable.inactive?}",
                   polymorphic_path(bookmarkable),
                   class: "hover:underline",
                   data: { turbo: false, } %>
