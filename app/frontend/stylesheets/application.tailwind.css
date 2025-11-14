@@ -17,6 +17,15 @@
     @apply text-pink-800 text-indigo-800 text-green-800 text-yellow-800
     text-red-800 text-purple-800 text-green-200;
   }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .animate-fade {
+    animation: fadeIn .5s ease-in-out;
+  }
 }
 
 @theme {
