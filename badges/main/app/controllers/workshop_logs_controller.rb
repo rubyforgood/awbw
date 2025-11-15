@@ -13,7 +13,7 @@ class WorkshopLogsController < ApplicationController
       end
     @workshop_logs_unpaginated = permitted_logs.includes(:workshop, :user, :windows_type)
                                             .search(params)
-    @workshop_logs_count = @workshop_logs_unpaginated.count
+    @workshop_logs_count = @workshop_logs_unpaginated.size
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
     set_index_variables
   end
@@ -135,8 +135,7 @@ class WorkshopLogsController < ApplicationController
       @workshop = Workshop.new
     end
 
-    @workshops = Workshop.created_by_id(current_user.id)
-                         .where(inactive: false)
+    @workshops = Workshop.published.or(Workshop.where(id: @workshop_log.workshop_id))
                          .order(title: :asc)
 
     # Build one blank quote if none exists

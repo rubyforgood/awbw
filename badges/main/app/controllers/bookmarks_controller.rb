@@ -4,7 +4,7 @@ class BookmarksController < ApplicationController
   def index
     bookmarks = Bookmark.search(params)
     @bookmarks = bookmarks.paginate(page: params[:page], per_page: 25)
-    @bookmarks_count = bookmarks.count
+    @bookmarks_count = bookmarks.size
     @windows_types_array = ["", "Adult", "Child", "Family"]
     load_sortable_fields
     respond_to do |format|
