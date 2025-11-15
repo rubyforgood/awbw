@@ -1,14 +1,9 @@
 Rails.application.routes.draw do
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
-  get 'cms', to: 'admins/base#show'
-
   devise_for :users,
              controllers: { registrations: 'registrations',
                             passwords: 'passwords' }
-
-  devise_for :admins
-
   get 'users/change_password', to: 'users#change_password', as:'change_password'
   post 'users/update_password', to: 'users#update_password', as: 'update_password'
 

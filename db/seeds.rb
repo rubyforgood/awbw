@@ -1,6 +1,3 @@
-admin_password = Devise::Encryptor.digest(Admin, 'password')
-Admin.update_all(encrypted_password: admin_password)
-
 user_password = Devise::Encryptor.digest(User, 'password')
 User.in_batches do |batch|
   batch.update_all(encrypted_password: user_password)
@@ -10,9 +7,16 @@ Permission.where(security_cat: "Children's Windows").first_or_create!
 Permission.where(security_cat: "Adult Windows").first_or_create!
 Permission.where(security_cat: "Combined Adult and Children's Windows").first_or_create!
 
-Admin.where(first_name: "Amy", last_name: "Admin", email: "amy.admin@example.com").first_or_create!(password: "password")
-User.where(first_name: "Umberto", last_name: "User", email: "umberto.user@example.com").first_or_create!(password: "password")
-User.where(first_name: "Orphaned Reports", last_name: "User", email: "orphaned_reports@awbw.org").first_or_create!(password: "password")
+admin = User.where(first_name: "Umberto", last_name: "User",
+                   email: "umberto.user@example.com",
+                   super_user: true)
+            .first_or_create!(password: "password")
+nonadmin = User.where(first_name: "Amy", last_name: "User",
+                      email: "amy.user@example.com",
+                      super_user: false)
+               .first_or_create!(password: "password")
+User.where(first_name: "Orphaned Reports", last_name: "User",
+           email: "orphaned_reports@awbw.org").first_or_create!(password: "password")
 
 adult_type = WindowsType.where(name: "ADULT WORKSHOP").first_or_create!
 childrens_type = WindowsType.where(name: "CHILDREN WORKSHOP").first_or_create!

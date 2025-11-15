@@ -6,8 +6,8 @@ class Notification < ApplicationRecord
   attr_accessor :fields_changed
 
   def send_notice
-    Admins::NotificationMailer
-      .email(self)
+    NotificationMailer
+      .report_notification(self)
       .deliver_now
   end
 end
