@@ -11,7 +11,7 @@ class WorkshopsController < ApplicationController
                                          :workshop_age_ranges, :bookmarks)
                                .paginate(page: params[:page], per_page: params[:per_page] || 50)
 
-    @workshops_count = search_service.workshops.count
+    @workshops_count = search_service.workshops.size
 
     @category_metadata = Metadatum.published.includes(:categories).decorate
     @sectors = Sector.published
@@ -135,7 +135,7 @@ class WorkshopsController < ApplicationController
     @quotes = Quote.where(workshop_id: @workshop.id).active
     @leader_spotlights = @workshop.resources.published.leader_spotlights
     @workshop_variations = @workshop.workshop_variations.active
-    @sectors = @workshop.sectorable_items.where(inactive: false).map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
+    @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
   end
 
   def set_form_variables
@@ -149,7 +149,7 @@ class WorkshopsController < ApplicationController
   end
 
   def workshops_per_page
-    view_all_workshops? ? @workshops.where(inactive: false).count : 12
+    view_all_workshops? ? @workshops.published.size : 12
   end
 
   def view_all_workshops?

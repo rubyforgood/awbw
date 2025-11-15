@@ -6,7 +6,7 @@ class UsersController < ApplicationController
 
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)
-    @users_count = users.count
+    @users_count = users.size
     @users = users.paginate(page: params[:page], per_page: per_page)
 
   end

@@ -141,7 +141,7 @@ class WorkshopLog < Report
 
   def update_workshop_log_count
     return unless owner
-    new_led_count = owner.workshop_logs.count
+    new_led_count = owner.workshop_logs.size
     owner.update(led_count: new_led_count)
   end
 

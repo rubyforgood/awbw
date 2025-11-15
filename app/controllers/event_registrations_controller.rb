@@ -5,7 +5,7 @@ class EventRegistrationsController < ApplicationController
   def index
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = EventRegistration.search_by_params(params)
-    @event_registrations_count = unpaginated.count
+    @event_registrations_count = unpaginated.size
     @event_registrations = unpaginated.paginate(page: params[:page], per_page: per_page)
   end
 
