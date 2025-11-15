@@ -1,0 +1,34 @@
+<%= simple_form_for(event_registration, data: { turbo: false }) do |f| %>
+  <%= render 'shared/errors', resource: event_registration if event_registration.errors.any? %>
+
+  <div class="p-3">
+    <div class="flex flex-col md:flex-row md:space-x-4">
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :event_id,
+                    collection: @events,
+                    label_method: :full_name, value_method: :id,
+                    include_blank: true,
+                    selected: f.object.event_id %>
+      </div>
+
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :registrant_id,
+                    collection: @registrants,
+                    label_method: :full_name, value_method: :id,
+                    include_blank: true,
+                    selected: f.object.registrant_id %>
+      </div>
+    </div>
+
+    <div class="form-actions mt-3">
+      <% if @event_registration.persisted? %>
+        <%= link_to "Delete", @event_registration, method: :delete,
+                    data: {  turbo: false,
+                             confirm: "Are you sure?" },
+                    class: "btn btn-danger-outline" %>
+      <% end %>
+      <%= link_to "Cancel", stories_path, class: "btn btn-secondary-outline" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>
