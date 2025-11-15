@@ -1,0 +1,42 @@
+<%= form_tag(event_registrations_path, method: :get, class: "space-y-4") do |f| %>
+  <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-6">
+    <div class="w-full md:flex-1">
+      <%= label_tag :event_name, "Event", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <div class="relative">
+        <%= text_field_tag :event_name, params[:event_name],
+                           class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                           placeholder: "Type and hit Enter",
+                           onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
+        <button type="submit"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
+                onclick="this.closest('form').submit()">
+          <i class="fa fa-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="w-full md:flex-1">
+      <%= label_tag :registrant_name, "Registrant", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <div class="relative">
+        <%= text_field_tag :registrant_name, params[:registrant_name],
+                           class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                           placeholder: "Type and hit Enter",
+                           onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
+        <button type="submit"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
+                onclick="this.closest('form').submit()">
+          <i class="fa fa-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Clear filters -->
+    <div class="w-full md:w-auto flex justify-end">
+      <%= link_to 'Clear filters', event_registrations_path,
+                  class: "btn btn-utility-outline" %>
+    </div>
+  </div>
+<% end %>
+
