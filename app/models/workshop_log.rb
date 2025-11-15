@@ -77,19 +77,6 @@ class WorkshopLog < Report
     end
   end
 
-  def owner_title
-    workshop_title = owner.nil? ? workshop_name : owner.title
-    return "" unless workshop_title && windows_type
-
-    if !owner.nil?
-      title = "#{workshop_title} - #{owner.windows_type.label}"
-     "<a class='pjax' href='/admin/cms/workshop/#{owner.id}'>#{title}</a>".html_safe
-    else
-      title = "#{workshop_title} - #{windows_type.label}"
-      "#{title}"
-    end
-  end
-
   def title
     workshop_title = owner.nil? ? workshop_name : owner.title
     return unless workshop_title

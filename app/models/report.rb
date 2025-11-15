@@ -36,7 +36,7 @@ class Report < ApplicationRecord
   accepts_nested_attributes_for :quotable_item_quotes
 
   after_create :set_windows_type
-  after_save :create_admin_notification
+  after_save :create_notification
 
   def users_admin_type
     if form_builder && form_builder.id == 7
@@ -140,7 +140,7 @@ class Report < ApplicationRecord
     update(windows_type_id: project.windows_type.id)
   end
 
-  def create_admin_notification
+  def create_notification
     notifications.create(notification_type: 0)
   end
 end

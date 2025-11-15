@@ -177,10 +177,6 @@ class Workshop < ApplicationRecord
     end.join(",")
   end
 
-  def admin_title
-    "#{title} - #{windows_type.label if windows_type}"
-  end
-
   def log_title
     "#{title} #{windows_type.log_label if windows_type}"
   end
