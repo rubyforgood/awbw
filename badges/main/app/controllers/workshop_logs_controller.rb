@@ -111,7 +111,8 @@ class WorkshopLogsController < ApplicationController
     @year_options = WorkshopLog.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at))"))
                                .sort
                                .reverse
-    @facilitators = User.joins(:workshop_logs)
+    @facilitators = User.active.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
+                        .joins(:workshop_logs)
                         .distinct
                         .order(:last_name, :first_name)
     @projects = if current_user.super_user?

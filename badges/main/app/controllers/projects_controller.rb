@@ -28,14 +28,15 @@ class ProjectsController < ApplicationController
     @year_options = WorkshopLog.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at))"))
                                .sort
                                .reverse
-    @facilitators = User.joins(:workshop_logs)
-                        .distinct
-                        .order(:last_name, :first_name)
     @projects = Project.where(id: @project.id)
     @per_page = params[:per_page] || 10
     @workshop_logs_unpaginated = @project.workshop_logs
     @workshop_logs_count = @workshop_logs_unpaginated.size
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
+    @facilitators = User.active.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
+                        .joins(:workshop_logs)
+                        .distinct
+                        .order(:last_name, :first_name)
   end
 
   def new
