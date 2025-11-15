@@ -5,7 +5,7 @@
     <% if current_user.super_user? %>
       <%= form_with url: request.path, method: :get, local: true, html: { class: "inline-block" } do %>
         <%= select_tag :user_id,
-                       options_from_collection_for_select(User.all.order(:first_name, :last_name),
+                       options_from_collection_for_select(User.active.order(:first_name, :last_name),
                                                           :id, :full_name, params[:user_id] || @user.id),
                        include_blank: "All Users",
                        class: "border border-gray-300 admin-only bg-blue-100 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 ",

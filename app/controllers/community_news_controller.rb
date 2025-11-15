@@ -51,7 +51,7 @@ class CommunityNewsController < ApplicationController
   def set_form_variables
     @organizations = Project.pluck(:name, :id).sort_by(&:first)
     @windows_types = WindowsType.pluck(:name, :id).sort_by(&:first)
-    @authors = User.all.map{|u| [u.full_name, u.id]}.sort_by(&:first)
+    @authors = User.active.map{|u| [u.full_name, u.id]}.sort_by(&:first)
   end
 
   private
