@@ -36,7 +36,9 @@ Rails.application.routes.draw do
     end
   end
   resources :community_news
-  resources :events
+  resources :events do
+    resource :registrations, only: %i[create destroy], module: :events
+  end
   resources :event_registrations
   resources :facilitators
   resources :faqs
