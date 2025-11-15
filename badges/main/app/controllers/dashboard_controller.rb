@@ -24,6 +24,7 @@ class DashboardController < ApplicationController
       @user_content_cards = [
 
         { title: "Bookmarks tally", path: tally_bookmarks_path, icon: "🔖" },
+        { title: "Event Registrations", path: event_registrations_path, icon: "🎟️" },
         { title: "!!!Quotes", path: authenticated_root_path, icon: "💬" },
         { title: "Stories", path: stories_path, icon: "🗣️" },
         { title: "Story Ideas", path: story_ideas_path, icon: "✍️️" },

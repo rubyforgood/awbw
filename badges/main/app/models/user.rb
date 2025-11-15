@@ -52,7 +52,6 @@ class User < ApplicationRecord
 
   # Search Cop
   include SearchCop
-
   search_scope :search do
     attributes [:email, :first_name, :last_name, :phone]
     attributes user: "projects.name"
