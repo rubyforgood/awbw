@@ -58,6 +58,8 @@ class User < ApplicationRecord
     attributes user: "projects.name"
   end
 
+  scope :active, -> { where(inactive: false) }
+
   def self.search_by_params(params)
     results = User.all
     results = results.search(params[:search]) if params[:search].present?
