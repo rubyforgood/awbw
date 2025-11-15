@@ -13,6 +13,8 @@ class SectorableItem < ApplicationRecord
   # Validations
   # validates_presence_of :sectorable_type, :sectorable_id, :sector_id
 
+  scope :published, -> { where(inactive: false) }
+
   # Methods
   def title
     return id unless sectorable && sectorable.class != WorkshopLog

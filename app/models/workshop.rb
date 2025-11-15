@@ -77,7 +77,8 @@ class Workshop < ApplicationRecord
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
-  scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }
+  scope :published, -> (published=nil) { published.to_s.present? ?
+                                           where(inactive: !published) : where(inactive: false) }
   scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
 
@@ -160,7 +161,7 @@ class Workshop < ApplicationRecord
   end
 
   def log_count
-    workshop_logs.count
+    workshop_logs.size
   end
 
   def main_image_url
@@ -186,7 +187,7 @@ class Workshop < ApplicationRecord
   end
 
   def published_sectors
-    sectorable_items.where(inactive: false).map { |item| item.sector }
+    sectorable_items.published.map { |item| item.sector }
   end
 
   def time_frame_total

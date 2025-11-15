@@ -51,7 +51,8 @@ class Resource < ApplicationRecord
   scope :kind, -> (kind) { where("kind like ?", kind ) }
   scope :leader_spotlights, -> { kind("LeaderSpotlight") }
   scope :popular, -> { where(kind: POPULAR_KINDS) }
-  scope :published, -> (published=nil) { published.present? ? where(inactive: !published) : where(inactive: false) }
+  scope :published, -> (published=nil) { published.present? ?
+                                           where(inactive: !published) : where(inactive: false) }
   scope :recent, -> { published.by_created }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
