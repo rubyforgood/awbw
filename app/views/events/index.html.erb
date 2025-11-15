@@ -1,38 +1,11 @@
 <div class="w-full">
-  <div class="flex items-start justify-between m-6">
+  <div class="flex items-start justify-between mb-6">
     <div class="pr-6">
-      <h1 class="text-2xl font-semibold mb-2">Community of Practice Events</h1>
-
-     <div>
-       Mark your calendars for a year of exciting events! They are
-       designed to expand your knowledge, ignite your passion, and foster connections within our network of
-       Windows Facilitators. Whether you’re a seasoned facilitator or just starting out,
-       we think you’ll find something to inspire and empower you.
-       <br><br>
-       <span class="font-bold">Stay Updated & Connected!</span>
-       <br>
-       To ensure you don’t miss a thing, follow these simple steps:
-       <br>
-       <ul class="list-disc pl-5">
-         <li><span class="font-bold">Register:</span> Click "Register"
-           (event dates/times are subject to change -- we will keep you informed by email)
-         </li>
-         <li><span class="font-bold">Calendar:</span> Click "Add to calendar" (remote event invites will include a Zoom link)</li>
-         <li>
-           <span class="font-bold">Confirm:</span> Check your inbox for confirmation emails
-         </li>
-         <li>
-           <span class="font-bold">Wait:</span> As each event approaches, you’ll receive an email with more information.
-         </li>
-         <li>
-           <span class="font-bold">Ask:</span>
-           For questions, reach out to us at <%= mail_to "programs@awbw.org",
-                                                         class: "underline" %>
-         </li>
-       </ul>
-     </div>
+      <h1 class="text-2xl font-semibold mb-2">Events</h1>
+      Click 'Register' and then 'Register for Selected Events' to sign up for
+      multiple events at once.
     </div>
-    <%= link_to "New Event", new_event_path, class: "whitespace-nowrap btn btn-secondary-outline" %>
+    <%= link_to "New Event", new_event_path, class: "btn btn-secondary-outline" %>
   </div>
 </div>
 <!-- Divider -->
@@ -41,9 +14,128 @@
 </div>
 
 <% if @events.any? %>
+  <% if @events.length > 10 %>
+    <div class="flex justify-center mb-6">
+      <%= form.submit "Register for Selected Events",
+                  class:
+                    "inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                                    transition-colors duration-200 font-medium shadow-sm text-sm
+                                    border border-blue-600 bg-blue-600 text-white
+                                    enabled:hover:bg-white enabled:hover:text-blue-600
+                                    disabled:opacity-50 disabled:cursor-not-allowed",
+                  id: "register-button",
+                  disabled: true %>
+    </div>
+  <% end %>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     <% @events.each do |event| %>
-      <%= render "card", event: event %>
+      <div
+        class="
+          relative bg-white border border-gray-200 rounded-xl shadow hover:shadow-md
+          transition p-4 flex flex-col
+        "
+      >
+        <!-- Event Title -->
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+          <div class="flex items-center space-x-2">
+            <!-- Bookmark icon -->
+            <%= render "bookmarks/editable_bookmark_icon", resource: event %>
+            <!-- Title link -->
+            <%= link_to "#{event.title}#{" [HIDDEN]" if current_user.super_user? && !event.publicly_visible}",
+            event_path(event),
+            class: "text-gray-900 hover:underline font-medium" %>
+          </div>
+        </h3>
+        <% if event.event_registrations.where(email: current_user.email).exists? %>
+          <span
+            class="
+              absolute top-2 right-2 text-xs bg-green-100 text-green-700 px-2 py-0.5
+              rounded-full
+            "
+          >
+            Registered
+          </span>
+          
+        <% end %>
+        <!-- Dates -->
+        <p class="text-sm text-gray-600 mb-1">
+          <span class="font-medium">Start:</span>
+          <%= event.start_date&.strftime("%B %d, %Y") %>
+        </p>
+        <p class="text-sm text-gray-600 mb-3">
+          <span class="font-medium">End:</span>
+          <%= event.end_date&.strftime("%B %d, %Y") %>
+        </p>
+
+        <div class="mt-3 flex gap-2">
+          <!-- Admin Edit -->
+          <% if current_user.super_user %>
+            <div class="mt-2">
+              <%= link_to "Edit", edit_event_path(event), class: "btn btn-secondary-outline" %>
+            </div>
+          <% end %>
+
+          <% if event.event_registrations.where(email: current_user.email).exists? %>
+          
+            <% registration = event.event_registrations.where(email: current_user.email).last %>
+            <div class="mt-2 ml-auto">
+              <%= link_to "De-register",
+              event_registration_path(registration),
+              class: "btn btn-secondary-outline",
+              method: :delete,
+              data: {
+                confirm: "Are you sure you want to de-register?",
+              } %>
+            </div>
+
+            
+          
+          <% elsif event.registerable? %>
+            <div class="mt-2 ml-auto">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <%= check_box_tag "event_ids[]",
+                event.id,
+                false,
+                id: "event_ids_#{event.id}",
+                class:
+                  "event-checkbox h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
+                <span class="text-gray-700">Register</span>
+              </label>
+            </div>
+          <% else %>
+            <div class="mt-2 ml-auto">
+              <span class="text-sm text-gray-500 italic">Registration closed</span>
+            </div>
+          <% end %>
+        </div>
+         <!-- Add to Calendar -->
+          <% if event.event_registrations.where(email: current_user.email).exists? %>
+          <% start_time = event.start_date.strftime("%Y%m%dT%H%M%SZ") %>
+          <% end_time   = event.end_date.strftime("%Y%m%dT%H%M%SZ") %>
+          <% title_encoded = ERB::Util.url_encode(event.title) %>
+          <% desc_encoded  = ERB::Util.url_encode(event.description || "") %>
+
+          <div class="mt-4 pt-3  items-center space-x-2">
+            <div class="text-sm font-semibold text-gray-600">Add to calendar:</div>
+              <div class="text-sm flex space-x-3">
+                <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=<%= title_encoded %>&dates=<%= start_time %>/<%= end_time %>&details=<%= desc_encoded %>" class="text-blue-600 hover:text-blue-800 mx-2">Google</a> •
+                <a href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR
+                  VERSION:2.0
+                  BEGIN:VEVENT
+                  SUMMARY:<%= event.title %>
+                  DTSTART:<%= start_time %>
+                  DTEND:<%= end_time %>
+                  DESCRIPTION:<%= event.description %>
+                  END:VEVENT
+                  END:VCALENDAR" download="<%= event.title.parameterize %>.ics" class="text-blue-600 hover:text-blue-800 mx-2">Apple</a> •
+                <a href="https://outlook.live.com/owa/?rru=addevent&startdt=<%= start_time %>&enddt=<%= end_time %>&subject=<%= title_encoded %>&body=<%= desc_encoded %>" class="text-blue-600 hover:text-blue-800 mx-2">Outlook</a> •
+                <a href="https://outlook.office.com/owa/?rru=addevent&startdt=<%= start_time %>&enddt=<%= end_time %>&subject=<%= title_encoded %>&body=<%= desc_encoded %>" class="text-blue-600 hover:text-blue-800 mx-2">Office 365</a> •
+                <a href="https://calendar.yahoo.com/?v=60&title=<%= title_encoded %>&st=<%= start_time %>&et=<%= end_time %>&desc=<%= desc_encoded %>" class="text-blue-600 hover:text-blue-800 mx-2">Yahoo</a>
+              </div>
+          </div>
+        <% end %>
+      </div>
     <% end %>
   </div>
 
@@ -53,3 +145,36 @@
     No events available.
   </div>
 <% end %>
+
+<%= form_with url: bulk_create_event_registrations_path, method: :post, local: true, id: 'bulk-registration-form' do |form| %>
+  <div class="flex justify-start m-6">
+    <%= form.submit "Register for Selected Events",
+                class:
+                  "inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                                transition-colors duration-200 font-medium shadow-sm text-sm
+                                border border-blue-600 bg-blue-600 text-white
+                                enabled:hover:bg-white enabled:hover:text-blue-600
+                                disabled:opacity-50 disabled:cursor-not-allowed",
+                id: "register-button",
+                disabled: true %>
+                
+  </div>
+<% end %>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.event-checkbox');
+        const registerButton = document.getElementById('register-button');
+
+        function updateRegisterButton() {
+            const checkedBoxes = document.querySelectorAll('.event-checkbox:checked');
+            registerButton.disabled = checkedBoxes.length === 0;
+        }
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateRegisterButton);
+        });
+
+        updateRegisterButton();
+    });
+</script>
