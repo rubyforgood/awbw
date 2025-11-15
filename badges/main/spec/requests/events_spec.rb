@@ -44,7 +44,7 @@ RSpec.describe "/events", type: :request do
       sign_in user
 
       allow_any_instance_of(ApplicationController).
-        to receive(:current_admin).and_return(true)
+        to receive(:current_user).and_return(user)
       get event_url(event)
 
       expect(response).to be_successful
@@ -55,7 +55,7 @@ RSpec.describe "/events", type: :request do
     it "renders a successful response" do
       sign_in user
       allow_any_instance_of(ApplicationController).
-        to receive(:current_admin).and_return(true)
+        to receive(:current_user).and_return(user)
 
       get new_event_url
 
@@ -69,7 +69,7 @@ RSpec.describe "/events", type: :request do
         sign_in admin
   
         allow_any_instance_of(ApplicationController).
-          to receive(:current_admin).and_return(true)
+          to receive(:current_user).and_return(admin)
         get edit_event_url(event)
   
         expect(response).to be_successful
@@ -145,7 +145,7 @@ RSpec.describe "/events", type: :request do
         it "updates the requested event" do
           sign_in user
           allow_any_instance_of(ApplicationController).
-            to receive(:current_admin).and_return(true)
+            to receive(:current_user).and_return(admin)
           patch event_url(event), params: { event: new_attributes }
           event.reload
           
@@ -155,7 +155,7 @@ RSpec.describe "/events", type: :request do
         it "redirects to the event" do
           sign_in user
           allow_any_instance_of(ApplicationController).
-            to receive(:current_admin).and_return(true)
+            to receive(:current_user).and_return(admin)
 
           patch event_url(event), params: { event: new_attributes }
           event.reload
@@ -180,7 +180,7 @@ RSpec.describe "/events", type: :request do
       it "renders a response with validation errors (i.e. to display the 'edit' template)" do
         event = Event.create!(valid_attributes)
         allow_any_instance_of(ApplicationController).
-          to receive(:current_admin).and_return(true)
+          to receive(:current_user).and_return(admin)
         patch event_url(event), params: { event: invalid_attributes }
         expect(response).to_not be_successful
       end
@@ -192,7 +192,7 @@ RSpec.describe "/events", type: :request do
       event = Event.create!(valid_attributes)
       sign_in admin
       allow_any_instance_of(ApplicationController).
-        to receive(:current_admin).and_return(true)
+        to receive(:current_user).and_return(admin)
       expect {
         delete event_url(event)
       }.to change(Event, :count).by(-1)
@@ -201,7 +201,7 @@ RSpec.describe "/events", type: :request do
     it "redirects to the events list" do
       sign_in user
       allow_any_instance_of(ApplicationController).
-        to receive(:current_admin).and_return(true)
+        to receive(:current_user).and_return(admin)
       delete event_url(event)
       expect(response).to redirect_to(events_url)
     end

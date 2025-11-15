@@ -1,6 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe NotificationMailer do
+  describe '#report_notification' do
+    it 'renders successfully' do
+      # Not sure if this mailer is actually never used, causing a bunch of errors, or the inky
+      # extension is somehow working.
+      pending 'The template for this mailer has an extension of inky'
+      fail
+    end
+  end
+
   describe '#reset_password_notification' do
     xit 'renders the subject and sends to the correct email' do
       user = double('User', email: 'user@example.com')
