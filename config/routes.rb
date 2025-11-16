@@ -29,7 +29,6 @@ Rails.application.routes.draw do
   resources :banners
   resources :bookmarks do
     post :search
-    resources :annotations
     collection do
       get :tally
       get :personal
@@ -86,9 +85,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :authentications, only: [:create]
       resources :quotes
-      resources :bookmarks do
-        resources :annotations
-      end
+      resources :bookmarks
     end
   end
 
