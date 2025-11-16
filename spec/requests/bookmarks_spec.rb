@@ -2,9 +2,6 @@
 require "rails_helper"
 
 RSpec.describe "Bookmarks", type: :request do
-	let!(:combined_perm) { create(:permission, :combined) }
-	let!(:adult_perm)    { create(:permission, :adult) }
-	let!(:children_perm) { create(:permission, :children) }
 	let(:user) { create(:user) }
 	let!(:bookmark) { create(:bookmark, user: user) }
   let(:workshop) { create(:workshop) }

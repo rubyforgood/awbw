@@ -1,10 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "banners/index", type: :view do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:admin) { create(:user, :admin) }
+    let(:admin) { create(:user, :admin) }
   let(:banner1) { create(:banner) }
   let(:banner2) { create(:banner) }
 

@@ -8,10 +8,6 @@ class Search
     queries = process_params(params)
     klass = params[:type] ? params[:type].constantize : Workshop
     results = process_queries(klass, queries, user)
-    perms = user.user_permissions_list
-    results = results.select { |r|
-      perms.include? r.windows_type.name
-    }
     return sort(results, klass)
   end
 

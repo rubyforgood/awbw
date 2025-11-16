@@ -17,10 +17,6 @@ RSpec.describe "/faqs", type: :request do
     }
   end
 
-  let!(:combined_perm)  { create(:permission, security_cat: "Combined Adult and Children's Windows") }
-  let!(:adult_perm)     { create(:permission, security_cat: "Adult Windows") }
-  let!(:children_perm)  { create(:permission, security_cat: "Children's Windows") }
-
   let(:admin)         { create(:user, :admin) }
   let(:regular_user)  { create(:user) }
   let!(:active_faq)   { create(:faq, question: "Public FAQ", answer: "Public FAQ Body", inactive: false) }

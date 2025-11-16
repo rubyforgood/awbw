@@ -27,10 +27,7 @@ RSpec.describe Form do
 
   describe '#name' do
     # These tests remain relevant
-    let(:user_owner) do 
-      create(:permission, :adult)
-      create(:permission, :children)
-      create(:permission, :combined)
+    let(:user_owner) do
       create(:user)
     end
     let(:form) { build(:form, owner: user_owner) }

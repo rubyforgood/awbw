@@ -17,10 +17,7 @@ RSpec.describe FormField do
 
   describe 'validations' do
     # Requires form association for create
-    subject do 
-      create(:permission, :adult)
-      create(:permission, :children)
-      create(:permission, :combined)
+    subject do
       build(:form_field, form: create(:form))
     end
     it { should validate_presence_of(:question) }

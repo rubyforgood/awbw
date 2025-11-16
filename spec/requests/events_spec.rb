@@ -1,9 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe "/events", type: :request do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
 
   let(:valid_attributes) {
     {
