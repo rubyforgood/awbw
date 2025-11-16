@@ -14,7 +14,7 @@ module Events
       else
         error = @event_registration.errors.full_messages.to_sentence
         respond_to do |format|
-          format.tubo_stream { flash.now[:alert] = error }
+          format.turbo_stream { flash.now[:alert] = error }
           format.html { redirect_to @event, alert: error }
         end
       end
