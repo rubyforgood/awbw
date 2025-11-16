@@ -2,7 +2,6 @@ require 'rails_helper'
 
 RSpec.describe "Workshops" do
   before do
-    create(:footer)
     create(:permission, :adult)
     create(:permission, :children)
     create(:permission, :combined)
