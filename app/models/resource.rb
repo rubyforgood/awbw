@@ -35,8 +35,8 @@ class Resource < ApplicationRecord
   accepts_nested_attributes_for :attachments, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
 
-  KINDS = ['Toolkit', 'Form', 'Template', 'Handout', 'Story']
-  POPULAR_KINDS = [nil, "Resource", "Template", "Handout", "Scholarship", "Toolkit", "Form"]
+  PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
+  KINDS = PUBLISHED_KINDS + ["Resource", "Story"]
 
   # Search Cop
   include SearchCop
@@ -50,7 +50,7 @@ class Resource < ApplicationRecord
   scope :featured, -> (featured=nil) { featured.present? ? where(featured: featured) : where(featured: true) }
   scope :kind, -> (kind) { where("kind like ?", kind ) }
   scope :leader_spotlights, -> { kind("LeaderSpotlight") }
-  scope :popular, -> { where(kind: POPULAR_KINDS) }
+  scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
   scope :published, -> (published=nil) { published.present? ?
                                            where(inactive: !published) : where(inactive: false) }
   scope :recent, -> { published.by_created }
