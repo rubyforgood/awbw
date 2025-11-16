@@ -42,9 +42,14 @@
                               class: "btn btn-secondary-outline" %>
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-800">
-                    <%= link_to event_registration.registrant.full_name,
+                    <%# FIXME not all users have facilitators %>
+                    <% if event_registration.registrant.facilitator %>
+                      <%= link_to event_registration.registrant.full_name,
                               facilitator_path(event_registration.registrant.facilitator),
                               class: "btn btn-secondary-outline" %>
+                    <% else %>
+                      <%= event_registration.registrant.full_name %>
+                    <% end %>
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-800">
                     <%= event_registration.created_at.strftime("%B %d, %Y") %>
