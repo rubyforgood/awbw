@@ -13,9 +13,11 @@
             <%= EventRegistration.model_name.human.pluralize %> (<%= @event_registrations_count %>)
           </h1>
           <div class="flex gap-2">
-            <%= link_to "New #{EventRegistration.model_name.human.downcase}",
-                        new_event_registration_path,
-                        class: "btn btn-primary-outline" if current_user.super_user? %>
+            <% if current_user.super_user? %>
+              <%= link_to "New #{EventRegistration.model_name.human.downcase}",
+                          new_event_registration_path,
+                          class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+            <% end %>
           </div>
         </div>
 

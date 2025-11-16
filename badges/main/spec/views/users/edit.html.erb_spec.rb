@@ -9,8 +9,7 @@ RSpec.describe "users/edit", type: :view do
 
   before do
     assign(:user, user)
-    # Stub current_user for Devise
-    allow(view).to receive(:current_user).and_return(admin_user)
+    allow(view).to receive(:current_user).and_return(admin_user) # Stub current_user for Devise
   end
 
   it "renders the edit user form with all fields" do
