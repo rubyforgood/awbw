@@ -1,14 +1,14 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "projects/index", type: :view do
   let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
+  let!(:adult_perm) { create(:permission, :adult) }
   let!(:children_perm) { create(:permission, :children) }
   let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
-  let(:project1) { create(:project)}
-  let(:project2) { create(:project)}
+  let!(:project1) { create(:project, name: "Project 1") }
+  let!(:project2) { create(:project, name: "Project 2") }
 
   before(:each) do
     assign(:projects, paginated([project1, project2]))
@@ -18,7 +18,7 @@ RSpec.describe "projects/index", type: :view do
   end
 
   it "renders a list of projects" do
-    expect(rendered).to match(project1.name)
-    expect(rendered).to match(project2.name)
+    expect(rendered).to match("Project 1")
+    expect(rendered).to match("Project 1")
   end
 end
