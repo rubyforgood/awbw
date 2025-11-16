@@ -1,6 +1,11 @@
 <div class="min-h-screen py-8">
   <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+    <div
+      class="
+        max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow
+        duration-200 p-6
+      "
+    >
       <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -20,47 +25,50 @@
         <div class="overflow-x-auto">
           <table class="w-full border-collapse border border-gray-200">
             <thead class="bg-gray-100">
-            <tr>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Event</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Registrant</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Created</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
-            </tr>
+              <tr>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Event</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Registrant</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Created</th>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
+              </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-200">
-            <% @event_registrations.each do |event_registration| %>
-              <tr class="hover:bg-gray-50 transition-colors duration-150">
-                <td class="px-4 py-2 text-sm text-gray-800">
-                  <%= link_to event_registration.event.name,
+              <% @event_registrations.each do |event_registration| %>
+                <tr id="<%= dom_id(event_registration) %>" class="hover:bg-gray-50 transition-colors duration-150">
+                  <td class="px-4 py-2 text-sm text-gray-800">
+                    <%= link_to event_registration.event.name,
                               event_path(event_registration.event),
                               class: "btn btn-secondary-outline" %>
-                </td>
-                <td class="px-4 py-2 text-sm text-gray-800">
-                  <%= link_to event_registration.registrant.full_name,
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-800">
+                    <%# FIXME not all users have facilitators %>
+                    <% if event_registration.registrant.facilitator %>
+                      <%= link_to event_registration.registrant.full_name,
                               facilitator_path(event_registration.registrant.facilitator),
                               class: "btn btn-secondary-outline" %>
-                </td>
-                <td class="px-4 py-2 text-sm text-gray-800">
-                  <%= event_registration.created_at.strftime("%B %d, %Y") %>
-                </td>
+                    <% else %>
+                      <%= event_registration.registrant.full_name %>
+                    <% end %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-800">
+                    <%= event_registration.created_at.strftime("%B %d, %Y") %>
+                  </td>
 
-                <!-- Actions -->
-                <td class="px-4 py-2 text-center justify-center gap-2">
-                  <%= link_to "Edit", edit_event_registration_path(event_registration),
+                  <!-- Actions -->
+                  <td class="px-4 py-2 text-center justify-center gap-2">
+                    <%= link_to "Edit", edit_event_registration_path(event_registration),
                               class: "btn btn-secondary-outline" %>
-                </td>
-              </tr>
-            <% end %>
+                  </td>
+                </tr>
+              <% end %>
             </tbody>
           </table>
         </div>
 
         <!-- Empty state -->
         <% unless @event_registrations.any? %>
-          <p class="text-gray-500 text-center py-6">
-            No <%= EventRegistration.model_name.human.pluralize %> found.
-          </p>
+          <p class="text-gray-500 text-center py-6">No <%= EventRegistration.model_name.human.pluralize %> found.</p>
         <% end %>
 
         <!-- Pagination -->
