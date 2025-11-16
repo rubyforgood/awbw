@@ -1,15 +1,14 @@
 class ResourcesController < ApplicationController
 
   def index
-    unpaginated = Resource.where(kind: ['Template','Handout', 'Scholarship',
-                                        'Toolkit', 'Form', 'Resource', 'Story']) #TODO - #FIXME brittle
+    unpaginated = Resource.where(kind: Resource::PUBLISHED_KINDS) #TODO - #FIXME brittle
                           .includes(:images, :attachments)
                           .search_by_params(params)
                           .by_created
     @resources = unpaginated.paginate(page: params[:page], per_page: 24)
 
     @resources_count = unpaginated.size
-    @sortable_fields = Resource::KINDS
+    @sortable_fields = Resource::PUBLISHED_KINDS
 
     respond_to do |format|
       format.html
@@ -65,7 +64,7 @@ class ResourcesController < ApplicationController
 
   def search
     process_search
-    @sortable_fields = Resource::KINDS.dup.delete("Story")
+    @sortable_fields = Resource::PUBLISHED_KINDS
     render :index
   end
 

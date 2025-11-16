@@ -14,7 +14,7 @@
     <div class="flex-1 min-w-[200px]">
       <%= f.input :kind,
                   as: :select,
-                  collection: Resource::KINDS,
+                  collection: Resource::PUBLISHED_KINDS,
                   selected: f.object.kind,
                   input_html: { class: "w-full rounded border-gray-300" } %>
     </div>
