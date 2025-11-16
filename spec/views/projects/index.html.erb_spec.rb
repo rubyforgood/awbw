@@ -1,11 +1,11 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "projects/index", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
-  let(:project1) { create(:project)}
-  let(:project2) { create(:project)}
+  let!(:project1) { create(:project, name: "Project 1") }
+  let!(:project2) { create(:project, name: "Project 2") }
 
   before(:each) do
     assign(:projects, paginated([project1, project2]))
