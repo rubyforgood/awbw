@@ -18,7 +18,7 @@ RSpec.describe "Events::Registrations", type: :request do
     context "when successful" do
       it "creates a registration and returns turbo stream" do
         expect {
-          post event_user_registration_path(event_id: event.id),
+          post event_registrant_registration_path(event_id: event.id),
             headers: turbo_headers
         }.to change(EventRegistration, :count).by(1)
 
@@ -39,7 +39,7 @@ RSpec.describe "Events::Registrations", type: :request do
       end
 
       it "returns turbo stream with alert" do
-        post event_user_registration_path(event_id: event.id),
+        post event_registrant_registration_path(event_id: event.id),
           headers: turbo_headers
 
         expect(response).to have_http_status(:ok)
@@ -55,7 +55,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
       it "destroys registration and returns turbo stream" do
         expect {
-          delete event_user_registration_path(event_id: event.id),
+          delete event_registrant_registration_path(event_id: event.id),
             headers: turbo_headers
         }.to change(EventRegistration, :count).by(-1)
 
@@ -67,7 +67,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
     context "when registration does not exist" do
       it "returns turbo stream with alert" do
-        delete event_user_registration_path(event_id: event.id),
+        delete event_registrant_registration_path(event_id: event.id),
           headers: turbo_headers
 
         expect(response).to have_http_status(:ok)
@@ -89,7 +89,7 @@ RSpec.describe "Events::Registrations", type: :request do
       end
 
       it "returns turbo stream with alert" do
-        delete event_user_registration_path(event_id: event.id),
+        delete event_registrant_registration_path(event_id: event.id),
           headers: turbo_headers
 
         expect(response).to have_http_status(:ok)

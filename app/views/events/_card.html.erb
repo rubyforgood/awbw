@@ -47,7 +47,7 @@
     <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
       <div class="mt-2 ml-auto">
         <%= button_to "De-register",
-        event_user_registration_path(event_id: event.id),
+        event_registrant_registration_path(event_id: event.id),
         class: "btn btn-secondary-outline",
         method: :delete,
         data: {
@@ -57,7 +57,7 @@
     <% elsif event.registerable? %>
       <div class="mt-2 ml-auto">
         <%= button_to "Register",
-        event_user_registration_path(event_id: event),
+        event_registrant_registration_path(event_id: event),
         class: "btn btn-primary-outline" %>
       </div>
     <% else %>
