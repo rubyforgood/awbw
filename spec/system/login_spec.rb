@@ -1,10 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "User login", type: :system do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:user) { create(:user) }
+    let(:user) { create(:user) }
 
   before do
     driven_by :selenium_chrome_headless

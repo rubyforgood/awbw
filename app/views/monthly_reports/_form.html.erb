@@ -24,10 +24,10 @@
     	<div class="col-md-8 form-group">
     	  <div class='btn-container windows-type btns-aligned'>
     	    <%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
-    		class: "btn btn-primary btn--small #{'disabled' unless current_user.permissions_list.include? 'ADULT WORKSHOP LOG'}") %>
+    		class: "btn btn-primary btn--small") %>
 
     	    <%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
-    		class: "btn btn-primary btn--small #{'disabled' unless current_user.permissions_list.include? 'CHILDREN WORKSHOP LOG'}") %>
+    		class: "btn btn-primary btn--small") %>
     	  </div>
 	   </div>
     </div>

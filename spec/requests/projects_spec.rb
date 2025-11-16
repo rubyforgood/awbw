@@ -1,9 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "/projects", type: :request do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
 
   let(:user) { create(:user) }
   let(:admin) { create(:user, super_user: true) }

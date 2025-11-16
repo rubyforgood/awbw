@@ -3,10 +3,6 @@ require "rails_helper"
 RSpec.describe User do
   # Use FactoryBot
   # let(:user) { build(:user) } # Keep build for simple validation tests
-  # Create permissions needed by the after_create callback
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
 
   describe "associations" do
     # Need create for association tests to work correctly with callbacks
@@ -25,8 +21,6 @@ RSpec.describe User do
     it { should have_many(:project_users).dependent(:destroy) }
     it { should have_many(:projects).through(:project_users) }
     it { should have_many(:windows_types).through(:projects) }
-    it { should have_many(:user_permissions).dependent(:destroy) }
-    it { should have_many(:permissions).through(:user_permissions) }
     it { should have_many(:resources) }
     it { should have_many(:user_forms).dependent(:destroy) }
     it { should have_many(:user_form_form_fields).through(:user_forms).dependent(:destroy) }

@@ -2,12 +2,6 @@ require "rails_helper"
 
 RSpec.describe Workshop do
   # pending "add some examples to (or delete) #{__FILE__}"
-  before do
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-  end
-
   describe "associations" do
     # Need create for association tests to work correctly with callbacks/scopes
     subject { create(:workshop) } # Assumes functional factory

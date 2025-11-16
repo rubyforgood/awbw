@@ -1,12 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "events/index", type: :view do
-  before do
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-  end
-
   let(:user) { create(:user, super_user: true) }
   let(:event_closed) {
     create(:event, title: "Event 1",

@@ -2,12 +2,6 @@
 require 'rails_helper'
 
 RSpec.describe WorkshopSearchService, type: :service do
-	before do
-		create(:permission, :adult)
-		create(:permission, :children)
-		create(:permission, :combined)
-	end
-
 	let!(:workshop_1) do
 		create(:workshop, title: "A Workshop", year: 2025, month: 1, created_at: 5.days.ago, led_count: 5)
 	end

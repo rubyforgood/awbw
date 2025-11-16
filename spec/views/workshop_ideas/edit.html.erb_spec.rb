@@ -1,10 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "workshop_ideas/edit", type: :view do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:user) { create(:user) }
+    let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
   let(:workshop_idea) { create(:workshop_idea, created_by: user, updated_by: user) }
 

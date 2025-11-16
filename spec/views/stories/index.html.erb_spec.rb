@@ -1,10 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "stories/index", type: :view do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:user) { create(:user) }
+    let(:user) { create(:user) }
   let(:story1) { create(:story, created_by: user, updated_by: user, title: "MyStory1", youtube_url: "Youtube_url1") }
   let(:story2) { create(:story, created_by: user, updated_by: user, title: "MyStory2", youtube_url: "Youtube_url2") }
 
