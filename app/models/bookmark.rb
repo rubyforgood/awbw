@@ -1,7 +1,6 @@
 class Bookmark < ApplicationRecord
   belongs_to :user
   belongs_to :bookmarkable, polymorphic: true
-  has_many :bookmark_annotations, dependent: :destroy
 
   scope :for_workshops, -> { where(bookmarkable_type: 'Workshop') }
   scope :bookmarkable_type, -> (bookmarkable_type) { bookmarkable_type.present? ? where(bookmarkable_type: bookmarkable_type) : all }

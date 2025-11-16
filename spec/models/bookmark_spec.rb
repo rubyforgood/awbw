@@ -5,7 +5,6 @@ RSpec.describe Bookmark, type: :model do
   describe 'associations' do
     it { should belong_to(:user) }
     it { should belong_to(:bookmarkable) } # Polymorphic
-    it { should have_many(:bookmark_annotations).dependent(:destroy) }
   end
 
   describe 'validations' do
