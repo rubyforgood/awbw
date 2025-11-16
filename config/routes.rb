@@ -1,15 +1,9 @@
 Rails.application.routes.draw do
-  resources :projects
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
-  get 'cms', to: 'admins/base#show'
-
   devise_for :users,
              controllers: { registrations: 'registrations',
                             passwords: 'passwords' }
-
-  devise_for :admins
-
   get 'users/change_password', to: 'users#change_password', as:'change_password'
   post 'users/update_password', to: 'users#update_password', as: 'update_password'
 
@@ -42,23 +36,24 @@ Rails.application.routes.draw do
     end
   end
   resources :community_news
-  resources :events
-  resource :event_registrations, only: [:create, :destroy]
-
+  resources :event_registrations
+  resources :events do
+    resource :registrations, only: %i[create destroy], module: :events, as: :registrant_registration
+  end
+  resources :facilitators
   resources :faqs
-  resources :monthly_reports
+  resources :organizations
+  resources :projects
   resources :project_users
-
+  resources :quotes
   resources :users do
     member do
       get :generate_facilitator
     end
   end
   resources :user_forms
-  resources :facilitators
-  resources :organizations
-  resources :quotes
 
+  resources :monthly_reports
   get 'reports/:id/edit_story', to: 'reports#edit_story', as: 'reports_edit_story'
   put 'reports/update_story/:id', to: 'reports#update_story', as: 'reports_update_story'
   post 'reports/share_story', to: 'reports#create_story', as: 'create_story'

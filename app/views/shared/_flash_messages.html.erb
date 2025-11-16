@@ -1,4 +1,7 @@
-<div id="flash_now" class="inset-x-0 flex justify-center z-50 print:hidden">
+<div
+  id="flash_now"
+  class="fixed top-4 right-0 left-0 flex justify-center z-50 print:hidden"
+>
   <%# === Collect manual messages from params === %>
   <% manual_messages = [] %>
   <% { notice: params[:notice], alert: params[:alert], info: params[:info], warning: params[:warning], error: params[:error] }.each do |type, msg| %>
@@ -6,9 +9,12 @@
   <% end %>
 
   <%# === Collect flash messages === %>
-  <% flash_notices = flash.to_a.reject { |_, msg| msg.blank? || msg.is_a?(Array) || msg.is_a?(ActiveRecord::Relation) } %>
+  <% flash_notices =
+    flash.to_a.reject do |_, msg|
+      msg.blank? || msg.is_a?(Array) || msg.is_a?(ActiveRecord::Relation)
+    end %>
 
-  <%# === Discard flash so it doesn’t persist on next request (works for Turbo + normal) === %>
+  <%# === Discard flash so it doesn’t persist on next request === %>
   <% flash.discard %>
 
   <%# === Merge manual + flash messages === %>
@@ -16,20 +22,42 @@
 
   <%# === Render each message === %>
   <% notices_and_alerts.each do |type, msg| %>
-    <div class="flash-msg w-full max-w-3xl my-2" data-controller="alerts" data-alerts-flash-value="<%= type %>">
-      <% bg_class, text_class = case type.to_s
-                                when "notice", "info" then ["bg-blue-50", "text-blue-800"]
-                                when "warning" then ["bg-yellow-50", "text-yellow-800"]
-                                when "alert", "error" then ["bg-red-50", "text-red-800"]
-                                else ["bg-gray-50", "text-gray-800"]
-                                end %>
+    <% bg_class, text_class =
+      case type.to_s
+      when "notice", "info"
+        %w[bg-blue-50 text-blue-800]
+      when "warning"
+        %w[bg-yellow-50 text-yellow-800]
+      when "alert", "error"
+        %w[bg-red-50 text-red-800]
+      else
+        %w[bg-gray-50 text-gray-800]
+      end %>
 
-      <div class="flex items-center justify-between px-4 py-3 rounded shadow-md <%= bg_class %> <%= text_class %>">
+    <div
+      class="max-w-3xl my-2"
+      data-controller="dismiss"
+      data-dismiss-timeout-value="4000"
+    >
+      <div
+        class="
+          flex items-center justify-between px-4 py-3 rounded shadow-md
+          <%= bg_class %> <%= text_class %>
+        "
+      >
         <div class="flex-1 text-center font-medium">
           <p class="<%= type %>">
             <%= msg.is_a?(String) ? msg : msg.html_safe %>
           </p>
         </div>
+
+        <button
+          type="button"
+          data-action="click->dismiss#hide"
+          class="ml-4 text-xl text-current hover:text-gray-500 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
       </div>
     </div>
   <% end %>

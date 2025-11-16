@@ -52,11 +52,12 @@ class User < ApplicationRecord
 
   # Search Cop
   include SearchCop
-
   search_scope :search do
     attributes [:email, :first_name, :last_name, :phone]
     attributes user: "projects.name"
   end
+
+  scope :active, -> { where(inactive: false) }
 
   def self.search_by_params(params)
     results = User.all

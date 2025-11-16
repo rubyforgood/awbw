@@ -59,7 +59,8 @@ class StoryIdeasController < ApplicationController
     @projects = (@user || current_user).projects.order(:name)
     @windows_types = WindowsType.all.order(:name)
     @workshops = Workshop.all.order(:title)
-    @users = User.all.order(:first_name, :last_name)
+    @users = User.active.or(User.where(id: @story_idea.created_by_id))
+                 .order(:first_name, :last_name)
   end
 
   # def remove_image

@@ -14,3 +14,6 @@ application.register("sortable", SortableController)
 
 import TimeframeController from "./timeframe_controller"
 application.register("timeframe", TimeframeController)
+
+import DismissController from "./dismiss_controller";
+application.register("dismiss", DismissController);

@@ -67,9 +67,15 @@
               <% page_totals[:adults_first_time]   += log.adults_first_time.to_i %>
 
               <tr class="hover:bg-gray-50 transition-colors duration-150">
-                <td class="px-2 text-left text-xs whitespace-nowrap"><%= link_to (log.date || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %></td>
-                <td class="px-2 text-left text-sm font-bold"><%= log.workshop ? link_to(log.workshop.title, workshop_path(log.workshop)) : "-" %></td>
-                <td class="px-2 text-left text-xs"><%= log.user ? link_to(log.user.name, generate_facilitator_user_path(log.user)) : "—" %></td>
+                <td class="px-2 text-left text-xs whitespace-nowrap">
+                  <%= link_to (log.date || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %>
+                </td>
+                <td class="px-2 text-left text-sm font-bold">
+                  <%= log.workshop ? link_to(log.workshop.title, workshop_path(log.workshop)) : "-" %>
+                </td>
+                <td class="px-2 text-left text-xs">
+                  <%= log.user ? link_to(log.user.name, generate_facilitator_user_path(log.user)) : "—" %>
+                </td>
 
                 <td class="text-center font-bold text-lg bg-purple-100"><%= display_count(log.total_attendance) %></td>
 
@@ -84,9 +90,11 @@
                 <td class="text-center bg-green-100"><%= display_count(log.adults_first_time) %></td>
 
                 <td class="text-center whitespace-nowrap">
-                  <%= link_to "Edit",
-                              edit_workshop_log_path(log),
-                              class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+                  <% if current_user.super_user? || log.user == current_user %>
+                    <%= link_to "Edit",
+                                edit_workshop_log_path(log),
+                                class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+                  <% end %>
                   <%= link_to "View",
                               workshop_log_path(log),
                               class: "btn btn-secondary-outline text-xs px-2 py-1" %>
