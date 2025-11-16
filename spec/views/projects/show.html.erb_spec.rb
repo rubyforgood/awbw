@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "projects/show", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
   let!(:project) { create(:project, name: "Project 1") }
@@ -13,6 +13,6 @@ RSpec.describe "projects/show", type: :view do
   end
 
   it "renders attributes" do
-    expect(rendered).to match("Project 1")
+    expect(rendered).to match(project.name)
   end
 end
