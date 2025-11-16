@@ -1,10 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "projects/edit", type: :view do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:user) { create(:user) }
+    let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
   let(:project_status) { create(:project_status) }

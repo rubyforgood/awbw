@@ -1,12 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "Events::Registrations", type: :request do
-  before(:all) do
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-  end
-
   let(:user) { create(:user) }
   let(:event) { create(:event) }
 

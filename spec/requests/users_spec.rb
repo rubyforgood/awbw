@@ -13,9 +13,6 @@ require 'rails_helper'
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
 RSpec.describe "/users", type: :request do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
 
   let(:valid_attributes) do
     {

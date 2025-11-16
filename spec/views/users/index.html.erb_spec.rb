@@ -1,9 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe "users/index", type: :view do
-  let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
-  let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
-  let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
   let(:admin_user) { create(:user, :admin) } # or super_user trait
 
   before(:each) do

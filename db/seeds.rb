@@ -3,10 +3,6 @@ User.in_batches do |batch|
   batch.update_all(encrypted_password: user_password)
 end
 
-Permission.where(security_cat: "Children's Windows").first_or_create!
-Permission.where(security_cat: "Adult Windows").first_or_create!
-Permission.where(security_cat: "Combined Adult and Children's Windows").first_or_create!
-
 admin = User.where(first_name: "Umberto", last_name: "User",
                    email: "umberto.user@example.com",
                    super_user: true)
