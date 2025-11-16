@@ -45,21 +45,13 @@
         <%= render "sort_by_options" %>
       </div>
 
-      <div>
-        <hr class="border-gray-300 my-6">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div class="filters-applied" style="display: flex; gap: 0.5rem; align-items: center;">
-            <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">
-              Workshops (<%= @workshops_count %>)
-            </h3>
-          </div>
-        </div>
-      </div>
+      <%= render "workshops_count" %>
     <% end %>
 
     <!-- Workshops List -->
     <%= turbo_frame_tag "frame_list" do %>
       <%= turbo_stream.replace("filters_applied", partial: "filters_applied") %>
+      <%= turbo_stream.update("workshops_count", partial: "workshops_count") %>
       <div class="mt-6">
         <% if @workshops.any? %>
           <div id="workshops-list" class="space-y-4 animate-fade">
