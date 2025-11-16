@@ -2,18 +2,15 @@ import { Controller } from "@hotwired/stimulus"
 
 // Connects to data-controller="collection"
 export default class extends Controller {
-  connect() {
-  }
-  static targets = ["content", "form"]
 
   connect() {
-    this.formTarget.addEventListener("change", (event) => {
+    this.element.addEventListener("change", (event) => {
       if (event.target.type === "checkbox" || event.target.type === "radio") {
         this.submitForm()
       }
     })
 
-    this.formTarget.addEventListener("input", (event) => {
+    this.element.addEventListener("input", (event) => {
       if (event.target.type === "text") {
         this.debouncedSubmit()
       }
@@ -21,7 +18,7 @@ export default class extends Controller {
   }
 
   submitForm() {
-     this.formTarget.requestSubmit()
+     this.element.requestSubmit()
   }
 
   debouncedSubmit() {
