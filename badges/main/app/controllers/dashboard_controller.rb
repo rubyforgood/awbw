@@ -10,7 +10,7 @@ class DashboardController < ApplicationController
 
     @popular_resources = Resource.featured
                                  .published
-                                 .popular
+                                 .published_kinds
                                  .order(ordering: :asc, created_at: :desc)
                                  .decorate
 
