@@ -3,7 +3,7 @@ class WorkshopDecorator < Draper::Decorator
   delegate_all
 
   def list_sectors
-    sectorable_items.where(inactive: false).map(&:sector).map(&:name).to_sentence
+    sectorable_items.published.map(&:sector).map(&:name).to_sentence
   end
 
   def display_fields
