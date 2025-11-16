@@ -3,8 +3,6 @@ class Facilitator < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
 
   has_one :user, inverse_of: :facilitator, dependent: :nullify
-  has_many :facilitator_organizations, dependent: :restrict_with_exception
-  has_many :organizations, through: :facilitator_organizations
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :sectors, through: :sectorable_items
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
