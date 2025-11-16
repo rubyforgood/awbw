@@ -12,8 +12,7 @@
         <p class="text-gray-700">
           Search by emotional theme, materials needed, ease of set-up, and more.
           <br>
-          We encourage Windows Facilitator creativity and innovation.
-          If you adapt and improve workshops, please
+          We encourage Windows Facilitator creativity and innovation. If you adapt and improve workshops, please
           <%= link_to "share your ideas with us", new_workshop_variation_path, class: "text-blue-500" %>!
         </p>
       </div>
@@ -24,100 +23,59 @@
       <% end %>
     </div>
   </div>
+
   <!-- Divider -->
-  <div class="w-full">
-    <hr class="border-gray-300 mb-6">
-  </div>
+  <div class="w-full"><hr class="border-gray-300 mb-6"></div>
+
   <!-- Search Form -->
   <div class="w-full">
-    <%= form_tag('/workshops', method: :get, class: "space-y-6") do %>
+    <%= form_tag('/workshops', method: :get, data: {turbo_stream: true, turbo_frame: "frame_list", controller: "collection share-url"}, class: "space-y-6") do %>
       <%= render "filters" %>
-      <div>
-        <hr class="border-gray-300 my-6">
-      </div>
-      <div class="mt-6">
-        <%= render "filters_applied" %>
-      </div>
-      <div>
-        <hr class="border-gray-300 my-6">
-      </div>
+      <div><hr class="border-gray-300 my-6"></div>
+
+      <div class="mt-6"><%= render "filters_applied" %></div>
+
+      <div><hr class="border-gray-300 my-6"></div>
+
       <!-- Sort Options -->
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 font-medium">
-        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Sort by</h3>
+        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">
+          Sort by
+        </h3>
         <%= render "sort_by_options" %>
       </div>
 
-      <div>
-        <hr class="border-gray-300 my-6">
-        <div
-          style="display: flex; justify-content: space-between; align-items: center;"
-        >
-          <div
-            class="filters-applied"
-            style="display: flex; gap: 0.5rem; align-items: center;"
-          >
-            <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Workshops (<%= @workshops_count %>)</h3>
-          </div>
-        </div>
-      </div>
+      <%= render "workshops_count" %>
     <% end %>
-    <!-- Workshops List -->
-    <div class="mt-6">
-      <% if @workshops.any? %>
 
-        <div id="workshops-list" class="space-y-4">
-          <% @workshops.each do |workshop| %>
-            <%= render "workshops/index_row",
+    <!-- Workshops List -->
+    <%= turbo_frame_tag "frame_list" do %>
+      <%= turbo_stream.replace("filters_applied", partial: "filters_applied") %>
+      <%= turbo_stream.replace("workshops_count", partial: "workshops_count") %>
+      <%= turbo_stream.replace("copy_url", partial: "copy_url") %>
+      <div class="mt-6">
+        <% if @workshops.any? %>
+          <div id="workshops-list" class="space-y-4 animate-fade">
+            <% @workshops.each do |workshop| %>
+              <%= render "workshops/index_row",
             workshop: workshop.decorate,
             breadcrumb: "Workshops",
             link_route: workshop_path(workshop) %>
-          <% end %>
-        </div>
-
-        <div class="pagination mt-6">
-          <%= will_paginate @workshops,
-          previous_label: "<<",
-          next_label: ">>",
-          inner_window: 2,
-          class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
-        </div>
-
-      <% else %>
-        <p class="text-gray-600">Your search returned no results. Please try again.</p>
-      <% end %>
-    </div>
+            <% end %>
+          </div>
+          <div class="pagination mt-6">
+            <%= will_paginate @workshops,
+              previous_label: "<<",
+              next_label: ">>",
+              inner_window: 2,
+              class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
+          </div>
+        <% else %>
+          <p class="text-gray-600">
+            Your search returned no results. Please try again.
+          </p>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll(".category-checkbox").forEach(function(checkbox) {
-            checkbox.addEventListener("change", function() {
-                this.form.submit();
-            });
-        });
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const resultsDiv = document.getElementById("workshops-list");
-
-        // Only scroll if the element exists and we have query/sort params
-        if (resultsDiv && (new URLSearchParams(window.location.search).has('query') ||
-            new URLSearchParams(window.location.search).has('sort'))) {
-
-            // Use a timeout to ensure the element is fully rendered
-            setTimeout(() => {
-                const headerOffset = 275; // adjust to your header height + buffer
-                const elementPosition = resultsDiv.getBoundingClientRect().top + window.scrollY;
-                const offsetPosition = elementPosition - headerOffset;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "smooth"
-                });
-            }, 50); // small delay
-        }
-    });
-</script>
