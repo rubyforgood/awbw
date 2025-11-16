@@ -8,7 +8,9 @@
             <%= WorkshopIdea.model_name.human.pluralize %> (<%= @workshop_ideas_count %>)
           </h1>
           <div class="flex gap-2">
-            <%= link_to "New #{WorkshopIdea.model_name.human.downcase}", new_workshop_idea_path, class: "btn btn-primary-outline" %>
+            <%= link_to "New #{WorkshopIdea.model_name.human.downcase}",
+                        new_workshop_idea_path,
+                        class: "btn btn-primary" %>
           </div>
         </div>
 

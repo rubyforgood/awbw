@@ -7,11 +7,11 @@
           <h2 class="normal">Workshop Variations</h2>
         </div>
         <div class="pull-right">
-          <div>
-            <%= link_to 'New workshop variation',
-                               new_workshop_variation_path(from: "index"),
-                               class: "btn btn-primary-outline" %>
-          </div>
+          <% if current_user.super_user? %>
+            <%= link_to "New workshop variation",
+                        new_workshop_variation_path(from: "index"),
+                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+         <% end %>
         </div>
       </div>
 
