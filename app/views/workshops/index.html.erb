@@ -29,7 +29,7 @@
 
   <!-- Search Form -->
   <div class="w-full">
-    <%= form_tag('/workshops', method: :get, data: {turbo_stream: true, turbo_frame: "frame_list", controller: "collection"}, class: "space-y-6") do %>
+    <%= form_tag('/workshops', method: :get, data: {turbo_stream: true, turbo_frame: "frame_list", controller: "collection share-url"}, class: "space-y-6") do %>
       <%= render "filters" %>
       <div><hr class="border-gray-300 my-6"></div>
 
@@ -51,7 +51,8 @@
     <!-- Workshops List -->
     <%= turbo_frame_tag "frame_list" do %>
       <%= turbo_stream.replace("filters_applied", partial: "filters_applied") %>
-      <%= turbo_stream.update("workshops_count", partial: "workshops_count") %>
+      <%= turbo_stream.replace("workshops_count", partial: "workshops_count") %>
+      <%= turbo_stream.replace("copy_url", partial: "copy_url") %>
       <div class="mt-6">
         <% if @workshops.any? %>
           <div id="workshops-list" class="space-y-4 animate-fade">
