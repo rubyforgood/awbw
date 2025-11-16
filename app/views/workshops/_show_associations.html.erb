@@ -5,12 +5,10 @@
       <div class="pr-6">
         <h2 class="text-lg font-semibold mb-2">Variations of this Workshop</h2>
       </div>
-      <% if current_user.super_user? %>
-        <%= link_to 'New variation',
-                    new_workshop_variation_path(from: "workshop_show",
-                                                workshop_id: workshop.id),
-                    class: "btn btn-secondary-outline" %>
-      <% end %>
+      <%= link_to "New variation",
+                  new_workshop_variation_path(from: "workshop_show",
+                                              workshop_id: workshop.id),
+                  class: "btn btn-secondary-outline" %>
     </div>
 
     <hr class="border-gray-300 mb-4">
@@ -32,8 +30,10 @@
         <div class="pr-6">
           <h2 class="text-lg font-semibold mb-2">Quotes</h2>
         </div>
-        <% if current_user.super_user? %>
-          <%#= link_to 'New quote', new_quote_path(workshop_id: @workshop.id), class: "btn btn-secondary-outline admin-only bg-blue-100" if @workshop.persisted? %>
+        <% if current_user.super_user? && @workshop.persisted? %>
+          <%= link_to "New quote",
+                      new_quote_path(workshop_id: @workshop.id),
+                      class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
         <% end %>
       </div>
 
@@ -58,9 +58,11 @@
         <div class="pr-6">
           <h2 class="text-lg font-semibold mb-2">Related Facilitator Spotlight(s)</h2>
         </div>
-        <% if current_user.super_user? %>
-          <%#= link_to 'New story', new_story_path(workshop_id: @workshop.id,
-            owner_id: @workshop_id, owner_type: "Workshop"), class: "btn btn-secondary-outline admin-only bg-blue-100" if @workshop.persisted? %>
+        <% if current_user.super_user? && @workshop.persisted? %>
+          <%= link_to "New story",
+                      new_story_path(workshop_id: @workshop.id,
+                                     owner_id: @workshop_id, owner_type: "Workshop"),
+                      class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
         <% end %>
       </div>
 

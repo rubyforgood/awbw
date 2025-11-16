@@ -8,7 +8,11 @@
             <%= User.model_name.human.pluralize %> (<%= @users_count %>)
           </h1>
           <div class="flex gap-2">
-            <%= link_to "New #{User.model_name.human.downcase}", new_user_path, class: "btn btn-primary-outline" %>
+            <% if current_user.super_user? %>
+              <%= link_to "New #{User.model_name.human.downcase}",
+                          new_user_path,
+                          class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+            <% end %>
           </div>
         </div>
 
