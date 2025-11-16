@@ -61,7 +61,7 @@
       <!-- Info grid -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Organization affiliations -->
-        <% if @facilitator.profile_show_organizations? %>
+        <% if @facilitator.profile_show_affiliations? %>
           <div>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Organization affiliations</h2>
             <% if @facilitator.user.project_users.active.any? %>
