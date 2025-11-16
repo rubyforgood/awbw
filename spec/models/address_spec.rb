@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Address, type: :model do
   describe 'associations' do
-    it { should belong_to(:organization) }
+    it { should belong_to(:addressable) }
   end
 
   describe 'validations' do
@@ -36,10 +36,10 @@ RSpec.describe Address, type: :model do
       expect(address.errors[:zip]).to include("can't be blank")
     end
 
-    it 'requires an organization' do
-      address.organization = nil
+    it 'requires an addressable' do
+      address.addressable = nil
       expect(address).not_to be_valid
-      expect(address.errors[:organization]).to include("must exist")
+      expect(address.errors[:addressable]).to include("must exist")
     end
   end
 
