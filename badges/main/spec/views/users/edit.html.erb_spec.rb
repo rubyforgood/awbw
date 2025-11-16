@@ -1,10 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "users/edit", type: :view do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:user) { create(:user) }
+    let(:user) { create(:user) }
   let(:admin_user) { create(:user, :admin) } # or super_user trait
 
   before do

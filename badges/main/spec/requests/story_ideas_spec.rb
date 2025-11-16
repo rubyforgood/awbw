@@ -17,10 +17,7 @@ RSpec.describe "/story_ideas", type: :request do
   # This should return the minimal set of attributes required to create a valid
   # StoryIdea. As you add validations to StoryIdea, be sure to
   # adjust the attributes here as well.
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:user) { create(:user) }
+    let(:user) { create(:user) }
   let(:windows_type) { create(:windows_type) }
   let(:workshop) { create(:workshop) }
   let(:project) { create(:project) }

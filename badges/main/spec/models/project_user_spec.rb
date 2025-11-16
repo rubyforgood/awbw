@@ -8,10 +8,7 @@ RSpec.describe ProjectUser do
   end
 
   describe 'validations' do
-    subject do 
-      create(:permission, :adult)
-      create(:permission, :children)
-      create(:permission, :combined)
+    subject do
       build(:project_user, project: create(:project), user: create(:user))
     end
     it { should validate_presence_of(:project_id) }
