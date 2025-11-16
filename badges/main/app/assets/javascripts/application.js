@@ -14,7 +14,6 @@
 //= require jquery_ujs
 //= require bootstrap.min
 //= require cocoon
-//= require annotator-full.min
 
 //= require ckeditor/config
 //= require_tree ./components
