@@ -28,16 +28,7 @@
     <%= f.input :locality,
                 label: "Locality",
                 as: :select,
-                collection: [
-                  "LA City",
-                  "LA County",
-                  "Southern CA",
-                  "Northern CA",
-                  "Central CA",
-                  "Orange County",
-                  "Outside CA",
-                  "Outside USA",
-                ],
+                collection: Address::LOCALITIES,
                 include_blank: true,
                 selected: f.object.locality,
                 input_html: {
