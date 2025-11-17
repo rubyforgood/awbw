@@ -75,8 +75,18 @@ class Bookmark < ApplicationRecord
 
   def self.windows_type(windows_type)
     return all unless windows_type.present?
+    case windows_type.downcase
+    when /adult/
+      normalized = "ADULT WORKSHOP"
+    when /child/
+      normalized = "CHILDREN WORKSHOP"
+    when /combined/
+      normalized = "COMBINED"
+    else
+      normalized = windows_type
+    end
 
-    pattern = "%#{windows_type}%"
+    pattern = "%#{normalized}%"
 
     # Resources with a windows_type
     resources = joins(

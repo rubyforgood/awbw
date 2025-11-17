@@ -51,6 +51,7 @@
       <%= select_tag :windows_type,
                      options_for_select(@windows_types_array,
                                         params[:windows_type]),
+                     include_blank: true,
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                      onchange: "this.form.submit()" %>
