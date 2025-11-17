@@ -1,6 +1,5 @@
 class MediaFile < ApplicationRecord
   belongs_to :report, optional: true
-  belongs_to :workshop, optional: true
   belongs_to :workshop_log, optional: true
 
   FORM_FILE_CONTENT_TYPES = ["image/jpeg", "image/png",

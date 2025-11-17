@@ -1,8 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe "stories/show", type: :view do
-    let(:user) { create(:user) }
-  let(:story) { create(:story, created_by: user, updated_by: user, body: "MyBody", youtube_url: "Youtube_url") }
+  let(:user) { create(:user) }
+  let(:story) { create(:story, created_by: user, updated_by: user,
+                       body: "MyBody", youtube_url: "Youtube_url") }
 
   before(:each) do
     assign(:story, story)
