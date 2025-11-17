@@ -1,37 +1,70 @@
 <%= simple_form_for(@project) do |f| %>
   <%= render 'shared/errors', resource: @project if @project.errors.any? %>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 p-3 mb-6 items-start">
+
+    <!-- LEFT SIDE (3/4) -->
     <div>
-      <%= f.input :name,
-                  label: "Project Name",
-                  required: true,
-                  input_html: {
-                    autofocus: true,
-                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                  } %>
-      <div class="">
-        <span class="font-medium text-gray-700 mb-3">Sectors</span>
-        <div class="flex flex-wrap items-center gap-4 p-3">
-          <%= f.simple_fields_for :sectorable_items do |sfi| %>
-            <%= render "sectorable_item_fields", f: sfi %>
-          <% end %>
+      <!-- Project Name + Hidden -->
+      <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4 mb-6">
+        <div>
+          <%= f.input :name,
+                      label: "Project Name",
+                      as: :text,
+                      required: true,
+                      input_html: {
+                        autofocus: true,
+                        rows: 1,
+                        class: "w-full rounded-md border-gray-300 shadow-sm
+                        focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      } %>
         </div>
-        <%= link_to_add_association "➕ Add Sector",
-                                    f,
-                                    :sectorable_items,
-                                    render_options: {
-                                      locals: {
-                                        collection: Sector.published.where.not(name: f.object.sector_list)
-                                      }
-                                    },
-                                    class: "btn btn-secondary-outline" %>
+
+        <div class="flex items-center">
+          <%= f.input :inactive,
+                      as: :boolean,
+                      label: "Hidden?",
+                      input_html: {
+                        class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                      } %>
+        </div>
+      </div>
+
+      <!-- Sectors -->
+      <div class="form-group space-y-4">
+        <div class="font-semibold text-gray-700">
+          Sectors served
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+          <div class="flex flex-wrap items-center gap-4 p-3">
+            <%= f.simple_fields_for :sectorable_items do |sfi| %>
+              <%= render "sectorable_item_fields", f: sfi %>
+            <% end %>
+          </div>
+          <%= link_to_add_association "➕ Add Sector",
+                                      f,
+                                      :sectorable_items,
+                                      render_options: {
+                                        locals: {
+                                          collection: Sector.published.where.not(name: f.object.sector_list)
+                                        }
+                                      },
+                                      class: "btn btn-secondary-outline" %>
+        </div>
       </div>
     </div>
-    <div class="text-center">
-      <%= render 'shared/form_image_field', f: f, resource: @project, field_name: :logo, rounded: true %>
+
+    <!-- RIGHT SIDE (1/4) -->
+    <div class="flex justify-center text-center md:justify-start">
+      <%= render 'shared/form_image_field',
+                 f: f,
+                 resource: @project,
+                 field_name: :logo,
+                 rounded: true %>
     </div>
+
   </div>
+
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <div class="flex flex-col">
@@ -51,6 +84,12 @@
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
     </div>
+    <%= f.input :agency_type_other,
+                label: "Agency Type Other",
+                hint: "Please specify if 'Other' selected",
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
     <%= f.association :windows_type,
                       label: "Windows Type",
                       include_blank: true,
@@ -68,20 +107,10 @@
                 input_html: {
                   class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                 } %>
-    <%= f.input :inactive,
-                as: :boolean,
-                label: "Hidden?",
-                input_html: { class: "mr-2 rounded focus:ring-blue-500 text-blue-600" } %>
   </div>
 
   <!-- WINDOWS / STATUS / START / END -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <%= f.input :agency_type_other,
-                label: "Agency Type Other",
-                hint: "Please specify if 'Other' selected",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
     <%= f.input :start_date,
                 label: "Affiliation start date",
                 as: :string,
@@ -99,130 +128,14 @@
                   value: f.object.end_date&.strftime('%Y-%m-%d'),
                   class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
-    <%= f.input :internal_id,
-                label: "Internal Project ID",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-  </div>
-
-  <!-- LOCATION + DISTRICT + LOCALITY -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <%= f.association :location,
-                      include_blank: true,
-                      input_html: {
-                        class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                      } %>
-    <%= f.input :locality,
-                label: "Locality",
-                as: :select,
-                collection: [
-                  "LA City",
-                  "LA County",
-                  "Southern CA",
-                  "Northern CA",
-                  "Central CA",
-                  "Orange County",
-                  "Outside CA",
-                  "Outside USA",
-                ],
-                include_blank: true,
-                selected: f.object.locality,
-                input_html: {
-                  value: f.object.locality,
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
-    <%= f.input :district,
-                label: "District",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
-  </div>
-
-
-  <!-- LA-SPECIFIC FIELDS -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <%= f.input :la_city_council_district,
-                label: "LA City Council District",
-                as: :select,
-                collection: (1..15).to_a,
-                selected: f.object.la_city_council_district,
-                include_blank: true,
-                input_html: {
-                  min: 1, max: 15,
-                  value:  f.object.la_city_council_district,
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
-    <%= f.input :la_supervisorial_district,
-                label: "LA Supervisorial District",
-                as: :select,
-                collection: (1..5).to_a,
-                selected: f.object.la_supervisorial_district,
-                include_blank: true,
-                input_html: {
-                  min: 1, max: 5,
-                  value:  f.object.la_supervisorial_district,
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
-    <%= f.input :la_service_planning_area,
-                label: "LA Service Planning Area",
-                as: :select,
-                collection: (1..8).to_a,
-                selected: f.object.la_service_planning_area,
-                include_blank: true,
-                input_html: {
-                  min: 1, max: 8,
-                  value:  f.object.la_service_planning_area,
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
-  </div>
-
-  <!-- ADDRESS BLOCK -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <%= f.input :street_address,
-                label: "Street Address",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
-    <%= f.input :city,
-                label: "City",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
-    <%= f.input :state,
-                label: "State",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-    <%= f.input :zip_code,
-                label: "ZIP Code",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
-
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <%= f.input :county,
-                label: "County",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
-    <%= f.input :country,
-                label: "Country",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-    <%= f.input :phone,
-                label: "Phone",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
     <%= f.input :website_url,
                 label: "Website URL",
                 as: :string,
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+    <%= f.input :internal_id,
+                label: "Internal Project ID",
                 input_html: {
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
@@ -253,6 +166,28 @@
                   rows: 3,
                   class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
                 } %>
+  </div>
+
+  <div class="form-group space-y-4">
+    <div class="font-semibold text-gray-700">
+      Addresses
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <div class="flex flex-wrap items-center gap-4 p-3">
+        <%= f.simple_fields_for :addresses do |sfi| %>
+          <%= render "address_fields", f: sfi %>
+        <% end %>
+      </div>
+      <%= link_to_add_association "➕ Add Address",
+                                  f,
+                                  :addresses,
+                                  render_options: {
+                                    locals: {
+                                      collection: Sector.published.where.not(name: f.object.sector_list)
+                                    }
+                                  },
+                                  class: "btn btn-secondary-outline" %>
+    </div>
   </div>
 
   <!-- ACTIONS -->
