@@ -1,6 +1,5 @@
 <%= simple_form_for @facilitator, html: { multipart: true, class: "space-y-8" } do |f| %>
   <%= render 'shared/errors', resource: @facilitator if @facilitator.errors.any? %>
-  <%= f.object.errors.full_messages %>
 
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
@@ -62,39 +61,51 @@
 
     <!-- Organization Connections (PROJECT_USERS) -->
     <div class="form-group space-y-4">
-      <h4 class="text-sm font-semibold text-gray-700">Organization affiliations</h4>
-      <%= u.fields_for :project_users do |project_user_form| %>
-        <%= render "project_user_fields",
-                   f: project_user_form,
-                   projects: u.object.projects,
-                   user: u.object %>
-      <% end %>
+      <div class="font-semibold text-gray-700">
+        Organization affiliations
+        <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+        <%= u.fields_for :project_users do |project_user_form| %>
+            <%= render "project_user_fields",
+                       f: project_user_form,
+                       projects: u.object.projects,
+                       user: u.object %>
+        <% end %>
 
-      <div>
-        <%= link_to_add_association "➕ Add Role",
-                                    u,
-                                    :project_users,
-                                    html_options: { locals: { projects: u.object.projects } },
-                                    class: "inline-flex items-center rounded-md bg-blue-600 text-white px-3 py-2 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition" %>
+        <% if current_user.super_user? %>
+          <div class="admin-only bg-blue-100 p-3 mt-6">
+            <%= link_to_add_association "➕ Add Role",
+                                        u,
+                                        :project_users,
+                                        html_options: { locals: { projects: u.object.projects } },
+                                        class: "btn btn-secondary-outline" %>
+          </div>
+        <% end %>
       </div>
     </div>
   <% end %>
 
-  <div>
-    <div class="flex flex-wrap items-center gap-4 p-3">
-      <%= f.simple_fields_for :sectorable_items do |sfi| %>
-        <%= render "sectorable_item_fields", f: sfi %>
-      <% end %>
+  <div class="form-group space-y-4">
+    <div class="font-semibold text-gray-700">
+     Sectors served
     </div>
-    <%= link_to_add_association "➕ Add Sector",
-                                f,
-                                :sectorable_items,
-                                render_options: {
-                                  locals: {
-                                    collection: Sector.published.where.not(name: f.object.sector_list)
-                                  }
-                                },
-                                class: "btn btn-secondary-outline" %>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+        <div class="flex flex-wrap items-center gap-4 p-3">
+          <%= f.simple_fields_for :sectorable_items do |sfi| %>
+            <%= render "sectorable_item_fields", f: sfi %>
+          <% end %>
+        </div>
+        <%= link_to_add_association "➕ Add Sector",
+                                    f,
+                                    :sectorable_items,
+                                    render_options: {
+                                      locals: {
+                                        collection: Sector.published.where.not(name: f.object.sector_list)
+                                      }
+                                    },
+                                    class: "btn btn-secondary-outline" %>
+      </div>
   </div>
 
 

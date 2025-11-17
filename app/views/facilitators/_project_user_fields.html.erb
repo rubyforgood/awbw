@@ -1,5 +1,6 @@
-<div class="nested-fields rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<% if current_user.super_user? %>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start mb-4">
+
     <div>
       <%= f.input :project_id,
                   as: :select,
@@ -7,45 +8,37 @@
                   collection: @projects_array,
                   selected: f.object.project_id,
                   input_html: {
-                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  },
-                  label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+                    class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  } %>
     </div>
 
     <div>
       <%= f.input :position,
-                  as: :select,
-                  label: "Role",
-                  collection: ProjectUser.positions.keys.map { |k| [k.humanize, k] },
-                  selected: f.object.position.presence || "default",
-                  include_blank: true,
+                  as: :text,
                   input_html: {
-                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  },
-                  label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
-
+                    rows: 1,
+                    value: f.object.position,
+                  } %>
     </div>
 
-    <!-- Inactive (boolean) -->
-    <div class="flex items-center space-x-2 pt-6">
-      <%= f.input :inactive,
-                  as: :boolean,
-                  label: "Hidden?",
-                  input_html: {
-                    class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  },
-                  wrapper_html: {
-                    class: "flex items-center space-x-2"
-                  },
-                  label_html: { class: "text-sm font-medium text-gray-700 mb-0" } %>
-    </div>
-
-    <% if current_user.super_user? %>
-      <div class="flex justify-between items-center mt-3 mb-3 admin-only bg-blue-100">
-        <%= link_to_remove_association "✖ Remove",
-                                       f,
-                                       class: "text-sm text-red-600 hover:text-red-800 underline" %>
+    <div class="flex items-center justify-between py-3 px-6 gap-6 col-span-2">
+      <div class="flex items-center pt-6 space-x-2">
+        <%= f.input :inactive,
+                    as: :boolean,
+                    label: "Inactive?",
+                    wrapper_html: { class: "m-0 p-0" },
+                    label_html: { class: "text-sm font-medium text-gray-700 mb-0" },
+                    input_html: { class: "h-4 w-4 text-blue-600 border-gray-300 rounded" } %>
       </div>
-    <% end %>
+
+      <%= link_to_remove_association "✖ Remove",
+                                     f,
+                                     class: "btn btn-danger-outline whitespace-nowrap" %>
+    </div>
   </div>
-</div>
+<% else %>
+  <div class="ps-6 mb-4">
+    <li><%= f.object.project&.name %> (<%= f.object.title || f.object.position %>)</li>
+  </div>
+<% end %>
+
