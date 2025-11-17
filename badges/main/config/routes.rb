@@ -9,12 +9,6 @@ Rails.application.routes.draw do
 
   post 'workshop_logs/validate_new', to: 'workshop_logs#validate_new'
 
-  get 'impersonate_users', to: 'impersonate_users#index'
-  post 'impersonate_users', to: 'impersonate_users#impersonate'
-  post 'impersonate_users_back', to: 'impersonate_users#back'
-  get 'impersonate_users/help', to: 'impersonate_users#help'
-
-
   get 'contact_us', to: 'contact_us#index'
   post 'contact_us', to: 'contact_us#create'
   get 'dashboard/admin', to: 'dashboard#admin'

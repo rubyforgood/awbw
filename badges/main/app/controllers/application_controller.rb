@@ -6,15 +6,6 @@ class ApplicationController < ActionController::Base
 
   private
 
-  # IMPERSONATE USER
-  def current_user
-    if session[:i_user] && super && super.super_user?
-      user = User.find_by(email: session[:i_user]) if session[:i_user]
-    else
-      super
-    end
-  end
-
   def after_sign_in_path_for(resource)
     user_signed_in? ? authenticated_root_path : unauthenticated_root_path
   end
