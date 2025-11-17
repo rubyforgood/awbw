@@ -146,6 +146,6 @@ RSpec.describe User do
     end
   end
 
-  # Add tests for other methods like #active_for_authentication?, #has_liaison_position_for?, etc.
+  # Add tests for other methods like #active_for_authentication? etc.
   # Test callbacks like :set_default_values, :before_destroy
 end
