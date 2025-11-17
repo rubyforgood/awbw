@@ -1,0 +1,19 @@
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/erb-5.1.1/ext/erb/escape
+/opt/hostedtoolcache/Ruby/3.3.8/x64/bin/ruby extconf.rb
+checking for rb_ext_ractor_safe() in ruby.h... yes
+creating Makefile
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/erb-5.1.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251117-2680-h0msu6 sitelibdir\=./.gem.20251117-2680-h0msu6 clean
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/erb-5.1.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251117-2680-h0msu6 sitelibdir\=./.gem.20251117-2680-h0msu6
+compiling escape.c
+linking shared-object erb/escape.so
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/erb-5.1.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251117-2680-h0msu6 sitelibdir\=./.gem.20251117-2680-h0msu6 install
+/usr/bin/install -c -m 0755 escape.so ./.gem.20251117-2680-h0msu6/erb
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/3.3.0/gems/erb-5.1.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251117-2680-h0msu6 sitelibdir\=./.gem.20251117-2680-h0msu6 clean
