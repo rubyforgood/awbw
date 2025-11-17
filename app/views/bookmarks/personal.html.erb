@@ -1,6 +1,8 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
   <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
-    <h1 class="text-2xl font-semibold text-gray-900 mb-4"><%= @viewing_self ? "My" : "#{@user_name}'s" %> Bookmarks</h1>
+    <h1 class="text-2xl font-semibold text-gray-900 mb-4">
+      <%= @viewing_self ? "My" : "#{@user_name}'s" %> Bookmarks (<%= @bookmarks_count %>)
+    </h1>
     <div class="border-b border-gray-300 mb-6"></div>
     <div class="mt-4 pt-4">
 

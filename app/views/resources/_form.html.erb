@@ -10,15 +10,6 @@
                   wrapper: false,
                   label_html: { class: 'block font-medium mb-1' } %>
     </div>
-
-    <div class="flex-1 min-w-[200px]">
-      <%= f.input :kind,
-                  as: :select,
-                  collection: Resource::PUBLISHED_KINDS,
-                  selected: f.object.kind,
-                  input_html: { class: "w-full rounded border-gray-300" } %>
-    </div>
-
     <div class="flex-1 min-w-[200px]">
       <label class="block font-medium mb-1">Flags</label>
       <div class="flex items-center gap-6">
@@ -31,6 +22,34 @@
                       wrapper: false, label_html: { class: "inline" } %>
         </div>
       </div>
+    </div>
+  </div>
+  <div class="title-row flex flex-wrap gap-4 mb-4">
+    <div class="flex-1 min-w-[200px]">
+      <%= f.input :kind,
+                  as: :select,
+                  collection: Resource::PUBLISHED_KINDS,
+                  selected: f.object.kind,
+                  input_html: { class: "w-full rounded border-gray-300" } %>
+    </div>
+    <div class="flex-1 min-w-[200px]">
+      <%= f.input :windows_type_id,
+                  as: :select,
+                  collection: @windows_types,
+                  include_blank: true,
+                  selected: f.object.windows_type_id,
+                  input_html: { value: f.object.windows_type_id,
+                                class: "w-full rounded border-gray-300" } %>
+    </div>
+    <div class="flex-1 min-w-[200px]">
+      <%= f.input :user_id,
+                  as: :select,
+                  label: "Author",
+                  collection: @authors,
+                  include_blank: true,
+                  selected: f.object.user_id,
+                  input_html: { value: f.object.user_id,
+                                class: "w-full rounded border-gray-300" } %>
     </div>
   </div>
 

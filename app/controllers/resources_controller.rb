@@ -21,10 +21,12 @@ class ResourcesController < ApplicationController
 
   def new
     @resource = Resource.new
+    set_form_variables
   end
 
   def edit
     @resource = Resource.find(resource_id_param).decorate
+    set_form_variables
   end
 
   def show
@@ -38,6 +40,7 @@ class ResourcesController < ApplicationController
     if @resource.save
       redirect_to resources_path
     else
+      set_form_variables
       flash[:alert] = "Unable to save #{@resource.title.titleize}"
       render :new
     end
@@ -50,6 +53,7 @@ class ResourcesController < ApplicationController
       flash[:notice] = 'Resource updated.'
       redirect_to resources_path
     else
+      set_form_variables
       flash[:alert] = 'Failed to update Resource.'
       render :edit
     end
@@ -91,6 +95,13 @@ class ResourcesController < ApplicationController
   end
 
   private
+
+  def set_form_variables
+    @windows_types = WindowsType.order(:name).pluck(:name, :id)
+    @authors = User.active.or(User.where(id: @resource.user_id))
+                   .order(:first_name, :last_name)
+                   .map{|u| [u.full_name, u.id] }
+  end
 
   def process_search
     @params = search_params
