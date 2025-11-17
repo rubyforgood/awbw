@@ -49,8 +49,15 @@ class Project < ApplicationRecord
     SQL
       wildcard: wildcard, exact: exact)
   end
-  scope :windows_type_name, ->(windows_type_name) { return all if windows_type_name.blank?
-    joins(:windows_type).where("windows_types.name LIKE ?", "%#{ windows_type_name }%") }
+  scope :windows_type_name, ->(windows_type_name) do
+    return all if windows_type_name.blank?
+    if windows_type_name.downcase.include?("adult")
+      windows_type_name = "ADULT WORKSHOP"
+    elsif windows_type_name.downcase.include?("child")
+      windows_type_name = "CHILDREN WORKSHOP"
+    end
+    joins(:windows_type).where("windows_types.name LIKE ?", "%#{ windows_type_name }%")
+  end
 
   def self.search_by_params(params)
     projects = Project.all

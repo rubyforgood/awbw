@@ -5,7 +5,7 @@ class BookmarksController < ApplicationController
     bookmarks = Bookmark.search(params)
     @bookmarks = bookmarks.paginate(page: params[:page], per_page: 25)
     @bookmarks_count = bookmarks.size
-    @windows_types_array = ["", "Adult", "Child", "Family"]
+    @windows_types_array = WindowsType::TYPES
     load_sortable_fields
     respond_to do |format|
       format.html
@@ -18,8 +18,10 @@ class BookmarksController < ApplicationController
     user ||= current_user
     @user_name = user.full_name if user
     @viewing_self = user == current_user
-    @bookmarks = Bookmark.search(params, user: user).paginate(page: params[:page], per_page: 25)
-    @windows_types_array = ["", "Adult", "Child", "Family"]
+    bookmarks = Bookmark.search(params, user: user)
+    @bookmarks_count = bookmarks.size
+    @bookmarks = bookmarks.paginate(page: params[:page], per_page: 25)
+    @windows_types_array = WindowsType::TYPES
 
     load_sortable_fields
     respond_to do |format|
@@ -88,7 +90,7 @@ class BookmarksController < ApplicationController
       end
     end.sort_by { |_, count| -count }
 
-    @windows_types_array = ["", "Adult", "Child", "Family"]
+    @windows_types_array = WindowsType::TYPES
 
     @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
   end
