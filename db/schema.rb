@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_16_190510) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_17_010000) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -40,20 +40,24 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_16_190510) do
   end
 
   create_table "addresses", charset: "utf8mb3", force: :cascade do |t|
+    t.string "address_type"
     t.bigint "addressable_id"
     t.string "addressable_type"
     t.string "city", null: false
     t.string "country"
     t.string "county"
     t.datetime "created_at", null: false
+    t.string "district"
+    t.boolean "inactive", default: false, null: false
     t.integer "la_city_council_district"
     t.integer "la_service_planning_area"
     t.integer "la_supervisorial_district"
     t.string "locality"
+    t.string "phone"
     t.string "state", null: false
-    t.string "street", null: false
+    t.string "street_address", null: false
     t.datetime "updated_at", null: false
-    t.string "zip", null: false
+    t.string "zip_code", null: false
     t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
   end
 
@@ -424,35 +428,23 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_16_190510) do
   create_table "projects", id: :integer, charset: "utf8mb3", force: :cascade do |t|
     t.string "agency_type"
     t.string "agency_type_other"
-    t.string "city"
-    t.string "country"
-    t.string "county"
     t.datetime "created_at", precision: nil, null: false
     t.text "description", size: :medium
-    t.string "district"
     t.date "end_date"
     t.string "filemaker_code"
     t.boolean "inactive", default: false
     t.string "internal_id"
-    t.integer "la_city_council_district"
-    t.integer "la_service_planning_area"
-    t.integer "la_supervisorial_district"
     t.boolean "legacy", default: false
     t.integer "legacy_id"
-    t.string "locality"
     t.integer "location_id"
     t.string "mission_vision_values"
     t.string "name"
     t.text "notes", size: :medium
-    t.string "phone"
     t.integer "project_status_id"
     t.date "start_date"
-    t.string "state"
-    t.string "street_address"
     t.datetime "updated_at", precision: nil, null: false
     t.string "website_url"
     t.integer "windows_type_id"
-    t.string "zip_code"
     t.index ["location_id"], name: "index_projects_on_location_id"
     t.index ["project_status_id"], name: "index_projects_on_project_status_id"
     t.index ["windows_type_id"], name: "index_projects_on_windows_type_id"

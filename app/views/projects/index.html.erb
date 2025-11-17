@@ -7,7 +7,7 @@
           Organizations (<%= number_with_delimiter(@projects_count) %>)
         </h1>
         <% if current_user.super_user? %>
-          <%= link_to "New Project",
+          <%= link_to "New Organization",
                       new_project_path,
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
         <% end %>
@@ -17,23 +17,42 @@
       <div class="mb-4">
         <%= form_with url: projects_path, method: :get, local: true, class: "flex flex-wrap items-end gap-3" do %>
           <div>
-            <%= label_tag :query, "Search", class: "text-sm font-medium text-gray-700 mb-1 block" %>
+            <%= label_tag :query, "Name", class: "text-sm font-medium text-gray-700 mb-1 block" %>
             <%= text_field_tag :query, params[:query],
                                class: "w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                                        focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                               placeholder: "Name or Location",
+                               onkeypress: "if(event.key === 'Enter'){ this.form.requestSubmit(); }" %>
+          </div>
+          <div>
+            <%= label_tag :windows_type_name, "Windows type", class: "text-sm font-medium text-gray-700 mb-1 block" %>
+            <%= select_tag :windows_type_name,
+                           options_for_select(WindowsType::TYPES.map { |wt| [wt, wt] },
+                                              params[:windows_type_name]),
+                           include_blank: "All types",
+                           class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                           onchange: "this.form.requestSubmit()" %>
+          </div>
+          <div>
+            <%= label_tag :address, "Address", class: "text-sm font-medium text-gray-700 mb-1 block" %>
+            <%= text_field_tag :address, params[:address],
+                               class: "w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                                onkeypress: "if(event.key === 'Enter'){ this.form.requestSubmit(); }" %>
           </div>
 
-          <div>
-            <%= label_tag :status, "Status", class: "text-sm font-medium text-gray-700 mb-1 block" %>
-            <%= select_tag :project_status,
-                           options_for_select(@project_statuses, params[:project_status]),
-                           include_blank: "All",
-                           class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                   focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           onchange: "this.form.requestSubmit()" %>
-          </div>
+          <% if current_user.super_user? %>
+            <div class="admin-only bg-blue-100">
+              <%= label_tag :status, "Status", class: "text-sm font-medium text-gray-700 mb-1 block" %>
+              <%= select_tag :project_status,
+                             options_for_select(@project_statuses.map { |ps| [ps.name, ps.id] },
+                                                params[:project_status]),
+                             include_blank: "All statuses",
+                             class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                             onchange: "this.form.requestSubmit()" %>
+            </div>
+          <% end %>
 
           <%= link_to "Clear filters", projects_path,
                       class: "btn btn-utility-outline w-full sm:w-auto" %>
@@ -47,7 +66,7 @@
           <tr>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Windows type</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Location</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Locality</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliation dates</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Active?</th>
@@ -58,24 +77,22 @@
           <tbody class="divide-y divide-gray-100">
           <% @projects.each do |project| %>
             <tr class="hover:bg-gray-50 transition">
-              <td class="px-4 py-2 font-medium text-blue-700">
+              <td class="px-4 py-2 font-semibold">
                 <%= link_to project.name, project_path(project), class: "hover:underline" %>
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700">
-                <%= project.windows_type&.short_name&.titleize || "—" %>
+                <%= project.windows_type&.short_name&.titleize %>
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700">
-                <%= project.location&.name || project.locality || "—" %>
+                <%= project.addresses.active.map(&:locality).join("<br>") %>
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
                 <% if project.start_date || project.end_date %>
                   <%= project.start_date&.strftime("%b %Y") %> –
                   <%= project.end_date&.strftime("%b %Y") || "Present" %>
-                <% else %>
-                  —
                 <% end %>
               </td>
 
@@ -101,8 +118,10 @@
               </td>
 
               <td class="px-4 py-2 text-center whitespace-nowrap">
-                <%= link_to "Edit", edit_project_path(project),
-                            class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+                <% if current_user.super_user? %>
+                  <%= link_to "Edit", edit_project_path(project),
+                              class: "admin-only bg-blue-100 btn btn-secondary-outline text-xs px-2 py-1" %>
+                <% end %>
                 <%= link_to "Profile", project_path(project),
                             class: "btn btn-secondary-outline text-xs px-2 py-1" %>
               </td>
