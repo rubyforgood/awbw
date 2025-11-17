@@ -46,11 +46,11 @@ class StoryIdea < ApplicationRecord
     project.name
   end
 
-  def organization_location
-    project.location&.name || project.locality
+  def organization_locality
+    project.addresses.active.first&.locality
   end
 
   def organization_description
-    "#{organization_name}, #{organization_location}"
+    "#{organization_name}, #{organization_locality}"
   end
 end
