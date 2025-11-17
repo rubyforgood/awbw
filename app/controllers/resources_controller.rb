@@ -1,15 +1,14 @@
 class ResourcesController < ApplicationController
 
   def index
-    unpaginated = Resource.where(kind: ['Template','Handout', 'Scholarship',
-                                        'Toolkit', 'Form', 'Resource', 'Story']) #TODO - #FIXME brittle
+    unpaginated = Resource.where(kind: Resource::PUBLISHED_KINDS) #TODO - #FIXME brittle
                           .includes(:images, :attachments)
                           .search_by_params(params)
                           .by_created
     @resources = unpaginated.paginate(page: params[:page], per_page: 24)
 
-    @resources_count = unpaginated.count
-    @sortable_fields = Resource::KINDS
+    @resources_count = unpaginated.size
+    @sortable_fields = Resource::PUBLISHED_KINDS
 
     respond_to do |format|
       format.html
@@ -22,10 +21,12 @@ class ResourcesController < ApplicationController
 
   def new
     @resource = Resource.new
+    set_form_variables
   end
 
   def edit
     @resource = Resource.find(resource_id_param).decorate
+    set_form_variables
   end
 
   def show
@@ -39,6 +40,7 @@ class ResourcesController < ApplicationController
     if @resource.save
       redirect_to resources_path
     else
+      set_form_variables
       flash[:alert] = "Unable to save #{@resource.title.titleize}"
       render :new
     end
@@ -51,6 +53,7 @@ class ResourcesController < ApplicationController
       flash[:notice] = 'Resource updated.'
       redirect_to resources_path
     else
+      set_form_variables
       flash[:alert] = 'Failed to update Resource.'
       render :edit
     end
@@ -65,7 +68,7 @@ class ResourcesController < ApplicationController
 
   def search
     process_search
-    @sortable_fields = Resource::KINDS.dup.delete("Story")
+    @sortable_fields = Resource::PUBLISHED_KINDS
     render :index
   end
 
@@ -92,6 +95,13 @@ class ResourcesController < ApplicationController
   end
 
   private
+
+  def set_form_variables
+    @windows_types = WindowsType.order(:name).pluck(:name, :id)
+    @authors = User.active.or(User.where(id: @resource.user_id))
+                   .order(:first_name, :last_name)
+                   .map{|u| [u.full_name, u.id] }
+  end
 
   def process_search
     @params = search_params

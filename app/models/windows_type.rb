@@ -5,6 +5,8 @@ class WindowsType < ApplicationRecord
   has_many :reports
   has_many :form_builders
 
+  TYPES = ["Adult", "Children", "Combined"]
+
   def custom_label_method
     self.name.gsub("LOG", "").gsub("WORKSHOP", "WINDOWS").titleize.strip.gsub("Children", "Children's")
   end
@@ -27,20 +29,19 @@ class WindowsType < ApplicationRecord
 
   def short_name
     if name.include?("COMBINED")
-      "Family"
+      "Combined"
     else
       name.gsub("LOG", "").gsub("WORKSHOP", "").strip
     end
   end
 
   def label
-    label = ""
-    if name.downcase.include?("combined")
-      label = "Family Windows"
-    else
-      label = name.gsub("LOG", "").gsub("WORKSHOP", "WINDOWS").titleize.strip
-    end
-    label.gsub("Children", "Children's")
+    label = short_name
+    label = label.downcase.gsub("windows", "")
+    label = label.downcase.gsub("workshop", "")
+    label = label.downcase.gsub("log", "")
+    label = label.gsub("Children", "Children's")
+    label.strip.titleize
   end
 
   def workshop_log_label

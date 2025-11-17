@@ -12,9 +12,6 @@ RSpec.describe WorkshopAgeRange do
     # Need create for uniqueness test
     # Must create associated records first
     subject do
-      create(:permission, :adult)
-      create(:permission, :children)
-      create(:permission, :combined)
       workshop = create(:workshop) # Assumes functional workshop factory
       age_range = create(:age_range, windows_type: workshop.windows_type) # Assumes functional age_range factory
       create(:workshop_age_range, workshop: workshop, age_range: age_range)

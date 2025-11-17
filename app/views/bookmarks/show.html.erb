@@ -1,6 +1,5 @@
 <div class="curriculum-detail">
   <div class="bc"><%= @bookmark.breadcrumbs %></div>
-  <div class="js-annotatable" data-bookmark="<%= @bookmark.to_json %>" data-annotations="<%= @bookmark.bookmark_annotations.map(&:annotation).to_json %>">
     <%= @bookmark.content %>
   </div>
 </div> 

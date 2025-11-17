@@ -1,10 +1,14 @@
 <% windows_types_applied = params[:windows_types].present? ? WindowsType.where(id: params[:windows_types].to_unsafe_h.values.reject(&:blank?)).
   pluck(:name).map{|wt| wt.gsub("log","").downcase.titleize} : [] %>
+
 <% categories_applied = params[:categories].present? ? Category.where(id: params[:categories].to_unsafe_h.values.reject(&:blank?)).
   pluck(:name) : [] %>
+
 <% sections_applied = params[:sectors].present? ? Sector.where(id: params[:sectors].to_unsafe_h.values.reject(&:blank?)).
   pluck(:name) : [] %>
+
 <% active_applied = "Published" if params[:active] == "true" %>
+
 <% inactive_applied = "Hidden" if params[:inactive] == "true" %>
 
 <% filters_applied = [
@@ -18,15 +22,16 @@
 
 ].reject(&:blank?).sort %>
 
-<div style="display: flex; justify-content: space-between; align-items: center;">
-  <div class="filters-applied" style="display: flex; gap: 0.5rem; align-items: center;">
-    <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters applied</h3>
+<div id="filters_applied" class="flex justify-between items-center">
+  <div class="flex gap-1 items-center">
+    <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">
+      Filters applied
+    </h3>
     <% if filters_applied.any? %>
       <%= filters_applied.to_sentence %>
       <%= link_to 'Clear filters', workshops_path, class: "btn btn-primary" %>
     <% else %>
       None
     <% end %>
-
   </div>
 </div>

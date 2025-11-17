@@ -21,7 +21,6 @@ namespace :db do
       ProjectStatus.create_defaults
       WindowsType.create_defaults
       Sector.create_defaults
-      Permission.create_defaults
     end
 
     desc 'Import Legacy Users'
@@ -109,12 +108,6 @@ namespace :db do
       CSV.foreach(full_filepath('workshop_favorites.csv'), headers: true) do |row|
         create_workshop_favorite(row)
       end
-    end
-
-    desc 'import user permissions'
-    task :import_user_permissions => :environment do
-      xml = open_as_xml(full_filepath('user_permissions.xml'))
-      process_xml_rows(xml, :create_user_permission)
     end
 
     desc 'import legacy workshop images'
@@ -377,17 +370,4 @@ def windows_type_id(legacy_id)
   WindowsType.find_by(
     legacy_id: legacy_id
   ).id
-end
-
-def create_user_permission(xml, _name = nil)
-  Permission.create_defaults unless Permission.any?
-
-  user = User.find_by_legacy_id(search_for_value(xml, 'userid'))
-  permission = Permission.find_by_legacy_id(search_for_value(xml, 'security_categoryid'))
-
-  return unless user && permission
-  UserPermission.find_or_create_by(
-    user: user,
-    permission: permission
-  )
 end

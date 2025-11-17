@@ -19,7 +19,6 @@ class Workshop < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
-  has_many :organization_workshops, dependent: :restrict_with_exception
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :workshop_age_ranges
   has_many :workshop_logs, dependent: :destroy, as: :owner
@@ -39,7 +38,6 @@ class Workshop < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :metadata, through: :categories
   has_many :quotes, through: :quotable_item_quotes
-  has_many :organizations, through: :organization_workshops
   has_many :resources, through: :workshop_resources
   has_many :sectors, through: :sectorable_items
 
@@ -77,7 +75,8 @@ class Workshop < ApplicationRecord
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
-  scope :published, -> (published=nil) { published.to_s.present? ? where(inactive: !published) : where(inactive: false) }
+  scope :published, -> (published=nil) { published.to_s.present? ?
+                                           where(inactive: !published) : where(inactive: false) }
   scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
 
@@ -160,7 +159,7 @@ class Workshop < ApplicationRecord
   end
 
   def log_count
-    workshop_logs.count
+    workshop_logs.size
   end
 
   def main_image_url
@@ -186,7 +185,7 @@ class Workshop < ApplicationRecord
   end
 
   def published_sectors
-    sectorable_items.where(inactive: false).map { |item| item.sector }
+    sectorable_items.published.map { |item| item.sector }
   end
 
   def time_frame_total

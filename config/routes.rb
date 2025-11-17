@@ -9,12 +9,6 @@ Rails.application.routes.draw do
 
   post 'workshop_logs/validate_new', to: 'workshop_logs#validate_new'
 
-  get 'impersonate_users', to: 'impersonate_users#index'
-  post 'impersonate_users', to: 'impersonate_users#impersonate'
-  post 'impersonate_users_back', to: 'impersonate_users#back'
-  get 'impersonate_users/help', to: 'impersonate_users#help'
-
-
   get 'contact_us', to: 'contact_us#index'
   post 'contact_us', to: 'contact_us#create'
   get 'dashboard/admin', to: 'dashboard#admin'
@@ -29,15 +23,16 @@ Rails.application.routes.draw do
   resources :banners
   resources :bookmarks do
     post :search
-    resources :annotations
     collection do
       get :tally
       get :personal
     end
   end
   resources :community_news
-  resources :events
   resources :event_registrations
+  resources :events do
+    resource :registrations, only: %i[create destroy], module: :events, as: :registrant_registration
+  end
   resources :facilitators
   resources :faqs
   resources :organizations
@@ -84,9 +79,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :authentications, only: [:create]
       resources :quotes
-      resources :bookmarks do
-        resources :annotations
-      end
+      resources :bookmarks
     end
   end
 

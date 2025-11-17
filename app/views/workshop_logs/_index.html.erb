@@ -10,7 +10,8 @@
           </h1>
           <div class="flex gap-2">
             <%= link_to "New #{WorkshopLog.model_name.human.downcase}",
-                        new_workshop_log_path, class: "btn btn-primary-outline" %>
+                        new_workshop_log_path,
+                        class: "btn btn-primary" %>
           </div>
         </div>
 
@@ -167,11 +168,7 @@
         <!-- Pagination -->
         <div class="mt-6 flex justify-center">
           <div class="pagination">
-            <%= will_paginate @workshop_logs,
-                              previous_label: "<<",
-                              next_label: ">>",
-                              inner_window: 2,
-                              class: "will-paginate-wrapper flex space-x-2 list-none p-0" %>
+            <%= tailwind_paginate @workshop_logs %>
           </div>
         </div>
 

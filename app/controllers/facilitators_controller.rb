@@ -15,7 +15,7 @@ class FacilitatorsController < ApplicationController
                      .search_by_params(params.to_unsafe_h)
                      .joins(:user)
                      .order(:first_name, :last_name)
-    @facilitators_count = facilitators.count
+    @facilitators_count = facilitators.size
     @facilitators = facilitators.paginate(page: params[:page], per_page: per_page)
   end
 
@@ -105,7 +105,7 @@ class FacilitatorsController < ApplicationController
         :profile_show_phone,
         :profile_show_member_since,
         :profile_show_sectors,
-        :profile_show_organizations,
+        :profile_show_affiliations,
         :profile_show_social_media,
         :profile_show_events_registered,
         :profile_show_stories,

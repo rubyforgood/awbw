@@ -1,10 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe "community_news/index", type: :view do
-  let!(:adult_permission) { create(:permission, :adult) }
-  let!(:children_permission) { create(:permission, :children) }
-  let!(:combined_permission) { create(:permission, :combined) }
-
   let(:admin) { create(:user, :admin) }
 
   let(:community_news1) { CommunityNews.create!(

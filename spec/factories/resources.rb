@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :resource do
     association :user
     title { Faker::Lorem.sentence }
-    kind { [Resource::KINDS.sample] }
+    kind { [Resource::PUBLISHED_KINDS.sample] }
 
     # Use after(:create) to assign sectors
     after(:create) do |resource|

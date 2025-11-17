@@ -2,12 +2,6 @@ require "rails_helper"
 
 RSpec.describe Workshop do
   # pending "add some examples to (or delete) #{__FILE__}"
-  before do
-    create(:permission, :adult)
-    create(:permission, :children)
-    create(:permission, :combined)
-  end
-
   describe "associations" do
     # Need create for association tests to work correctly with callbacks/scopes
     subject { create(:workshop) } # Assumes functional factory
@@ -28,8 +22,6 @@ RSpec.describe Workshop do
     it { should have_many(:quotes).through(:quotable_item_quotes) }
     it { should have_many(:workshop_resources).dependent(:destroy) }
     it { should have_many(:resources).through(:workshop_resources) }
-    it { should have_many(:organization_workshops).dependent(:restrict_with_exception) }
-    it { should have_many(:organizations).through(:organization_workshops) }
     it { should have_many(:attachments).dependent(:destroy) } # As owner
     it { should have_many(:workshop_age_ranges) }
 

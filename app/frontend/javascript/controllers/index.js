@@ -17,3 +17,9 @@ application.register("timeframe", TimeframeController)
 
 import DismissController from "./dismiss_controller";
 application.register("dismiss", DismissController);
+
+import CollectionController from "./collection_controller"
+application.register("collection", CollectionController)
+
+import ShareUrlController from "./share_url_controller"
+application.register("share-url", ShareUrlController)

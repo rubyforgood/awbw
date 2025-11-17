@@ -14,23 +14,23 @@ class ProjectsController < ApplicationController
     workshop_logs_controller = WorkshopLogsController.new
     workshop_logs_controller.request = request
     workshop_logs_controller.response = response
-
-    # Inject context so the WorkshopLogsController#index scopes properly
-    params[:project_id] = @project.id
+    params[:project_id] = @project.id  # Inject context so the WorkshopLogsController#index scopes properly
     workshop_logs_controller.params = params
-
     workshop_logs_controller.index
-    @month_year_options = WorkshopLog.where.not(date: nil)
-                                     .group("DATE_FORMAT(COALESCE(date, created_at), '%Y-%m')")
-                                     .select("DATE_FORMAT(COALESCE(date, created_at), '%Y-%m') AS ym, MAX(COALESCE(date, created_at)) AS max_dt")
+
+    workshop_logs = WorkshopLog.where(project_id: @project.id)
+    @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
+                                     .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
+           MAX(COALESCE(date, created_at)) AS max_dt")
                                      .order("max_dt DESC")
                                      .map { |record| [Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym] }
-    @year_options = WorkshopLog.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at))"))
-                               .sort
-                               .reverse
+
+    @year_options = workshop_logs.pluck(
+      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
+    ).sort.reverse
     @projects = Project.where(id: @project.id)
     @per_page = params[:per_page] || 10
-    @workshop_logs_unpaginated = @project.workshop_logs
+    @workshop_logs_unpaginated = workshop_logs
     @workshop_logs_count = @workshop_logs_unpaginated.size
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
     @facilitators = User.active.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
@@ -91,25 +91,28 @@ class ProjectsController < ApplicationController
   # Strong parameters
   def project_params
     params.require(:project).permit(
-      :name, :description, :start_date, :end_date,
-      :district, :locality, :inactive, :notes,
+      :name, :description, :start_date, :end_date, :mission_vision_values, :internal_id,
+      :inactive, :notes, :agency_type,  :agency_type_other, :website_url,
       :project_status_id, :location_id, :windows_type_id,
-      :agency_type_other,
 
-      :street_address,
-      :city,
-      :state,
-      :zip_code,
-      :county,
-      :country,
-      :website_url,
-      :agency_type,
-      :phone,
-      :mission_vision_values,
-      :internal_id,
-      :la_city_council_district,
-      :la_supervisorial_district,
-      :la_service_planning_area,
+      addresses_attributes: [
+        :id,
+        :address_type,
+        :inactive,
+        :phone,
+        :street_address,
+        :city,
+        :state,
+        :zip_code,
+        :county,
+        :country,
+        :district,
+        :locality,
+        :la_city_council_district,
+        :la_supervisorial_district,
+        :la_service_planning_area,
+        :_destroy,
+      ]
     )
   end
 end

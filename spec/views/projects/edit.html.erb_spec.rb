@@ -1,10 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "projects/edit", type: :view do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:user) { create(:user) }
+    let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
   let(:project_status) { create(:project_status) }
@@ -17,8 +14,6 @@ RSpec.describe "projects/edit", type: :view do
       location: nil,
       name: "MyString",
       description: "MyString",
-      district: "MyString",
-      locality: "MyString",
       inactive: false,
       notes: "MyText"
     )
@@ -35,17 +30,11 @@ RSpec.describe "projects/edit", type: :view do
 
       assert_select "select[name=?]", "project[windows_type_id]"
 
-      assert_select "input[name=?]", "project[name]"
+      assert_select "textarea[name=?]", "project[name]"
 
       assert_select "textarea[name=?]", "project[description]"
 
       assert_select "select[name=?]", "project[project_status_id]"
-
-      assert_select "select[name=?]", "project[location_id]"
-
-      assert_select "input[name=?]", "project[district]"
-
-      assert_select "select[name=?]", "project[locality]"
 
       assert_select "input[name=?]", "project[inactive]"
 

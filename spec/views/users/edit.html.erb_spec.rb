@@ -1,16 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe "users/edit", type: :view do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
-  let(:user) { create(:user) }
+    let(:user) { create(:user) }
   let(:admin_user) { create(:user, :admin) } # or super_user trait
 
   before do
     assign(:user, user)
-    # Stub current_user for Devise
-    allow(view).to receive(:current_user).and_return(admin_user)
+    allow(view).to receive(:current_user).and_return(admin_user) # Stub current_user for Devise
   end
 
   it "renders the edit user form with all fields" do

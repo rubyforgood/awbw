@@ -5,7 +5,6 @@ RSpec.describe Bookmark, type: :model do
   describe 'associations' do
     it { should belong_to(:user) }
     it { should belong_to(:bookmarkable) } # Polymorphic
-    it { should have_many(:bookmark_annotations).dependent(:destroy) }
   end
 
   describe 'validations' do
@@ -18,9 +17,6 @@ RSpec.describe Bookmark, type: :model do
   end
 
   describe '.filter_by_params' do
-    let!(:combined_perm) { create(:permission, :combined) }
-    let!(:adult_perm)    { create(:permission, :adult) }
-    let!(:children_perm) { create(:permission, :children) }
     let(:user) { create(:user) }
     let!(:windows_type1) { create(:windows_type, id: 1, name: "Type 1") }
     let!(:windows_type3) { create(:windows_type, id: 3, name: "Type 3") }
@@ -63,9 +59,6 @@ RSpec.describe Bookmark, type: :model do
   end
 
   describe '.search' do
-    let!(:combined_perm) { Permission.create!(security_cat: "Combined Adult and Children's Windows") }
-    let!(:adult_perm)    { Permission.create!(security_cat: "Adult Windows") }
-    let!(:children_perm) { Permission.create!(security_cat: "Children's Windows") }
     let(:user) { create(:user) }
     let!(:workshop1) { create(:workshop, title: "Alpha", led_count: 15) }
     let!(:workshop2) { create(:workshop, title: "Bravo", led_count: 10) }

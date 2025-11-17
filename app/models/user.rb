@@ -25,8 +25,6 @@ class User < ApplicationRecord
   has_many :project_users, dependent: :destroy
   has_many :projects, through: :project_users
   has_many :windows_types, through: :projects
-  has_many :user_permissions, dependent: :destroy
-  has_many :permissions, through: :user_permissions
   has_many :resources
   has_many :user_forms, dependent: :destroy
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
@@ -109,10 +107,6 @@ class User < ApplicationRecord
     recent.sort_by { |item| item.try(:updated_at) || item.created_at }.reverse.first(activity_limit * 8)
   end
 
-  def liaison_in_projects?(projects)
-    (liaison_project_ids & projects.map(&:id)).any?
-  end
-
   def project_monthly_workshop_logs(date, *windows_type)
     where = windows_type.map { |wt| "windows_type_id = ?" }
 
@@ -137,17 +131,6 @@ class User < ApplicationRecord
     end
   end
 
-  def permissions_list
-    security_list = permissions.pluck(:security_cat)
-    result = []
-
-    result << "ADULT WORKSHOP LOG" if security_list.include? "Adult Windows"
-    result << "CHILDREN WORKSHOP LOG" if security_list.include? "Children's Windows"
-    result << "ADULT & CHILDREN COMBINED (FAMILY) LOG" if security_list.include? "Combined Adult and Children's Windows"
-
-    result
-  end
-
   def name
     return email if !first_name || first_name.empty?
     "#{first_name} #{last_name}"
@@ -168,21 +151,9 @@ class User < ApplicationRecord
 
   private
 
-  def liaison_project_ids
-    project_users.liaisons.pluck(:project_id)
-  end
-
   def set_default_values
     self.inactive = false if inactive.nil?
     self.confirmed = true if confirmed.nil?
-
-    combined_perm = Permission.find_by(security_cat: "Combined Adult and Children's Windows")
-    adult_perm = Permission.find_by(security_cat: "Adult Windows")
-    children_perm = Permission.find_by(security_cat: "Children's Windows")
-
-    permissions << combined_perm
-    permissions << adult_perm
-    permissions << children_perm
   end
 
   def reassign_reports_and_logs_to_orphaned_user

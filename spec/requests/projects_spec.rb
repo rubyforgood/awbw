@@ -1,14 +1,10 @@
 require "rails_helper"
 
 RSpec.describe "/projects", type: :request do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
 
   let(:user) { create(:user) }
   let(:admin) { create(:user, super_user: true) }
 
-  let!(:windows_type) { create(:windows_type) }
   let!(:location) { create(:location) }
   let!(:project_status) { create(:project_status, name: "Active") }
 
@@ -19,12 +15,8 @@ RSpec.describe "/projects", type: :request do
       start_date: Date.today - 6.months,
       end_date: Date.today + 6.months,
       project_status_id: project_status.id,
-      windows_type_id: windows_type.id,
-      location_id: location.id,
-      district: "Los Angeles County",
-      locality: "Venice, CA",
       inactive: false,
-      notes: "Runs bi-weekly at community centers."
+      notes: "Runs bi-weekly at community centers.",
     }
   end
 
@@ -34,7 +26,6 @@ RSpec.describe "/projects", type: :request do
       description: nil,
       project_status_id: nil,
       windows_type_id: nil,
-      location_id: nil
     }
   end
 

@@ -1,13 +1,10 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "projects/show", type: :view do
-  let!(:combined_perm) { create(:permission, :combined) }
-  let!(:adult_perm)    { create(:permission, :adult) }
-  let!(:children_perm) { create(:permission, :children) }
   let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
-  let(:project) { create(:project)}
+  let!(:project) { create(:project, name: "Project 1") }
 
   before do
     assign(:project, project)
@@ -16,7 +13,6 @@ RSpec.describe "projects/show", type: :view do
   end
 
   it "renders attributes" do
-    render
     expect(rendered).to match(project.name)
   end
 end
