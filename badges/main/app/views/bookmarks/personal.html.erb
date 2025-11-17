@@ -32,7 +32,7 @@
           <!-- Pagination -->
           <div class="mt-6 flex flex-col items-center space-y-4">
             <div id="infinite-scrolling" class="hidden">
-              <%= will_paginate @bookmarks %>
+              <%= tailwind_paginate @bookmarks %>
             </div>
 
             <% if @bookmarks.next_page %>

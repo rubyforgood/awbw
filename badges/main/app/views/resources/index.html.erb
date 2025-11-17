@@ -91,11 +91,7 @@
 
   <!-- Pagination -->
   <div class="pagination flex justify-center mt-6">
-    <%= will_paginate @resources,
-                      previous_label: '<<',
-                      next_label: '>>',
-                      inner_window: 2,
-                      class: 'will-paginate-wrapper flex space-x-2 list-none p-0' %>
+    <%= tailwind_paginate @resources %>
   </div>
 </div>
 
