@@ -107,10 +107,6 @@ class User < ApplicationRecord
     recent.sort_by { |item| item.try(:updated_at) || item.created_at }.reverse.first(activity_limit * 8)
   end
 
-  def liaison_in_projects?(projects)
-    (liaison_project_ids & projects.map(&:id)).any?
-  end
-
   def project_monthly_workshop_logs(date, *windows_type)
     where = windows_type.map { |wt| "windows_type_id = ?" }
 
@@ -154,10 +150,6 @@ class User < ApplicationRecord
   end
 
   private
-
-  def liaison_project_ids
-    project_users.liaisons.pluck(:project_id)
-  end
 
   def set_default_values
     self.inactive = false if inactive.nil?

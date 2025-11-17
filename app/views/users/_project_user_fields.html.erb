@@ -13,11 +13,11 @@
     </div>
 
     <div>
-      <%= f.input :position,
+      <%= f.input :title,
                   as: :text,
                   input_html: {
                     rows: 1,
-                    value: f.object.position,
+                    value: f.object.title || f.object.position,
                   } %>
     </div>
 
