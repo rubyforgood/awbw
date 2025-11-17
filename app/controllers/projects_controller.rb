@@ -91,25 +91,28 @@ class ProjectsController < ApplicationController
   # Strong parameters
   def project_params
     params.require(:project).permit(
-      :name, :description, :start_date, :end_date,
-      :district, :locality, :inactive, :notes,
+      :name, :description, :start_date, :end_date, :mission_vision_values, :internal_id,
+      :inactive, :notes, :agency_type,  :agency_type_other, :website_url,
       :project_status_id, :location_id, :windows_type_id,
-      :agency_type_other,
 
-      :street_address,
-      :city,
-      :state,
-      :zip_code,
-      :county,
-      :country,
-      :website_url,
-      :agency_type,
-      :phone,
-      :mission_vision_values,
-      :internal_id,
-      :la_city_council_district,
-      :la_supervisorial_district,
-      :la_service_planning_area,
+      addresses_attributes: [
+        :id,
+        :address_type,
+        :inactive,
+        :phone,
+        :street_address,
+        :city,
+        :state,
+        :zip_code,
+        :county,
+        :country,
+        :district,
+        :locality,
+        :la_city_council_district,
+        :la_supervisorial_district,
+        :la_service_planning_area,
+        :_destroy,
+      ]
     )
   end
 end

@@ -17,9 +17,6 @@ RSpec.describe "/projects", type: :request do
       end_date: Date.today + 6.months,
       project_status_id: project_status.id,
       windows_type_id: windows_type.id,
-      location_id: location.id,
-      district: "Los Angeles County",
-      locality: "Venice, CA",
       inactive: false,
       notes: "Runs bi-weekly at community centers."
     }
@@ -31,7 +28,6 @@ RSpec.describe "/projects", type: :request do
       description: nil,
       project_status_id: nil,
       windows_type_id: nil,
-      location_id: nil
     }
   end
 
