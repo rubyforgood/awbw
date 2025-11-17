@@ -31,19 +31,23 @@ class Project < ApplicationRecord
 
   scope :address, ->(address) do
     return all if address.blank?
-    q = "%#{address}%"
-    left_joins(:addresses).where("
-      addresses.street_address LIKE :q OR
-      addresses.city LIKE :q OR
-      addresses.state LIKE :q OR
-      addresses.county LIKE :q OR
-      addresses.country LIKE :q OR
-      addresses.district LIKE :q OR
-      addresses.locality LIKE :q OR
-      addresses.zip_code = :q OR
-      CAST(addresses.la_city_council_district AS CHAR) = '#{address}' OR
-      CAST(addresses.la_service_planning_area AS CHAR) = '#{address}' OR
-      CAST(addresses.la_supervisorial_district AS CHAR) = '#{address}'", q: q)
+    exact = address.to_s
+    wildcard = "%#{exact}%"
+    left_joins(:addresses).where(
+      <<~SQL,
+      addresses.street_address LIKE :wildcard OR
+      addresses.city LIKE :wildcard OR
+      addresses.state LIKE :wildcard OR
+      addresses.county LIKE :wildcard OR
+      addresses.country LIKE :wildcard OR
+      addresses.district LIKE :wildcard OR
+      addresses.locality LIKE :wildcard OR
+      addresses.zip_code LIKE :exact OR
+      CAST(addresses.la_city_council_district AS CHAR) = :exact OR
+      CAST(addresses.la_service_planning_area AS CHAR) = :exact OR
+      CAST(addresses.la_supervisorial_district AS CHAR) = :exact
+    SQL
+      wildcard: wildcard, exact: exact)
   end
   scope :windows_type_name, ->(windows_type_name) { return all if windows_type_name.blank?
     joins(:windows_type).where("windows_types.name LIKE ?", "%#{ windows_type_name }%") }

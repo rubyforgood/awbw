@@ -13,8 +13,4 @@ class Address < ApplicationRecord
   def name
     "#{street}, #{city}, #{state} #{zip}"
   end
-
-  def city_state
-    "#{city}, #{state}"
-  end
 end
