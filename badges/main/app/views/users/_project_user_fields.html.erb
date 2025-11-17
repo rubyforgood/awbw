@@ -7,29 +7,39 @@
                   collection: @projects_array,
                   selected: f.object.project_id,
                   input_html: {
-                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   },
                   label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
     </div>
 
     <div>
       <%= f.input :position,
-                  as: :select,
-                  label: "Role",
-                  collection: ProjectUser.positions.keys.map { |k| [k.humanize, k] },
-                  selected: f.object.position.presence || "default",
-                  include_blank: true,
+                  as: :text,
                   input_html: {
-                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  },
-                  label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
-
+                    rows: 1,
+                    value: f.object.position,
+                  } %>
     </div>
 
-    <div class="flex justify-between items-center mt-3 mb-3">
-      <%= link_to_remove_association "✖ Remove",
-                                     f,
-                                     class: "text-sm text-red-600 hover:text-red-800 underline" %>
+    <div class="admin-only bg-blue-100 p-3">
+      <div class="flex items-center space-x-2 pt-6">
+        <%= f.input :inactive,
+                    as: :boolean,
+                    label: "Inactive?",
+                    input_html: {
+                      class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    },
+                    wrapper_html: {
+                      class: "flex items-center space-x-2"
+                    },
+                    label_html: { class: "text-sm font-medium text-gray-700 mb-0" } %>
+      </div>
+
+      <div class="flex justify-between items-center mt-3 mb-3">
+        <%= link_to_remove_association "✖ Remove",
+                                       f,
+                                       class: "text-sm text-red-600 hover:text-red-800 underline" %>
+      </div>
     </div>
   </div>
 </div>
