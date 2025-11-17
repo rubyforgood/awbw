@@ -18,16 +18,16 @@ class ProjectsController < ApplicationController
     workshop_logs_controller.params = params
     workshop_logs_controller.index
 
-    workshop_logs = @project.workshop_logs
-    @month_year_options = workshop_logs
-      .where.not(date: nil)
-      .group("DATE_FORMAT(COALESCE(date, created_at), '%Y-%m')")
-      .select("DATE_FORMAT(COALESCE(date, created_at), '%Y-%m') AS ym, MAX(COALESCE(date, created_at)) AS max_dt")
-      .order("max_dt DESC")
-      .map { |record| [Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym] }
-    @year_options = workshop_logs.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at))"))
-                                 .sort
-                                 .reverse
+    workshop_logs = WorkshopLog.where(project_id: @project.id)
+    @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
+                                     .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
+           MAX(COALESCE(date, created_at)) AS max_dt")
+                                     .order("max_dt DESC")
+                                     .map { |record| [Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym] }
+
+    @year_options = workshop_logs.pluck(
+      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
+    ).sort.reverse
     @projects = Project.where(id: @project.id)
     @per_page = params[:per_page] || 10
     @workshop_logs_unpaginated = workshop_logs
