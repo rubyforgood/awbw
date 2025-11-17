@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_17_010000) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_17_071900) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -418,6 +418,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_17_010000) do
     t.boolean "inactive", default: false, null: false
     t.integer "position"
     t.integer "project_id"
+    t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
     t.index ["agency_id"], name: "index_project_users_on_agency_id"
