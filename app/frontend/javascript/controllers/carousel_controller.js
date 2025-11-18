@@ -16,6 +16,7 @@ export default class extends Controller {
     this.swiper = new Swiper(this.element, {
       modules: [Navigation],
       loop: true,
+      speed: 1400,
       spaceBetween: this.spaceBetweenValue,
       
       // Responsive breakpoints
@@ -36,8 +37,8 @@ export default class extends Controller {
       
       // Navigation arrows
       navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
+        nextEl: '.swiper-button-next-custom',
+        prevEl: '.swiper-button-prev-custom',
       }
     })
   }
