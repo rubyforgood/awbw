@@ -7,23 +7,19 @@ import 'swiper/css/navigation'
 
 // Connects to data-controller="carousel"
 export default class extends Controller {
-  static values = {
-    spaceBetween: { type: Number, default: 30 }
-  }
 
   connect() {
     this.swiper = new Swiper(this.element, {
       modules: [Navigation],
       loop: true,
       speed: 1400,
-      spaceBetween: this.spaceBetweenValue,
+      spaceBetween: 30,
       
-      // Responsive breakpoints
       breakpoints: {
         320: {
           slidesPerView: 1,
         },
-        640: {
+        485: {
           slidesPerView: 2,
         },
         768: {
