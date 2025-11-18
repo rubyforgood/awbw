@@ -2,12 +2,12 @@
   <div class="form-body space-y-6">
     <!-- Form Errors -->
     <%%= f.error_notification %>
-    <%%= render 'shared/errors', resource: @<%= singular_table_name %> if @<%= singular_table_name %>.errors.any? %>
+    <%%= render "shared/errors", resource: @<%= singular_table_name %> if @<%= singular_table_name %>.errors.any? %>
 
     <!-- Form Fields -->
     <div class="row">
       <%% @<%= singular_table_name %>.attribute_names.reject { |a| ["id", "created_at", "updated_at"].include?(a) }.each do |attr| %>
-        <%% next if ['id', 'created_at', 'updated_at'].include?(attr) %>
+        <%% next if ["id", "created_at", "updated_at"].include?(attr) %>
         <div class="col-md-6 mb-3">
           <%%= f.input attr.to_sym, input_html: { class: "form-control" } %>
         </div>
@@ -20,7 +20,7 @@
         <%%= link_to "Delete", @<%= singular_table_name %>, method: :delete,
                             class: "btn btn-danger-outline", data: { confirm: "Are you sure?" } %>
       <%% end %>
-      <%%= link_to 'Cancel', <%= plural_table_name %>_path, class: "btn btn-secondary-outline" %>
+      <%%= link_to "Cancel", <%= plural_table_name %>_path, class: "btn btn-secondary-outline" %>
       <%%= f.button :submit,
                   class: "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
                           transition-colors duration-150" %>
