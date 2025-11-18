@@ -8,9 +8,9 @@
             <%= Story.model_name.human.pluralize %> (<%= @stories_count %>)
           </h1>
           <div class="flex gap-2">
-            <%= link_to('New ' + Story.model_name.human.downcase,
-                                new_story_path,
-                                class: "btn btn-primary-outline") %>
+            <%= link_to("New #{Story.model_name.human.downcase}",
+                        new_story_path,
+                        class: "btn btn-primary-outline") %>
           </div>
         </div>
 
