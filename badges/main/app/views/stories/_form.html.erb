@@ -90,6 +90,7 @@
                       story_idea_path(story_idea), class: "hover:underline") : "Story idea").html_safe,
                     prompt: "Select idea" %>
         <%= f.input :published, as: :boolean %>
+        <%= f.input :featured, as: :boolean %>
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :created_by_id,
