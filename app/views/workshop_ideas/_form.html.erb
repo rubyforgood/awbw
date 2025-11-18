@@ -37,8 +37,8 @@
                     as: :select,
                     label: "Workshop type",
                     required: true,
-                    collection: WindowsType.pluck(:name, :id).sort_by(&:first),
-                    selected: f.object.windows_type_id || WindowsType.where("name like 'adult%'").last&.id,
+                    collection: @windows_types, label_method: :short_name, value_method: :id,
+                    selected: f.object.windows_type_id,
                     input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
       </div>
 
