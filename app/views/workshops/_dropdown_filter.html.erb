@@ -1,3 +1,5 @@
+<% label_method ||= :name %>
+
 <div class="relative">
   <div
     data-controller="dropdown"
@@ -39,7 +41,7 @@
           id: "#{param_name}_#{item.id}",
           class: "category-checkbox" %>
           <%= label_tag "#{param_name}_#{item.id}",
-          item.name.titleize,
+          item.public_send(label_method).titleize,
           class: "text-sm text-gray-700" %>
         </div>
       <% end %>

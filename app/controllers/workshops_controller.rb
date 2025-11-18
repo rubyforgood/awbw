@@ -146,6 +146,7 @@ class WorkshopsController < ApplicationController
     @workshop_ideas = WorkshopIdea.order(created_at: :desc)
                                   .map { |wi| ["#{wi.created_at.strftime("%Y-%m-%d")} - (#{wi.created_by.full_name}): #{wi.title}",
                                                wi.id] }
+    @windows_types = WindowsType.all
   end
 
   def workshops_per_page

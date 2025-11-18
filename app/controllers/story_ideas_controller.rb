@@ -57,7 +57,7 @@ class StoryIdeasController < ApplicationController
   def set_form_variables
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @projects = (@user || current_user).projects.order(:name)
-    @windows_types = WindowsType.all.order(:name)
+    @windows_types = WindowsType.all
     @workshops = Workshop.all.order(:title)
     @users = User.active.or(User.where(id: @story_idea.created_by_id))
                  .order(:first_name, :last_name)
