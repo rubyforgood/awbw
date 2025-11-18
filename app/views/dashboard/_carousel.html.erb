@@ -1,3 +1,10 @@
+<div class="flex flex-col items-center mb-4">
+  <div class="inline-block mr-24">
+    <h2 class="text-2xl text-gray-700 font-medium m-2">Featured Workshops</h2>
+    <hr class="h-1 bg-primary border-0 rounded-sm my-2 mx-4">
+  </div>
+</div>
+
 <div class="pl-4 pr-6 lg:pl-10 lg:pr-12 bg-gray-300 py-8 rounded-lg">
   <div data-controller="carousel" data-carousel-space-between-value="24" class="swiper">
     <!-- Slides -->
@@ -11,14 +18,14 @@
 
             <!-- Content section -->
             <div class="p-4">
-              <div class="text-lg font-semibold text-gray-800 mb-2">
+              <div class="text-xs text-gray-500 mb-2">
                 <%= workshop.windows_type.label if workshop.windows_type %> |
                 <span class="pull-right"><%= workshop.date %></span>
               </div>
 
-              <div class="text-gray-600 text-sm">
-                <span class="text-lg font-semibold text-gray-800 mb-2"><%= workshop.title %></span>
-                <p>
+              <div class="flex flex-col gap-2">
+                <span class="text-lg font-semibold text-gray-800"><%= workshop.title %></span>
+                <p class="text-gray-600 text-sm">
                   <%= workshop.title.length > 25 ? workshop.formatted_objective.truncate(75) : workshop.formatted_objective %>
                 </p>
               </div>
@@ -32,7 +39,7 @@
 
     <button
       class="
-        swiper-button-prev-custom absolute top-1/2  w-12 h-12 text-primary bg-gray-100 text-2xl font-bold
+        swiper-button-prev-custom absolute bottom-4 sm:top-1/2  w-12 h-12 text-primary bg-gray-100 text-2xl font-bold
         rounded-full flex items-center justify-center shadow-lg z-10
       "
     >
@@ -41,7 +48,7 @@
 
     <button
       class="
-        swiper-button-next-custom absolute top-1/2 right-2 w-12 h-12 text-primary bg-gray-100 text-2xl
+        swiper-button-next-custom absolute bottom-4 sm:top-1/2 right-2 w-12 h-12 text-primary bg-gray-100 text-2xl
         font-bold rounded-full flex items-center justify-center shadow-lg z-10
       "
     >

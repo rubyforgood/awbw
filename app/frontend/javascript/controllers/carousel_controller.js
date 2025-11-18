@@ -2,7 +2,6 @@ import { Controller } from "@hotwired/stimulus"
 import Swiper from 'swiper'
 import { Navigation } from 'swiper/modules'
 
-// Import Swiper styles
 import 'swiper/css'
 import 'swiper/css/navigation'
 
@@ -21,21 +20,20 @@ export default class extends Controller {
       
       // Responsive breakpoints
       breakpoints: {
-        // when window width is >= 320px (mobile)
         320: {
           slidesPerView: 1,
         },
-        // when window width is >= 768px (tablet)
+        640: {
+          slidesPerView: 2,
+        },
         768: {
           slidesPerView: 3,
         },
-        // when window width is >= 1024px (desktop)
         1024: {
           slidesPerView: 4,
         }
       },
       
-      // Navigation arrows
       navigation: {
         nextEl: '.swiper-button-next-custom',
         prevEl: '.swiper-button-prev-custom',
