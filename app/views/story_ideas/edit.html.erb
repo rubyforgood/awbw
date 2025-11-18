@@ -12,7 +12,7 @@
           <% else %>
             <div class="admin-only bg-blue-100 p-3">
               <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
-                          class: "btn btn-secondary-outline ms-2" if current_user.super_user && f.object.persisted? %>
+                          class: "btn btn-secondary-outline ms-2" if current_user.super_user && @story_idea.persisted? %>
             </div>
           <% end %>
           <%= link_to "View", story_idea_path(@story_idea),
