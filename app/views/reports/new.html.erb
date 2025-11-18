@@ -1,6 +1,6 @@
 <br>
 <h2 class='normal'><%= "#{@form_builder.name}" %></h2>
-<%= render 'form', form_fields: @form_builder.form_fields, agencies: current_user.projects %>
+<%= render "form", form_fields: @form_builder.form_fields, agencies: current_user.projects %>
 <script>
   //<![CDATA[
     $(function() {

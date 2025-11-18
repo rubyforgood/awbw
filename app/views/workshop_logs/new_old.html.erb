@@ -101,7 +101,7 @@
                workshop_id: params[:workshop_id] },
                :html => {:novalidate => 'novalidate', :multipart => true},
                :method => :post do |f| %>
-  <%= render 'form', form: f %>
+  <%= render "form", form: f %>
   <% end %>
 
   <link rel="stylesheet" href="/vendor/Pikaday/css/pikaday.css">
