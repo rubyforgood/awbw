@@ -71,7 +71,7 @@ RSpec.describe "Workshops" do
         save_and_open_page
 
         fill_in 'Workshop title', with: 'My New Workshop'
-        select adult_window.name, from: 'workshop_windows_type_id'
+        select adult_window.short_name, from: 'workshop_windows_type_id'
         fill_in 'workshop_full_name', with: 'Jane Doe'
         fill_in 'workshop_objective', with: 'Learn something new'
         fill_in 'workshop_materials', with: 'Paper, Markers'
