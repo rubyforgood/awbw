@@ -23,3 +23,6 @@ application.register("collection", CollectionController)
 
 import ShareUrlController from "./share_url_controller"
 application.register("share-url", ShareUrlController)
+
+import CarouselController from "./carousel_controller"
+application.register("carousel", CarouselController)
