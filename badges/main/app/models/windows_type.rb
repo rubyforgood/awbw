@@ -29,10 +29,11 @@ class WindowsType < ApplicationRecord
 
   def short_name
     if name.include?("COMBINED")
-      "Combined"
+      short_name = "Combined"
     else
-      name.gsub("LOG", "").gsub("WORKSHOP", "").strip
+      short_name = name.gsub("LOG", "").gsub("WORKSHOP", "").strip
     end
+    short_name.titleize
   end
 
   def label

@@ -35,7 +35,7 @@
     <div class="flex-1 min-w-[200px]">
       <%= f.input :windows_type_id,
                   as: :select,
-                  collection: @windows_types,
+                  collection: @windows_types, label_method: :short_name, value_method: :id,
                   include_blank: true,
                   selected: f.object.windows_type_id,
                   input_html: { value: f.object.windows_type_id,

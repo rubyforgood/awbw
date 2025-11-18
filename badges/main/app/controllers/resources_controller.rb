@@ -97,7 +97,7 @@ class ResourcesController < ApplicationController
   private
 
   def set_form_variables
-    @windows_types = WindowsType.order(:name).pluck(:name, :id)
+    @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
                    .order(:first_name, :last_name)
                    .map{|u| [u.full_name, u.id] }

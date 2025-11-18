@@ -27,6 +27,7 @@
              dom_id_prefix: "windows-types",
              label_text: "Windows Type",
              items: @windows_types,
+             label_method: :short_name,
              param_name: :windows_types %>
 
   <%= render "categories_fields", metadata: @category_metadata %>
