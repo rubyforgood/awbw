@@ -9,7 +9,7 @@
 
       <div class="space-y-6">
         <div class="mt-4">
-          <%%= render 'form', <%= singular_table_name %>: @<%= singular_table_name %> %>
+          <%%= render "form", <%= singular_table_name %>: @<%= singular_table_name %> %>
         </div>
       </div>
     </div>
