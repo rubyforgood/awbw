@@ -66,4 +66,41 @@
       </div>
     <% end %>
   </div>
+
+ <!-- Calendar -->
+<% if event.event_registrations.exists?(registrant_id: current_user.id) %>
+  <% start_time = event.start_date.strftime("%Y%m%dT%H%M%SZ") %>
+  <% end_time   = event.end_date.strftime("%Y%m%dT%H%M%SZ") %>
+  <% title_encoded = ERB::Util.url_encode(event.title) %>
+  <% desc_encoded  = ERB::Util.url_encode(event.description || "") %>
+
+  
+    <div class="text-sm font-semibold text-gray-600 mb-2">Add to calendar:</div>
+    <div class="text-xs flex flex-wrap gap-2">
+      <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=<%= title_encoded %>&dates=<%= start_time %>/<%= end_time %>&details=<%= desc_encoded %>" 
+         class="text-blue-600 hover:text-blue-800 hover:underline">Google</a>
+      <span class="text-gray-300">•</span>
+      <a href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:<%= event.title %>
+DTSTART:<%= start_time %>
+DTEND:<%= end_time %>
+DESCRIPTION:<%= event.description %>
+END:VEVENT
+END:VCALENDAR" 
+         download="<%= event.title.parameterize %>.ics" 
+         class="text-blue-600 hover:text-blue-800 hover:underline">Apple</a>
+      <span class="text-gray-300">•</span>
+      <a href="https://outlook.live.com/owa/?rru=addevent&startdt=<%= start_time %>&enddt=<%= end_time %>&subject=<%= title_encoded %>&body=<%= desc_encoded %>" 
+         class="text-blue-600 hover:text-blue-800 hover:underline">Outlook</a>
+      <span class="text-gray-300">•</span>
+      <a href="https://outlook.office.com/owa/?rru=addevent&startdt=<%= start_time %>&enddt=<%= end_time %>&subject=<%= title_encoded %>&body=<%= desc_encoded %>" 
+         class="text-blue-600 hover:text-blue-800 hover:underline">Office 365</a>
+      <span class="text-gray-300">•</span>
+      <a href="https://calendar.yahoo.com/?v=60&title=<%= title_encoded %>&st=<%= start_time %>&et=<%= end_time %>&desc=<%= desc_encoded %>" 
+         class="text-blue-600 hover:text-blue-800 hover:underline">Yahoo</a>
+    </div>
+
+<% end %>
 <% end %>
