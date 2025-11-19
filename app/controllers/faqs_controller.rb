@@ -32,8 +32,10 @@ class FaqsController < ApplicationController
   end
 
   def update
+    notice = "FAQ was successfully updated."
+    flash.now[:notice] = notice
     if @faq.update(faq_params)
-      redirect_to faqs_path, notice: "FAQ was successfully updated.", status: :see_other
+      redirect_to faqs_path, notice: notice, status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content
