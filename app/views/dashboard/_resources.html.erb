@@ -4,10 +4,10 @@
                title: "Popular Resources",
                subtitle: "Tools and activities used across our network" %>
 
-    <% if resources.any? %>
+    <% if @resources.any? %>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <% resources.each do |resource| %>
-          <%= render "dashboard/resource_card", resource: resource.decorate %>
+        <% @resources.each do |resource| %>
+          <%= render "resources/resource_card", resource: resource.decorate %>
         <% end %>
       </div>
 

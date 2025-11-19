@@ -1,7 +1,7 @@
 <div data-controller="carousel" class="swiper">
   <!-- Slides -->
   <div class="swiper-wrapper">
-    <% @featured_workshops.each do |workshop| %>
+    <% @workshops.each do |workshop| %>
       <%= render "dashboard/workshop_card", workshop: workshop %>
     <% end %>
   </div>
