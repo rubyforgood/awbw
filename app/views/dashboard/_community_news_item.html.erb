@@ -1,9 +1,16 @@
-<div class="bg-white shadow-sm rounded-xl p-4 hover:shadow-md transition">
+<div class="relative bg-white shadow-sm rounded-xl p-4 hover:shadow-md transition">
 
-  <%= link_to community_news_path(news), class: "flex flex-row items-start gap-4" do %>
+  <!-- BOOKMARK (clickable) -->
+  <div class="absolute top-3 right-3 z-20 cursor-pointer">
+    <%= render "bookmarks/editable_bookmark_icon", resource: news.object %>
+  </div>
+
+  <!-- CARD BODY (clickable) -->
+  <%= link_to community_news_path(news),
+              class: "flex flex-row items-start gap-4 block z-10" do %>
 
     <!-- LEFT: TITLE + BODY -->
-    <div class="flex-1">
+    <div class="flex-1 pr-10"> <!-- padding so text doesn't go under the bookmark -->
       <h3 class="text-lg font-semibold text-gray-900 leading-tight">
         <%= news.title %>
       </h3>
@@ -15,11 +22,6 @@
       <p class="text-xs text-gray-400 mt-2">
         <%#= news.created_at.to_date.to_s(:long) %>
       </p>
-    </div>
-
-    <!-- RIGHT: BOOKMARK -->
-    <div class="shrink-0 pt-1">
-      <%= render "bookmarks/editable_bookmark_icon", resource: news.object %>
     </div>
 
   <% end %>
