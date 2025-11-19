@@ -11,7 +11,12 @@ class CommunityNews < ApplicationRecord
   has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
            as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
 
+<<<<<<< HEAD
   # Validations
+=======
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+
+>>>>>>> 94dc74e8 (Add bookmarks to all dashboard sections)
   validates :author_id, presence: true
   validates :title, presence: true
   validates :body, presence: true
