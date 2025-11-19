@@ -12,33 +12,7 @@
     style="position: relative; top: -200px;"
   ></div>
   <!-- 1️⃣ Bookmark -->
-  <%= turbo_frame_tag dom_id(bookmarkable, :bookmark) do %>
-    <%= turbo_flash %>
-    <div class="flex flex-col gap-1">
-      <% if bookmarkable.bookmarks.any? { |b| b.user_id == current_user.id } %>
-        <%= link_to bookmark_path(current_user.bookmark_for(bookmarkable),
-                                  from: "bookmarkables_index",
-                                  **request.query_parameters,
-                                  anchor: "bookmarkable-#{bookmarkable.id}-anchor"),
-                    class: "inline-block",
-                    title: "Remove bookmark",
-                    data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
-          <i class="fas fa-bookmark w-5 h-5 text-blue-500 hover:text-gray-400"></i>
-        <% end %>
-      <% else %>
-        <%= link_to bookmarks_path(bookmark: { bookmarkable_id: bookmarkable.id,
-                                               bookmarkable_type: "Workshop" },
-                                   from: "workshops_index",
-                                   **request.query_parameters,
-                                   anchor: "bookmarkable-#{bookmarkable.id}-anchor"),
-                    class: "inline-block",
-                    title: "Create bookmark",
-                    data: {turbo_method: :post} do %>
-          <i class="far fa-bookmark w-5 h-5 text-gray-400 hover:text-blue-500"></i>
-        <% end %>
-      <% end %>
-    </div>
-  <% end %>
+  <%= render "bookmarks/editable_bookmark_icon", resource: bookmarkable.object %>
 
   <!-- 1️⃣ Image -->
   <div class="flex flex-col items-center w-12">
