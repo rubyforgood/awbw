@@ -86,7 +86,7 @@ class StoriesController < ApplicationController
   # Strong parameters
   def story_params
     params.require(:story).permit(
-      :title, :body, :youtube_url, :published, :featured,
+      :title, :body, :featured, :published, :youtube_url, :website_url,
       :windows_type_id, :project_id, :workshop_id,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
       :main_image, images: []

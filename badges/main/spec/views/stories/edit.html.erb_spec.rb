@@ -26,7 +26,7 @@ RSpec.describe "stories/edit", type: :view do
 
       assert_select "textarea[name=?]", "story[body]"
 
-      assert_select "input[name=?]", "story[youtube_url]"
+      assert_select "textarea[name=?]", "story[youtube_url]"
 
       # assert_select "input[name=?]", "story[publish_preferences]"
 
