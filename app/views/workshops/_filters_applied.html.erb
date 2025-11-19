@@ -20,10 +20,10 @@
   *sections_applied,
   active_applied,
   inactive_applied,
-  params[:title],
-  params[:query],
-
-].reject(&:blank?).sort %>
+  "#{ "Title: " + params[:title] if params[:title].present? }",
+  "#{ "Author: " + params[:author_name] if params[:author_name].present? }",
+  "#{ "Full-text: " + params[:query] if params[:query].present? }",
+].flatten.reject(&:blank?).sort %>
 
 <div id="filters_applied" class="flex justify-between items-center">
   <div class="flex gap-1 items-center">
