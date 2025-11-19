@@ -70,6 +70,20 @@
                 <%= news.updated_at.strftime("%b %d, %Y") %>
               </td>
 
+              <% if current_user.super_user? %>
+                <td class="px-6 py-4 text-center admin-only bg-blue-100">
+                  <% if news.published? %>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <i class="fa-solid fa-circle-check text-green-500"></i> Yes
+                      </span>
+                  <% else %>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium text-gray-700">
+                        <i class="fa-regular fa-circle-xmark text-gray-500"></i> No
+                      </span>
+                  <% end %>
+                </td>
+              <% end %>
+
               <td class="px-6 py-4 text-right">
                 <div class="inline-flex gap-2">
                   <% if current_user.super_user? %>
