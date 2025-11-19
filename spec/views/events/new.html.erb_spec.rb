@@ -18,7 +18,7 @@ RSpec.describe "events/new", type: :view do
     render
 
     expect(rendered).to have_selector("form")
-    expect(rendered).to have_selector("input[type='text'][name='event[title]']")
+    expect(rendered).to have_field("event[title]")
     expect(rendered).to have_selector("textarea[name='event[description]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[start_date]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[end_date]']")

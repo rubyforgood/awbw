@@ -18,6 +18,6 @@ RSpec.describe "stories/index", type: :view do
   it "renders a friendly message when no stories exist" do
     assign(:stories, paginated([]))
     render
-    expect(rendered).to match(/No Stories found/)
+    expect(rendered).to match(/No stories found/)
   end
 end

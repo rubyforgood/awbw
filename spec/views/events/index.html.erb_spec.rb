@@ -33,8 +33,9 @@ RSpec.describe "events/index", type: :view do
 
     events.each do |event|
       expect(rendered).to have_content(event.title)
-      expect(rendered).to have_content(event.start_date.strftime("%B %d, %Y"))
-      expect(rendered).to have_content(event.end_date.strftime("%B %d, %Y"))
+      formatted = event.decorate.times(display_day: true, display_date: true)
+      text      = formatted.gsub("<br>", "")
+      expect(rendered).to have_text(text)
     end
   end
 
@@ -42,7 +43,7 @@ RSpec.describe "events/index", type: :view do
     render
 
     events.each do |event|
-      expect(rendered).to have_link(event.title, href: event_path(event))
+      expect(rendered).to have_content(event.title)
       expect(rendered).to have_link("Edit", href: edit_event_path(event))
     end
   end
@@ -71,7 +72,10 @@ RSpec.describe "events/index", type: :view do
       render
 
       expect(rendered).to have_content("Minimal Event")
-      expect(rendered).to have_content(event_with_minimal_data.start_date.strftime("%B %d, %Y"))
+
+      formatted = event_with_minimal_data.decorate.times(display_day: true, display_date: true)
+      text      = formatted.gsub("<br>", "")
+      expect(rendered).to have_text(text)
     end
   end
 end

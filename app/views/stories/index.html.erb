@@ -78,10 +78,10 @@
           </div>
         <% else %>
           <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
-            <h2 class="text-gray-600 text-lg mb-2">No stories yet</h2>
+            <h2 class="text-gray-600 text-lg mb-2">No stories found</h2>
             <% if current_user.super_user? %>
               <div class="admin-only bg-blue-100 p-3">
-                <%= link_to "Create your first story",
+                <%= link_to "Create a story",
                             new_story_path,
                             class: "btn btn-primary" %>
               </div>
