@@ -218,7 +218,7 @@ class WorkshopDecorator < Draper::Decorator
       # -------------------------
       # TITLE + WINDOWS TYPE (row 2)
       # -------------------------
-      title_content = object.title.titleize
+      title_content = object.title
 
       if object.windows_type.present?
         title_content += " (#{object.windows_type.short_name})"
