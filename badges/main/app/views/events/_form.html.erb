@@ -16,6 +16,7 @@
     <% if current_user.super_user? %>
       <div class="admin-only bg-blue-100 flex items-center mt-6 md:mt-0">
         <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?", wrapper_html: { class: "ml-2" } %>
+        <%= f.input :featured, as: :boolean, label: "Featured?", wrapper_html: { class: "ml-2" } %>
       </div>
     <% end %>
   </div>

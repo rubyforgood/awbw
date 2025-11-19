@@ -15,45 +15,30 @@
           <thead class="bg-gray-50">
           <tr>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Title</th>
-            <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Published</th>
-            <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Featured</th>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Author</th>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Project</th>
             <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Updated</th>
+            <% if current_user.super_user? %>
+              <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 admin-only bg-blue-100">
+                Published
+              </th>
+            <% end %>
             <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
           </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
           <% @community_news.each do |news| %>
             <tr class="hover:bg-gray-50 transition">
-              <td class="px-6 py-4">
-                <%= link_to news.title,
-                            news,
-                            class: "text-indigo-600 hover:text-indigo-800 font-medium" %>
-              </td>
-
-              <td class="px-6 py-4 text-center">
-                <% if news.published? %>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                      <i class="fa-solid fa-circle-check text-green-500"></i> Yes
-                    </span>
-                <% else %>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium text-gray-700">
-                      <i class="fa-regular fa-circle-xmark text-gray-500"></i> No
-                    </span>
-                <% end %>
-              </td>
-
-              <td class="px-6 py-4 text-center">
-                <% if news.featured? %>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+              <td class="px-4 py-2 text-sm text-gray-800">
+                <span class="inline-flex items-center">
+                  <%= link_to news.title, community_news_path(news),
+                              class: "font-bold hover:text-indigo-800 hover:underline" %>
+                  <% if news.featured? %>
+                    <span class="inline-flex items-center gap-1 ms-2 px-2 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
                       🌟 Featured
                     </span>
-                <% else %>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium text-gray-700">
-                      —
-                    </span>
-                <% end %>
+                  <% end %>
+                </span>
               </td>
 
               <td class="px-6 py-4 text-gray-800">

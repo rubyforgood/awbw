@@ -7,6 +7,8 @@ class Event < ApplicationRecord
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :publicly_visible, in: [true, false]
 
+  scope :featured, -> { where(featured: true) }
+  scope :published, -> { publicly_visible }
   scope :publicly_visible, -> { where(publicly_visible: true) }
 
   def inactive?

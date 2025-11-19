@@ -1,12 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe "stories/index", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:story1) { create(:story, created_by: user, updated_by: user, title: "MyStory1", youtube_url: "Youtube_url1") }
   let(:story2) { create(:story, created_by: user, updated_by: user, title: "MyStory2", youtube_url: "Youtube_url2") }
 
   before(:each) do
-    # Simulate a single page of paginated results
+    sign_in user
     assign(:stories, paginated([story1, story2]))
   end
 
