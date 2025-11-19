@@ -1,148 +1,57 @@
-<script
-  type="text/javascript"
-  src="/vendor/tinycarousel/jquery.tinycarousel.min.js"
-></script>
-<link
-  rel="stylesheet"
-  href="/vendor/tinycarousel/tinycarousel.css"
-  type="text/css"
-  media="screen"
->
-<script type="text/javascript">
-    $(document).ready(function()
-    {
-        $('#slider1').tinycarousel();
-    });
-</script>
-
-<style>
-    #slider1 .viewport {
-        height: 320px;
-        overflow: hidden;
-        position: relative;
-    }
-
-    #slider1 .overview li {
-        border: 1px solid #dcdcdc;
-        float: left;
-        width: 236px; height: 320px;
-        margin: 0 10px 0 10px;
-        padding: 1px;
-    }
-
-    .tiny-label {
-        color: #4a4a4a;
-        font-size: 11px;
-        letter-spacing: 0.5px;
-        line-height: 1.83;
-        margin: 10px 0 6px 0;
-        padding: 0 10px;
-    }
-
-    .workshop p {
-        color: #464748;
-        font-size: 12px;
-        letter-spacing: 0.5px;
-        line-height: 1.71;
-    }
-
-    .workshop { background-color: #fff;}
-
-    .ws-desc { padding: 0 10px 10px 10px;}
-
-    .ws-desc .ws-title{
-        display: block;
-        margin-bottom: 6px;
-    }
-
-    .ws-desc p {
-        padding-top: 10px;
-    }
-
-    #slider1 {
-        height: 1%;
-        overflow: hidden;
-        padding: 0 0px 0px;
-        position: relative;
-    }
-
-    #slider1 .buttons {
-        box-shadow: 3px 3px 3px 3px #ccc;
-        border: solid #ccc 1px;
-        padding-top: 14px;
-        padding-left: 0px;
-        margin-left: 0px;
-        color: #063b8d;
-        background: #fff none repeat scroll 0 0;
-        font-size: 25px;
-        width: 40px;
-        height: 65px;
-        z-index: 1;
-    }
-
-    #slider1 .prev {
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
-        border-top-right-radius: 75px;
-        border-bottom-right-radius: 75px;
-        padding-left: 0px;
-        margin-left: 0px;
-        margin-right: 0px;
-        padding-right:0px;
-    }
-
-    #slider1 .next {
-        border-top-left-radius: 75px;
-        border-bottom-left-radius: 75px;
-        border-top-right-radius: 0px;
-        border-bottom-right-radius: 0px;
-        padding-left: 0px;
-        margin-left: 0px;
-        margin-right: 0px;
-        padding-right:0px;
-    }
-</style>
-<%# TODO Carousel and associated cards need to be updated to stimulus/tailwind %>
-<!--Carousel-->
-<div class="flex flex-col my-6">
-  <div class="flex flex-col items-center mb-4">
-    <div class="inline-block mr-24">
-      <h2 class="text-2xl text-gray-700 font-medium m-2">Featured Workshops</h2>
-      <hr class="h-1 bg-primary border-0 rounded-sm my-2 mx-4">
-    </div>
+<div class="flex flex-col items-center mb-4">
+  <div>
+    <h2 class="text-2xl text-gray-700 font-medium m-2 text-nowrap">Featured Workshops</h2>
+    <hr class="h-1 bg-primary border-0 rounded-sm my-2 mx-4">
   </div>
+</div>
 
-  <div class="pl-4 pr-6 lg:pl-10 lg:pr-12 bg-gray-300 pb-8 rounded-lg">
-    <div id="slider1">
-      <a class="buttons prev" href="#">&#60;</a>
+<div class="px-6 bg-gray-300 py-8 rounded-lg">
+  <div data-controller="carousel" class="swiper">
+    <!-- Slides -->
+    <div class="swiper-wrapper">
+      <% @featured_workshops.each do |workshop| %>
+        <div class="swiper-slide rounded-xl overflow-hidden bg-white shadow-md" style="height: 320px;">
+          <%= link_to workshop_path(workshop)  do %>
+            <div class="h-24 w-full overflow-hidden">
+              <img class="w-full h-full object-cover" src="<%= workshop.main_image_url %>" alt="workshop">
+            </div>
 
-      <div class="viewport">
-        <ul class="overview">
-          <% @featured_workshops.each do |workshop| %>
-            <li class="rounded-xl bg-white shadow-lg">
-              <%= link_to workshop_path(workshop), { class: "nodecor"}  do %>
-                <img
-                    class="portrait-img"
-                    src="<%= workshop.main_image_url %>"
-                >
-                <div class="tiny-label"><%= workshop.windows_type.label if workshop.windows_type %>
-                  | <span class="pull-right"><%= workshop.date %></span>
-                </div>
+            <!-- Content section -->
+            <div class="p-4">
+              <div class="text-xs text-gray-500 mb-2">
+                <%= workshop.windows_type.label if workshop.windows_type %> |
+                <span class="pull-right"><%= workshop.date %></span>
+              </div>
 
-                <div class="ws-desc">
-                  <span class="ws-title font-bold"><%= workshop.title %></span>
-                  <p><%= workshop.title.length > 25 ? workshop.formatted_objective.truncate(75) : workshop.formatted_objective %></p>
-                </div>
-              <% end %>
-            </li>
+              <div class="flex flex-col gap-2">
+                <span class="text-lg font-semibold text-gray-800"><%= workshop.title %></span>
+                <p class="text-gray-600 text-sm">
+                  <%= workshop.title.length > 25 ? workshop.formatted_objective.truncate(75) : workshop.formatted_objective %>
+                </p>
+              </div>
+            </div>
           <% end %>
-        </ul>
-      </div>
-      <a class="buttons next" href="#">&#62;</a>
+        </div>
+      <% end %>
     </div>
-  </div>
 
+    <!-- Navigation buttons -->
+
+    <button
+      class="swiper-button-prev-custom absolute bottom-4 sm:top-1/2  w-12 h-12 text-primary bg-gray-100 text-2xl font-bold
+        rounded-full flex items-center justify-center shadow-lg z-10"
+    >
+      &lt;
+    </button>
+
+    <button
+      class="swiper-button-next-custom absolute bottom-4 sm:top-1/2 right-2 w-12 h-12 text-primary bg-gray-100 text-2xl
+        font-bold rounded-full flex items-center justify-center shadow-lg z-10"
+    >
+      &gt;
+    </button>
+  </div>
+</div>
   <div class="text-right text-end mt-4">
     <%= link_to "View all", workshops_path, class: "btn btn-secondary-outline" %>
   </div>
-</div>
