@@ -1,9 +1,9 @@
-<div class="m-2 p-4 bg-gray-300 rounded-lg">
-  <%= link_to story.url, target: :blank, class: "flex flex-col md:flex-row" do %>
+<div class="p-4 bg-gray-300 rounded-lg">
+  <%= link_to story_path(story), target: :blank, class: "flex flex-col md:flex-row" do %>
     <div class="grow">
       <h3 class="text-lg pb-2 font-medium text-gray-700"><%= story.title %></h3>
       <p class="px-2 text-gray-700">
-        <span class="line-clamp-3"><%= strip_tags(story.text).truncate(250) %></span>
+        <span class="line-clamp-3"><%= strip_tags(story.body).truncate(250) %></span>
       </p>
     </div>
     <%# TODO conditionally show story image if attached %>

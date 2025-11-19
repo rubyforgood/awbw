@@ -22,6 +22,9 @@ class Story < ApplicationRecord
   validates :main_image, content_type: ACCEPTED_CONTENT_TYPES
   validates :images, content_type: ACCEPTED_CONTENT_TYPES
 
+  scope :featured, -> { where(featured: true) }
+  scope :published, -> { where(published: true) }
+
   def name
     title
   end
