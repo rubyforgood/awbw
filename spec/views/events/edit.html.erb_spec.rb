@@ -26,7 +26,7 @@ RSpec.describe "events/edit", type: :view do
     render
 
     expect(rendered).to have_selector("form")
-    expect(rendered).to have_selector("input[type='text'][name='event[title]'][value='Original Title']")
+    expect(rendered).to have_field("event[title]", with: "Original Title")
     expect(rendered).to have_selector("textarea[name='event[description]']", text: "Original description")
     expect(rendered).to have_selector("input[type='checkbox'][name='event[publicly_visible]'][checked='checked']")
   end

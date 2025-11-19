@@ -1,136 +1,98 @@
+<% event = event.decorate %>
+
 <%= tag.div id: dom_id(event, :card), class: "
-    relative bg-white border border-gray-200 rounded-xl shadow hover:shadow-md
-    transition p-4 flex flex-col
-  " do %>
-  <!-- Event Title -->
-  <h3 class="text-lg font-semibold text-gray-900 mb-2">
-    <div class="flex items-center space-x-2">
-      <!-- Bookmark icon -->
-      <%= render "bookmarks/editable_bookmark_icon", resource: event %>
-      <!-- Title link -->
-      <%= link_to "#{event.title}#{" [HIDDEN]" if current_user.super_user? && !event.publicly_visible}",
-      event_path(event),
-      class: "text-gray-900 hover:underline font-medium" %>
-      <% if event.featured? %>
-        <span class="inline-flex items-center gap-1 ms-2 px-2 py-0.5 rounded-full text-sm font-medium
-        bg-yellow-100 text-yellow-800 whitespace-nowrap">
-          🌟 Featured
-        </span>
-      <% end %>
-    </div>
-  </h3>
+  relative bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md
+  transition p-4 flex flex-col gap-4
+" do %>
 
-  <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
-    <span
-      class="
-        absolute top-2 right-2 text-xs bg-green-100 text-green-700 px-2 py-0.5
-        rounded-full
-      "
-    >
-      Registered
-    </span>
-  <% end %>
-
-  <!-- Dates -->
-  <p class="text-sm text-gray-600 mb-1">
-    <span class="font-medium">Start:</span>
-    <%= event.start_date&.strftime("%B %d, %Y") %>
-  </p>
-
-  <p class="text-sm text-gray-600 mb-3">
-    <span class="font-medium">End:</span>
-    <%= event.end_date&.strftime("%B %d, %Y") %>
-  </p>
-
-  <div class="mt-3 flex gap-2">
-    <!-- Admin Edit -->
-    <% if current_user.super_user %>
-      <div class="mt-2">
-        <%= link_to "Edit", edit_event_path(event), class: "btn btn-secondary-outline" %>
-      </div>
-    <% end %>
-
-    <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
-      <div class="mt-2 ml-auto">
-        <%= button_to "De-register",
-        event_registrant_registration_path(event_id: event.id),
-        class: "btn btn-secondary-outline",
-        method: :delete,
-        data: {
-          turbo_confirm: "Are you sure you want to de-register?",
-        } %>
-      </div>
-    <% elsif event.registerable? %>
-      <div class="mt-2 ml-auto">
-        <%= button_to "Register",
-        event_registrant_registration_path(event_id: event),
-        class: "btn btn-primary-outline" %>
-      </div>
-    <% else %>
-      <div class="mt-2 ml-auto">
-        <span class="text-sm text-gray-500 italic">Registration closed</span>
-      </div>
-    <% end %>
+  <!-- 📌 Bookmark -->
+  <div class="absolute top-3 right-3 z-20">
+    <%= render "bookmarks/editable_bookmark_icon", resource: event %>
   </div>
 
-  <!-- Calendar -->
-  <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
-    <% start_time = event.start_date.strftime("%Y%m%dT%H%M%SZ") %>
-    <% end_time   = event.end_date.strftime("%Y%m%dT%H%M%SZ") %>
-    <% title_encoded = ERB::Util.url_encode(event.title) %>
-    <% desc_encoded  = ERB::Util.url_encode(event.description || "") %>
+  <!-- 1️⃣ Thumbnail + Title Row -->
+  <div class="flex flex-col md:flex-row gap-4">
 
-    <div class="flex flex-wrap items-center text-sm font-semibold text-gray-600 mt-6 mb-2 gap-1">
-      <span class="whitespace-nowrap">Calendar:</span>
+    <!-- Thumbnail -->
+    <div class="flex-shrink-0 w-32 h-24 rounded overflow-hidden bg-gray-100 relative">
+      <%= link_to event_path(event), class: "block w-full h-full" do %>
+        <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-4xl fallback-icon"
+             style="<%= true || event.main_image_url.present? ? 'display:none;' : 'display:flex;' %>">
+          <i class="fa-regular fa-image"></i>
+        </div>
 
-      <div class="flex items-center gap-1 text-xs font-normal whitespace-nowrap">
-        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=<%= title_encoded %>&dates=<%= start_time %>/<%= end_time %>&details=<%= desc_encoded %>"
-           class="text-blue-600 hover:text-blue-800 hover:underline">
-          Google
-        </a>
-      </div>
-
-      <div class="flex items-center gap-1 text-xs font-normal whitespace-nowrap">
-        <span class="text-gray-300">•</span>
-        <a href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR
-          VERSION:2.0
-          BEGIN:VEVENT
-          SUMMARY:<%= event.title %>
-          DTSTART:<%= start_time %>
-          DTEND:<%= end_time %>
-          DESCRIPTION:<%= event.description %>
-          END:VEVENT
-          END:VCALENDAR"
-           download="<%= event.title.parameterize %>.ics"
-           class="text-blue-600 hover:text-blue-800 hover:underline">
-          Apple
-        </a>
-      </div>
-
-      <div class="flex items-center gap-1 text-xs font-normal whitespace-nowrap">
-        <span class="text-gray-300">•</span>
-        <a href="https://outlook.live.com/owa/?rru=addevent&startdt=<%= start_time %>&enddt=<%= end_time %>&subject=<%= title_encoded %>&body=<%= desc_encoded %>"
-           class="text-blue-600 hover:text-blue-800 hover:underline">
-          Outlook
-        </a>
-      </div>
-
-      <div class="flex items-center gap-1 text-xs font-normal whitespace-nowrap">
-        <span class="text-gray-300">•</span>
-        <a href="https://outlook.office.com/owa/?rru=addevent&startdt=<%= start_time %>&enddt=<%= end_time %>&subject=<%= title_encoded %>&body=<%= desc_encoded %>"
-           class="text-blue-600 hover:text-blue-800 hover:underline">
-          Office 365
-        </a>
-      </div>
-
-      <div class="flex items-center gap-1 text-xs font-normal whitespace-nowrap">
-        <span class="text-gray-300">•</span>
-        <a href="https://calendar.yahoo.com/?v=60&title=<%= title_encoded %>&st=<%= start_time %>&et=<%= end_time %>&desc=<%= desc_encoded %>"
-           class="text-blue-600 hover:text-blue-800 hover:underline">
-          Yahoo
-        </a>
-      </div>
+        <% if true || event.main_image_url.present? %>
+          <img src="<%= "www.google.com" || event.main_image_url %>"
+               class="object-cover w-full h-full"
+               onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';">
+        <% end %>
+      <% end %>
     </div>
 
+    <!-- Title + badges -->
+    <div class="flex flex-col gap-2 flex-1 min-w-0">
+      <%= link_to event_path(event),
+                  class: "hover:underline block leading-tight",
+                  data: { turbo: false } do %>
+        <%= event.title_with_badges(controller_name: controller_name).html_safe %>
+      <% end %>
+    </div>
+
+  </div> <!-- END title row -->
+
+  <!-- 2️⃣ FULL-WIDTH TIMES ROW -->
+  <div class="text-sm text-gray-700 leading-tight pl-1 whitespace-pre-line">
+    <%= event.times(display_day: true, display_date: true).html_safe %>
+  </div>
+
+  <!-- 3️⃣ BUTTONS ROW -->
+  <div class="flex items-center w-full pt-2">
+
+    <!-- LEFT: Edit button -->
+    <% if current_user.super_user? %>
+      <div>
+        <%= link_to "Edit",
+                    edit_event_path(event),
+                    class: "btn btn-secondary-outline" %>
+      </div>
+    <% end %>
+
+    <!-- MIDDLE: Spacer -->
+    <div class="flex-1"></div>
+
+    <!-- RIGHT: Actions -->
+    <div class="flex items-center gap-3">
+
+      <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
+        <%= button_to "De-register",
+                      event_registrant_registration_path(event_id: event),
+                      method: :delete,
+                      data: { turbo_confirm: "Are you sure?" },
+                      class: "btn btn-secondary-outline" %>
+      <% elsif event.registerable? %>
+        <%= button_to "Register",
+                      event_registrant_registration_path(event_id: event),
+                      class: "btn btn-primary-outline" %>
+      <% else %>
+        <span class="text-sm text-gray-500 italic">Registration closed</span>
+      <% end %>
+
+      <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
+      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+        Registered
+      </span>
+      <% end %>
+
+    </div>
+  </div>
+
+
+  <!-- 4️⃣ FULL-WIDTH CALENDAR LINKS ROW -->
+  <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
+    <div class="text-sm text-gray-700 mt-2 flex flex-wrap gap-2 items-center pl-1">
+<!--      <span class="font-semibold">Calendar:</span>-->
+      <%= event.calendar_links %>
+    </div>
   <% end %>
+
 <% end %>

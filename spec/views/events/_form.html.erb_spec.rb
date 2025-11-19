@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "events/_form", type: :view do
-  let(:event) { Event.new }
+  let(:event) { create(:event, title: "Original Title") }
 
   before do
     assign(:event, event)
@@ -12,7 +12,7 @@ RSpec.describe "events/_form", type: :view do
     render
 
     expect(rendered).to have_selector("form")
-    expect(rendered).to have_selector("input[type='text'][name='event[title]']")
+    expect(rendered).to have_field("event[title]", with: "Original Title")
     expect(rendered).to have_selector("textarea[name='event[description]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[start_date]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[end_date]']")
@@ -51,7 +51,7 @@ RSpec.describe "events/_form", type: :view do
     it "populates form fields with existing data" do
       render
 
-      expect(rendered).to have_selector("input[value='Existing Event']")
+      expect(rendered).to have_field("event[title]", with: "Existing Event")
       expect(rendered).to have_selector("textarea", text: "Existing description")
       expect(rendered).to have_selector("input[type='checkbox'][checked='checked']")
     end
