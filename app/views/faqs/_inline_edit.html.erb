@@ -1,9 +1,12 @@
 <% frame_id = dom_id(model, "#{attribute}_turbo_frame") %>
+
 <% form_class ||= "" %>
+
 <% frame_class ||= "" %>
 
 <%= form_with model: model, data: {turbo: true, turbo_frame: frame_id}, class: "#{form_class}" do %>
   <%= turbo_frame_tag frame_id, class: "#{frame_class}" do %>
+    <%= turbo_flash %>
     <%= yield %>
   <% end %>
 <% end %>
