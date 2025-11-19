@@ -105,7 +105,7 @@
         <h2 class="text-gray-600 text-lg mb-2">No community news yet</h2>
         <% if current_user.super_user? %>
           <div class="admin-only bg-blue-100 p-3">
-            <%= link_to "Create your first post",
+            <%= link_to "Create a post",
                         new_community_news_path,
                         class: "btn btn-primary" %>
           </div>
