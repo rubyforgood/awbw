@@ -1,12 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe "stories/show", type: :view do
-    let(:user) { create(:user) }
+  let(:admin) { create(:user, :admin) }
   let(:story_idea) { create(:story_idea, :with_story,
-                            created_by: user, updated_by: user,
+                            created_by: admin, updated_by: admin,
                             body: "MyBody", youtube_url: "Youtube_url") }
   let(:story) { story_idea.stories.first }
+
   before(:each) do
+    sign_in admin
+    allow(view).to receive(:current_user).and_return(admin)
     assign(:story, story)
   end
 
