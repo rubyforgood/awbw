@@ -1,11 +1,14 @@
-<% windows_types_applied = params[:windows_types].present? ? WindowsType.where(id: params[:windows_types].to_unsafe_h.values.reject(&:blank?)).
-  pluck(:name).map{|wt| wt.gsub("log","").downcase.titleize} : [] %>
+<% windows_types_applied = params[:windows_types].present? ?
+                             WindowsType.where(id: params[:windows_types].to_unsafe_h.values.reject(&:blank?))
+                               .map{|wt| wt.short_name} : [] %>
 
-<% categories_applied = params[:categories].present? ? Category.where(id: params[:categories].to_unsafe_h.values.reject(&:blank?)).
-  pluck(:name) : [] %>
+<% categories_applied = params[:categories].present? ?
+                          Category.where(id: params[:categories].to_unsafe_h.values.reject(&:blank?))
+                            .pluck(:name) : [] %>
 
-<% sections_applied = params[:sectors].present? ? Sector.where(id: params[:sectors].to_unsafe_h.values.reject(&:blank?)).
-  pluck(:name) : [] %>
+<% sections_applied = params[:sectors].present? ?
+                        Sector.where(id: params[:sectors].to_unsafe_h.values.reject(&:blank?))
+                          .pluck(:name) : [] %>
 
 <% active_applied = "Published" if params[:active] == "true" %>
 
@@ -17,10 +20,10 @@
   *sections_applied,
   active_applied,
   inactive_applied,
-  params[:title],
-  params[:query],
-
-].reject(&:blank?).sort %>
+  "#{ "Title: " + params[:title] if params[:title].present? }",
+  "#{ "Author: " + params[:author_name] if params[:author_name].present? }",
+  "#{ "Full-text: " + params[:query] if params[:query].present? }",
+].flatten.reject(&:blank?).sort %>
 
 <div id="filters_applied" class="flex justify-between items-center">
   <div class="flex gap-1 items-center">
