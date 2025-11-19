@@ -1,63 +1,29 @@
-<% prefix = activity.created_at == activity.updated_at ? "New" : "Update" %>
-
-<tr class="border-b border-gray-200 hover:bg-gray-50">
-  <td class="px-4 py-2 text-sm text-gray-700">
-    <%= activity.updated_at.strftime("%b %-d, %Y %l:%M %p") %>
-  </td>
-  <td class="px-4 py-2 text-xl">
-    <span class="text-gray-500 text-sm"><%= prefix %> </span>
-    <% case activity.class.name %>
-    <% when "Workshop" %>
-      <span class="text-gray-500 text-sm">Workshop: </span>
-      <%= link_to "#{ activity.name }#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
-                  workshop_path(activity), class: "hover:underline" %>
-    <% when "WorkshopLog" %>
-      <span class="text-gray-500 text-sm">Log: </span>
-      <% if activity.workshop %>
-        <%= link_to activity.workshop.title,
-                    workshop_path(activity.workshop),
-                    class: "hover:underline" %>
-      <% else %>
-        <%= link_to activity.title,
-                    workshop_log_path(activity),
-                    class: "hover:underline" %>
-      <% end %>
-    <% when "Resource" %>
-      <span class="text-gray-500 text-sm"><%= activity.kind %>: </span>
-      <%= link_to "#{ activity.name }#{ "<span class='text-gray-500 text-sm'> (inactive)</span>" if activity.inactive? }".html_safe,
-                  resource_path(activity),
-                  class: "hover:underline" %>
-    <% when "Report" %>
-      <span class="text-gray-500 text-sm">Report: </span>
-      <%= link_to activity.title,
-                  report_path(activity),
-                  class: "hover:underline"%>
-    <% when "MonthlyReport" %>
-      <span class="text-gray-500 text-sm">MonthlyReport: </span>
-      <%= link_to activity.title,
-                  report_path(activity),
-                  class: "hover:underline"%>
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col md:flex-row">
+  <div class="w-full md:w-1/4 bg-gray-100 flex items-center justify-center p-4">
+    <% if resource.main_image_url.present? %>
+      <img src="<%= resource.main_image_url %>" alt=""
+           class="w-full h-full object-cover rounded">
     <% else %>
-      <span class="text-gray-500 text-sm"><%= activity.class.name %>: </span>
-      <%= link_to activity.name, polymorphic_path(activity), class: "hover:underline" %>
+      <%= render "resources/resource_icon", kind: resource.kind %>
     <% end %>
-  </td>
-  <% if params[:user_id] && params[:user_id].empty? %>
-    <td>
-      <%=
-        if activity.respond_to?(:user) && activity.user
-          activity.user.full_name
-        elsif activity.respond_to?(:created_by) && activity.created_by
-          activity.created_by.full_name
-        end
-      %>
-    </td>
-  <% end %>
-  <td class="px-4 py-2 text-sm">
-    <% if activity.respond_to?(:id) %>
-      <%= link_to "Edit", edit_polymorphic_path(activity),
-                  class: "btn btn-secondary-outline admin-only bg-blue-100" if current_user.super_user? %>
-      <%= link_to "View", polymorphic_path(activity), class: "btn btn-secondary-outline" %>
-    <% end %>
-  </td>
-</tr>
+  </div>
+
+  <div class="flex-1 p-4">
+    <h3 class="text-lg font-semibold text-gray-900">
+      <%= link_to resource.title, resource.featured_url || resource_path(resource),
+                  class: "hover:underline" %>
+    </h3>
+
+    <p class="text-sm text-gray-600 line-clamp-3 mt-1">
+      <%= resource.description %>
+    </p>
+
+    <div class="flex justify-end mt-4 space-x-2">
+      <% if resource.download_attachment&.file&.attached? %>
+        <%= link_to raw("<span class='fa fa-download'></span>"),
+                    resource_download_path(resource),
+                    class: "btn btn-utility" %>
+      <% end %>
+    </div>
+  </div>
+</div>

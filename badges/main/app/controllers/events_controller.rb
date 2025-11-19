@@ -3,25 +3,26 @@ class EventsController < ApplicationController
   before_action :authorize_admin!, only: %i[ edit update destroy ]
 
   def index
-    @events = Event.order(start_date: :desc)
-    @events = @events.publicly_visible unless current_user.super_user?
+    events = Event.order(start_date: :desc)
+    @events = current_user.super_user? ? events : events.publicly_visible
   end
 
   def show
   end
 
   def new # all logged in users can create events
-    @event = Event.new
+    @event = Event.new.decorate
   end
 
   def edit
+    @event = @event.decorate
     unless @event.created_by == current_user || current_user.super_user?
       redirect_to events_path, alert: "You are not authorized to edit this event."
     end
   end
 
   def create
-    @event = Event.new(event_params)
+    @event = Event.new(event_params).decorate
     @event.created_by ||= current_user
 
     respond_to do |format|

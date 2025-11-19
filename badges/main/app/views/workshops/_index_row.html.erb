@@ -3,98 +3,116 @@
 <% spanish ||= false %>
 <% hide_tags ||= false %>
 
-<% if workshop_series_membership %>
-  <% description = workshop_series_membership.series_description_for(spanish: spanish,
-                                                                     length: description_length) %>
-<% else %>
-  <% description = workshop.formatted_objective(length: description_length) %>
-<% end %>
+<% description =
+     if workshop_series_membership
+       workshop_series_membership.series_description_for(spanish: spanish, length: description_length)
+     else
+       workshop.formatted_objective(length: description_length)
+     end %>
 
 <div
   id="workshop-<%= workshop.id %>"
   class="
-    flex flex-col md:flex-row <%= "admin-only bg-blue-100" if workshop.inactive? %> border-b
-    border-gray-200 py-4 list-group-item-custom gap-4
+    flex flex-col md:flex-row
+    <%= "admin-only bg-blue-100" if workshop.inactive? %>
+    border-b border-gray-200 bg-white py-4 gap-4
+    px-4 md:px-0        <!-- ⭐ Mobile padding -->
   "
 >
-  <div
-    id="workshop-<%= workshop.id %>-anchor"
-    style="position: relative; top: -200px;"
-  ></div>
+  <div id="workshop-<%= workshop.id %>-anchor" style="position: relative; top: -200px;"></div>
+
   <!-- 1️⃣ Image -->
-  <div class="flex-shrink-0 w-32 h-24 bg-gray-100 rounded overflow-hidden">
+  <div class="flex-shrink-0 w-full md:w-32 h-32 md:h-24 bg-gray-100 rounded overflow-hidden">
     <%= link_to workshop_path(workshop) do %>
-      <img
-        class="object-cover w-full h-full"
-        src="<%= workshop.main_image_url %>"
-      >
+      <img class="object-cover w-full h-full" src="<%= workshop.main_image_url %>">
     <% end %>
   </div>
-  <!-- 2️⃣ Title / author / metadata -->
-    <div class="flex flex-col gap-1 min-w-[40ch] max-w-[40ch] break-words">
-      <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+
+  <!-- Content (bookmark + title+ + description) -->
+  <div class="flex flex-col md:flex-row gap-4 flex-1">
+
+    <!-- 2️⃣ Title / author / metadata -->
+    <div class="flex flex-1 gap-4">
+
+      <!-- Bookmark column (always visible, always left of title badges) -->
+      <div class="flex-shrink-0 pt-1 w-6">
         <%= render "bookmarks/editable_bookmark_icon", resource: workshop.object %>
-        <%= link_to "#{"[HIDDEN] " if workshop.inactive?}#{workshop.title}",
-                    link_route,
-                    class: "hover:underline",
-                    data: { turbo: false, } %>
-      </h3>
+      </div>
 
-      <div class="text-sm text-gray-600">
-        Author:
-        <% if workshop.user %>
-          <%= link_to workshop.author_name,
-                      generate_facilitator_user_path(workshop.user),
-                      class: "hover:underline",
-                      data: { turbo: false, } %>
-        <% else %>
-          <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
+      <!-- Title + badges + metadata -->
+      <div class="flex flex-col gap-1 flex-1 min-w-0">
+
+        <!-- Title with badges (single column, bookmark stays separate) -->
+        <%= link_to link_route,
+                    class: "hover:underline block",
+                    data: { turbo: false } do %>
+          <%= workshop.title_with_badges(controller_name: controller_name).html_safe %>
         <% end %>
-      </div>
 
-      <div class="text-sm text-gray-600">
-        <span>
-          Type/date:
-          <%= if workshop.windows_type.present?
-            "#{workshop.windows_type.label} - #{workshop.date}"
-          end %>
-          <% if workshop.workshop_age_ranges.any? %>
-            (<%= workshop.workshop_age_ranges.to_sentence %>)
+        <!-- Author + date -->
+        <div class="text-sm text-gray-600 leading-tight">
+          By:
+          <% if workshop.user %>
+            <%= link_to workshop.author_name,
+                        generate_facilitator_user_path(workshop.user),
+                        class: "hover:underline",
+                        data: { turbo: false } %>
+          <% else %>
+            <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
           <% end %>
-        </span>
+          | <%= workshop.date %>
+        </div>
+
+        <!-- Bookmarked count -->
+        <%= tag.div id: dom_id(workshop, :bookmark_count),
+                    class: "text-sm text-gray-600 leading-tight" do %>
+          Bookmarked: <%= workshop.led_count %> <%= "time".pluralize(workshop.led_count) %>
+        <% end %>
+
+        <!-- Age ranges -->
+        <% if workshop.workshop_age_ranges.any? %>
+          <div class="text-sm text-gray-600 leading-tight">
+            Age ranges: <%= workshop.workshop_age_ranges.to_sentence %>
+          </div>
+        <% end %>
+
       </div>
-      <%= tag.div id: dom_id(workshop, :bookmark_count ), class:  "text-sm text-gray-600" do %>
-        Bookmarked:
-        <%= workshop.led_count %>
-        <%= "time".pluralize(workshop.led_count) %>
-      <% end %>
     </div>
 
- <!-- 3️⃣ Description -->
- <div class="flex-1 text-sm text-gray-700">
-   <p class="workshop-description">
-    <span title="<%= description %>">
-      <%= sanitize(
-            truncate(
-              CGI.unescapeHTML(description),
-              length: 215,
-              omission: "... ",
-              separator: " ",
-              ),
-            ) %>
-    </span>
-   </p>
-   <!-- 4️⃣ Tags (optional) -->
-   <% unless hide_tags %>
-     <% if workshop.categories.any? %>
-       <p class="tags mt-3 italic">
-         Tags:
-         <span title="<%= workshop.categories.map(&:name).to_sentence %>">
-          <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
-        </span>
-       </p>
-     <% end %>
-   <% end %>
- </div>
-</div>
+    <!-- 3️⃣ Description -->
+    <div class="flex flex-1 gap-4 pr-4 md:pr-3">
 
+      <!-- Empty placeholder where the bookmark column would be -->
+      <div class="w-6 flex-shrink-0"></div>
+
+      <!-- Actual description column -->
+      <div class="flex-1 text-sm text-gray-700">
+        <p class="workshop-description">
+      <span title="<%= description %>">
+        <%= sanitize(
+              truncate(
+                CGI.unescapeHTML(description),
+                length: 215,
+                omission: "... ",
+                separator: " ",
+                ),
+              ) %>
+      </span>
+        </p>
+
+        <% unless hide_tags %>
+          <% if workshop.categories.any? %>
+            <p class="tags mt-3 italic">
+              Tags:
+              <span title="<%= workshop.categories.map(&:name).to_sentence %>">
+            <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
+          </span>
+            </p>
+          <% end %>
+        <% end %>
+
+      </div>
+    </div>
+
+  </div>
+</div>

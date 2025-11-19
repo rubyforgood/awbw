@@ -1,0 +1,48 @@
+<%= form_tag resources_path, method: :get, class: "space-y-2" do %>
+  <!-- Search Fields -->
+  <div class="flex flex-wrap md:flex-nowrap items-end gap-6">
+
+    <!-- KEYWORDS -->
+    <div class="flex-1 min-w-[200px] pb-2">
+      <label for="query" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">
+        Keywords
+      </label>
+      <div class="relative">
+        <%= text_field_tag :query, params[:query],
+                           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10
+                                 focus:ring-blue-500 focus:border-blue-500" %>
+        <button type="submit"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+          <i class="fa fa-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- PUBLISHED -->
+    <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
+      <label for="published"
+             class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">
+        Published
+      </label>
+      <%= select_tag :published,
+                     options_for_select(
+                       [["All", ""], ["Published", "true"], ["Hidden", "false"]],
+                       params[:published]
+                     ),
+                     class: "border border-gray-300 rounded-lg px-3 py-2 text-gray-700 w-full",
+                     onchange: "this.form.submit();" %>
+    </div>
+
+    <!-- KINDS -->
+    <div class="min-w-[150px]">
+      <%= render "search_boxes_kinds", sortable_fields: Resource::PUBLISHED_KINDS %>
+    </div>
+
+    <!-- CLEAR FILTERS -->
+    <div class="min-w-[120px] pb-3">
+      <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">&nbsp;</label>
+      <%= link_to "Clear filters", resources_path, class: "btn btn-utility" %>
+    </div>
+
+  </div>
+<% end %>

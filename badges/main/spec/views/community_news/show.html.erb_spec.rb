@@ -5,6 +5,8 @@ RSpec.describe "community_news/show", type: :view do
 
   before(:each) do
     sign_in admin
+    allow(view).to receive(:current_user).and_return(admin)
+
 
     assign(:community_news, CommunityNews.create!(
       title: "Title",

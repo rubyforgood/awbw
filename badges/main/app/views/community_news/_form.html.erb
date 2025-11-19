@@ -42,7 +42,7 @@
                 as: :select,
                 required: false,
                 include_blank: true,
-                collection: @windows_types,
+                collection: @windows_types, label_method: :short_name, value_method: :id,
                 selected: f.object.windows_type_id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 

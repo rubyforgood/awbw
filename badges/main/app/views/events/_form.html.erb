@@ -5,13 +5,17 @@
     <%= render 'shared/errors', resource: @event %>
   <% end %>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div>
-      <%= f.input :title, label: "Event title", required: true,
-                  input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
-    </div>
-    <div>
-      <%= f.input :description, input_html: { class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" } %>
+      <div>
+        <%= f.input :title, label: "Event title", required: true,
+                    as: :text,
+                    input_html: {
+                      rows: 1,
+                      value: f.object.title,
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2
+                      focus:ring-blue-500 focus:border-blue-500" } %>
+      </div>
     </div>
     <% if current_user.super_user? %>
       <div class="admin-only bg-blue-100 flex items-center mt-6 md:mt-0">
@@ -21,7 +25,16 @@
     <% end %>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  <div>
+    <%= f.input :description,
+                as: :text,
+                input_html: {
+                  rows: 3,
+                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2
+                    focus:ring-blue-500 focus:border-blue-500" } %>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-12">
     <div>
       <%= f.label :start_date, "Start time", required: true, class: "block font-medium mb-1" %>
       <%= f.text_field :start_date, type: 'datetime-local',

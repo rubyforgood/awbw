@@ -2,9 +2,12 @@ require 'rails_helper'
 
 RSpec.describe "community_news/new", type: :view do
   let(:admin) { create(:user, :admin) }
+  let(:windows_types) { create_list(:windows_type, 3) }
 
   before(:each) do
     sign_in admin
+    allow(view).to receive(:current_user).and_return(admin)
+    assign(:windows_types, windows_types)
 
     assign(:community_news, CommunityNews.new(
       title: "MyString",

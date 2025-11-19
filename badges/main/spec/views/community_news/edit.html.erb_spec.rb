@@ -18,10 +18,13 @@ RSpec.describe "community_news/edit", type: :view do
       updated_by: create(:user),
     )
   }
+  let(:windows_types) { create_list(:windows_type, 3) }
 
   before(:each) do
     sign_in admin
+    allow(view).to receive(:current_user).and_return(admin)
     assign(:community_news, community_news)
+    assign(:windows_types, windows_types)
   end
 
   it "renders the edit community_news form" do

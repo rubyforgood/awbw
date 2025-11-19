@@ -1,17 +1,23 @@
-<section class="community-news">
-  <div class="flex flex-col items-start mb-4">
-    <div class="inline-block mr-24">
-      <h2 class="text-2xl text-gray-700 font-medium m-2">Community news</h2>
-      <hr class="h-1 bg-primary border-0 rounded-sm my-2 mx-4">
-    </div>
-  </div>
+<section class="mt-6 py-12 bg-orange-50">
+  <div class="max-w-6xl mx-auto px-4">
+    <%= render "dashboard_section_header",
+               title: "Community News",
+               subtitle: "Announcements and updates" %>
 
-  <div class="flex flex-col">
-    <% community_news.each do |community_news_item| %>
-      <%= render "community_news_item", community_news_item: community_news_item %>
+    <% if community_news.any? %>
+      <div class="space-y-4">
+        <% community_news.first(3).each do |news| %>
+          <%= render "dashboard/community_news_item", news: news %>
+        <% end %>
+      </div>
+
+      <div class="mt-6 text-right">
+        <%= link_to "View all news",
+                    community_news_index_path,
+                    class: "text-primary font-medium hover:underline" %>
+      </div>
+    <% else %>
+      <p class="text-gray-500">No news available.</p>
     <% end %>
-  </div>
-  <div class="text-right text-end mt-4">
-    <%= link_to "View all", community_news_index_path, class: "btn btn-secondary-outline" %>
   </div>
 </section>
