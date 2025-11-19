@@ -7,7 +7,6 @@
         <%= text_field_tag :query, params[:query],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                                  focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           placeholder: "Type and hit Enter",
                            onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
 
         <button type="submit"

@@ -1,87 +1,95 @@
 <div class="min-h-screen py-8">
-  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
-      <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">
-            <%= Story.model_name.human.pluralize %> (<%= @stories_count %>)
-          </h1>
-          <div class="flex gap-2">
-            <%= link_to("New #{Story.model_name.human.downcase}",
-                        new_story_path,
-                        class: "btn btn-primary-outline") %>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-rose-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+      <!-- Header Row -->
+      <div class="w-full">
+        <div class="flex items-start justify-between mb-6">
+          <div class="pr-6">
+            <h2 class="text-2xl font-semibold mb-2"><%= Story.model_name.human.pluralize %> (<%= @stories_count %>)</h2>
+          </div>
+          <div class="text-right text-end">
+            <% if current_user.super_user? %>
+              <%= link_to "New Story",
+                          new_story_path,
+                          class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+            <% end %>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Title</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Windows Type</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Workshop</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Author</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Project</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Updated At</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
-            </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-            <% @stories.each do |story| %>
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-2 text-sm text-gray-800">
+        <% if @stories.any? %>
+          <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Title</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Windows Type</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Workshop</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Author</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Project</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Updated At</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+              </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+              <% @stories.each do |story| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-4 py-2 text-sm text-gray-800">
                   <span class="inline-flex items-center">
-                    <%= link_to story.title, story_path(story),
-                                class: "font-bold hover:text-indigo-800 hover:underline" %>
                     <% if story.featured? %>
                       <span class="inline-flex items-center gap-1 ms-2 px-2 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
                         🌟 Featured
                       </span>
                     <% end %>
+                    <%= link_to story.title, story_path(story),
+                                class: "font-bold hover:text-indigo-800 hover:underline" %>
                   </span>
-                </td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.short_name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800">
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.short_name %></td>
+                  <td class="px-4 py-2 text-sm text-gray-800">
                   <span title="<%= story.workshop&.title %>">
                     <%= story.workshop&.title.truncate(30) %>
                   </span>
-                </td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story.created_by.name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800">
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-800"><%= story.created_by.name %></td>
+                  <td class="px-4 py-2 text-sm text-gray-800">
                   <span title="<%= story.project&.name %>">
                     <%= story.project&.name.truncate(30) %>
                   </span>
-                </td>
-                <td class="px-4 py-2 text-sm text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
-                <td class="px-4 py-2 text-sm text-gray-500">
-                  <%= link_to "View", story_path(story), class: "btn btn-secondary-outline" %>
-                  <% if current_user.super_user? %>
-                    <%= link_to "Edit", edit_story_path(story),
-                                class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-            </tbody>
-          </table>
-        </div>
-
-
-        <!-- Empty state -->
-        <% unless @stories.any? %>
-          <p class="text-gray-500 text-center py-6">
-            No <%= Story.model_name.human.pluralize %> found.
-          </p>
-        <% end %>
-
-        <!-- Pagination -->
-        <div class="mt-6 flex justify-center">
-          <div class="pagination mt-6">
-            <%= tailwind_paginate @stories %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
+                  <td class="px-4 py-2 text-sm text-gray-500">
+                    <%= link_to "View", story_path(story), class: "btn btn-secondary-outline" %>
+                    <% if current_user.super_user? %>
+                      <%= link_to "Edit", edit_story_path(story),
+                                  class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+              </tbody>
+            </table>
           </div>
-        </div>
+
+          <!-- Pagination -->
+          <div class="mt-6 flex justify-center">
+            <div class="pagination mt-6">
+              <%= tailwind_paginate @stories %>
+            </div>
+          </div>
+        <% else %>
+          <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <h2 class="text-gray-600 text-lg mb-2">No stories yet</h2>
+            <% if current_user.super_user? %>
+              <div class="admin-only bg-blue-100 p-3">
+                <%= link_to "Create your first story",
+                            new_story_path,
+                            class: "btn btn-primary" %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
 </div>
+
