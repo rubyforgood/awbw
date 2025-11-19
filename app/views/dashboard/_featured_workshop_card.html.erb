@@ -1,0 +1,12 @@
+<div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden">
+  <%= link_to workshop_path(workshop), class: "block" do %>
+    <img src="<%= workshop.main_image_url %>"
+         class="w-full h-48 object-cover"
+         alt="<%= workshop.title %>">
+
+    <div class="p-4">
+      <h3 class="text-lg font-semibold text-gray-900"><%= workshop.title %></h3>
+      <p class="text-gray-600 text-sm mt-1 line-clamp-2"><%= workshop.description %></p>
+    </div>
+  <% end %>
+</div>

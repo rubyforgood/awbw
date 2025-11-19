@@ -1,18 +1,23 @@
-<section class="stories">
-  <div class="flex flex-col items-start mb-4">
-    <div class="inline-block mr-24">
-      <h2 class="text-2xl text-gray-700 font-medium m-2">Stories</h2>
-      <hr class="h-1 bg-primary border-0 rounded-sm my-2 mx-4">
-    </div>
-  </div>
+<section class="py-12 bg-rose-50">
+  <div class="max-w-6xl mx-auto px-4">
+    <%= render "dashboard_section_header",
+               title: "Stories",
+               subtitle: "Voices and experiences from our community" %>
 
-  <div class="flex flex-col">
-    <% stories.each do |story| %>
-      <%= render "story", story: story %>
+    <% if stories.any? %>
+      <div class="space-y-4">
+        <% stories.first(3).each do |story| %>
+          <%= render "dashboard/story", story: story %>
+        <% end %>
+      </div>
+
+      <div class="mt-6 text-right">
+        <%= link_to "Read all stories",
+                    stories_path,
+                    class: "text-primary font-medium hover:underline" %>
+      </div>
+    <% else %>
+      <p class="text-gray-500">No stories yet.</p>
     <% end %>
-
-    <div class="text-right text-end mt-4">
-      <%= link_to "View all", stories_path, class: "btn btn-secondary-outline" %>
-    </div>
   </div>
 </section>
