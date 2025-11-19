@@ -1,16 +1,19 @@
-<div class="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 flex flex-col gap-2">
-  <%= link_to event_path(event) do %>
-    <div class="relative group">
-      <div class="absolute top-2 right-2
-            opacity-100 md:opacity-0 md:group-hover:opacity-100
-            transition-opacity">
-        <%= render "bookmarks/editable_bookmark_icon", resource: event %>
-      </div>
-      <h3 class="text-lg font-semibold text-gray-900"><%= event.title %></h3>
-      <p class="text-gray-600 text-sm line-clamp-3"><%= event.description %></p>
-      <p class="text-xs text-gray-400 mt-1">
-        <%= event.start_date.strftime("%B %-d, %Y • %l:%M %p") %>
-      </p>
-    </div>
+<div class="relative">
+  <!-- Bookmark is OUTSIDE the link, but visually on top -->
+  <div class="absolute top-3 right-3 z-30">
+    <%= render "bookmarks/editable_bookmark_icon", resource: event %>
+  </div>
+
+  <!-- Entire card is clickable -->
+  <%= link_to event_path(event),
+              class: "block bg-white rounded-xl shadow-sm hover:shadow-md
+            transition p-4 flex flex-col gap-2 cursor-pointer relative z-10" do %>
+
+  <h3 class="text-lg font-semibold text-gray-900"><%= event.title %></h3>
+  <p class="text-gray-600 text-sm line-clamp-3"><%= event.description %></p>
+  <p class="text-xs text-gray-400 mt-1">
+    <%= event.start_date.strftime("%B %-d, %Y • %l:%M %p") %>
+  </p>
+
   <% end %>
 </div>

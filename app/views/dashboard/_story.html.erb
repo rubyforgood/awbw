@@ -1,19 +1,34 @@
 <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4">
-  <%= link_to story_path(story), class: "flex flex-col md:flex-row gap-4" do %>
 
+  <%= link_to story_path(story), class: "
+        flex flex-col md:flex-row items-start gap-4
+        cursor-pointer
+      " do %>
+
+    <!-- LEFT: TEXT -->
     <div class="flex-1">
-      <h3 class="text-lg font-semibold text-gray-900"><%= story.title %></h3>
+      <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+        <%= story.title %>
+      </h3>
+
       <p class="text-gray-600 text-sm mt-1 line-clamp-3">
         <%= strip_tags(story.body).truncate(250) %>
       </p>
     </div>
 
+    <!-- MIDDLE: BOOKMARK -->
+    <div class="shrink-0 flex items-start pt-1">
+      <%= render "bookmarks/editable_bookmark_icon", resource: story %>
+    </div>
+
+    <!-- RIGHT: IMAGE -->
     <div class="w-24 h-20 rounded bg-gray-200 flex items-center justify-center shrink-0">
       <% if false && story.image.attached? %>
         <%= image_tag story.image.variant(resize_to_fill: [96, 80]),
                       class: "w-full h-full object-cover rounded" %>
       <% else %>
-        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 18"></svg>
+        <svg class="w-6 h-6 text-gray-400"
+             fill="currentColor" viewBox="0 0 20 18"></svg>
       <% end %>
     </div>
 
