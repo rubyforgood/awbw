@@ -66,7 +66,7 @@ class TailwindPaginationRenderer < WillPaginate::ActionView::LinkRenderer
 		@template.tag.span(
 			text,
 			class: "disabled-arrow-classes px-3 py-1
-              bg-transparent text-white"
+              bg-transparent text-transparent"
 		)
 	end
 
