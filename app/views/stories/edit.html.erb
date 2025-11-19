@@ -3,8 +3,12 @@
     <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @story.class.model_name.human %></h1>
-        <%= link_to 'View', story_path(@story),
-                            class: "btn btn-secondary-outline" %>
+        <div class="text-right text-end space-x-2">
+          <%= link_to "Website", safe_url(@story.website_url), class: "btn btn-secondary-outline" if @story.website_url %>
+          <%= link_to "View",
+                      story_path(@story),
+                      class: "btn btn-secondary-outline" %>
+        </div>
       </div>
 
       <div class="space-y-6">
