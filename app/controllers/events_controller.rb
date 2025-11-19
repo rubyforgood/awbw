@@ -63,8 +63,13 @@ class EventsController < ApplicationController
   end
 
   def event_params
-    params.require(:event).permit(:created_by_id, :title, :description, :start_date, :end_date,
-                                  :registration_close_date, :publicly_visible)
+    params.require(:event).permit(:created_by_id,
+                                  :title,
+                                  :description,
+                                  :featured,
+                                  :start_date, :end_date,
+                                  :registration_close_date,
+                                  :publicly_visible)
   end
 
   def authorize_admin!

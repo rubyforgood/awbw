@@ -20,9 +20,9 @@
             <tr>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Title</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Windows Type</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Project</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Workshop</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Author</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Project</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Updated At</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
             </tr>
@@ -31,16 +31,35 @@
             <% @stories.each do |story| %>
               <tr class="hover:bg-gray-50">
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <%= link_to story.title, story_path(story), class: "text-blue-600 hover:underline" %>
+                  <span class="inline-flex items-center">
+                    <%= link_to story.title, story_path(story),
+                                class: "font-bold hover:text-indigo-800 hover:underline" %>
+                    <% if story.featured? %>
+                      <span class="inline-flex items-center gap-1 ms-2 px-2 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                        🌟 Featured
+                      </span>
+                    <% end %>
+                  </span>
                 </td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story.project&.name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story.workshop&.title %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.short_name %></td>
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <span title="<%= story.workshop&.title %>">
+                    <%= story.workshop&.title.truncate(30) %>
+                  </span>
+                </td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story.created_by.name %></td>
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <span title="<%= story.project&.name %>">
+                    <%= story.project&.name.truncate(30) %>
+                  </span>
+                </td>
                 <td class="px-4 py-2 text-sm text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
                 <td class="px-4 py-2 text-sm text-gray-500">
-                  <%= link_to 'Edit', edit_story_path(story), class: "btn btn-secondary-outline" %>
+                  <%= link_to "View", story_path(story), class: "btn btn-secondary-outline" %>
+                  <% if current_user.super_user? %>
+                    <%= link_to "Edit", edit_story_path(story),
+                                class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                  <% end %>
                 </td>
               </tr>
             <% end %>
