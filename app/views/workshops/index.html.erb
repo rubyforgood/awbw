@@ -1,6 +1,6 @@
 <div
   class="
-    search-curriculum-page max-w-7xl mx-auto bg-white border border-gray-200
+    search-curriculum-page max-w-7xl mx-auto bg-indigo-50 border border-gray-200
     rounded-xl shadow p-6
   "
 >
@@ -29,7 +29,9 @@
 
   <!-- Search Form -->
   <div class="w-full">
-    <%= form_tag('/workshops', method: :get, data: {turbo_stream: true, turbo_frame: "frame_list", controller: "collection share-url"}, class: "space-y-6") do %>
+    <%= form_tag(workshops_path, method: :get,
+                 data: {turbo_stream: true, turbo_frame: "frame_list",
+                        controller: "collection share-url"}, class: "space-y-6") do %>
       <%= render "filters" %>
       <div><hr class="border-gray-300 my-6"></div>
 
@@ -63,7 +65,8 @@
             link_route: workshop_path(workshop) %>
             <% end %>
           </div>
-          <div class="pagination mt-6">
+
+          <div class="pagination flex justify-center mt-12">
             <%= tailwind_paginate @workshops %>
           </div>
         <% else %>

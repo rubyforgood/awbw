@@ -8,12 +8,8 @@ class Story < ApplicationRecord
   belongs_to :workshop
   belongs_to :spotlighted_facilitator, class_name: "Facilitator",
              foreign_key: "spotlighted_facilitator_id", optional: true
-  validates :windows_type_id, presence: true
-  validates :project_id, presence: true
-  validates :workshop_id, presence: true
-  validates :created_by_id, presence: true
-  validates :updated_by_id, presence: true
-  validates :body, presence: true
+
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
 
   # Images
   ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
@@ -21,6 +17,13 @@ class Story < ApplicationRecord
   has_many_attached :images
   validates :main_image, content_type: ACCEPTED_CONTENT_TYPES
   validates :images, content_type: ACCEPTED_CONTENT_TYPES
+
+  validates :windows_type_id, presence: true
+  validates :project_id, presence: true
+  validates :workshop_id, presence: true
+  validates :created_by_id, presence: true
+  validates :updated_by_id, presence: true
+  validates :body, presence: true
 
   scope :featured, -> { where(featured: true) }
   scope :published, -> { where(published: true) }

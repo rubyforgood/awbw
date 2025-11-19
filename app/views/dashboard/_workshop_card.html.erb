@@ -1,0 +1,41 @@
+<div class="swiper-slide relative block rounded-xl border border-gray-200 shadow-sm
+            bg-white hover:shadow-md hover:bg-gray-50
+            transition p-4 cursor-pointer"
+     style="height: 320px;">
+
+  <!-- BOOKMARK ICON (clickable, bottom-right) -->
+  <div class="absolute bottom-3 right-3 z-30">
+    <%= render "bookmarks/editable_bookmark_icon", resource: workshop %>
+  </div>
+
+  <!-- FULLY CLICKABLE CARD CONTENT -->
+  <%= link_to workshop_path(workshop), class: "block h-full" do %>
+
+    <!-- Image -->
+    <div class="h-24 w-full overflow-hidden rounded">
+      <img class="w-full h-full object-cover"
+           src="<%= workshop.main_image_url %>"
+           alt="workshop">
+    </div>
+
+    <!-- Content section -->
+    <div class="p-4 pb-8"><!-- add bottom padding so text never overlaps the bookmark -->
+      <div class="text-xs text-gray-500 mb-2 flex justify-between">
+        <span><%= workshop.windows_type&.label %></span>
+        <span><%= workshop.date %></span>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <span class="text-lg font-semibold text-gray-800">
+          <%= workshop.title %>
+        </span>
+        <p class="text-gray-600 text-sm">
+          <%= workshop.title.length > 25 ?
+                workshop.formatted_objective.truncate(75) :
+                workshop.formatted_objective %>
+        </p>
+      </div>
+    </div>
+
+  <% end %>
+</div>

@@ -6,6 +6,8 @@ RSpec.describe "stories/show", type: :view do
                        body: "MyBody", youtube_url: "Youtube_url") }
 
   before(:each) do
+    sign_in user
+    allow(view).to receive(:current_user).and_return(user)
     assign(:story, story)
   end
 

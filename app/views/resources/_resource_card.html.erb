@@ -1,71 +1,100 @@
-<% background_color = (resource.inactive? ? "bg-blue-100" : "bg-white") if controller_name == "resources" %>
+<% main_link = resource.featured_url.presence || resource_path(resource) %>
 
-<div class="flex flex-col md:flex-row <%= background_color %>
- border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden">
-  <!-- Left Section: Icon or Image -->
-  <div class="w-full md:w-1/4 <%= background_color == "bg-white" ? "bg-gray-100" : background_color %>
-              flex flex-col items-center text-center justify-center p-4
-              border-b md:border-b-0 md:border-r border-gray-200">
-    <div class="relative w-12 h-12">
-      <%= link_to resource_path(resource), class: "block w-full h-full" do %>
-        <!-- Default icon, hidden initially -->
-        <div class="absolute inset-0 flex items-center justify-center text-gray-700 resource-icon">
-          <%= render "resources/resource_icon", kind: resource.kind %>
-        </div>
+<div class="relative">
 
-        <!-- Main image -->
-        <img
-          src="<%= resource.main_image_url %>"
-          alt="<%= resource.title.truncate(25) %>"
-          class="w-full h-full object-cover rounded-lg shadow-sm"
-          onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';"
-          />
-      <% end %>
-    </div>
-
-    <span class="mt-2 text-xs font-medium text-gray-400 uppercase tracking-wide">
-      <%= resource.kind == "Scholarship" ? "Scholar-" + "ship" : resource.kind || "Resource" %>
-    </span>
+  <!-- BOOKMARK ICON -->
+  <div class="absolute top-3 right-3 z-30">
+    <%= render "bookmarks/editable_bookmark_icon", resource: resource.object %>
   </div>
 
-  <!-- Right Section: Content -->
-  <div class="flex-1 p-4 flex flex-col justify-between">
-    <div>
-      <h3 class="text-lg font-semibold text-gray-900 leading-tight">
-        <%= render "bookmarks/editable_bookmark_icon", resource: resource.object %>
-        <%= link_to "#{ resource.title.titleize }#{
-          "<span class='text-gray-500 text-sm font-normal'> (not published)
-          </span>" if resource.inactive? && controller_name == "resources" }#{
-          "<span class='text-gray-500 text-sm font-normal'>
-          <span class='inline-flex items-center gap-1 ms-2 px-2 py-0.5 rounded-full
-          text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap'>
-                        🌟 Featured</span>
-          </span>" if resource.featured? && controller_name == "resources" }".html_safe,
-                    resource.featured_url.present? ? resource.featured_url : resource_path(resource),
-                    class: "hover:underline" %>
-      </h3>
+  <!-- CARD (horizontal, wrap text when narrow) -->
+  <div class="
+    flex flex-row flex-wrap
+    bg-white
+    border border-gray-200 rounded-xl shadow-sm hover:shadow-md
+    transition-all overflow-hidden cursor-pointer
+    relative z-20
+  ">
+
+    <!-- LEFT: IMAGE + TYPE -->
+    <div class="
+      w-24 md:w-1/4
+      flex-shrink-0
+      flex flex-col items-center text-center justify-center p-4
+      border-b md:border-b-0 md:border-r border-gray-200
+    ">
+
+      <div class="relative w-14 h-14">
+        <%= link_to main_link, class: "block w-full h-full" do %>
+
+          <!-- fallback icon -->
+          <div class="absolute inset-0 flex items-center justify-center text-gray-700 resource-icon">
+            <%= render "resources/resource_icon", kind: resource.kind %>
+          </div>
+
+          <!-- main image -->
+          <img
+            src="<%= resource.main_image_url %>"
+            alt="<%= resource.title.truncate(25) %>"
+            class="w-full h-full object-cover rounded-lg shadow-sm"
+            onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';"
+            />
+
+        <% end %>
+      </div>
+
+      <span class="mt-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+        <%= resource.kind == "Scholarship" ? "Scholar-ship" : (resource.kind || "Resource") %>
+      </span>
     </div>
 
+    <!-- RIGHT: CONTENT -->
+    <div class="flex-1 min-w-0 p-4 pr-14 pb-12 relative">
 
-      <div class="flex justify-end items-center mt-4 space-x-2">
-        <div class="flex items-center space-x-2">
-          <% if resource.download_attachment&.file&.attached? %>
-            <% from = controller_name == "resources" &&
-              action_name == "index" ? "resources_index" : (controller_name == "dashboard" &&
-              action_name == "index" ? "dashboard_index" : "unknown") %>
-            <%= link_to "<span class='fa fa-download' title='Download #{resource.kind}'></span>".html_safe,
-                               resource_download_path(resource,
-                                                      from: from),
-                               class: "btn btn-utility" %>
+      <!-- BADGES + TITLE (one wrap group) -->
+      <div class="mb-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- TITLE -->
+          <%= link_to main_link,
+                      class: "inline-flex min-w-0 max-w-full text-lg font-semibold
+                        text-gray-900 leading-tight hover:underline" do %>
+            <%= resource.title_with_badges(controller_name: controller_name) %>
           <% end %>
-          <% if controller_name == "resources" %>
-            <% if current_user.super_user? %>
-              <%= link_to "<span class='far fa-edit'></span>".html_safe,
-                          edit_resource_path(resource),
-                          class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
-            <% end %>
-          <% end %>
+
         </div>
       </div>
+
+      <!-- BOTTOM RIGHT ACTION BUTTONS -->
+      <div class="absolute bottom-3 right-3 flex items-center space-x-2 z-30">
+
+        <% if resource.download_attachment&.file&.attached? %>
+          <% from =
+               if controller_name == "resources" && action_name == "index"
+                 "resources_index"
+               elsif controller_name == "dashboard" && action_name == "index"
+                 "dashboard_index"
+               else
+                 "unknown"
+               end %>
+
+          <%= link_to(
+                content_tag(:span, "", class: "fa fa-download", title: "Download #{resource.kind}"),
+                resource_download_path(resource, from: from),
+                class: "btn btn-utility"
+              ) %>
+        <% end %>
+
+        <% if controller_name == "resources" && current_user.super_user? %>
+          <%= link_to(
+                content_tag(:span, "", class: "far fa-edit"),
+                edit_resource_path(resource),
+                class: "admin-only bg-blue-100 btn btn-secondary-outline"
+              ) %>
+        <% end %>
+
+      </div>
+
+    </div>
+
   </div>
 </div>

@@ -6,13 +6,13 @@ class DashboardController < ApplicationController
                         .published
                         .includes(:sectors)
                         .decorate
-    @featured_workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
+    @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
 
-    @popular_resources = Resource.featured
-                                 .published
-                                 .published_kinds
-                                 .order(ordering: :asc, created_at: :desc)
-                                 .decorate
+    @resources = Resource.featured
+                         .published
+                         .published_kinds
+                         .order(ordering: :asc, created_at: :desc)
+                         .decorate
 
     @stories = Story.featured.published.order(:title).decorate
     @community_news = CommunityNews.featured.published.order(updated_at: :desc).decorate

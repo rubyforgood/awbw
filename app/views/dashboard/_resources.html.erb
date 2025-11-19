@@ -1,0 +1,24 @@
+<section class="py-12 bg-violet-50">
+  <div class="max-w-6xl mx-auto px-4">
+    <%= render "dashboard_section_header",
+               title: "Popular Resources",
+               subtitle: "Tools and activities used across our network" %>
+
+    <% if @resources.any? %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% @resources.each do |resource| %>
+          <%= render "resources/resource_card", resource: resource.decorate %>
+        <% end %>
+      </div>
+
+      <div class="mt-6 text-right">
+        <%= link_to "Browse all resources",
+                    resources_path,
+                    class: "text-primary font-medium hover:underline" %>
+      </div>
+
+    <% else %>
+      <p class="text-gray-500 text-center py-10">No popular resources yet.</p>
+    <% end %>
+  </div>
+</section>

@@ -1,97 +1,46 @@
-<div class="w-full px-4 search-resources-page">
+<div class="bg-orange-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
   <!-- Header Row -->
   <div class="w-full">
     <div class="flex items-start justify-between mb-6">
       <div class="pr-6">
         <h2 class="text-2xl font-semibold mb-2">Resources (<%= @resources_count %>)</h2>
       </div>
-      <% if current_user.super_user? %>
-        <%= link_to "New Resource",
-                    new_resource_path,
-                    class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-      <% end %>
+      <div class="text-right text-end">
+        <% if current_user.super_user? %>
+          <%= link_to "New Resource",
+                      new_resource_path,
+                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
     </div>
-  </div>
 
-  <!-- Search Form -->
-  <div class="w-full">
-    <%= form_tag resources_path, method: :get, class: "space-y-2" do %>
-      <input type="hidden" name="kind" value="<%= params[:kind] %>" />
-      <!-- Filters Header -->
-      <div>
-        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters</h3>
+    <!-- Search Form -->
+    <div class="w-full">
+      <%= render "search_boxes" %>
+
+    </div>
+
+    <!-- Divider -->
+    <div class="w-full mt-6">
+      <hr class="border-gray-300 mb-6">
+    </div>
+
+    <!-- Results Table -->
+    <% if @resources.any? %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% @resources.each do |resource| %>
+          <%= render "resource_card", resource: resource.decorate %>
+        <% end %>
       </div>
-
-      <!-- Search Fields -->
-      <div class="flex flex-col md:flex-row items-start md:items-end gap-6">
-
-        <!-- Keywords -->
-        <div class="keywords-search-box flex-1">
-          <%#= label_tag :query, "Keywords", class: "block text-gray-700 font-medium mb-1" %>
-          <div class="relative">
-            <%= text_field_tag :query, params[:query],
-                                placeholder: "Keywords",
-                               class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10
-                               focus:ring-blue-500 focus:border-blue-500" %>
-            <button type="submit"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-              <i class="fa fa-search"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 admin-only bg-blue-100 p-1">
-          <h3 class="text-sm font-semibold text-gray-500 tracking-wide">Published</h3>
-          <label for="published"
-                 class="cursor-pointer inline-block px-4 py-2 rounded font-medium transition-colors duration-200">
-            <%= select_tag :published,
-                           options_for_select(
-                             [["All", ""],
-                              ["Published", "true"],
-                              ["Not published", "false"]],
-                             params[:published]
-                           ),
-                           include_blank: false,
-                           class: "border border-gray-300 rounded-md px-2 py-1 text-gray-700",
-                           onchange: "this.form.submit();" %>
-          </label>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <%= render "search_boxes_kinds", sortable_fields: Resource::PUBLISHED_KINDS %>
-        </div>
-
-        <!-- Clear Filters -->
-        <div>
-          <%= link_to 'Clear filters', resources_path, class: "btn btn-utility" %>
-        </div>
-
-      </div>
-
+    <% else %>
+      <p class="text-gray-500 text-center py-6">There are no resources that match your search. Please try again.</p>
     <% end %>
 
-  </div>
 
-  <!-- Divider -->
-  <div class="w-full mt-6">
-    <hr class="border-gray-300 mb-6">
-  </div>
-
-  <!-- Results Table -->
-  <% if @resources.any? %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <% @resources.each do |resource| %>
-        <%= render "resource_card", resource: resource.decorate %>
-      <% end %>
+    <!-- Pagination -->
+    <div class="pagination flex justify-center mt-6 w-full">
+      <%= tailwind_paginate @resources %>
     </div>
-  <% else %>
-    <p class="text-gray-500 text-center py-6">There are no resources that match your search. Please try again.</p>
-  <% end %>
-
-
-  <!-- Pagination -->
-  <div class="pagination flex justify-center mt-6">
-    <%= tailwind_paginate @resources %>
   </div>
 </div>
 

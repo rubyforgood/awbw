@@ -39,7 +39,9 @@
   </div>
 
   <div id="infinite-scrolling" class="hide">
-    <%= tailwind_paginate(@stories) %>
+    <div class="pagination flex justify-center mt-6">
+      <%= tailwind_paginate(@stories) %>
+    </div>
   </div>
 
   <% if @resources.next_page %>
