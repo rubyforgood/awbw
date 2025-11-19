@@ -3,7 +3,7 @@
 
 <div class="max-w-3xl mx-auto px-6 py-10 text-gray-800">
   <div class="text-right text-end">
-    <%= link_to "Website", @story.website_url, class: "btn btn-secondary-outline" if  @story.website_url %>
+    <%= link_to "Website", safe_url(@story.website_url), class: "btn btn-secondary-outline" if  @story.website_url %>
     <%= link_to "Dashboard", authenticated_root_path, class: "btn btn-secondary-outline" %>
   </div>
 
