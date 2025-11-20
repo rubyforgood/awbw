@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_19_023239) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_20_011040) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -568,7 +568,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_023239) do
     t.integer "created_by_id", null: false
     t.boolean "featured", default: false, null: false
     t.boolean "permission_given"
-    t.integer "project_id", null: false
+    t.integer "project_id"
     t.boolean "published", default: false, null: false
     t.integer "spotlighted_facilitator_id"
     t.bigint "story_idea_id"
@@ -577,7 +577,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_19_023239) do
     t.integer "updated_by_id", null: false
     t.string "website_url"
     t.integer "windows_type_id", null: false
-    t.integer "workshop_id", null: false
+    t.integer "workshop_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_stories_on_created_by_id"
     t.index ["project_id"], name: "index_stories_on_project_id"

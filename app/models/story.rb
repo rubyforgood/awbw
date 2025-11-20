@@ -3,9 +3,9 @@ class Story < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
 
   belongs_to :story_idea, optional: true
-  belongs_to :project
+  belongs_to :project, optional: true
   belongs_to :windows_type
-  belongs_to :workshop
+  belongs_to :workshop, optional: true
   belongs_to :spotlighted_facilitator, class_name: "Facilitator",
              foreign_key: "spotlighted_facilitator_id", optional: true
 
@@ -19,8 +19,6 @@ class Story < ApplicationRecord
   validates :images, content_type: ACCEPTED_CONTENT_TYPES
 
   validates :windows_type_id, presence: true
-  validates :project_id, presence: true
-  validates :workshop_id, presence: true
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
   validates :body, presence: true
