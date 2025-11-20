@@ -50,13 +50,13 @@
                   <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.short_name %></td>
                   <td class="px-4 py-2 text-sm text-gray-800">
                   <span title="<%= story.workshop&.title %>">
-                    <%= story.workshop&.title.truncate(30) %>
+                    <%= story.workshop&.title&.truncate(30) %>
                   </span>
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-800"><%= story.created_by.name %></td>
                   <td class="px-4 py-2 text-sm text-gray-800">
                   <span title="<%= story.project&.name %>">
-                    <%= story.project&.name.truncate(30) %>
+                    <%= story.project&.name&.truncate(30) %>
                   </span>
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
