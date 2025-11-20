@@ -1,70 +1,93 @@
+<% community_news_url   = community_news_url(@community_news) %>
+<% community_news_title = ERB::Util.url_encode(@community_news.title) %>
 <div class="min-h-screen py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
-      <div class="flex items-center justify-between mb-6">
-        <!-- Title -->
-        <h1 class="text-2xl font-semibold text-gray-900">
-          <%= @community_news.class.model_name.human %> Details
-        </h1>
+    <div class="bg-orange-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+      <!-- Top Right Utility Buttons -->
+      <div class="text-right mb-4 space-x-1">
+        <span class="inline-block text-sm">
+          <%= render "bookmarks/editable_bookmark_button", resource: @community_news %>
+        </span>
 
-        <!-- Buttons Group -->
-        <div class="flex items-center gap-2">
-          <%= link_to("Index", community_news_index_path, class: "btn btn-secondary-outline") %>
-          <% if current_user.super_user? %>
-            <%= link_to("Edit", edit_community_news_path(@community_news), class: "btn btn-primary-outline") %>
-          <% end %>
-        </div>
+        <%= link_to "Dashboard", authenticated_root_path,
+                    class: "btn btn-secondary-outline" %>
+
+        <% if current_user.super_user? %>
+          <%= link_to "Edit", edit_community_news_path(@community_news),
+                      class: "btn btn-secondary-outline admin-only bg-blue-100" %>
+        <% end %>
       </div>
 
-      <div class="space-y-6">
-        <div class="mt-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+      <!-- Header Row -->
+      <div class="w-full">
+        <div class="max-w-3xl mx-auto px-4 py-10 text-gray-800">
 
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Title:</p>
-                <p class="text-gray-900"><%= @community_news.title %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Body:</p>
-                <p class="text-gray-900"><%= @community_news.body %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Youtube url:</p>
-                <p class="text-gray-900"><%= @community_news.youtube_url %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Published:</p>
-                <p class="text-gray-900"><%= @community_news.published %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Featured:</p>
-                <p class="text-gray-900"><%= @community_news.featured %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Author:</p>
-                <p class="text-gray-900"><%= @community_news.author %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Reference url:</p>
-                <p class="text-gray-900"><%= @community_news.reference_url %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Project:</p>
-                <p class="text-gray-900"><%= @community_news.project %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Windows type:</p>
-                <p class="text-gray-900"><%= @community_news.windows_type %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Created by:</p>
-                <p class="text-gray-900"><%= @community_news.created_by %></p>
-              </div>
-                          <div class="mb-3">
-                <p class="font-bold text-gray-700">Updated by:</p>
-                <p class="text-gray-900"><%= @community_news.updated_by %></p>
-              </div>
-            
+          <!-- Title -->
+          <h1 class="text-3xl font-bold mb-2 text-gray-900 leading-tight">
+            <%= @community_news.title %>
+          </h1>
+
+          <!-- Meta Data (exact screenshot style) -->
+          <div class="text-sm text-gray-600 space-y-0.5 mb-6">
+            <p><strong>By:</strong> <%= @community_news.created_by.full_name %></p>
+            <p><strong>Organization Name:</strong> <%= @community_news.project&.name %></p>
+          </div>
+
+          <!-- Hero Image -->
+          <% if false && @community_news.images.attached? %>
+            <div class="mb-8">
+              <%= image_tag @community_news.images.first,
+                            class: "w-full rounded-lg shadow-sm border border-gray-200",
+                            alt: @community_news.title %>
+            </div>
+          <% end %>
+
+          <!-- community_news Body Text -->
+          <div class="prose prose-lg max-w-none text-gray-700 mb-10">
+            <%= simple_format(@community_news.body) %>
+          </div>
+
+          <!-- Share Section -->
+          <h3 class="font-semibold text-lg mb-3">Share this news:</h3>
+
+          <div class="flex space-x-4 mb-6">
+
+            <!-- Facebook -->
+            <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{community_news_url}",
+                        target: "_blank", rel: "noopener",
+                        class: "text-blue-600 hover:text-blue-800" do %>
+              <i class="fab fa-facebook-square fa-lg"></i>
+            <% end %>
+
+            <!-- X / Twitter -->
+            <%= link_to "https://twitter.com/intent/tweet?url=#{community_news_url}&text=#{community_news_title}",
+                        target: "_blank", rel: "noopener",
+                        class: "text-sky-500 hover:text-sky-700" do %>
+              <i class="fab fa-x-twitter fa-lg"></i>
+            <% end %>
+
+            <!-- LinkedIn -->
+            <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{community_news_url}",
+                        target: "_blank", rel: "noopener",
+                        class: "text-blue-700 hover:text-blue-900" do %>
+              <i class="fab fa-linkedin fa-lg"></i>
+            <% end %>
+
+            <!-- Pinterest -->
+            <%= link_to "https://pinterest.com/pin/create/button/?url=#{community_news_url}&description=#{community_news_title}",
+                        target: "_blank", rel: "noopener",
+                        class: "text-red-600 hover:text-red-800" do %>
+              <i class="fab fa-pinterest-square fa-lg"></i>
+            <% end %>
+
+          </div>
+
+          <!-- Footer Copy (matches screenshot) -->
+          <div class="text-sm text-gray-500 leading-relaxed border-t border-gray-300 pt-6">
+            <strong>A Window Between Worlds (AWBW)</strong>
+            supports hundreds of art workshop facilitators across the country to
+            incorporate creative expression into their work with trauma survivors.
+            These Windows Facilitators serve over 140,000 adults, teens, and children each year.
           </div>
         </div>
       </div>
