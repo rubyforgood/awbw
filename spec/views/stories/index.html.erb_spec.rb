@@ -12,7 +12,7 @@ RSpec.describe "stories/index", type: :view do
 
   it "renders a list of stories" do
     render
-    expect(rendered).to include(story1.title, story2.title)
+    expect(rendered).to include(story1.title.titleize, story2.title.titleize)
   end
 
   it "renders a friendly message when no stories exist" do
