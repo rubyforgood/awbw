@@ -58,19 +58,26 @@
    </div>
 
    <div class="text-sm text-gray-600">
-      <span>
-        Type/date:
-        <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.windows_type.present? %>
-          <%= "#{bookmarkable.windows_type.label} - #{bookmarkable.date}" %>
-        <% elsif bookmark.bookmarkable_type == "Event" %>
-          <%= bookmarkable.date %>
-        <% else %>
-          <%= bookmarkable.created_at.strftime("%B %d, %Y") %>
-        <% end %>
-        <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.workshop_age_ranges.any? %>
-          (<%= bookmarkable.workshop_age_ranges.to_sentence %>)
-        <% end %>
-      </span>
+    <span>
+      Type/date:
+      <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.windows_type.present? %>
+        <%= "#{bookmarkable.windows_type.label} - #{bookmarkable.date}" %>
+      <% elsif bookmark.bookmarkable_type == "Event" %>
+        <%= bookmarkable.date %>
+      <% else %>
+        <%= bookmarkable.created_at.strftime("%B %d, %Y") %>
+      <% end %>
+      <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.workshop_age_ranges.any? %>
+        (<%= bookmarkable.workshop_age_ranges.to_sentence %>)
+      <% end %>
+    </span>
+   </div>
+
+   <div class="text-sm text-gray-600">
+    <span>
+      Bookmarked on:
+      <%= bookmark.created_at.strftime("%B %d, %Y") %>
+    </span>
    </div>
  </div>
 </div>

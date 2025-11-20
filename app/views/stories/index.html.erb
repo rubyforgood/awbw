@@ -33,16 +33,19 @@
               <tbody class="divide-y divide-gray-100">
               <% @stories.each do |story| %>
                 <tr class="hover:bg-gray-50">
-                  <td class="px-4 py-2 text-sm text-gray-800">
-                  <span class="inline-flex items-center">
-                    <% if story.featured? %>
-                      <span class="inline-flex items-center gap-1 ms-2 px-2 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
-                        🌟 Featured
-                      </span>
-                    <% end %>
-                    <%= link_to story.title, story_path(story),
-                                class: "font-bold hover:text-indigo-800 hover:underline" %>
-                  </span>
+                  <td class="px-4 py-2 text-sm text-gray-800 flex items-center gap-2">
+
+                    <!-- BOOKMARK -->
+                    <span class="pointer-events-auto">
+                      <%= render "bookmarks/editable_bookmark_icon", resource: story %>
+                    </span>
+
+                    <!-- TITLE + BADGES -->
+                    <span class="inline-flex items-center gap-2">
+                      <%= link_to story.decorate.title_with_badges(controller_name: controller_name).html_safe,
+                                  story_path(story),
+                                  class: "font-bold hover:text-indigo-800 hover:underline" %>
+                    </span>
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.short_name %></td>
                   <td class="px-4 py-2 text-sm text-gray-800">
