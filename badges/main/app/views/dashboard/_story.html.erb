@@ -1,12 +1,16 @@
-<div class="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4">
+<div class="relative bg-white rounded-xl shadow-sm hover:shadow-md transition p-4">
 
-  <%= link_to story_path(story), class: "
-        flex flex-col md:flex-row items-start gap-4
-        cursor-pointer
-      " do %>
+  <!-- BOOKMARK COLUMN (not inside link) -->
+  <div class="absolute top-4 right-4 z-20 pointer-events-auto">
+    <%= render "bookmarks/editable_bookmark_icon", resource: story.object %>
+  </div>
 
-    <!-- LEFT: TEXT -->
-    <div class="flex-1">
+  <!-- CLICKABLE CARD -->
+  <%= link_to story_path(story),
+              class: "flex flex-col md:flex-row items-start gap-4 cursor-pointer block" do %>
+
+    <!-- LEFT: TEXT (leave right padding equal to bookmark width) -->
+    <div class="flex-1 pr-12"> <!-- <-- This prevents text going under bookmark -->
       <h3 class="text-lg font-semibold text-gray-900 leading-tight">
         <%= story.title %>
       </h3>
@@ -16,13 +20,8 @@
       </p>
     </div>
 
-    <!-- MIDDLE: BOOKMARK -->
-    <div class="shrink-0 flex items-start pt-1">
-      <%= render "bookmarks/editable_bookmark_icon", resource: story %>
-    </div>
-
     <!-- RIGHT: IMAGE -->
-    <div class="w-24 h-20 rounded bg-gray-200 flex items-center justify-center shrink-0">
+    <div class="w-24 h-20 rounded bg-gray-200 flex items-center justify-center shrink-0 mr-9">
       <% if false && story.image.attached? %>
         <%= image_tag story.image.variant(resize_to_fill: [96, 80]),
                       class: "w-full h-full object-cover rounded" %>

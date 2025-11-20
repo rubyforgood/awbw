@@ -1,4 +1,4 @@
-<%= tag.div id: dom_id(resource, :bookmark_button), class: "flex items-center gap-2" do %>
+<%= tag.span id: dom_id(resource, :bookmark_button) do %>
   <% if resource.bookmarks.any? { |b| b.user_id == current_user.id } %>
     <%= link_to bookmark_path(current_user.bookmark_for(resource)),
                     class: "inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600
