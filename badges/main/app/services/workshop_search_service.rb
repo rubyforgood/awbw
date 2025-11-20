@@ -169,7 +169,10 @@ class WorkshopSearchService
 									 else [:id, :title]
 									 end
 
-		workshop_ids = @workshops.select(*sort_columns).pluck(:id)
+    workshop_ids = @workshops
+      .select(*sort_columns)
+      .order(sort_columns)
+      .map(&:id)
 		@workshops = Workshop.where(id: workshop_ids)
 												 .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
 	end
