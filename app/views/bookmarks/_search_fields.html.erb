@@ -1,4 +1,4 @@
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-6">
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end mb-6">
   <!-- Title -->
   <div>
     <%= label_tag :title, "Title", class: "block text-sm font-medium text-gray-700 mb-1" %>
@@ -15,7 +15,7 @@
 
   <!-- Username -->
   <div>
-    <%= label_tag :user_name, "Username", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= label_tag :user_name, "Created by", class: "block text-sm font-medium text-gray-700 mb-1" %>
     <div class="relative">
       <%= text_field_tag :user_name, params[:user_name],
                          class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
@@ -29,14 +29,16 @@
 
   <!-- Type Dropdown -->
   <div>
-    <%= label_tag :bookmarkable_type, "Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= label_tag :bookmarkable_type, "Bookmark type", class: "block text-sm font-medium text-gray-700 mb-1" %>
     <div class="relative">
       <%= select_tag :bookmarkable_type,
                      options_for_select([["All types", ""],
                                          ["Workshops", "Workshop"],
                                          ["Stories", "Story"],
                                          ["Resources", "Resource"],
-                                         ["Events", "Event"]],
+                                         ["Community news", "CommunityNews"],
+                                         ["Events", "Event"],
+                                        ],
                                         params[:bookmarkable_type]),
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
@@ -46,7 +48,7 @@
 
   <!-- Type Dropdown -->
   <div>
-    <%= label_tag :windows_type, "Windows Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= label_tag :windows_type, "Windows type", class: "block text-sm font-medium text-gray-700 mb-1" %>
     <div class="relative">
       <%= select_tag :windows_type,
                      options_for_select(@windows_types_array,

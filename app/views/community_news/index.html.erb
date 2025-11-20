@@ -36,15 +36,17 @@
           <tbody class="divide-y divide-gray-100">
           <% @community_news.each do |news| %>
             <tr class="hover:bg-gray-50 transition">
-              <td class="px-4 py-2 text-sm text-gray-800">
-                <span class="inline-flex items-center">
-                  <% if news.featured? %>
-                    <span class="inline-flex items-center gap-1 ms-2 px-2 py-0.5 rounded-full text-sm font-medium
-                    bg-yellow-100 text-yellow-800 whitespace-nowrap pr-3">
-                      🌟 Featured
-                    </span>
-                  <% end %>
-                  <%= link_to news.title, community_news_path(news),
+              <td class="px-4 py-2 text-sm text-gray-800 flex items-center gap-2">
+
+                <!-- BOOKMARK -->
+                <span class="pointer-events-auto">
+                  <%= render "bookmarks/editable_bookmark_icon", resource: news %>
+                </span>
+
+                <!-- TITLE + BADGES -->
+                <span class="inline-flex items-center gap-2">
+                  <%= link_to news.decorate.title_with_badges(controller_name: controller_name).html_safe,
+                              community_news_path(news),
                               class: "font-bold hover:text-indigo-800 hover:underline" %>
                 </span>
               </td>

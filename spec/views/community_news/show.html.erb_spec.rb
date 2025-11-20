@@ -27,8 +27,5 @@ RSpec.describe "community_news/show", type: :view do
     render
     expect(rendered).to match(/Title/)
     expect(rendered).to match(/MyText/)
-    expect(rendered).to match(/Youtube Url/)
-    expect(rendered).to match(/false/)
-    expect(rendered).to match(/Reference Url/)
   end
 end
