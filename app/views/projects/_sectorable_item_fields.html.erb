@@ -1,7 +1,7 @@
 <% collection ||= Sector.published %>
 
 <div class="nested-fields flex items-center space-x-2 bg-purple-50 border border-purple-200
-                rounded-full px-3 shadow-sm text-sm text-purple-700 hover:bg-purple-100 transition">
+                rounded-full px-3 mb-4 shadow-sm text-sm text-purple-700 hover:bg-purple-100 transition">
   <!-- Select dropdown (optional – could be hidden if sector is already chosen) -->
   <%= f.input :sector_id,
               as: :select,
