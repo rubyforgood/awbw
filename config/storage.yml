@@ -6,6 +6,16 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
+digitalocean:
+  service: S3
+  access_key_id: <%= ENV['DO_SPACES_KEY'] %>
+  secret_access_key: <%= ENV['DO_SPACES_SECRET'] %>
+  region: <%= ENV['DO_SPACES_REGION'] %> # e.g., 'nyc3', 'sfo2', 'sgp1'
+  bucket: <%= ENV['DO_SPACES_BUCKET'] %>
+  endpoint: <%= "https://#{ENV['DO_SPACES_REGION']}.digitaloceanspaces.com" %>
+  force_path_style: false
+  http_open_timeout: 15
+  http_read_timeout: 30
 # Use rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 # amazon:
 #   service: S3
