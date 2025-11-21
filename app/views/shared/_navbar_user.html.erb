@@ -17,53 +17,62 @@
 
   </button>
   <!-- Dropdown menu -->
-  <div
-    class="
-      absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg outline
-      outline-black/5 transition hidden
-    "
-    id="avatar-dropdown"
-    data-dropdown-target="content"
-  >
-    <% if current_user.super_user? %>
-      <%= link_to "Admin",
-                  dashboard_admin_path,
-                  class:
-                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+<div
+  class="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg outline outline-black/5 transition hidden"
+  id="avatar-dropdown"
+  data-dropdown-target="content"
+>
+  <% if current_user.super_user? %>
+    <%= link_to dashboard_admin_path,
+                class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+      <i class="fas fa-cog"></i>
+      <span>Admin</span>
     <% end %>
-    <%= link_to "My profile",
-                current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user),
-                class:
-                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-    <% if current_user.project_users.any? %>
-      <% current_user.project_users.each do |project_user| %>
-        <%= link_to "My team#{ " (" + project_user.project.name.truncate(12) + ")" if current_user.project_users.many? }",
-                    project_path(project_user.project),
-                    class:
-                      "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+  <% end %>
+
+  <%= link_to (current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user)),
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-user"></i>
+    <span>My profile</span>
+  <% end %>
+
+  <% if current_user.project_users.any? %>
+    <% current_user.project_users.each do |project_user| %>
+      <%= link_to project_path(project_user.project),
+                  class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+        <i class="fas fa-users"></i>
+        <span>
+          My team<%= " (" + project_user.project.name.truncate(12) + ")" if current_user.project_users.many? %>
+        </span>
       <% end %>
     <% end %>
+  <% end %>
 
-    <%= link_to "My bookmarks",
-                personal_bookmarks_path,
-                class:
-                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+  <%= link_to personal_bookmarks_path,
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-bookmark"></i>
+    <span>My bookmarks</span>
+  <% end %>
 
-    <%= link_to "My workshop logs",
-                workshop_logs_path(user_id: current_user.id),
-                class:
-                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
+  <%= link_to workshop_logs_path(user_id: current_user.id),
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-clipboard-list"></i>
+    <span>My workshop logs</span>
+  <% end %>
 
+  <%= link_to change_password_path,
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-key"></i>
+    <span>Change password</span>
+  <% end %>
 
-    <%= link_to "Change password",
-                change_password_path,
-                class:
-                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-    <%= link_to "Logout",
-                destroy_user_session_path,
-                method: :delete,
-                data: { turbo_method: :delete },
-                class:
-                  "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-  </div>
+  <%= link_to destroy_user_session_path,
+              method: :delete,
+              data: { turbo_method: :delete },
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-sign-out-alt"></i>
+    <span>Logout</span>
+  <% end %>
+</div>
+
 </div>
