@@ -46,9 +46,18 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
-  Rails.application.routes.default_url_options[:host] ||= "http://localhost:3000"
+  # Store uploaded files on the digitalocean (see config/storage.yml for options).
+  config.active_storage.service = :digitalocean
+
+  config.routes.default_url_options = {
+    host: ENV.fetch("APP_HOST"),
+    protocol: "https"
+  }
+
+  config.active_storage.url_options = {
+    host: ENV.fetch("APP_HOST"),
+    protocol: "https"
+  }
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true
