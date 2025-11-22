@@ -40,8 +40,8 @@
             <%= f.simple_fields_for :sectorable_items do |sfi| %>
               <%= render "sectorable_item_fields", f: sfi %>
             <% end %>
-          </div>
-          <%= link_to_add_association "➕ Add Sector",
+
+             <%= link_to_add_association "➕ Add Sector",
                                       f,
                                       :sectorable_items,
                                       render_options: {
@@ -49,7 +49,8 @@
                                           collection: Sector.published.where.not(name: f.object.sector_list)
                                         }
                                       },
-                                      class: "btn btn-secondary-outline" %>
+                                    class: "btn btn-secondary-outline" %>
+          </div>
         </div>
       </div>
     </div>
