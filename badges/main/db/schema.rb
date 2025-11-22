@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_20_011040) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_20_164722) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -815,10 +815,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_20_011040) do
     t.boolean "legacy", default: false
     t.string "name"
     t.integer "ordering"
-    t.string "reference_url"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "variation_id"
     t.integer "workshop_id"
+    t.string "youtube_url"
     t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
   end
