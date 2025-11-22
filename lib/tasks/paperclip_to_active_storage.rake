@@ -6,12 +6,15 @@ require "csv"
 namespace :paperclip_to_active_storage do
 
 
-  S3_CLIENT = Aws::S3::Client.new(
-    region: ENV['AWS_REGION'],
-    access_key_id: ENV['AWS_ACCESS_KEY_ID'],
-    secret_access_key: ENV['AWS_SECRET_ACCESS_KEY']
-  )
   CSV_PATH = Rails.root.join("tmp/migration_log.csv")
+
+  def s3_client
+    Aws::S3::Client.new(
+      region: ENV['AWS_REGION'],
+      access_key_id: ENV['AWS_ACCESS_KEY_ID'],
+      secret_access_key: ENV['AWS_SECRET_ACCESS_KEY']
+    )
+  end
 
   def migration_map
     {
@@ -51,7 +54,7 @@ namespace :paperclip_to_active_storage do
       temp = Tempfile.new(file_name)
       temp.binmode
 
-      S3_CLIENT.get_object(bucket: bucket, key: key) do |chunk|
+      s3_client.get_object(bucket: bucket, key: key) do |chunk|
         temp.write(chunk)
       end
 
@@ -81,7 +84,7 @@ namespace :paperclip_to_active_storage do
  
   def upload_csv(file_name)
       file_path = Rails.root.join("tmp/migration_log.csv")
-      blob = ActiveStorage::Blob.create_and_upload!(
+      ActiveStorage::Blob.create_and_upload!(
         io: File.open(file_path, "rb"),
         key: file_name,
         filename: file_name,
@@ -158,7 +161,7 @@ namespace :paperclip_to_active_storage do
             puts "Checking S3: #{key}"
 
             begin
-              S3_CLIENT.head_object(bucket: bucket, key: key)
+              s3_client.head_object(bucket: bucket, key: key)
               puts "✅ Found #{model}##{record.id} (#{file_name})"
               csv << [model.name, record.id, field, file_name, key]
             rescue Aws::S3::Errors::NoSuchKey
