@@ -22,11 +22,12 @@ namespace :paperclip_to_active_storage do
       Attachment => [:file],
       MediaFile => [:file],
       Image => [:file],
-      Workshop => [:thumbnail, :header]
+      Workshop => [:thumbnail, :header],
+      Ckeditor::Picture => [:data],
+      Ckeditor::AttachmentFile => [:data],
+      Report => [:form_file],
     }
 
-    # CkeditorAssets => [:data]
-    # Report => [:form_file],
   end
 
   def migrate_attachment(record, field)
@@ -48,7 +49,17 @@ namespace :paperclip_to_active_storage do
 
     bucket = ENV['AWS_S3_BUCKET']
     key_path = record.id.to_s.rjust(9, "0").scan(/.{1,3}/).join("/")
-    key = "#{record.class.table_name}/#{field.to_s.pluralize}/#{key_path}/original/#{file_name}"
+
+    key = case model
+          when Report
+            "workshop_ideas/headers/#{key_path}/original/#{file_name}"
+          when Ckeditor::Picture
+              "ckeditor_assets/pictures/#{model.id}/original_#{File.basename(file_name, '.*')}#{File.extname(file_name)}"
+          when Ckeditor::AttachmentFile
+            "ckeditor_assets/attachments/#{model.id}/#{file_name}"
+          else
+            "#{model.table_name}/#{field.to_s.pluralize}/#{key_path}/original/#{file_name}"
+          end
 
     begin
       temp = Tempfile.new(file_name)
@@ -157,7 +168,17 @@ namespace :paperclip_to_active_storage do
             end
 
             key_path = record.id.to_s.rjust(9, "0").scan(/.{1,3}/).join("/")
-            key = "#{model.table_name}/#{field.to_s.pluralize}/#{key_path}/original/#{file_name}"
+
+            key = case model.to_s
+                  when "Report"
+                    "workshop_ideas/headers/#{key_path}/original/#{file_name}"
+                  when "Ckeditor::Picture"
+                     "ckeditor_assets/pictures/#{record.id}/original_#{File.basename(file_name, '.*')}#{File.extname(file_name)}"
+                  when "Ckeditor::AttachmentFile"
+                    "ckeditor_assets/attachments/#{record.id}/#{file_name}"
+                  else
+                    "#{model.table_name}/#{field.to_s.pluralize}/#{key_path}/original/#{file_name}"
+                  end
             puts "Checking S3: #{key}"
 
             begin
