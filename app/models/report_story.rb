@@ -1,2 +1,0 @@
-class ReportStory < Report
-end
