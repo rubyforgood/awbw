@@ -1,0 +1,2 @@
+class ReportStory < Report
+end
