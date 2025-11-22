@@ -64,7 +64,7 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [:name, :code, :inactive, :ordering, :reference_url, :created_by_id, :workshop_id])
+      [:name, :code, :inactive, :ordering, :youtube_url, :created_by_id, :workshop_id])
   end
 
 end
