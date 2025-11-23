@@ -4,28 +4,33 @@
 
   <!-- Hidden menu items -->
   <div id="fab-menu"
-       class="hidden flex flex-col items-end space-y-2 mb-2 transition-all duration-300">
-    <%= link_to "FAQs",
-                faqs_path,
-                class: "block bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100
-                        border border-gray-300 text-sm font-medium transition w-max" %>
+     class="hidden flex flex-col items-start space-y-2 mb-2 p-4 bg-white border border-gray-300 rounded-lg shadow-md transition-all duration-300">
+ 
+  <%= link_to faqs_path, class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
+    <i class="fas fa-question-circle"></i> 
+    <span>FAQs</span>
+  <% end %>
 
-    <%= link_to "Contact Us",
-                contact_us_path,
-                class: "block bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100
-                        border border-gray-300 text-sm font-medium transition w-max" %>
 
-    <%= link_to "Public Site",
-                "https://www.awbw.org",
-                target: "_blank",
-                class: "block bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100
-                        border border-gray-300 text-sm font-medium transition w-max" %>
-    <%= link_to "Help",
-                dashboard_help_path,
-                target: "_blank",
-                class: "block bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100
-                        border border-gray-300 text-sm font-medium transition w-max" %>
-  </div>
+  <%= link_to contact_us_path, class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
+    <i class="fas fa-envelope"></i>
+    <span>Contact Us</span>
+  <% end %>
+
+
+  <%= link_to "https://www.awbw.org", target: "_blank", class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
+    <i class="fas fa-globe"></i>
+    <span>Public Site</span>
+  <% end %>
+
+
+  <%= link_to dashboard_help_path, class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
+    <i class="fas fa-circle-info"></i>
+    <span>Help</span>
+  <% end %>
+</div>
+
+
 
   <!-- Main round button -->
   <button id="fab-button"

@@ -15,30 +15,35 @@
       <span>New</span>
     </button>
     <!-- Dropdown menu -->
-    <div
-      id="workshop-dropdown"
-      class="
-        absolute right-0 top-11 mt-2 w-48 rounded-md bg-white py-1 shadow-lg outline
-        outline-black/5 transition transition-discrete hidden
-      "
-      data-dropdown-target="content"
-    >
-      <%= link_to "New workshop variation",
-                  new_workshop_variation_path,
-                  class:
-                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-      <%= link_to "New workshop idea",
-                  new_workshop_idea_path,
-                  class:
-                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-      <%= link_to "New workshop log",
-                  new_workshop_log_path,
-                  class:
-                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-      <%= link_to "New story idea",
-                  new_story_idea_path,
-                  class:
-                    "block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden" %>
-    </div>
+   <div
+  id="workshop-dropdown"
+  class="absolute right-0 top-11 mt-2 w-48 rounded-md bg-white py-1 shadow-lg outline outline-black/5 transition transition-discrete hidden"
+  data-dropdown-target="content"
+>
+  <%= link_to new_workshop_variation_path,
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-layer-group"></i>
+    <span>New workshop variation</span>
+  <% end %>
+
+  <%= link_to new_workshop_idea_path,
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-lightbulb"></i>
+    <span>New workshop idea</span>
+  <% end %>
+
+  <%= link_to new_workshop_log_path,
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-clipboard-list"></i>
+    <span>New workshop log</span>
+  <% end %>
+
+  <%= link_to new_story_idea_path,
+              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+    <i class="fas fa-book-open"></i>
+    <span>New story idea</span>
+  <% end %>
+</div>
+
   </div>
 </div>
