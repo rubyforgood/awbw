@@ -1,4 +1,6 @@
 class Ckeditor::Picture < ApplicationRecord # Ckeditor::Asset
+  self.table_name = "ckeditor_assets"
+
   ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png"].freeze
   has_one_attached :data
   validates :data, size: {less_than: 2.megabytes}, content_type: ACCEPTED_CONTENT_TYPES, attached: true
