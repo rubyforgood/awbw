@@ -333,7 +333,11 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_23_164008) do
     t.integer "owner_id"
     t.string "owner_type"
     t.integer "report_id"
+<<<<<<< HEAD
     t.string "type", default: "Images::GalleryImage", null: false
+=======
+    t.string "type", default: "GalleryImage", null: false
+>>>>>>> b3025845 (Change Image to STI so MainImage can be separate from the rest of the images, now named GalleryImage)
     t.datetime "updated_at", precision: nil, null: false
     t.index ["owner_id"], name: "index_images_on_owner_id"
     t.index ["type"], name: "index_images_on_type"
