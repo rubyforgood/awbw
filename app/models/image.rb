@@ -6,5 +6,6 @@ class Image < ApplicationRecord
   has_one_attached :file
 
   ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif"].freeze
-  validates :file, content_type: ACCEPTED_CONTENT_TYPES
+  validates :file,
+            content_type: ACCEPTED_CONTENT_TYPES
 end

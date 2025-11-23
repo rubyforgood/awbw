@@ -86,6 +86,14 @@ class Project < ApplicationRecord
     addresses.first&.locality
   end
 
+  def organization_locality
+    addresses.active.first&.locality
+  end
+
+  def organization_description
+    "#{name}, #{organization_locality}"
+  end
+
   def sector_list
     sectors.pluck(:name)
   end
