@@ -1,15 +1,10 @@
 class WindowsType < ApplicationRecord
-  # Associations
+  TYPES = ["Adult", "Children", "Combined"]
+
   has_many :workshops
   has_many :age_ranges
   has_many :reports
   has_many :form_builders
-
-  TYPES = ["Adult", "Children", "Combined"]
-
-  def custom_label_method
-    self.name.gsub("LOG", "").gsub("WORKSHOP", "WINDOWS").titleize.strip.gsub("Children", "Children's")
-  end
 
   # Methods
   def self.create_defaults

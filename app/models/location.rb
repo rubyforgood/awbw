@@ -1,8 +1,7 @@
-class Location < ApplicationRecord
+class Location < ApplicationRecord # TODO remove this class if unused
   # Validations
   validates_presence_of :city, :country
 
-  # Methods
   def name
     "#{city}, #{state}"
   end
