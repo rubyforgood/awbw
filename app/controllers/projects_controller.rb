@@ -75,6 +75,8 @@ class ProjectsController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
+    @project.build_logo_image if @project.logo_image.blank?
+
     @project_statuses = ProjectStatus.all
   end
 
@@ -94,7 +96,7 @@ class ProjectsController < ApplicationController
       :name, :description, :start_date, :end_date, :mission_vision_values, :internal_id,
       :inactive, :notes, :agency_type,  :agency_type_other, :website_url,
       :project_status_id, :location_id, :windows_type_id,
-
+      logo_image_attributes: [:id, :file, :_destroy],
       addresses_attributes: [
         :id,
         :address_type,

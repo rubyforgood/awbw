@@ -49,6 +49,9 @@ class CommunityNewsController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
+    @community_news.build_main_image if @community_news.main_image.blank?
+    @community_news.gallery_images.build
+
     @organizations = Project.pluck(:name, :id).sort_by(&:first)
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @community_news.author_id))
@@ -67,7 +70,9 @@ class CommunityNewsController < ApplicationController
       :title, :body, :published, :featured,
       :reference_url,:youtube_url,
       :project_id, :windows_type_id,
-      :author_id, :created_by_id, :updated_by_id
+      :author_id, :created_by_id, :updated_by_id,
+      main_image_attributes: [:id, :file, :_destroy],
+      gallery_images_attributes: [:id, :file, :_destroy]
     )
   end
 end

@@ -47,10 +47,11 @@ class WorkshopIdeasController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @potential_series_workshops = Workshop.published.order(:title)
-    image = @workshop_idea.images.first || @workshop_idea.images.build # build an image if there isn't one
+    @workshop_idea.build_main_image if @workshop_idea.main_image.blank?
+    @workshop_idea.gallery_images.build
 
     @age_ranges = AgeRange.pluck(:name)
+    @potential_series_workshops = Workshop.published.order(:title)
     @category_metadata = Metadatum.published.includes(:categories).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
@@ -89,7 +90,8 @@ class WorkshopIdeasController < ApplicationController
       :visualization, :visualization_spanish,
       :warm_up, :warm_up_spanish,
 
-      images_attributes: [:id, :file, :caption, :caption_spanish, :_destroy],
+      main_image_attributes: [:id, :file, :_destroy],
+      gallery_images_attributes: [:id, :file, :_destroy],
       workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :series_order, :_destroy],

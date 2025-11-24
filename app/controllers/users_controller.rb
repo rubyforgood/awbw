@@ -138,7 +138,7 @@ class UsersController < ApplicationController
       :notes, :primary_address, :avatar, :subscribecode,
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
       :confirmed, :inactive, :super_user, :legacy, :legacy_id,
-
+      avatar_image_attributes: [:id, :file, :_destroy],
       project_users_attributes: [:id, :project_id, :position, :inactive, :_destroy]
     )
   end
