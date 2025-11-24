@@ -5,11 +5,14 @@
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @user.class.model_name.human %></h1>
         <div class="flex space-x-2">
           <% if current_user == @user %>
-            <%= link_to 'Change password',
+            <%= link_to "Change password",
                         change_password_path,
                         class: "btn btn-secondary-outline" %>
           <% end %>
-          <%= link_to 'View',
+          <%= link_to "Facilitator",
+                      facilitator_path(@user.facilitator),
+                      class: "btn btn-secondary-outline" if @user.facilitator %>
+          <%= link_to "View",
                       user_path(@user),
                       class: "btn btn-secondary-outline" %>
         </div>

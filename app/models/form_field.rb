@@ -1,10 +1,11 @@
 class FormField < ApplicationRecord
-  # Associations
   belongs_to :form, inverse_of: :form_fields
   has_many :form_field_answer_options, dependent: :destroy
   has_many :report_form_field_answers, dependent: :destroy
-  has_many :answer_options, through: :form_field_answer_options
   has_many :childs, foreign_key: "parent_id", class_name: "FormField"
+
+  # has_many through
+  has_many :answer_options, through: :form_field_answer_options
 
   # Validations
   validates_presence_of :question
@@ -30,6 +31,7 @@ class FormField < ApplicationRecord
     :date,
   ]
 
+  # Nested attributes
   accepts_nested_attributes_for :form_field_answer_options
 
   default_scope { order(ordering: :desc) }

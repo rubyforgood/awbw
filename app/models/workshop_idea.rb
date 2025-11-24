@@ -1,18 +1,8 @@
 class WorkshopIdea < ApplicationRecord
-  before_save :set_time_frame
-
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
-
   has_many :workshops
-
-  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
-  has_one_attached :header
-  validates :header, content_type: ACCEPTED_CONTENT_TYPES
-  has_many :images, as: :owner, dependent: :destroy
-  validate :images_must_be_valid_type
-
   has_many :workshop_series_children, # When this workshop is the parent in a series
            -> { order(:series_order) },
            class_name: "WorkshopSeriesMembership",
@@ -22,12 +12,24 @@ class WorkshopIdea < ApplicationRecord
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_child_id",
            dependent: :destroy
+  # Images
+  has_one_attached :header
+  # Image associations
+  has_one :main_image, -> { where(type: "Images::MainImage") },
+          as: :owner, class_name: "Images::MainImage", dependent: :destroy
+  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
+           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
 
-  accepts_nested_attributes_for :images, reject_if: :all_blank, allow_destroy: true
+  before_save :set_time_frame
+
+  # Nested attributes
+  accepts_nested_attributes_for :main_image, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
                                 allow_destroy: true
 
+  # Scopes
   scope :title, -> (title) { where("workshop_ideas.title like ?", "%#{ title }%") }
   scope :author_name, ->(author_name) { joins(:created_by).
     where("users.first_name like ? or users.last_name like ? or users.email like ?",
@@ -63,15 +65,5 @@ class WorkshopIdea < ApplicationRecord
 
   def set_time_frame
     self.timeframe = time_frame_total
-  end
-
-  def images_must_be_valid_type
-    return if images.none?
-
-    images.each do |image|
-      unless ACCEPTED_CONTENT_TYPES.include?(image.file.content_type)
-        errors.add(:images, "must be a JPEG or PNG (#{image.filename})")
-      end
-    end
   end
 end

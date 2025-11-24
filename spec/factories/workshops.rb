@@ -12,9 +12,6 @@ FactoryBot.define do
     materials { Faker::Lorem.paragraph }
     time_opening { rand(0..75) }
 
-    thumbnail_file_name { nil }
-    header_file_name { nil }
-
     trait :with_organization do
       after(:create) do |workshop|
         workshop.organizations << create(:organization)

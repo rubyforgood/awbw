@@ -49,6 +49,46 @@ module ApplicationHelper
     end
   end
 
+  def main_image_url(record)
+    return nil unless record.present?
+
+    # All possible attachment names used across your models
+    attachment_candidates = ["main_image", "avatar", "photo", "banner", "hero_image",
+                             "gallery_images", "images", "attachments", "media_files"]
+
+    attachment_candidates.each do |name|
+      next unless record.respond_to?(name)
+
+      value = record.public_send(name)
+      next if value.blank?
+
+      # CASE 1 — Direct ActiveStorage attachment (e.g., user.avatar)
+      if value.respond_to?(:attached?) && value.attached?
+        return url_for(value)
+      end
+
+      # CASE 2 — Wrapper Model (e.g., StoryIdea.main_image)
+      if value.respond_to?(:file) &&
+        value.file.respond_to?(:attached?) &&
+        value.file.attached?
+
+        return url_for(value.file)
+      end
+
+      # CASE 3 — Collection (e.g., StoryIdea.gallery_images)
+      # value = ActiveRecord::Associations::CollectionProxy each item is an Image STI instance
+      if value.is_a?(Enumerable)
+        img = value.find { |img| img.respond_to?(:file) &&
+          img.file.respond_to?(:attached?) &&
+          img.file.attached? }
+
+        return url_for(img.file) if img
+      end
+    end
+
+    nil
+  end
+
   def ra_path(obj, action = nil)
     action = action.nil? ? '' : "#{action}_"
 
@@ -89,6 +129,57 @@ module ApplicationHelper
       name.to_s.titleize
     end
   end
+
+  def title_with_badges(record, admin: false, display_windows_type: false)
+    content_tag :div, class: "flex flex-col" do
+
+      # ---- BADGE ROW ---------------------------------------------------------
+      badge_row = content_tag :div, class: "flex flex-wrap items-center gap-2 mb-1" do
+        fragments = []
+
+        # Hidden badge
+        if admin && record.respond_to?(:inactive?) &&
+          record.inactive? && controller_name != "dashboard"
+          fragments << content_tag(
+            :span,
+            content_tag(:i, "", class: "fa-solid fa-eye-slash mr-1") + " Hidden",
+            class: "inline-flex items-center px-2 py-0.5 rounded-full
+                  text-sm font-medium bg-blue-100 text-gray-600 whitespace-nowrap"
+          )
+        end
+
+        # Featured badge
+        if record.respond_to?(:featured?) &&
+          record.featured? && controller_name != "dashboard"
+          fragments << content_tag(
+            :span,
+            "🌟 Featured",
+            class: "inline-flex items-center px-2 py-0.5 rounded-full
+                  text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap"
+          )
+        end
+
+        safe_join(fragments)
+      end
+
+      # ---- TITLE + WINDOWS TYPE ------------------------------------------------
+      title_content = record.title.to_s
+
+      if display_windows_type && record.respond_to?(:windows_type) && record.windows_type.present?
+        title_content += " (#{record.windows_type.short_name})"
+      end
+
+      title_row = content_tag(
+        :span,
+        title_content.html_safe,
+        class: "text-lg font-semibold text-gray-900 leading-tight"
+      )
+
+      # Combine badge row + title row
+      safe_join([badge_row, title_row])
+    end
+  end
+
 
   def icon_for_mimetype(mime)
     mimes = {

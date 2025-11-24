@@ -129,6 +129,8 @@ class WorkshopLogsController < ApplicationController
   private
 
   def set_form_variables
+    @workshop_log.gallery_images.build
+
     if params[:workshop_id]
       @workshop = Workshop.where(id: params[:workshop_id]).last
     elsif params[:windows_type_id]
@@ -153,9 +155,6 @@ class WorkshopLogsController < ApplicationController
       qiq.quotable = @workshop_log
     end
 
-    # Pre-build a file upload for the form
-    @workshop_log.media_files.build if @workshop_log.media_files.empty?
-
     # @sectors = Sector.published.map{ |si| [ si.id, si.name ] }
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
 
@@ -171,7 +170,11 @@ class WorkshopLogsController < ApplicationController
     @title = params[:windows_type_id] == '3' ? :log_title : :title
     @agency_title = params[:windows_type_id] == '3' ? :log_title : :name
 
-    @agencies = current_user.projects.uniq
+    @agencies =
+      Project.where(id: current_user.projects.select(:id))
+             .or(Project.where(id: @workshop_log.project_id))
+             .distinct
+             .order(:name)
     agency = params[:agency_id].present? ? Project.where(id: params[:agency_id]).last : @agencies.first
     @agency_id = agency.id if agency
   end
@@ -201,8 +204,8 @@ class WorkshopLogsController < ApplicationController
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
         quote_attributes: [:id, :quote, :age, :workshop_id, :_destroy]],
-      media_files_attributes: [:id, :file, :_destroy],
       report_form_field_answers_attributes: [:id, :form_field_id, :answer_option_id,
-                                             :answer, :report_id, :_destroy])
+                                             :answer, :report_id, :_destroy],
+      gallery_images_attributes: [:id, :file, :_destroy])
   end
 end

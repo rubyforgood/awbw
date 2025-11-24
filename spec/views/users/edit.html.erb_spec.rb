@@ -14,16 +14,12 @@ RSpec.describe "users/edit", type: :view do
 
     assert_select "form[action=?][method=?]", user_path(user), "post" do
       # Inputs
-      %w[
-        first_name last_name email
-        state state2 zip zip2 phone phone2 phone3 best_time_to_call
-        inactive super_user
-      ].each do |field|
+      %w[ first_name last_name email inactive super_user ].each do |field|
         assert_select "input[name=?]", "user[#{field}]"
       end
 
       # Textareas
-      %w[address address2 city city2 notes].each do |field|
+      %w[notes].each do |field|
         assert_select "textarea[name=?]", "user[#{field}]"
       end
     end

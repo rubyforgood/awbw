@@ -7,42 +7,43 @@ class User < ApplicationRecord
   after_create :set_default_values
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
-  # Avatar
-  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png"].freeze
-  has_one_attached :avatar
-  validates :avatar, content_type: ACCEPTED_CONTENT_TYPES
-
   # Associations
   belongs_to :facilitator, optional: true
-  has_many :workshops
-  has_many :workshop_logs
-  has_many :reports
-  has_many :communal_reports, through: :projects, source: :reports
   has_many :bookmarks, dependent: :destroy
-  has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: "Workshop"
-  has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: "Resource"
-  has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: "Event"
+  has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
+  has_many :notifications, as: :noticeable
   has_many :project_users, dependent: :destroy
-  has_many :projects, through: :project_users
-  has_many :windows_types, through: :projects
+  has_many :reports
   has_many :resources
   has_many :user_forms, dependent: :destroy
-  has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
-  has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct }, through: :projects, source: :project_users
-  has_many :notifications, as: :noticeable
-  has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
-  has_many :events, through: :event_registrations
+  has_many :workshops
+  has_many :workshop_logs
 
+  # created_by associations
   has_many :stories_as_creator, foreign_key: :created_by_id, class_name: "Story"
   has_many :story_ideas_as_creator, foreign_key: :created_by_id, class_name: "StoryIdea"
   has_many :workshop_variations_as_creator, foreign_key: :created_by_id, class_name: "WorkshopVariation"
   has_many :workshops_as_creator, foreign_key: :created_by_id, class_name: "Workshop"
+  has_many :workshop_ideas_as_creator, foreign_key: :created_by_id, class_name: "WorkshopIdea"
 
-  # Nested
+  # has_many through
+  has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: "Workshop"
+  has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: "Resource"
+  has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: "Event"
+  has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct },
+           through: :projects, source: :project_users
+  has_many :communal_reports, through: :projects, source: :reports
+  has_many :events, through: :event_registrations
+  has_many :projects, through: :project_users
+  has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
+  has_many :windows_types, through: :projects
+  # Images
+  has_one_attached :avatar # old paperclip -- TODO convert these to SquareImage belonging to Facilitator
+
+  # Nested attributes
   accepts_nested_attributes_for :user_forms
-  accepts_nested_attributes_for :project_users,
-    reject_if: proc { |attrs| attrs["organization_id"].blank? },
-    allow_destroy: true
+  accepts_nested_attributes_for :project_users, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["organization_id"].blank? }
 
   # Validations
   validates :first_name, :last_name, presence: true

@@ -1,13 +1,17 @@
 class Facilitator < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
-
   has_one :user, inverse_of: :facilitator, dependent: :nullify
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :sectors, through: :sectorable_items
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
+  # Image associations
+  has_one :avatar_image, -> { where(type: "Images::SquareImage") },
+          as: :owner, class_name: "Images::SquareImage",
+          dependent: :destroy# new active storage
 
+  # Validations
   validates :first_name, presence: true
   validates :last_name, presence: true
 
@@ -19,6 +23,8 @@ class Facilitator < ApplicationRecord
   # TODO: add validation on STATE
   # TODO: add validation on phone number type
 
+  # Nested attributes
+  accepts_nested_attributes_for :avatar_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs['sector_id'].blank? }
   accepts_nested_attributes_for :user, update_only: true

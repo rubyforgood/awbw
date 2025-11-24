@@ -7,7 +7,7 @@
 
   <!-- CLICKABLE CARD -->
   <%= link_to story_path(story),
-              class: "flex flex-col md:flex-row items-start gap-4 cursor-pointer block" do %>
+              class: "flex flex-col md:flex-row md:items-center gap-4 cursor-pointer block" do %>
 
     <!-- LEFT: TEXT (leave right padding equal to bookmark width) -->
     <div class="flex-1 pr-12"> <!-- <-- This prevents text going under bookmark -->
@@ -21,10 +21,11 @@
     </div>
 
     <!-- RIGHT: IMAGE -->
-    <div class="w-24 h-20 rounded bg-gray-200 flex items-center justify-center shrink-0 mr-9">
-      <% if false && story.image.attached? %>
-        <%= image_tag story.image.variant(resize_to_fill: [96, 80]),
-                      class: "w-full h-full object-cover rounded" %>
+    <div class="w-24 h-14 rounded bg-gray-200 flex items-center justify-center shrink-0 mr-9">
+      <% if story.main_image&.file&.blob&.persisted? %>
+        <%= image_tag story.main_image.file,
+                      class: "w-full rounded shadow-sm border border-gray-200",
+                      alt: story.title %>
       <% else %>
         <svg class="w-6 h-6 text-gray-400"
              fill="currentColor" viewBox="0 0 20 18"></svg>

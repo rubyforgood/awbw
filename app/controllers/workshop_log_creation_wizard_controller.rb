@@ -169,7 +169,7 @@ class WorkshopLogCreationWizardController < ApplicationController
       #sectorable_items_attributes: [:_create, :sector_id, :is_leader],
       #sectors_attributes: [:_create, :name],
       workshop_age_ranges_attributes: [:age_range_id, :workshop_id, :_create],
-      quotes_attributes: [:quote, :age]
+      quotes_attributes: [:quote, :age],
     )
   end
 

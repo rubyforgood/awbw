@@ -40,6 +40,8 @@
                   input_html: { class: "w-full" } %>
     </div>
 
+    <%= render "shared/form_image_fields", f: f, include_main_image: true %>
+
     <% if current_user.super_user? %>
       <div class="flex items-start gap-6 bg-blue-50 p-4 rounded-lg">
         <%= f.input :inactive, as: :boolean, label: "Hidden?", input_html: { checked: f.object.id ? f.object.inactive : false } %>

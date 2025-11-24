@@ -9,7 +9,8 @@
       User-generated content
       <% @user_content_cards.each do |card| %>
         <a href="<%= card[:path] %>"
-           class="flex items-center gap-6 bg-white rounded-lg shadow-lg border border-gray-200
+           class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+                  <%= card[:bg_color] %> <%= card[:text_color] %>
                   hover:bg-gray-100 transition-colors transition-shadow duration-300 p-4">
 
           <div class="text-5xl text-gray-700 flex-shrink-0">
@@ -29,7 +30,8 @@
       System settings
       <% @system_cards.each do |card| %>
         <a href="<%= card[:path] %>"
-           class="flex items-center gap-6 bg-white rounded-lg shadow-lg border border-gray-200
+           class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+                  <%= card[:bg_color] %> <%= card[:text_color] %>
                   hover:bg-gray-100 transition-colors transition-shadow duration-300 p-4">
           <div class="text-5xl text-gray-700 flex-shrink-0">
             <%= card[:icon] %>
@@ -43,7 +45,8 @@
       <% end %>
       <% @reference_cards.each do |card| %>
         <a href="<%= card[:path] %>"
-           class="flex items-center gap-6 bg-white rounded-lg shadow-lg border border-gray-200
+           class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+                  <%= card[:bg_color] %> <%= card[:text_color] %>
                   hover:bg-gray-100 transition-colors transition-shadow duration-300 p-4">
 
           <div class="text-5xl text-gray-700 flex-shrink-0">
@@ -59,3 +62,26 @@
     </div>
   </div>
 </section>
+
+<div class="hidden
+    bg-gray-50 bg-gray-100 bg-gray-200 bg-gray-500
+    bg-blue-50 bg-blue-100 bg-blue-200 bg-blue-500
+    bg-green-50 bg-green-100 bg-green-200 bg-green-500
+    bg-indigo-50 bg-indigo-100 bg-indigo-200 bg-indigo-500
+    bg-orange-50 bg-orange-100 bg-orange-200 bg-orange-500
+    bg-pink-50 bg-pink-100 bg-pink-200 bg-pink-500
+    bg-purple-50 bg-purple-100 bg-purple-200 bg-purple-500
+    bg-red-800
+    bg-rose-50 bg-rose-100 bg-rose-200 bg-rose-500
+    bg-yellow-50 bg-yellow-100 bg-yellow-200
+
+    text-gray-50 text-transparent
+    text-blue-800
+    text-green-800 text-green-200
+    text-indigo-800
+    text-orange-800
+    text-pink-800
+    text-purple-800
+    text-red-800
+    text-yellow-800">
+</div>

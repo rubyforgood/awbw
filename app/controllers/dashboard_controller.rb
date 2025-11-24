@@ -22,42 +22,76 @@ class DashboardController < ApplicationController
   def admin
     if current_user.super_user?
       @user_content_cards = [
+        { title: "Bookmarks tally", path: tally_bookmarks_path, icon: "🔖",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "Recent Activity", path: dashboard_recent_activities_path, icon: "🧭",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "Event Registrations", path: event_registrations_path, icon: "🎟️",
+          bg_color: "bg-blue-100", text_color: "text-blue-800" },
+        { title: "!!!Quotes", path: authenticated_root_path, icon: "💬",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "Story Ideas", path: story_ideas_path, icon: "✍️️",
+          bg_color: "bg-rose-100", text_color: "text-rose-800" },
+        { title: "Workshop Variations", path: workshop_variations_path, icon: "🔀",
+          bg_color: "bg-purple-100", text_color: "text-purple-800" },
+        { title: "Workshop Ideas", path: workshop_ideas_path, icon: "💡",
+          bg_color: "bg-indigo-100", text_color: "text-indigo-800" },
 
-        { title: "Bookmarks tally", path: tally_bookmarks_path, icon: "🔖" },
-        { title: "Event Registrations", path: event_registrations_path, icon: "🎟️" },
-        { title: "!!!Quotes", path: authenticated_root_path, icon: "💬" },
-        { title: "Stories", path: stories_path, icon: "🗣️" },
-        { title: "Story Ideas", path: story_ideas_path, icon: "✍️️" },
-        { title: "!!!Vision Seeds", path: authenticated_root_path, icon: "🌱" },
-        { title: "Workshops", path: workshops_path, icon: "🎨" },
-        { title: "Workshop Ideas", path: workshop_ideas_path, icon: "💡" },
-        { title: "Workshop Variations", path: workshop_variations_path, icon: "🔀" },
-        { title: "Workshop Logs", path: workshop_logs_path, icon: "📝" },
-        { title: "!!!Annual Reports", path: authenticated_root_path, icon: "📊" },
-        { title: "Recent Activity", path: dashboard_recent_activities_path, icon: "🧭" },
+
+        { title: "!!!Vision Seeds", path: authenticated_root_path, icon: "🌱",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "!!!Annual Reports", path: authenticated_root_path, icon: "📊",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "Workshop Logs", path: workshop_logs_path, icon: "📝",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
       ]
 
       @system_cards = [
-        { title: "Banners", path: banners_path, icon: "📣" },
-        { title: "Events", path: events_path, icon: "📆" },
-        { title: "FAQs", path: faqs_path, icon: "❔" },
-        { title: "!!!Forms", path: authenticated_root_path, icon: "📋" },
-        { title: "Organizations", path: projects_path, icon: "🏫" },
-        { title: "Resources", path: resources_path, icon: "📚" },
-        { title: "Users", path: users_path, icon: "👥" },
-        { title: "Facilitators", path: facilitators_path, icon: "🧑‍🎨" },
+        { title: "Banners", path: banners_path, icon: "📣",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "CommunityNews", path: community_news_index_path, icon: "📣",
+          bg_color: "bg-orange-50", text_color: "text-gray-800" },
+        { title: "Events", path: events_path, icon: "📆",
+          bg_color: "bg-blue-50", text_color: "text-gray-800" },
+        { title: "FAQs", path: faqs_path, icon: "❔",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "Stories", path: stories_path, icon: "🗣️",
+          bg_color: "bg-rose-50", text_color: "text-gray-800" },
+        { title: "Resources", path: resources_path, icon: "📚",
+          bg_color: "bg-violet-50", text_color: "text-gray-800" },
+        { title: "Workshops", path: workshops_path, icon: "🎨",
+          bg_color: "bg-indigo-50", text_color: "text-gray-800" },
+
+
+
+
+        { title: "Facilitators", path: facilitators_path, icon: "🧑‍🎨",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "Organizations", path: projects_path, icon: "🏫",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "Users", path: users_path, icon: "👥",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "!!!Forms", path: authenticated_root_path, icon: "📋",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
 
       ]
 
       @reference_cards = [
 
-        { title: "!!!Age ranges", path: authenticated_root_path, icon: "👶" },
-        { title: "!!!Categories", path: authenticated_root_path, icon: "🗂️" },
-        { title: "!!!Sectors", path: authenticated_root_path, icon: "🏭" },
-        { title: "!!!Project Statuses", path: authenticated_root_path, icon: "🧮️" },
-        # { title: "WindowsTypes", path: authenticated_root_path, icon: "🪟" },
-        # { title: "FormFields", path: authenticated_root_path, icon: "✏️" },
-        # { title: "FormAnswerOptions", path: authenticated_root_path, icon: "🗳️" },
+        { title: "!!!Age ranges", path: authenticated_root_path, icon: "👶",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "!!!Categories", path: authenticated_root_path, icon: "🗂️",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "!!!Sectors", path: authenticated_root_path, icon: "🏭",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        { title: "!!!Project Statuses", path: authenticated_root_path, icon: "🧮️",
+          bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        # { title: "WindowsTypes", path: authenticated_root_path, icon: "🪟",
+        #           bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        # { title: "FormFields", path: authenticated_root_path, icon: "✏️",
+        #           bg_color: "bg-gray-50", text_color: "text-gray-800" },
+        # { title: "FormAnswerOptions", path: authenticated_root_path, icon: "🗳️",
+        #           bg_color: "bg-gray-50", text_color: "text-gray-800" },
       ]
     else
       redirect_to authenticated_root_path, alert: 'You do not have permission.'

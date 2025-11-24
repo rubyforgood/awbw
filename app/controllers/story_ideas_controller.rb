@@ -37,10 +37,6 @@ class StoryIdeasController < ApplicationController
 
   def update
     if @story_idea.update(story_idea_params.except(:images))
-      # Attach new images *in addition* to existing ones
-      if story_idea_params[:images].present?
-        @story_idea.images.attach(story_idea_params[:images])
-      end
       redirect_to story_ideas_path, notice: "StoryIdea was successfully updated.", status: :see_other
     else
       set_form_variables
@@ -55,6 +51,9 @@ class StoryIdeasController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
+    @story_idea.build_main_image if @story_idea.main_image.blank?
+    @story_idea.gallery_images.build
+
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @projects = (@user || current_user).projects.order(:name)
     @windows_types = WindowsType.all
@@ -87,7 +86,8 @@ class StoryIdeasController < ApplicationController
       :permission_given, :publish_preferences, :promoted_to_story,
       :windows_type_id, :project_id, :workshop_id,
       :created_by_id, :updated_by_id,
-      :main_image, images: []
+      main_image_attributes: [:id, :file, :_destroy],
+      gallery_images_attributes: [:id, :file, :_destroy]
     )
   end
 end

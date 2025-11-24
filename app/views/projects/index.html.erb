@@ -64,6 +64,7 @@
         <table class="min-w-full border border-gray-200 rounded-lg divide-y divide-gray-200">
           <thead class="bg-gray-100">
           <tr>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Logo</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Windows type</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Locality</th>
@@ -77,6 +78,20 @@
           <tbody class="divide-y divide-gray-100">
           <% @projects.each do |project| %>
             <tr class="hover:bg-gray-50 transition">
+              <td class="px-4 py-2 text-center">
+                <% if project.logo_image&.file&.blob&.persisted? %>
+                  <%= link_to (image_tag url_for(project.logo_image.file),
+                                         class: "w-10 h-10 rounded-full object-cover
+                                           border border-gray-300 shadow-sm mx-auto").html_safe,
+                              project_path(project) %>
+                <% else %>
+                  <%= link_to project_path(project) do %>
+                    <svg class="w-10 h-10 text-gray-400 bg-gray-200 rounded-full"
+                         fill="currentColor" viewBox="0 0 20 18"></svg>
+                  <% end %>
+                <% end %>
+              </td>
+
               <td class="px-4 py-2 font-semibold">
                 <%= link_to project.name, project_path(project), class: "hover:underline" %>
               </td>
