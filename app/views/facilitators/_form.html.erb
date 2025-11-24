@@ -54,9 +54,46 @@
 
       <!-- Avatar -->
       <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
-        <%= render 'shared/form_image_field', f: u, resource: u.object,
-                   field_name: :avatar, rounded: true %>
+        <!-- AVATAR -->
+        <%= f.fields_for :avatar_image do |img| %>
+          <div class="w-full flex flex-col text-center items-center gap-4">
+            <%= render "shared/form_image_field",
+                       f: img,
+                       field: :avatar_image,
+                       resource: img.object,
+                       label: "Avatar" %>
+          </div>
+        <% end %>
       </div>
+    </div>
+
+    <div class="addresses">
+      <!-- Primary Address Choice -->
+      <div class="flex flex-col md:flex-row gap-4">
+        <%#= f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %>
+      </div>
+
+      <!-- Work Address -->
+      <div>
+        <h3 class="font-semibold text-gray-700 mb-2">Work Address</h3>
+        <div class="flex flex-col md:flex-row gap-6 w-full">
+          <%= f.input :street_address, label: 'Street', as: :text, input_html: { rows: 1 } %>
+          <%= f.input :city, as: :text, input_html: { rows: 1 } %>
+          <%= f.input :state %>
+          <%= f.input :zip %>
+        </div>
+      </div>
+
+      <!-- Home Address -->
+<!--      <div>-->
+<!--        <h3 class="font-semibold text-gray-700 mb-2">Home Address</h3>-->
+<!--        <div class="flex flex-col md:flex-row gap-6 w-full">-->
+          <%#= f.input :address2, label: 'Street2', as: :text, input_html: { rows: 1 } %>
+          <%#= f.input :city2, as: :text, input_html: { rows: 1 } %>
+          <%#= f.input :state2 %>
+          <%#= f.input :zip2 %>
+<!--        </div>-->
+<!--      </div>-->
     </div>
 
     <!-- Organization Connections (PROJECT_USERS) -->
