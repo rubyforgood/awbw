@@ -13,4 +13,12 @@ class WorkshopVariation < ApplicationRecord
   accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
 
   scope :active, -> { where(inactive: false) }
+
+  def description
+    code # TODO - rename this field
+  end
+
+  def title
+    name
+  end
 end

@@ -130,6 +130,10 @@ class WorkshopLog < Report
     end
   end
 
+  def description
+    "Workshop Log for #{workshop_title} led by #{name} on #{date_label}"
+  end
+
   def date_label
    date ? date.strftime('%m/%d/%Y') : created_at.strftime('%m/%d/%Y')
   end
