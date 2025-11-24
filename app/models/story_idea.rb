@@ -5,24 +5,11 @@ class StoryIdea < ApplicationRecord
   belongs_to :windows_type
   belongs_to :workshop, optional: true
   has_many :stories
-<<<<<<< HEAD
   # Image associations
   has_one :main_image, -> { where(type: "Images::MainImage") },
           as: :owner, class_name: "Images::MainImage", dependent: :destroy
   has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
            as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
-=======
-  # Images
-  has_one :main_image, -> { where(type: "MainImage") },
-          as: :owner,
-          class_name: "MainImage",
-          dependent: :destroy
-
-  has_many :gallery_images, -> { where(type: "GalleryImage") },
-           as: :owner,
-           class_name: "GalleryImage",
-           dependent: :destroy
->>>>>>> b3025845 (Change Image to STI so MainImage can be separate from the rest of the images, now named GalleryImage)
 
   # Validations
   validates :created_by_id, presence: true
