@@ -42,39 +42,32 @@
         <% end %>
       </div>
 
-      <!-- Main Image -->
-      <% if @resource.main_image.present? %>
-        <div class="flex justify-start">
-          <% image_url = @resource.main_image_url rescue nil %>
-          <% if image_url %>
-            <% if @resource.kind == 'LeaderSpotlight' %>
-              <%= link_to image_url,
-                          download: @resource.main_image.file_file_name do %>
-                <%= image_tag image_url,
-                              class: 'max-h-[400px] w-auto rounded-lg shadow-lg mb-4 object-cover',
-                              alt: @resource.display_title,
-                              onerror: "this.onerror=null;this.src='/assets/missing.png';" %>
+      <div class="images">
+        <!-- Hero Image -->
+        <% if @resource.main_image&.file&.attached? %>
+          <div class="mb-8">
+            <%= image_tag @resource.main_image.file,
+                          class: "w-full rounded-lg shadow-sm border border-gray-200",
+                          alt: @resource.title %>
+          </div>
+        <% end %>
+
+        <!-- Gallery Images -->
+        <% if @resource.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
+          <div class="resource-gallery single-resource-detail text-center mb-4">
+            <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
+              <% @resource.gallery_images.each_with_index do |gallery_image, idx| %>
+                <% if gallery_image.file&.attached? %>
+                  <%= image_tag url_for(gallery_image.file),
+                                alt: "Gallery Image #{idx + 1}",
+                                data: { file_preview_target: "preview" },
+                                class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+                <% end %>
               <% end %>
-            <% else %>
-              <%= link_to image_url,
-                          download: @resource.main_image.file_file_name do %>
-                <%= image_tag image_url,
-                              class: 'w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 object-cover',
-                              alt: @resource.display_title,
-                              onerror: "this.onerror=null;this.src='/assets/missing.png';" %>
-              <% end %>
-            <% end %>
-          <% else %>
-            <div class="w-full h-24 bg-gray-200 rounded-md flex items-center justify-center text-gray-400">
-              No image available
             </div>
-          <% end %>
-        </div>
-      <% else %>
-        <div class="w-full h-24 bg-gray-200 rounded-md flex items-center justify-center text-gray-400">
-          No image available
-        </div>
-      <% end %>
+          </div>
+        <% end %>
+      </div>
 
 
       <!-- URL -->

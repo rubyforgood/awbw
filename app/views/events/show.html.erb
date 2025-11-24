@@ -7,25 +7,48 @@
         <%= link_to("Edit", edit_event_path(@event), class: "btn btn-primary-outline") %>
       <% end %>
     </div>
-    <div
-      class="
-        max-w-3xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6
-      "
-    >
-      <div class="flex gap-3">
-        <h1 class="pt-4 text-2xl font-bold mb-4">Event Details</h1>
-        <%= render "bookmarks/editable_bookmark_button", resource: @event %>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-        <div>
-          <p class="font-bold text-gray-700">Title:</p>
-          <p class="text-gray-900"><%= @event.title.presence || "—" %></p>
+    <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+      <div class="header-row flex justify-between items-center">
+        <div class="text-left">
+          <div class="pt-4 mb-4">Event Details</div>
         </div>
 
         <div>
-          <p class="font-bold text-gray-700">Publicly Visible:</p>
-          <p class="text-gray-900"><%= @event.publicly_visible? ? "Yes" : "No" %></p>
+          <%= render "bookmarks/editable_bookmark_button", resource: @event %>
         </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+        <div>
+          <%= title_with_badges(@event) %>
+        </div>
+      </div>
+
+      <div class="images">
+        <!-- Hero Image -->
+        <% if @event.main_image&.file&.attached? %>
+          <div class="mb-8">
+            <%= image_tag @event.main_image.file,
+                          class: "w-full rounded-lg shadow-sm border border-gray-200",
+                          alt: @event.title %>
+          </div>
+        <% end %>
+
+        <!-- Gallery Images -->
+        <% if @event.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
+          <div class="event-gallery single-event-detail text-center mb-4">
+            <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
+              <% @event.gallery_images.each_with_index do |gallery_image, idx| %>
+                <% if gallery_image.file&.attached? %>
+                  <%= image_tag url_for(gallery_image.file),
+                                alt: "Gallery Image #{idx + 1}",
+                                data: { file_preview_target: "preview" },
+                                class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
 
       <div class="mb-3">

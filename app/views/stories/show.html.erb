@@ -2,7 +2,7 @@
 <% story_title = ERB::Util.url_encode(@story.title) %>
 <div class="min-h-screen py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-rose-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+    <div class="border border-gray-200 bg-rose-50 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
         <span class="inline-block text-sm">
@@ -35,18 +35,38 @@
           <!-- Meta Data (exact screenshot style) -->
           <div class="text-sm text-gray-600 space-y-0.5 mb-6">
             <p><strong>Story by:</strong> <%= @story.story_idea&.author_credit || @story.created_by.full_name %></p>
-            <p><strong>Organization Name:</strong> <%= @story.organization_description %></p>
-            <p><strong>Workshop:</strong> <%= @story.workshop.title %></p>
+            <p><strong>Organization Name:</strong> <%= @story.organization_name %></p>
+            <% if @story.decorate.workshop_title.present? %>
+            <p><strong>Workshop:</strong> <%= @story.decorate.workshop_title %></p>
+            <% end %>
           </div>
 
-          <!-- Hero Image -->
-          <% if @story.images.attached? %>
-            <div class="mb-8">
-              <%= image_tag @story.images.first,
-                            class: "w-full rounded-lg shadow-sm border border-gray-200",
-                            alt: @story.title %>
-            </div>
-          <% end %>
+          <div class="images">
+            <!-- Hero Image -->
+            <% if @story.main_image&.file&.attached? %>
+              <div class="mb-8">
+                <%= image_tag @story.main_image.file,
+                              class: "w-full rounded-lg shadow-sm border border-gray-200",
+                              alt: @story.title %>
+              </div>
+            <% end %>
+
+            <!-- Gallery Images -->
+            <% if @story.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
+              <div class="story-gallery single-story-detail text-center mb-4">
+                <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
+                  <% @story.gallery_images.each_with_index do |gallery_image, idx| %>
+                    <% if gallery_image.file&.attached? %>
+                      <%= image_tag url_for(gallery_image.file),
+                                    alt: "Gallery Image #{idx + 1}",
+                                    data: { file_preview_target: "preview" },
+                                    class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
 
           <!-- Story Body Text -->
           <div class="prose prose-lg max-w-none text-gray-700 mb-10">

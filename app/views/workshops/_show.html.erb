@@ -1,6 +1,6 @@
-<% header_image = url_for(workshop.header_image) %>
+<% main_image = url_for(workshop.main_image) %>
 
-<div class='hero-workshop' style='background-image: url(<%= header_image %>)'>
+<div class='hero-workshop' style='background-image: url(<%= main_image %>)'>
 
   <div class='inner-hero'>
     <h2 class='normal inline-block no-margin'>
@@ -97,261 +97,275 @@
         </div>
       <% end %>
 
-      <% if workshop.legacy %>
-        <div class='small wysiwyg-content clearfix'>
-          <div class="wysiwyg-content__inner-wrapper">
-            <%= workshop.display_objective %>
+      <% unless workshop.objective.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Objective</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.objective_fixed_img_urls %>
+            </div>
           </div>
         </div>
-      <% else %>
-        <% unless workshop.objective.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Objective</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.objective_fixed_img_urls %>
-              </div>
+      <% end %>
+
+      <% unless workshop.age_range.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Age Range</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <p><%= workshop.age_range.html_safe %></p>
             </div>
           </div>
-        <% end %>
+        </div>
+      <% end %>
 
-        <% unless workshop.age_range.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Age Range</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <p><%= workshop.age_range.html_safe %></p>
-              </div>
+      <% unless workshop.materials.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Materials</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.materials.html_safe %>
             </div>
           </div>
-        <% end %>
+        </div>
+      <% end %>
 
-        <% unless workshop.materials.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Materials</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.materials.html_safe %>
-              </div>
+      <% unless workshop.optional_materials.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Optional Materials</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.optional_materials.html_safe %>
             </div>
           </div>
-        <% end %>
+        </div>
+      <% end %>
 
-        <% unless workshop.optional_materials.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Optional Materials</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.optional_materials.html_safe %>
-              </div>
+      <% unless workshop.time_frame_total == "00:00" %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Suggested Time Frame</h3>
+          <hr></br>
+          <div class="time-frame-wrapper">
+
+            <% unless workshop.time_intro.to_i == 0 %>
+            <div class="single-time-frame">
+              <h3 class='normal'>Intro</h3>
+              <div class='small'><span><%= workshop.time_intro.to_i %></span> <span>min</span></div>
+            </div>
+            <% end %>
+
+            <% unless workshop.time_demonstration.to_i == 0 %>
+            <div class="single-time-frame">
+              <h3 class='normal'>Demonstration</h3>
+              <div class='small'><span><%= workshop.time_demonstration.to_i %></span> <span>min</span></div>
+            </div>
+            <% end %>
+
+            <% unless workshop.time_opening.to_i == 0 %>
+            <div class="single-time-frame">
+              <h3 class='normal'>Opening</h3>
+              <div class='small'><span><%= workshop.time_opening.to_i %></span> <span>min</span></div>
+            </div>
+            <% end %>
+
+            <% unless workshop.time_warm_up.to_i == 0 %>
+            <div class="single-time-frame">
+              <h3 class='normal'>Warm Up</h3>
+              <div class='small'><span><%= workshop.time_warm_up.to_i %></span> <span>min</span></div>
+            </div>
+            <% end %>
+
+            <% unless workshop.time_creation.to_i == 0 %>
+            <div class="single-time-frame">
+              <h3 class='normal'>Creation</h3>
+              <div class='small'><span><%= workshop.time_creation.to_i %></span> <span>min</span></div>
+            </div>
+            <% end %>
+
+            <% unless workshop.time_closing.to_i == 0 %>
+            <div class="single-time-frame">
+              <h3 class='normal'>Closing</h3>
+              <div class='small'><span><%= workshop.time_closing.to_i %></span> <span>min</span></div>
+            </div>
+            <% end %>
+
+            <div class="single-time-frame">
+              <h3 class='normal'>Total</h3>
+              <div class="small"><span><%= workshop.time_frame_total %></span></span></div>
             </div>
           </div>
-        <% end %>
+        </div>
+     <% end %>
 
-        <% unless workshop.time_frame_total == "00:00" %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Suggested Time Frame</h3>
-            <hr></br>
-            <div class="time-frame-wrapper">
+      <% unless workshop.setup.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Setup</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.setup.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
 
-              <% unless workshop.time_intro.to_i == 0 %>
-              <div class="single-time-frame">
-                <h3 class='normal'>Intro</h3>
-                <div class='small'><span><%= workshop.time_intro.to_i %></span> <span>min</span></div>
-              </div>
+      <% unless workshop.introduction.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Introduction</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.introduction.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.demonstration.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Demonstration</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.demonstration.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.opening_circle.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Opening</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.opening_circle.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.warm_up.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Warm Up</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.warm_up.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.visualization.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Visualization</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.visualization.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.creation.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Creation</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.creation.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.closing.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Closing</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.closing.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.notes.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Notes</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.notes.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.tips.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Tips</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.tips.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.misc1.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Miscellaneous</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.misc1.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% unless workshop.misc2.blank? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Miscellaneous 2</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <%= workshop.misc2.html_safe %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% if true || workshop.main_image&.file&.attached? || workshop.gallery_images.any? %>
+        <div class="single-workshop-detail">
+          <h3 class='normal curriculum-title'>Gallery</h3>
+          <hr>
+          <div class='small wysiwyg-content clearfix'>
+            <div class="wysiwyg-content__inner-wrapper">
+              <% if workshop.main_image&.file&.attached? %>
+                <%= image_tag url_for(workshop.main_image.file),
+                              alt: "Main Image",
+                              data: { file_preview_target: "preview" },
+                              class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
               <% end %>
-
-              <% unless workshop.time_demonstration.to_i == 0 %>
-              <div class="single-time-frame">
-                <h3 class='normal'>Demonstration</h3>
-                <div class='small'><span><%= workshop.time_demonstration.to_i %></span> <span>min</span></div>
-              </div>
+              <% workshop.gallery_images.each_with_index do |image, idx| %>
+                <%= image_tag url_for(image.file),
+                              alt: "Gallery Image #{idx + 1}",
+                              data: { file_preview_target: "preview" },
+                              class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
               <% end %>
-
-              <% unless workshop.time_opening.to_i == 0 %>
-              <div class="single-time-frame">
-                <h3 class='normal'>Opening</h3>
-                <div class='small'><span><%= workshop.time_opening.to_i %></span> <span>min</span></div>
-              </div>
-              <% end %>
-
-              <% unless workshop.time_warm_up.to_i == 0 %>
-              <div class="single-time-frame">
-                <h3 class='normal'>Warm Up</h3>
-                <div class='small'><span><%= workshop.time_warm_up.to_i %></span> <span>min</span></div>
-              </div>
-              <% end %>
-
-              <% unless workshop.time_creation.to_i == 0 %>
-              <div class="single-time-frame">
-                <h3 class='normal'>Creation</h3>
-                <div class='small'><span><%= workshop.time_creation.to_i %></span> <span>min</span></div>
-              </div>
-              <% end %>
-
-              <% unless workshop.time_closing.to_i == 0 %>
-              <div class="single-time-frame">
-                <h3 class='normal'>Closing</h3>
-                <div class='small'><span><%= workshop.time_closing.to_i %></span> <span>min</span></div>
-              </div>
-              <% end %>
-
-              <div class="single-time-frame">
-                <h3 class='normal'>Total</h3>
-                <div class="small"><span><%= workshop.time_frame_total %></span></span></div>
-              </div>
             </div>
           </div>
-       <% end %>
-
-        <% unless workshop.setup.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Setup</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.setup.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.introduction.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Introduction</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.introduction.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.demonstration.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Demonstration</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.demonstration.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.opening_circle.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Opening</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.opening_circle.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.warm_up.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Warm Up</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.warm_up.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.visualization.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Visualization</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.visualization.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.creation.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Creation</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.creation.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.closing.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Closing</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.closing.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.notes.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Notes</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.notes.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.tips.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Tips</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.tips.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.misc1.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Miscellaneous</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.misc1.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% unless workshop.misc2.blank? %>
-          <div class="single-workshop-detail">
-            <h3 class='normal curriculum-title'>Miscellaneous 2</h3>
-            <hr>
-            <div class='small wysiwyg-content clearfix'>
-              <div class="wysiwyg-content__inner-wrapper">
-                <%= workshop.misc2.html_safe %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
+        </div>
       <% end %>
     </div>
   </li>
