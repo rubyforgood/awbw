@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_20_164722) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_23_164008) do
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -333,8 +333,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_20_164722) do
     t.integer "owner_id"
     t.string "owner_type"
     t.integer "report_id"
+    t.string "type", default: "Images::GalleryImage", null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["owner_id"], name: "index_images_on_owner_id"
+    t.index ["type"], name: "index_images_on_type"
   end
 
   create_table "locations", id: :integer, charset: "utf8mb3", force: :cascade do |t|
@@ -566,6 +568,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_20_164722) do
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
+    t.string "external_workshop_title"
     t.boolean "featured", default: false, null: false
     t.boolean "permission_given"
     t.integer "project_id"
@@ -593,6 +596,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_20_164722) do
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
+    t.string "external_workshop_title"
     t.boolean "permission_given"
     t.integer "project_id", null: false
     t.string "publish_preferences"
@@ -600,7 +604,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_20_164722) do
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
     t.integer "windows_type_id", null: false
-    t.integer "workshop_id", null: false
+    t.integer "workshop_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_story_ideas_on_created_by_id"
     t.index ["project_id"], name: "index_story_ideas_on_project_id"

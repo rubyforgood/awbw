@@ -139,14 +139,16 @@ class WorkshopsController < ApplicationController
   end
 
   def set_form_variables
-    @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
-    image = @workshop.images.first || @workshop.images.build # build an image if there isn't one
+    @workshop.build_main_image if @workshop.main_image.blank?
+    @workshop.gallery_images.build
 
     @age_ranges = AgeRange.all
-    @workshop_ideas = WorkshopIdea.order(created_at: :desc)
-                                  .map { |wi| ["#{wi.created_at.strftime("%Y-%m-%d")} - (#{wi.created_by.full_name}): #{wi.title}",
-                                               wi.id] }
+    @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
     @windows_types = WindowsType.all
+    @workshop_ideas = WorkshopIdea.order(created_at: :desc)
+                                  .map { |wi|
+                                    ["#{wi.created_at.strftime("%Y-%m-%d")
+                                    } - (#{wi.created_by.full_name}): #{wi.title}", wi.id] }
   end
 
   def workshops_per_page
@@ -188,7 +190,8 @@ class WorkshopsController < ApplicationController
       workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :series_order, :_destroy],
-      images_attributes: %i[file owner_id owner_type id _destroy]
+      main_image_attributes: [:id, :file, :_destroy],
+      gallery_images_attributes: [:id, :file, :_destroy]
     )
   end
 

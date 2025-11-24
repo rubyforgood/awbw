@@ -40,41 +40,7 @@
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-4 justify-start">
-      <!-- Main image -->
-      <div class="flex flex-col items-center gap-4 w-1/4">
-        <%= render 'shared/form_image_field',
-                   f: f,
-                   resource: @story,
-                   field_name: :main_image,
-                   image: @story.main_image || @story_idea&.main_image %>
-      </div>
-
-      <!-- Existing gallery images -->
-      <% @story.images.each_with_index do |image, idx| %>
-        <div class="flex flex-col items-center gap-4 w-1/4" id="images-field-<%= idx %>">
-          <%= render 'shared/form_image_field',
-                     f: f,
-                     resource: @story,
-                     field_name: :images,
-                     image: image,
-                     multiple: true,
-                     show_file_field: false %>
-        </div>
-      <% end %>
-
-      <!-- Single uploader for new images -->
-      <div class="flex flex-col items-center gap-4 w-1/4">
-        <%= render 'shared/form_image_field',
-                   f: f,
-                   resource: @story,
-                   field_name: :images,
-                   multiple: true,
-                   show_existing: true,
-                   image: @story.images.build,
-                   label: "Additional Image" %>
-      </div>
-    </div>
+    <%= render "shared/form_image_fields", f: f, include_main_image: true %>
 
     <div class="mb-3">
       <%= f.input :body, as: :text,

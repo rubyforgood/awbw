@@ -1,20 +1,9 @@
 class Workshop < ApplicationRecord
   include Rails.application.routes.url_helpers
 
-  before_save :set_time_frame
-
-  # Associations
   belongs_to :windows_type
   belongs_to :user, optional: true
   belongs_to :workshop_idea, optional: true
-
-  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
-  has_one_attached :thumbnail
-  validates :thumbnail, content_type: ACCEPTED_CONTENT_TYPES
-  has_one_attached :header
-  validates :header, content_type: ACCEPTED_CONTENT_TYPES
-  has_many :attachments, as: :owner, dependent: :destroy
-  has_many :images, as: :owner, dependent: :destroy
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
@@ -41,8 +30,28 @@ class Workshop < ApplicationRecord
   has_many :resources, through: :workshop_resources
   has_many :sectors, through: :sectorable_items
 
-  # Nested Attributes
-  accepts_nested_attributes_for :images, reject_if: :all_blank, allow_destroy: true
+  # Images
+  has_one_attached :thumbnail # old paperclip -- TODO convert these to AvatarImage records
+  has_one_attached :header # old paperclip -- TODO convert these to MainImage records
+  has_many :attachments, as: :owner, dependent: :destroy # old paperclip -- TODO convert these to GalleryImage records
+  has_many :images, as: :owner, dependent: :destroy # old paperclip -- TODO convert these to GalleryImage records
+  has_one :main_image, -> { where(type: "Images::MainImage") },
+          as: :owner, class_name: "Images::MainImage", dependent: :destroy
+  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
+           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+
+  # Callbacks
+  before_save :set_time_frame
+
+  # Validations
+  validates_presence_of :title
+  # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
+  validates_length_of :age_range, maximum: 16
+  validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
+
+  # Nested attributes
+  accepts_nested_attributes_for :main_image, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_images, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :sectorable_items,
     reject_if: proc { |object| object["_create"] == "0" },
     allow_destroy: true
@@ -64,12 +73,10 @@ class Workshop < ApplicationRecord
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
                                 allow_destroy: true
-
-  # Validations
-  validates_presence_of :title
-  # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
-  validates_length_of :age_range, maximum: 16
-  validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
+  # Nested Attributes
+  accepts_nested_attributes_for :workshop_logs,
+                                reject_if: :all_blank,
+                                allow_destroy: true
 
   # Scopes
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
@@ -79,11 +86,6 @@ class Workshop < ApplicationRecord
                                            where(inactive: !published) : where(inactive: false) }
   scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
-
-  # Nested Attributes
-  accepts_nested_attributes_for :workshop_logs,
-    reject_if: :all_blank,
-    allow_destroy: true
 
   # Search Cop
   include SearchCop
@@ -163,8 +165,10 @@ class Workshop < ApplicationRecord
   end
 
   def main_image_url
-    if images&.first&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(images.first.file)
+    if main_image&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(main_image.file)
+    elsif gallery_images.first&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
     else
       ActionController::Base.helpers.asset_path("workshop_default.jpg")
     end
@@ -177,7 +181,7 @@ class Workshop < ApplicationRecord
   end
 
   def log_title
-    "#{title} #{windows_type.log_label if windows_type}"
+    "#{title} #{windows_type.label if windows_type}"
   end
 
   def communal_label(report)

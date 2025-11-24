@@ -119,7 +119,7 @@ class FacilitatorsController < ApplicationController
         :instagram_url,
         :youtube_url,
         :twitter_url,
-
+        avatar_image_attributes: [:id, :file, :_destroy],
         sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy],
         user_attributes: [
           :id, :facilitator_id,
@@ -133,7 +133,6 @@ class FacilitatorsController < ApplicationController
           :phone2,
           :phone3,
           :best_time_to_call,
-          :avatar,
           :address,
           :city,
           :state,

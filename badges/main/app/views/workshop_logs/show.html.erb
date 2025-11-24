@@ -30,6 +30,24 @@
         </div>
       </div>
 
+      <div class="images">
+        <!-- Gallery Images -->
+        <% if @workshop_log.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
+          <div class="workshop_log-gallery single-workshop_log-detail text-center mb-4">
+            <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
+              <% @workshop_log.gallery_images.each_with_index do |gallery_image, idx| %>
+                <% if gallery_image.file&.attached? %>
+                  <%= image_tag url_for(gallery_image.file),
+                                alt: "Gallery Image #{idx + 1}",
+                                data: { file_preview_target: "preview" },
+                                class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
       <!-- Participant Counts -->
       <div>
         <h2 class="text-lg font-semibold text-gray-800 mb-2">Participant Counts</h2>

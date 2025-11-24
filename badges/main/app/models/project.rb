@@ -1,7 +1,7 @@
 class Project < ApplicationRecord
-  # Associations
-  belongs_to :location, optional: true
   belongs_to :project_status
+  belongs_to :project_obligation, optional: true
+  belongs_to :location, optional: true # TODO - remove Location if unused
   belongs_to :windows_type, optional: true
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :project_users, dependent: :restrict_with_error
@@ -10,16 +10,17 @@ class Project < ApplicationRecord
   has_many :workshop_logs, through: :users
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :sectors, through: :sectorable_items
+  # Image associations
+  has_one :logo_image, -> { where(type: "Images::SquareImage") },
+          as: :owner, class_name: "Images::SquareImage", dependent: :destroy
 
-  # Logo
-  ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png" ].freeze
-  has_one_attached :logo
-  validates :logo, content_type: ACCEPTED_CONTENT_TYPES
-
+  # Validations
   validates :name, presence: true
   validates :project_status_id, presence: true
 
-  accepts_nested_attributes_for :addresses, allow_destroy: true
+  # Nested attributes
+  accepts_nested_attributes_for :logo_image, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
 
   scope :active, -> { where(inactive: false) }
 
@@ -74,7 +75,15 @@ class Project < ApplicationRecord
   end
 
   def log_title
-    "#{name} #{windows_type.log_label if windows_type}"
+    "#{name} #{windows_type.label if windows_type}"
+  end
+
+  def organization_description
+    description
+  end
+
+  def organization_locality
+    addresses.first&.locality
   end
 
   def sector_list

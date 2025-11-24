@@ -106,6 +106,30 @@
           </div>
         <% end %>
 
+        <% if workshop.main_image&.file&.attached? ||
+          workshop.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
+          <div class="workshop-gallery single-workshop-detail mb-4">
+            <h3 class="text-lg font-semibold mb-1">Gallery</h3>
+            <hr class="border-gray-300 mb-2">
+            <div class="flex flex-wrap gap-4">
+              <% if workshop.main_image&.file&.attached? %>
+                <%= image_tag url_for(workshop.main_image.file),
+                              alt: "Main Image",
+                              data: { file_preview_target: "preview" },
+                              class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+              <% end %>
+              <% workshop.gallery_images.each_with_index do |gallery_image, idx| %>
+                <% if gallery_image.file&.attached? %>
+                  <%= image_tag url_for(gallery_image.file),
+                                alt: "Gallery Image #{idx + 1}",
+                                data: { file_preview_target: "preview" },
+                                class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
         <% if workshop.workshop_series_children.any? %>
           <%= render "show_series_membership_children",
                      workshop: workshop,

@@ -3,12 +3,12 @@ class StoriesController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
+    unpaginated = current_user.super_user? ? Story.all : Story.published
+    @stories = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
+                          .order(created_at: :desc)
+                          .paginate(page: params[:page], per_page: per_page)
 
-    stories = Story.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
-    @stories = stories.order(created_at: :desc)
-                      .paginate(page: params[:page], per_page: per_page)
-
-    @stories_count = stories.size
+    @stories_count = unpaginated.size
   end
 
   def show
@@ -36,10 +36,6 @@ class StoriesController < ApplicationController
 
   def update
     if @story.update(story_params.except(:images))
-      # Attach new images *in addition* to existing ones
-      if story_params[:images].present?
-        @story.images.attach(story_params[:images])
-      end
       redirect_to stories_path, notice: "Story was successfully updated.", status: :see_other
     else
       set_form_variables
@@ -54,6 +50,9 @@ class StoriesController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
+    @story.build_main_image if @story.main_image.blank?
+    @story.gallery_images.build
+
     @story_idea = StoryIdea.find(params[:story_idea_id]) if params[:story_idea_id].present?
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @projects = (@user || current_user).projects.order(:name)
@@ -89,7 +88,8 @@ class StoriesController < ApplicationController
       :title, :body, :featured, :published, :youtube_url, :website_url,
       :windows_type_id, :project_id, :workshop_id,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
-      :main_image, images: []
+      main_image_attributes: [:id, :file, :_destroy],
+      gallery_images_attributes: [:id, :file, :_destroy]
     )
   end
 end

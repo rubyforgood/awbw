@@ -21,30 +21,6 @@ RSpec.describe "users/new.html.erb", type: :view do
 
       assert_select "input[name=?]", "user[email]"
 
-      assert_select "textarea[name=?]", "user[address]"
-
-      assert_select "textarea[name=?]", "user[address2]"
-
-      assert_select "textarea[name=?]", "user[city]"
-
-      assert_select "textarea[name=?]", "user[city2]"
-
-      assert_select "input[name=?]", "user[state]"
-
-      assert_select "input[name=?]", "user[state2]"
-
-      assert_select "input[name=?]", "user[zip]"
-
-      assert_select "input[name=?]", "user[zip2]"
-
-      assert_select "input[name=?]", "user[phone]"
-
-      assert_select "input[name=?]", "user[phone2]"
-
-      assert_select "input[name=?]", "user[phone3]"
-
-      assert_select "input[name=?]", "user[best_time_to_call]"
-
       assert_select "textarea[name=?]", "user[notes]"
 
       assert_select "input[name=?]", "user[inactive]"

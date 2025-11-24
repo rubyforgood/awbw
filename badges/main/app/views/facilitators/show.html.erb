@@ -47,6 +47,7 @@
 
         <div class="flex-1">
           <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
+
             <% @facilitator.badges.each do |(label, color)| %>
                 <span class="px-3 py-1 bg-<%= color %>-100 text-<%= color %>-800 text-sm font-semibold rounded-full">
                   <%= label %>
@@ -194,9 +195,9 @@
         <% if @facilitator.profile_show_workshop_ideas? %>
           <div class="mt-6 p-3">
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Ideas submitted</h2>
-            <% if @facilitator.user.story_ideas_as_creator.any? %>
-              <% @facilitator.user.story_ideas_as_creator.each do |idea| %>
-                <%= link_to idea.title, story_idea_path(idea), class: "btn btn-secondary-outline" %>
+            <% if @facilitator.user.workshop_ideas_as_creator.any? %>
+              <% @facilitator.user.workshop_ideas_as_creator.each do |idea| %>
+                <%= link_to idea.title, workshop_idea_path(idea), class: "btn btn-secondary-outline" %>
               <% end %>
             <% else %>
               <p class="text-gray-500 italic">No ideas submitted yet.</p>
@@ -210,7 +211,7 @@
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Story Ideas submitted</h2>
             <% if @facilitator.user.story_ideas_as_creator.any? %>
               <% @facilitator.user.story_ideas_as_creator.each do |story_idea| %>
-                <%= link_to story_idea.title, story_idea_path(story_idea),
+                <%= link_to story_idea.full_name, story_idea_path(story_idea),
                             class: "btn btn-secondary-outline" %>
               <% end %>
             <% else %>

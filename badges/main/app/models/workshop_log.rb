@@ -2,31 +2,34 @@ class WorkshopLog < Report
   belongs_to :workshop
   belongs_to :user
   belongs_to :project
-
-  has_many :media_files, dependent: :destroy
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
   has_many :quotes, through: :quotable_item_quotes
   has_many :report_form_field_answers,
            foreign_key: :report_id, inverse_of: :report,
            dependent: :destroy
+  # Image associations
+  has_many :media_files, dependent: :destroy # TODO - convert these to GalleryImages
+  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
+           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
 
-  accepts_nested_attributes_for :media_files, allow_destroy: true
-  accepts_nested_attributes_for :quotable_item_quotes,
-                                allow_destroy: true,
+  # Nested attributes
+  accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :quotable_item_quotes, allow_destroy: true,
                                 reject_if: ->(attributes) { false } # allow empty
-  accepts_nested_attributes_for :report_form_field_answers,
-                                allow_destroy: true,
+  accepts_nested_attributes_for :report_form_field_answers, allow_destroy: true,
                                 reject_if: ->(attributes) { false } # allow empty
 
-  # Callbacks
-  after_save :update_owner_and_date
-  after_save :update_workshop_log_count
-
+  # Validations
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
             :children_first_time, :teens_first_time, :adults_first_time,
             numericality: { greater_than_or_equal_to: 0, only_integer: true }
   validates :date, presence: true
 
+  # Callbacks
+  after_save :update_owner_and_date
+  after_save :update_workshop_log_count
+
+  # Scopes
   scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
   scope :project_id, ->(project_id) { where(project_id: project_id) if project_id.present? }
   scope :user_id, ->(user_id) { where(user_id: user_id.to_i) if user_id.present? }
@@ -35,13 +38,11 @@ class WorkshopLog < Report
       year, month = month_and_year.split("-").map(&:to_i)
       where("EXTRACT(YEAR FROM COALESCE(reports.date, reports.created_at)) = ? AND
                EXTRACT(MONTH FROM COALESCE(reports.date, reports.created_at)) = ?", year, month)
-    end
-  }
+    end }
   scope :year, ->(year) {
     if year.present?
       where("EXTRACT(YEAR FROM COALESCE(reports.date, reports.created_at)) = ?", year.to_i)
-    end
-  }
+    end }
   scope :ordered_by_date, -> { order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")) }
 
   def self.search(params)
@@ -71,7 +72,7 @@ class WorkshopLog < Report
 
   def type_title
     if windows_type
-      "#{windows_type.workshop_log_label} #{type}"
+      "#{windows_type.label} #{type}"
     else
       "#{type}"
     end
@@ -127,6 +128,10 @@ class WorkshopLog < Report
     else
       []
     end
+  end
+
+  def description
+    "Workshop Log for #{workshop_title} led by #{name} on #{date_label}"
   end
 
   def date_label

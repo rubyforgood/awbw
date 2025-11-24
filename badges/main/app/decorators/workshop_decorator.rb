@@ -47,63 +47,6 @@ class WorkshopDecorator < Draper::Decorator
     "#{full_name}"
   end
 
-  def title_with_badges(controller_name:)
-    h.content_tag :div, class: "flex flex-col" do
-
-      # -------------------------
-      # BADGE ROW (row 1)
-      # -------------------------
-      badge_row = h.content_tag :div, class: "flex flex-wrap items-center gap-2 mb-1" do
-        parts = []
-
-        # Hidden badge
-        if inactive? && controller_name != "dashboard"
-          parts << h.content_tag(
-            :span,
-            h.content_tag(:i, "", class: "fa-solid fa-eye-slash mr-1") + " Hidden",
-            class: "inline-flex items-center px-2 py-0.5 rounded-full
-                  text-sm font-medium bg-blue-100 text-gray-600 whitespace-nowrap"
-          )
-        end
-
-        # Featured badge
-        if featured? && controller_name != "dashboard"
-          parts << h.content_tag(
-            :span,
-            "🌟 Featured",
-            class: "inline-flex items-center px-2 py-0.5 rounded-full
-                  text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap"
-          )
-        end
-
-        parts.join.html_safe
-      end
-
-      # -------------------------
-      # TITLE + WINDOWS TYPE (row 2)
-      # -------------------------
-      title_content = object.title
-
-      if object.windows_type.present?
-        title_content += " (#{object.windows_type.short_name})"
-      end
-
-      title_row = h.content_tag(
-        :span,
-        title_content.html_safe,
-        class: "text-lg font-semibold text-gray-900 leading-tight"
-      )
-
-      # -------------------------
-      # RETURN FINAL COMBINED ELEMENT
-      # -------------------------
-      (badge_row + title_row).html_safe
-    end
-  end
-
-
-
-
   def list_sectors
     sectorable_items.published.map(&:sector).map(&:name).to_sentence
   end
@@ -182,9 +125,6 @@ class WorkshopDecorator < Draper::Decorator
     end
   end
 
-
-
-
   def objective_fixed_img_urls
     html = html_objective
 
@@ -195,60 +135,6 @@ class WorkshopDecorator < Draper::Decorator
 
     html.to_s.html_safe
   end
-
-  def dashboard_image_url
-    if thumbnail&.attached?
-      Rails.application.routes.url_helpers.url_for(thumbnail)
-    elsif header&.attached?
-      Rails.application.routes.url_helpers.url_for(header)
-    elsif images&.first&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(images.first.file)
-    else
-      default_image_url
-    end
-  end
-
-  def header_image
-    if header.attached?
-      header
-    elsif thumbnail.attached?
-      thumbnail
-    end
-  end
-
-  def main_image
-    content = html_content
-
-    if content.css('img').any?
-      images = html_objective.css('img')
-
-      return nil unless images.any?
-
-      pathname = images.map do |img|
-        src = img.attributes['src'].value
-        src unless src.include?('transparent')
-      end.compact.first
-
-      if pathname
-        "https://dashboard.awbw.org#{pathname}"
-      else
-        "/images/workshop_default.jpg"
-      end
-    else
-      images ? images.first.file : "/images/workshop_default.jpg"
-    end
-  end
-
-  def thumbnail_image
-    # TODO Figure out if we need main_image
-    if thumbnail.attached?
-      thumbnail
-    elsif header.attached?
-      header
-    end
-  end
-
-
 
   def spanish_field_values
     display_spanish_fields.map do |field|

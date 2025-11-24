@@ -63,10 +63,6 @@ RSpec.describe User do
     # Commented out validations in model
     # it { should validate_presence_of(:first_name) }
     # it { should validate_presence_of(:last_name) }
-
-    # Avatar validations
-    it { should validate_content_type_of(:avatar).allowing(User::ACCEPTED_CONTENT_TYPES) }
-    it { should validate_content_type_of(:avatar).rejecting("text/plain", "text/xml") }
   end
 
   describe "bookmark_associations" do

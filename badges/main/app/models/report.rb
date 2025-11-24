@@ -1,42 +1,56 @@
 class Report < ApplicationRecord
+  belongs_to :owner, polymorphic: true, optional: true
   belongs_to :user
   belongs_to :project
   belongs_to :windows_type
-
-  belongs_to :owner, polymorphic: true, optional: true
   has_one :form, as: :owner
-  has_one :image
-  validate :image_valid?
+  has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
+  has_many :report_form_field_answers, dependent: :destroy
+  has_many :sectorable_items, as: :sectorable, dependent: :destroy
+  # Images
+  has_one_attached :image # old paperclip -- TODO convert these to MainImage records
+  has_one_attached :form_file # old paperclip -- TODO convert these to GalleryImage records
+  # Image associations
+  has_many :media_files, dependent: :destroy
+  has_one :main_image, -> { where(type: "Images::MainImage") },
+          as: :owner, class_name: "Images::MainImage", dependent: :destroy
+  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
+           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
 
+  # has_many through
+  has_many :form_fields, through: :form
+  has_many :quotes, through: :quotable_item_quotes, dependent: :destroy
+  has_many :sectors, through: :sectorable_items, dependent: :destroy
+
+  # Nested attributes
+  accepts_nested_attributes_for :media_files, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :main_image, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :quotable_item_quotes
+  accepts_nested_attributes_for :report_form_field_answers,
+                                reject_if: proc { |object|
+                                  object["_create"].to_i == 0 && object["answer"].nil? }
+
+  # Validations
   FORM_FILE_CONTENT_TYPES = %w[application/pdf application/msword
     application/vnd.openxmlformats-officedocument.wordprocessingml.document application/vnd.ms-excel
     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]
-  has_one_attached :form_file
   validates :form_file, content_type: FORM_FILE_CONTENT_TYPES
 
-  before_save :set_has_attachament # TODO verify set_has_attachament works as expected once this feature is enabled in the UI
-
-  has_many :images
-  has_many :form_fields, through: :form
-  has_many :report_form_field_answers, dependent: :destroy
-  has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
-  has_many :quotes, through: :quotable_item_quotes, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :destroy
-  has_many :sectorable_items, as: :sectorable, dependent: :destroy
-  has_many :sectors, through: :sectorable_items, dependent: :destroy
-  scope :in_month, ->(date) { where(created_at: date.beginning_of_month..date.end_of_month) }
-
-  has_many :media_files, dependent: :destroy
-  accepts_nested_attributes_for :media_files
-
-  accepts_nested_attributes_for :report_form_field_answers,
-    reject_if: proc { |object|
-      object["_create"].to_i == 0 && object["answer"].nil?
-    }
-  accepts_nested_attributes_for :quotable_item_quotes
-
+  before_save :set_has_attachment # TODO verify set_has_attachment works as expected once this feature is enabled in the UI
   after_create :set_windows_type
   after_save :create_notification
+
+
+
+
+  scope :in_month, ->(date) { where(created_at: date.beginning_of_month..date.end_of_month) }
+
+
+
+
+
 
   def users_admin_type
     if form_builder && form_builder.id == 7
@@ -80,15 +94,6 @@ class Report < ApplicationRecord
     save
   end
 
-  def image_valid?
-    return true if image.nil?
-    unless image.valid?
-      image.errors.each do |error|
-        errors.add(error.attribute, error.message)
-      end
-    end
-  end
-
   def log_fields
     if form_builder
       form_builder.forms[0].form_fields.where("ordering is not null and status = 1")
@@ -130,7 +135,7 @@ class Report < ApplicationRecord
 
   private
 
-  def set_has_attachament
+  def set_has_attachment
     self.has_attachment = image&.file&.attached? || form_file&.attached? ||
       media_files.any? { |media_file| media_file.file.attached? }
   end

@@ -3,8 +3,8 @@ class EventsController < ApplicationController
   before_action :authorize_admin!, only: %i[ edit update destroy ]
 
   def index
-    events = Event.order(start_date: :desc)
-    @events = current_user.super_user? ? events : events.publicly_visible
+    unpaginated = current_user.super_user? ? Event.all : Event.published
+    @events = unpaginated.order(start_date: :desc)
   end
 
   def show
@@ -12,10 +12,12 @@ class EventsController < ApplicationController
 
   def new # all logged in users can create events
     @event = Event.new.decorate
+    set_form_variables
   end
 
   def edit
     @event = @event.decorate
+    set_form_variables
     unless @event.created_by == current_user || current_user.super_user?
       redirect_to events_path, alert: "You are not authorized to edit this event."
     end
@@ -30,6 +32,7 @@ class EventsController < ApplicationController
         format.html { redirect_to events_path, notice: "Event was successfully created." }
         format.json { render :show, status: :created, location: @event }
       else
+        set_form_variables
         format.html { render :new, status: :unprocessable_content }
         format.json { render json: @event.errors, status: :unprocessable_content }
       end
@@ -42,6 +45,7 @@ class EventsController < ApplicationController
         format.html { redirect_to events_path, notice: "Event was successfully updated." }
         format.json { render :show, status: :ok, location: @event }
       else
+        set_form_variables
         format.html { render :edit, status: :unprocessable_content }
         format.json { render json: @event.errors, status: :unprocessable_content }
       end
@@ -59,6 +63,11 @@ class EventsController < ApplicationController
 
   private
 
+  def set_form_variables
+    @event.build_main_image if @event.main_image.blank?
+    @event.gallery_images.build
+  end
+
   def set_event
     @event = Event.find(params[:id])
   end
@@ -70,10 +79,14 @@ class EventsController < ApplicationController
                                   :featured,
                                   :start_date, :end_date,
                                   :registration_close_date,
-                                  :publicly_visible)
+                                  :publicly_visible,
+                                  main_image_attributes: [:id, :file, :_destroy],
+                                  gallery_images_attributes: [:id, :file, :_destroy]
+                                  )
   end
 
   def authorize_admin!
-    redirect_to events_path, alert: "You are not authorized to perform this action." unless current_user.super_user?
+    redirect_to events_path,
+                alert: "You are not authorized to perform this action." unless current_user.super_user?
   end
 end

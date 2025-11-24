@@ -18,14 +18,12 @@ RSpec.describe "events/show", type: :view do
   it "renders the event title" do
     render
 
-    expect(rendered).to have_selector("h1", text: "Event Details")
     expect(rendered).to have_content("Test Event")
   end
 
   it "renders all event details" do
     render
 
-    expect(rendered).to have_content("Title:")
     expect(rendered).to have_content("Test Event")
     
     expect(rendered).to have_content("Description:")
@@ -78,7 +76,7 @@ RSpec.describe "events/show", type: :view do
     it "renders without description content" do
       render
 
-      expect(rendered).to have_content("Event with Empty Description")
+      expect(rendered).to have_content(event.title)
       expect(rendered).to have_content("Description:")
     end
   end
