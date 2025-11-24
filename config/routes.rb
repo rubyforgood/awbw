@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   get 'dashboard/admin', to: 'dashboard#admin'
   get 'dashboard/recent_activities', to: 'dashboard#recent_activities'
   get 'dashboard/help', to: 'dashboard#help'
+  get "image_migration_audit", to: "image_migration_audit#index"
 
   resources :workshops do
     collection do
