@@ -136,60 +136,6 @@ class WorkshopDecorator < Draper::Decorator
     html.to_s.html_safe
   end
 
-  def dashboard_image_url
-    if thumbnail&.attached?
-      Rails.application.routes.url_helpers.url_for(thumbnail)
-    elsif header&.attached?
-      Rails.application.routes.url_helpers.url_for(header)
-    elsif images&.first&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(images.first.file)
-    else
-      default_image_url
-    end
-  end
-
-  def header_image
-    if header.attached?
-      header
-    elsif thumbnail.attached?
-      thumbnail
-    end
-  end
-
-  def main_image
-    content = html_content
-
-    if content.css('img').any?
-      images = html_objective.css('img')
-
-      return nil unless images.any?
-
-      pathname = images.map do |img|
-        src = img.attributes['src'].value
-        src unless src.include?('transparent')
-      end.compact.first
-
-      if pathname
-        "https://dashboard.awbw.org#{pathname}"
-      else
-        "/images/workshop_default.jpg"
-      end
-    else
-      images ? images.first.file : "/images/workshop_default.jpg"
-    end
-  end
-
-  def thumbnail_image
-    # TODO Figure out if we need main_image
-    if thumbnail.attached?
-      thumbnail
-    elsif header.attached?
-      header
-    end
-  end
-
-
-
   def spanish_field_values
     display_spanish_fields.map do |field|
       workshop.send(field) unless workshop.send(field).blank?
