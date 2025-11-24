@@ -94,15 +94,6 @@ class Report < ApplicationRecord
     save
   end
 
-  def image_valid?
-    return true if image.nil?
-    unless image.valid?
-      image.errors.each do |error|
-        errors.add(error.attribute, error.message)
-      end
-    end
-  end
-
   def log_fields
     if form_builder
       form_builder.forms[0].form_fields.where("ordering is not null and status = 1")
@@ -144,7 +135,7 @@ class Report < ApplicationRecord
 
   private
 
-  def set_has_attachament
+  def set_has_attachment
     self.has_attachment = image&.file&.attached? || form_file&.attached? ||
       media_files.any? { |media_file| media_file.file.attached? }
   end

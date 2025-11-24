@@ -72,7 +72,7 @@ class WorkshopLog < Report
 
   def type_title
     if windows_type
-      "#{windows_type.workshop_log_label} #{type}"
+      "#{windows_type.label} #{type}"
     else
       "#{type}"
     end

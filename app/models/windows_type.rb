@@ -40,15 +40,6 @@ class WindowsType < ApplicationRecord
     label.strip.titleize
   end
 
-  def workshop_log_label
-    label = name.gsub("LOG", "").gsub("WORKSHOP", "").titleize.strip
-    label.gsub("Children", "Children's").gsub("Adult & Children's","").gsub("(Family)", "").tr(' ','')
-  end
-
-  def log_label
-    id != 3 ? "(#{name.split(' ')[0]})" : ''
-  end
-
   private
 
   def self.symbolize(name)
@@ -57,7 +48,7 @@ class WindowsType < ApplicationRecord
         .downcase.to_sym
   end
 
-  def self.defaults
+  def self.defaults # TODO - remove these
     ['Women\'s Windows', 'Children\'s Windows',
      'Combined Women\'s and Children\'s Windows']
   end

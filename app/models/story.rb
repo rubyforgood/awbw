@@ -33,14 +33,14 @@ class Story < ApplicationRecord
   end
 
   def organization_name
-    project.name
+    project&.name
   end
 
   def organization_locality
-    project.addresses.active.first&.locality
+    project&.organization_locality
   end
 
   def organization_description
-    "#{organization_name}, #{organization_locality}"
+    project&.organization_description
   end
 end

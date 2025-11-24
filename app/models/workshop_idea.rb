@@ -66,14 +66,4 @@ class WorkshopIdea < ApplicationRecord
   def set_time_frame
     self.timeframe = time_frame_total
   end
-
-  def images_must_be_valid_type
-    return if images.none?
-
-    images.each do |image|
-      unless ACCEPTED_CONTENT_TYPES.include?(image.file.content_type)
-        errors.add(:images, "must be a JPEG or PNG (#{image.filename})")
-      end
-    end
-  end
 end

@@ -75,7 +75,15 @@ class Project < ApplicationRecord
   end
 
   def log_title
-    "#{name} #{windows_type.log_label if windows_type}"
+    "#{name} #{windows_type.label if windows_type}"
+  end
+
+  def organization_description
+    description
+  end
+
+  def organization_locality
+    addresses.first&.locality
   end
 
   def sector_list
