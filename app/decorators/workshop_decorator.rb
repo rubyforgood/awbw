@@ -47,63 +47,6 @@ class WorkshopDecorator < Draper::Decorator
     "#{full_name}"
   end
 
-  def title_with_badges(controller_name:)
-    h.content_tag :div, class: "flex flex-col" do
-
-      # -------------------------
-      # BADGE ROW (row 1)
-      # -------------------------
-      badge_row = h.content_tag :div, class: "flex flex-wrap items-center gap-2 mb-1" do
-        parts = []
-
-        # Hidden badge
-        if inactive? && controller_name != "dashboard"
-          parts << h.content_tag(
-            :span,
-            h.content_tag(:i, "", class: "fa-solid fa-eye-slash mr-1") + " Hidden",
-            class: "inline-flex items-center px-2 py-0.5 rounded-full
-                  text-sm font-medium bg-blue-100 text-gray-600 whitespace-nowrap"
-          )
-        end
-
-        # Featured badge
-        if featured? && controller_name != "dashboard"
-          parts << h.content_tag(
-            :span,
-            "🌟 Featured",
-            class: "inline-flex items-center px-2 py-0.5 rounded-full
-                  text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap"
-          )
-        end
-
-        parts.join.html_safe
-      end
-
-      # -------------------------
-      # TITLE + WINDOWS TYPE (row 2)
-      # -------------------------
-      title_content = object.title
-
-      if object.windows_type.present?
-        title_content += " (#{object.windows_type.short_name})"
-      end
-
-      title_row = h.content_tag(
-        :span,
-        title_content.html_safe,
-        class: "text-lg font-semibold text-gray-900 leading-tight"
-      )
-
-      # -------------------------
-      # RETURN FINAL COMBINED ELEMENT
-      # -------------------------
-      (badge_row + title_row).html_safe
-    end
-  end
-
-
-
-
   def list_sectors
     sectorable_items.published.map(&:sector).map(&:name).to_sentence
   end
@@ -181,9 +124,6 @@ class WorkshopDecorator < Draper::Decorator
       h.truncate(html_objective.text.html_safe.squish, length: length)
     end
   end
-
-
-
 
   def objective_fixed_img_urls
     html = html_objective
