@@ -1,0 +1,54 @@
+<h1 class="text-2xl mb-4">Paperclip → ActiveStorage Migration Audit</h1>
+
+<table class="min-w-full border border-gray-300 text-sm">
+  <thead class="bg-gray-100">
+    <tr>
+      <th class="border px-3 py-2 text-left">Model</th>
+      <th class="border px-3 py-2 text-left">ID</th>
+      <th class="border px-3 py-2 text-left">Attachment</th>
+      <th class="border px-3 py-2 text-left">Paperclip</th>
+      <th class="border px-3 py-2 text-left">ActiveStorage preview</th>
+      <th class="border px-3 py-2 text-left">ActiveStorage</th>
+    </tr>
+  </thead>
+
+  <tbody class="divide-y divide-gray-200">
+    <% @results.each do |row| %>
+      <% row[:attachments].each do |att| %>
+        <tr class="align-top">
+          <td class="border px-3 py-2 font-mono"><%= row[:model] %></td>
+          <td class="border px-3 py-2 font-mono"><%= row[:id] %></td>
+          <td class="border px-3 py-2 font-mono"><%= att[:name] %></td>
+
+          <td class="border px-3 py-2 font-mono whitespace-pre-wrap">
+            <% att[:paperclip].each do |k,v| %>
+              <%= "#{k}: #{v}" %><br>
+            <% end %>
+          </td>
+
+          <td class="border px-3 py-2 text-center">
+            <% urls = att.dig(:activestorage, :urls) || [] %>
+            <% if urls.any? %>
+              <% urls.each do |u| %>
+                <img src="<%= u %>"
+                     alt=""
+                     class="w-20 h-20 object-cover rounded border mb-1" />
+              <% end %>
+            <% else %>
+              —
+            <% end %>
+          </td>
+
+          <td class="border px-3 py-2 font-mono whitespace-pre-wrap">
+            <% urls = att.dig(:activestorage, :urls) %>
+            <% if urls.present? %>
+              <% urls.each { |u| %><%= u %><br><% } %>
+            <% else %>—<% end %>
+          </td>
+        </tr>
+      <% end %>
+    <% end %>
+  </tbody>
+</table>
+
+
