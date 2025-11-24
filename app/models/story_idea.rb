@@ -3,7 +3,7 @@ class StoryIdea < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
   belongs_to :project
   belongs_to :windows_type
-  belongs_to :workshop
+  belongs_to :workshop, optional: true
   has_many :stories
   # Image associations
   has_one :main_image, -> { where(type: "Images::MainImage") },
@@ -26,11 +26,15 @@ class StoryIdea < ApplicationRecord
   accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
 
   def name
-    title
+    "StoryIdea ##{id}"
   end
 
   def full_name
-    "#{created_at.strftime("%Y-%m-%d")} #{author_credit}: #{title}"
+    "#{created_at.strftime("%Y-%m-%d")} #{author_credit}: #{workshop_title}"
+  end
+
+  def workshop_title
+    workshop&.title ||  "[#{external_workshop_title}]"
   end
 
   def author_credit
@@ -49,10 +53,10 @@ class StoryIdea < ApplicationRecord
   end
 
   def organization_locality
-    project.addresses.active.first&.locality
+    project&.organization_locality
   end
 
   def organization_description
-    "#{organization_name}, #{organization_locality}"
+    project&.organization_description
   end
 end

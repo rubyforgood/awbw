@@ -1,5 +1,5 @@
 class StoryIdeasController < ApplicationController
-  before_action :set_story, only: [:show, :edit, :update, :destroy]
+  before_action :set_story_idea, only: [:show, :edit, :update, :destroy]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -75,7 +75,7 @@ class StoryIdeasController < ApplicationController
 
   private
 
-  def set_story
+  def set_story_idea
     @story_idea = StoryIdea.find(params[:id])
   end
 
@@ -84,7 +84,7 @@ class StoryIdeasController < ApplicationController
     params.require(:story_idea).permit(
       :title, :body, :youtube_url,
       :permission_given, :publish_preferences, :promoted_to_story,
-      :windows_type_id, :project_id, :workshop_id,
+      :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
       main_image_attributes: [:id, :file, :_destroy],
       gallery_images_attributes: [:id, :file, :_destroy]

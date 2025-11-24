@@ -1,6 +1,6 @@
 <div class="min-h-screen py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+    <div class="max-w-5xl mx-auto bg-rose-200 border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @story_idea.class.model_name.human %></h1>
         <div class="text-end text-right items-end items-right">
@@ -10,10 +10,10 @@
                           class: "btn btn-secondary-outline" %>
             <% end %>
           <% else %>
-            <div class="admin-only bg-blue-100 p-3">
+            <% if current_user.super_user && @story_idea.persisted? %>
               <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
-                          class: "btn btn-secondary-outline ms-2" if current_user.super_user && @story_idea.persisted? %>
-            </div>
+                          class: "admin-only bg-blue-100 btn btn-secondary-outline ms-2" %>
+            <% end %>
           <% end %>
           <%= link_to "View", story_idea_path(@story_idea),
                       class: "btn btn-secondary-outline" %>
