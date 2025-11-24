@@ -35,14 +35,6 @@
               </p>
             </div>
           <% end %>
-          <div class="w-full md:w-auto">
-            <%= f.label :birthday, "Birthday", required: true, class: "block font-medium mb-1" %>
-            <%= f.text_field :birthday, type: 'date',
-                             class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                             value: @user.birthday&.strftime('%Y-%m-%d'),
-                             required: true,
-                             autocomplete: "bday" %>
-          </div>
         </div>
 
         <% if current_user.super_user? %>
@@ -53,46 +45,18 @@
             </div>
           </div>
         <% end %>
-
-        <div class="flex flex-col md:flex-row gap-4">
-          <%= f.input :phone %>
-          <%= f.input :phone2 %>
-          <%= f.input :phone3 %>
-          <%= f.input :best_time_to_call %>
-        </div>
       </div>
     </div>
 
     <!-- RIGHT COLUMN: 25% -->
     <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
-      <%= render 'shared/form_image_field', f: f, resource: @user, field_name: :avatar, rounded: true %>
-    </div>
-  </div>
-
-  <!-- Primary Address Choice -->
-  <div class="flex flex-col md:flex-row gap-4">
-    <%= f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %>
-  </div>
-
-  <!-- Work Address -->
-  <div>
-    <h3 class="font-semibold text-gray-700 mb-2">Work Address</h3>
-    <div class="flex flex-col md:flex-row gap-6 w-full">
-      <%= f.input :address, label: 'Street', as: :text, input_html: { rows: 1 } %>
-      <%= f.input :city, as: :text, input_html: { rows: 1 } %>
-      <%= f.input :state %>
-      <%= f.input :zip %>
-    </div>
-  </div>
-
-  <!-- Home Address -->
-  <div>
-    <h3 class="font-semibold text-gray-700 mb-2">Home Address</h3>
-    <div class="flex flex-col md:flex-row gap-6 w-full">
-      <%= f.input :address2, label: 'Street2', as: :text, input_html: { rows: 1 } %>
-      <%= f.input :city2, as: :text, input_html: { rows: 1 } %>
-      <%= f.input :state2 %>
-      <%= f.input :zip2 %>
+      <% if f.object.facilitator&.avatar_image&.file %>
+        <div class="h-24 w-full rounded overflow-visible">
+          <img class="w-full h-full object-cover"
+               src="<%= f.object.facilitator.avatar_image.file %>"
+               alt="workshop">
+        </div>
+      <% end %>
     </div>
   </div>
 

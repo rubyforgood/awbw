@@ -250,22 +250,7 @@
 
     </div>
 
-    <div class="main-image">
-      <div class="m-6"></div>
-
-      <%= f.fields_for :images do |img_fields| %>
-        <div class="flex flex-col items-center gap-2" style="flex: 0 0 25%;">
-          <%= render "shared/form_image_field",
-                     f: img_fields, resource: img_fields.object, field_name: :file, label: "Main image",
-                     hint: "***If any image includes the client or client artwork, fill out #{
-                       link_to "Art/Media Release Form",
-                               "http://dashboard.awbw.org/resources/859"}" if img_fields.object %>
-        </div>
-      <% end %>
-      <div class="mt-2">
-        <%#= link_to_add_association "Add another Image", f, :images, partial: "image_fields", class: "text-blue-600 hover:underline" %>
-      </div>
-    </div>
+    <%= render "shared/form_image_fields", f: f, include_main_image: true %>
 
     <!-- Accordions -->
     <div class="space-y-4">

@@ -56,6 +56,8 @@
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
   </div>
 
+  <%= render "shared/form_image_fields", f: f, include_main_image: true %>
+
   <!-- Actions -->
   <div class="flex flex-wrap gap-3 mt-6 justify-end">
     <% if @community_news.persisted? && current_user&.super_user? %>

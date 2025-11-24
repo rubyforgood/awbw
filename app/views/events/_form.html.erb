@@ -74,6 +74,8 @@
     </div>
   </div>
 
+  <%= render "shared/form_image_fields", f: f, include_main_image: true %>
+
   <div class="flex items-center justify-between gap-4">
     <div>
       <%= "Created by: #{f.object.created_by.name}" if f.object.created_by %>
