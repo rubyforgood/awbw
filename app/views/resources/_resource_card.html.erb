@@ -1,5 +1,3 @@
-<% main_link = resource.featured_url.presence || resource_path(resource) %>
-
 <div class="relative">
 
   <!-- BOOKMARK ICON -->
@@ -7,79 +5,62 @@
     <%= render "bookmarks/editable_bookmark_icon", resource: resource.object %>
   </div>
 
-  <!-- CARD (horizontal, wrap text when narrow) -->
+  <!-- CARD -->
   <div class="
     flex flex-row flex-wrap
-    bg-white
-    border border-gray-200 rounded-xl shadow-sm hover:shadow-md
+    bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md
     transition-all overflow-hidden cursor-pointer
-    relative z-20
   ">
 
-    <!-- LEFT: IMAGE + TYPE -->
+    <!-- LEFT SIDE -->
     <div class="
-      w-24 md:w-1/4
       flex-shrink-0
-      flex flex-col items-center text-center justify-center p-4
+      w-40 md:w-40
+      flex flex-col items-center text-center justify-center py-4 pb-3 px-3
       border-b md:border-b-0 md:border-r border-gray-200
     ">
-
-      <div class="relative w-14 h-14">
-        <%= link_to main_link, class: "block w-full h-full" do %>
+      <!-- IMAGE -->
+      <div class="relative w-32 h-32">
+        <%= link_to resource_path(resource.object), class: "block w-full h-full" do %>
 
           <!-- fallback icon -->
           <div class="absolute inset-0 flex items-center justify-center text-gray-700 resource-icon">
             <%= render "resources/resource_icon", kind: resource.kind %>
           </div>
 
-          <!-- main image -->
           <img
             src="<%= resource.main_image_url %>"
             alt="<%= resource.title.truncate(25) %>"
             class="w-full h-full object-cover rounded-lg shadow-sm"
             onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';"
             />
-
         <% end %>
       </div>
 
+      <!-- TYPE -->
       <span class="mt-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
         <%= resource.kind == "Scholarship" ? "Scholar-ship" : (resource.kind || "Resource") %>
       </span>
     </div>
 
-    <!-- RIGHT: CONTENT -->
-    <div class="flex-1 min-w-0 p-4 pr-14 pb-12 relative">
+    <!-- RIGHT SIDE -->
+    <div class="flex-1 min-w-0 pl-4 pr-10 pb-12 relative">
 
-      <!-- BADGES + TITLE (one wrap group) -->
       <div class="mb-2">
-        <div class="flex flex-wrap items-center gap-2">
-          <!-- TITLE -->
-          <%= link_to main_link,
-                      class: "inline-flex min-w-0 max-w-full text-lg font-semibold
-                        text-gray-900 leading-tight hover:underline" do %>
-            <%= resource.title_with_badges(controller_name: controller_name) %>
-          <% end %>
-
-        </div>
+        <%= link_to resource_path(resource.object),
+                    class: "inline-flex min-w-0 max-w-full text-lg font-semibold
+                            text-gray-900 leading-tight hover:underline" do %>
+          <%= title_with_badges(resource, admin: current_user.super_user?).html_safe %>
+        <% end %>
       </div>
 
-      <!-- BOTTOM RIGHT ACTION BUTTONS -->
+      <!-- ACTION BUTTONS -->
       <div class="absolute bottom-3 right-3 flex items-center space-x-2 z-30">
 
         <% if resource.download_attachment&.file&.attached? %>
-          <% from =
-               if controller_name == "resources" && action_name == "index"
-                 "resources_index"
-               elsif controller_name == "dashboard" && action_name == "index"
-                 "dashboard_index"
-               else
-                 "unknown"
-               end %>
-
           <%= link_to(
-                content_tag(:span, "", class: "fa fa-download", title: "Download #{resource.kind}"),
-                resource_download_path(resource, from: from),
+                content_tag(:span, "", class: "fa fa-download"),
+                resource_download_path(resource.object),
                 class: "btn btn-utility"
               ) %>
         <% end %>
@@ -87,7 +68,7 @@
         <% if controller_name == "resources" && current_user.super_user? %>
           <%= link_to(
                 content_tag(:span, "", class: "far fa-edit"),
-                edit_resource_path(resource),
+                edit_resource_path(resource.object),
                 class: "admin-only bg-blue-100 btn btn-secondary-outline"
               ) %>
         <% end %>
@@ -95,6 +76,5 @@
       </div>
 
     </div>
-
   </div>
 </div>
