@@ -1,4 +1,4 @@
-<div class="swiper-slide relative block rounded-xl border border-gray-200 shadow-sm
+<div class="swiper-slide relative overflow-visible block rounded-xl border border-gray-200 shadow-sm
             bg-white hover:shadow-md hover:bg-gray-50
             transition p-4 cursor-pointer"
      style="height: 320px;">
@@ -12,7 +12,7 @@
   <%= link_to workshop_path(workshop), class: "block h-full" do %>
 
     <!-- Image -->
-    <div class="h-24 w-full overflow-hidden rounded">
+    <div class="h-24 w-full rounded overflow-visible">
       <img class="w-full h-full object-cover"
            src="<%= workshop.main_image_url %>"
            alt="workshop">

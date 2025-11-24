@@ -9,11 +9,11 @@
               class: "block bg-white rounded-xl shadow-sm hover:shadow-md
             transition p-4 flex flex-col gap-2 cursor-pointer relative z-10" do %>
 
-  <h3 class="text-lg font-semibold text-gray-900"><%= event.title %></h3>
-  <p class="text-gray-600 text-sm line-clamp-3"><%= event.description %></p>
-  <p class="text-xs text-gray-400 mt-1">
-    <%= event.start_date.strftime("%B %-d, %Y • %l:%M %p") %>
-  </p>
+    <h3 class="text-lg font-semibold text-gray-900"><%= event.title %></h3>
+    <p class="text-gray-600 text-sm line-clamp-3"><%= event.description %></p>
+    <p class="text-xs text-gray-400 mt-1">
+      <%= event.start_date.strftime("%B %-d, %Y • %l:%M %p") %>
+    </p>
 
   <% end %>
 </div>
