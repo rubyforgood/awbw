@@ -1,49 +1,54 @@
 class Resource < ApplicationRecord
   include Rails.application.routes.url_helpers
 
-  # Associations
+  PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
+  KINDS = PUBLISHED_KINDS + ["Resource", "Story"]
+
   belongs_to :user
   belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :images, as: :owner, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
-  has_many :categories, through: :categorizable_items
-  has_many :sectorable_items, dependent: :destroy, as: :sectorable
-  has_many :sectors, through: :sectorable_items, source: :sector
-  has_many :related_workshops, through: :sectors, source: :workshops
-  has_many :attachments, as: :owner, dependent: :destroy
   has_many :reports, as: :owner
+  has_many :sectorable_items, dependent: :destroy, as: :sectorable
   has_many :workshop_resources, dependent: :destroy
 
-  validates :title, presence: true, uniqueness: { case_sensitive: false }
-  validates :kind, presence: true
+  # has_many through
+  has_many :categories, through: :categorizable_items
+  has_many :related_workshops, through: :sectors, source: :workshops
+  has_many :sectors, through: :sectorable_items, source: :sector
+
+  # Image associations
+  has_many :attachments, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
+  has_one :main_image, -> { where(type: "Images::MainImage") },
+          as: :owner, class_name: "Images::MainImage", dependent: :destroy
+  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
+           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+
+  # Default values
   attribute :inactive, :boolean, default: false
 
-  # Nested Attributes
+  # Validations
+  validates :title, presence: true, uniqueness: { case_sensitive: false }
+  validates :kind, presence: true
+
+  # Nested attributes
+  accepts_nested_attributes_for :main_image, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_images, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :categorizable_items,
                                  allow_destroy: true,
                                  reject_if: proc { |resource| Resource.reject?(resource) }
-
   accepts_nested_attributes_for :sectorable_items,
                                  allow_destroy: true,
                                  reject_if: proc { |resource| Resource.reject?(resource) }
-  accepts_nested_attributes_for :images,
-                                 allow_destroy: true,
-                                 reject_if: proc { |resource| Resource.reject?(resource) }
-  accepts_nested_attributes_for :attachments, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
-
-  PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
-  KINDS = PUBLISHED_KINDS + ["Resource", "Story"]
 
   # Search Cop
   include SearchCop
   search_scope :search do
     attributes :title, :author, :text
   end
-
 
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
@@ -80,30 +85,18 @@ class Resource < ApplicationRecord
     title || id
   end
 
-  def main_image
-    images.first
-  end
-
   def main_image_url
     if main_image&.file&.attached?
       Rails.application.routes.url_helpers.url_for(main_image.file)
+    elsif gallery_images.first&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
     else
       ActionController::Base.helpers.asset_path("theme_default.png")
     end
   end
 
-  def main_attachment
-    attachments.first
-  end
-
-  def main_attachment_url
-    if main_attachment&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(main_attachment.file)
-    end
-  end
-
   def download_attachment
-    main_attachment || main_image
+    main_image || gallery_images.first || attachments.first
   end
 
   def type_enum

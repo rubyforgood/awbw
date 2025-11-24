@@ -7,8 +7,8 @@ RSpec.describe Report do
     it { should belong_to(:windows_type) }
     it { should belong_to(:owner).optional }
     it { should have_one(:form) }
-    it { should have_one(:image) }
-    it { should have_many(:images) }
+    it { should have_one(:main_image) }
+    it { should have_many(:gallery_images) }
     it { should have_many(:form_fields).through(:form) }
     it { should have_many(:report_form_field_answers).dependent(:destroy) }
     it { should have_many(:quotable_item_quotes).dependent(:destroy) }

@@ -20,15 +20,32 @@
 @layer utilities {
   .text-transparent { color: transparent; }
 
-  /* prettier-ignore */
   ._safelist {
     /* background colors */
-    @apply bg-pink-100 bg-pink-800 bg-indigo-100 bg-indigo-800 bg-red-800
-    bg-blue-500 bg-green-500 bg-purple-100 bg-purple-200 bg-purple-500 bg-gray-200 bg-yellow-200;
+    @apply
+    bg-blue-100 bg-blue-500
+    bg-green-500
+    bg-indigo-100
+    bg-orange-100
+    bg-pink-100
+    bg-purple-100 bg-purple-200 bg-purple-500
+    bg-red-800
+    bg-yellow-200
+
+    bg-gray-200;
 
     /* text colors */
-    @apply text-pink-800 text-indigo-800 text-green-800 text-yellow-800
-    text-red-800 text-purple-800 text-green-200 text-gray-50 text-transparent;
+    @apply
+    text-blue-800
+    text-green-800 text-green-200
+    text-indigo-800
+    text-orange-800
+    text-pink-800
+    text-purple-800
+    text-red-800
+    text-yellow-800
+
+    text-gray-50 text-transparent;
   }
 
   @keyframes fadeIn {

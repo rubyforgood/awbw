@@ -1,4 +1,4 @@
-<section class="py-12 bg-blue-50">
+<section class="py-10 bg-blue-50">
   <div class="max-w-6xl mx-auto px-4">
     <%= render "dashboard_section_header",
                title: "Events",
@@ -7,7 +7,7 @@
     <% if events.any? %>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <% events.first(4).each do |event| %>
-          <%= render "dashboard/event", event: event %>
+          <%= render "events/card", event: event %>
         <% end %>
       </div>
 

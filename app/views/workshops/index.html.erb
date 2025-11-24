@@ -59,10 +59,8 @@
         <% if @workshops.any? %>
           <div id="workshops-list" class="space-y-4 animate-fade">
             <% @workshops.each do |workshop| %>
-              <%= render "workshops/index_row",
-            workshop: workshop.decorate,
-            breadcrumb: "Workshops",
-            link_route: workshop_path(workshop) %>
+              <%= render "workshops/index_row", workshop: workshop.decorate,
+                         breadcrumb: "Workshops", link_route: workshop_path(workshop) %>
             <% end %>
           </div>
 

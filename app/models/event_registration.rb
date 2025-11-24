@@ -2,9 +2,11 @@ class EventRegistration < ApplicationRecord
   belongs_to :registrant, class_name: "User", foreign_key: :registrant_id
   belongs_to :event
 
+  # Validations
   validates :registrant_id, uniqueness: {scope: :event_id}
   validates :event_id, presence: true
 
+  # Scopes
   scope :registrant_name, -> (registrant_name){ joins(:registrant).where(
     "LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
     OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name

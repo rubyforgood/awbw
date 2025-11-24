@@ -2,7 +2,7 @@ class ResourcesController < ApplicationController
 
   def index
     unpaginated = Resource.where(kind: Resource::PUBLISHED_KINDS) #TODO - #FIXME brittle
-                          .includes(:images, :attachments)
+                          .includes(:main_image, :gallery_images, :attachments)
                           .search_by_params(params)
                           .by_created
     @resources = unpaginated.paginate(page: params[:page], per_page: 24)
@@ -97,6 +97,9 @@ class ResourcesController < ApplicationController
   private
 
   def set_form_variables
+    @resource.build_main_image if @resource.main_image.blank?
+    @resource.gallery_images.build
+
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
                    .order(:first_name, :last_name)
@@ -119,8 +122,8 @@ class ResourcesController < ApplicationController
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
       categorizable_items_attributes: [:id, :category_id, :_destroy], category_ids: [],
       sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy], sector_ids: [],
-      images_attributes: [:file, :owner_id, :owner_type, :id, :_destroy],
-      attachments_attributes: [:file, :owner_id, :owner_type, :id, :_destroy]
+      main_image_attributes: [:id, :file, :_destroy],
+      gallery_images_attributes: [:id, :file, :_destroy]
     )
   end
 

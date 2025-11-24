@@ -1,6 +1,6 @@
 <div class="min-h-screen py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-rose-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+    <div class="border border-gray-200 bg-rose-50 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
       <!-- Header Row -->
       <div class="w-full">
         <div class="flex items-start justify-between mb-6">
@@ -40,9 +40,21 @@
                       <%= render "bookmarks/editable_bookmark_icon", resource: story %>
                     </span>
 
+                    <span class="w-24 h-14 rounded bg-gray-200 flex items-center justify-center shrink-0 mr-2">
+                      <% if story.main_image&.file&.blob&.persisted? %>
+                        <%= link_to (image_tag story.main_image.file,
+                                      class: "w-full rounded shadow-sm border border-gray-200",
+                                      alt: story.title),
+                                    story_path(story) %>
+                      <% else %>
+                        <svg class="w-6 h-6 text-gray-400"
+                             fill="currentColor" viewBox="0 0 20 18"></svg>
+                      <% end %>
+                    </span>
+
                     <!-- TITLE + BADGES -->
                     <span class="inline-flex items-center gap-2">
-                      <%= link_to story.decorate.title_with_badges(controller_name: controller_name).html_safe,
+                      <%= link_to title_with_badges(story, admin: current_user.super_user?).html_safe,
                                   story_path(story),
                                   class: "font-bold hover:text-indigo-800 hover:underline" %>
                     </span>

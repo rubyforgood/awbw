@@ -19,7 +19,9 @@
                 label: "Workshop",
                 prompt: "Select a Workshop",
                 required: true,
-                input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                selected: f.object.workshop_id,
+                input_html: { value: f.object.workshop_id,
+                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
 
     <%= f.input :project_id,
@@ -31,8 +33,9 @@
                 required: true,
                 hint: "Please contact AWBW if your agency is not listed.",
                 prompt: (@agencies.count > 1 ? "Please select the relevant agency" : nil),
-                selected: (@agencies.count == 1 ? @agencies.first.id : nil),
-                input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                selected: (f.object.project_id || (@agencies.count == 1 ? @agencies.first.id : nil)),
+                input_html: { value: f.object.project_id || @agency_id,
+                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
     <%= f.input :date,
                 label: "Workshop Date",
@@ -97,34 +100,9 @@
   </div>
 
   <!-- Upload Section -->
-  <hr class="my-6 border-gray-200">
-  <h2 class="text-lg font-semibold text-gray-800 mb-2">Upload Images / Media Releases</h2>
-  <p class="text-sm text-gray-600 mb-3">
-    Click <a href="https://bit.ly/AWBWartmedia" target="_blank" class="text-blue-600 hover:underline">here to download</a> the Art/Media Release.
-  </p>
-  <div id="media-files" class="space-y-4">
-    <%= f.simple_fields_for :media_files do |mf_form| %>
-      <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
-        <%= render "shared/form_image_field",
-                   f: mf_form,
-                   resource: mf_form.object,
-                   field_name: :file,
-                   label: "Upload File",
-                   hint: "Attach photos, PDFs, or signed media release forms" %>
-      </div>
-    <% end %>
-
-    <div class="pt-2">
-      <%= link_to_add_association "Add another file",
-                                  f,
-                                  :media_files,
-                                  partial: "shared/form_image_field",
-                                  render_options: { locals: { field_name: :file,    # <- pass locals here
-                                                              label: "Upload File",
-                                                              hint: "Attach photos, PDFs, or signed media release forms" } },
-                                  class: "text-blue-600 hover:text-blue-800 font-medium text-sm" %>
-    </div>
-  </div>
+  <%= render "shared/form_image_fields", f: f, include_main_image: false,
+             section_title: "Upload Images / Media Releases",
+             section_subtitle: "Attach photos, PDFs, or signed media release forms" %>
 
   <!-- Submit -->
   <div class="mt-8 flex justify-center gap-3">

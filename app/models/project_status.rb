@@ -1,7 +1,8 @@
 class ProjectStatus < ApplicationRecord
+  PROJECT_STATUSES = ['Active', 'Inactive', 'Pending', 'Reinstate', 'Suspended']
 
   def self.create_defaults
-    ['Active', 'Inactive', 'Pending', 'Reinstate', 'Suspended'].each do |name|
+    PROJECT_STATUSES.each do |name|
       ProjectStatus.find_or_create_by(name: name)
     end
   end

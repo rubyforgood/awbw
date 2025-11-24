@@ -1,18 +1,18 @@
-<div class="max-w-7xl mx-auto px-4 py-8">
-  <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto bg-violet-50 border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      <div class="flex items-center justify-between mb-3">
+        <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @resource.class.model_name.human %></h1>
+        <div class="text-right text-end">
+          <%= link_to "View", resource_path(@resource), class: "btn btn-secondary-outline" %>
+        </div>
+      </div>
 
-    <!-- Header + View Button -->
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-semibold text-gray-900">Edit Resource</h1>
-      <%= link_to 'View', resource_path(@resource), class: "btn btn-secondary-outline" %>
+      <div class="space-y-6">
+        <div class="mt-4 bg-white rounded p-3">
+          <%= render "form" %>
+        </div>
+      </div>
     </div>
-
-    <div class="border-b border-gray-300 mb-6"></div>
-
-    <!-- Form -->
-    <div class="mt-4">
-      <%= render "form", resource: @resource %>
-    </div>
-
   </div>
 </div>

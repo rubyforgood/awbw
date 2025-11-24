@@ -1,8 +1,11 @@
 class FormBuilder < ApplicationRecord
+  belongs_to :windows_type
+  has_many :forms, as: :owner
+
+  # Validations
   validates :name, presence: true
 
-  has_many :forms, as: :owner
-  belongs_to :windows_type
+  # Nested attributes
   accepts_nested_attributes_for :forms
 
   scope :workshop_logs, -> { where('name LIKE ?', '%Log%') }

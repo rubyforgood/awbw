@@ -1,168 +1,147 @@
-<%= simple_form_for(story_idea, html: { multipart: true }) do |f| %>
-  <% f.hidden_field :created_by_id, value: f.object.created_by_id || (@user || current_user)&.id %>
-  <% f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
-  <% promoted_to_story = f.object.stories.any? %>
-  <% if promoted_to_story %>
-    <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
-    <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
-    <%= f.hidden_field :project_id, value: f.object.project_id %>
-    <%= f.hidden_field :title, value: f.object.title %>
-    <%= f.hidden_field :body, value: f.object.body %>
-    <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
-    <%= f.hidden_field :permission_given, value: f.object.permission_given %>
-  <% end %>
+<div class="rounded-xl bg-white p-6">
+  <%= simple_form_for(story_idea, html: { multipart: true }) do |f| %>
+    <%= f.hidden_field :created_by_id, value: f.object.created_by_id || (@user || current_user)&.id %>
+    <%= f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
 
-  <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
-
-  <div class="mb-3">
-    <%= f.input :title,
-                disabled: promoted_to_story,
-                hint: "Give your story a short title that reflects its content",
-                input_html: {
-                  class: ("readonly" if promoted_to_story)
-                } %>
-  </div>
-
-  <div class="flex flex-col md:flex-row md:space-x-4 mt-6">
-    <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :windows_type_id,
-                  collection: @windows_types, label_method: :short_name, value_method: :id,
-                  disabled: promoted_to_story,
-                  prompt: "Select Windows Type",
-                  input_html: {
-                    class: ("readonly" if promoted_to_story)
-                  } %>
-    </div>
-
-    <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :workshop_id,
-                  collection: @workshops, label_method: :title, value_method: :id,
-                  disabled: promoted_to_story,
-                  prompt: "Select Workshop",
-                  input_html: {
-                    class: ("readonly" if promoted_to_story)
-                  } %>
-    </div>
-
-    <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :project_id,
-                  label: "Organization",
-                  collection: @projects, label_method: :name, value_method: :id,
-                  disabled: promoted_to_story,
-                  input_html: {
-                    class: ("readonly" if promoted_to_story)
-                   }%>
-    </div>
-  </div>
-
-  <div class="block font-medium mb-1 text-gray-700 my-3">Images/attachments</div>
-  <div class="flex flex-wrap gap-4 justify-start">
-    <div class="flex flex-col items-center gap-4 w-1/4">
-      <%= render 'shared/form_image_field',
-                 f: f,
-                 resource: @story_idea,
-                 field_name: :main_image %>
-    </div>
-
-    <!-- Existing gallery images -->
-    <% @story_idea.images.each_with_index do |image, idx| %>
-      <div class="flex flex-col items-center gap-4 w-1/4" id="images-field-<%= idx %>">
-        <%= render 'shared/form_image_field',
-                   f: f,
-                   resource: @story_idea,
-                   field_name: :images,
-                   image: image,
-                   multiple: true,
-                   show_file_field: false %>
-      </div>
+    <% promoted_to_story = f.object.stories.any? %>
+    <% if promoted_to_story %>
+      <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
+      <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
+      <%= f.hidden_field :project_id, value: f.object.project_id %>
+      <%= f.hidden_field :title, value: f.object.title %>
+      <%= f.hidden_field :body, value: f.object.body %>
+      <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
+      <%= f.hidden_field :permission_given, value: f.object.permission_given %>
     <% end %>
 
-    <!-- Single uploader for new images -->
-    <div class="flex flex-col items-center gap-4 w-1/4">
-      <%= render 'shared/form_image_field',
-                 f: f,
-                 resource: @story_idea,
-                 field_name: :images,
-                 multiple: true,
-                 show_existing: true,
-                 image: @story_idea.images.build,
-                 label: "Additional Image" %>
-    </div>
-  </div>
+    <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
+    <%#= f.object.errors.full_messages %>
 
-  <div class="mb-3">
-    <%= f.input :body,
-                as: :text,
-                disabled: promoted_to_story,
-                input_html: { rows: 5,
-                              class: ("readonly" if promoted_to_story) } %>
-  </div>
+<!--    <div class="mb-3">-->
+      <%#= f.input :title,
+                  disabled: promoted_to_story,
+                  hint: "Give your story a short title that reflects its content",
+                  input_html: {
+                    class: ("readonly" if promoted_to_story)
+                  } %>
+<!--    </div>-->
 
-  <div class="flex gap-4">
-    <%= f.input :publish_preferences,
-                as: :select,
-                required: true,
-                collection: [
-                  "I would like my full name published with the story",
-                  "I would like only my first name published",
-                  "I do not want my name published with my story"
-                ],
-                include_blank: "Select a preference",
-                selected: f.object.publish_preferences %>
-    <%= f.input :youtube_url,
-                as: :text,
-                disabled: promoted_to_story,
-                input_html: { rows: 1,
-                              class: ("readonly" if promoted_to_story)
-                              } %>
-  </div>
-
-  <div class="mb-6">
-    <%= f.input :permission_given,
-                as: :boolean,
-                required: true,
-                disabled: promoted_to_story,
-                label: "I give A Window Between Worlds permission to share the words and images I am submitting" +
-                  " online, via social media, and in external communications, including with my fellow " +
-                  "Windows Facilitators. If there is any identifying information in my images, " +
-                  "such as names or faces, I certify that I have received permission from the subject, " +
-                  "or their caregiver, to display their likeness online.",
-                input_html: {
-                  class: ("readonly" if promoted_to_story)
-                } %>
-  </div>
-
-  <% if current_user.super_user? || @user %>
-    <div class="flex flex-col md:flex-row md:space-x-4">
+    <div class="flex flex-col md:flex-row md:space-x-4 mt-6">
       <div class="flex-1 mb-4 md:mb-0">
-        <% if promoted_to_story %>
-          <div class="flex items-center space-x-2">
-            <label class="text-gray-700">
-              Promoted to Story
-            </label>
-            <% f.object.stories.each do |story| %>
-              <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
-            <% end %>
-          </div>
-        <% elsif current_user.super_user? %>
-          <div class="admin-only bg-blue-100 p-3">
-            <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
-                        class: "btn btn-secondary-outline ms-2" if f.object.persisted? %>
-          </div>
-        <% end %>
+        <%= f.input :windows_type_id,
+                    collection: @windows_types, label_method: :short_name, value_method: :id,
+                    disabled: promoted_to_story,
+                    input_html: {
+                      class: ("readonly" if promoted_to_story)
+                    } %>
+      </div>
+
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :workshop_id,
+                    collection: @workshops, label_method: :title, value_method: :id,
+                    disabled: promoted_to_story,
+                    required: false,
+                    input_html: {
+                      class: ("readonly" if promoted_to_story)
+                    } %>
+        <%= f.input :external_workshop_title,
+                    as: :text,
+                    label: "External title (if no workshop above)",
+                    input_html: {
+                      rows: 1,
+                      class: ("readonly" if promoted_to_story)
+                    } %>
+      </div>
+
+      <div class="flex-1 mb-4 md:mb-0">
+        <%= f.input :project_id,
+                    label: "Organization",
+                    collection: @projects, label_method: :name, value_method: :id,
+                    disabled: promoted_to_story,
+                    input_html: {
+                      class: ("readonly" if promoted_to_story)
+                     }%>
       </div>
     </div>
-  <% end %>
 
-  <div class="form-actions mt-6 pt-6">
-    <% if current_user.super_user? %>
-      <span class="admin-only bg-blue-100 p-3">
-        <%= link_to "Delete", @story_idea,
-                    class: "btn btn-danger-outline",
-                    method: :delete, data: { confirm: "Are you sure?" } %>
-      </span>
+    <div class="mb-3">
+      <%= f.input :body,
+                  as: :text,
+                  disabled: promoted_to_story,
+                  input_html: { rows: 10,
+                                class: ("readonly" if promoted_to_story) } %>
+    </div>
+
+    <div class="flex gap-4">
+      <%= f.input :publish_preferences,
+                  as: :select,
+                  required: true,
+                  collection: [
+                    "I would like my full name published with the story",
+                    "I would like only my first name published",
+                    "I do not want my name published with my story"
+                  ],
+                  include_blank: "Select a preference",
+                  selected: f.object.publish_preferences %>
+      <%= f.input :youtube_url,
+                  as: :text,
+                  label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
+                  hint: "If you already have a video on YouTube you’d like to share",
+                  disabled: promoted_to_story,
+                  input_html: { rows: 1,
+                                class: ("readonly" if promoted_to_story)
+                                } %>
+    </div>
+
+    <%= render "shared/form_image_fields", f: f, include_main_image: true %>
+
+    <div class="my-12">
+      <%= f.input :permission_given,
+                  as: :boolean,
+                  required: true,
+                  disabled: promoted_to_story,
+                  label: "I give A Window Between Worlds permission to share the words and images I am submitting" +
+                    " online, via social media, and in external communications, including with my fellow " +
+                    "Windows Facilitators. If there is any identifying information in my images, " +
+                    "such as names or faces, I certify that I have received permission from the subject, " +
+                    "or their caregiver, to display their likeness online.",
+                  input_html: {
+                    class: ("readonly" if promoted_to_story)
+                  } %>
+    </div>
+
+    <% if current_user.super_user? || @user %>
+      <div class="flex flex-col md:flex-row md:space-x-4">
+        <div class="flex-1 mb-4 md:mb-0">
+          <% if promoted_to_story %>
+            <div class="flex items-center space-x-2">
+              <label class="text-gray-700">
+                Promoted to Story
+              </label>
+              <% f.object.stories.each do |story| %>
+                <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
+              <% end %>
+            </div>
+          <% elsif current_user.super_user? && f.object.persisted? %>
+            <div class="admin-only bg-blue-100 p-3">
+              <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
+                          class: "btn btn-secondary-outline ms-2" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
     <% end %>
-    <%= link_to "Cancel", story_ideas_path, class: "btn btn-secondary-outline ms-2" %>
-    <%= f.button :submit, class: "btn btn-primary" %>
-  </div>
-<% end %>
+
+    <div class="form-actions mt-6 pt-6">
+      <% if current_user.super_user? && f.object.persisted? && f.object.stories.none? %>
+        <span class="admin-only bg-blue-100 p-3">
+          <%= link_to "Delete", @story_idea,
+                      class: "btn btn-danger-outline",
+                      method: :delete, data: { confirm: "Are you sure?" } %>
+        </span>
+      <% end %>
+      <%= link_to "Cancel", story_ideas_path, class: "btn btn-secondary-outline ms-2" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

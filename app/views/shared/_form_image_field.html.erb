@@ -1,78 +1,126 @@
+<%# ------------------------------------------
+    Shared image field partial
+    Supports:
+    - Pattern B wrapper model (Image + file)
+    - Parent has_one_attached
+    - Parent has_many_attached
+    - Image gallery display
+    ------------------------------------------ %>
 <% f ||= nil %>
 
-<% if f %>
-  <% resource ||= f.object %>
-  <% field_name ||= :image %>
-  <% label ||= field_name.to_s.titleize %>
-  <% hint ||= nil %>
-  <% rounded ||= false %>
-  <% multiple ||= false %>
-  <% image ||= nil %>
-  <% show_file_field = local_assigns.fetch(:show_file_field, true) %>
-  <% show_existing   = local_assigns.fetch(:show_existing, true) %>
+<% raise "form_image_field requires f:" if f.nil? %>
 
-  <div data-controller="file-preview">
-    <%= f.label label, class: "block font-medium gap-1 text-gray-700 string required" %>
-    <% if hint %>
-      <%= f.hint hint.html_safe, wrap_with: { tag: :p, class: "text-gray-500 text-sm" } %>
-    <% end %>
+<% resource ||= f.object %>
+<% field_name ||= :file %>
+<% label ||= field_name.to_s.titleize %>
+<% hint ||= nil %>
+<% rounded ||= false %>
+<% multiple ||= false %>
+<% image ||= nil %>
+<% use_profile_placeholder ||= false %>
 
-    <div class="flex flex-col items-center gap-2">
-      <% if show_existing %>
-        <% image_to_show =
-             if image.present?
-               image
-             else
-               attached = resource.public_send(field_name)
-               if attached.is_a?(ActiveStorage::Attached::One)
-                 attached.attachment
-               elsif attached.is_a?(ActiveStorage::Attached::Many)
-                 attached.attachments.first
-               end
-             end %>
+<% show_file_field = show_file_field.to_s.present? ? show_file_field : true %>
+<% show_existing   = show_existing.to_s.present? ? show_existing : true %>
 
-        <% if image_to_show&.blob.present? %>
-          <%= image_tag url_for(image_to_show),
-                        alt: "#{field_name.to_s.humanize} Image",
-                        data: { file_preview_target: "preview" },
-                        class: "w-32 h-32 #{'rounded-full' if rounded} object-cover border border-gray-300 shadow-sm" %>
-        <% else %>
-          <%= image_tag "missing.png",
-                        data: { file_preview_target: "preview" },
-                        class: "w-32 h-32 #{'rounded-full' if rounded} object-cover border border-dashed border-gray-300" %>
-        <% end %>
+<div data-controller="file-preview"
+     class="text-center">
+  <%= f.label label, class: "block font-medium gap-1 text-gray-700 string required" %>
 
-        <div data-file-preview-target="filename"
-             class="text-center text-sm text-gray-500">
-          <%= image_to_show&.blob.present? ? image_to_show.filename.to_s : "No file selected" %>
+  <% if hint %>
+    <p class="text-gray-500 text-sm"><%= hint.html_safe %></p>
+  <% end %>
+
+  <div class="flex flex-col items-center gap-2">
+    <% if show_existing %>
+      <% active_storage_attachment =
+           if image.present?
+             image
+           elsif resource.respond_to?(field_name)
+             file = resource.public_send(field_name)
+           else
+             nil
+           end
+      %>
+      <%# if active_storage_attachment.respond_to?(:attached?) &&
+        active_storage_attachment.attached? &&
+        active_storage_attachment.blob.present? %>
+      <% if active_storage_attachment&.attached? %>
+        <%= image_tag url_for(active_storage_attachment),
+                      alt: "#{label} Image",
+                      data: { file_preview_target: "preview" },
+                      class: "w-32 h-32 #{rounded ? 'rounded-full' : ''} object-cover border border-gray-300 shadow-sm" %>
+      <% elsif use_profile_placeholder %>
+        <%= image_tag "missing.png",
+                      data: { file_preview_target: "preview" },
+                      class: "w-32 h-32 #{rounded ? 'rounded-full' : ''} object-cover border border-gray-300 shadow-sm" %>
+      <% else %>
+        <div class="relative w-32 h-32">
+          <%# ALWAYS render an <img> for Stimulus to target %>
+          <img
+            data-file-preview-target="preview"
+            src="<%= active_storage_attachment&.attached? ? url_for(active_storage_attachment) : "" %>"
+            alt="<%= "#{label} Image" %>"
+            class="w-32 h-32 object-cover border border-gray-300 shadow-sm
+                 <%= rounded ? 'rounded-full' : '' %>
+                 <%= active_storage_attachment&.attached? ? '' : 'hidden' %>"
+            />
+
+          <%# Placeholder icon – only visible when nothing is attached %>
+          <div
+            data-file-preview-target="placeholder"
+            class="absolute inset-0 flex items-center justify-center
+                 border border-gray-300 shadow-sm bg-gray-50 text-gray-400 text-6xl
+                 <%= rounded ? 'rounded-full' : '' %>
+                 <%= active_storage_attachment&.attached? ? 'hidden' : '' %>">
+            <i class="fa-regular fa-image"></i>
+          </div>
         </div>
       <% end %>
+      <div data-file-preview-target="filename"
+           class="text-center text-sm text-gray-500">
+        <%= if active_storage_attachment&.attached?
+              active_storage_attachment.blob.filename.to_s
+            else
+              "No file selected"
+            end %>
+      </div>
+    <% end %>
 
-      <% if show_file_field %>
-        <div class="relative w-36">
+    <% if show_file_field %>
+      <div class="flex items-center gap-3">
+
+        <!-- Choose File Button -->
+        <div class="relative w-28">
           <%= f.file_field field_name,
-                           data: { file_preview_target: "input" },
+                           data: {
+                             file_preview_target: "input",
+                             action: "change->file-preview#update"
+                           },
                            multiple: multiple,
-                           class: "absolute inset-0 w-36 h-full opacity-0 cursor-pointer" %>
+                           class: "absolute inset-0 w-full h-full opacity-0 cursor-pointer" %>
+
           <button type="button"
-                  class="w-full py-2 px-3 w-36 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50">
+                  class="w-full py-2 px-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50">
             Choose file
           </button>
         </div>
-      <% end %>
-    </div>
+
+        <!-- Remove Button -->
+        <% if f.object.persisted? && f.object.file.attached? %>
+          <div class="flex items-center gap-1">
+            <%= f.check_box :_destroy,
+                            class: "h-4 w-4 appearance-none checked:bg-red-600
+                            bg-gray-100 text-white border border-gray-300 rounded cursor-pointer
+                            checked:border-red-600 checked:text-white" %>
+
+            <%= f.label :_destroy,
+                        "Remove",
+                        class: "text-sm cursor-pointer" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   </div>
+</div>
 
-  <%#= link_to "🗑 Remove",
-              remove_image_story_path(@story, image_id: image.id),
-              data: { turbo_method: :delete, turbo_confirm: "Remove this image?" },
-              class: "text-red-600 hover:text-red-800 text-sm" if image %>
-
-  <%#= f.input :remove_image, as: :boolean,
-              label: "Remove file",
-              wrapper_html: { class: "flex justify-center items-center mb-0" },
-              label_html: { class: "text-sm text-gray-700 ml-2" } %>
-
-  <%= f.error :file, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" } %>
-
-<% end %>
+<%= f.error :file, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" } %>

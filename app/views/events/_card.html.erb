@@ -17,12 +17,12 @@
     <div class="flex-shrink-0 w-32 h-24 rounded overflow-hidden bg-gray-100 relative">
       <%= link_to event_path(event), class: "block w-full h-full" do %>
         <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-4xl fallback-icon"
-             style="<%= true || event.main_image_url.present? ? 'display:none;' : 'display:flex;' %>">
+             style="<%= main_image_url(event).present? ? 'display:none;' : 'display:flex;' %>">
           <i class="fa-regular fa-image"></i>
         </div>
 
-        <% if true || event.main_image_url.present? %>
-          <img src="<%= "www.google.com" || event.main_image_url %>"
+        <% if main_image_url(event).present? %>
+          <img src="<%= main_image_url(event) %>"
                class="object-cover w-full h-full"
                onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';">
         <% end %>
@@ -30,38 +30,32 @@
     </div>
 
     <!-- Title + badges -->
-    <div class="flex flex-col gap-2 flex-1 min-w-0">
+    <div class="flex flex-col gap-2 flex-1 min-w-0 mr-4">
       <%= link_to event_path(event),
                   class: "hover:underline block leading-tight",
                   data: { turbo: false } do %>
-        <%= event.title_with_badges(controller_name: controller_name).html_safe %>
+        <%= title_with_badges(event, admin: current_user.super_user?).html_safe %>
       <% end %>
     </div>
 
   </div> <!-- END title row -->
 
-  <!-- 2️⃣ FULL-WIDTH TIMES ROW -->
-  <div class="text-sm text-gray-700 leading-tight pl-1 whitespace-pre-line">
-    <%= event.times(display_day: true, display_date: true).html_safe %>
-  </div>
+  <!-- 2️⃣ TIMES + BUTTONS IN ONE ROW -->
+  <div class="times-and-buttons flex flex-wrap items-center justify-between w-full gap-4">
 
-  <!-- 3️⃣ BUTTONS ROW -->
-  <div class="flex items-center w-full pt-2">
+    <!-- LEFT: Times -->
+    <div class="text-sm text-gray-700 leading-tight whitespace-pre-line">
+      <%= event.times(display_day: true, display_date: true).html_safe %>
+    </div>
 
-    <!-- LEFT: Edit button -->
-    <% if current_user.super_user? %>
-      <div>
+    <!-- RIGHT: Buttons + Registered -->
+    <div class="flex items-center gap-3">
+
+      <% if current_user.super_user? %>
         <%= link_to "Edit",
                     edit_event_path(event),
-                    class: "btn btn-secondary-outline" %>
-      </div>
-    <% end %>
-
-    <!-- MIDDLE: Spacer -->
-    <div class="flex-1"></div>
-
-    <!-- RIGHT: Actions -->
-    <div class="flex items-center gap-3">
+                    class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+      <% end %>
 
       <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
         <%= button_to "De-register",
@@ -86,10 +80,9 @@
     </div>
   </div>
 
-
   <!-- 4️⃣ FULL-WIDTH CALENDAR LINKS ROW -->
   <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
-    <div class="text-sm text-gray-700 mt-2 flex flex-wrap gap-2 items-center pl-1">
+    <div class="flex gap-2 items-center justify-center w-full text-sm text-gray-700 mt-2">
 <!--      <span class="font-semibold">Calendar:</span>-->
       <%= event.calendar_links %>
     </div>
