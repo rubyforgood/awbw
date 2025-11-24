@@ -19,7 +19,7 @@
             <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Author</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Title</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Name</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Windows Type</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Workshop</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Project</th>
@@ -33,7 +33,7 @@
               <tr class="hover:bg-gray-50">
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.created_by.name %></td>
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <%= link_to story_idea.title, story_idea_path(story_idea),
+                  <%= link_to story_idea.name, story_idea_path(story_idea),
                               class: "font-bold hover:text-indigo-800 hover:underline" %>
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.windows_type&.short_name %></td>
