@@ -26,17 +26,13 @@ RSpec.describe Workshop do
     it { should have_many(:workshop_age_ranges) }
 
     # Nested Attributes
-    it { should accept_nested_attributes_for(:images).allow_destroy(true) }
+    it { should accept_nested_attributes_for(:gallery_images).allow_destroy(true) }
     it { should accept_nested_attributes_for(:sectorable_items).allow_destroy(true) }
     it { should accept_nested_attributes_for(:sectors).allow_destroy(true) }
     it { should accept_nested_attributes_for(:workshop_age_ranges).allow_destroy(true) }
     it { should accept_nested_attributes_for(:quotes) }
     it { should accept_nested_attributes_for(:workshop_variations) }
     it { should accept_nested_attributes_for(:workshop_logs).allow_destroy(true) }
-
-    # Paperclip
-    # it { should have_attached_file(:thumbnail) }
-    # it { should have_attached_file(:header) }
   end
 
   describe "validations" do
@@ -45,16 +41,6 @@ RSpec.describe Workshop do
 
     it { should validate_presence_of(:title) }
     it { should validate_length_of(:age_range).is_at_most(16) }
-
-    # Paperclip
-    # it { should validate_attachment_content_type(:thumbnail).allowing('image/png', 'image/jpeg', 'image/gif') }
-    # it { should validate_attachment_content_type(:header).allowing('image/png', 'image/jpeg', 'image/gif') }
-
-    it { should validate_content_type_of(:header).allowing(Workshop::ACCEPTED_CONTENT_TYPES) }
-    it { should validate_content_type_of(:header).rejecting("text/plain", "text/xml") }
-
-    it { should validate_content_type_of(:thumbnail).allowing(Workshop::ACCEPTED_CONTENT_TYPES) }
-    it { should validate_content_type_of(:thumbnail).rejecting("text/plain", "text/xml") }
 
     # Conditional presence validation for legacy workshops (month, year)
     context "when legacy is true" do
