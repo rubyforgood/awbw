@@ -79,19 +79,11 @@ class Project < ApplicationRecord
   end
 
   def organization_description
-    description
-  end
-
-  def organization_locality
-    addresses.first&.locality
+    "#{name}, #{organization_locality}"
   end
 
   def organization_locality
     addresses.active.first&.locality
-  end
-
-  def organization_description
-    "#{name}, #{organization_locality}"
   end
 
   def sector_list
