@@ -1,6 +1,6 @@
 <div class="min-h-screen py-8">
   <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+    <div class="max-w-7xl mx-auto bg-rose-200 border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -37,7 +37,7 @@
                               class: "font-bold hover:text-indigo-800 hover:underline" %>
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.windows_type&.short_name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.workshop&.title %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.workshop_title %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.project&.name %></td>
                 <td class="px-4 py-2 text-sm text-gray-500 text-center">
                   <%= story_idea.updated_at.strftime("%b %d, %Y") %>

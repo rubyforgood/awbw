@@ -86,7 +86,7 @@ class StoriesController < ApplicationController
   def story_params
     params.require(:story).permit(
       :title, :body, :featured, :published, :youtube_url, :website_url,
-      :windows_type_id, :project_id, :workshop_id,
+      :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
       main_image_attributes: [:id, :file, :_destroy],
       gallery_images_attributes: [:id, :file, :_destroy]
