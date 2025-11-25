@@ -71,41 +71,6 @@ class WorkshopDecorator < Draper::Decorator
     stars.html_safe
   end
 
-
-
-  def display_objective
-    if legacy
-      html = html_objective
-      html.xpath("//img").each do |img|
-        src = formatted_url(img)
-        img.set_attribute('src', src)
-      end
-      html.xpath("//a").each do |link|
-        href = link.attributes['href'].value.gsub('https://www.awbw.org', 'http://dashboard.awbw.org') if link.attributes['href']
-        link.set_attribute('href', href)
-        link.set_attribute('class', 'underline')
-      end
-      html.to_s.html_safe
-    else
-      objective
-    end
-  end
-
-  def formatted_url(img)
-    return unless img.attributes['src']
-    value = img.attributes['src'].value
-
-    if value.include?('awbw.org')
-      return value.gsub('https', 'http').gsub('www.', '').gsub('awbw.org', 'dashboard.awbw.org')
-    else
-      if value.include?("s3.amazonaws.com")
-        return value
-      else
-        return value.prepend('http://dashboard.awbw.org') unless value.include?('.org') || value.include?('.com')
-      end
-    end
-  end
-
   def formatted_objective(length: 100)
     if legacy
       html = html_objective
@@ -123,17 +88,6 @@ class WorkshopDecorator < Draper::Decorator
     else
       h.truncate(html_objective.text.html_safe.squish, length: length)
     end
-  end
-
-  def objective_fixed_img_urls
-    html = html_objective
-
-    html.xpath("//img").each do |img|
-      src = formatted_url(img)
-      img.set_attribute('src', src)
-    end
-
-    html.to_s.html_safe
   end
 
   def spanish_field_values
