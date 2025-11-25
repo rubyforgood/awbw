@@ -27,6 +27,18 @@ namespace :update_picture_urls do
     )
   end
 
+  def upload_csv(file_name, csv_file)
+    file_path = Rails.root.join(csv_file)
+    ActiveStorage::Blob.create_and_upload!(
+      io: File.open(file_path, "rb"),
+      key: file_name,
+      filename: file_name,
+      content_type: "text/csv"
+    )
+
+    puts "\n Migration log uploaded to DigitalOcean as #{file_name}"
+  end
+
   def run_update(dry_run:, start_id: nil, finish_id: nil)
     models = [
       Address,
@@ -98,6 +110,8 @@ namespace :update_picture_urls do
         end
       end
     end
+
+    upload_csv("rich_text_update_log_#{Time.now.to_i}.csv", csv_file)
     puts "CSV report generated at #{csv_file}"
   end
 
