@@ -135,17 +135,17 @@ namespace :update_picture_urls do
       end
 
       begin
-        blob = ActiveStorage::Blob.find_by(key: key)
+        blob = ActiveStorage::Blob.find_by(aws_key: key)
         image = record.images.build(type: "Images::SpecialImage")
         file_name = File.basename(key)
         temp = nil
 
         ActiveRecord::Base.transaction do
-          # TODO update to aws_key
           if blob.present?
             image.file.attach(blob)
           else
             temp = if dashboard_url
+              # Download from previous production local storage
               URI.open(dashboard_url)
             else
               Tempfile.new(file_name)
@@ -163,7 +163,8 @@ namespace :update_picture_urls do
             image.file.attach(
               io: temp,
               filename: file_name,
-              content_type: content_type
+              content_type: content_type,
+              aws_key: key
             )
           end
           image.save!
@@ -177,7 +178,7 @@ namespace :update_picture_urls do
           end
           content = record.public_send(column)
           new_content = content.gsub(url, new_url)
-          record.update!(column => new_content)
+          record.update_column(column, new_content)
           # Log success
           csv << [model.name, record.id, column, url, key, "updated", nil, new_url]
         end
