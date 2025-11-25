@@ -105,14 +105,24 @@ namespace :update_picture_urls do
     record.public_send(column).gsub(/src="([^"]*)"/) do |match|
       url = match[/src="([^"]*)"/, 1] # extract the actual URL
       aws_prefix = "https://s3.amazonaws.com/awbwassets/"
+      dashboard_url = nil
+      key = nil
 
-      unless url.start_with?(aws_prefix)
+      case url
+      when %r{^/awbw/} # matches any URL starting with /awbw/uploads/
+        puts "Local upload path detected"
+        dashboard_url = "https://dashboard.awbw.org#{url}"
+        key = url
+      when ->(u) { u.start_with?(aws_prefix) } # matches URLs starting with the AWS prefix
+        puts "AWS hosted file detected"
+        key = url.sub(aws_prefix, "")
+      else
+        puts "Unknown source"
         csv << [model.name, record.id, column, url, nil, "skipped", "No AWS Url", nil]
         next
       end
 
       # Extract the S3 key
-      key = url.sub(aws_prefix, "")
       bucket = ENV["AWS_S3_BUCKET"]
       if dry_run
         begin
@@ -123,34 +133,38 @@ namespace :update_picture_urls do
         end
         next
       end
-      # real run: transaction ensures atomic save
+
       begin
         blob = ActiveStorage::Blob.find_by(key: key)
         image = record.images.build(type: "Images::SpecialImage")
         file_name = File.basename(key)
-        temp = Tempfile.new(file_name)
+        temp = nil
 
         ActiveRecord::Base.transaction do
           # TODO update to aws_key
           if blob.present?
             image.file.attach(blob)
           else
-
+            temp = if dashboard_url
+              URI.open(dashboard_url)
+            else
+              Tempfile.new(file_name)
+            end
             temp.binmode
             # Download from S3
-            s3_client.get_object(bucket: bucket, key: key) do |chunk|
-              temp.write(chunk)
+            unless dashboard_url
+              s3_client.get_object(bucket: bucket, key: key) do |chunk|
+                temp.write(chunk)
+              end
             end
             temp.rewind
 
             content_type = Marcel::MimeType.for temp
-            puts content_type
             image.file.attach(
               io: temp,
               filename: file_name,
               content_type: content_type
             )
-            puts "Attached file to image"
           end
           image.save!
 
@@ -162,7 +176,6 @@ namespace :update_picture_urls do
             raise "Image not associated with record or file missing"
           end
           content = record.public_send(column)
-
           new_content = content.gsub(url, new_url)
           record.update!(column => new_content)
           # Log success
@@ -171,7 +184,7 @@ namespace :update_picture_urls do
       rescue => e
         csv << [model.name, record.id, column, url, key, "error", "#{e.class}: #{e.message}", nil]
       ensure
-        temp&.close!
+        temp&.close
       end
     end
   end
