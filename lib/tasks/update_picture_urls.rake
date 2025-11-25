@@ -136,7 +136,7 @@ namespace :update_picture_urls do
 
       begin
         blob = ActiveStorage::Blob.find_by(aws_key: key)
-        image = record.images.build(type: "Images::SpecialImage")
+        image = record.images.build(type: "Images::RichTextImage")
         file_name = File.basename(key)
         temp = nil
 
