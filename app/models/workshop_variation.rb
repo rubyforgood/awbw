@@ -2,6 +2,7 @@ class WorkshopVariation < ApplicationRecord
   belongs_to :workshop
   belongs_to :created_by, class_name: 'User', optional: true
   # Image associations
+  has_many :images, as: :owner, dependent: :destroy
   has_one :main_image, -> { where(type: "Images::MainImage") },
           as: :owner, class_name: "Images::MainImage", dependent: :destroy
   has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
