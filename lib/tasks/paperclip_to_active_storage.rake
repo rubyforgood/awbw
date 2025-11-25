@@ -22,7 +22,6 @@ namespace :paperclip_to_active_storage do
       MediaFile => [:file],
       Image => [:file],
       Workshop => [:thumbnail, :header],
-      Ckeditor::Picture => [:data],
       Report => [:form_file]
     }
   end
@@ -139,7 +138,9 @@ namespace :paperclip_to_active_storage do
             end
 
             # This should help with exceeding RAM on server
-            GC.start(full_mark: true, immediate_sweep: true)
+            if record.try("#{field}_file_name")
+              GC.start(full_mark: true, immediate_sweep: true)
+            end
           end
         end
       end

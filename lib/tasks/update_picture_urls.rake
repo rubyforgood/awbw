@@ -86,7 +86,7 @@ namespace :update_picture_urls do
 
       models.each do |model|
         text_columns = model.columns.select { |c| c.type == :text }.map(&:name)
-        puts "Processing #{model}"
+        puts "Processing #{model}..........................................................................................."
 
         model.find_each(start: start_id, finish: finish_id) do |record|
           puts "Processing #{model} id: #{record.id}"
@@ -110,14 +110,11 @@ namespace :update_picture_urls do
 
       case url
       when %r{^/awbw/} # matches any URL starting with /awbw/uploads/
-        puts "Local upload path detected"
         dashboard_url = "https://dashboard.awbw.org#{url}"
         key = url
       when ->(u) { u.start_with?(aws_prefix) } # matches URLs starting with the AWS prefix
-        puts "AWS hosted file detected"
         key = url.sub(aws_prefix, "")
       else
-        puts "Unknown source"
         csv << [model.name, record.id, column, url, nil, "skipped", "No AWS Url", nil]
         next
       end
@@ -141,9 +138,7 @@ namespace :update_picture_urls do
         temp = nil
 
         ActiveRecord::Base.transaction do
-          if blob.present?
-            image.file.attach(blob)
-          else
+          unless blob
             temp = if dashboard_url
               # Download from previous production local storage
               URI.open(dashboard_url)
@@ -160,13 +155,14 @@ namespace :update_picture_urls do
             temp.rewind
 
             content_type = Marcel::MimeType.for temp
-            image.file.attach(
+            blob = ActiveStorage::Blob.create_and_upload!(
               io: temp,
               filename: file_name,
-              content_type: content_type,
-              aws_key: key
+              content_type: content_type
             )
+            blob.update!(aws_key: key)
           end
+          image.file.attach(blob)
           image.save!
 
           new_url = url_for(image.file)
@@ -180,6 +176,7 @@ namespace :update_picture_urls do
           new_content = content.gsub(url, new_url)
           record.update_column(column, new_content)
           # Log success
+          puts "#{model.name} # #{record.id} updated"
           csv << [model.name, record.id, column, url, key, "updated", nil, new_url]
         end
       rescue => e
