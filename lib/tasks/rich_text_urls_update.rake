@@ -136,19 +136,19 @@ namespace :rich_text_urls_update do
       key = nil
       puts url
       case url
-      when %r{^/awbw/} # matches any URL starting with /awbw/
+      when %r{^/awbw/u} # matches any URL starting with /awbw/u
         dashboard_url = "https://dashboard.awbw.org#{url}"
         key = url
-      when ->(u) { u.start_with?("https://dashboard.awbw.org") } # https
+      when ->(u) { u.start_with?("https://dashboard.awbw.org/awbw") } # https
         key = url.sub(%r{^https://dashboard\.awbw\.org}, "")
         dashboard_url = url
-      when ->(u) { u.start_with?("http://dashboard.awbw.org") }
+      when ->(u) { u.start_with?("http://dashboard.awbw.org/awbw") }
         key = url.sub(%r{^http://dashboard\.awbw\.org}, "")
         dashboard_url = "https://dashboard.awbw.org#{key}"
-      when ->(u) { u.start_with?("https://legacy.awbw.org") }
+      when ->(u) { u.start_with?("https://legacy.awbw.org/awbw") }
         key = url.sub(%r{^https://legacy\.awbw\.org}, "")
         dashboard_url = "https://dashboard.awbw.org#{key}"
-      when ->(u) { u.start_with?("http://legacy.awbw.org") }
+      when ->(u) { u.start_with?("http://legacy.awbw.org/awbw") }
         key = url.sub(%r{^http://legacy\.awbw\.org}, "")
         dashboard_url = "https://dashboard.awbw.org#{key}"
       when ->(u) { u.start_with?(aws_prefix) } # matches URLs starting with the AWS prefix
