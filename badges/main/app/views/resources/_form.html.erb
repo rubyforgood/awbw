@@ -88,6 +88,25 @@
   <!-- Third Row -->
   <%= render "shared/form_image_fields", f: f, include_main_image: true %>
 
+  <% if @resource.attachments.any? %>
+    <div class="bg-red-200 p-3 pb-9">
+      <h3 class="text-lg font-medium mt-6 mb-2">Attachments (need to reattach)</h3>
+      <ul class="list-disc pl-5">
+        <% @resource.attachments.each do |attachment| %>
+          <li>
+            <%= attachment.file_file_name %>
+            <%# if attachment&.persisted? %>
+              <%#= link_to attachment.file_file_name,
+                          url_for(attachment.file), class: "hover:underline" %>
+            <%# else %>
+              <%#= attachment.file_file_name %>
+            <%# end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
 
 
   <!-- Form Actions -->
