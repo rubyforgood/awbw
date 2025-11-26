@@ -3,16 +3,26 @@ require "aws-sdk-s3"
 
 include Rails.application.routes.url_helpers
 
-namespace :update_picture_urls do
-  desc "Update picture URLs in all text columns for multiple models with optional start/end IDs"
-  task :update, [:start_id, :finish_id] => :environment do |t, args|
+namespace :rich_text_urls_update do
+  desc "Update picture URLs in all text columns for models with optional start/end IDs"
+  task :images, [:start_id, :finish_id] => :environment do |t, args|
     run_update(
       dry_run: false,
+      html_attr: "src",
       start_id: args[:start_id]&.to_i,
       finish_id: args[:finish_id]&.to_i
     )
   end
 
+  desc "Update link URLs in all text columns for models with optional start/end IDs"
+  task :links, [:start_id, :finish_id] => :environment do |t, args|
+    run_update(
+      dry_run: false,
+      html_attr: "href",
+      start_id: args[:start_id]&.to_i,
+      finish_id: args[:finish_id]&.to_i
+    )
+  end
   desc "Dry run: check picture URLs without updating, generate CSV report"
   task dry_run: :environment do
     run_update(dry_run: true)
@@ -39,7 +49,7 @@ namespace :update_picture_urls do
     puts "\n Migration log uploaded to DigitalOcean as #{file_name}"
   end
 
-  def run_update(dry_run:, start_id: nil, finish_id: nil)
+  def run_update(dry_run:, html_attr:, start_id: nil, finish_id: nil)
     models = [
       Address,
       AgeRange,
@@ -105,7 +115,7 @@ namespace :update_picture_urls do
           text_columns.each do |column|
             next unless record[column].present?
 
-            process_content(model, record, column, dry_run, csv)
+            process_content(model, record, column, dry_run, csv, html_attr)
           end
         end
       end
@@ -115,7 +125,7 @@ namespace :update_picture_urls do
     puts "CSV report generated at #{csv_file}"
   end
 
-  def process_content(model, record, column, dry_run, csv, html_attr: "href")
+  def process_content(model, record, column, dry_run, csv, html_attr)
     regex = /#{html_attr}="([^"]*)"/
 
     record.public_send(column).gsub(regex) do |match|
