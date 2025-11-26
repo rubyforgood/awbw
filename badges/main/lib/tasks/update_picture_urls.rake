@@ -119,15 +119,30 @@ namespace :update_picture_urls do
     record.public_send(column).gsub(/src="([^"]*)"/) do |match|
       url = match[/src="([^"]*)"/, 1] # extract the actual URL
       aws_prefix = "https://s3.amazonaws.com/awbwassets/"
+      aws_prefix_2 = "http://s3.amazonaws.com/awbwassets/"
       dashboard_url = nil
       key = nil
-
+      puts url
       case url
       when %r{^/awbw/} # matches any URL starting with /awbw/uploads/
         dashboard_url = "https://dashboard.awbw.org#{url}"
         key = url
+      when ->(u) { u.start_with?("https://dashboard.awbw.org") } # https
+        key = url.sub(%r{^https://dashboard\.awbw\.org}, "")
+        dashboard_url = url
+      when ->(u) { u.start_with?("http://dashboard.awbw.org") }
+        key = url.sub(%r{^http://dashboard\.awbw\.org}, "")
+        dashboard_url = "https://dashboard.awbw.org#{key}"
+      when ->(u) { u.start_with?("https://legacy.awbw.org") }
+        key = url.sub(%r{^https://legacy\.awbw\.org}, "")
+        dashboard_url = "https://dashboard.awbw.org#{key}"
+      when ->(u) { u.start_with?("http://legacy.awbw.org") }
+        key = url.sub(%r{^http://legacy\.awbw\.org}, "")
+        dashboard_url = "https://dashboard.awbw.org#{key}"
       when ->(u) { u.start_with?(aws_prefix) } # matches URLs starting with the AWS prefix
         key = url.sub(aws_prefix, "")
+      when ->(u) { u.start_with?(aws_prefix_2) }
+        key = url.sub(aws_prefix_2, "")
       else
         csv << [model.name, record.id, column, url, nil, "skipped", "No AWS Url", nil]
         next
