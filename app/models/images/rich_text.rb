@@ -5,9 +5,7 @@ module Images
       "image/png",
       "image/gif",
       "application/pdf",
-      "application/x-zip-compressed",
       "application/zip",
-      "application/zip-compressed",
       "application/msword", # Word .doc
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document", # Word .docx
       "application/vnd.oasis.opendocument.text" # Word document .odt
