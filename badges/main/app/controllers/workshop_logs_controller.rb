@@ -204,6 +204,9 @@ class WorkshopLogsController < ApplicationController
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
         quote_attributes: [:id, :quote, :age, :workshop_id, :_destroy]],
+      all_quotable_item_quotes_attributes: [
+        :id, :quotable_type, :quotable_id, :_destroy,
+        quote_attributes: [:id, :quote, :age, :workshop_id, :_destroy]],
       report_form_field_answers_attributes: [:id, :form_field_id, :answer_option_id,
                                              :answer, :report_id, :_destroy],
       gallery_images_attributes: [:id, :file, :_destroy])
