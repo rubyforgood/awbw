@@ -1,4 +1,5 @@
 class Quote < ApplicationRecord
+  belongs_to :workshop, optional: true
   has_many :quotable_item_quotes, dependent: :destroy
 
   validates :quote, presence: true, unless: -> { quote.blank? }

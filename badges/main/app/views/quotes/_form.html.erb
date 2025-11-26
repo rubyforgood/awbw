@@ -1,0 +1,75 @@
+<%= simple_form_for(@quote) do |f| %>
+  <div class="space-y-6">
+    <!-- Workshop -->
+    <div>
+      <%= f.input :workshop_id,
+                  as: :select,
+                  collection: @workshops,
+                  label_method: :title,
+                  value_method: :id,
+                  include_blank: "Select workshop",
+                  label: "Workshop",
+                  input_html: { class: "w-full" },
+                  wrapper_html: { class: "w-full" }
+      %>
+    </div>
+
+    <!-- Quote Text -->
+    <div>
+      <%= f.input :quote,
+                  as: :text,
+                  label: "Quote body",
+                  input_html: { rows: 5, class: "w-full" },
+                  wrapper_html: { class: "w-full" }
+      %>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <%= f.input :speaker_name,
+                    label: "Speaker name",
+                    input_html: { class: "w-full" },
+                    wrapper_html: { class: "w-full" }
+        %>
+      </div>
+
+      <div>
+        <%= f.input :age,
+                    as: :integer,
+                    label: "Age",
+                    input_html: { min: 0, class: "w-full" }
+        %>
+      </div>
+
+      <div>
+        <%= f.input :gender,
+                    as: :string,
+                    input_html: { class: "w-full" }
+        %>
+      </div>
+
+      <div class="flex items-center mt-6 md:mt-0">
+        <%= f.input :inactive,
+                    as: :boolean,
+                    label: "Hidden?",
+                    wrapper_html: { class: "flex items-center" },
+                    input_html: {
+                      class: "h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    }
+        %>
+      </div>
+
+    </div>
+
+    <div class="form-actions mt-3">
+      <% if f.object.persisted? && current_user.super_user? %>
+        <%= link_to "Delete", @quote, class: "btn btn-danger-outline",
+                    method: :delete, data: { confirm: "Are you sure?" } %>
+      <% end %>
+
+      <%= link_to "Cancel", quotes_path, class: "btn btn-secondary-outline ms-2" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
+    </div>
+  </div>
+
+<% end %>
