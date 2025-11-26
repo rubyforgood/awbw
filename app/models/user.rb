@@ -95,10 +95,11 @@ class User < ApplicationRecord
     recent = []
 
     # recent.concat(events.order(updated_at: :desc).limit(activity_limit))
+    recent.concat(bookmarks.order(updated_at: :desc).limit(activity_limit))
     recent.concat(workshops.order(updated_at: :desc).limit(activity_limit))
     recent.concat(workshop_logs.order(updated_at: :desc).limit(activity_limit))
     recent.concat(workshop_variations_as_creator.order(updated_at: :desc).limit(activity_limit))
-    # recent.concat(stories.order(updated_at: :desc).limit(activity_limit))
+    recent.concat(stories_as_creator.order(updated_at: :desc).limit(activity_limit))
     # recent.concat(quotes.order(updated_at: :desc).limit(activity_limit))
     recent.concat(resources.order(updated_at: :desc).limit(activity_limit))
     recent.concat(reports.where(owner_type: "MonthlyReport").order(updated_at: :desc).limit(activity_limit))
