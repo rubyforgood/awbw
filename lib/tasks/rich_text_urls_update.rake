@@ -3,16 +3,26 @@ require "aws-sdk-s3"
 
 include Rails.application.routes.url_helpers
 
-namespace :update_picture_urls do
-  desc "Update picture URLs in all text columns for multiple models with optional start/end IDs"
-  task :update, [:start_id, :finish_id] => :environment do |t, args|
+namespace :rich_text_urls_update do
+  desc "Update picture URLs in all text columns for models with optional start/end IDs"
+  task :images, [:start_id, :finish_id] => :environment do |t, args|
     run_update(
       dry_run: false,
+      html_attr: "src",
       start_id: args[:start_id]&.to_i,
       finish_id: args[:finish_id]&.to_i
     )
   end
 
+  desc "Update link URLs in all text columns for models with optional start/end IDs"
+  task :links, [:start_id, :finish_id] => :environment do |t, args|
+    run_update(
+      dry_run: false,
+      html_attr: "href",
+      start_id: args[:start_id]&.to_i,
+      finish_id: args[:finish_id]&.to_i
+    )
+  end
   desc "Dry run: check picture URLs without updating, generate CSV report"
   task dry_run: :environment do
     run_update(dry_run: true)
@@ -22,8 +32,8 @@ namespace :update_picture_urls do
     Aws::S3::Client.new(
       region: ENV["AWS_REGION"],
       access_key_id: ENV["AWS_ACCESS_KEY_ID"],
-      secret_access_key: ENV["AWS_SECRET_ACCESS_KEY"],
-      ssl_ca_bundle: "/etc/ssl/certs/ca-certificates.crt"
+      secret_access_key: ENV["AWS_SECRET_ACCESS_KEY"]
+      # ssl_ca_bundle: "/etc/ssl/certs/ca-certificates.crt"
     )
   end
 
@@ -39,7 +49,7 @@ namespace :update_picture_urls do
     puts "\n Migration log uploaded to DigitalOcean as #{file_name}"
   end
 
-  def run_update(dry_run:, start_id: nil, finish_id: nil)
+  def run_update(dry_run:, html_attr:, start_id: nil, finish_id: nil)
     models = [
       Address,
       AgeRange,
@@ -105,7 +115,7 @@ namespace :update_picture_urls do
           text_columns.each do |column|
             next unless record[column].present?
 
-            process_content(model, record, column, dry_run, csv)
+            process_content(model, record, column, dry_run, csv, html_attr)
           end
         end
       end
@@ -115,28 +125,30 @@ namespace :update_picture_urls do
     puts "CSV report generated at #{csv_file}"
   end
 
-  def process_content(model, record, column, dry_run, csv)
-    record.public_send(column).gsub(/src="([^"]*)"/) do |match|
-      url = match[/src="([^"]*)"/, 1] # extract the actual URL
+  def process_content(model, record, column, dry_run, csv, html_attr)
+    regex = /#{html_attr}="([^"]*)"/
+
+    record.public_send(column).gsub(regex) do |match|
+      url = match[regex, 1] # extract the actual URL
       aws_prefix = "https://s3.amazonaws.com/awbwassets/"
       aws_prefix_2 = "http://s3.amazonaws.com/awbwassets/"
       dashboard_url = nil
       key = nil
       puts url
       case url
-      when %r{^/awbw/} # matches any URL starting with /awbw/uploads/
+      when %r{^/awbw/u} # matches any URL starting with /awbw/u
         dashboard_url = "https://dashboard.awbw.org#{url}"
         key = url
-      when ->(u) { u.start_with?("https://dashboard.awbw.org") } # https
+      when ->(u) { u.start_with?("https://dashboard.awbw.org/awbw") } # https
         key = url.sub(%r{^https://dashboard\.awbw\.org}, "")
         dashboard_url = url
-      when ->(u) { u.start_with?("http://dashboard.awbw.org") }
+      when ->(u) { u.start_with?("http://dashboard.awbw.org/awbw") }
         key = url.sub(%r{^http://dashboard\.awbw\.org}, "")
         dashboard_url = "https://dashboard.awbw.org#{key}"
-      when ->(u) { u.start_with?("https://legacy.awbw.org") }
+      when ->(u) { u.start_with?("https://legacy.awbw.org/awbw") }
         key = url.sub(%r{^https://legacy\.awbw\.org}, "")
         dashboard_url = "https://dashboard.awbw.org#{key}"
-      when ->(u) { u.start_with?("http://legacy.awbw.org") }
+      when ->(u) { u.start_with?("http://legacy.awbw.org/awbw") }
         key = url.sub(%r{^http://legacy\.awbw\.org}, "")
         dashboard_url = "https://dashboard.awbw.org#{key}"
       when ->(u) { u.start_with?(aws_prefix) } # matches URLs starting with the AWS prefix
@@ -144,7 +156,7 @@ namespace :update_picture_urls do
       when ->(u) { u.start_with?(aws_prefix_2) }
         key = url.sub(aws_prefix_2, "")
       else
-        csv << [model.name, record.id, column, url, nil, "skipped", "No AWS Url", nil]
+        csv << [model.name, record.id, column, url, nil, "skipped", "No Matching Url", nil]
         next
       end
 

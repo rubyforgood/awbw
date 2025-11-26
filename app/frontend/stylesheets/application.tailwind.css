@@ -56,6 +56,11 @@
   .animate-fade {
     animation: fadeIn .5s ease-in-out;
   }
+  
+  /* add link styles */
+  .default-link a {
+    @apply underline text-blue-600 hover:text-blue-800;
+  }
 }
 
 .readonly {
