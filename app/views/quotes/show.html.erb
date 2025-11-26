@@ -1,0 +1,136 @@
+<% quote_url   = quote_url(@quote) %>
+<% quote_title = ERB::Util.url_encode(@quote.title) %>
+
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-gray-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+      <!-- Top Right Utility Buttons -->
+      <div class="text-right mb-4 space-x-1">
+        <span class="inline-block text-sm">
+          <%#= render "bookmarks/editable_bookmark_button", resource: @quote %>
+        </span>
+
+        <%= link_to "Dashboard", authenticated_root_path,
+                    class: "btn btn-secondary-outline" %>
+
+        <% if current_user.super_user? %>
+          <%= link_to "Edit", edit_quote_path(@quote),
+                      class: "btn btn-secondary-outline admin-only bg-blue-100" %>
+        <% end %>
+      </div>
+
+      <!-- Header Row -->
+      <div class="w-full">
+        <div class="max-w-3xl mx-auto px-4 py-10 text-gray-800">
+
+          <!-- Title -->
+          <h1 class="text-3xl font-bold mb-2 text-gray-900 leading-tight">
+            Quote Details
+          </h1>
+
+          <!-- Card -->
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-6 mb-6">
+            <div>
+              <div class="relative bg-gray-100 italic leading-relaxed p-6 rounded-2xl">
+                <div class="font-semibold text-gray-700 italic text-lg">
+                  <%= @quote.description %>
+                </div>
+                <div class="text-gray-700 mt-3">
+                  -- <%= @quote.attribution %>
+                  <%= "@ " + @quote.created_at.strftime("%m-%d-%-Y") %>
+                  <%= ("re " + link_to(@quote.workshop.title, workshop_path(@quote.workshop),
+                                       class: "hover:underline") if @quote.workshop).to_s.html_safe %>
+                </div>
+                <div class="absolute -bottom-3 left-8 w-0 h-0 border-t-8 border-t-gray-100 border-x-8 border-x-transparent"></div>
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-medium text-gray-500">Status:</h3>
+              <% if @quote.inactive? %>
+                <span class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">
+                  Inactive
+                </span>
+              <% else %>
+                <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
+                  Active
+                </span>
+              <% end %>
+            </div>
+
+            <!-- Workshop -->
+            <% if @quote.workshop.present? %>
+              <div>
+                <h3 class="text-sm font-medium text-gray-500">Workshop</h3>
+                <%= link_to @quote.workshop.title,
+                            workshop_path(@quote.workshop),
+                            class: "btn btn-secondary-outline" %>
+              </div>
+            <% end %>
+
+            <div>
+              <% @quote.quotable_item_quotes.each do |qiq| %>
+                <div>
+                  <h3 class="text-sm font-medium text-gray-500"><%= qiq.quotable.class %></h3>
+                  <%= link_to qiq.quotable.title,
+                              polymorphic_path(qiq.quotable),
+                              class: "btn btn-secondary-outline" %>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Timestamps -->
+            <div class="text-xs text-gray-500 border-t pt-4">
+              <p>Created: <%= @quote.created_at.strftime("%B %e, %Y at %l:%M %p") %></p>
+              <p>Updated: <%= @quote.updated_at.strftime("%B %e, %Y at %l:%M %p") %></p>
+            </div>
+          </div>
+
+          <!-- Share Section -->
+          <h3 class="font-semibold text-lg mb-3">Share this quote:</h3>
+
+          <div class="flex space-x-4 mb-6">
+
+            <!-- Facebook -->
+            <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{quote_url}",
+                        target: "_blank", rel: "noopener",
+                        class: "text-blue-600 hover:text-blue-800" do %>
+              <i class="fab fa-facebook-square fa-lg"></i>
+            <% end %>
+
+            <!-- X / Twitter -->
+            <%= link_to "https://twitter.com/intent/tweet?url=#{quote_url}&text=#{quote_title}",
+                        target: "_blank", rel: "noopener",
+                        class: "text-sky-500 hover:text-sky-700" do %>
+              <i class="fab fa-x-twitter fa-lg"></i>
+            <% end %>
+
+            <!-- LinkedIn -->
+            <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{quote_url}",
+                        target: "_blank", rel: "noopener",
+                        class: "text-blue-700 hover:text-blue-900" do %>
+              <i class="fab fa-linkedin fa-lg"></i>
+            <% end %>
+
+            <!-- Pinterest -->
+            <%= link_to "https://pinterest.com/pin/create/button/?url=#{quote_url}&description=#{quote_title}",
+                        target: "_blank", rel: "noopener",
+                        class: "text-red-600 hover:text-red-800" do %>
+              <i class="fab fa-pinterest-square fa-lg"></i>
+            <% end %>
+
+          </div>
+
+          <!-- Footer Copy (matches screenshot) -->
+          <div class="text-sm text-gray-500 leading-relaxed border-t border-gray-300 pt-6">
+            <strong>A Window Between Worlds (AWBW)</strong>
+            supports hundreds of art workshop facilitators across the country to
+            incorporate creative expression into their work with trauma survivors.
+            These Windows Facilitators serve over 140,000 adults, teens, and children each year.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
