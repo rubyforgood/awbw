@@ -1,43 +1,62 @@
 <div id="workshop-top" class="mt-6"></div>
 
 <!-- Tabs / Accordion -->
+
 <div data-controller="tabs" class="mt-4">
   <!-- Tabs -->
   <ul class="flex border-b border-gray-300 print:hidden">
     <li class="-mb-px mr-1">
-      <a href="#"
-         class="inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors duration-200"
-         data-action="click->tabs#switch"
-         data-tabs-target="tabLink"
-         data-tab-content-id="english-content">
+      <a
+        href="#"
+        class="
+          inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900
+          hover:border-gray-300 transition-colors duration-200
+        "
+        data-action="click->tabs#switch"
+        data-tabs-target="tabLink"
+        data-tab-content-id="english-content"
+      >
         <%= workshop.has_spanish_fields? ? "English" : "Details" %>
       </a>
     </li>
     <% if workshop.has_spanish_fields? %>
       <li class="-mb-px mr-1">
-        <a href="#"
-           class="inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors duration-200"
-           data-action="click->tabs#switch"
-           data-tabs-target="tabLink"
-           data-tab-content-id="spanish-content">
+        <a
+          href="#"
+          class="
+            inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900
+            hover:border-gray-300 transition-colors duration-200
+          "
+          data-action="click->tabs#switch"
+          data-tabs-target="tabLink"
+          data-tab-content-id="spanish-content"
+        >
           Español
         </a>
       </li>
     <% end %>
 
     <li class="-mb-px mr-1 ml-auto">
-      <a href="#workshopVariations"
-         class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200">
+      <a
+        href="#workshopVariations"
+        class="
+          px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
+          hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
+        "
+      >
         Workshop Variations
       </a>
     </li>
 
     <% if @quotes.any? %>
       <li class="-mb-px mr-1">
-        <a href="#workshopQuotes"
-           class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-              hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200">
+        <a
+          href="#workshopQuotes"
+          class="
+            px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
+            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
+          "
+        >
           Related Quotes
         </a>
       </li>
@@ -45,14 +64,17 @@
 
     <% if @leader_spotlights.any? %>
       <li class="-mb-px mr-1">
-        <a href="#workshopLeaderSpotlights"
-           class="px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-              hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200">
+        <a
+          href="#workshopLeaderSpotlights"
+          class="
+            px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
+            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
+          "
+        >
           Related Stories
         </a>
       </li>
     <% end %>
-
   </ul>
 
   <!-- Tab contents -->
@@ -60,17 +82,10 @@
     <!-- English / Details -->
     <div id="english-content" data-tabs-target="tabContent">
       <% unless workshop.extra_field.blank? %>
-        <div class="prose text-sm mb-4">
-          <%= workshop.extra_field.html_safe %>
-        </div>
+        <div class="prose text-sm mb-4"><%= workshop.extra_field.html_safe %></div>
       <% end %>
 
-      <% if workshop.legacy %>
-        <div class="prose text-sm mb-4">
-          <%= workshop.display_objective %>
-        </div>
-      <% else %>
-        <% workshop_sections = { "Objective" => workshop.objective_fixed_img_urls,
+      <% workshop_sections = { "Objective" => workshop.objective,
                                  "Age Range" => workshop.age_range,
                                  "Materials" => workshop.materials,
                                  "Optional Materials" => workshop.optional_materials,
@@ -87,30 +102,26 @@
                                  "Tips" => workshop.tips,
                                  "Miscellaneous" => workshop.misc1,
                                  "Miscellaneous 2" => workshop.misc2 } %>
-
-        <% workshop_sections.each do |title, content| %>
-          <% next if content.blank? ||
-            (title == "Suggested time frame" && content == "00:00") ||
-            (title == "Objective" && content == "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\" \"http://www.w3.org/TR/REC-html40/loose.dtd\">\n\n")%>
-          <div class="workshop-<%= title %> single-workshop-detail mb-4">
-            <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
-            <% if title == "Suggested time frame" %>
-              <%= render "show_time_frame", workshop: workshop,
+      <% workshop_sections.each do |title, content| %>
+        <% next if content.blank? ||
+            (title == "Suggested time frame" && content == "00:00") %>
+        <div class="workshop-<%= title %> single-workshop-detail mb-4">
+          <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
+          <% if title == "Suggested time frame" %>
+            <%= render "show_time_frame", workshop: workshop,
                          title: title, content: content, language: "english" %>
-            <% else %>
-              <hr class="border-gray-300 mb-2">
-              <div class="prose text-sm after:clear-both after:block after:content-['']">
-                <%= content.html_safe %>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
+          <% else %>
+            <hr class="border-gray-300 mb-2">
+            <div class="prose text-sm after:clear-both after:block after:content-['']"><%= content.html_safe %></div>
+          <% end %>
+        </div>
 
         <% if workshop.main_image&.file&.attached? ||
           workshop.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
           <div class="workshop-gallery single-workshop-detail mb-4">
             <h3 class="text-lg font-semibold mb-1">Gallery</h3>
             <hr class="border-gray-300 mb-2">
+
             <div class="flex flex-wrap gap-4">
               <% if workshop.main_image&.file&.attached? %>
                 <%= image_tag url_for(workshop.main_image.file),
@@ -161,8 +172,7 @@
 
         <% workshop_sections_spanish.each do |title, content| %>
           <% next if content.blank? ||
-            (title == "Tiempo sugerido" && content == "00:00") ||
-            (title == "Objetivo" && content == "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\" \"http://www.w3.org/TR/REC-html40/loose.dtd\">\n\n")%>
+            (title == "Tiempo sugerido" && content == "00:00") %>
 
           <div class="workshop-<%= title %> single-workshop-detail mb-4">
             <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
@@ -171,9 +181,7 @@
                          title: title, content: content, language: "spanish" %>
             <% else %>
               <hr class="border-gray-300 mb-2">
-              <div class="prose text-sm after:clear-both after:block after:content-['']">
-                <%= content.html_safe %>
-              </div>
+              <div class="prose text-sm after:clear-both after:block after:content-['']"><%= content.html_safe %></div>
             <% end %>
           </div>
         <% end %>
