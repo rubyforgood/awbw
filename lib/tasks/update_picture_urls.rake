@@ -115,16 +115,18 @@ namespace :update_picture_urls do
     puts "CSV report generated at #{csv_file}"
   end
 
-  def process_content(model, record, column, dry_run, csv)
-    record.public_send(column).gsub(/src="([^"]*)"/) do |match|
-      url = match[/src="([^"]*)"/, 1] # extract the actual URL
+  def process_content(model, record, column, dry_run, csv, html_attr: "href")
+    regex = /#{html_attr}="([^"]*)"/
+
+    record.public_send(column).gsub(regex) do |match|
+      url = match[regex, 1] # extract the actual URL
       aws_prefix = "https://s3.amazonaws.com/awbwassets/"
       aws_prefix_2 = "http://s3.amazonaws.com/awbwassets/"
       dashboard_url = nil
       key = nil
       puts url
       case url
-      when %r{^/awbw/} # matches any URL starting with /awbw/uploads/
+      when %r{^/awbw/} # matches any URL starting with /awbw/
         dashboard_url = "https://dashboard.awbw.org#{url}"
         key = url
       when ->(u) { u.start_with?("https://dashboard.awbw.org") } # https
@@ -144,7 +146,7 @@ namespace :update_picture_urls do
       when ->(u) { u.start_with?(aws_prefix_2) }
         key = url.sub(aws_prefix_2, "")
       else
-        csv << [model.name, record.id, column, url, nil, "skipped", "No AWS Url", nil]
+        csv << [model.name, record.id, column, url, nil, "skipped", "No Matching Url", nil]
         next
       end
 
