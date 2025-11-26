@@ -1,6 +1,10 @@
 class ResourceDecorator < Draper::Decorator
   delegate_all
 
+  def description
+    text # TODO - rename field
+  end
+
   def featured_url
     return "" if url.nil?
     url.empty? ? h.resource_path(resource) : url

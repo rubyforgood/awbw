@@ -2,6 +2,10 @@
 class WorkshopDecorator < Draper::Decorator
   delegate_all
 
+  def created_by
+    user
+  end
+
   def disable_title_field?
     !id.nil?
   end
