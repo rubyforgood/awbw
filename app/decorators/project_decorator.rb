@@ -1,6 +1,10 @@
 class ProjectDecorator < Draper::Decorator
   delegate_all
 
+  def title
+    name
+  end
+
   def badges
     years = start_date ? (Time.zone.now.year - start_date.year) : 0
     badges = []

@@ -1,6 +1,10 @@
 class StoryDecorator < Draper::Decorator
   delegate_all
 
+  def description
+    body.truncate(50)
+  end
+
   def inactive?
     !published?
   end

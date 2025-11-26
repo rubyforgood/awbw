@@ -16,11 +16,6 @@ Rails.application.routes.draw do
   get 'dashboard/help', to: 'dashboard#help'
   get "image_migration_audit", to: "image_migration_audit#index"
 
-  resources :workshops do
-    collection do
-      post :search
-    end
-  end
   resources :banners
   resources :bookmarks do
     post :search
@@ -36,6 +31,7 @@ Rails.application.routes.draw do
   end
   resources :facilitators
   resources :faqs
+  resources :notifications, only: [:show]
   resources :organizations
   resources :projects
   resources :project_users
@@ -74,7 +70,11 @@ Rails.application.routes.draw do
   resources :workshop_logs
   resources :workshop_log_creation_wizard
   resources :workshop_variations
-  resources :workshops
+  resources :workshops do
+    collection do
+      post :search
+    end
+  end
 
   namespace :api do
     namespace :v1 do

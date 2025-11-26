@@ -118,6 +118,18 @@ class DashboardController < ApplicationController
       recent.concat(Resource.order(updated_at: :desc).limit(10))
       recent.concat(Report.where(owner_type: 'MonthlyReport').order(updated_at: :desc).limit(10))
       # recent.concat(Report.where(owner_id: 7).order(updated_at: :desc).limit(10)) # TODO: remove hard-coded
+      recent.concat(Address.order(updated_at: :desc).limit(10))
+      recent.concat(AgeRange.order(updated_at: :desc).limit(10))
+      recent.concat(Bookmark.order(updated_at: :desc).limit(10))
+      recent.concat(Category.order(updated_at: :desc).limit(10))
+      recent.concat(CommunityNews.order(updated_at: :desc).limit(10))
+      recent.concat(Notification.order(updated_at: :desc).limit(10))
+      recent.concat(Project.order(updated_at: :desc).limit(10))
+      recent.concat(ProjectStatus.order(updated_at: :desc).limit(10))
+      recent.concat(ProjectObligation.order(updated_at: :desc).limit(10))
+      recent.concat(ProjectUser.order(updated_at: :desc).limit(10))
+      recent.concat(Sector.order(updated_at: :desc).limit(10))
+      recent.concat(WindowsType.order(updated_at: :desc).limit(10))
 
       # Sort by the most recent timestamp (updated_at preferred, fallback to created_at)
       recent_activities = recent.sort_by { |item|
