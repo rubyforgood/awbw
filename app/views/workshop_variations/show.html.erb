@@ -64,9 +64,9 @@
 
 
       <!-- URL -->
-      <% if @workshop_variation.reference_url.present? %>
+      <% if @workshop_variation.youtube_url.present? %>
         <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
-          <%= link_to @workshop_variation.reference_url, @workshop_variation.reference_url, target: "_blank",
+          <%= link_to @workshop_variation.youtube_url, @workshop_variation.youtube_url, target: "_blank",
                       rel: "noopener noreferrer",
                       class: "text-blue-600 hover:underline break-words" %>
         </div>
