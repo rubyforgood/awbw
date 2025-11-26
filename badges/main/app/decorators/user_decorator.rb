@@ -1,5 +1,14 @@
 class UserDecorator < Draper::Decorator
   delegate_all
+
+  def title
+    name
+  end
+
+  def description
+    email
+  end
+
   def full_name
     return unless user
     if first_name.empty?

@@ -3,6 +3,14 @@ class BookmarkDecorator < Draper::Decorator
   delegate :current_page, :total_pages, :limit_value
   decorates_association :bookmarkable
 
+  def title
+    "Bookmark of #{bookmarkable_class_name} ##{bookmarkable.id}"
+  end
+
+  def description
+    "Bookmarkable: #{bookmarkable_class_name} ##{bookmarkable.id} (#{bookmarkable.title})"
+  end
+
   def breadcrumbs
     "#{bookmarks_link} >> #{bookmarkable_link}".html_safe
   end

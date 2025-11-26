@@ -1,6 +1,14 @@
 class FacilitatorDecorator < Draper::Decorator
   delegate_all
 
+  def title
+    "#{first_name} #{last_name}"
+  end
+
+  def description
+    "Facilitator Profile for #{first_name} #{last_name}"
+  end
+
  DISPLAY_FIELDS = {
     "First name" => :first_name,
     "Last name" => :last_name,
