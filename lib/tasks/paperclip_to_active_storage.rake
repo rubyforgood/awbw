@@ -3,18 +3,9 @@
 require "aws-sdk-s3"
 require "csv"
 
+CSV_PATH = Rails.root.join("tmp/migration_log.csv")
+
 namespace :paperclip_to_active_storage do
-  CSV_PATH = Rails.root.join("tmp/migration_log.csv")
-
-  def s3_client
-    Aws::S3::Client.new(
-      region: ENV["AWS_REGION"],
-      access_key_id: ENV["AWS_ACCESS_KEY_ID"],
-      secret_access_key: ENV["AWS_SECRET_ACCESS_KEY"]
-      # ssl_ca_bundle: "/etc/ssl/certs/ca-certificates.crt"
-    )
-  end
-
   def migration_map
     {
       User => [:avatar],
@@ -96,18 +87,6 @@ namespace :paperclip_to_active_storage do
     end
   end
 
-  def upload_csv(file_name)
-    file_path = Rails.root.join("tmp/migration_log.csv")
-    ActiveStorage::Blob.create_and_upload!(
-      io: File.open(file_path, "rb"),
-      key: file_name,
-      filename: file_name,
-      content_type: "text/csv"
-    )
-
-    puts "\n Migration log uploaded to DigitalOcean as #{file_name}"
-  end
-
   desc "Migrate Paperclip attachments to ActiveStorage (safe, manual-run only)"
   task migrate_to_active_storage: :environment do
     puts "🚀 Starting Paperclip → ActiveStorage migration..."
@@ -138,14 +117,14 @@ namespace :paperclip_to_active_storage do
             end
 
             # This should help with exceeding RAM on server
-            if record.try("#{field}_file_name")
+            unless model == Report
               GC.start(full_mark: true, immediate_sweep: true)
             end
           end
         end
       end
 
-      upload_csv("migration_log_#{Time.now.to_i}.csv")
+      upload_csv("migration_log_#{Time.now.to_i}.csv", CSV_PATH)
     end
 
     puts "\n🎉 Migration complete!"
@@ -204,7 +183,7 @@ namespace :paperclip_to_active_storage do
       end
     end
 
-    upload_csv("migration_dry_run_log_#{Time.now.to_i}.csv")
+    upload_csv("migration_dry_run_log_#{Time.now.to_i}.csv", CSV_PATH)
 
     puts "\n Dry run complete"
   end
