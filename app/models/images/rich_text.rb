@@ -1,6 +1,17 @@
 module Images
   class RichText < Image
-    ACCEPTED_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif", "application/pdf", "application/msword"].freeze
+    ACCEPTED_CONTENT_TYPES = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+      "application/x-zip-compressed",
+      "application/zip",
+      "application/zip-compressed",
+      "application/msword", # Word .doc
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", # Word .docx
+      "application/vnd.oasis.opendocument.text" # Word document .odt
+    ].freeze
 
     validates :file, content_type: ACCEPTED_CONTENT_TYPES
   end
