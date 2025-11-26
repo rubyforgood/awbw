@@ -1,6 +1,5 @@
 require "csv"
 require "aws-sdk-s3"
-require "net/http"
 
 include Rails.application.routes.url_helpers
 
