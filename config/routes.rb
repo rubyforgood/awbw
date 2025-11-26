@@ -1,4 +1,14 @@
 Rails.application.routes.draw do
+  # temporary direct routes to images for migration audit
+  resources :attachments, only: [:show]
+  resources :media_files, only: [:show]
+  namespace :images do
+    resources :main_images, only: [:show]
+    resources :gallery_images, only: [:show]
+    resources :rich_texts, only: [:show]
+  end
+  resources :images, only: [:show]
+
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
   devise_for :users,
