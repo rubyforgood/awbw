@@ -3,7 +3,12 @@ class WorkshopLog < Report
   belongs_to :user
   belongs_to :project
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
-  has_many :quotes, through: :quotable_item_quotes
+  has_many :all_quotable_item_quotes,
+           ->(wl) { where(quotable_id: wl.id,
+                          quotable_type: %w[WorkshopLog Report]) }, # needed bc some are stored w type Report
+           class_name: "QuotableItemQuote",
+           inverse_of: :quotable
+  has_many :quotes, through: :all_quotable_item_quotes
   has_many :report_form_field_answers,
            foreign_key: :report_id, inverse_of: :report,
            dependent: :destroy
@@ -16,6 +21,7 @@ class WorkshopLog < Report
   accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :quotable_item_quotes, allow_destroy: true,
                                 reject_if: ->(attributes) { false } # allow empty
+  accepts_nested_attributes_for :all_quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :report_form_field_answers, allow_destroy: true,
                                 reject_if: ->(attributes) { false } # allow empty
 
