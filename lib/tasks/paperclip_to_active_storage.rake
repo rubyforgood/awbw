@@ -40,8 +40,6 @@ namespace :paperclip_to_active_storage do
     key = case record.class.name
     when "MonthlyReport"
       "monthly_reports/#{field.to_s.pluralize}/#{key_path}/original/#{file_name}"
-    when "Ckeditor::Picture"
-      "ckeditor_assets/pictures/#{record.id}/original_#{File.basename(file_name, ".*")}#{File.extname(file_name)}"
     else
       "#{record.class.table_name}/#{field.to_s.pluralize}/#{key_path}/original/#{file_name}"
     end

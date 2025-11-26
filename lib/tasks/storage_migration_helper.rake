@@ -2,8 +2,8 @@ def s3_client
   Aws::S3::Client.new(
     region: ENV["AWS_REGION"],
     access_key_id: ENV["AWS_ACCESS_KEY_ID"],
-    secret_access_key: ENV["AWS_SECRET_ACCESS_KEY"],
-    ssl_ca_bundle: "/etc/ssl/certs/ca-certificates.crt"
+    secret_access_key: ENV["AWS_SECRET_ACCESS_KEY"]
+    # ssl_ca_bundle: "/etc/ssl/certs/ca-certificates.crt"
   )
 end
 
