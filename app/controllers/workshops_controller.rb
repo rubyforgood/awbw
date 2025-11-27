@@ -13,7 +13,7 @@ class WorkshopsController < ApplicationController
 
     @workshops_count = search_service.workshops.size
 
-    @category_metadata = CategoryType.published.includes(:categories).decorate
+    @category_types = CategoryType.published.includes(:categories).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
 

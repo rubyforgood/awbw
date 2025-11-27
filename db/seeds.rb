@@ -53,8 +53,8 @@ Sector::SECTOR_TYPES.each do |sector_type|
   Sector.where(name: sector_type).first_or_create!
 end
 
-puts "Creating Metadata/Categories…"
-metadata_categories = [
+puts "Creating CategoryTypes/Categories…"
+category_type_categories = [
   ["AgeRange", "3-5"],
   ["AgeRange", "6-12"],
   ["AgeRange", "Teen"],
@@ -156,9 +156,9 @@ metadata_categories = [
   ["Service Population", "Substance Abuse"],
   ["Service Population", "Veterans & Military"],
 ]
-metadata_categories.each do |metadata_name, category_name, legacy_id|
-  unless metadata_name.nil?
-    metadata = Metadatum.find_or_create_by!(name: metadata_name)
+category_type_categories.each do |category_type_name, category_name, legacy_id|
+  unless category_type_name.nil?
+    metadata = CategoryType.find_or_create_by!(name: category_type_name)
     metadata.categories.find_or_create_by!(name: category_name)
   end
 end
