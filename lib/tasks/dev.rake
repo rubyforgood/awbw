@@ -24,7 +24,7 @@ namespace :db do
 
     desc 'Generate dev seed data'
     task :generate_dev_seeds => :environment do |task, arguments|
-      load Rails.root.join("db/seeds/dummy_data_seeds.rb")
+      load Rails.root.join("db/seeds/dummy_dev_seeds.rb")
     end
 
     desc 'Import projects'
