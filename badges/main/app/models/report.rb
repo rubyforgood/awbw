@@ -12,7 +12,8 @@ class Report < ApplicationRecord
   has_one_attached :image # old paperclip -- TODO convert these to MainImage records
   has_one_attached :form_file # old paperclip -- TODO convert these to GalleryImage records
   # Image associations
-  has_many :media_files, dependent: :destroy
+  has_many :images, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
+  has_many :media_files, dependent: :destroy # TODO - convert to GalleryImages
   has_one :main_image, -> { where(type: "Images::MainImage") },
           as: :owner, class_name: "Images::MainImage", dependent: :destroy
   has_many :gallery_images, -> { where(type: "Images::GalleryImage") },

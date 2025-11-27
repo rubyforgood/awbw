@@ -5,54 +5,49 @@ class ImageMigrationAuditController < ApplicationController
 	def index
 		@results = []
 
-		# -----------------------------------------------------------------
-		# Configure models to audit
-		# -----------------------------------------------------------------
+		models_to_audit = params[:models].to_s.downcase.split("-")
 		audit(User,
 					as: [:avatar],
 					paperclip: [:avatar]
-		)
+		) if models_to_audit.empty? || models_to_audit.include?("user")
 
 		audit(Workshop, # includes WorkshopIdea
 					as: [:thumbnail, :header, :images, :attachments],
 					paperclip: [:thumbnail, :header]
-		)
+		) if models_to_audit.empty? || models_to_audit.include?("workshop")
 
 		audit(Resource,
 					as: [:attachments, :images],
 					paperclip: []
-		)
+		) if models_to_audit.empty? || models_to_audit.include?("resource")
 
 		audit(WorkshopLog,
 					as: [:media_files],
 					paperclip: []
-		)
+		) if models_to_audit.empty? || models_to_audit.include?("workshop_log")
 
 		audit(Report,
 					as: [:image, :form_file, :images, :media_files],
 					paperclip: [:image, :form_file]
-		)
+		) if models_to_audit.empty? || models_to_audit.include?("report")
 
+		audit(Attachment,
+					as: [:file],
+					paperclip: [:file]
+		) if models_to_audit.empty? || models_to_audit.include?("attachment")
 
+		audit(Image,
+					as: [:file],
+					paperclip: [:file]
+		) if models_to_audit.empty? || models_to_audit.include?("image")
 
-		# audit(
-		# 	Attachment,
-		# 	as_associations: [:file],
-		# 	paperclip_groups: [:file]
-		# )
-		# audit(
-		# 	Image,
-		# 	as_associations: [:file],
-		# 	paperclip_groups: [:file]
-		# )
-		# audit(
-		# 	MediaFile,
-		# 	as_associations: [:file],
-		# 	paperclip_groups: [:file]
-		# )
+		audit(MediaFile,
+					as: [:file],
+					paperclip: [:file]
+		) if models_to_audit.empty? || models_to_audit.include?("media_file")
 
 		# -----------------------------------------------------------------
-		# Filter only records that actually have data
+		# Filter only records that have at least one attachment present
 		# -----------------------------------------------------------------
 		@results.select! do |row|
 			row[:attachments].any? do |att|
