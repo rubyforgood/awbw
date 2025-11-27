@@ -1,4 +1,10 @@
 class StoryIdea < ApplicationRecord
+  PUBLISH_PREFERENCES = [
+    "I would like my full name published with the story",
+    "I would like only my first name published",
+    "I do not want my name published with my story"
+  ]
+
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :project

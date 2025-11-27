@@ -61,7 +61,7 @@
     <span>
       Type/date:
       <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.windows_type.present? %>
-        <%= "#{bookmarkable.windows_type.label} - #{bookmarkable.date}" %>
+        <%= "#{bookmarkable.windows_type.short_name} - #{bookmarkable.date}" %>
       <% elsif bookmark.bookmarkable_type == "Event" %>
         <%= bookmarkable.date %>
       <% else %>
