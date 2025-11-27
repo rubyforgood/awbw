@@ -70,3 +70,17 @@
     <% end %>
   </div>
 </div>
+<div class="my-6 flex flex-wrap gap-2">
+  Tags:
+  <% workshop.sectors.order(:name).each do |sector| %>
+    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-black text-white">
+      Sector: <%= sector.name %>
+    </span>
+  <% end %>
+  <% workshop.categories.includes(:category_type).references(:category_type)
+       .order("metadata.name, categories.name").each do |category| %>
+    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-black text-white">
+      <%= category.category_type.name %>: <%= category.name %>
+    </span>
+  <% end %>
+</div>
