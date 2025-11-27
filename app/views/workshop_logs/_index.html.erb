@@ -10,7 +10,9 @@
           </h1>
           <div class="flex gap-2">
             <%= link_to "New #{WorkshopLog.model_name.human.downcase}",
-                        new_workshop_log_path,
+                        new_workshop_log_path(project_id: params[:project_id],
+                                              workshop_id: params[:workshop_id],
+                                              user_id: current_user.id),
                         class: "btn btn-primary" %>
           </div>
         </div>

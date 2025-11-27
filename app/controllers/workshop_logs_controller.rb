@@ -139,8 +139,14 @@ class WorkshopLogsController < ApplicationController
       @workshop = Workshop.new
     end
 
-    @workshops = Workshop.published.or(Workshop.where(id: @workshop_log.workshop_id))
-                         .order(title: :asc)
+    workshops = if current_user.super_user?
+                  Workshop.all
+                else
+                  Workshop.published
+                end
+    @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id))
+                          .distinct
+                          .order(title: :asc)
 
     # Build one blank quote if none exists
     @workshop_log.quotable_item_quotes.each do |qiq|

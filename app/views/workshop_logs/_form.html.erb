@@ -1,5 +1,5 @@
-<%= simple_form_for(@workshop_log || WorkshopLog.new) do |f| %>
-  <%= f.input :user_id, as: :hidden, input_html: { value: current_user.id } %>
+<%= simple_form_for(@workshop_log) do |f| %>
+  <%= f.input :user_id, as: :hidden, input_html: { value: params[:user_id] || current_user.id } %>
   <%= f.input :windows_type_id, as: :hidden, input_html: { value: @windows_type_id } %>
 
   <!-- Error messages -->
@@ -13,14 +13,14 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <%= f.input :workshop_id,
                 as: :select,
-                collection: @workshops_list,
+                collection: @workshops,
                 label_method: :type_name,
                 value_method: :id,
                 label: "Workshop",
                 prompt: "Select a Workshop",
                 required: true,
-                selected: f.object.workshop_id,
-                input_html: { value: f.object.workshop_id,
+                selected: params[:workshop_id].presence || f.object.workshop_id,
+                input_html: { value: params[:workshop_id].presence || f.object.workshop_id,
                               class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
 
@@ -33,8 +33,8 @@
                 required: true,
                 hint: "Please contact AWBW if your agency is not listed.",
                 prompt: (@agencies.count > 1 ? "Please select the relevant agency" : nil),
-                selected: (f.object.project_id || (@agencies.count == 1 ? @agencies.first.id : nil)),
-                input_html: { value: f.object.project_id || @agency_id,
+                selected: (params[:project_id].presence || (f.object.project_id || (@agencies.count == 1 ? @agencies.first.id : nil))),
+                input_html: { value: params[:project_id].presence || f.object.project_id || @agency_id,
                               class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
     <%= f.input :date,
