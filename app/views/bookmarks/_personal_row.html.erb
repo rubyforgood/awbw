@@ -67,8 +67,8 @@
       <% else %>
         <%= bookmarkable.created_at.strftime("%B %d, %Y") %>
       <% end %>
-      <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.workshop_age_ranges.any? %>
-        (<%= bookmarkable.workshop_age_ranges.to_sentence %>)
+      <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.age_ranges.any? %>
+        (<%= bookmarkable.age_ranges.pluck(:name).to_sentence %>)
       <% end %>
     </span>
    </div>

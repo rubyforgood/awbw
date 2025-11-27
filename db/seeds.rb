@@ -28,14 +28,6 @@ FormBuilder.where(name: "Children's Workshop Log", windows_type: childrens_type)
 FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_create!(id: 10)
 FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).first_or_create!(id: 5)
 
-puts "Creating AgeRanges…"
-AgeRange.where(name: '3-5', windows_type: childrens_type).first_or_create!(id: 1)
-AgeRange.where(name: '6-12', windows_type: childrens_type).first_or_create!(id: 2)
-AgeRange.where(name: 'Teen', windows_type: childrens_type).first_or_create!(id: 3)
-AgeRange.where(name: 'Mixed-age groups', windows_type: combined_type).first_or_create!(id: 6)
-AgeRange.where(name: 'Family Windows', windows_type: combined_type).first_or_create!(id: 7)
-AgeRange.where(name: 'Adult', windows_type: adult_type).first_or_create! # no id from old data
-
 puts "Creating ProjectStatuses…"
 ProjectStatus.where(name: "Active").first_or_create!(id: 1)
 ProjectStatus.where(name: "Inactive").first_or_create!(id: 2)

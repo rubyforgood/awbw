@@ -88,9 +88,6 @@ class DashboardController < ApplicationController
       ]
 
       @reference_cards = [
-
-        { title: "!!!Age ranges", path: authenticated_root_path, icon: "👶",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
         { title: "!!!Categories", path: authenticated_root_path, icon: "🗂️",
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
         { title: "!!!Sectors", path: authenticated_root_path, icon: "🏭",
