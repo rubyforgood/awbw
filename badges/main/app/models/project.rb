@@ -74,8 +74,8 @@ class Project < ApplicationRecord
     leader.user == user
   end
 
-  def log_title
-    "#{name} #{windows_type.short_name if windows_type}"
+  def type_name
+    "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end
 
   def organization_description

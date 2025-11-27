@@ -7,7 +7,7 @@ class WorkshopLogCreationWizardController < ApplicationController
   def show
     @user = current_user
     @agencies = current_user.projects
-    windows_type_id = params[:windows_type_id] || current_user.windows_types.first.id
+    windows_type_id = params[:windows_type_id] || WindowsType.where(short_name: "COMBINED")
     @windows_type = WindowsType.find(windows_type_id) if windows_type_id
     send(step)
     render_wizard

@@ -173,8 +173,8 @@ class Workshop < ApplicationRecord
     end.join(",")
   end
 
-  def log_title
-    "#{title} #{windows_type.short_name if windows_type}"
+  def type_name
+    "#{id} #{title} #{ " (#{windows_type.short_name})" if windows_type}"
   end
 
   def communal_label(report)
