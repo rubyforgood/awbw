@@ -1,2 +1,0 @@
-class GalleryImage < Image
-end
