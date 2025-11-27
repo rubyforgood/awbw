@@ -8,6 +8,7 @@ class Workshop < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
+  has_many :resources, dependent: :restrict_with_error
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :workshop_logs, dependent: :destroy, as: :owner
   has_many :workshop_resources, dependent: :destroy
