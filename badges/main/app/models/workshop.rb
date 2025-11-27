@@ -25,7 +25,7 @@ class Workshop < ApplicationRecord
 
   # has_many through
   has_many :categories, through: :categorizable_items
-  has_many :metadata, through: :categories
+  has_many :category_types, through: :categories
   has_many :quotes, through: :quotable_item_quotes
   has_many :resources, through: :workshop_resources
   has_many :sectors, through: :sectorable_items

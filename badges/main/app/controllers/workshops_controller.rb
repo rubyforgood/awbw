@@ -13,7 +13,7 @@ class WorkshopsController < ApplicationController
 
     @workshops_count = search_service.workshops.size
 
-    @category_metadata = Metadatum.published.includes(:categories).decorate
+    @category_metadata = CategoryType.published.includes(:categories).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
 
@@ -200,6 +200,6 @@ class WorkshopsController < ApplicationController
   end
 
   def load_metadata
-    @metadata = Metadatum.published.includes(:categories).decorate
+    @metadata = CategoryType.published.includes(:categories).decorate
   end
 end
