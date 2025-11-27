@@ -131,9 +131,9 @@ class WorkshopLogsController < ApplicationController
   def set_form_variables
     @workshop_log.gallery_images.build
 
-    if params[:workshop_id]
+    if params[:workshop_id].present?
       @workshop = Workshop.where(id: params[:workshop_id]).last
-    elsif params[:windows_type_id]
+    elsif params[:windows_type_id].present?
       @workshop = Workshop.new(windows_type_id: params[:windows_type_id])
     else
       @workshop = Workshop.new
@@ -158,7 +158,8 @@ class WorkshopLogsController < ApplicationController
     # @sectors = Sector.published.map{ |si| [ si.id, si.name ] }
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
 
-    @windows_type_id = params[:windows_type_id].presence || @workshop.windows_type_id || 3
+    @windows_type_id = params[:windows_type_id].presence || @workshop.windows_type_id ||
+      WindowsType.where(short_name: "COMBINED")
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder
     if form
@@ -166,9 +167,6 @@ class WorkshopLogsController < ApplicationController
         @workshop_log.report_form_field_answers.find_or_initialize_by(form_field: field)
       end
     end
-
-    @title = params[:windows_type_id] == '3' ? :log_title : :title
-    @agency_title = params[:windows_type_id] == '3' ? :log_title : :name
 
     @agencies =
       Project.where(id: current_user.projects.select(:id))
