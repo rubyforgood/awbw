@@ -76,11 +76,7 @@
       <%= f.input :publish_preferences,
                   as: :select,
                   required: true,
-                  collection: [
-                    "I would like my full name published with the story",
-                    "I would like only my first name published",
-                    "I do not want my name published with my story"
-                  ],
+                  collection: StoryIdea::PUBLISH_PREFERENCES,
                   include_blank: "Select a preference",
                   selected: f.object.publish_preferences %>
       <%= f.input :youtube_url,

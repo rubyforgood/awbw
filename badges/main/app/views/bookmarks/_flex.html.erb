@@ -138,7 +138,7 @@
         <span>
           Type/date:
           <%= if workshop.windows_type.present?
-                "#{workshop.windows_type.label} - #{workshop.date}"
+                "#{workshop.windows_type.short_name} - #{workshop.date}"
               end %>
           <% if workshop.workshop_age_ranges.any? %>
             (<%= workshop.workshop_age_ranges.to_sentence %>)

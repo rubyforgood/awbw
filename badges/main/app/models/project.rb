@@ -75,7 +75,7 @@ class Project < ApplicationRecord
   end
 
   def log_title
-    "#{name} #{windows_type.label if windows_type}"
+    "#{name} #{windows_type.short_name if windows_type}"
   end
 
   def organization_description
