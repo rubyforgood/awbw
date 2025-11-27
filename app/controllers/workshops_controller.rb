@@ -186,11 +186,13 @@ class WorkshopsController < ApplicationController
       :visualization, :visualization_spanish,
       :warm_up, :warm_up_spanish,
 
+      main_image_attributes: [:id, :file, :_destroy],
+      gallery_images_attributes: [:id, :file, :_destroy],
+      categorizable_items_attributes: [:id, :category_id, :_destroy],
+      sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy],
       workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :series_order, :_destroy],
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy]
     )
   end
 
