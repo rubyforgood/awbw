@@ -50,7 +50,7 @@ class WorkshopIdeasController < ApplicationController
     @workshop_idea.build_main_image if @workshop_idea.main_image.blank?
     @workshop_idea.gallery_images.build
 
-    @age_ranges = AgeRange.pluck(:name)
+    @age_ranges = Category.includes(:category_type).where("metadata.name = 'AgeRange'").pluck(:name)
     @potential_series_workshops = Workshop.published.order(:title)
     @category_types = CategoryType.published.includes(:categories).decorate
     @sectors = Sector.published

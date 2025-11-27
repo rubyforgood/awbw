@@ -70,9 +70,9 @@
         <% end %>
 
         <!-- Age ranges -->
-        <% if workshop.workshop_age_ranges.any? %>
+        <% if workshop.age_ranges.any? %>
           <div class="text-sm text-gray-600 leading-tight">
-            Age ranges: <%= workshop.workshop_age_ranges.to_sentence %>
+            Age ranges: <%= workshop.age_ranges.pluck(:name).to_sentence %>
           </div>
         <% end %>
 

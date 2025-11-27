@@ -14,7 +14,7 @@ RSpec.describe Workshop do
     it { should have_many(:images).dependent(:destroy) } # As owner
     it { should have_many(:workshop_logs).dependent(:destroy) } # As owner
     it { should have_many(:bookmarks).dependent(:destroy) } # As bookmarkable
-    it { should have_many(:workshop_variations).dependent(:destroy) }
+    it { should have_many(:workshop_variations).dependent(:restrict_with_error) }
     it { should have_many(:categorizable_items).dependent(:destroy) } # As categorizable
     it { should have_many(:categories).through(:categorizable_items) }
     it { should have_many(:category_types).through(:categories) }
@@ -23,13 +23,13 @@ RSpec.describe Workshop do
     it { should have_many(:workshop_resources).dependent(:destroy) }
     it { should have_many(:resources).through(:workshop_resources) }
     it { should have_many(:attachments).dependent(:destroy) } # As owner
-    it { should have_many(:workshop_age_ranges) }
+    it { should have_many(:age_ranges) }
 
     # Nested Attributes
     it { should accept_nested_attributes_for(:gallery_images).allow_destroy(true) }
     it { should accept_nested_attributes_for(:sectorable_items).allow_destroy(true) }
     it { should accept_nested_attributes_for(:sectors).allow_destroy(true) }
-    it { should accept_nested_attributes_for(:workshop_age_ranges).allow_destroy(true) }
+    it { should accept_nested_attributes_for(:categorizable_items).allow_destroy(true) }
     it { should accept_nested_attributes_for(:quotes) }
     it { should accept_nested_attributes_for(:workshop_variations) }
     it { should accept_nested_attributes_for(:workshop_logs).allow_destroy(true) }

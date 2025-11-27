@@ -140,8 +140,8 @@
           <%= if workshop.windows_type.present?
                 "#{workshop.windows_type.short_name} - #{workshop.date}"
               end %>
-          <% if workshop.workshop_age_ranges.any? %>
-            (<%= workshop.workshop_age_ranges.to_sentence %>)
+          <% if workshop.age_ranges.any? %>
+            (<%= workshop.age_ranges.pluck(:name).to_sentence %>)
           <% end %>
         </span>
       </div>
