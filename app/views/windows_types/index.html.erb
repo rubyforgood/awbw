@@ -1,0 +1,78 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-semibold text-gray-900">
+            <%= WindowsType.model_name.human.pluralize %> (<%= @windows_types_count %>)
+          </h1>
+          <div class="flex gap-2">
+            <%= link_to("New #{ WindowsType.model_name.human.downcase }",
+                        new_windows_type_path,
+                        class: "btn btn-primary-outline") %>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full border border-gray-300 text-left">
+            <thead class="bg-gray-100 text-sm">
+            <tr>
+              <th class="px-4 py-2">Short Name</th>
+              <th class="px-4 py-2">AgeRange Categories</th>
+              <th class="px-4 py-2 w-32">Actions</th>
+            </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-200">
+            <% @windows_types.each do |wt| %>
+              <tr>
+                <!-- SHORT NAME -->
+                <td class="px-4 py-2 text-gray-700">
+                  <%= wt.short_name %>
+                </td>
+
+                <!-- CATEGORIES (comma-separated) -->
+                <td class="px-4 py-2">
+                  <% if wt.categories.any? %>
+                    <div class="flex flex-wrap gap-2">
+                      <% wt.categories.each do |cat| %>
+                        <span class="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded-full border border-gray-300">
+                          <%= cat.name %>
+                        </span>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="text-gray-400 italic text-sm">None</span>
+                  <% end %>
+                </td>
+
+                <!-- ACTIONS -->
+                <td class="px-4 py-2">
+                  <div class="flex items-center gap-3">
+                    <%= link_to "Edit",
+                                edit_windows_type_path(wt),
+                                class: "btn btn-secondary-outline" %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty state -->
+        <% unless @windows_types.any? %>
+          <p class="text-gray-500 text-center py-6">
+            No <%= WindowsType.model_name.human.pluralize %> found.
+          </p>
+        <% end %>
+
+        <!-- Pagination -->
+        <div class="pagination flex justify-center mt-12">
+          <%= tailwind_paginate @windows_types %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

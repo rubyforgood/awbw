@@ -11,4 +11,7 @@ class WindowsType < ApplicationRecord
            through: :categorizable_items, source: :category # needs to be after has_many :categorizable_items
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
+
+  validates :name, presence: true
+  validates :short_name, presence: true
 end
