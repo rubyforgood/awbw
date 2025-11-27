@@ -5,6 +5,7 @@
     <tr>
       <th class="border px-3 py-2 text-left">Model</th>
       <th class="border px-3 py-2 text-left">ID</th>
+      <th class="border px-3 py-2 text-left">Owner</th>
       <th class="border px-3 py-2 text-left">Attachment</th>
       <th class="border px-3 py-2 text-left">Paperclip</th>
       <th class="border px-3 py-2 text-left">ActiveStorage preview</th>
@@ -14,16 +15,47 @@
 
   <tbody class="divide-y divide-gray-200">
     <% @results.each do |row| %>
-      <% row[:attachments].each do |att| %>
+    <% row[:attachments]
+         .select { |att| att[:paperclip].present? && att[:paperclip].values.any?(&:present?) }
+         .each do |att| %>
+        <% record = att[:record] || row[:model].classify.constantize.find(row[:id]) %>
         <tr class="align-top">
           <td class="border px-3 py-2 font-mono"><%= row[:model] %></td>
-          <td class="border px-3 py-2 font-mono"><%= row[:id] %></td>
-          <td class="border px-3 py-2 font-mono"><%= att[:name] %></td>
+          <td class="border px-3 py-2 font-mono">
+            <%= record ? link_to(row[:id],
+                  url_for(record),
+                  class: "hover:underline"
+                ) : row[:id] %>
+          </td>
+          <td class="border px-3 py-2">
+            <% owner = record.try(:owner) if record %>
 
-          <td class="border px-3 py-2 font-mono whitespace-pre-wrap">
-            <% att[:paperclip].each do |k,v| %>
-              <%= "#{k}: #{v}" %><br>
+            <% if owner.present? %>
+              <%= link_to(
+                    "#{owner.class.name} ##{owner.id}",
+                    url_for(owner),
+                    class: "hover:underline"
+                  ) %>
+            <% else %>
+              <span class="text-gray-500">—</span>
             <% end %>
+          </td>
+          <td class="border px-3 py-2 font-mono"><%= att[:name] %></td>
+          <td class="border px-3 py-2 font-mono text-left align-top">
+            <table class="text-xs w-full">
+              <% att[:paperclip].each do |k, v| %>
+                <% display_value = if k.to_s.ends_with?("_file_name") && v.present? && v.length > 45
+                                     # break into 45-char chunks and put each on its own line
+                                     v.scan(/.{1,45}/).join("<br>").html_safe
+                                   else
+                                     v
+                                   end %>
+                <tr>
+                  <td class="pr-2 align-top whitespace-nowrap"><%= k %>:</td>
+                  <td class="align-top"><%= display_value %></td>
+                </tr>
+              <% end %>
+            </table>
           </td>
 
           <td class="border px-3 py-2 text-center">
