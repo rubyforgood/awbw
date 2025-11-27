@@ -64,18 +64,17 @@ Rails.application.routes.draw do
   get 'monthly_reports', to: 'monthly_reports#monthly'
 
   get 'reports/annual', to: 'reports#annual'
-
   resources :reports
-
   resources :resources do
     get :download
     collection do
       post :search
     end
   end
-
+  resources :sectors
   resources :story_ideas
   resources :stories
+  resources :windows_types
   resources :workshop_ideas
   resources :workshop_logs
   resources :workshop_log_creation_wizard
