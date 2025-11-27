@@ -39,7 +39,7 @@ class WorkshopsController < ApplicationController
     @total_ongoing    = logs.reduce(0) { |sum, l| sum += l.num_ongoing }
     @total_first_time = logs.reduce(0) { |sum, l| sum += l.num_first_time }
 
-    combined_windows_type = WindowsType.where("name LIKE ?", "%COMBINED (FAMILY)%").first
+    combined_windows_type = WindowsType.where(short_name: "COMBINED").first
     @combined_workshop_logs = current_user.project_workshop_logs(
       @report.date, combined_windows_type, current_user.agency_id
     )
@@ -197,7 +197,7 @@ class WorkshopsController < ApplicationController
   end
 
   def load_sortable_fields
-    @sortable_fields = WindowsType.where('name NOT LIKE ?', '%COMBINED%')
+    @sortable_fields = WindowsType.where(short_name: "COMBINED")
   end
 
   def load_metadata
