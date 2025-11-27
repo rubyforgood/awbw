@@ -6,5 +6,9 @@ FactoryBot.define do
 
     # Association: belongs_to :metadatum
     association :category_type
+
+    trait :category_age_range do
+      association :category_type, factory: :age_range
+    end
   end
 end
