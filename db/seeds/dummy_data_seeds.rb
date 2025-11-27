@@ -1,3 +1,143 @@
+puts "Creating CommunityNews…"
+[
+	"Workshop Spotlight: Building Confidence Through Art",
+	"New Facilitator Training Resources Released",
+	"Creative Healing Story of the Month",
+	"Leader Highlight: Supporting Survivors with Compassion",
+	"New Workshop Series Launching This Spring",
+	"Art-Based Tools for Emotional Safety",
+	"Celebrating Community Voices",
+	"Partner Site Success Story",
+	"New Resources Added to the Library",
+	"How Creativity Builds Connection"
+].each do |title|
+	CommunityNews.where(title: title)
+							 .first_or_create!(
+									body: Faker::Lorem.paragraph(sentence_count: 6),
+									featured: [true, false].sample,
+									published: [true, true, true, false].sample,
+									author_id: User.all.sample.id,
+									created_by_id: User.first.id,
+									updated_by_id: User.first.id,
+									project_id: Project.all.sample.id,
+									windows_type_id: WindowsType.all.sample.id,
+									created_at: Time.current - rand(1..60).days,
+									updated_at: Time.current - rand(1..30).days
+								)
+end
+
+puts "Creating new StoryIdeas…"
+10.times do |i|
+	StoryIdea.create!(
+		body: Faker::Lorem.paragraph(sentence_count: 10),
+		publish_preferences: StoryIdea::PUBLISH_PREFERENCES.sample,
+		permission_given: true,
+		external_workshop_title: [nil, nil, "Community Art Night", "Healing Arts Circle"].sample,
+		project_id: Project.all.sample.id,
+		workshop_id: Workshop.all.sample&.id,
+		windows_type_id: WindowsType.all.sample.id,
+		youtube_url: [nil, nil, "https://youtube.com/watch?v=dQw4w9WgXcQ",
+									"https://youtube.com/watch?v=abcd1234xyz"].sample,
+		created_by_id: User.first.id,
+		updated_by_id: User.first.id,
+		created_at: Time.current - rand(1..90).days,
+		updated_at: Time.current - rand(1..40).days
+	)
+end
+
+puts "Creating Stories…"
+[
+	"Healing Through Art: A Survivor’s Journey",
+	"Finding Strength in Creativity",
+	"A Workshop Moment That Changed Everything",
+	"From Silence to Expression",
+	"Rediscovering Self-Worth Through Art",
+	"Painting the Path to Healing",
+	"A Child’s Story of Safety and Hope",
+	"Community Coming Together Through Workshops",
+	"Leadership in Action: A Facilitator’s Story",
+	"When Art Opens a Door"
+].each do |title|
+	Story.where(title: title)
+			 .first_or_create!(
+					body: Faker::Lorem.paragraph(sentence_count: 10),
+					featured: [true, false, false, false, false, false].sample,
+					published: [true, true, true, false].sample,
+					permission_given: true,
+					external_workshop_title: [nil, nil, nil, nil, nil, nil, "Community Art Night", "Healing Arts Circle"].sample,
+					project_id: Project.all.sample.id,
+					workshop_id: [nil, Workshop.all.sample&.id].sample,
+					story_idea_id: [nil, nil, nil, nil, nil, nil, nil, nil, StoryIdea.all.sample&.id].sample,
+					windows_type_id: WindowsType.all.sample.id,
+					spotlighted_facilitator_id: [nil, nil, nil, nil, Facilitator.all.sample&.id].sample,
+					youtube_url: [
+						nil,
+						nil,
+						"https://youtube.com/watch?v=dQw4w9WgXcQ",
+						"https://youtube.com/watch?v=abcd1234xyz"
+					].sample,
+					created_by_id: User.first.id,
+					updated_by_id: User.first.id,
+					created_at: Time.current - rand(1..90).days,
+					updated_at: Time.current - rand(1..40).days
+			 )
+end
+
+
+puts "Creating Events…"
+[
+	"Healing Through Art: Spring Community Gathering",
+	"Facilitator Training: Trauma-Informed Art Practices",
+	"Youth Creativity Day",
+	"Mindful Art for Survivors Workshop",
+	"Community Open Studio Night",
+	"Annual Celebration of Voices",
+	"Art as Healing: Virtual Group Session",
+	"Leaders in Creativity: Facilitator Roundtable",
+	"Family Creative Expression Day",
+	"Creative Safety & Support Workshop"
+].each do |title|
+	start_date = Time.current + rand(5..60).days
+	end_date   = start_date + rand(1..3).hours
+	registration_close = start_date - rand(2..10).days
+	Event.where(title: title,
+							start_date: start_date,
+							end_date: end_date,)
+			 .first_or_create!(
+		description: Faker::Lorem.paragraph(sentence_count: 6),
+		featured: [true, false].sample,
+		publicly_visible: [true, true, false].sample,
+		registration_close_date: registration_close,
+		created_by_id: User.first.id,
+		created_at: Time.current - rand(10..90).days,
+		updated_at: Time.current - rand(1..30).days
+	)
+end
+
+
+
+puts "Creating new Resources…"
+10.times do
+	kind = Resource::PUBLISHED_KINDS.sample
+	Resource.where(title: Faker::Book.title).first_or_create!(
+		text: Faker::Lorem.paragraph(sentence_count: 8),
+		author: [Faker::Name.name, nil].sample,
+		agency: [Faker::Company.name, nil].sample,
+		kind: kind,
+		url: ["https://example.com/resource/#{SecureRandom.hex(4)}", nil].sample,
+		featured: [true, false].sample,
+		inactive: [true, false, false].sample, # mostly false = active
+		legacy: [true, false, false].sample,
+		legacy_id: rand(1000..9999),
+		ordering: rand(1..50),
+		windows_type_id: WindowsType.all.sample&.id,
+		workshop_id: Workshop.all.sample&.id,
+		user_id: User.all.sample&.id,
+		created_at: Time.current - rand(20..120).days,
+		updated_at: Time.current - rand(1..40).days
+	)
+end
+
 puts "Creating FAQs…"
 faqs = [
 	{
@@ -87,7 +227,7 @@ faqs.each do |faq_data|
 end
 
 puts "Creating workshops…"
-Workshop.create!([
+workshops = [
   {
   	 title: "Comfort Journals",
   	 windows_type_id: 1,
@@ -317,7 +457,10 @@ Workshop.create!([
   	 misc1: "", misc2: "", inactive: false, searchable: true,
   	 created_at: Time.zone.parse("2023-01-01"), updated_at: Time.zone.parse("2023-09-01")
   }
-								 ])
+]
+workshops.each do |workshop_data|
+	Workshop.where(title: workshop_data[:title]).first_or_create!(workshop_data)
+end
 
 puts "Assigning workshop categories and sectors…"
 workshops = Workshop.all
@@ -349,18 +492,9 @@ workshops.each do |workshop|
 		)
 	end
 end
-
 puts "Done assigning categories and sectors."
 
 
 # Bookmark
-# WorkshopVariation
-# Quote
 # Stories
 # # LeaderSpotlight
-# Workshop
-# # AgeRange
-# # EmotionalTheme
-# # HolidayTheme
-# # Focus
-# # Quote

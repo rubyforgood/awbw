@@ -1,8 +1,8 @@
 namespace :db do
-  namespace :seed do
+  namespace :dev do
 
     desc 'Import dev data'
-    task :import_dev_data => :environment do |task, arguments|
+    task :seed => :environment do |task, arguments|
       [
         :import_workshops,
         :generate_dev_seeds,
@@ -11,7 +11,7 @@ namespace :db do
         :import_workshop_quotes,
         :import_workshop_variations,
       ].each do |task|
-        Rake::Task["db:seed:#{task}"].invoke
+        Rake::Task["db:dev:#{task}"].invoke
       end
     end
 
