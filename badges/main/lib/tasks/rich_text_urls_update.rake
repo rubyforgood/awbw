@@ -50,7 +50,7 @@ namespace :rich_text_urls_update do
       Image,
       Location,
       MediaFile,
-      Metadatum,
+      CategoryType,
       MonthlyReport,
       Notification,
       ProjectObligation,

@@ -11,7 +11,7 @@ namespace :attachment_report do
       Address, AgeRange, AnswerOption, Attachment, Banner, Bookmark,
       Category, CategorizableItem, CommunityNews, EventRegistration, Event,
       Facilitator, Faq, FormBuilder, FormFieldAnswerOption, FormField, Form,
-      Image, Location, MediaFile, Metadatum, MonthlyReport, Notification,
+      Image, Location, MediaFile, CategoryType, MonthlyReport, Notification,
       ProjectObligation, ProjectStatus, ProjectUser, Project,
       QuotableItemQuote, Quote, ReportFormFieldAnswer, Report, Resource,
       SectorableItem, Sector, Story, StoryIdea, UserFormFormField, UserForm,
