@@ -1,8 +1,4 @@
-user_password = Devise::Encryptor.digest(User, 'password')
-User.in_batches do |batch|
-  batch.update_all(encrypted_password: user_password)
-end
-
+puts "Creating Users…"
 admin = User.where(first_name: "Umberto", last_name: "User",
                    email: "umberto.user@example.com",
                    super_user: true)
@@ -13,99 +9,145 @@ nonadmin = User.where(first_name: "Amy", last_name: "User",
                .first_or_create!(password: "password")
 User.where(first_name: "Orphaned Reports", last_name: "User",
            email: "orphaned_reports@awbw.org").first_or_create!(password: "password")
+user_password = Devise::Encryptor.digest(User, 'password')
+User.in_batches do |batch|
+  batch.update_all(encrypted_password: user_password)
+end
 
-adult_type = WindowsType.where(name: "ADULT WORKSHOP").first_or_create!
-childrens_type = WindowsType.where(name: "CHILDREN WORKSHOP").first_or_create!
-combined_type = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY)").first_or_create!
+puts "Creating WindowsTypes…"
+adult_type = WindowsType.where(name: "ADULT WINDOWS", legacy_id: 1, short_name: "ADULT").first_or_create!
+childrens_type = WindowsType.where(name: "CHILDREN'S WINDOWS", legacy_id: 2, short_name: "CHILDREN").first_or_create!
+combined_type = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS",
+                                  legacy_id: 3, short_name: "COMBINED").first_or_create!
 
-AgeRange.find_or_create_by!(name: '3-5', windows_type: childrens_type)
-AgeRange.find_or_create_by!(name: '6-12', windows_type: childrens_type)
-AgeRange.find_or_create_by!(name: 'Teen', windows_type: childrens_type)
-AgeRange.find_or_create_by!(name: 'Adult', windows_type: adult_type)
-AgeRange.find_or_create_by!(name: 'Mixed-age groups', windows_type: combined_type)
-AgeRange.find_or_create_by!(name: 'Family Windows', windows_type: combined_type)
+puts "Creating FormBuilders…"
+FormBuilder.where(name: "Adult Monthly Report", windows_type: adult_type).first_or_create!(id: 4)
+FormBuilder.where(name: "Adult Workshop Log", windows_type: adult_type).first_or_create!(id: 3)
+FormBuilder.where(name: "Children's Monthly Report", windows_type: childrens_type).first_or_create!(id: 2)
+FormBuilder.where(name: "Children's Workshop Log", windows_type: childrens_type).first_or_create!(id: 1)
+FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_create!(id: 10)
+FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).first_or_create!(id: 5)
 
-dataset = [
+puts "Creating AgeRanges…"
+AgeRange.where(name: '3-5', windows_type: childrens_type).first_or_create!(id: 1)
+AgeRange.where(name: '6-12', windows_type: childrens_type).first_or_create!(id: 2)
+AgeRange.where(name: 'Teen', windows_type: childrens_type).first_or_create!(id: 3)
+AgeRange.where(name: 'Mixed-age groups', windows_type: combined_type).first_or_create!(id: 6)
+AgeRange.where(name: 'Family Windows', windows_type: combined_type).first_or_create!(id: 7)
+AgeRange.where(name: 'Adult', windows_type: adult_type).first_or_create! # no id from old data
+
+puts "Creating ProjectStatuses…"
+ProjectStatus.where(name: "Active").first_or_create!(id: 1)
+ProjectStatus.where(name: "Inactive").first_or_create!(id: 2)
+ProjectStatus.where(name: "Pending").first_or_create!(id: 3)
+ProjectStatus.where(name: "Reinstate").first_or_create!(id: 4)
+ProjectStatus.where(name: "Suspended").first_or_create!(id: 5)
+
+puts "Creating ProjectObligations…"
+ProjectObligation::OBLIGATION_TYPES.each do |obligation_type|
+  ProjectObligation.where(name: obligation_type).first_or_create!
+end
+
+puts "Creating Sectors…"
+Sector::SECTOR_TYPES.each do |sector_type|
+  Sector.where(name: sector_type).first_or_create!
+end
+
+puts "Creating Metadata/Categories…"
+metadata_categories = [
   ["AgeRange", "3-5"],
   ["AgeRange", "6-12"],
   ["AgeRange", "Teen"],
   ["AgeRange", "Adult"],
   ["AgeRange", "Mixed-age groups"],
   ["AgeRange", "Family Windows"],
-  ["ArtType", "Clay"],
-  ["ArtType", "Collage"],
-  ["ArtType", "Coioring"],
-  ["ArtType", "Cray-Pas (crayon, oil pastels)"],
-  ["ArtType", "Digital Media"],
-  ["ArtType", "Dolls"],
-  ["ArtType", "Drawing"],
-  ["ArtType", "Embodied Art"],
-  ["ArtType", "Jewelry"],
-  ["ArtType", "Journaling"],
-  ["ArtType", "Masks"],
-  ["ArtType", "Mixed-Media"],
-  ["ArtType", "Painting"],
-  ["ArtType", "Poetry/Creative Writing"],
-  ["ArtType", "Puppets"],
-  ["ArtType", "Scratch Art"],
-  ["ArtType", "Sculpture"],
-  ["ArtType", "Shrinky Dinks"],
-  ["ArtType", "Touchstones"],
-  ["ArtType", "Watercolor"],
+  # ["ArtType", "Boxes", 1],
+  ["ArtType", "Clay", 11],
+  ["ArtType", "Collage", 2],
+  ["ArtType", "Coioring"], # fake id
+  ["ArtType", "Cray-Pas (crayon, oil pastels)", 3],
+  ["ArtType", "Digital Media", 21],
+  ["ArtType", "Dolls", 10],
+  ["ArtType", "Drawing", 17],
+  ["ArtType", "Embodied Art", 20],
+  ["ArtType", "Jewelry", 13],
+  ["ArtType", "Journaling", 5],
+  ["ArtType", "Masks", 16],
+  ["ArtType", "Mixed-Media", 6],
+  ["ArtType", "Painting", 7],
+  ["ArtType", "Poetry/Creative Writing"], # fake id
+  ["ArtType", "Puppets", 8],
+  ["ArtType", "Scratch Art", 18],
+  ["ArtType", "Sculpture", 9],
+  ["ArtType", "Shrinky Dinks", 12],
+  ["ArtType", "Touchstones"], # fake id
+  ["ArtType", "Watercolor"], # fake id
+
   ["EmotionalTheme", "Communication"],
-  ["EmotionalTheme", "Discovering My Feelings"],
+  # ["EmotionalTheme", "D.V.", 10],
+  # ["EmotionalTheme", "Dreams and Wishes", 2],
+  ["EmotionalTheme", "Discovering My Feelings", 1],
   ["EmotionalTheme", "Empathy"],
   ["EmotionalTheme", "Gratitude"],
   ["EmotionalTheme", "Grief"],
-  ["EmotionalTheme", "Handling Anger"],
+  ["EmotionalTheme", "Handling Anger", 3],
   ["EmotionalTheme", "Hopeful Future"],
-  ["EmotionalTheme", "My Body"],
-  ["EmotionalTheme", "Relationships / Boundaries"],
-  ["EmotionalTheme", "Safety and Security"],
-  ["EmotionalTheme", "Self-Care"],
-  ["EmotionalTheme", "Self-Esteem"],
+  # ["EmotionalTheme", "Leaving the Shelter", 4],
+  ["EmotionalTheme", "My Body", 5],
+  ["EmotionalTheme", "Relationships / Boundaries", 6],
+  ["EmotionalTheme", "Safety and Security", 7],
+  ["EmotionalTheme", "Self-Care", 9],
+  ["EmotionalTheme", "Self-Esteem", 11],
   ["EmotionalTheme", "Self-Regulation"],
-  ["EmotionalTheme", "Spirituality"],
+  # ["EmotionalTheme", "Sexual Assault/Abuse", 13],
+  ["EmotionalTheme", "Spirituality", 12],
   ["EmotionalTheme", "Transitions"],
-  ["EmotionalTheme", "Who Am I?"],
-  ["Focus", "Adults and Children Together"],
+  ["EmotionalTheme", "Who Am I?", 8],
+  ["Focus", "Adults and Children Together", 6],
   ["Focus", "Collaboration and Mutuality"],
-  ["Focus", "Community Engagement"],
+  ["Focus", "Community Engagement", 19],
   ["Focus", "Cultural Issues"],
-  ["Focus", "Dating Violence for Teens"],
-  ["Focus", "DV 101"],
-  ["Focus", "Easy Set-up"],
+  ["Focus", "Dating Violence for Teens", 15],
+  ["Focus", "DV 101", 16],
+  ["Focus", "Easy Set-up", 1],
   ["Focus", "Empowerment, Voice, and Choice"],
+  # ["Focus", "Exhibit Recommended", 10],
   ["Focus", "Gender Issues"],
   ["Focus", "Good for Exhibits"],
-  ["Focus", "Good for New Leaders"],
+  ["Focus", "Good for New Leaders", 3],
   ["Focus", "Good for New Participants"],
-  ["Focus", "Good for One-on-One Sessions"],
+  ["Focus", "Good for One-on-One Sessions", 2],
+  # ["Focus", "Good for Working with Boys", 4],
   ["Focus", "Good for Staff"],
   ["Focus", "Historical Trauma"],
-  ["Focus", "Inexpensive Supplies"],
-  ["Focus", "Movement and Body Awareness"],
+  ["Focus", "Inexpensive Supplies", 5],
+  # ["Focus", "Life Skills", 7],
+  ["Focus", "Movement and Body Awareness", 17],
   ["Focus", "Peer Support"],
   ["Focus", "Resilience"],
   ["Focus", "Skill Building"],
   ["Focus", "Social Emotional Learning"],
-  ["Focus", "Spanish Translation"],
-  ["Focus", "Team Building"],
+  ["Focus", "Spanish Translation", 11],
+  # ["Focus", "Staff Retreat", 9],
+  # ["Focus", "Storytelling", 18],
+  ["Focus", "Team Building", 8],
   ["Focus", "Transparency"],
-  ["HolidayTheme", "Chanukah"],
+  ["HolidayTheme", "Chanukah", 1],
   ["HolidayTheme", "Child Abuse Prevention Month"],
-  ["HolidayTheme", "Christmas"],
+  ["HolidayTheme", "Christmas", 2],
   ["HolidayTheme", "Denim Day"],
-  ["HolidayTheme", "DV Awareness Month"],
-  ["HolidayTheme", "Easter"],
-  ["HolidayTheme", "Father's Day"],
-  ["HolidayTheme", "Independence Day"],
-  ["HolidayTheme", "Mother's Day"],
-  ["HolidayTheme", "New Year"],
-  ["HolidayTheme", "Sexual Assault Awareness Month"],
-  ["HolidayTheme", "St. Patrick's Day"],
-  ["HolidayTheme", "Teen Dating Violence Awareness Month"],
-  ["HolidayTheme", "Valentine's Day"],
+  ["HolidayTheme", "DV Awareness Month", 9],
+  ["HolidayTheme", "Easter", 3],
+  ["HolidayTheme", "Father's Day", 12],
+  # ["HolidayTheme", "Halloween", 4],
+  ["HolidayTheme", "Independence Day", 5],
+  ["HolidayTheme", "Mother's Day", 8],
+  ["HolidayTheme", "New Year", 7],
+  ["HolidayTheme", "Sexual Assault Awareness Month", 15],
+  ["HolidayTheme", "St. Patrick's Day", 14],
+  ["HolidayTheme", "Teen Dating Violence Awareness Month", 16],
+  # ["HolidayTheme", "Thanksgiving", 11],
+  ["HolidayTheme", "Valentine's Day", 10],
   ["Service Population", "Child Abuse"],
   ["Service Population", "Domestic Violence"],
   ["Service Population", "Education/Schools"],
@@ -114,22 +156,9 @@ dataset = [
   ["Service Population", "Substance Abuse"],
   ["Service Population", "Veterans & Military"],
 ]
-
-dataset.each do |metadata_name, category_name|
+metadata_categories.each do |metadata_name, category_name, legacy_id|
   unless metadata_name.nil?
     metadata = Metadatum.find_or_create_by!(name: metadata_name)
     metadata.categories.find_or_create_by!(name: category_name)
   end
 end
-
-wt = WindowsType.where(name: "ADULT WORKSHOP LOG", legacy_id: 1, short_name: "ADULT").first_or_create!
-wt.form_builders.where(name: "Adult Monthly Report").first_or_create!
-wt.form_builders.where(name: "Adult Workshop Log").first_or_create!
-
-wt = WindowsType.where(name: "CHILDREN WORKSHOP LOG", legacy_id: 2, short_name: "CHILDREN").first_or_create!
-wt.form_builders.where(name: "Children's Monthly Report").first_or_create!
-wt.form_builders.where(name: "Children's Workshop Log").first_or_create!
-
-wt = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) LOG", legacy_id: 3, short_name: "COMBINED").first_or_create!
-wt.form_builders.where(name: "Share a Story").first_or_create!
-wt.form_builders.where(name: "Family Workshop Log").first_or_create!

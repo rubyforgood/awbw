@@ -9,7 +9,7 @@
 
     <div class='flex-subtitle detail'>
       <span class='small'><%= "Author: #{workshop.author}" %></span>
-      <span class='small'><%= "Type: #{workshop.windows_type.label if workshop.windows_type}" %></span>
+      <span class='small'><%= "Type: #{workshop.windows_type.short_name if workshop.windows_type}" %></span>
       <% if sectors && sectors.any? %>
         <span class='small'><%= workshop.date %></span>
         <span class='small'>

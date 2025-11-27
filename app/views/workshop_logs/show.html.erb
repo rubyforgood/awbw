@@ -21,7 +21,7 @@
         <div>
           <p><span class="font-semibold text-gray-700">Facilitator:</span> <%= @workshop_log.user&.name || "—" %></p>
           <p><span class="font-semibold text-gray-700">Organization:</span> <%= @workshop_log.project&.name || "—" %></p>
-          <p><span class="font-semibold text-gray-700">Workshop Type:</span> <%= @workshop_log.workshop&.windows_type&.label || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Workshop Type:</span> <%= @workshop_log.workshop&.windows_type&.short_name || "—" %></p>
         </div>
         <div>
           <p><span class="font-semibold text-gray-700">Workshop date:</span> <%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %></p>
