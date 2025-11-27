@@ -5,6 +5,6 @@ FactoryBot.define do
     published { true }
 
     # Association: belongs_to :metadatum
-    association :metadatum
+    association :category_type
   end
-end 
+end

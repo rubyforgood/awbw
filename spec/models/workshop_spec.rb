@@ -17,7 +17,7 @@ RSpec.describe Workshop do
     it { should have_many(:workshop_variations).dependent(:destroy) }
     it { should have_many(:categorizable_items).dependent(:destroy) } # As categorizable
     it { should have_many(:categories).through(:categorizable_items) }
-    it { should have_many(:metadata).through(:categories) }
+    it { should have_many(:category_types).through(:categories) }
     it { should have_many(:quotable_item_quotes).dependent(:destroy) } # As quotable
     it { should have_many(:quotes).through(:quotable_item_quotes) }
     it { should have_many(:workshop_resources).dependent(:destroy) }

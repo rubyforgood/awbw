@@ -52,7 +52,7 @@ class WorkshopIdeasController < ApplicationController
 
     @age_ranges = AgeRange.pluck(:name)
     @potential_series_workshops = Workshop.published.order(:title)
-    @category_metadata = Metadatum.published.includes(:categories).decorate
+    @category_metadata = CategoryType.published.includes(:categories).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
   end
