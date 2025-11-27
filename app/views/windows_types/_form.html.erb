@@ -1,0 +1,41 @@
+<%= simple_form_for @windows_type do |f| %>
+  <%= f.hidden_field :short_name, value: f.object.short_name %>
+
+  <div class="flex flex-wrap gap-3">
+    <div class="w-60">
+      <%= f.input :name, as: :text, input_html: { rows: 1 } %>
+    </div>
+    <%= f.input :short_name,
+                input_html: { readonly: true },
+                as: :string %>
+  </div>
+
+
+  <div class="form-group space-y-4">
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <div class="font-semibold text-gray-700">
+        AgeRange Categories
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <% @categories.each do |category| %>
+          <label class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px]">
+            <%= check_box_tag "windows_type[category_ids][]",
+                              category.id,
+                              @windows_type.category_ids.include?(category.id),
+                              class: "h-4 w-4 text-blue-600 rounded" %>
+
+            <span class="text-sm text-gray-700 whitespace-nowrap">
+              <%= category.name %>
+            </span>
+          </label>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <%= f.submit "Save Workshop",
+                 class: "px-4 py-2 bg-blue-600 text-white rounded-md" %>
+  </div>
+
+<% end %>
