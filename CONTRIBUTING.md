@@ -68,9 +68,9 @@ For Docker-based development (recommended):
 4. Log in as a sample user with the default [credentials](#credentials)
 
 ### Database encoding
-We were getting a different schema encoding on Mac vs Linux (utf8mb4 vs utf8) which was causing some merge conflicts. 
+Different schema encodings on Mac vs Linux (utf8mb4 vs utf8) was causing some merge challenges in schema.rb. 
 To ensure consistent encoding across environments, we have set MySQL database to use `utf8mb4` encoding by default by
-overriding DATABASE_URL in `.env` and `.env.example` files:
+overriding DATABASE_URL in `docker-compose.yml`.
 
 ```
 
