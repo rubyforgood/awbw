@@ -7,8 +7,7 @@ class WorkshopsController < ApplicationController
     @sort = params[:sort] # search_service.default_sort
 
     @workshops = search_service.workshops
-                               .includes(:categories, :sectors, :windows_type, :user, :images,
-                                         :workshop_age_ranges, :bookmarks)
+                               .includes(:categories, :sectors, :windows_type, :user, :images, :bookmarks)
                                .paginate(page: params[:page], per_page: params[:per_page] || 50)
 
     @workshops_count = search_service.workshops.size
@@ -142,7 +141,7 @@ class WorkshopsController < ApplicationController
     @workshop.build_main_image if @workshop.main_image.blank?
     @workshop.gallery_images.build
 
-    @age_ranges = AgeRange.all
+    @age_ranges = Category.includes(:category_type).where("metadata.name = 'AgeRange'").pluck(:name)
     @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
     @windows_types = WindowsType.all
     @workshop_ideas = WorkshopIdea.order(created_at: :desc)

@@ -9,7 +9,6 @@ class Workshop < ApplicationRecord
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
-  has_many :workshop_age_ranges
   has_many :workshop_logs, dependent: :destroy, as: :owner
   has_many :workshop_resources, dependent: :destroy
   has_many :workshop_series_children, # When this workshop is the parent in a series
@@ -21,9 +20,11 @@ class Workshop < ApplicationRecord
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_child_id",
            dependent: :destroy
-  has_many :workshop_variations, dependent: :destroy
+  has_many :workshop_variations, dependent: :restrict_with_error
 
   # has_many through
+  has_many :age_ranges, -> { joins(:category_type).where(metadata: { name: "AgeRange" }) },
+           through: :categorizable_items, source: :category # needs to be after has_many :categorizable_items
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
   has_many :quotes, through: :quotable_item_quotes
@@ -57,12 +58,6 @@ class Workshop < ApplicationRecord
     allow_destroy: true
   accepts_nested_attributes_for :sectors,
     reject_if: proc { |object| object["_create"] == "0" || !object["_create"] },
-    allow_destroy: true
-  accepts_nested_attributes_for :workshop_age_ranges,
-    reject_if: proc { |object|
-      object["_create"] == "0" || !object["_create"] ||
-        WorkshopAgeRange.find_by(workshop_id: object[:workshop_id], age_range_id: object[:age_range_id])
-    },
     allow_destroy: true
   accepts_nested_attributes_for :quotes,
     reject_if: proc { |object| object["quote"].nil? }
