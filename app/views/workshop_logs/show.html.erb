@@ -126,11 +126,11 @@
         <div class="mt-8 space-y-3">
           <h2 class="text-lg font-semibold text-gray-800 mb-2">Quotes</h2>
           <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-6 mb-6">
-            <% @workshop_log.quotes.each do |quote| %>
+            <% @workshop_log.quotes.decorate.each do |quote| %>
               <div>
                 <div class="relative bg-gray-100 italic leading-relaxed p-6 rounded-2xl">
                   <div class="font-semibold text-gray-700 italic text-lg">
-                    <%= link_to quote.description, quote_path(quote), class: "hover:underline" %>
+                    <%= link_to quote.description, quote_path(quote.object), class: "hover:underline" %>
                     <span class="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded-full">
                       <span class="fa fa-eye-slash"></span>
                       Hidden
