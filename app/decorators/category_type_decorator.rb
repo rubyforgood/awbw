@@ -2,7 +2,7 @@ class CategoryTypeDecorator < Draper::Decorator
 	delegate_all
 
 	def title
-		name
+		name.titleize
 	end
 
 	def description

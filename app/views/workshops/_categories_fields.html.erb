@@ -1,51 +1,48 @@
-<% metadata.each do |metadatum, categories| %>
+<% category_types.each do |category_type| %>
   <div class="relative">
-    <div
-      data-controller="dropdown"
-      class="inline-block w-full"
-      data-dropdown-target="content"
-    >
+    <div data-controller="dropdown" class="inline-block w-full" data-dropdown-target="content">
+
       <button
-        id="<%= metadatum.name %>-button"
+        id="<%= category_type.name %>-button"
         type="button"
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"<%= metadatum.name %>-dropdown":"hidden"},{"<%= metadatum.name %>-arrow":"rotate-180"},{"<%=  metadatum.name %>-button":"rounded-md rounded-t-md"}]'
-        class="
-          relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
-          border border-gray-300 cursor-pointer flex justify-between items-center
-        "
+        data-dropdown-payload-param='[{"<%= category_type.name %>-dropdown":"hidden"},
+                                     {"<%= category_type.name %>-arrow":"rotate-180"},
+                                     {"<%= category_type.name %>-button":"rounded-md rounded-t-md"}]'
+        class="relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
+               border border-gray-300 cursor-pointer flex justify-between items-center"
       >
-
         <label class="mb-0 font-medium text-gray-700">
-          <%= metadatum.display_name %></label>
+          <%= category_type.title %>
+        </label>
+
         <i
-          id="<%= metadatum.name %>-arrow"
-          class="
-            fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300
-          "
+          id="<%= category_type.name %>-arrow"
+          class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"
         ></i>
       </button>
+
       <div
-        id="<%=  metadatum.name %>-dropdown"
-        class="
-          absolute left-0 top-full w-full shadow-sm bg-white border border-t-0
-          border-gray-300 rounded-b-md hidden z-40
-        "
+        id="<%= category_type.name %>-dropdown"
+        class="absolute left-0 top-full w-full shadow-sm bg-white border border-t-0
+               border-gray-300 rounded-b-md hidden z-40"
       >
 
         <%# Class "category-checkbox" is used to submit on change %>
-        <% metadatum.categories.each do |category| %>
+        <% category_type.categories.each do |category| %>
           <div class="flex items-center gap-2 mb-1 px-4">
             <%= check_box_tag "categories[#{category.id}]",
-            category.id,
-            params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
-            id: "category_#{category.id}",
-            class: "category-checkbox" %>
+                              category.id,
+                              params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
+                              id: "category_#{category.id}",
+                              class: "category-checkbox" %>
+
             <%= label_tag "category_#{category.id}",
-            category.name,
-            class: "text-sm text-gray-700" %>
+                          category.name,
+                          class: "text-sm text-gray-700" %>
           </div>
         <% end %>
+
       </div>
     </div>
   </div>
