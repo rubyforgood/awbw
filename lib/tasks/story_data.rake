@@ -19,7 +19,7 @@ namespace :story_data do
 				spotlighted_facilitator_id: nil,
 				story_idea_id:         nil,
 				website_url:           resource.url,
-				windows_type_id:       resource.windows_type_id || WindowsType.first&.id,
+				windows_type_id:       resource.windows_type_id || WindowsType.where(short_name: "COMBINED").first.id,
 				workshop_id:           resource.workshop_id,
 				youtube_url:           nil, # resources don't store this, add mapping if needed
 				created_at:            resource.created_at,
