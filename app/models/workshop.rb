@@ -207,21 +207,4 @@ class Workshop < ApplicationRecord
   def set_time_frame
     self.timeframe = time_frame_total
   end
-
-  def self.anchors_english_admin
-    "<a name='top'></a>".html_safe
-    %w[extra_field objective materials optional_materials setup
-      introduction demonstration opening_circle warm_up visualization creation
-      closing notes tips].map { |field|
-      "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |" }.join(" ").html_safe
-  end
-
-  def self.anchors_spanish_admin
-    %w[extra_field_spanish objective_spanish materials_spanish optional_materials_spanish
-      age_range_spanish setup_spanish introduction_spanish
-      demonstration_spanish opening_circle_spanish warm_up_spanish visualization_spanish
-      creation_spanish closing_spanish notes_spanish tips_spanish misc1_spanish
-      misc2_spanish].map { |field| # timeframe_spanish
-      "<a href='#workshop_#{field}_field'>#{field.capitalize}</a> |" }.join(" ").html_safe
-  end
 end
