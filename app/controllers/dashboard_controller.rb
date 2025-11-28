@@ -8,17 +8,12 @@ class DashboardController < ApplicationController
                         .decorate
     @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
 
-<<<<<<< HEAD
     @resources = Resource.includes(:windows_type, :main_image, :gallery_images)
                          .featured
-=======
-    @resources = Resource.featured
->>>>>>> a2c2bd56 (Start to apply dashboard styling to interior pages)
                          .published
                          .published_kinds
                          .order(ordering: :asc, created_at: :desc)
                          .decorate
-<<<<<<< HEAD
     @stories = Story.includes(:windows_type, :main_image, :gallery_images)
                     .featured.published
                     .order(:title)
@@ -33,12 +28,6 @@ class DashboardController < ApplicationController
                    .publicly_visible
                    .order(:start_date)
                    .decorate
-=======
-
-    @stories = Story.featured.published.order(:title).decorate
-    @community_news = CommunityNews.featured.published.order(updated_at: :desc).decorate
-    @events = Event.featured.publicly_visible.order(:start_date).decorate
->>>>>>> a2c2bd56 (Start to apply dashboard styling to interior pages)
   end
 
   def admin

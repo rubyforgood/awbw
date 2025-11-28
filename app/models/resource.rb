@@ -66,9 +66,6 @@ class Resource < ApplicationRecord
   scope :theme, -> { where(kind: "Theme") }
   scope :title, -> (title) { where("title like ?", "%#{ title }%") }
 
-  def description
-    text # TODO - rename field
-  end
   def story?
     ["Story", "LeaderSpotlight"].include? self.kind
   end

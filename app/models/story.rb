@@ -5,7 +5,6 @@ class Story < ApplicationRecord
   belongs_to :project, optional: true
   belongs_to :spotlighted_facilitator, class_name: "Facilitator",
              foreign_key: "spotlighted_facilitator_id", optional: true
-<<<<<<< HEAD
   belongs_to :story_idea, optional: true
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -20,26 +19,12 @@ class Story < ApplicationRecord
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
   validates :body, presence: true
-=======
-
-  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
->>>>>>> 94dc74e8 (Add bookmarks to all dashboard sections)
 
   # Nested attributes
   accepts_nested_attributes_for :main_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
 
-<<<<<<< HEAD
   # Scopes
-=======
-  validates :windows_type_id, presence: true
-  validates :project_id, presence: true
-  validates :workshop_id, presence: true
-  validates :created_by_id, presence: true
-  validates :updated_by_id, presence: true
-  validates :body, presence: true
-
->>>>>>> 94dc74e8 (Add bookmarks to all dashboard sections)
   scope :featured, -> { where(featured: true) }
   scope :published, -> { where(published: true) }
 
