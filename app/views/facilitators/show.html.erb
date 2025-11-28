@@ -72,7 +72,7 @@
                     <%= link_to pu.project.name, authenticated_root_path(pu.project),
                                 class: "text-blue-600 hover:underline font-medium" %>
                     <% if pu.position.present? %>
-                      <span class="text-gray-600">– <%= pu.position.humanize %></span>
+                      <span class="text-gray-600">– <%= pu.title.presence || pu.position.humanize %></span>
                     <% end %>
                   </li>
                 <% end %>
