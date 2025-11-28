@@ -1,15 +1,30 @@
 puts "Creating Users…"
-admin = User.where(first_name: "Umberto", last_name: "User",
-                   email: "umberto.user@example.com",
-                   super_user: true)
-            .first_or_create!(password: "password")
-nonadmin = User.where(first_name: "Amy", last_name: "User",
-                      email: "amy.user@example.com",
-                      super_user: false)
-               .first_or_create!(password: "password")
-User.where(first_name: "Orphaned Reports", last_name: "User",
-           email: "orphaned_reports@awbw.org").first_or_create!(password: "password")
-user_password = Devise::Encryptor.digest(User, 'password')
+
+# Admin
+User.find_or_create_by!(email: "umberto.user@example.com") do |user|
+  user.first_name = "Umberto"
+  user.last_name = "User"
+  user.password = "password"
+  user.super_user = true
+end
+
+# Non-Admin
+User.find_or_create_by!(email: "amy.user@example.com") do |user|
+  user.first_name = "Amy"
+  user.last_name = "User"
+  user.password = "password"
+  user.super_user = false
+end
+
+# Orphaned
+User.find_or_create_by!(email: "orphaned_reports@awbw.org") do |user|
+  user.first_name = "Orphaned Reports"
+  user.last_name = "User"
+  user.password = "password"
+  user.super_user = false
+end
+
+user_password = Devise::Encryptor.digest(User, "password")
 User.in_batches do |batch|
   batch.update_all(encrypted_password: user_password)
 end
@@ -18,15 +33,15 @@ puts "Creating WindowsTypes…"
 adult_type = WindowsType.where(name: "ADULT WINDOWS", legacy_id: 1, short_name: "ADULT").first_or_create!
 childrens_type = WindowsType.where(name: "CHILDREN'S WINDOWS", legacy_id: 2, short_name: "CHILDREN").first_or_create!
 combined_type = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS",
-                                  legacy_id: 3, short_name: "COMBINED").first_or_create!
+  legacy_id: 3, short_name: "COMBINED").first_or_create!
 
 puts "Creating FormBuilders…"
-FormBuilder.where(name: "Adult Monthly Report", windows_type: adult_type).first_or_create!(id: 4)
-FormBuilder.where(name: "Adult Workshop Log", windows_type: adult_type).first_or_create!(id: 3)
-FormBuilder.where(name: "Children's Monthly Report", windows_type: childrens_type).first_or_create!(id: 2)
-FormBuilder.where(name: "Children's Workshop Log", windows_type: childrens_type).first_or_create!(id: 1)
-FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_create!(id: 10)
-FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).first_or_create!(id: 5)
+FormBuilder.find_or_create_by!(name: "Adult Monthly Report", windows_type: adult_type)
+FormBuilder.find_or_create_by!(name: "Adult Workshop Log", windows_type: adult_type)
+FormBuilder.find_or_create_by!(name: "Children's Monthly Report", windows_type: childrens_type)
+FormBuilder.find_or_create_by!(name: "Children's Workshop Log", windows_type: childrens_type)
+FormBuilder.find_or_create_by!(name: "Share a Story", windows_type: combined_type)
+FormBuilder.find_or_create_by!(name: "Family Workshop Log", windows_type: combined_type)
 
 puts "Creating ProjectStatuses…"
 ProjectStatus.where(name: "Active").first_or_create!(id: 1)
@@ -146,7 +161,7 @@ category_type_categories = [
   ["Service Population", "LGBTQIA"],
   ["Service Population", "Sexual Assault"],
   ["Service Population", "Substance Abuse"],
-  ["Service Population", "Veterans & Military"],
+  ["Service Population", "Veterans & Military"]
 ]
 category_type_categories.each do |category_type_name, category_name, legacy_id|
   unless category_type_name.nil?
