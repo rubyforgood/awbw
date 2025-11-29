@@ -54,11 +54,6 @@ class Workshop < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :main_image, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :gallery_images, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :categorizable_items,
-                                reject_if: proc { |attrs| attrs["category_id"].blank? },
-                                allow_destroy: true
-  accepts_nested_attributes_for :sectorable_items, reject_if: proc { |object| object["_create"] == "0" },
-                                allow_destroy: true
   accepts_nested_attributes_for :quotes, reject_if: proc { |object| object["quote"].nil? }
   accepts_nested_attributes_for :sectors,
                                 reject_if: proc { |object| object["_create"] == "0" || !object["_create"] },
@@ -67,8 +62,7 @@ class Workshop < ApplicationRecord
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
                                 allow_destroy: true
-  accepts_nested_attributes_for :workshop_variations,
-    reject_if: proc { |object| object.nil? }
+  accepts_nested_attributes_for :workshop_variations, reject_if: proc { |object| object.nil? }
 
 
   # Scopes

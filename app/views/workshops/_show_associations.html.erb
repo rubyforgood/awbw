@@ -1,57 +1,58 @@
-<%# if @workshop_variations.any? %>
-<div id="workshop-variations" class="flex-1 space-y-8 bg-white p-4 rounded-lg shadow-md mb-3">
-  <section id="workshopVariations">
-    <div class="flex items-start justify-between mb-1">
-      <div class="pr-6">
-        <h2 class="text-lg font-semibold mb-2">Variations of this Workshop</h2>
-      </div>
-      <%= link_to "New variation",
-                  new_workshop_variation_path(from: "workshop_show",
-                                              workshop_id: workshop.id),
-                  class: "btn btn-secondary-outline" %>
-    </div>
-
-    <hr class="border-gray-300 mb-4">
-    <div class="d-flex flex-wrap gap-2">
-      <% @workshop_variations.each do |variation| %>
-        <%= link_to variation.name,
-                    workshop_variation_path(variation),
-                    class: "btn btn-secondary-outline" %>
-      <% end %>
-    </div>
-  </section>
-</div>
-<%# end %>
-
-<% if @quotes.any? %>
-  <div id="workshop-quotes" class="flex-1 space-y-8 bg-white p-4 rounded-lg shadow-md mb-3">
-    <section id="workshopQuotes">
+<div class="show-associations-section print:hidden mt-6">
+  <%# if @workshop_variations.any? %>
+  <div id="workshop-variations" class="flex-1 space-y-8 bg-white p-4 rounded-lg shadow-md mb-3">
+    <section id="workshopVariations">
       <div class="flex items-start justify-between mb-1">
         <div class="pr-6">
-          <h2 class="text-lg font-semibold mb-2">Quotes</h2>
+          <h2 class="text-lg font-semibold mb-2">Variations of this Workshop</h2>
         </div>
-        <% if current_user.super_user? && @workshop.persisted? %>
-          <%= link_to "New quote",
-                      new_quote_path(workshop_id: @workshop.id),
-                      class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
-        <% end %>
+        <%= link_to "New variation",
+                    new_workshop_variation_path(from: "workshop_show",
+                                                workshop_id: workshop.id),
+                    class: "btn btn-secondary-outline" %>
       </div>
 
       <hr class="border-gray-300 mb-4">
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <% @quotes.each do |quote| %>
-          <div class="space-y-1">
-            <p class="italic text-gray-700 text-sm"><%= quote.quote %></p>
-            <p class="text-sm font-bold text-gray-800">- <%= quote.speaker %></p>
-          </div>
+      <div class="d-flex flex-wrap gap-2">
+        <% @workshop_variations.each do |variation| %>
+          <%= link_to variation.name,
+                      workshop_variation_path(variation),
+                      class: "btn btn-secondary-outline" %>
         <% end %>
       </div>
     </section>
   </div>
-<% end %>
+  <%# end %>
 
-<% if @leader_spotlights.any? %>
+  <% if @quotes.any? %>
+    <div id="workshop-quotes" class="flex-1 space-y-8 bg-white p-4 rounded-lg shadow-md mb-3">
+      <section id="workshopQuotes">
+        <div class="flex items-start justify-between mb-1">
+          <div class="pr-6">
+            <h2 class="text-lg font-semibold mb-2">Quotes</h2>
+          </div>
+          <% if current_user.super_user? && @workshop.persisted? %>
+            <%= link_to "New quote",
+                        new_quote_path(workshop_id: @workshop.id),
+                        class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+          <% end %>
+        </div>
+
+        <hr class="border-gray-300 mb-4">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <% @quotes.each do |quote| %>
+            <div class="space-y-1">
+              <p class="italic text-gray-700 text-sm"><%= quote.quote %></p>
+              <p class="text-sm font-bold text-gray-800">- <%= quote.speaker %></p>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    </div>
+  <% end %>
+
+  <% if @leader_spotlights.any? %>
   <div id="workshop-spotlights" class="flex-1 bg-white p-4 rounded-lg shadow-md mb-3">
     <section id="workshopLeaderSpotlights">
       <div class="flex items-start justify-between mb-1">
@@ -89,3 +90,4 @@
     </section>
   </div>
 <% end %>
+</div>
