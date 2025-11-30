@@ -87,8 +87,8 @@ RSpec.describe "Workshops", type: :system do
 
         save_and_open_page
 
-        expect(Workshop.last.title).to eq('My New Workshop')
-        # expect(page).to have_content('My New Workshop')
+        # expect(Workshop.last.title).to eq('My New Workshop')
+        expect(page).to have_content('My New Workshop')
         # expect(page).to have_content('Learn something new')
       end
     end
