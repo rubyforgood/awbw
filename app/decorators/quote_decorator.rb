@@ -13,7 +13,7 @@ class QuoteDecorator < Draper::Decorator
 		name = speaker_name.presence || "anonymous"
 
 		details = []
-		details << "#{age}yrs" if age.present?
+		details << "#{age.gsub("years","").gsub("yrs","")} yrs" if age.present?
 		details << gender if gender.present?
 
 		if details.any?
