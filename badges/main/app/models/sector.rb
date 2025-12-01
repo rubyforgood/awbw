@@ -1,8 +1,8 @@
 class Sector < ApplicationRecord
   attr_accessor :_create
 
-  SECTOR_TYPES = ['Veterans & Military', 'Sexual Assault', 'Addiction Recovery',
-                  'LGBTQIA', 'Child Abuse', 'Education/Schools', 'Other' ]
+  SECTOR_TYPES = ['Veterans & Military', 'Sexual Assault', 'Substance Abuse', 'LGBTQIA',
+                  'Child Abuse', 'Education/Schools', 'Domestic Violence', 'Other' ]
 
   has_many :sectorable_items, dependent: :destroy
   has_many :workshops, through: :sectorable_items,

@@ -1,0 +1,27 @@
+<div class="tags-section print:hidden p-2">
+  <% if workshop.sectors.any? %>
+    <div class="my-6 flex flex-wrap gap-2">
+      <span class="text-xs text-gray-700">
+        SERVICE POPULATIONS: 
+      </span>
+      <% workshop.sectors.order(:name).each do |sector| %>
+      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-white">
+        <%= sector.name %>
+      </span>
+      <% end %>
+    </div>
+  <% end %>
+  <% if workshop.categories.any? %>
+    <div class="my-6 flex flex-wrap gap-2">
+      <span class="text-xs text-gray-700">
+        ADDITIONAL TAGS:
+      </span>
+      <% workshop.categories.includes(:category_type).references(:category_type)
+                       .order("metadata.name, categories.name").each do |category| %>
+      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-white">
+        <%= category.category_type&.name + ": " if category.category_type %><%= category.name %>
+      </span>
+      <% end %>
+    </div>
+  <% end %>
+</div>

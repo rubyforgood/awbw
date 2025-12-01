@@ -1,42 +1,4 @@
-<!-- Hero Workshop Section -->
-<style>
-    .is-active {
-        @apply text-blue-600 border-b-2 border-blue-600;
-        font-weight: bold;
-        background-color: #eaeaea;
-    } /* for tabs*/
-</style>
-
-<div
-  class="relative bg-cover bg-center"
-  style="background-image: url('<%= workshop.main_image_url %>')"
->
-  <div class="inner-hero bg-black/40 p-6 md:p-12">
-    <h2 class="text-3xl md:text-4xl font-bold text-white mb-2 inline-block">
-      <%= workshop.title %><%= " [HIDDEN]" if workshop.inactive %>
-    </h2>
-
-    <div class="flex flex-wrap gap-4 text-sm text-gray-200 mt-2">
-      <span>Author:
-        <%= workshop.author %></span>
-      <span>Type:
-        <%= workshop.windows_type&.short_name %></span>
-      <span>Added:
-        <%= workshop.date %></span>
-      <% if sectors&.any? %>
-        <span>Sectors:
-          <% sectors.each do |sector| %>
-            <%= sector.name %>
-          <% end %>
-        </span>
-      <% end %>
-    </div>
-  </div>
-</div>
-
-<div
-  class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden"
->
+<div class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden p-2">
   <!-- Left: Bookmark -->
   <div class="flex items-center gap-2">
 
@@ -56,8 +18,8 @@
   <div class="flex items-center gap-4">
     <% if current_user.super_user? %>
       <%= link_to "Edit",
-      edit_workshop_path(workshop),
-      class: "btn btn-secondary-outline admin-only bg-blue-100" %>
+                  edit_workshop_path(workshop),
+                  class: "btn btn-secondary-outline admin-only bg-blue-100" %>
     <% end %>
 
     <%= link_to '#',
@@ -69,18 +31,4 @@
       <span>Print</span>
     <% end %>
   </div>
-</div>
-<div class="my-6 flex flex-wrap gap-2">
-  Tags:
-  <% workshop.sectors.order(:name).each do |sector| %>
-    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-black text-white">
-      Sector: <%= sector.name %>
-    </span>
-  <% end %>
-  <% workshop.categories.includes(:category_type).references(:category_type)
-       .order("metadata.name, categories.name").each do |category| %>
-    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-black text-white">
-      <%= category.category_type.name %>: <%= category.name %>
-    </span>
-  <% end %>
 </div>

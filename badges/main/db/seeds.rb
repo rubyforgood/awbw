@@ -42,7 +42,7 @@ end
 
 puts "Creating Sectors…"
 Sector::SECTOR_TYPES.each do |sector_type|
-  Sector.where(name: sector_type).first_or_create!
+  Sector.where(name: sector_type, published: true).first_or_create!
 end
 
 puts "Creating CategoryTypes/Categories…"
@@ -140,13 +140,13 @@ category_type_categories = [
   ["HolidayTheme", "Teen Dating Violence Awareness Month", 16],
   # ["HolidayTheme", "Thanksgiving", 11],
   ["HolidayTheme", "Valentine's Day", 10],
-  ["Service Population", "Child Abuse"],
-  ["Service Population", "Domestic Violence"],
-  ["Service Population", "Education/Schools"],
-  ["Service Population", "LGBTQIA"],
-  ["Service Population", "Sexual Assault"],
-  ["Service Population", "Substance Abuse"],
-  ["Service Population", "Veterans & Military"],
+  # ["Service Population", "Child Abuse"], # now a Sector
+  # ["Service Population", "Domestic Violence"], # now a Sector
+  # ["Service Population", "Education/Schools"], # now a Sector
+  # ["Service Population", "LGBTQIA"], # now a Sector
+  # ["Service Population", "Sexual Assault"], # now a Sector
+  # ["Service Population", "Substance Abuse"], # now a Sector
+  # ["Service Population", "Veterans & Military"], # now a Sector
 ]
 category_type_categories.each do |category_type_name, category_name, legacy_id|
   unless category_type_name.nil?

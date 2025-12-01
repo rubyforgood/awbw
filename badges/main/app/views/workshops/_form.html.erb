@@ -29,22 +29,9 @@
       </div>
 
       <div>
-        <%= f.input :age_range, as: :select,
-                    collection: @age_ranges,
-                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-      </div>
-    </div>
-
-    <!-- Row 2 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <%= f.input :objective, as: :text, label: "Workshop objective",
-                  hint: "Indicate goals of the workshop",
-                  input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
-      <div>
         <label class="block text-md font-medium text-gray-700 mb-1">Timeframe / Duration</label>
 
-        <div class="flex gap-x-2 items-center">
+        <div class="flex gap-x-2 font-bold text-xl items-center">
           <span
             data-timeframe-target="output"
             class="text-gray-900 font-medium"
@@ -57,20 +44,19 @@
           Automatic total time, in 15min increments
         </p>
       </div>
+    </div>
 
-      <% if current_user.super_user? %>
-        <br>
-        <div class="admin-only bg-blue-100">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Flags</label>
-          <div class="flex gap-x-6 items-center">
-            <%= f.input :featured, as: :boolean, wrapper: false %>
-            <%= f.input :inactive, as: :boolean, label: "Hidden?", wrapper: false %>
-          </div>
-        </div>
-      <% end %>
+    <div class="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
+      <%= f.input :objective, as: :text, label: "Workshop objective",
+                  hint: "Indicate goals of the workshop",
+                  input_html: { rows: 3, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+    </div>
 
+
+    <!-- Row 2 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <% if current_user.super_user %>
-        <div class="admin-only bg-blue-100 flex gap-x-2 items-center">
+        <div class="admin-only bg-blue-100 p-3 flex gap-x-2 items-center">
           <%= f.input :full_name, as: :text,
                       label: "Author's name",
                       hint: "Display name",
@@ -87,7 +73,7 @@
                         class: "block w-full rounded-md border-gray-300 shadow-sm
                         focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
         </div>
-        <div class="admin-only bg-blue-100 flex gap-x-2 items-center">
+        <div class="admin-only bg-blue-100 flex p-3 gap-x-2 items-center">
           <%= f.input :workshop_idea_id,
                       as: :select,
                       label: "Workshop Idea parent",
@@ -98,7 +84,14 @@
                       input_html: { value: f.object.workshop_idea_id,
                                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
         </div>
-      <% else %>
+        <div class="admin-only bg-blue-100 p-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Flags</label>
+          <div class="flex gap-x-6 items-center">
+            <%= f.input :featured, as: :boolean, wrapper: false %>
+            <%= f.input :inactive, as: :boolean, label: "Hidden?", wrapper: false %>
+          </div>
+        </div>
+    <% else %>
         <%= f.hidden_field :user_id, value: current_user&.id %>
       <% end %>
     </div>
@@ -273,7 +266,99 @@
 
     <!-- Accordions -->
     <div class="space-y-4">
-      <div data-controller="dropdown">
+      <div class="tags-section" data-controller="dropdown">
+        <button
+          type="button"
+          id="tags_button"
+          class="
+            flex items-center justify-between cursor-pointer w-full
+            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+          "
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'
+        >
+          Tags
+          <svg
+            id="tags_arrow"
+            class="w-6 h-6 shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+        </button>
+
+        <div
+          id="tags"
+          class="hidden border border-gray-300 p-4 rounded-b-md"
+        >
+          <div class="form-group space-y-6">
+            <% @categories_grouped.each do |type, cats| %>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+
+                <!-- Header -->
+                <h3 class="text-base font-semibold text-gray-800 mb-3">
+                  <%= type.name.titleize %>
+                </h3>
+
+                <!-- Checkbox List -->
+                <div class="flex flex-wrap gap-3">
+                  <% cats.sort_by { |c| c.name.to_s }.each do |category| %>
+                    <% id = "workshop_category_ids_#{category.id}" %>
+                    <label for="<%= id %>" class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                      <%= check_box_tag "workshop[category_ids][]",
+                                        category.id,
+                                        @workshop.category_ids.include?(category.id),
+                                        id: id,
+                                        class: "h-4 w-4 text-blue-600 rounded" %>
+
+                      <span class="text-sm text-gray-700 whitespace-nowrap">
+                        <%= category.name %>
+                      </span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+
+              <!-- Header -->
+              <h3 class="text-base font-semibold text-gray-800 mb-3">
+                Sectors (Service Populations)
+              </h3>
+
+              <!-- Checkbox List -->
+              <div class="flex flex-wrap gap-3">
+                <% @sectors.each do |sector| %>
+                  <% id = "workshop_sector_ids_#{sector.id}" %>
+                  <label for="<%= id %>" class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                    <%= check_box_tag "workshop[sector_ids][]",
+                                      sector.id,
+                                      @workshop.sector_ids.include?(sector.id),
+                                      id: id,
+                                      class: "h-4 w-4 text-blue-600 rounded" %>
+
+                    <span class="text-sm text-gray-700 whitespace-nowrap">
+                      <%= sector.name %>
+                    </span>
+                  </label>
+                <% end %>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="spanish-translations-section" data-controller="dropdown">
         <button
           type="button"
           id="translations_button"
@@ -313,7 +398,7 @@
         </div>
       </div>
 
-      <div data-controller="dropdown">
+      <div class="series-section" data-controller="dropdown">
         <div>
           <button
             type="button"
