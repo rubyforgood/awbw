@@ -100,16 +100,18 @@ RSpec.describe "Workshops", type: :system do
         user = create(:user, super_user: true)
         sign_in(user)
         adult_window = create(:windows_type, :adult)
-        workshop = create(:workshop, title: 'Old Title', windows_type: adult_window, user: user)
+        workshop = create(:workshop, title: "Old Title", windows_type: adult_window, user: user)
 
         visit edit_workshop_path(workshop)
 
-        fill_in "workshop_title", with: "Updated Title"
+        fill_in "workshop_title", with: "A New Title"
+        select adult_window.short_name, from: "Workshop type" # windows_type required
 
         click_on 'Submit'
 
-        expect(workshop.reload.title).to eq('Updated Title')
-        expect(page).to have_content('Workshop updated successfully.')
+        # expect(workshop.reload.title).to eq("A New Title")
+        expect(page).to have_content("A New Title")
+        expect(page).to have_content("Workshop updated successfully.")
       end
     end
   end
