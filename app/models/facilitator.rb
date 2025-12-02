@@ -71,19 +71,19 @@ class Facilitator < ApplicationRecord
   def name
     case display_name_preference
     when "full_name"
-      user.full_name
+      full_name
     when "first_name_last_initial"
-      "#{user.first_name} #{user.last_name.first}"
+      "#{first_name} #{last_name.first}"
     when "first_name_only"
-      user.first_name
+      first_name
     when "last_name_only"
-      user.last_name
+      last_name
     else
-      user.full_name
+      full_name
     end
   end
 
   def full_name
-    user.full_name
+    "#{first_name} #{last_name}"
   end
 end
