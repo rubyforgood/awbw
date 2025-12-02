@@ -23,6 +23,10 @@ class WorkshopVariationDecorator < Draper::Decorator
     end
   end
 
+  def main_image_url
+    workshop.decorate.main_image_url
+  end
+
   private
 
   def method_name

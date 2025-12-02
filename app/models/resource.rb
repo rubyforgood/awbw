@@ -83,16 +83,6 @@ class Resource < ApplicationRecord
     title || id
   end
 
-  def main_image_url
-    if main_image&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(main_image.file)
-    elsif gallery_images.first&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
-    else
-      ActionController::Base.helpers.asset_path("theme_default.png")
-    end
-  end
-
   def download_attachment
     main_image || gallery_images.first || attachments.first
   end
