@@ -11,8 +11,7 @@ RSpec.describe Facilitator, type: :model do
   end
 
   describe "#name" do
-    let(:user) { build(:user, first_name: "Jane", last_name: "Doe") }
-    let(:facilitator) { build(:facilitator, user: user) }
+    let(:facilitator) { build(:facilitator, first_name: "Jane", last_name: "Doe") }
 
     context "when display_name_preference is full_name" do
       it "returns the full name" do

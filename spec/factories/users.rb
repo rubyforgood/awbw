@@ -46,6 +46,10 @@ FactoryBot.define do
       super_user { true }
     end
 
+    trait :with_facilitator do
+      facilitator { association :facilitator, user: instance }
+    end
+
     trait :orphaned_reports do
       email { "orphaned_reports@awbw.org" }
       super_user { true }
