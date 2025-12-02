@@ -72,7 +72,7 @@ class WorkshopLogsController < ApplicationController
 
   def show
     @workshop_log = Report.find(params[:id]).decorate
-    @workshop     = @workshop_log.workshop.decorate
+    @workshop     = @workshop_log.workshop&.decorate
     @answers      = @workshop_log.report_form_field_answers
 
     if @workshop_log

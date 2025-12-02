@@ -16,7 +16,7 @@
     </p>
     <p>
       <strong>Workshop:</strong>
-      <%= @story_idea.workshop.title %>
+      <%= @story_idea.workshop&.title || @story_idea.external_workshop_title %>
     </p>
   </div>
 
