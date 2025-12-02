@@ -1,0 +1,39 @@
+<div id="mobile-menu" class="hidden md:hidden" data-dropdown-target="content">
+
+  <div class="space-y-1 px-2 pt-2 pb-3">
+    <%= link_to workshops_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+          hover:text-white" do %>
+      Workshops
+    <% end %>
+
+    <%= link_to resources_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+          hover:text-white"  do %>
+      Resources
+    <% end %>
+
+    <%= link_to faqs_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5
+          hover:text-white"  do %>
+      FAQ
+    <% end %>
+
+    <%= link_to "New workshop variation",
+                new_workshop_variation_path,
+                class:
+                  "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white" %>
+    <%= link_to "New workshop idea",
+                new_workshop_idea_path,
+                class:
+                  "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white" %>
+    <%= link_to "New workshop log",
+                new_workshop_log_path,
+                class:
+                  "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white" %>
+    <%= link_to "New story idea",
+                new_story_idea_path,
+                class:
+                  "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5" %>
+
+
+
+  </div>
+</div>
