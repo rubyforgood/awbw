@@ -1,76 +1,126 @@
-<div class="detail py-6 min-h-screen">
-  <div class="max-w-5xl mx-auto px-4">
+<div class="min-h-screen py-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <div class="flex justify-end mb-6">
-      <%= link_to("Index", events_path, class: "btn btn-secondary-outline") %>
-      <% if current_user.super_user? %>
-        <%= link_to("Edit", edit_event_path(@event), class: "btn btn-primary-outline") %>
-      <% end %>
-    </div>
-    <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
-      <div class="header-row flex justify-between items-center">
-        <div class="text-left">
-          <div class="pt-4 mb-4">Event Details</div>
-        </div>
+    <!-- Outer Soft Container (Events = blue theme) -->
+    <div class="bg-blue-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
 
-        <div>
-          <%= render "bookmarks/editable_bookmark_button", resource: @event %>
-        </div>
-      </div>
+      <!-- Top Right Actions -->
+      <div class="text-right mb-4 space-x-2">
+        <%= link_to "Index", events_path, class: "btn btn-secondary-outline" %>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-        <div>
-          <%= title_with_badges(@event) %>
-        </div>
-      </div>
-
-      <div class="images">
-        <!-- Hero Image -->
-        <% if @event.main_image&.file&.attached? %>
-          <div class="mb-8">
-            <%= image_tag @event.main_image.file,
-                          class: "w-full rounded-lg shadow-sm border border-gray-200",
-                          alt: @event.title %>
-          </div>
+        <% if current_user.super_user? %>
+          <%= link_to "Edit", edit_event_path(@event),
+                      class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>
 
-        <!-- Gallery Images -->
-        <% if @event.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
-          <div class="event-gallery single-event-detail text-center mb-4">
-            <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
-              <% @event.gallery_images.each_with_index do |gallery_image, idx| %>
-                <% if gallery_image.file&.attached? %>
-                  <%= image_tag url_for(gallery_image.file),
-                                alt: "Gallery Image #{idx + 1}",
-                                data: { file_preview_target: "preview" },
-                                class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+        <span class="inline-block">
+          <%= render "bookmarks/editable_bookmark_button", resource: @event %>
+        </span>
+      </div>
+
+      <!-- Inner White Card -->
+      <div class="bg-white rounded-lg shadow p-8">
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-10">
+
+          <!-- Left Column -->
+          <div class="md:col-span-3">
+
+            <!-- Title + Badges -->
+            <div class="my-3">
+              <%= title_with_badges(@event, font_size: "text-3xl") %>
+            </div>
+
+            <!-- Dates Section -->
+            <div class="space-y-6">
+
+              <div class="">
+                <%= @event.times(display_day: true, display_date: true) %>
+              </div>
+
+              <div class="registration-section flex flex-col gap-4 mb-6">
+                <!-- ⭐ BUTTONS -->
+                <div class="flex flex-wrap items-center gap-3">
+                  <% registered = @event.event_registrations.exists?(registrant_id: current_user.id) %>
+
+                  <% if registered %>
+                    <%= button_to "De-register",
+                                  event_registrant_registration_path(event_id: @event),
+                                  method: :delete,
+                                  data: { turbo_confirm: "Are you sure?" },
+                                  class: "btn btn-secondary-outline" %>
+
+                  <% elsif @event.registerable? %>
+                    <%= button_to "Register",
+                                  event_registrant_registration_path(event_id: @event),
+                                  class: "btn btn-primary-outline" %>
+                  <% else %>
+                    <span class="text-sm text-gray-500 italic">Registration closed</span>
+                  <% end %>
+
+                  <% if registered %>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                      You are registered!
+                    </span>
+                  <% end %>
+                </div>
+
+                <!-- ⭐ CALENDAR LINKS -->
+                <% if registered %>
+                  <div class="flex gap-2 items-center text-sm text-gray-700">
+                    <%= @event.calendar_links %>
+                  </div>
                 <% end %>
+
+              </div>
+
+              <% if @event.registration_close_date %>
+                <div>
+                  <p class="font-semibold text-gray-700">Registration Close Date</p>
+                  <p class="text-gray-900">
+                    <%= @event.registration_close_date&.strftime("%B %d, %Y %l:%M %P") || "—" %>
+                  </p>
+                </div>
               <% end %>
+
             </div>
           </div>
-        <% end %>
-      </div>
 
-      <div class="mb-3">
-        <p class="font-bold text-gray-700">Description:</p>
-        <p class="text-gray-900"><%= @event.description.presence || "—" %></p>
-      </div>
+          <!-- Right Column -->
+          <div class="md:col-span-2 space-y-6">
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-        <div>
-          <p class="font-bold text-gray-700">Start Date:</p>
-          <p class="text-gray-900"><%= @event.start_date&.strftime("%B %d, %Y %l:%M %p") || "—" %></p>
+            <!-- Main Image Hero Image -->
+            <% if @event.main_image&.file&.attached? %>
+              <div>
+                <%= image_tag @event.main_image.file,
+                              class: "w-full rounded-lg shadow-sm border border-gray-200",
+                              alt: @event.main_image.file.blob.filename.to_s %>
+              </div>
+            <% end %>
+
+            <!-- Gallery Image Thumbnails -->
+            <% if @event.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
+              <div class="flex flex-wrap justify-start gap-3">
+                <% @event.gallery_images.each_with_index do |gallery_image, idx| %>
+                  <% if gallery_image.file&.attached? %>
+                    <%= image_tag url_for(gallery_image.file),
+                                  alt: "Gallery Image #{idx + 1}: #{gallery_image.file.blob.filename.to_s}",
+                                  class: "w-24 h-24 object-cover rounded border shadow-sm" %>
+                  <% end %>
+                <% end %>
+              </div>
+            <% end %>
+
+          </div>
         </div>
 
-        <div>
-          <p class="font-bold text-gray-700">End Date:</p>
-          <p class="text-gray-900"><%= @event.end_date&.strftime("%B %d, %Y %l:%M %p") || "—" %></p>
+        <!-- FULL-WIDTH DESCRIPTION -->
+        <div class="mt-6 md:col-span-5">
+          <p class="text-gray-900 leading-relaxed">
+            <%= @event.description.presence || "—" %>
+          </p>
         </div>
 
-        <div class="md:col-span-2">
-          <p class="font-bold text-gray-700">Registration Close Date:</p>
-          <p class="text-gray-900"><%= @event.registration_close_date&.strftime("%B %d, %Y %l:%M %p") || "—" %></p>
-        </div>
       </div>
     </div>
   </div>
