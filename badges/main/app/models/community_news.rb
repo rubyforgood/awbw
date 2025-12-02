@@ -13,7 +13,7 @@ class CommunityNews < ApplicationRecord
 
   # Validations
   validates :author_id, presence: true
-  validates :title, presence: true
+  validates :title, presence: true, length: { maximum: 150 }
   validates :body, presence: true
 
   # Nested attributes
