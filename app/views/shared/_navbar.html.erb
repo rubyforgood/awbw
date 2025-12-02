@@ -58,7 +58,7 @@
         <% if user_signed_in? %>
           <div class="hidden grow md:ml-6 md:block content-center">
             <div class="flex justify-between">
-              <%= render "shared/navbar_text" %>
+              <%= render "shared/navbar_menu" %>
               <%= render "shared/navbar_new_button" %>
             </div>
           </div>
@@ -78,5 +78,5 @@
     </div>
   </div>
 
-  <%= render "shared/navbar_mobile_menu" %>
+  <%= render "shared/navbar_menu_mobile" %>
 </nav>

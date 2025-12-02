@@ -1,0 +1,148 @@
+<div id="mobile-menu" class="hidden md:hidden">
+
+  <div class="space-y-1 px-2 pt-2 pb-3">
+    <!-- Facilitate -->
+    <div data-controller="dropdown">
+      <button
+        class="mobile-section flex justify-between w-full"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"mobile-facilitate":"hidden"}]'>
+        Facilitate
+        <i class="fas fa-chevron-down" data-dropdown-target="arrow"></i>
+      </button>
+
+      <div id="mobile-facilitate"
+           class="hidden flex flex-col pl-4 mt-1 mb-3 space-y-2"
+           data-dropdown-target="content">
+        <%= link_to workshops_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-palette"></i>
+          <span>Workshops</span>
+        <% end %>
+        <%= link_to resources_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-file"></i>
+          <span>Resources</span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Community -->
+    <div data-controller="dropdown">
+      <button
+        class="mobile-section flex justify-between w-full"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"mobile-community":"hidden"}]'
+      >
+        Community
+        <i class="fas fa-chevron-down" data-dropdown-target="arrow"></i>
+      </button>
+
+      <div id="mobile-community"
+           class="hidden flex flex-col pl-4 mt-1 mb-3 space-y-2"
+           data-dropdown-target="content">
+        <%= link_to community_news_index_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-newspaper"></i>
+          <span>Community News</span>
+        <% end %>
+        <%= link_to stories_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-file-alt"></i>
+          <span>Stories</span>
+        <% end %>
+        <%= link_to events_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-calendar"></i>
+          <span>Events</span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Help -->
+    <div data-controller="dropdown">
+      <button
+        class="mobile-section flex justify-between w-full"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"mobile-help":"hidden"}]'>
+        Help
+        <i class="fas fa-chevron-down" data-dropdown-target="arrow"></i>
+      </button>
+
+      <div id="mobile-help"
+           class="hidden flex flex-col pl-4 mt-1 mb-3 space-y-2"
+           data-dropdown-target="content">
+        <%= link_to faqs_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-question-circle"></i>
+          <span>FAQs</span>
+        <% end %>
+
+
+        <%= link_to contact_us_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-envelope"></i>
+          <span>Contact Us</span>
+        <% end %>
+
+
+        <%= link_to "https://www.awbw.org", target: "_blank", class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-globe"></i>
+          <span>Public Site</span>
+        <% end %>
+
+
+        <%= link_to dashboard_help_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-circle-info"></i>
+          <span>Help</span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Help -->
+    <div data-controller="dropdown">
+      <button
+        class="mobile-section flex justify-between w-full"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"mobile-new":"hidden"}]'>
+        New
+        <i class="fas fa-chevron-down" data-dropdown-target="arrow"></i>
+      </button>
+
+      <div id="mobile-new"
+           class="hidden flex flex-col pl-4 mt-1 mb-3 space-y-2"
+           data-dropdown-target="content">
+        <%= link_to new_workshop_variation_path,
+                    class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-layer-group"></i>
+          <span class="whitespace-nowrap">New workshop variation</span>
+        <% end %>
+
+        <%= link_to new_workshop_idea_path,
+                    class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-lightbulb"></i>
+          <span>New workshop idea</span>
+        <% end %>
+
+        <%= link_to new_workshop_log_path,
+                    class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-clipboard-list"></i>
+          <span>New workshop log</span>
+        <% end %>
+
+        <%= link_to new_story_idea_path,
+                    class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-book-open"></i>
+          <span>New story idea</span>
+        <% end %>
+      </div>
+    </div>
+
+  </div>
+</div>
