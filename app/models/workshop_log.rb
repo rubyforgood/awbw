@@ -168,6 +168,7 @@ class WorkshopLog < Report
     changes = {}
     changes[:date] = created_at if date.blank?
     changes[:owner_id] = workshop_id if owner_id.blank?
+    changes[:owner_type] = "Workshop" if workshop_id
     update_columns(changes) if changes.any?
   end
 
