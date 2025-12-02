@@ -23,7 +23,6 @@ class StoryIdea < ApplicationRecord
   validates :updated_by_id, presence: true
   validates :project_id, presence: true
   validates :windows_type_id, presence: true
-  validates :workshop_id, presence: true
   validates :body, presence: true
   validates :permission_given, presence: true
   validates :publish_preferences, presence: true
