@@ -23,9 +23,9 @@
         <div class="max-w-3xl mx-auto px-4 py-10 text-gray-800">
 
           <!-- Title -->
-          <h1 class="text-3xl font-bold mb-2 text-gray-900 leading-tight">
-            <%= @community_news.title %>
-          </h1>
+          <div class="font-bold my-6 text-gray-900 leading-tight">
+            <%= title_with_badges(@community_news, font_size: "text-3xl") %>
+          </div>
 
           <!-- Meta Data (exact screenshot style) -->
           <div class="text-sm text-gray-600 space-y-0.5 mb-6">

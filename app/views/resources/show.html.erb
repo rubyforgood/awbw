@@ -22,27 +22,9 @@
       <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
 
         <!-- Title -->
-        <h2 class="text-3xl font-semibold text-gray-900 mb-2">
-          <%= @resource.display_title %>
-        </h2>
-
-        <div class="mb-3">
-          <% if @resource.featured %>
-            <span
-              class="inline-flex items-center px-2 py-0.5 rounded-full
-                     text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
-              🌟 Dashboard Feature
-            </span>
-          <% end %>
-          <% if @resource.inactive? %>
-             <span
-               class="inline-flex items-center px-2 py-0.5 rounded-full
-                     text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap">
-               <i class="fa-solid fa-eye-slash mr-1"></i> Hidden
-            </span>
-          <% end %>
+        <div class="font-semibold text-gray-900 mb-2">
+          <%= title_with_badges(@resource, font_size: "text-3xl") %>
         </div>
-
 
         <!-- Author and Date -->
         <div class="flex flex-col gap-1">

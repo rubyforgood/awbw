@@ -28,9 +28,9 @@
       <div class="w-full bg-white rounded-lg shadow-md p-6 space-y-6">
 
         <!-- Title -->
-        <h1 class="text-3xl font-bold my-6 text-gray-900 leading-tight">
-          <%= @story.title %>
-        </h1>
+        <div class="font-bold my-6 text-gray-900 leading-tight">
+          <%= title_with_badges(@story, font_size: "text-3xl") %>
+        </div>
 
         <!-- Meta Data (exact screenshot style) -->
         <div class="text-sm text-gray-600 space-y-0.5 mb-6">
