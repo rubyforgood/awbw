@@ -2,9 +2,27 @@ FactoryBot.define do
   factory :event do
     title { "sample title" }
     description { "sample description" }
-    start_date { 1.day.from_now }
-    end_date { 2.days.from_now }
-    registration_close_date { 3.days.ago }
+    start_date { 12.day.from_now }
+    end_date { 14.days.from_now }
+    registration_close_date { 13.days.from_now }
     publicly_visible { true }
+
+    trait :registration_closed do
+      after(:build) do |event|
+        event.registration_close_date = 13.days.ago
+      end
+    end
+
+    trait :main_image_with_file do
+      after(:build) do |event|
+        event.main_image = build(:image, :with_file, owner: event)
+      end
+    end
+
+    trait :gallery_image_with_file do
+      after(:build) do |event|
+        event.gallery_images << build(:image, :with_file, owner: event)
+      end
+    end
   end
 end

@@ -8,6 +8,7 @@ class EventsController < ApplicationController
   end
 
   def show
+    @event = @event.decorate
   end
 
   def new # all logged in users can create events
@@ -16,7 +17,6 @@ class EventsController < ApplicationController
   end
 
   def edit
-    @event = @event.decorate
     set_form_variables
     unless @event.created_by == current_user || current_user.super_user?
       redirect_to events_path, alert: "You are not authorized to edit this event."
@@ -64,6 +64,7 @@ class EventsController < ApplicationController
   private
 
   def set_form_variables
+    @event = @event.decorate
     @event.build_main_image if @event.main_image.blank?
     @event.gallery_images.build
   end
