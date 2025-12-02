@@ -19,15 +19,10 @@
               <label class="block text-md font-medium text-gray-700 mb-1">Email</label>
               <span class="text-gray-900 font-medium"><%= u.object.email %></span>
               <p class="text-sm text-gray-500 mt-1">Only
-              <%= current_user.super_user? && u.object.persisted? ? (link_to "editable by admins", edit_user_path(u.object)) : "editable by admins" %></p>
+              <%= current_user.super_user? &&
+                    u.object.persisted? ? (link_to "editable by admins",
+                                                   edit_user_path(u.object)) : "editable by admins" %></p>
             </div>
-          </div>
-
-          <div class="flex flex-col md:flex-row gap-4">
-            <%= u.input :phone %>
-            <%= u.input :phone2 %>
-            <%= u.input :phone3 %>
-            <%= u.input :best_time_to_call %>
           </div>
 
           <div class="flex flex-col md:flex-row gap-4">
@@ -67,6 +62,18 @@
       </div>
     </div>
 
+    <div class="phones">
+      <h3 class="font-semibold text-gray-700 mb-2">Phones</h3>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+        <div class="flex flex-col md:flex-row gap-4">
+          <%= u.input :phone %>
+          <%= u.input :phone2 %>
+          <%= u.input :phone3 %>
+          <%= u.input :best_time_to_call %>
+        </div>
+      </div>
+    </div>
+
     <div class="addresses">
       <!-- Primary Address Choice -->
       <div class="flex flex-col md:flex-row gap-4">
@@ -75,12 +82,14 @@
 
       <!-- Work Address -->
       <div>
-        <h3 class="font-semibold text-gray-700 mb-2">Work Address</h3>
-        <div class="flex flex-col md:flex-row gap-6 w-full">
-          <%= f.input :street_address, label: 'Street', as: :text, input_html: { rows: 1 } %>
-          <%= f.input :city, as: :text, input_html: { rows: 1 } %>
-          <%= f.input :state %>
-          <%= f.input :zip %>
+        <h3 class="font-semibold text-gray-700 mb-2">Work address</h3>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+          <div class="flex flex-col md:flex-row gap-6 w-full">
+            <%= f.input :street_address, label: 'Street', as: :text, input_html: { rows: 1 } %>
+            <%= f.input :city, as: :text, input_html: { rows: 1 } %>
+            <%= f.input :state %>
+            <%= f.input :zip %>
+          </div>
         </div>
       </div>
 
@@ -99,25 +108,35 @@
     <!-- Organization Connections (PROJECT_USERS) -->
     <div class="form-group space-y-4">
       <div class="font-semibold text-gray-700">
-        Organization affiliations
+        Organizational affiliations
         <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-        <%= u.fields_for :project_users do |project_user_form| %>
-            <%= render "project_user_fields",
-                       f: project_user_form,
-                       projects: u.object.projects,
-                       user: u.object %>
-        <% end %>
+        <% if false && current_user.super_user? %>
+          <div class="admin-only bg-blue-100 p-3">
+            <%= u.fields_for :project_users do |project_user_form| %>
+              <%= render "project_user_fields",
+                         f: project_user_form,
+                         projects: u.object.projects,
+                         user: u.object %>
+            <% end %>
 
-        <% if current_user.super_user? %>
-          <div class="admin-only bg-blue-100 p-3 mt-6">
-            <%= link_to_add_association "➕ Add Role",
-                                        u,
-                                        :project_users,
-                                        html_options: { locals: { projects: u.object.projects } },
-                                        class: "btn btn-secondary-outline" %>
+            <div class="admin-only bg-blue-100 p-3 mt-6">
+              <%= link_to_add_association "➕ Add Role",
+                                          u,
+                                          :project_users,
+                                          html_options: { locals: { projects: u.object.projects } },
+                                          class: "btn btn-secondary-outline" %>
+            </div>
           </div>
+        <% else %>
+          <% f.object.user && f.object.user.project_users.each do |pu| %>
+            <div class="ps-6 mb-2">
+              <li><%= pu.title || pu.position %> - <%= pu.persisted? ? (link_to pu.project&.name,
+                                                               project_path(pu.project),
+                                                               class: "underline") : pu.project&.name %></li>
+            </div>
+          <% end %>
         <% end %>
       </div>
     </div>
@@ -159,40 +178,77 @@
                 hint: "Maximum 250 characters" %>
   </div>
 
-  <div class="flex flex-col md:flex-row gap-4">
-    <%= f.input :linked_in_url, as: :text, input_html: { rows: 1 } %>
-    <%= f.input :facebook_url, as: :text, input_html: { rows: 1 } %>
-    <%= f.input :instagram_url, as: :text, input_html: { rows: 1 } %>
-    <%= f.input :youtube_url, as: :text, input_html: { rows: 1 } %>
-    <%= f.input :twitter_url, as: :text, input_html: { rows: 1 } %>
+  <div class="profile-preferences-section">
+    <div class="font-medium text-gray-700 mb-3 block">
+      Social media links:
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <div class="flex flex-col md:flex-row gap-4 pl-3 pr-3 pb-3">
+        <%= f.input :linked_in_url, as: :text, input_html: { rows: 1 } %>
+        <%= f.input :facebook_url, as: :text, input_html: { rows: 1 } %>
+        <%= f.input :instagram_url, as: :text, input_html: { rows: 1 } %>
+        <%= f.input :youtube_url, as: :text, input_html: { rows: 1 } %>
+        <%= f.input :twitter_url, as: :text, input_html: { rows: 1 } %>
+      </div>
+    </div>
   </div>
 
-  <span class="font-medium text-gray-700 mb-3">
-    Set your Profile preferences:
-  </span>
-  <div class="flex flex-col md:flex-row gap-4 mt-3">
-    <%= f.input :profile_is_searchable,
-                hint: "Display in facilitators index" %>
-    <%= f.input :display_name_preference,
-                as: :select,
-                collection: [
-                  ["First and Last Name", "full_name"],
-                  ["First Name and Last Initial", "first_name_last_initial"],
-                  ["First Name Only", "first_name_only"],
-                  ["Last Name Only", "last_name_only"]
-                ],
-                selected: f.object.display_name_preference || "full_name" %>
-    <%= f.input :profile_show_pronouns %>
-    <%= f.input :profile_show_member_since %>
-    <%= f.input :profile_show_bio %>
+  <div class="profile-preferences-section">
+    <div class="font-medium text-gray-700 mb-3 block">
+      Profile display preferences:
+    </div>
+
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <div class="pl-3 pr-3 pb-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+        <%= f.input :profile_is_searchable,
+                    hint: ("Findable on " + (link_to "facilitators index",
+                                                    facilitators_path,
+                                                    class: "underline")).html_safe %>
+
+        <%= f.input :display_name_preference,
+                    as: :select,
+                    collection: [
+                      ["First and Last Name", "full_name"],
+                      ["First Name and Last Initial", "first_name_last_initial"],
+                      ["First Name Only", "first_name_only"],
+                      ["Last Name Only", "last_name_only"]
+                    ],
+                    selected: f.object.display_name_preference || "full_name" %>
+
+        <%= f.input :profile_show_pronouns, label: "Show pronouns" %>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+        <%= f.input :profile_show_email, label: "Show email" %>
+        <%= f.input :profile_show_phone, label: "Show phone" %>
+        <%= f.input :profile_show_social_media, label: "Show social media" %>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+        <%= f.input :profile_show_member_since, label: "Show facilitator since" %>
+        <%= f.input :profile_show_bio, label: "Show bio" %>
+        <%= f.input :profile_show_affiliations, label: "Show affiliations" %>
+        <%= f.input :profile_show_sectors, label: "Show sectors" %>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+        <%= f.input :profile_show_workshops, label: "Show workshops" %>
+        <%= f.input :profile_show_workshop_variations, label: "Show workshop variations" %>
+        <%= f.input :profile_show_stories, label: "Show stories" %>
+        <%= f.input :profile_show_events_registered, label: "Show participation" %>
+      </div>
+
+      <!-- Row 5 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+        <%= f.input :profile_show_workshop_ideas, label: "Show workshop ideas" %>
+        <%= f.input :profile_show_story_ideas, label: "Show story ideas" %>
+        <%= f.input :profile_show_workshop_logs, label: "Show workshop logs" %>
+      </div>
+    </div>
+    </div>
   </div>
-  <div class="flex flex-col md:flex-row gap-4 mt-3">
-    <%= f.input :profile_show_social_media %>
-    <%= f.input :profile_show_affiliations %>
-    <%= f.input :profile_show_sectors %>
-    <%= f.input :profile_show_email %>
-    <%= f.input :profile_show_phone %>
-  </div>
+
 
   <!-- Actions -->
   <div class="mt-6 flex flex-wrap gap-3">

@@ -13,7 +13,7 @@ class FacilitatorsController < ApplicationController
     facilitators = Facilitator
                      .searchable
                      .search_by_params(params.to_unsafe_h)
-                     .joins(:user)
+                     .includes(:user).references(:user)
                      .order(:first_name, :last_name)
     @facilitators_count = facilitators.size
     @facilitators = facilitators.paginate(page: params[:page], per_page: per_page)
@@ -80,6 +80,7 @@ class FacilitatorsController < ApplicationController
         end
       end
       @facilitator.build_user if @facilitator.user.blank? # Build a fresh one if missing
+      @facilitator.build_avatar_image if @facilitator.avatar_image.blank?
 
       @facilitator.user.project_users.first || @facilitator.user.project_users.build
       projects = if current_user.super_user?
@@ -93,9 +94,13 @@ class FacilitatorsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def facilitator_params
       params.require(:facilitator).permit(
-        :first_name, :last_name, :primary_email_address, :primary_email_address_type,
+        :first_name, :last_name,
+        :primary_email_address, :primary_email_address_type,
         :street_address, :city, :state, :zip, :country, :mailing_address_type,
-        :phone_number, :phone_number_type,:bio, :created_by_id, :updated_by_id,
+        :phone_number, :phone_number_type,
+        :created_by_id, :updated_by_id,
+        :bio,
+        :display_name_preference,
         :pronouns,
         :profile_show_name_preference,
         :profile_is_searchable,
@@ -142,7 +147,14 @@ class FacilitatorsController < ApplicationController
           :state2,
           :zip2,
           :notes,
-          project_users_attributes: [:id, :project_id, :position, :inactive, :_destroy]
+          project_users_attributes: [
+            :id,
+            :project_id,
+            :position,
+            :title,
+            :inactive,
+            :_destroy
+          ]
         ],
       )
     end

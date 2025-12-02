@@ -6,6 +6,9 @@ class Facilitator < ApplicationRecord
   has_many :sectors, through: :sectorable_items
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
+  # has_many through
+  has_many :event_registrations, through: :user
+
   # Image associations
   has_one :avatar_image, -> { where(type: "Images::SquareImage") },
           as: :owner, class_name: "Images::SquareImage",
