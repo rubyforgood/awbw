@@ -73,3 +73,7 @@
 .readonly textarea {
   @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300;
 }
+
+.rotate-180 {
+  transform: rotate(180deg);
+}

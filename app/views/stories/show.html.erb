@@ -1,8 +1,9 @@
 <% story_url   = story_url(@story) %>
 <% story_title = ERB::Util.url_encode(@story.title) %>
+
 <div class="min-h-screen py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="border border-gray-200 bg-rose-50 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+    <div class="bg-rose-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
         <span class="inline-block text-sm">
@@ -24,99 +25,109 @@
       </div>
 
       <!-- Header Row -->
-      <div class="w-full">
-        <div class="max-w-3xl mx-auto px-4 py-10 text-gray-800">
+      <div class="w-full bg-white rounded-lg shadow-md p-6 space-y-6">
 
-          <!-- Title -->
-          <h1 class="text-3xl font-bold mb-2 text-gray-900 leading-tight">
-            <%= @story.title %>
-          </h1>
+        <!-- Title -->
+        <h1 class="text-3xl font-bold my-6 text-gray-900 leading-tight">
+          <%= @story.title %>
+        </h1>
 
-          <!-- Meta Data (exact screenshot style) -->
-          <div class="text-sm text-gray-600 space-y-0.5 mb-6">
-            <p><strong>Story by:</strong> <%= @story.story_idea&.author_credit || @story.created_by.full_name %></p>
-            <p><strong>Organization Name:</strong> <%= @story.organization_name %></p>
-            <% if @story.decorate.workshop_title.present? %>
-            <p><strong>Workshop:</strong> <%= @story.decorate.workshop_title %></p>
+        <!-- Meta Data (exact screenshot style) -->
+        <div class="text-sm text-gray-600 space-y-0.5 mb-6">
+          <p><strong>Story by:</strong>
+            <% author_credit = @story.story_idea&.author_credit || @story.created_by.full_name %>
+            <% if @story.created_by.facilitator&.profile_is_searchable %>
+              <%= link_to author_credit, facilitator_path(@story.created_by) %>
+            <% else %>
+              <%= author_credit %>
             <% end %>
-          </div>
+          </p>
+          <p><strong>Organization Name:</strong>
+            <%= link_to @story.decorate.organization_name,
+                        organization_path(@story.project),
+                        class: "hover:underline" %>
+          </p>
+          <% if @story.decorate.workshop_title.present? %>
+            <p><strong>Workshop:</strong>
+              <%= link_to @story.decorate.workshop_title, workshop_path(@story.workshop), class: "hover:underline" %>
+            </p>
+          <% end %>
+        </div>
 
-          <div class="images">
-            <!-- Hero Image -->
-            <% if @story.main_image&.file&.attached? %>
-              <div class="mb-8">
-                <%= image_tag @story.main_image.file,
-                              class: "w-full rounded-lg shadow-sm border border-gray-200",
-                              alt: @story.title %>
-              </div>
-            <% end %>
+        <div class="images">
+          <!-- Hero Image -->
+          <% if @story.main_image&.file&.attached? %>
+            <div class="mb-8">
+              <%= image_tag @story.main_image.file,
+                            class: "w-full rounded-lg shadow-sm border border-gray-200",
+                            alt: @story.title %>
+            </div>
+          <% end %>
 
-            <!-- Gallery Images -->
-            <% if @story.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
-              <div class="story-gallery single-story-detail text-center mb-4">
-                <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
-                  <% @story.gallery_images.each_with_index do |gallery_image, idx| %>
-                    <% if gallery_image.file&.attached? %>
-                      <%= image_tag url_for(gallery_image.file),
-                                    alt: "Gallery Image #{idx + 1}",
-                                    data: { file_preview_target: "preview" },
-                                    class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
-                    <% end %>
+          <!-- Gallery Images -->
+          <% if @story.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
+            <div class="story-gallery single-story-detail text-center mb-4">
+              <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
+                <% @story.gallery_images.each_with_index do |gallery_image, idx| %>
+                  <% if gallery_image.file&.attached? %>
+                    <%= image_tag url_for(gallery_image.file),
+                                  alt: "Gallery Image #{idx + 1}",
+                                  data: { file_preview_target: "preview" },
+                                  class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
                   <% end %>
-                </div>
+                <% end %>
               </div>
-            <% end %>
-          </div>
+            </div>
+          <% end %>
+        </div>
 
-          <!-- Story Body Text -->
-          <div class="prose prose-lg max-w-none text-gray-700 mb-10">
-            <%= simple_format(@story.body) %>
-          </div>
+        <!-- Story Body Text -->
+        <div class="prose prose-lg max-w-none text-gray-700 mb-10">
+          <%= simple_format(@story.body) %>
+        </div>
 
-          <!-- Share Section -->
-          <h3 class="font-semibold text-lg mb-3">Share this Story:</h3>
+        <!-- Share Section -->
+        <h3 class="font-semibold text-lg mb-3">Share this Story:</h3>
 
-          <div class="flex space-x-4 mb-6">
+        <div class="flex space-x-4 mb-6">
 
-            <!-- Facebook -->
-            <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{story_url}",
-                        target: "_blank", rel: "noopener",
-                        class: "text-blue-600 hover:text-blue-800" do %>
-              <i class="fab fa-facebook-square fa-lg"></i>
-            <% end %>
+          <!-- Facebook -->
+          <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{story_url}",
+                      target: "_blank", rel: "noopener",
+                      class: "text-blue-600 hover:text-blue-800" do %>
+            <i class="fab fa-facebook-square fa-lg"></i>
+          <% end %>
 
-            <!-- X / Twitter -->
-            <%= link_to "https://twitter.com/intent/tweet?url=#{story_url}&text=#{story_title}",
-                        target: "_blank", rel: "noopener",
-                        class: "text-sky-500 hover:text-sky-700" do %>
-              <i class="fab fa-x-twitter fa-lg"></i>
-            <% end %>
+          <!-- X / Twitter -->
+          <%= link_to "https://twitter.com/intent/tweet?url=#{story_url}&text=#{story_title}",
+                      target: "_blank", rel: "noopener",
+                      class: "text-sky-500 hover:text-sky-700" do %>
+            <i class="fab fa-x-twitter fa-lg"></i>
+          <% end %>
 
-            <!-- LinkedIn -->
-            <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{story_url}",
-                        target: "_blank", rel: "noopener",
-                        class: "text-blue-700 hover:text-blue-900" do %>
-              <i class="fab fa-linkedin fa-lg"></i>
-            <% end %>
+          <!-- LinkedIn -->
+          <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{story_url}",
+                      target: "_blank", rel: "noopener",
+                      class: "text-blue-700 hover:text-blue-900" do %>
+            <i class="fab fa-linkedin fa-lg"></i>
+          <% end %>
 
-            <!-- Pinterest -->
-            <%= link_to "https://pinterest.com/pin/create/button/?url=#{story_url}&description=#{story_title}",
-                        target: "_blank", rel: "noopener",
-                        class: "text-red-600 hover:text-red-800" do %>
-              <i class="fab fa-pinterest-square fa-lg"></i>
-            <% end %>
+          <!-- Pinterest -->
+          <%= link_to "https://pinterest.com/pin/create/button/?url=#{story_url}&description=#{story_title}",
+                      target: "_blank", rel: "noopener",
+                      class: "text-red-600 hover:text-red-800" do %>
+            <i class="fab fa-pinterest-square fa-lg"></i>
+          <% end %>
 
-          </div>
+        </div>
 
-          <!-- Footer Copy (matches screenshot) -->
-          <div class="text-sm text-gray-500 leading-relaxed border-t border-gray-300 pt-6">
-            <strong>A Window Between Worlds (AWBW)</strong>
-            supports hundreds of art workshop facilitators across the country to
-            incorporate creative expression into their work with trauma survivors.
-            These Windows Facilitators serve over 140,000 adults, teens, and children each year.
-            Through these stories, we invite you to explore and share their journeys
-            toward transformation and healing.
-          </div>
+        <div class="text-sm text-gray-500 leading-relaxed border-t border-gray-300 pt-6">
+          <strong>A Window Between Worlds (AWBW)</strong>
+          supports hundreds of art workshop facilitators across the country to
+          incorporate creative expression into their work with trauma survivors.
+          These Windows Facilitators serve over 140,000 adults, teens, and children each year.
+          Through these stories, we invite you to explore and share their journeys
+          toward transformation and healing.
         </div>
       </div>
     </div>
