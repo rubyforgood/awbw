@@ -4,6 +4,7 @@ class Report < ApplicationRecord
   belongs_to :project
   belongs_to :windows_type
   has_one :form, as: :owner
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :report_form_field_answers, dependent: :destroy
