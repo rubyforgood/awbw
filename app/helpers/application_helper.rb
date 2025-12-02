@@ -130,53 +130,54 @@ module ApplicationHelper
     end
   end
 
-  def title_with_badges(record, admin: false, display_windows_type: false)
-    content_tag :div, class: "flex flex-col" do
+  def title_with_badges(record, font_size: "text-lg", record_title: nil,
+                        show_hidden_badge: false, display_windows_type: false)
+    fragments = []
 
-      # ---- BADGE ROW ---------------------------------------------------------
-      badge_row = content_tag :div, class: "flex flex-wrap items-center gap-2 mb-1" do
-        fragments = []
-
-        # Hidden badge
-        if admin && record.respond_to?(:inactive?) &&
-          record.inactive? && controller_name != "dashboard"
-          fragments << content_tag(
-            :span,
-            content_tag(:i, "", class: "fa-solid fa-eye-slash mr-1") + " Hidden",
-            class: "inline-flex items-center px-2 py-0.5 rounded-full
-                  text-sm font-medium bg-blue-100 text-gray-600 whitespace-nowrap"
-          )
-        end
-
-        # Featured badge
-        if record.respond_to?(:featured?) &&
-          record.featured? && controller_name != "dashboard"
-          fragments << content_tag(
-            :span,
-            "🌟 Featured",
-            class: "inline-flex items-center px-2 py-0.5 rounded-full
-                  text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap"
-          )
-        end
-
-        safe_join(fragments)
-      end
-
-      # ---- TITLE + WINDOWS TYPE ------------------------------------------------
-      title_content = record.title.to_s
-
-      if display_windows_type && record.respond_to?(:windows_type) && record.windows_type.present?
-        title_content += " (#{record.windows_type.short_name})"
-      end
-
-      title_row = content_tag(
+    # --- Hidden badge ---
+    if show_hidden_badge && record.respond_to?(:inactive?) &&
+      record.inactive? && controller_name != "dashboard"
+      fragments << content_tag(
         :span,
-        title_content.html_safe,
-        class: "text-lg font-semibold text-gray-900 leading-tight"
+        content_tag(:i, "", class: "fa-solid fa-eye-slash mr-1") + " Hidden",
+        class: "inline-flex items-center px-2 py-0.5 rounded-full
+              text-sm font-medium bg-blue-100 text-gray-600 whitespace-nowrap"
       )
+    end
 
-      # Combine badge row + title row
-      safe_join([badge_row, title_row])
+    # --- Featured badge ---
+    if record.respond_to?(:featured?) && record.featured? && controller_name != "dashboard"
+      fragments << content_tag(
+        :span,
+        "🌟 Dashboard Feature",
+        class: "inline-flex items-center px-2 py-0.5 rounded-full
+              text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap"
+      )
+    end
+
+    title_content = record_title.presence || record.title.to_s
+
+    if display_windows_type && record.respond_to?(:windows_type) && record.windows_type.present?
+      title_content += " (#{record.windows_type.short_name})"
+    end
+
+    title_row = content_tag(
+      :span,
+      title_content.html_safe,
+      class: "#{font_size} font-semibold text-gray-900 leading-tight"
+    )
+
+    # ---- Combine rows intelligently ----
+    if fragments.any?
+      content_tag :div, class: "flex flex-col" do
+        safe_join([
+                    content_tag(:div, safe_join(fragments), class: "flex flex-wrap items-center gap-2 mb-1"),
+                    title_row
+                  ])
+      end
+    else
+      # No badges: just return the title with no empty div wrapper
+      title_row
     end
   end
 

@@ -46,7 +46,8 @@
         <%= link_to link_route,
                     class: "hover:underline block",
                     data: { turbo: false } do %>
-          <%= title_with_badges(workshop, admin: current_user.super_user?, display_windows_type: true).html_safe %>
+          <%= title_with_badges(workshop, show_hidden_badge: current_user.super_user?,
+                                display_windows_type: true).html_safe %>
         <% end %>
 
         <!-- Author + date -->
