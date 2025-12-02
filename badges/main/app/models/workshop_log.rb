@@ -76,9 +76,17 @@ class WorkshopLog < Report
     title
   end
 
+  def workshop_name
+    workshop&.title
+  end
+
+  def windows_type_name
+    windows_type&.short_name
+  end
+
   def type_title
     if windows_type
-      "#{windows_type.short_name} #{type}"
+      "#{windows_type_name} #{type}"
     else
       "#{type}"
     end

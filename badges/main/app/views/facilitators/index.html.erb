@@ -23,7 +23,6 @@
           <table class="w-full border-collapse border border-gray-200">
             <thead class="bg-gray-100">
               <tr>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Avatar</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Name</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Facilitator since</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Sector(s)</th>
@@ -37,27 +36,8 @@
             <% @facilitators.each do |facilitator| %>
               <% facilitator = facilitator.decorate %>
               <tr class="hover:bg-gray-50 transition-colors duration-150">
-                <!-- Avatar -->
-                <td class="px-4 py-2 text-center">
-                  <% if facilitator.user.avatar.present? %>
-                    <%= link_to (image_tag url_for(facilitator.user.avatar),
-                                           class: "w-10 h-10 rounded-full object-cover
-                                           border border-gray-300 shadow-sm mx-auto").html_safe,
-                    facilitator_path(facilitator) %>
-                  <% else %>
-                    <%= link_to (image_tag "missing.png",
-                                           class: "w-10 h-10 rounded-full object-cover
-                                           border border-dashed border-gray-300 mx-auto").html_safe,
-                                facilitator_path(facilitator) %>
-                  <% end %>
-                </td>
-
-                <!-- Name -->
-                <td class="px-4 py-2 text-sm text-gray-800">
-                  <% facilitator_name = "<span class='font-bold text-md'>#{ facilitator.name }</span>" +
-                    "#{ " (#{facilitator.pronouns_display})" if facilitator.pronouns_display.present? }" %>
-                  <%= link_to facilitator_name.html_safe,
-                             facilitator_path(facilitator) %>
+                <td class="px-4 py-2">
+                  <%= facilitator_profile_button(facilitator) %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
@@ -71,7 +51,7 @@
 
                 <!-- Organizations -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% if facilitator.user.projects.any? %>
+                  <% if facilitator.user&.projects&.any? %>
                     <% user_project_names = facilitator.user.projects.map(&:name).join(", ") %>
                     <span title="<%= user_project_names %>">
                       <%= truncate(user_project_names, length: 120) %>
@@ -88,10 +68,12 @@
 
                 <!-- Actions -->
                 <td class="px-4 py-2 justify-center gap-2">
-                  <%= link_to "Profile", facilitator_path(facilitator),
-                              class: "btn btn-secondary-outline" %>
-                  <%= link_to "Edit", edit_facilitator_path(facilitator),
-                              class: "admin-only bg-blue-100 btn btn-secondary-outline" if current_user.super_user %>
+                  <% if current_user.super_user? %>
+                    <%= link_to "User", user_path(facilitator.user),
+                                class: "admin-only bg-blue-100 btn btn-secondary-outline" if facilitator.user %>
+                    <%= link_to "Edit", edit_facilitator_path(facilitator),
+                                class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                  <% end %>
                 </td>
               </tr>
             <% end %>

@@ -10,6 +10,7 @@ class StoryIdea < ApplicationRecord
   belongs_to :project
   belongs_to :windows_type
   belongs_to :workshop, optional: true
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :stories
   # Image associations
   has_one :main_image, -> { where(type: "Images::MainImage") },

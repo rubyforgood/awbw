@@ -34,7 +34,7 @@
       <%= link_to event_path(event),
                   class: "hover:underline block leading-tight",
                   data: { turbo: false } do %>
-        <%= title_with_badges(event, admin: current_user.super_user?).html_safe %>
+        <%= title_with_badges(event, show_hidden_badge: current_user.super_user?).html_safe %>
       <% end %>
     </div>
 

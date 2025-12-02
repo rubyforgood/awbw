@@ -50,7 +50,7 @@
         <%= link_to resource_path(resource.object),
                     class: "inline-flex min-w-0 max-w-full text-lg font-semibold
                             text-gray-900 leading-tight hover:underline" do %>
-          <%= title_with_badges(resource, admin: current_user.super_user?).html_safe %>
+          <%= title_with_badges(resource, show_hidden_badge: current_user.super_user?).html_safe %>
         <% end %>
       </div>
 

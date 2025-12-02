@@ -4,6 +4,7 @@ class Report < ApplicationRecord
   belongs_to :project
   belongs_to :windows_type
   has_one :form, as: :owner
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :report_form_field_answers, dependent: :destroy
@@ -148,5 +149,15 @@ class Report < ApplicationRecord
 
   def create_notification
     notifications.create(notification_type: 0)
+  end
+
+  def main_image_url
+    if main_image&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(main_image.file)
+    elsif gallery_images.first&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
+    else
+      ActionController::Base.helpers.asset_path("workshop_default.jpg")
+    end
   end
 end

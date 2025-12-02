@@ -23,13 +23,9 @@
           <table class="w-full border-collapse border border-gray-200">
             <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Avatar</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">First Name</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Last Name</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Name</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/3">Email</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/3">Organization(s)</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Phone</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Inactive</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">No access?</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Super User</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
             </tr>
@@ -40,42 +36,17 @@
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <!-- Avatar -->
                 <td class="px-4 py-2 text-center">
-                  <% if user.avatar.present? %>
-                    <%= image_tag url_for(user.avatar), class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm mx-auto" %>
+                  <% if user.facilitator %>
+                    <%= facilitator_profile_button(user.facilitator) %>
                   <% else %>
-                    <%= image_tag "missing.png", class: "w-10 h-10 rounded-full object-cover border border-dashed border-gray-300 mx-auto" %>
+                    <%= link_to "Create facilitator",
+                                new_facilitator_path(user_id: user.id),
+                                class: "btn btn-secondary-outline" %>
                   <% end %>
                 </td>
-
-                <!-- First Name -->
-                <td class="px-4 py-2 text-sm text-gray-800"><%= user.first_name %></td>
-
-                <!-- Last Name -->
-                <td class="px-4 py-2 text-sm text-gray-800"><%= user.last_name %></td>
 
                 <!-- Email -->
                 <td class="px-4 py-2 text-sm text-gray-800 break-words"><%= user.email %></td>
-
-                <!-- Organizations -->
-                <td class="px-4 py-2 text-sm text-gray-800">
-                  <% if user.projects.any? %>
-                    <% user_project_names = user.projects.map(&:name).join(", ") %>
-                    <span title="<%= user_project_names %>">
-                      <%= truncate(user_project_names, length: 60) %>
-                    </span>
-                  <% else %>
-                    <span>--</span>
-                  <% end %>
-                </td>
-
-                <!-- Phone -->
-                <td class="px-4 py-2 text-sm text-gray-800 whitespace-nowrap">
-                  <% if user.phone.present? %>
-                    <%= user.phone %>
-                  <% else %>
-                    <span>--</span>
-                  <% end %>
-                </td>
 
                 <!-- Inactive -->
                 <td class="px-4 py-2 text-center">

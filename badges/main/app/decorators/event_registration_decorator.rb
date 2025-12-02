@@ -8,4 +8,8 @@ class EventRegistrationDecorator < Draper::Decorator
 
   def description
   end
+
+  def main_image_url
+    event.decorate.main_image_url
+  end
 end

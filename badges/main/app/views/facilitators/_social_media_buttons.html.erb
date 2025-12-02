@@ -1,7 +1,7 @@
 <%# app/views/facilitators/_social_links.html.erb %>
 <% return if facilitator.blank? %>
 
-<div class="flex flex-wrap items-center gap-1">
+<div class="flex flex-wrap items-center justify-center md:justify-start gap-1">
   <% if facilitator.linked_in_url.present? %>
     <%= link_to facilitator.linked_in_url, target: "_blank", rel: "noopener",
                 class: "group inline-flex items-center justify-center w-6 h-6

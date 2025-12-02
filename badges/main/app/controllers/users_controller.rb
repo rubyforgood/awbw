@@ -113,6 +113,8 @@ class UsersController < ApplicationController
   end
 
   def set_form_variables
+    @facilitator = @user.facilitator ||
+      Facilitator.where(id: params[:facilitator_id]).first if params[:facilitator_id].present?
     @user.project_users.first || @user.project_users.build
     projects = if current_user.super_user?
                  Project.active
@@ -139,7 +141,7 @@ class UsersController < ApplicationController
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
       :confirmed, :inactive, :super_user, :legacy, :legacy_id,
       avatar_image_attributes: [:id, :file, :_destroy],
-      project_users_attributes: [:id, :project_id, :position, :inactive, :_destroy]
+      project_users_attributes: [:id, :project_id, :position, :title, :inactive, :_destroy]
     )
   end
 end

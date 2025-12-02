@@ -6,6 +6,9 @@ class Facilitator < ApplicationRecord
   has_many :sectors, through: :sectorable_items
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
+  # has_many through
+  has_many :event_registrations, through: :user
+
   # Image associations
   has_one :avatar_image, -> { where(type: "Images::SquareImage") },
           as: :owner, class_name: "Images::SquareImage",
@@ -68,19 +71,19 @@ class Facilitator < ApplicationRecord
   def name
     case display_name_preference
     when "full_name"
-      user.full_name
+      full_name
     when "first_name_last_initial"
-      "#{user.first_name} #{user.last_name.first}"
+      "#{first_name} #{last_name.first}"
     when "first_name_only"
-      user.first_name
+      first_name
     when "last_name_only"
-      user.last_name
+      last_name
     else
-      user.full_name
+      full_name
     end
   end
 
   def full_name
-    user.full_name
+    "#{first_name} #{last_name}"
   end
 end

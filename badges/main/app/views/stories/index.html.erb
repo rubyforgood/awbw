@@ -54,7 +54,7 @@
 
                     <!-- TITLE + BADGES -->
                     <span class="inline-flex items-center gap-2">
-                      <%= link_to title_with_badges(story, admin: current_user.super_user?).html_safe,
+                      <%= link_to title_with_badges(story, show_hidden_badge: current_user.super_user?).html_safe,
                                   story_path(story),
                                   class: "font-bold hover:text-indigo-800 hover:underline" %>
                     </span>
