@@ -11,8 +11,8 @@ RSpec.describe Report do
     it { should have_many(:gallery_images) }
     it { should have_many(:form_fields).through(:form) }
     it { should have_many(:report_form_field_answers).dependent(:destroy) }
-    it { should have_many(:quotable_item_quotes).dependent(:destroy) }
-    it { should have_many(:quotes).through(:quotable_item_quotes).dependent(:destroy) }
+    it { should have_many(:quotable_item_quotes).dependent(:nullify) }
+    it { should have_many(:quotes).through(:all_quotable_item_quotes).dependent(:nullify) }
     it { should have_many(:notifications).dependent(:destroy) }
     it { should have_many(:sectorable_items).dependent(:destroy) }
     it { should have_many(:sectors).through(:sectorable_items).dependent(:destroy) }

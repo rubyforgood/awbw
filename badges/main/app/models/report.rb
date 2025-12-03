@@ -6,8 +6,10 @@ class Report < ApplicationRecord
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
-  has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
-  has_many :report_form_field_answers, dependent: :destroy
+  has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
+  has_many :report_form_field_answers,
+           foreign_key: :report_id, inverse_of: :report,
+           dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   # Images
   has_one_attached :image # old paperclip -- TODO convert these to MainImage records
@@ -22,14 +24,20 @@ class Report < ApplicationRecord
 
   # has_many through
   has_many :form_fields, through: :form
-  has_many :quotes, through: :quotable_item_quotes, dependent: :destroy
+  has_many :all_quotable_item_quotes,
+           ->(wl) { where(quotable_id: wl.id,
+                          quotable_type: %w[WorkshopLog Report]) }, # needed bc some are stored w type Report
+           class_name: "QuotableItemQuote",
+           inverse_of: :quotable
+  has_many :quotes, through: :all_quotable_item_quotes, dependent: :nullify
   has_many :sectors, through: :sectorable_items, dependent: :destroy
 
   # Nested attributes
   accepts_nested_attributes_for :media_files, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :main_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :quotable_item_quotes
+  accepts_nested_attributes_for :all_quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :report_form_field_answers,
                                 reject_if: proc { |object|
                                   object["_create"].to_i == 0 && object["answer"].nil? }

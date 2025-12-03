@@ -39,7 +39,7 @@ class DashboardController < ApplicationController
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
         { title: "Event Registrations", path: event_registrations_path, icon: "🎟️",
           bg_color: "bg-blue-100", text_color: "text-blue-800" },
-        { title: "!!!Quotes", path: authenticated_root_path, icon: "💬",
+        { title: "Quotes", path: quotes_path, icon: "💬",
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
         { title: "Story Ideas", path: story_ideas_path, icon: "✍️️",
           bg_color: "bg-rose-100", text_color: "text-rose-800" },

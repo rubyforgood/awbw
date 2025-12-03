@@ -28,17 +28,24 @@
       <div>
         <%= f.input :speaker_name,
                     label: "Speaker name",
-                    input_html: { class: "w-full" },
+                    input_html: { value: f.object.speaker_name, class: "w-full" },
                     wrapper_html: { class: "w-full" }
         %>
       </div>
 
       <div>
-        <%= f.input :age,
-                    as: :integer,
-                    label: "Age",
-                    input_html: { min: 0, class: "w-full" }
-        %>
+        <!-- Check if quote was created with a string for an age-->
+        <% if f.object.age.present? && f.object.age.to_s.match?(/\D/) %>
+          <%= f.input :age,
+                      as: :string,
+                      label: "Age",
+                      input_html: { class: "w-full" } %>
+        <% else %>
+          <%= f.input :age,
+                      as: :integer,
+                      label: "Age",
+                      input_html: { min: 0, class: "w-full" } %>
+        <% end %>
       </div>
 
       <div>

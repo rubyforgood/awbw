@@ -56,7 +56,14 @@
                     <%= quote.attribution %>
                     <%= "@ " + quote.created_at.strftime("%m-%d-%-Y") %>
                     <%= ("re " + link_to(quote.workshop.title, workshop_path(quote.workshop),
-                                        class: "hover:underline") if quote.workshop).to_s.html_safe %>
+                                         class: "hover:underline") if quote.workshop).to_s.html_safe %>
+                    <% quote.quotable_item_quotes.each do |qiq| %>
+                      <% if qiq.quotable %>
+                        from: <%= link_to qiq.quotable.title,
+                                    polymorphic_path(qiq.quotable),
+                                    class: "hover:underline" %>
+                      <% end %>
+                    <% end %>
                   </div>
                 </td>
                 <td class="px-4 py-2 text-center whitespace-nowrap">
