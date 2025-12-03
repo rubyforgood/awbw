@@ -35,7 +35,7 @@ class DashboardController < ApplicationController
       @user_content_cards = [
         { title: "Bookmarks tally", path: tally_bookmarks_path, icon: "🔖",
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Recent Activity", path: dashboard_recent_activities_path, icon: "🧭",
+        { title: "Recent portal activity", path: dashboard_recent_activities_path, icon: "🧭",
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
         { title: "Event Registrations", path: event_registrations_path, icon: "🎟️",
           bg_color: "bg-blue-100", text_color: "text-blue-800" },
@@ -80,7 +80,7 @@ class DashboardController < ApplicationController
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
         { title: "Organizations", path: projects_path, icon: "🏫",
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Users", path: users_path, icon: "👥",
+        { title: "User accounts", path: users_path, icon: "👥",
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
         { title: "!!!Forms", path: authenticated_root_path, icon: "📋",
           bg_color: "bg-gray-50", text_color: "text-gray-800" },
