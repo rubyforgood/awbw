@@ -3,8 +3,9 @@
 class WorkshopsController < ApplicationController
 
   def index
-    search_service = WorkshopSearchService.new(params, super_user: current_user.super_user?).call
-    @sort = params[:sort] # search_service.default_sort
+    search_service = WorkshopSearchService.new(params,
+                                               super_user: current_user.super_user?).call
+    @sort = search_service.sort
 
     @workshops = search_service.workshops
                                .includes(:categories, :sectors, :windows_type, :user, :images, :bookmarks)

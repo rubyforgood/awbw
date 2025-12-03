@@ -19,7 +19,7 @@ class WorkshopSearchService
 
 	# Compute the effective sort
 	def default_sort
-		params[:sort].presence || 'title'
+		params[:sort].presence || "created"
 		# return params[:sort] if params[:sort].present?
 		# return 'keywords' if params[:query].present? # only when returning weighted results from # search_by_query
 		# 'title'
@@ -153,7 +153,7 @@ class WorkshopSearchService
 		when 'keywords'
 			# already ordered in filter_by_query
 		else
-			@workshops = @workshops.order(title: :asc)
+			@workshops = @workshops.order(created_at: :asc, title: :asc)
 		end
 	end
 

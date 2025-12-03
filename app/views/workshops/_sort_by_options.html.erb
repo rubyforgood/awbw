@@ -1,7 +1,7 @@
 <div class="flex items-center gap-1">
   <label class="flex items-center gap-1 cursor-pointer">
     <%= radio_button_tag :sort, "created",
-                         @sort == "created" %>
+                         @sort == "created" || !params[:sort].present? %>
     <span class="text-sm">Newest</span>
   </label>
 </div>
@@ -9,7 +9,7 @@
 <div class="flex items-center gap-1">
   <label class="flex items-center gap-1 cursor-pointer">
     <%= radio_button_tag :sort, "title",
-                         @sort == "title" || !params[:sort].present? %>
+                         @sort == "title" %>
     <span class="text-sm">Title</span>
   </label>
 </div>
