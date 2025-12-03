@@ -127,7 +127,6 @@ class DashboardController < ApplicationController
       recent.concat(Report.where(owner_type: 'MonthlyReport').order(updated_at: :desc).limit(10))
       # recent.concat(Report.where(owner_id: 7).order(updated_at: :desc).limit(10)) # TODO: remove hard-coded
       recent.concat(Address.order(updated_at: :desc).limit(10))
-      recent.concat(AgeRange.order(updated_at: :desc).limit(10))
       recent.concat(Bookmark.order(updated_at: :desc).limit(10))
       recent.concat(Category.order(updated_at: :desc).limit(10))
       recent.concat(CommunityNews.order(updated_at: :desc).limit(10))
