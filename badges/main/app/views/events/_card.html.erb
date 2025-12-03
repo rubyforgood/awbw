@@ -17,12 +17,12 @@
     <div class="flex-shrink-0 w-32 h-24 rounded overflow-hidden bg-gray-100 relative">
       <%= link_to event_path(event), class: "block w-full h-full" do %>
         <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-4xl fallback-icon"
-             style="<%= main_image_url(event).present? ? 'display:none;' : 'display:flex;' %>">
+             style="<%= event.main_image_url.present? ? 'display:none;' : 'display:flex;' %>">
           <i class="fa-regular fa-image"></i>
         </div>
 
-        <% if main_image_url(event).present? %>
-          <img src="<%= main_image_url(event) %>"
+        <% if event.main_image_url.present? %>
+          <img src="<%= event.main_image_url %>"
                class="object-cover w-full h-full"
                onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';">
         <% end %>
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Title + badges -->
-    <div class="flex flex-col gap-2 flex-1 min-w-0 mr-4">
+    <div class="flex flex-col gap-2 flex-1 min-w-0 mr-4 mt-1">
       <%= link_to event_path(event),
                   class: "hover:underline block leading-tight",
                   data: { turbo: false } do %>
