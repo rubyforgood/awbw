@@ -22,7 +22,12 @@
 
         </a>
       <% end %>
-      <% @reference_cards.each do |card| %>
+    </div>
+
+    <!-- Column 2 -->
+    <div class="flex flex-col gap-4 flex-1">
+      User-generated content
+      <% @user_content_cards.each do |card| %>
         <a href="<%= card[:path] %>"
            class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                   <%= card[:bg_color] %> <%= card[:text_color] %>
@@ -39,11 +44,12 @@
         </a>
       <% end %>
     </div>
+  </div>
 
-    <!-- Column 2 -->
-    <div class="flex flex-col gap-4 flex-1">
-      User-generated content
-      <% @user_content_cards.each do |card| %>
+  <div class="mt-20">
+    Base data
+    <div class="flex gap-6 mt-3">
+      <% @reference_cards.each do |card| %>
         <a href="<%= card[:path] %>"
            class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                   <%= card[:bg_color] %> <%= card[:text_color] %>
