@@ -73,9 +73,9 @@ RSpec.describe WorkshopSearchService, type: :service do
 				expect(service.sort).to eq('keywords')
 			end
 
-			it "defaults to title if no query or sort is provided" do
+			it "defaults to created if no query or sort is provided" do
 				service = WorkshopSearchService.new({}).call
-				expect(service.sort).to eq('title')
+				expect(service.sort).to eq('created')
 			end
 		end
 	end
