@@ -21,7 +21,7 @@ RSpec.describe "users/new.html.erb", type: :view do
 
       assert_select "input[name=?]", "user[email]"
 
-      assert_select "textarea[name=?]", "user[notes]"
+      assert_select "textarea[name=?]", "user[comment]"
 
       assert_select "input[name=?]", "user[inactive]"
 

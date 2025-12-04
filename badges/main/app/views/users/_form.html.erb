@@ -90,7 +90,7 @@
   <!-- Notes -->
   <% if current_user.super_user? %>
     <div class="admin-only bg-blue-100 p-3">
-      <%= f.input :notes, as: :text, input_html: { rows: 3, class: "w-full" } %>
+      <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
     </div>
   <% end %>
 

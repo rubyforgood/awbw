@@ -2,12 +2,12 @@
   <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-6">
     <!-- Contact info -->
     <div class="w-full md:flex-1">
-      <%= label_tag :contact_info, "Name, email, phone", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :contact_info, "Name, email, or phone", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <div class="relative">
         <%= text_field_tag :contact_info, params[:contact_info],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           placeholder: "Type and hit Enter",
+                           placeholder: "",
                            onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
         <button type="submit"
                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
@@ -24,7 +24,7 @@
         <%= text_field_tag :sector_name, params[:sector_name],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           placeholder: "Type and hit Enter",
+                           placeholder: "",
                            onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
         <button type="submit"
                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
@@ -41,7 +41,7 @@
         <%= text_field_tag :project_name, params[:project_name],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           placeholder: "Type and hit Enter",
+                           placeholder: "",
                            onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
         <button type="submit"
                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"

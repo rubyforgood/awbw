@@ -19,7 +19,7 @@ RSpec.describe "users/edit", type: :view do
       end
 
       # Textareas
-      %w[notes].each do |field|
+      %w[comment].each do |field|
         assert_select "textarea[name=?]", "user[#{field}]"
       end
     end
