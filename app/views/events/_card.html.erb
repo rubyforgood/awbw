@@ -11,7 +11,7 @@
   </div>
 
   <!-- 1️⃣ Thumbnail + Title Row -->
-  <div class="flex flex-col md:flex-row gap-4">
+  <div class="flex flex-col md:flex-row gap-2">
 
     <!-- Thumbnail -->
     <div class="flex-shrink-0 w-32 h-24 rounded overflow-hidden bg-gray-100 relative">
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Title + badges -->
-    <div class="flex flex-col gap-2 flex-1 min-w-0 mr-4 mt-1">
+    <div class="flex flex-col gap-2 flex-1 min-w-0 pr-1 mr-4 mt-1">
       <%= link_to event_path(event),
                   class: "hover:underline block leading-tight",
                   data: { turbo: false } do %>

@@ -12,8 +12,8 @@
       <div class="flex-1" style="flex: 0 0 75%;">
         <div class="space-y-6">
           <div class="flex flex-col md:flex-row gap-4">
-            <%= u.input :first_name %>
-            <%= u.input :last_name %>
+            <%= f.input :first_name %>
+            <%= f.input :last_name %>
 
             <div>
               <label class="block text-md font-medium text-gray-700 mb-1">Email</label>
@@ -27,7 +27,7 @@
 
           <div class="flex flex-col md:flex-row gap-4">
             <%= f.input :pronouns %>
-            <%= u.input :birthday,
+            <%= f.input :date_of_birth,
                         as: :string,
                         input_html: {
                           type: "date",
@@ -66,10 +66,10 @@
       <h3 class="font-semibold text-gray-700 mb-2">Phones</h3>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
         <div class="flex flex-col md:flex-row gap-4">
-          <%= u.input :phone %>
-          <%= u.input :phone2 %>
-          <%= u.input :phone3 %>
-          <%= u.input :best_time_to_call %>
+          <%= f.input :phone_number %>
+          <%= f.input :phone_number_2 %>
+          <%= f.input :phone_number_3 %>
+          <%= f.input :best_time_to_call %>
         </div>
       </div>
     </div>
@@ -112,7 +112,7 @@
         <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-        <% if false && current_user.super_user? %>
+        <% if current_user.super_user? %>
           <div class="admin-only bg-blue-100 p-3">
             <%= u.fields_for :project_users do |project_user_form| %>
               <%= render "project_user_fields",
