@@ -4,6 +4,7 @@ class Project < ApplicationRecord
   belongs_to :location, optional: true # TODO - remove Location if unused
   belongs_to :windows_type, optional: true
   has_many :addresses, as: :addressable, dependent: :destroy
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :project_users, dependent: :restrict_with_error
   has_many :users, through: :project_users
   has_many :reports, through: :users
