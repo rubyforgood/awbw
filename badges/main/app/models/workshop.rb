@@ -103,9 +103,9 @@ class Workshop < ApplicationRecord
 
   def date
     if month.present? && year.present?
-      "#{month}/#{year}"
+      Date.new(year.to_i, month.to_i).strftime("%B %Y")
     else
-      "#{created_at.month}/#{created_at.year}"
+      created_at.strftime("%B %Y")
     end
   end
 

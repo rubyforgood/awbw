@@ -13,23 +13,21 @@
 <div
   id="workshop-<%= workshop.id %>"
   class="
-    flex flex-col md:flex-row
+    flex flex-col sm:flex-row
     <%= "admin-only bg-blue-100" if workshop.inactive? %>
     border-b border-gray-200 bg-white py-4 gap-4
-    px-4 md:px-0        <!-- ⭐ Mobile padding -->
-  "
->
+    px-4 sm:px-0">
   <div id="workshop-<%= workshop.id %>-anchor" style="position: relative; top: -200px;"></div>
 
   <!-- 1️⃣ Image -->
-  <div class="flex-shrink-0 w-full md:w-32 h-32 md:h-24 bg-gray-100 rounded overflow-hidden">
+  <div class="flex-shrink-0 w-full sm:w-32 h-32 sm:h-24 bg-gray-100 rounded overflow-hidden">
     <%= link_to workshop_path(workshop) do %>
       <img class="object-cover w-full h-full" src="<%= workshop.main_image_url %>">
     <% end %>
   </div>
 
   <!-- Content (bookmark + title+ + description) -->
-  <div class="flex flex-col md:flex-row gap-4 flex-1">
+  <div class="flex flex-col sm:flex-row gap-4 flex-1">
 
     <!-- 2️⃣ Title / author / metadata -->
     <div class="flex flex-1 gap-4">
@@ -81,7 +79,7 @@
     </div>
 
     <!-- 3️⃣ Description -->
-    <div class="flex flex-1 gap-4 pr-4 md:pr-3">
+    <div class="flex flex-1 gap-4 pr-4 sm:pr-3">
 
       <!-- Empty placeholder where the bookmark column would be -->
       <div class="w-6 flex-shrink-0"></div>
