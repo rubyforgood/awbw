@@ -2,8 +2,12 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-8">
       <!-- Header actions -->
-      <div class="flex justify-end mb-6">
-        <%= link_to "Organizations", projects_path, class: "btn btn-secondary-outline mr-2" %>
+      <div class="flex justify-end mb-6 gap-2">
+
+        <%= link_to "Organizations", projects_path, class: "btn btn-secondary-outline" %>
+        <span class="inline-block text-sm">
+          <%= render "bookmarks/editable_bookmark_button", resource: @project %>
+        </span>
         <% if current_user.super_user? %>
           <%= link_to "Edit", edit_project_path(@project),
                       class: "admin-only bg-green-100 btn btn-primary-outline" %>

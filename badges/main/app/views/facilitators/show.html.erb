@@ -2,8 +2,11 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-8">
       <!-- Header actions -->
-      <div class="flex justify-end mb-6">
-        <%= link_to "Facilitators", facilitators_path, class: "btn btn-secondary-outline mr-2" %>
+      <div class="flex justify-end mb-6 gap-2">
+        <%= link_to "Facilitators", facilitators_path, class: "btn btn-secondary-outline" %>
+        <span class="inline-block text-sm">
+          <%= render "bookmarks/editable_bookmark_button", resource: @facilitator.object %>
+        </span>
         <% if current_user.super_user? || current_user == @facilitator.user %>
           <%= link_to "Edit", edit_facilitator_path(@facilitator),
                       class: "admin-only bg-green-50 btn btn-primary-outline" %>
@@ -75,7 +78,7 @@
                     <% if pu.title.present? || pu.position.present? %>
                       <span class="text-gray-600"><%= pu.title.presence || pu.position.humanize %> - </span>
                     <% end %>
-                    <%= link_to pu.project.name, authenticated_root_path(pu.project),
+                    <%= link_to pu.project.name, project_path(pu.project),
                                 class: "text-blue-600 hover:underline font-medium" %>
                   </li>
                 <% end %>
