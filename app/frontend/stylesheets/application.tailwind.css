@@ -77,3 +77,7 @@
 .rotate-180 {
   transform: rotate(180deg);
 }
+
+.is-active {
+  @apply text-primary border-b-2 border-primary font-bold bg-gray-100;
+}
