@@ -47,6 +47,14 @@
                   class: "hover:underline",
                   data: { turbo: false, } %>
     </h3>
+    <div class="text-sm text-gray-600">
+      You bookmarked on
+      <%= bookmark.created_at.strftime("%B %d, %Y") %>
+    </div>
+    <div class="text-sm text-gray-600">
+      Bookmarked by community
+      <%= bookmark.bookmarkable.bookmarks_count %> times
+    </div>
   </div>
 
  <!-- 3️⃣ Description -->
