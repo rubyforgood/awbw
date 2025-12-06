@@ -60,16 +60,21 @@
  <!-- 3️⃣ Description -->
  <div class="flex-1 text-sm text-gray-700">
    <div class="text-sm text-gray-600">
-     Author:
-     <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.user %>
-       <%= link_to bookmarkable.author_name,
+     Created by:
+     <% if bookmarkable.respond_to?(:user) && bookmarkable.user %>
+       <%= link_to bookmarkable.user.full_name,
                    generate_facilitator_user_path(bookmarkable.user),
                    class: "hover:underline",
                    data: { turbo: false, } %>
      <% elsif bookmark.bookmarkable_type == "Workshop" %>
        <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Facilitator" %>
-     <% elsif bookmarkable.respond_to?(:created_by) %>
-       <%= bookmarkable.created_by.present? ? bookmarkable.created_by.name : "User" %>
+     <% elsif bookmarkable.respond_to?(:created_by) && bookmarkable.created_by %>
+       <%= link_to bookmarkable.object.created_by.full_name,
+                   generate_facilitator_user_path(bookmarkable.created_by),
+                   class: "hover:underline",
+                   data: { turbo: false, } %>
+     <% else %>
+       User
      <% end %>
    </div>
 
