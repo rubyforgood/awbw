@@ -20,11 +20,33 @@ class Bookmark < ApplicationRecord
       .order("popularity DESC") }
 
 
-
-
   def self.search(params, user: nil)
     bookmarks = user ? user.bookmarks : self.all
     bookmarks = bookmarks.filter_by_params(params)
+    bookmarks = bookmarks.sorted(params[:sort])
+    bookmarks
+  end
+
+  def self.sorted(sort_by=nil) # sort and sort_by are namespaced
+    sort_by ||= "newest"
+    case sort_by
+    when "newest"        then self.sort_by_newest
+    when "title"         then self.sort_by_title
+    when "popularity"    then self.sort_by_popularity
+    else self.sort_by_newest
+    end
+  end
+
+  def self.filter_by_params(params={})
+    bookmarks = self.all
+
+    bookmarks = bookmarks.bookmarkable_type(params[:bookmarkable_type])
+    bookmarks = bookmarks.bookmarkable_attributes(params[:bookmarkable_type],
+                                                  params[:bookmarkable_id])
+    bookmarks = bookmarks.title(params[:title]) if params[:title].present?
+    bookmarks = bookmarks.user_name(params[:user_name]) if params[:user_name].present?
+    bookmarks = bookmarks.windows_type(params[:windows_type]) if params[:windows_type].present?
+
     bookmarks
   end
 
@@ -61,19 +83,6 @@ class Bookmark < ApplicationRecord
       bookmarks.created_at DESC
     SQL
     )
-  end
-
-  def self.filter_by_params(params={})
-    bookmarks = self.all
-
-    bookmarks = bookmarks.bookmarkable_type(params[:bookmarkable_type])
-    bookmarks = bookmarks.bookmarkable_attributes(params[:bookmarkable_type],
-                                                  params[:bookmarkable_id])
-    bookmarks = bookmarks.title(params[:title]) if params[:title].present?
-    bookmarks = bookmarks.user_name(params[:user_name]) if params[:user_name].present?
-    bookmarks = bookmarks.windows_type(params[:windows_type]) if params[:windows_type].present?
-
-    bookmarks
   end
 
   def self.title(title)

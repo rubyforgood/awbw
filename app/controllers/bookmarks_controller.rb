@@ -4,14 +4,7 @@ class BookmarksController < ApplicationController
   def index
     per_page = params[:number_of_items_per_page] || 25
     bookmarks = Bookmark.search(params)
-    sort = params[:sort] || "newest"
-    bookmarks =
-      case sort
-      when "newest"        then bookmarks.sort_by_newest
-      when "title"         then bookmarks.sort_by_title
-      when "popularity"    then bookmarks.sort_by_popularity
-      else bookmarks.sort_by_newest
-      end
+    bookmarks = bookmarks.sorted(params[:sort])
 
     @bookmarks = bookmarks.paginate(page: params[:page], per_page: per_page)
     @bookmarks_count = bookmarks.length
@@ -31,15 +24,7 @@ class BookmarksController < ApplicationController
     @viewing_self = user == current_user
 
     bookmarks = Bookmark.search(params, user: user)
-
-    sort = params[:sort] || "newest"
-    bookmarks =
-      case sort
-      when "newest"        then bookmarks.sort_by_newest
-      when "title"         then bookmarks.sort_by_title
-      when "popularity"    then bookmarks.sort_by_popularity
-      else bookmarks.sort_by_newest
-      end
+    bookmarks = bookmarks.sorted(params[:sort])
 
     @bookmarks_count = bookmarks.length
     @bookmarks = bookmarks.paginate(page: params[:page], per_page: per_page)
