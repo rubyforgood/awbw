@@ -18,6 +18,7 @@
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Type</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Title</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Created At</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Bookmark count</th>
             </tr>
             </thead>
 
@@ -38,6 +39,7 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-2"><%= bookmark.created_at.strftime("%b %d, %Y %H:%M") %></td>
+                <td class="px-4 py-2"><%= bookmark.bookmarkable.bookmarks_count %></td>
               </tr>
             <% end %>
             </tbody>

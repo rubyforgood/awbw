@@ -19,7 +19,7 @@
     <!-- Image -->
     <div class="w-12 h-8 bg-gray-100 rounded overflow-hidden">
       <%= link_to polymorphic_path(bookmarkable) do %>
-        <%= image_tag(bookmark.bookmarkable_image_url, class: "object-cover w-full h-full",
+        <%= image_tag(bookmark.decorate.bookmarkable_image_url, class: "object-cover w-full h-full",
                         alt: "#{ bookmarkable.object.class.name } image") %>
       <% end %>
     </div>
@@ -32,51 +32,63 @@
 
 
   <!-- 2️⃣ Title / author / metadata -->
-  <div class="flex flex-col gap-1 min-w-[40ch] max-w-[40ch] break-words">
+  <div class="flex flex-col gap-1 min-w-[60ch] max-w-[60ch] break-words">
     <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-      <%= link_to "#{bookmarkable.title}#{" [HIDDEN]" if bookmarkable.inactive?}",
+      <% if bookmarkable.respond_to?(:type) %>
+        <% type_name = " (#{bookmarkable.type})" %>
+      <% elsif bookmarkable.respond_to?(:windows_type) %>
+        <% type_name = " (#{bookmarkable.windows_type.short_name})" if bookmarkable.windows_type %>
+      <% else %>
+        <% type_name = "" %>
+      <% end %>
+
+      <%= link_to "#{bookmarkable.title}#{ type_name }#{" [HIDDEN]" if bookmarkable.inactive?}",
                   polymorphic_path(bookmarkable),
                   class: "hover:underline",
                   data: { turbo: false, } %>
     </h3>
+    <div class="text-sm text-gray-600">
+      You bookmarked on
+      <%= bookmark.created_at.strftime("%B %d, %Y") %>
+    </div>
+    <div class="text-sm text-gray-600">
+      Bookmarked by community
+      <%= bookmark.bookmarkable.bookmarks_count %> times
+    </div>
   </div>
 
  <!-- 3️⃣ Description -->
  <div class="flex-1 text-sm text-gray-700">
    <div class="text-sm text-gray-600">
-     Author:
-     <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.user %>
-       <%= link_to bookmarkable.author_name,
+     Created by:
+     <% if bookmarkable.respond_to?(:user) && bookmarkable.user %>
+       <%= link_to bookmarkable.user.full_name,
                    generate_facilitator_user_path(bookmarkable.user),
                    class: "hover:underline",
                    data: { turbo: false, } %>
      <% elsif bookmark.bookmarkable_type == "Workshop" %>
        <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Facilitator" %>
-     <% elsif bookmarkable.respond_to?(:created_by) %>
-       <%= bookmarkable.created_by.present? ? bookmarkable.created_by.name : "User" %>
+     <% elsif bookmarkable.respond_to?(:created_by) && bookmarkable.created_by %>
+       <%= link_to bookmarkable.object.created_by.full_name,
+                   generate_facilitator_user_path(bookmarkable.created_by),
+                   class: "hover:underline",
+                   data: { turbo: false, } %>
+     <% else %>
+       User
      <% end %>
    </div>
 
    <div class="text-sm text-gray-600">
     <span>
-      Type/date:
-      <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.windows_type.present? %>
-        <%= "#{bookmarkable.windows_type.short_name} - #{bookmarkable.date}" %>
-      <% elsif bookmark.bookmarkable_type == "Event" %>
+      Date:
+      <% if bookmark.bookmarkable_type == "Workshop" || bookmark.bookmarkable_type == "Event" %>
         <%= bookmarkable.date %>
       <% else %>
         <%= bookmarkable.created_at.strftime("%B %d, %Y") %>
       <% end %>
       <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.age_ranges.any? %>
-        (<%= bookmarkable.age_ranges.pluck(:name).to_sentence %>)
+        <br>Age ranges: <%= bookmarkable.age_ranges.pluck(:name).to_sentence %>
       <% end %>
-    </span>
-   </div>
-
-   <div class="text-sm text-gray-600">
-    <span>
-      Bookmarked on:
-      <%= bookmark.created_at.strftime("%B %d, %Y") %>
     </span>
    </div>
  </div>

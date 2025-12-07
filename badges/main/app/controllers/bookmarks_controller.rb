@@ -2,11 +2,14 @@ class BookmarksController < ApplicationController
   before_action :set_breadcrumb
 
   def index
+    per_page = params[:number_of_items_per_page] || 25
     bookmarks = Bookmark.search(params)
-    @bookmarks = bookmarks.paginate(page: params[:page], per_page: 25)
-    @bookmarks_count = bookmarks.size
+    bookmarks = bookmarks.sorted(params[:sort])
+
+    @bookmarks = bookmarks.paginate(page: params[:page], per_page: per_page)
+    @bookmarks_count = bookmarks.length
     @windows_types_array = WindowsType::TYPES
-    load_sortable_fields
+    set_index_variables
     respond_to do |format|
       format.html
       format.js
@@ -14,16 +17,20 @@ class BookmarksController < ApplicationController
   end
 
   def personal
+    per_page = params[:number_of_items_per_page] || 25
     user = User.where(id: params[:user_id]).first if params[:user_id].present?
     user ||= current_user
     @user_name = user.full_name if user
     @viewing_self = user == current_user
-    bookmarks = Bookmark.search(params, user: user)
-    @bookmarks_count = bookmarks.size
-    @bookmarks = bookmarks.paginate(page: params[:page], per_page: 25)
-    @windows_types_array = WindowsType::TYPES
 
-    load_sortable_fields
+    bookmarks = Bookmark.search(params, user: user)
+    bookmarks = bookmarks.sorted(params[:sort])
+
+    @bookmarks_count = bookmarks.length
+    @bookmarks = bookmarks.paginate(page: params[:page], per_page: per_page)
+
+    set_index_variables
+
     respond_to do |format|
       format.html
       format.js
@@ -97,9 +104,12 @@ class BookmarksController < ApplicationController
 
   private
 
-  def load_sortable_fields
+  def set_index_variables
     @sortable_fields = WindowsType.where("name NOT LIKE ?", "%COMBINED%")
-    @windows_types = WindowsType.all
+    @windows_types_array = WindowsType::TYPES
+    bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS
+    @bookmarkable_types = bookmarkable_types.map{ |type| [ type, type ] }
+
   end
 
   def load_workshop_data

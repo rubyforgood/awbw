@@ -32,14 +32,9 @@
     <%= label_tag :bookmarkable_type, "Bookmark type", class: "block text-sm font-medium text-gray-700 mb-1" %>
     <div class="relative">
       <%= select_tag :bookmarkable_type,
-                     options_for_select([["All types", ""],
-                                         ["Workshops", "Workshop"],
-                                         ["Stories", "Story"],
-                                         ["Resources", "Resource"],
-                                         ["Community news", "CommunityNews"],
-                                         ["Events", "Event"],
-                                        ],
+                     options_for_select(@bookmarkable_types,
                                         params[:bookmarkable_type]),
+                     include_blank: "All types",
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                      onchange: "this.form.submit()" %>
@@ -62,7 +57,6 @@
 
   <!-- Clear filters / placeholder for additional fields -->
   <div class="flex items-center space-x-2">
-    <%#= render 'workshops/windows_type_fields', windows_types: @windows_types %>
     <%= link_to 'Clear filters', bookmarks_path, class: "btn btn-utility-outline" %>
   </div>
 </div>

@@ -36,18 +36,10 @@
           </div>
 
           <!-- Pagination -->
-          <div class="mt-6 flex flex-col items-center space-y-4">
-            <div id="infinite-scrolling" class="hidden">
+          <div class="mt-6 flex justify-center">
+            <div class="pagination mt-6">
               <%= tailwind_paginate @bookmarks %>
             </div>
-
-            <% if @bookmarks.next_page %>
-              <div id="load_more">
-                <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow">
-                  Load More
-                </button>
-              </div>
-            <% end %>
           </div>
         <% else %>
           <p class="text-gray-600">Your search returned no results. Please try again.</p>
