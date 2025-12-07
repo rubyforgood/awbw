@@ -92,7 +92,7 @@ class Bookmark < ApplicationRecord
     bookmarks = bookmarks.joins(<<~SQL)
       LEFT JOIN community_news ON community_news.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
       LEFT JOIN events         ON events.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
-      LEFT JOIN facilitator    ON facilitators.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Facilitator'
+      LEFT JOIN facilitators   ON facilitators.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Facilitator'
       LEFT JOIN projects       ON projects.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Project'
       LEFT JOIN resources      ON resources.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
       LEFT JOIN stories        ON stories.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
@@ -105,7 +105,7 @@ class Bookmark < ApplicationRecord
 
     bookmarks.where(
       "community_news.title LIKE :title OR events.title LIKE :title OR facilitators.first_name LIKE :title OR
-       facilitators.last_name LIKE :title OR projects.name LIKE :title resources.title LIKE :title OR
+       facilitators.last_name LIKE :title OR projects.name LIKE :title OR resources.title LIKE :title OR
        stories.title LIKE :title OR workshops.title LIKE :title OR workshop_ideas.title LIKE :title OR
        story_ideas.body LIKE :title OR -- searching body for story ideas (title exists but isn't used in UI)
        DATE_FORMAT(workshop_logs.date, '%Y-%m-%d') LIKE :title OR -- no title on workshop_logs
