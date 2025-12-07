@@ -97,6 +97,11 @@ class ProjectsController < ApplicationController
       :inactive, :notes, :agency_type,  :agency_type_other, :website_url,
       :project_status_id, :location_id, :windows_type_id,
       logo_image_attributes: [:id, :file, :_destroy],
+      sectorable_items_attributes: [
+        :id,
+        :sector_id,
+        :_destroy,
+      ],
       addresses_attributes: [
         :id,
         :address_type,
