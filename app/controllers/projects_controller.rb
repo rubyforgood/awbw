@@ -111,6 +111,7 @@ class ProjectsController < ApplicationController
       project_users_attributes: [
         :id,
         :user_id,
+        :inactive,
         :title,
         :_destroy,
       ],
