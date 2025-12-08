@@ -78,6 +78,12 @@ class ProjectsController < ApplicationController
     @project.build_logo_image if @project.logo_image.blank?
 
     @project_statuses = ProjectStatus.all
+    @facilitators_array = Facilitator.joins(:user)
+                                     .order(:first_name, :last_name)
+                                     .map{|f| [f.name, f.user.id] }
+    @project.project_users = @project.project_users
+                                     .includes(:project)
+                                     .sort_by { |pu| pu.user.facilitator&.name.to_s.downcase }
   end
 
   def set_index_variables
@@ -100,6 +106,12 @@ class ProjectsController < ApplicationController
       sectorable_items_attributes: [
         :id,
         :sector_id,
+        :_destroy,
+      ],
+      project_users_attributes: [
+        :id,
+        :user_id,
+        :title,
         :_destroy,
       ],
       addresses_attributes: [
