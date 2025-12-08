@@ -22,6 +22,8 @@ class Project < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :logo_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :project_users, allow_destroy: true, reject_if: :all_blank
 
   scope :active, -> { where(inactive: false) }
 

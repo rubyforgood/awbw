@@ -78,6 +78,12 @@ class ProjectsController < ApplicationController
     @project.build_logo_image if @project.logo_image.blank?
 
     @project_statuses = ProjectStatus.all
+    @facilitators_array = Facilitator.joins(:user)
+                                     .order(:first_name, :last_name)
+                                     .map{|f| [f.name, f.user.id] }
+    @project.project_users = @project.project_users
+                                     .includes(:project)
+                                     .sort_by { |pu| pu.user.facilitator&.name.to_s.downcase }
   end
 
   def set_index_variables
@@ -97,6 +103,18 @@ class ProjectsController < ApplicationController
       :inactive, :notes, :agency_type,  :agency_type_other, :website_url,
       :project_status_id, :location_id, :windows_type_id,
       logo_image_attributes: [:id, :file, :_destroy],
+      sectorable_items_attributes: [
+        :id,
+        :sector_id,
+        :_destroy,
+      ],
+      project_users_attributes: [
+        :id,
+        :user_id,
+        :inactive,
+        :title,
+        :_destroy,
+      ],
       addresses_attributes: [
         :id,
         :address_type,

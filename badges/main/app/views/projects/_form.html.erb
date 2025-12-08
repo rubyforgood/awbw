@@ -105,47 +105,80 @@
                         class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                       } %>
 
-    <%= f.input :project_status_id,
-                as: :select,
-                collection: @project_statuses,
-                include_blank: true,
-                label: "Status",
-                required: true,
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
+    <% if current_user.super_user? %>
+      <div class="admin-only bg-blue-100">
+        <%= f.input :project_status_id,
+                    as: :select,
+                    collection: @project_statuses,
+                    include_blank: true,
+                    label: "Status",
+                    required: true,
+                    input_html: {
+                      class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    } %>
+      </div>
+    <% else %>
+      <div class="text-md font-semibold">
+        Project status:
+      </div>
+      <%= f.object.project_status&.name %>
+    <% end %>
   </div>
 
   <!-- WINDOWS / STATUS / START / END -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <%= f.input :start_date,
-                label: "Affiliation start date",
-                as: :string,
-                input_html: {
-                  type: 'date',
-                  value: f.object.start_date&.strftime('%Y-%m-%d'),
-                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
+    <% if current_user.super_user? %>
+      <div class="admin-only bg-blue-100">
+        <%= f.input :start_date,
+                    label: "Affiliation start date",
+                    as: :string,
+                    input_html: {
+                      type: 'date',
+                      value: f.object.start_date&.strftime('%Y-%m-%d'),
+                      class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    } %>
+      </div>
+      <div class="admin-only bg-blue-100">
+        <%= f.input :end_date,
+                    label: "Affiliation end date",
+                    as: :string,
+                    input_html: {
+                      type: 'date',
+                      value: f.object.end_date&.strftime('%Y-%m-%d'),
+                      class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    } %>
+      </div>
+    <% else %>
+      <div class="">
+        <div class="text-md font-semibold">
+          Affiliation start date:
+        </div>
+        <%= f.object.start_date&.strftime('%Y-%m-%d') %>
+      </div>
 
-    <%= f.input :end_date,
-                label: "Affiliation end date",
-                as: :string,
-                input_html: {
-                  type: 'date',
-                  value: f.object.end_date&.strftime('%Y-%m-%d'),
-                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
+      <div class="">
+        <div class="text-md font-semibold">
+          Affiliation end date:
+        </div>
+        <%= f.object.end_date&.strftime('%Y-%m-%d') %>
+      </div>
+
+    <% end %>
     <%= f.input :website_url,
                 label: "Website URL",
                 as: :string,
                 input_html: {
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
-    <%= f.input :internal_id,
-                label: "Internal Project ID",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
+    <% if current_user.super_user? %>
+      <div class="admin-only bg-blue-100">
+        <%= f.input :internal_id,
+                    label: "Internal Project ID",
+                    input_html: {
+                      class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    } %>
+      </div>
+    <% end %>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -165,21 +198,25 @@
                 } %>
   </div>
 
-  <div class="mb-6">
-    <%= f.input :notes,
-                as: :text,
-                label: "Internal Notes",
-                input_html: {
-                  rows: 3,
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
-                } %>
-  </div>
+  <% if current_user.super_user? %>
+    <div class="admin-only bg-blue-100">
+      <div class="mb-6">
+        <%= f.input :notes,
+                    as: :text,
+                    label: "Internal Notes",
+                    input_html: {
+                      rows: 3,
+                      class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
+                    } %>
+      </div>
+    </div>
+  <% end %>
 
   <div class="form-group space-y-4">
     <div class="font-semibold text-gray-700">
       Addresses
     </div>
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+    <div class="rounded-lg border border-gray-200 bg-yellow-50 p-4 mb-4 shadow-sm">
       <div class="flex flex-wrap items-center gap-4 p-3">
         <%= f.simple_fields_for :addresses do |sfi| %>
           <%= render "address_fields", f: sfi %>
@@ -194,6 +231,37 @@
                                     }
                                   },
                                   class: "btn btn-secondary-outline" %>
+    </div>
+  </div>
+
+  <div class="form-group space-y-4">
+    <div class="font-semibold text-gray-700">
+      Facilitator affiliations
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <% if current_user.super_user? %>
+        <div class="admin-only bg-blue-100 p-3">
+          <%= f.fields_for :project_users do |project_user_form| %>
+            <%= render "project_user_fields",
+                       f: project_user_form %>
+          <% end %>
+
+          <div class="admin-only bg-blue-100 p-3 mt-6">
+            <%= link_to_add_association "➕ Add Role",
+                                        f,
+                                        :project_users,
+                                        class: "btn btn-secondary-outline" %>
+          </div>
+        </div>
+      <% else %>
+        <% f.object.user && f.object.user.project_users.each do |pu| %>
+          <div class="ps-6 mb-2">
+            <li><%= pu.title || pu.position %> -
+              <%= facilitator_profile_button(pu.user.facilitator) if pu.persisted? && pu.user.facilitator %>
+            </li>
+          </div>
+        <% end %>
+      <% end %>
     </div>
   </div>
 
