@@ -11,6 +11,6 @@ class Address < ApplicationRecord
   scope :active, -> { where(inactive: false) }
 
   def name
-    "#{street}, #{city}, #{state} #{zip}"
+    "#{street_address}, #{city}, #{state} #{zip_code}"
   end
 end
