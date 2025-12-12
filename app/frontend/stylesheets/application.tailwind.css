@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./pagination.css";
 @import "./components/buttons";
+@plugin "@tailwindcss/typography";
 
 @source "../../views/**/*.html.erb";
 @source "../../javascript/**/*.js";
