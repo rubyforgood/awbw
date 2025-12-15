@@ -1,5 +1,4 @@
-class WorkshopVariationDecorator < Draper::Decorator
-  delegate_all
+class WorkshopVariationDecorator < ApplicationDecorator
 
   def breadcrumbs
     "#{workshop_link} >> #{name}".html_safe

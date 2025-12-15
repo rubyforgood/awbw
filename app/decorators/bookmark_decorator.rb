@@ -1,5 +1,4 @@
-class BookmarkDecorator < Draper::Decorator
-  delegate_all
+class BookmarkDecorator < ApplicationDecorator
   delegate :current_page, :total_pages, :limit_value
   decorates_association :bookmarkable
 
@@ -7,7 +6,7 @@ class BookmarkDecorator < Draper::Decorator
     "Bookmark of #{bookmarkable_class_name} ##{bookmarkable.id}"
   end
 
-  def description
+  def detail
     "Bookmarkable: #{bookmarkable_class_name} ##{bookmarkable.id} (#{bookmarkable.title})"
   end
 

@@ -1,3 +1,2 @@
-class CategoryDecorator < Draper::Decorator
-  delegate_all
+class CategoryDecorator < ApplicationDecorator
 end

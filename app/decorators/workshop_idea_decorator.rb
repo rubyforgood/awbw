@@ -1,5 +1,4 @@
-class WorkshopIdeaDecorator < Draper::Decorator
-  delegate_all
+class WorkshopIdeaDecorator < ApplicationDecorator
 
   def main_image_url
     if main_image&.file&.attached?

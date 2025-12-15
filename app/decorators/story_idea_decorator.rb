@@ -1,13 +1,11 @@
-class StoryIdeaDecorator < Draper::Decorator
-  delegate_all
-
+class StoryIdeaDecorator < ApplicationDecorator
 
   def title
     name
   end
 
-  def description
-    body.truncate(100)
+  def detail(length: 100)
+    body&.truncate(length)
   end
 
   def main_image_url

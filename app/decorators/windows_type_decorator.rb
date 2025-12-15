@@ -1,11 +1,10 @@
-class WindowsTypeDecorator < Draper::Decorator
-	delegate_all
+class WindowsTypeDecorator < ApplicationDecorator
 
 	def title
 		name
 	end
 
-	def description
+	def detail
 		short_name
 	end
 end

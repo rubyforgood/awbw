@@ -1,8 +1,7 @@
-class StoryDecorator < Draper::Decorator
-  delegate_all
+class StoryDecorator < ApplicationDecorator
 
-  def description
-    body.truncate(50)
+  def detail(length: 50)
+    body&.truncate(length)
   end
 
   def inactive?

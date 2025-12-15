@@ -1,5 +1,16 @@
-class ProjectDecorator < Draper::Decorator
-  delegate_all
+class ProjectDecorator < ApplicationDecorator
+
+  def detail(length: nil)
+    length ? description&.truncate(length) : description
+  end
+
+  def main_image_url
+    if logo_image&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(logo_image.file)
+    else
+      ActionController::Base.helpers.asset_path("theme_default.png")
+    end
+  end
 
   def title
     name

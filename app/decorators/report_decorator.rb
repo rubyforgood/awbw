@@ -1,5 +1,4 @@
-class ReportDecorator < Draper::Decorator
-  delegate_all
+class ReportDecorator < ApplicationDecorator
 
   def created_by
     user

@@ -1,9 +1,12 @@
-class EventDecorator < Draper::Decorator
-  delegate_all
+class EventDecorator < ApplicationDecorator
   decorates_association :bookmarkable
 
   def date
     start_date.strftime("%B %d, %Y")
+  end
+
+  def detail(length: nil)
+    length ? description&.truncate(length) : description
   end
 
   def calendar_links
@@ -144,7 +147,7 @@ class EventDecorator < Draper::Decorator
     elsif gallery_images.first&.file&.attached?
       Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
     else
-      ActionController::Base.helpers.asset_path("workshop_default_hands.png")
+      ActionController::Base.helpers.asset_path("theme_default.png")
     end
   end
 
