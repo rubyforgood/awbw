@@ -34,5 +34,10 @@ module Awbw
       g.assets false                   # Skip JS/CSS assets
       g.channel assets: false          # Skip ActionCable JS
     end
+
+    config.to_prepare do
+      ActionText::ContentHelper.allowed_tags ||= Set.new
+      ActionText::ContentHelper.allowed_tags << "iframe"
+    end
   end
 end

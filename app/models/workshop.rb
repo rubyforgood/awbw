@@ -1,6 +1,8 @@
 class Workshop < ApplicationRecord
   include Rails.application.routes.url_helpers
 
+  has_rich_text :content
+
   belongs_to :windows_type
   belongs_to :user, optional: true
   belongs_to :workshop_idea, optional: true

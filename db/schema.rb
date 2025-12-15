@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_12_152725) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_15_152705) do
   create_table "action_text_rich_texts", charset: "utf8mb3", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
@@ -933,6 +933,12 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_12_152725) do
     t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
     t.index ["workshop_idea_id"], name: "index_workshops_on_workshop_idea_id"
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
+  end
+
+  create_table "youtube_videos", charset: "utf8mb3", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "url"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

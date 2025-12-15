@@ -85,6 +85,8 @@ Rails.application.routes.draw do
     end
   end
 
+  post "/youtube_attachments", to: "youtube_attachments#create"
+
   namespace :api do
     namespace :v1 do
       resources :authentications, only: [:create]

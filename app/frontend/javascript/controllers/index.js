@@ -29,3 +29,6 @@ application.register("tabs", TabsController)
 
 import TimeframeController from "./timeframe_controller"
 application.register("timeframe", TimeframeController)
+
+import LexxyYoutubeController from "./lexxy_youtube_controller"
+application.register("lexxy-youtube", LexxyYoutubeController)
