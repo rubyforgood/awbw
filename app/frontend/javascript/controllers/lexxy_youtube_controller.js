@@ -25,8 +25,7 @@ async #unfurlLink(url, callbacks) {
     // Parse JSON from response
     const metadata = await response.json()
 
-    // Insert below the link
-    callbacks.insertBelowLink(this.#renderUnfurledHTML(metadata), {
+    callbacks.replaceLinkWith(this.#renderUnfurledHTML(metadata), {
       attachment: { sgid: metadata.sgid }
     })
   } catch (err) {
@@ -35,13 +34,25 @@ async #unfurlLink(url, callbacks) {
 }
 
   #renderUnfurledHTML(link) {
-    console.log(link)
-    // Example: show thumbnail + title linking to YouTube
+    let siParam = '';
+    try {
+      const urlParams = new URL(link.canonical_url).searchParams;
+      siParam = urlParams.get('si') || '';
+    } catch (e) {
+      // ignore if URL parsing fails
+    }
     return `
-      <div class="lexxy-youtube-embed" style="display:flex; align-items:center; gap:0.5rem; margin:0.5rem 0;">
-        <img src="${link.thumbnail_url}" alt="${link.title}" style="width:120px; height:auto; border-radius:4px;">
-        <a href="${link.canonical_url}" target="_blank" rel="noopener noreferrer">${link.title}</a>
-      </div>
+      <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/embed/${link.video_id}?si=${siParam}"
+        title="${link.title}"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+        style="border-radius:4px;"
+      ></iframe>
     `
   }
 }

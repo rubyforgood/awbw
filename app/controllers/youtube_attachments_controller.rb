@@ -3,7 +3,7 @@ class YoutubeAttachmentsController < ApplicationController
     video = YoutubeVideo.find_or_create_by(url: params[:url])
 
     render json: {
-      id: video.id,
+      video_id: video.video_id,
       sgid: video.attachable_sgid,
       title: "YouTube Video",
       canonical_url: video.url,
