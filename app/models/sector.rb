@@ -16,4 +16,5 @@ class Sector < ApplicationRecord
   # Scopes
   scope :published, -> { where(published: true).
                          order(Arel.sql("CASE WHEN name = 'Other' THEN 1 ELSE 0 END, LOWER(name) ASC")) }
+  scope :has_taggings, -> { joins(:sectorable_items).distinct }
 end
