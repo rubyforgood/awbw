@@ -1,7 +1,9 @@
+<% title ||= "Community News" %>
+
 <section class="mt-6 py-10 bg-orange-50">
   <div class="max-w-6xl mx-auto px-4">
-    <%= render "dashboard_section_header",
-               title: "Community news",
+    <%= render "dashboard/dashboard_section_header",
+               title: title,
                subtitle: "Announcements and updates" %>
 
     <% if community_news.any? %>
@@ -12,7 +14,7 @@
       </div>
 
       <div class="mt-6 text-right">
-        <%= link_to "View all news",
+        <%= link_to "Read all news",
                     community_news_index_path,
                     class: "text-primary font-medium hover:underline" %>
       </div>
