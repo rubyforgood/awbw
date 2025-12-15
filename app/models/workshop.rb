@@ -76,6 +76,17 @@ class Workshop < ApplicationRecord
            where(inactive: !published) : where(inactive: false) }
   scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
+  scope :order_by_date, ->(sort_order="asc") {
+    order(Arel.sql(<<~SQL.squish))
+    COALESCE(
+      STR_TO_DATE(
+        CONCAT(workshops.year, '-', LPAD(workshops.month, 2, '0'), '-01'),
+        '%Y-%m-%d'
+      ),
+      DATE(workshops.created_at)
+    ) #{sort_order == "asc" ? "ASC" : "DESC"}
+    SQL
+  }
 
   # Search Cop
   include SearchCop
