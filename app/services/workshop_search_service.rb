@@ -11,6 +11,7 @@ class WorkshopSearchService
 
 	# Main entry point
 	def call
+		normalize_published_param
 		filter_by_params
 		order_by_params
 		resolve_ids_order
@@ -31,6 +32,7 @@ class WorkshopSearchService
 
 	def filter_by_params
 		filter_by_windows_type
+		filter_by_windows_type_name
 		filter_by_published_status
 		filter_by_title
 		filter_by_query
@@ -43,6 +45,11 @@ class WorkshopSearchService
 		return unless params[:windows_types].present?
 		ids = params[:windows_types].values.map(&:to_i)
 		@workshops = @workshops.windows_type_ids(ids)
+	end
+
+	def filter_by_windows_type_name
+		return unless params[:windows_type_name].present?
+		@workshops = @workshops.windows_type_name(params[:windows_type_name])
 	end
 
 	def filter_by_published_status
@@ -74,8 +81,31 @@ class WorkshopSearchService
 	end
 
 	def filter_by_sectors
-		return unless params[:sectors].present?
-		@workshops = search_by_sectors(@workshops, params[:sectors])
+		sector_ids = []
+
+		# From dropdown IDs
+		if params[:sectors].present?
+			sector_ids += params[:sectors].to_unsafe_h.values.reject(&:blank?).map(&:to_i)
+		end
+
+		# From tagging links (?sector_names=...)
+		sector_ids += sector_ids_from_names
+
+		sector_ids.uniq!
+		return if sector_ids.blank?
+
+		@workshops = @workshops
+				.joins(:sectorable_items)
+				.where(
+					sectorable_items: {
+						sectorable_type: "Workshop",
+						sector_id: sector_ids
+					}
+				)
+				.distinct
+
+		params[:sectors] ||= {}
+		sector_ids.each { |id| params[:sectors][id.to_s] = id.to_s }
 	end
 
 	def filter_by_title
@@ -129,6 +159,37 @@ class WorkshopSearchService
 		workshops.joins(:sectorable_items)
 						 .where(sectorable_items: { sectorable_type: "Workshop", sector_id: ids })
 						 .distinct
+	end
+
+	def sector_ids_from_names
+		return [] if params[:sector_names].blank?
+
+		names =
+			params[:sector_names]
+				.to_s
+				.split("--")
+				.map(&:strip)
+				.reject(&:blank?)
+
+		return [] if names.empty?
+
+		Sector
+			.names(names) # your case-insensitive / partial matching scope
+			.pluck(:id)
+	end
+
+	def normalize_published_param
+		return unless params.key?(:published)
+
+		published = ActiveModel::Type::Boolean.new.cast(params[:published])
+
+		if published
+			params[:active] = true
+			params.delete(:inactive)
+		else
+			params[:inactive] = true
+			params.delete(:active)
+		end
 	end
 
 	# --- Sorting ---
