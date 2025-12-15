@@ -1,2 +1,15 @@
 @import "./lexxy-content.css";
 @import "./lexxy-editor.css";
+
+.lexxy-highlight-button {
+  font: initial;
+}
+
+lexxy-highlight-dropdown button {
+  line-height: normal;
+}
+
+lexxy-link-dropdown input[type="url"] {
+  min-inline-size: 30ch;
+  line-height: normal;
+}
