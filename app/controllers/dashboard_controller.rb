@@ -11,11 +11,11 @@ class DashboardController < ApplicationController
     @resources = Resource.includes(:windows_type, :main_image, :gallery_images)
                          .featured
                          .published
-                         .published_kinds
                          .order(ordering: :asc, created_at: :desc)
                          .decorate
     @stories = Story.includes(:windows_type, :main_image, :gallery_images)
-                    .featured.published
+                    .featured
+                    .published
                     .order(:title)
                     .decorate
     @community_news = CommunityNews.includes(:windows_type, :main_image, :gallery_images)
@@ -25,7 +25,7 @@ class DashboardController < ApplicationController
                                    .decorate
     @events = Event.includes(:event_registrations, :main_image, :gallery_images)
                    .featured
-                   .publicly_visible
+                   .published
                    .order(:start_date)
                    .decorate
   end

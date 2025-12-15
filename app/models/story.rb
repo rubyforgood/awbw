@@ -1,4 +1,6 @@
 class Story < ApplicationRecord
+  include Linkable, TagFilterable, WindowsTypeFilterable
+
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
@@ -8,11 +10,16 @@ class Story < ApplicationRecord
   belongs_to :story_idea, optional: true
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
+  has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   # Image associations
   has_one :main_image, -> { where(type: "Images::MainImage") },
           as: :owner, class_name: "Images::MainImage", dependent: :destroy
   has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
            as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+  # has_many through
+  has_many :categories, through: :categorizable_items
+  has_many :sectors, through: :sectorable_items
 
   # Validations
   validates :windows_type_id, presence: true
@@ -24,9 +31,26 @@ class Story < ApplicationRecord
   accepts_nested_attributes_for :main_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
 
+  # SearchCop
+  include SearchCop
+  search_scope :search do
+    attributes :title, :body
+  end
+
   # Scopes
   scope :featured, -> { where(featured: true) }
-  scope :published, -> { where(published: true) }
+  scope :published, ->(published=nil) { published ? where(published: published) : where(published: true) }
+  scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+
+  def self.search_by_params(params)
+    stories = self.all
+    stories = stories.search(params[:query]) if params[:query].present?
+    stories = stories.sector_names(params[:sector_names]) if params[:sector_names].present?
+    stories = stories.category_names(params[:category_names]) if params[:category_names].present?
+    stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    stories
+  end
 
   def name
     title

@@ -4,6 +4,7 @@ class StoriesController < ApplicationController
   def index
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = current_user.super_user? ? Story.all : Story.published
+    unpaginated = unpaginated.search_by_params(params)
     @stories = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
                           .order(created_at: :desc)
                           .paginate(page: params[:page], per_page: per_page)

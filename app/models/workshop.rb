@@ -1,4 +1,5 @@
 class Workshop < ApplicationRecord
+  include Linkable, TagFilterable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
   belongs_to :windows_type
@@ -66,11 +67,13 @@ class Workshop < ApplicationRecord
 
 
   # Scopes
+  scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
   scope :published, -> (published=nil) { published.to_s.present? ?
-                                           where(inactive: !published) : where(inactive: false) }
+           where(inactive: !published) : where(inactive: false) }
   scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
 

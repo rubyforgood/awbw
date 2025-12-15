@@ -1,4 +1,5 @@
 class Resource < ApplicationRecord
+  include Linkable, TagFilterable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
   PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
@@ -55,18 +56,33 @@ class Resource < ApplicationRecord
 
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
+  scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :featured, -> (featured=nil) { featured.present? ? where(featured: featured) : where(featured: true) }
   scope :kind, -> (kind) { where("kind like ?", kind ) }
   scope :leader_spotlights, -> { kind("LeaderSpotlight") }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
   scope :published, -> (published=nil) { published.present? ?
-                                           where(inactive: !published) : where(inactive: false) }
+           where(inactive: !published).published_kinds : where(inactive: false).published_kinds }
   scope :recent, -> { published.by_created }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
   scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
   scope :theme, -> { where(kind: "Theme") }
   scope :title, -> (title) { where("title like ?", "%#{ title }%") }
+
+  def self.search_by_params(params)
+    resources = all
+    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
+    resources = resources.sector_names(params[:sector_names]) if params[:sector_names].present?
+    resources = resources.category_names(params[:category_names]) if params[:category_names].present?
+    resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    resources = resources.title(params[:title]) if params[:title].present?
+    resources = resources.kind(params[:kind]) if params[:kind].present?
+    resources = resources.published(params[:published]) if params[:published].present?
+    resources = resources.featured(params[:featured]) if params[:featured].present?
+    resources
+  end
 
   def story?
     ["Story", "LeaderSpotlight"].include? self.kind
@@ -106,16 +122,6 @@ class Resource < ApplicationRecord
 
   def month
     created_at.month
-  end
-
-  def self.search_by_params(params)
-    resources = all
-    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
-    resources = resources.title(params[:title]) if params[:title].present?
-    resources = resources.kind(params[:kind]) if params[:kind].present?
-    resources = resources.published(params[:published]) if params[:published].present?
-    resources = resources.featured(params[:featured]) if params[:featured].present?
-    resources
   end
 
   private
