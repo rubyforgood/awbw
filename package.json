@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "vite": "^5.4.20",
     "vite-plugin-ruby": "^5.1.1"
   },

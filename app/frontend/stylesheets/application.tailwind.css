@@ -3,6 +3,8 @@
 @import "./components/buttons";
 @import "./components/lexxy/lexxy.css";
 
+@plugin "@tailwindcss/typography";
+
 @source "../../views/**/*.html.erb";
 @source "../../javascript/**/*.js";
 @source "../../helpers/**/*.rb";
