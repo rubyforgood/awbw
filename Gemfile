@@ -47,6 +47,8 @@ gem "stimulus-rails", "~> 1.3"
 
 gem "active_storage_validations", "~> 3.0"
 
+gem "lexxy", "~> 0.1.23.beta" # Need to specify the version since it's a pre-release
+
 group :development, :test do
   gem "better_errors"
   gem "brakeman", "~> 7.1.1", require: false

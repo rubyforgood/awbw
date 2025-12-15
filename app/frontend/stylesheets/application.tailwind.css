@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "./pagination.css";
 @import "./components/buttons";
-@import "./components/actiontext.css";
+@import "./components/lexxy/lexxy.css";
 
 @source "../../views/**/*.html.erb";
 @source "../../javascript/**/*.js";
@@ -63,6 +63,7 @@
   .default-link a {
     @apply underline text-blue-600 hover:text-blue-800;
   }
+
 }
 
 .readonly {

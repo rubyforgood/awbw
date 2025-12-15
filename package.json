@@ -4,9 +4,11 @@
     "vite-plugin-ruby": "^5.1.1"
   },
   "dependencies": {
+    "@37signals/lexxy": "^0.1.24-beta",
     "@fortawesome/fontawesome-free": "^7.0.1",
     "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo-rails": "^8.0.18",
+    "@rails/activestorage": "^7.2.300",
     "@rails/request.js": "^0.0.12",
     "@tailwindcss/vite": "^4.1.13",
     "sortablejs": "^1.15.6",
