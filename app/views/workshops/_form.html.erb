@@ -5,6 +5,11 @@
       <%= render 'shared/errors', resource: workshop %>
     <% end %>
 
+    <%= f.label :content %>
+    <%= f.rich_textarea :content, data: {
+                                  controller: "lexxy-youtube",
+                                  action: "lexxy:insert-link->lexxy-youtube#unfurl",
+                                  lexxy_youtube_url_value: "/youtube_attachments" } %>
     <!-- Row 1 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <div>
