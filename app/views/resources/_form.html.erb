@@ -68,7 +68,10 @@
 
       <div data-lexxy-editor-toggle-target="lexxy" class="flex-1 min-w-[200px]">
         <%= f.label :lexxy_text, "Text" %>
-        <%= f.rich_textarea :lexxy_text %>
+        <%= f.rich_textarea :lexxy_text, data: {
+                                  controller: "lexxy-youtube",
+                                  action: "lexxy:insert-link->lexxy-youtube#unfurl",
+                                  lexxy_youtube_url_value: "/youtube_attachments" } %>
       </div>
     </div>
 
