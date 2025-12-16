@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_15_152705) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_16_012116) do
   create_table "action_text_rich_texts", charset: "utf8mb3", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
@@ -540,6 +540,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_152705) do
     t.string "agency"
     t.string "author"
     t.datetime "created_at", precision: nil, null: false
+    t.boolean "display_rich_text"
     t.boolean "featured", default: false
     t.boolean "female", default: false
     t.string "filemaker_code"

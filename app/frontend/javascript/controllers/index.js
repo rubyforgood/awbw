@@ -32,3 +32,6 @@ application.register("timeframe", TimeframeController)
 
 import LexxyYoutubeController from "./lexxy_youtube_controller"
 application.register("lexxy-youtube", LexxyYoutubeController)
+
+import LexxyEditorToggleController from "./lexxy_editor_toggle_controller"
+application.register("lexxy-editor-toggle", LexxyEditorToggleController)
