@@ -14,6 +14,8 @@ class Resource < ApplicationRecord
   has_many :sectorable_items, dependent: :destroy, as: :sectorable
   has_many :workshop_resources, dependent: :destroy
 
+  has_rich_text :lexxy_text
+
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :related_workshops, through: :sectors, source: :workshops

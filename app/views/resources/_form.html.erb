@@ -1,48 +1,53 @@
-<%= simple_form_for @resource, wrapper: :tailwind_form do |f| %>
-  <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
+<%= tag.div data: {controller: "lexxy-editor-toggle"} do %>
+  <button type="button" class="btn btn-primary" data-action="click->lexxy-editor-toggle#toggle">
+    Toggle editor
+  </button>
+  <%= simple_form_for @resource, wrapper: :tailwind_form do |f| %>
+    <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
 
-  <!-- First Row -->
-  <div class="title-row flex flex-wrap gap-4 mb-4">
-    <div class="flex-1 min-w-[200px]">
-      <%= f.input :title,
+    <!-- First Row -->
+    <div class="title-row flex flex-wrap gap-4 mb-4">
+      <div class="flex-1 min-w-[200px]">
+        <%= f.input :title,
                   as: :text,
                   input_html: { rows: 1, class: "w-full rounded border-gray-300 font-bold text-md" },
                   wrapper: false,
                   label_html: { class: 'block font-medium mb-1' } %>
-    </div>
-    <div class="flex-1 min-w-[200px]">
-      <label class="block font-medium mb-1">Flags</label>
-      <div class="flex items-center gap-6">
-        <div>
-          <%= f.input :featured, as: :boolean, wrapper: false, label_html: { class: "inline" } %>
-        </div>
-        <div>
-          <%= f.input :inactive, as: :boolean,
+      </div>
+      <div class="flex-1 min-w-[200px]">
+        <label class="block font-medium mb-1">Flags</label>
+        <div class="flex items-center gap-6">
+          <div><%= f.input :featured, as: :boolean, wrapper: false, label_html: { class: "inline" } %></div>
+          <div>
+            <%= f.input :inactive, as: :boolean,
                       label: "Hidden?",
                       wrapper: false, label_html: { class: "inline" } %>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  <div class="title-row flex flex-wrap gap-4 mb-4">
-    <div class="flex-1 min-w-[200px]">
-      <%= f.input :kind,
+
+    <div class="title-row flex flex-wrap gap-4 mb-4">
+      <div class="flex-1 min-w-[200px]">
+        <%= f.input :kind,
                   as: :select,
                   collection: Resource::PUBLISHED_KINDS,
                   selected: f.object.kind,
                   input_html: { class: "w-full rounded border-gray-300" } %>
-    </div>
-    <div class="flex-1 min-w-[200px]">
-      <%= f.input :windows_type_id,
+      </div>
+
+      <div class="flex-1 min-w-[200px]">
+        <%= f.input :windows_type_id,
                   as: :select,
                   collection: @windows_types, label_method: :short_name, value_method: :id,
                   include_blank: true,
                   selected: f.object.windows_type_id,
                   input_html: { value: f.object.windows_type_id,
                                 class: "w-full rounded border-gray-300" } %>
-    </div>
-    <div class="flex-1 min-w-[200px]">
-      <%= f.input :user_id,
+      </div>
+
+      <div class="flex-1 min-w-[200px]">
+        <%= f.input :user_id,
                   as: :select,
                   label: "Author",
                   collection: @authors,
@@ -50,71 +55,77 @@
                   selected: f.object.user_id,
                   input_html: { value: f.object.user_id,
                                 class: "w-full rounded border-gray-300" } %>
+      </div>
     </div>
-  </div>
 
-  <!-- Second Row -->
-  <div class="text-row flex flex-wrap gap-4 mb-4">
-    <div class="flex-1 min-w-[200px]">
-      <%= f.input :text,
+    <!-- Second Row -->
+    <div class="text-row flex flex-wrap gap-4 mb-4">
+      <div data-lexxy-editor-toggle-target="legacy" class="flex-1 min-w-[200px] hidden">
+        <%= f.input :text,
                   as: :text,
                   input_html: { rows: 5, class: "w-full rounded border-gray-300" } %>
-    </div>
-  </div>
+      </div>
 
-  <!-- Second Row -->
-  <div class="url-row flex flex-wrap gap-4 mb-4">
-    <!-- URL Input: max half width -->
-    <div class="flex-[0_0_50%] min-w-[150px]">
-      <%= f.input :url,
+      <div data-lexxy-editor-toggle-target="lexxy" class="flex-1 min-w-[200px]">
+        <%= f.label :lexxy_text, "Text" %>
+        <%= f.rich_textarea :lexxy_text %>
+      </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="url-row flex flex-wrap gap-4 mb-4">
+      <!-- URL Input: max half width -->
+      <div class="flex-[0_0_50%] min-w-[150px]">
+        <%= f.input :url,
                   as: :text,
                   hint: "Enter full url, e.g. https://example.com",
                   input_html: { class: "w-full rounded border-gray-300 px-2 py-1",
                                 rows: 1 },
                   label_html: { class: "font-medium mb-1 block" } %>
-    </div>
+      </div>
 
-    <!-- Ordering Input -->
-    <div class="flex-[0_0_150px]">
-      <%= f.input :ordering,
+      <!-- Ordering Input -->
+      <div class="flex-[0_0_150px]">
+        <%= f.input :ordering,
                   as: :integer,
                   label: "Display order",
                   hint: "For dashboard",
                   input_html: { class: "w-full rounded border-gray-300 px-2 py-1", min: 1, step: 1 },
                   label_html: { class: "font-medium mb-1 block" } %>
+      </div>
     </div>
-  </div>
 
-  <!-- Third Row -->
-  <%= render "shared/form_image_fields", f: f, include_main_image: true %>
+    <!-- Third Row -->
+    <%= render "shared/form_image_fields", f: f, include_main_image: true %>
 
-  <% if @resource.attachments.any? %>
-    <div class="bg-red-200 p-3 pb-9">
-      <h3 class="text-lg font-medium mt-6 mb-2">Attachments (need to reattach)</h3>
-      <ul class="list-disc pl-5">
-        <% @resource.attachments.each do |attachment| %>
-          <li>
-            <%= attachment.file_file_name %>
-            <%# if attachment&.persisted? %>
-              <%#= link_to attachment.file_file_name,
-                          url_for(attachment.file), class: "hover:underline" %>
-            <%# else %>
-              <%#= attachment.file_file_name %>
-            <%# end %>
-          </li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+    <% if @resource.attachments.any? %>
+      <div class="bg-red-200 p-3 pb-9">
+        <h3 class="text-lg font-medium mt-6 mb-2">Attachments (need to reattach)</h3>
+        <ul class="list-disc pl-5">
+          <% @resource.attachments.each do |attachment| %>
+            <li>
+              <%= attachment.file_file_name %>
+              <%# if attachment&.persisted? %>
+              <%#
+                = link_to attachment.file_file_name,
+                url_for(attachment.file), class: "hover:underline"
+              %>
+              <%# else %>
+              <%# = attachment.file_file_name %>
+              <%# end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
 
-
-
-  <!-- Form Actions -->
-  <div class="flex gap-2 mt-4">
-    <%= link_to "Delete", @resource, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
-    <%= link_to 'Cancel', resources_path, class: "btn btn-secondary-outline" %>
-    <%= f.submit 'Submit',
+    <!-- Form Actions -->
+    <div class="flex gap-2 mt-4">
+      <%= link_to "Delete", @resource, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
+      <%= link_to 'Cancel', resources_path, class: "btn btn-secondary-outline" %>
+      <%= f.submit 'Submit',
                  class: "px-4 py-2 border border-blue-600 hover:text-gray-600 hover:bg-white
                  rounded-lg bg-blue-600 text-white text-sm font-medium" %>
-  </div>
+    </div>
+  <% end %>
 <% end %>
