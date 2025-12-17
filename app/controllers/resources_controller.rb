@@ -118,12 +118,13 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :text, :kind, :male, :female, :title, :featured, :inactive, :url,
+      :user_id,
+      :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
       main_image_attributes: [:id, :file, :_destroy],
       gallery_images_attributes: [:id, :file, :_destroy],
       categorizable_items_attributes: [:id, :category_id, :_destroy], category_ids: [],
-      sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy], sector_ids: [],
+      sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy], sector_ids: []
     )
   end
 
