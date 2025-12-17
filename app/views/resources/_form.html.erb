@@ -61,10 +61,17 @@
                   as: :text,
                   input_html: { rows: 5, class: "w-full rounded border-gray-300" } %>
     </div>
+
+    <%= f.hidden_field :rhino_text, id: f.field_id(:rhino_text), value: f.object.rhino_text.try(:to_trix_html) || f.object.rhino_text %>
+    <my-editor
+      input="<%= f.field_id(:rhino_text) %>"
+      data-blob-url-template="<%= rails_service_blob_url(":signed_id", ":filename") %>"
+      data-direct-upload-url="<%= rails_direct_uploads_url %>"
+    ></my-editor>
   </div>
 
   <div class="text-row flex flex-wrap gap-4 mb-4">
-    <div class="flex-1 min-w-[200px]"><%= rhino_editor_field(f, :text) %></div>
+    <div class="flex-1 min-w-[200px]"><%# rhino_editor_field(f, :text) %></div>
   </div>
 
   <!-- Second Row -->
