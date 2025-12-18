@@ -82,11 +82,11 @@
       </div>
 
       <%= f.hidden_field :rhino_text, id: f.field_id(:rhino_text), value: f.object.rhino_text.try(:to_trix_html) || f.object.rhino_text %>
-      <table-rhino-editor
+      <custom-rhino-editor
         input="<%= f.field_id(:rhino_text) %>"
         data-blob-url-template="<%= rails_service_blob_url(":signed_id", ":filename") %>"
         data-direct-upload-url="<%= rails_direct_uploads_url %>"
-      ></table-rhino-editor>
+      ></custom-rhino-editor>
     </div>
   </div>
 

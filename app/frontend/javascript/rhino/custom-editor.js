@@ -40,6 +40,9 @@ class CustomEditor extends TipTapEditor {
           <slot name="link-button">${this.renderLinkButton()}</slot>
           <slot name="after-link-button"></slot>
 
+          <!-- <Text Alignment> -->
+          <slot name="align-buttons">${this.renderAlignmentButtons()}</slot>
+
           <!-- Heading -->
           <slot name="before-heading-button"></slot>
           <slot name="heading-button">${this.renderHeadingButton()}</slot>
@@ -79,6 +82,7 @@ class CustomEditor extends TipTapEditor {
           <slot name="increase-indentation-button"
             >${this.renderIncreaseIndentation()}</slot
           >
+
           <slot name="after-increase-indentation-button"></slot>
 
           <slot name="table-button"
@@ -86,12 +90,12 @@ class CustomEditor extends TipTapEditor {
             ${this.renderTableButton()}
             </slot
           >
-
           <!-- Attachments -->
           <slot name="before-attach-files-button"></slot>
           <slot name="attach-files-button"
             >${this.renderAttachmentButton()}</slot
           >
+          <slot name="after-attach-files-button"></slot>
         <!-- Source Modal button -->
           <slot name="source-modal-button">
             <button
@@ -118,7 +122,6 @@ class CustomEditor extends TipTapEditor {
               &lt;/&gt;
             </button>
           </slot>
-          <slot name="after-attach-files-button"></slot>
 
 
           <!-- Undo -->
@@ -401,6 +404,36 @@ class CustomEditor extends TipTapEditor {
       </role-toolbar>
     `;
   }
+
+  renderAlignmentButtons() {
+    if (!this.editor) return html``;
+
+    const alignmentOptions = [
+      { name: 'left', icon: '⬅️' },
+      { name: 'center', icon: '↔️' },
+      { name: 'right', icon: '➡️' },
+      { name: 'justify', icon: '⏹', style: 'margin-inline-end:1rem;' },
+    ];
+
+    const canAlign = ['paragraph', 'heading'].some(type => this.editor.isActive(type));
+    if (!canAlign) return html``;
+
+    return html`
+      ${alignmentOptions.map(
+        align => html`
+          <button
+            class="toolbar__button rhino-toolbar-button"
+            type="button"
+            style=${align.style || ''}
+            aria-disabled=${!this.editor}
+            @click=${() => this.editor.chain().focus().setTextAlign(align.name).run()}
+          >
+            ${align.icon}
+          </button>
+        `
+      )}
+    `;
+  }
 }
 
-CustomEditor.define("table-rhino-editor")
+CustomEditor.define("custom-rhino-editor")

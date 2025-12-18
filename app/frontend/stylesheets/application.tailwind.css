@@ -84,14 +84,14 @@
 }
 
 
-table-rhino-editor table {
+custom-rhino-editor table {
   border-collapse: collapse;
   margin: 0;
   overflow: hidden;
   table-layout: fixed;
   width: 100%;
 }
-table-rhino-editor table td, table-rhino-editor table th {
+custom-rhino-editor table td, custom-rhino-editor table th {
   border: 2px solid #ced4da;
   box-sizing: border-box;
   min-width: 1em;
@@ -99,15 +99,15 @@ table-rhino-editor table td, table-rhino-editor table th {
   position: relative;
   vertical-align: top;
 }
-table-rhino-editor table td > *, table-rhino-editor table th > * {
+custom-rhino-editor table td > *, custom-rhino-editor table th > * {
   margin-bottom: 0;
 }
-table-rhino-editor table th {
+custom-rhino-editor table th {
   background-color: #f1f3f5;
   font-weight: bold;
   text-align: left;
 }
-table-rhino-editor table .selectedCell:after {
+custom-rhino-editor table .selectedCell:after {
   background: rgba(200, 200, 255, 0.4);
   content: "";
   left: 0;
@@ -118,7 +118,7 @@ table-rhino-editor table .selectedCell:after {
   position: absolute;
   z-index: 2;
 }
-table-rhino-editor table .column-resize-handle {
+custom-rhino-editor table .column-resize-handle {
   background-color: #adf;
   bottom: -2px;
   position: absolute;
@@ -127,7 +127,7 @@ table-rhino-editor table .column-resize-handle {
   top: 0;
   width: 4px;
 }
-table-rhino-editor table p {
+custom-rhino-editor table p {
   margin: 0;
 }
 .tableWrapper {
