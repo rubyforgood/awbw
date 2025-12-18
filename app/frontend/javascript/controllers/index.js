@@ -29,3 +29,6 @@ application.register("tabs", TabsController)
 
 import TimeframeController from "./timeframe_controller"
 application.register("timeframe", TimeframeController)
+
+import RhinoSourceController from "./rhino_source_controller"
+application.register("rhino-source", RhinoSourceController)

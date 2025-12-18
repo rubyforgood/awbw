@@ -7,6 +7,7 @@ import "rhino-editor/exports/styles/trix.css"
 import { TipTapEditor } from "rhino-editor/exports/elements/tip-tap-editor.js"
 import * as table_icons from "./table-icons.js"
 import * as table_translations from "./table-translations.js"
+import { application } from "../controllers/application"
 
 class CustomEditor extends TipTapEditor {
 
@@ -91,6 +92,32 @@ class CustomEditor extends TipTapEditor {
           <slot name="attach-files-button"
             >${this.renderAttachmentButton()}</slot
           >
+        <!-- Source Modal button -->
+          <slot name="source-modal-button">
+            <button
+              class="toolbar__button rhino-toolbar-button"
+              type="button"
+              @click=${() => {
+                const modalController = application.getControllerForElementAndIdentifier(
+                  document.querySelector("[data-controller='rhino-source']"),
+                  "rhino-source"
+                )
+                if (modalController) {
+                  modalController.registerEditor(this.editor)
+                  modalController.show()
+                }
+              }}
+            >
+              <role-tooltip
+                hoist
+                part="toolbar-tooltip"
+                exportparts=${this.__tooltipExportParts}
+              >
+                Edit HTML
+              </role-tooltip>
+              &lt;/&gt;
+            </button>
+          </slot>
           <slot name="after-attach-files-button"></slot>
 
 
