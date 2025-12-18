@@ -61,33 +61,34 @@
                   as: :text,
                   input_html: { rows: 5, class: "w-full rounded border-gray-300" } %>
     </div>
-    <div data-controller="rhino-source">
-      <!-- Modal for editing HTML -->
-      <div
-        data-rhino-source-target="modal"
-        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      >
-        <div class="bg-white p-4 rounded shadow-lg w-3/4 max-w-2xl">
-          <h2 class="text-lg font-bold mb-2">Edit HTML</h2>
+  </div>
 
-          <textarea data-rhino-source-target="textarea" class="w-full h-64 p-2 border rounded prose"></textarea>
+  <div data-controller="rhino-source">
+    <!-- Modal for editing HTML -->
+    <div
+      data-rhino-source-target="modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-4 rounded shadow-lg w-3/4 max-w-2xl">
+        <h2 class="text-lg font-bold mb-2">Edit HTML</h2>
 
-          <div class="mt-2 text-right">
-            <button data-action="click->rhino-source#hide" class="mr-2 px-4 py-2 bg-gray-200 rounded">Cancel</button>
-            <button data-action="click->rhino-source#save" class="px-4 py-2 bg-blue-600 text-white rounded">
-              Save
-            </button>
-          </div>
+        <textarea data-rhino-source-target="textarea" class="w-full h-64 p-2 border rounded prose"></textarea>
+
+        <div class="mt-2 text-right">
+          <button data-action="click->rhino-source#hide" class="mr-2 px-4 py-2 bg-gray-200 rounded">Cancel</button>
+          <button data-action="click->rhino-source#save" class="px-4 py-2 bg-blue-600 text-white rounded">
+            Save
+          </button>
         </div>
       </div>
-
-      <%= f.hidden_field :rhino_text, id: f.field_id(:rhino_text), value: f.object.rhino_text.try(:to_trix_html) || f.object.rhino_text %>
-      <custom-rhino-editor
-        input="<%= f.field_id(:rhino_text) %>"
-        data-blob-url-template="<%= rails_service_blob_url(":signed_id", ":filename") %>"
-        data-direct-upload-url="<%= rails_direct_uploads_url %>"
-      ></custom-rhino-editor>
     </div>
+
+    <%= f.hidden_field :rhino_text, id: f.field_id(:rhino_text), value: f.object.rhino_text.try(:to_trix_html) || f.object.rhino_text %>
+    <custom-rhino-editor
+      input="<%= f.field_id(:rhino_text) %>"
+      data-blob-url-template="<%= rails_service_blob_url(":signed_id", ":filename") %>"
+      data-direct-upload-url="<%= rails_direct_uploads_url %>"
+    ></custom-rhino-editor>
   </div>
 
   <div class="text-row flex flex-wrap gap-4 mb-4">

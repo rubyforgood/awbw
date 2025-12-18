@@ -130,7 +130,11 @@ custom-rhino-editor table .column-resize-handle {
 custom-rhino-editor table p {
   margin: 0;
 }
+custom-rhino-editor a {
+  @apply underline text-blue-600 hover:text-blue-800;
+}
 .tableWrapper {
   padding: 1rem 0;
   overflow-x: auto;
+
 }
