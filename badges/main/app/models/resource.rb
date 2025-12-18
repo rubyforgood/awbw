@@ -4,6 +4,8 @@ class Resource < ApplicationRecord
   PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
   KINDS = PUBLISHED_KINDS + ["Resource", "Story"]
 
+  has_rich_text :rhino_text
+
   belongs_to :user
   belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true

@@ -13,9 +13,7 @@
     <div class="flex-1 min-w-[200px]">
       <label class="block font-medium mb-1">Flags</label>
       <div class="flex items-center gap-6">
-        <div>
-          <%= f.input :featured, as: :boolean, wrapper: false, label_html: { class: "inline" } %>
-        </div>
+        <div><%= f.input :featured, as: :boolean, wrapper: false, label_html: { class: "inline" } %></div>
         <div>
           <%= f.input :inactive, as: :boolean,
                       label: "Hidden?",
@@ -24,6 +22,7 @@
       </div>
     </div>
   </div>
+
   <div class="title-row flex flex-wrap gap-4 mb-4">
     <div class="flex-1 min-w-[200px]">
       <%= f.input :kind,
@@ -32,6 +31,7 @@
                   selected: f.object.kind,
                   input_html: { class: "w-full rounded border-gray-300" } %>
     </div>
+
     <div class="flex-1 min-w-[200px]">
       <%= f.input :windows_type_id,
                   as: :select,
@@ -41,6 +41,7 @@
                   input_html: { value: f.object.windows_type_id,
                                 class: "w-full rounded border-gray-300" } %>
     </div>
+
     <div class="flex-1 min-w-[200px]">
       <%= f.input :user_id,
                   as: :select,
@@ -61,6 +62,8 @@
                   input_html: { rows: 5, class: "w-full rounded border-gray-300" } %>
     </div>
   </div>
+
+  <%= rhino_editor(f, :text) %>
 
   <!-- Second Row -->
   <div class="url-row flex flex-wrap gap-4 mb-4">
@@ -96,18 +99,18 @@
           <li>
             <%= attachment.file_file_name %>
             <%# if attachment&.persisted? %>
-              <%#= link_to attachment.file_file_name,
-                          url_for(attachment.file), class: "hover:underline" %>
+            <%#
+              = link_to attachment.file_file_name,
+              url_for(attachment.file), class: "hover:underline"
+            %>
             <%# else %>
-              <%#= attachment.file_file_name %>
+            <%# = attachment.file_file_name %>
             <%# end %>
           </li>
         <% end %>
       </ul>
     </div>
   <% end %>
-
-
 
   <!-- Form Actions -->
   <div class="flex gap-2 mt-4">

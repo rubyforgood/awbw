@@ -35,6 +35,12 @@ class ResourcesController < ApplicationController
     render :show
   end
 
+  def rhino_text
+    @resource = Resource.find(resource_id_param).decorate
+    load_forms
+    render :show_test
+  end
+
   def create
     @resource = current_user.resources.build(resource_params)
     if @resource.save
@@ -118,12 +124,12 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :text, :kind, :male, :female, :title, :featured, :inactive, :url,
+      :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
       main_image_attributes: [:id, :file, :_destroy],
       gallery_images_attributes: [:id, :file, :_destroy],
       categorizable_items_attributes: [:id, :category_id, :_destroy], category_ids: [],
-      sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy], sector_ids: [],
+      sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy], sector_ids: []
     )
   end
 
