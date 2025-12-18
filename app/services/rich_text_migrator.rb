@@ -52,7 +52,7 @@ class RichTextMigrator
         attachment = ActionText::Attachment.from_attachable(blob)
         img.replace(attachment.to_html)
       else
-        img.replace(placeholder_node(img["alt"]))
+        img.replace(placeholder_node(img["src"]))
       end
     end
 
@@ -80,8 +80,8 @@ class RichTextMigrator
     nil
   end
 
-  def placeholder_node(alt = nil)
-    text = alt.presence || PLACEHOLDER_TEXT
+  def placeholder_node(src = nil)
+    text = %([#{PLACEHOLDER_TEXT}#{": #{src}" if src.present?}])
 
     Nokogiri::HTML::DocumentFragment.parse(
       "<span>#{ERB::Util.html_escape(text)}</span>"
