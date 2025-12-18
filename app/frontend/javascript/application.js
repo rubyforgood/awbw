@@ -4,4 +4,4 @@ import "rhino-editor";
 import "rhino-editor/exports/styles/trix.css";
 
 import "./controllers";
-import "./rhino/table-editor.js";
+import "./rhino/extend-editor.js";

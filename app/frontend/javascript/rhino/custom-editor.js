@@ -377,4 +377,4 @@ class CustomEditor extends TipTapEditor {
   }
 }
 
-CustomEditor.define("my-editor")
+CustomEditor.define("table-rhino-editor")
