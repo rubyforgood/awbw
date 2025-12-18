@@ -35,6 +35,12 @@ class ResourcesController < ApplicationController
     render :show
   end
 
+  def show_test
+    @resource = Resource.find(resource_id_param).decorate
+    load_forms
+    render :show_test
+  end
+
   def create
     @resource = current_user.resources.build(resource_params)
     if @resource.save
