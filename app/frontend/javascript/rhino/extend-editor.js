@@ -5,17 +5,16 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { TableRow } from '@tiptap/extension-table-row'
 import Youtube from '@tiptap/extension-youtube'
 
-
-function extendRhinoEditor (event) {
+function extendRhinoEditor(event) {
   const rhinoEditor = event.target
   if (!rhinoEditor) return
 
-  rhinoEditor.addExtensions(Table, 
-                            TableRow, 
-                            TableHeader, 
-                            TableCell, 
-                            Youtube.configure({ nocookie: true, }
-                            )
+  rhinoEditor.addExtensions(
+      Table,
+      TableRow,
+      TableHeader,
+      TableCell,
+      Youtube.configure({ nocookie: true }),
   )
 }
 
