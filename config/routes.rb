@@ -68,7 +68,7 @@ Rails.application.routes.draw do
   resources :resources do
     get :download
     member do
-      get :show_test
+      get :rhino_text
     end
     collection do
       post :search

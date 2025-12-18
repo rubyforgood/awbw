@@ -35,7 +35,7 @@ class ResourcesController < ApplicationController
     render :show
   end
 
-  def show_test
+  def rhino_text
     @resource = Resource.find(resource_id_param).decorate
     load_forms
     render :show_test
