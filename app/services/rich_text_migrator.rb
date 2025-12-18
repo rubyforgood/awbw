@@ -16,18 +16,13 @@ class RichTextMigrator
 
     sanitized_html = sanitize_html(html)
 
-    # Assign the rich text content dynamically
     @record.assign_attributes(@new_column => ActionText::Content.new(sanitized_html))
 
-    # Save without triggering validations
     @record.save(validate: false)
   end
 
   private
 
-  # ----------------------------
-  # Sanitization
-  # ----------------------------
   def sanitize_html(html)
     sanitized = ActionController::Base.helpers.sanitize(
       html,
@@ -46,9 +41,6 @@ class RichTextMigrator
     ActionText::ContentHelper.allowed_attributes
   end
 
-  # ----------------------------
-  # Image conversion
-  # ----------------------------
   def convert_images_to_attachments(html)
     fragment = Nokogiri::HTML::DocumentFragment.parse(html)
 
@@ -67,14 +59,11 @@ class RichTextMigrator
     fragment.to_html
   end
 
-  # ----------------------------
-  # Blob lookup
-  # ----------------------------
   def index_resource_blobs
     @record.images
       .includes(file_attachment: :blob)
       .map(&:file)                 # get ActiveStorage::Attached::One
-      .map(&:blob)                 # may be nil
+      .map(&:blob)
       .compact                     # remove nil blobs
       .index_by(&:aws_key)
   end
@@ -91,9 +80,6 @@ class RichTextMigrator
     nil
   end
 
-  # ----------------------------
-  # Placeholder
-  # ----------------------------
   def placeholder_node(alt = nil)
     text = alt.presence || PLACEHOLDER_TEXT
 

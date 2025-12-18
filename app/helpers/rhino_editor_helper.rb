@@ -1,17 +1,16 @@
 module RhinoEditorHelper
-  def rhino_editor(form, base_name)
-    rhino_attr = :"rhino_#{base_name}"
+  # custom rhino editor with stimulus controller attached to edit raw source html
+  def rhino_editor(form, base_attribute_name)
+    rhino_attr = :"rhino_#{base_attribute_name}"
     field_id = form.field_id(rhino_attr)
     value = form.object.public_send(rhino_attr)
 
-    # Hidden field
     hidden = form.hidden_field(
       rhino_attr,
       id: field_id,
       value: value.respond_to?(:to_trix_html) ? value.to_trix_html : value
     )
 
-    # Modal for source html edit
     modal = content_tag(:div, data: {rhino_source_target: "modal"}, class: "hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50") do
       content_tag(:div, class: "bg-white p-4 rounded shadow-lg w-3/4 max-w-2xl") do
         safe_join([
@@ -27,7 +26,6 @@ module RhinoEditorHelper
       end
     end
 
-    # Rhino editor
     editor = content_tag(
       :"custom-rhino-editor",
       nil,

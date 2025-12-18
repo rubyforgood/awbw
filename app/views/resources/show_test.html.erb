@@ -74,8 +74,7 @@
         <% end %>
 
         <!-- Main Text -->
-
-        <div class="prose mx-auto leading-relaxed text-gray-800 text-left"><%= @resource.rhino_text %></div>
+        <%= @resource.rhino_text %>
 
         <!-- Attachments -->
         <% if @resource.attachments.any? %>
