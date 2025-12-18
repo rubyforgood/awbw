@@ -12,10 +12,8 @@ class CustomEditor extends TipTapEditor {
 
   renderToolbar() {
 
-  console.log("renderToolbar")
     if (this.readonly) return html``;
 
-  console.log("renderToolbar")
     return html`
       <slot name="toolbar">
         <role-toolbar class="toolbar" part="toolbar" role="toolbar">
@@ -148,8 +146,9 @@ class CustomEditor extends TipTapEditor {
     `;
   }
   renderTableMenu() {
-    console.log("renderTableMenu")
-    // if (!this.editor.isActive('table')) return html``;
+    if (!this.editor || !this.editor.isActive('table')) {
+      return html``;
+    }
     return html`
       <role-toolbar class="toolbar" part="toolbar" role="toolbar">
       <button
