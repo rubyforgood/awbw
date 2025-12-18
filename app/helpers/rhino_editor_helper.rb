@@ -1,5 +1,5 @@
 module RhinoEditorHelper
-  def rhino_source(form, base_name)
+  def rhino_editor(form, base_name)
     rhino_attr = :"rhino_#{base_name}"
     field_id = form.field_id(rhino_attr)
     value = form.object.public_send(rhino_attr)
