@@ -31,7 +31,6 @@ namespace :rich_text_urls_update do
   def run_update(dry_run:, html_attr:, start_id: nil, finish_id: nil)
     models = [
       Address,
-      AgeRange,
       AnswerOption,
       Attachment,
       Banner,
@@ -70,7 +69,6 @@ namespace :rich_text_urls_update do
       UserForm,
       User,
       WindowsType,
-      WorkshopAgeRange,
       WorkshopIdea,
       WorkshopLog,
       WorkshopResource,
