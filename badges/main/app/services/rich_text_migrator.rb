@@ -1,5 +1,8 @@
 class RichTextMigrator
-  include ActionText::ContentHelper
+  include Rails.application.routes.url_helpers
+
+  require "nokogiri"
+  require "uri"
 
   PLACEHOLDER_TEXT = "image not found"
 
@@ -7,76 +10,54 @@ class RichTextMigrator
     @record = record
     @old_column = old_column.to_s
     @new_column = "rhino_#{@old_column}"
-    @blobs_by_key = index_resource_blobs
   end
 
   def migrate!
+    return unless valid_columns?
+
     html = @record.public_send(@old_column)
     return if html.blank?
 
-    sanitized_html = sanitize_html(html)
+    fragment = Nokogiri::HTML::DocumentFragment.parse(html)
 
-    @record.assign_attributes(@new_column => ActionText::Content.new(sanitized_html))
+    fragment.css("img").each do |img|
+      img_url = img["src"]
+      next unless img_url
 
-    @record.save(validate: false)
+      signed_id = extract_signed_id(img_url)
+      next unless signed_id
+
+      blob = find_blob(signed_id)
+      if blob
+        attachment = ActionText::Attachment.from_attachable(blob, url: url_for(blob))
+
+        img.replace(attachment.to_html)
+      else
+        img.replace(placeholder_node(img_url))
+      end
+    end
+
+    @record.public_send(@new_column).update!(body: fragment.to_html)
   end
 
   private
 
-  def sanitize_html(html)
-    sanitized = ActionController::Base.helpers.sanitize(
-      html,
-      tags: allowed_tags,
-      attributes: allowed_attributes
-    )
-
-    convert_images_to_attachments(sanitized)
+  def valid_columns?
+    @record.respond_to?(@old_column) && @record.respond_to?(@new_column)
   end
 
-  def allowed_tags
-    ActionText::ContentHelper.allowed_tags
+  def extract_signed_id(url)
+    path_segments = URI.parse(url).path.split("/blobs/")[1]&.split("/")
+    return nil unless path_segments
+
+    (path_segments.first == "redirect") ? path_segments[1] : path_segments.first
+  rescue
+    nil
   end
 
-  def allowed_attributes
-    ActionText::ContentHelper.allowed_attributes
-  end
-
-  def convert_images_to_attachments(html)
-    fragment = Nokogiri::HTML::DocumentFragment.parse(html)
-
-    fragment.css("img").each do |img|
-      aws_key = extract_aws_key(img["src"])
-      blob = @blobs_by_key[aws_key]
-
-      if blob
-        attachment = ActionText::Attachment.from_attachable(blob)
-        img.replace(attachment.to_html)
-      else
-        img.replace(placeholder_node(img["src"]))
-      end
-    end
-
-    fragment.to_html
-  end
-
-  def index_resource_blobs
-    @record.images
-      .includes(file_attachment: :blob)
-      .map(&:file)                 # get ActiveStorage::Attached::One
-      .map(&:blob)
-      .compact                     # remove nil blobs
-      .index_by(&:aws_key)
-  end
-
-  def extract_aws_key(src)
-    return if src.blank?
-
-    uri = URI.parse(src)
-    uri.path
-      .sub(%r{^/}, "") # remove leading slash
-      .split("?")
-      .first
-  rescue URI::InvalidURIError
+  def find_blob(signed_id)
+    ActiveStorage::Blob.find_signed(signed_id)
+  rescue ActiveSupport::MessageVerifier::InvalidSignature
     nil
   end
 
