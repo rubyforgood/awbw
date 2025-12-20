@@ -135,6 +135,7 @@ class CustomEditor extends TipTapEditor {
           <slot name="redo-button"> ${this.renderRedoButton()} </slot>
           <slot name="after-redo-button"></slot>
 
+          <slot name="grid-button">${this.renderGridButton()}</slot>
           <slot name="toolbar-end">${this.renderToolbarEnd()}</slot>
         </role-toolbar>
 
@@ -142,6 +143,18 @@ class CustomEditor extends TipTapEditor {
       </slot>
     `;
   }
+renderGridButton() {
+  return html`
+    <button
+      type="button"
+      class="toolbar-button"
+      @click=${() => this.editor.commands.insertGrid(2, 2)}
+      title="Insert grid"
+    >
+      ⧉
+    </button>
+  `
+}
 
   renderTableButton() {
     const tableEnabled = true; // Boolean(this.editor?.commands.setAttachment);

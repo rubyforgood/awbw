@@ -5,6 +5,9 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { TableRow } from '@tiptap/extension-table-row'
 import Youtube from '@tiptap/extension-youtube'
 import TextAlign from '@tiptap/extension-text-align'
+import { Grid } from './grid/grid'
+import { GridRow } from './grid/gridRow'
+import { GridCell } from './grid/gridCell'
 
 function extendRhinoEditor(event) {
   const rhinoEditor = event.target
@@ -18,7 +21,10 @@ function extendRhinoEditor(event) {
       Youtube.configure({ nocookie: true }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
-      })
+      }),
+      Grid,
+      GridRow,
+      GridCell
   )
 }
 
