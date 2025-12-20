@@ -3,11 +3,9 @@ import { Node, mergeAttributes } from '@tiptap/core'
 export const GridCell = Node.create({
   name: 'gridCell',
   content: 'block+',
-
   parseHTML() {
     return [{ tag: 'div[data-type="grid-cell"]' }]
   },
-
   renderHTML({ HTMLAttributes }) {
     return [
       'div',

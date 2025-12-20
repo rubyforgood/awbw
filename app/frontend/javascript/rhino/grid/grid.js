@@ -1,19 +1,9 @@
 import { Node, mergeAttributes, findParentNodeClosestToPos } from '@tiptap/core'
 
-// Static mapping for Tailwind classes
-const columnClasses = {
-  1: 'grid-cols-1',
-  2: 'grid-cols-2',
-  3: 'grid-cols-3',
-  4: 'grid-cols-4',
-  5: 'grid-cols-5',
-  6: 'grid-cols-6',
-}
-
 export const Grid = Node.create({
   name: 'grid',
   group: 'block',
-  content: 'gridCell+',
+  content: 'gridRow+',
   isolating: true,
 
   addAttributes() {
@@ -27,8 +17,15 @@ export const Grid = Node.create({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const cols = node.attrs.columns
-    const colsClass = columnClasses[cols] || 'grid-cols-2'
+    const columnClasses = {
+      1: 'grid-cols-1',
+      2: 'grid-cols-2',
+      3: 'grid-cols-3',
+      4: 'grid-cols-4',
+      5: 'grid-cols-5',
+      6: 'grid-cols-6',
+    }
+    const colsClass = columnClasses[node.attrs.columns] || 'grid-cols-2'
 
     return [
       'div',
@@ -36,19 +33,22 @@ export const Grid = Node.create({
         'data-type': 'grid',
         class: `grid gap-4 ${colsClass}`,
       }),
-      0, // render children (gridCell nodes)
+      0,
     ]
   },
 
   addCommands() {
     return {
-      // Insert a new grid with rows x columns
+      // Insert a new grid with given rows and columns
       insertGrid:
-        (columns = 2, rows = 1) =>
+        (columns = 2, rows = 2) =>
         ({ commands }) => {
-          const content = Array.from({ length: rows * columns }).map(() => ({
-            type: 'gridCell',
-            content: [{ type: 'paragraph' }],
+          const content = Array.from({ length: rows }).map(() => ({
+            type: 'gridRow',
+            content: Array.from({ length: columns }).map(() => ({
+              type: 'gridCell',
+              content: [{ type: 'paragraph' }],
+            })),
           }))
 
           return commands.insertContent({
@@ -70,70 +70,72 @@ export const Grid = Node.create({
           if (!grid) return false
 
           const columns = grid.node.attrs.columns
-          const newCells = Array.from({ length: columns }).map(() => ({
-            type: 'gridCell',
-            content: [{ type: 'paragraph' }],
-          }))
+          const newRow = {
+            type: 'gridRow',
+            content: Array.from({ length: columns }).map(() => ({
+              type: 'gridCell',
+              content: [{ type: 'paragraph' }],
+            })),
+          }
 
-          return commands.insertContentAt(
-            grid.pos + grid.node.nodeSize - 1,
-            newCells
-          )
+          return commands.insertContentAt(grid.pos + grid.node.nodeSize - 1, newRow)
         },
 
       // Add a new column to all rows
-      addGridColumn:
+      //
+
+
+addGridColumn:
+  () =>
+  ({ state, commands }) => {
+    const { selection, schema } = state;
+    const gridPos = findParentNodeClosestToPos(
+      selection.$from,
+      node => node.type.name === 'grid'
+    );
+    if (!gridPos) return false;
+
+    const { node: gridNode, pos } = gridPos;
+    const oldColumns = gridNode.attrs.columns;
+    const newColumns = oldColumns + 1;
+
+    // Update columns attribute first
+    commands.updateAttributes('grid', { columns: newColumns });
+
+    // Collect all row positions
+    const rowPositions = [];
+    let offset = 1;
+    gridNode.forEach(row => {
+      rowPositions.push(pos + offset);
+      offset += row.nodeSize;
+    });
+
+    // Insert a new cell at the end of each row
+    rowPositions.reverse().forEach(rowPos => {
+      commands.insertContentAt(
+        rowPos + state.doc.nodeAt(rowPos).nodeSize - 1,
+        schema.nodes.gridCell.create({}, schema.nodes.paragraph.create())
+      );
+    });
+
+    return true;
+  },
+
+      // Delete grid
+      deleteGrid:
         () =>
-        ({ state, tr, commands }) => {
-          const { selection, schema } = state
+        ({ state, commands }) => {
+          const { selection } = state
           const grid = findParentNodeClosestToPos(
             selection.$from,
             node => node.type.name === 'grid'
           )
           if (!grid) return false
 
-          const { node, pos } = grid
-          const newColumns = node.attrs.columns + 1
-
-          // Update the columns attribute
-          tr.setNodeMarkup(pos, undefined, {
-            ...node.attrs,
-            columns: newColumns,
+          return commands.deleteRange({
+            from: grid.pos,
+            to: grid.pos + grid.node.nodeSize,
           })
-
-          // Append one new cell per row
-          const totalCells = node.content.size
-          const oldColumns = node.attrs.columns
-          const rowCount = Math.ceil(totalCells / oldColumns)
-          let insertPos = pos + 1
-
-          for (let i = 0; i < rowCount; i++) {
-            tr.insert(
-              insertPos + i * (oldColumns + 1) + oldColumns,
-              schema.nodes.gridCell.create({}, schema.nodes.paragraph.create())
-            )
-          }
-
-          return commands.editor?.view?.dispatch(tr) || true
-        },
-
-      deleteGrid:
-            () =>
-            ({ state, commands }) => {
-              const { selection } = state
-
-              const grid = findParentNodeClosestToPos(
-                selection.$from,
-                node => node.type.name === 'grid'
-              )
-
-              if (!grid) return false
-
-              // Delete the grid node entirely
-              return commands.deleteRange({
-                from: grid.pos,
-                to: grid.pos + grid.node.nodeSize,
-              })
         },
     }
   },
