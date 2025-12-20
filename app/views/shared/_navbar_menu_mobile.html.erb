@@ -7,7 +7,7 @@
         class="mobile-section flex justify-between w-full"
         data-action="dropdown#toggle"
         data-dropdown-payload-param='[{"mobile-facilitate":"hidden"}]'>
-        Facilitate
+        Curriculum
         <i class="fas fa-chevron-down" data-dropdown-target="arrow"></i>
       </button>
 
@@ -23,6 +23,11 @@
                     hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
           <i class="fas fa-file"></i>
           <span>Resources</span>
+        <% end %>
+        <%= link_to tags_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-tag"></i>
+          <span>Tags</span>
         <% end %>
       </div>
     </div>

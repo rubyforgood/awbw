@@ -12,4 +12,17 @@ RSpec.describe Sector do
     subject { build(:sector, name: existing_sector.name) }
     it { should validate_presence_of(:name) }
   end
-end 
+
+  it "has a valid factory" do
+    expect(build(:sector)).to be_valid
+  end
+
+  describe ".published" do
+    it "returns only published sectors" do
+      published = create(:sector, published: true)
+      unpublished = create(:sector, published: false)
+
+      expect(Sector.published).to contain_exactly(published)
+    end
+  end
+end

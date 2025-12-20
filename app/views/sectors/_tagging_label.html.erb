@@ -1,0 +1,22 @@
+<% sector ||= nil %>
+<% is_leader ||= false %>
+<% display_leader ||= false %>
+
+<% if sector %>
+
+  <%= link_to taggings_path(sector_names: sector.name),
+              class: "inline-flex items-center
+                      rounded-md
+                      border border-gray-300
+                      bg-white
+                      text-gray-500
+                      px-3 py-1
+                      text-sm font-medium
+                      hover:bg-gray-100 hover:border-gray-400
+                      transition" do %>
+    <%= sector.name %>
+    <% if display_leader && is_leader %>
+      <span class="ml-1 text-xs text-indigo-600">(Leader)</span>
+    <% end %>
+  <% end %>
+<% end %>

@@ -1,0 +1,53 @@
+<div class="mt-8 mb-12 text-center">
+  <% if @sector_names.present? %>
+
+    <div class="text-xs text-gray-500 text-italic">
+      Taggings
+    </div>
+    <div class="text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
+      <%= @sector_names.split("--").join(", ") %>
+    </div>
+  <% end %>
+
+  <% if @category_names.present? %>
+    <% unless @sector_names.present? %>
+      <div class="text-xs text-gray-500 text-italic">
+        Taggings
+      </div>
+    <% end %>
+    <p class="mt-2 text-base md:text-lg text-gray-600">
+      <%= @category_names.split("--").join(", ") %>
+    </p>
+  <% end %>
+</div>
+
+<div class="flex flex-col">
+  <div class="space-y-6">
+    <% @grouped_tagged_items.each do |type, items| %>
+      <% next if items.blank? %>
+
+      <% bg_class = @section_styles[type] || "bg-gray-50" %>
+
+      <section class="<%= bg_class %> rounded-2xl px-6 py-8">
+        <!-- Section Header -->
+        <div class="mb-6 text-center">
+          <div class="text-xl font-semibold text-gray-900">
+            <% type_header = "<span class='section-title'>#{ type.to_s.humanize } (#{
+              items.object.total_entries
+            }) <span class='text-sm'><span class='fa fa-external-link-alt'></span></span></span>" %>
+            <%= link_to type_header.html_safe,
+                        tagged_index_path(type, sector_names: @sector_names, category_names: @category_names),
+                        class: "hover:underline" %>
+          </div>
+        </div>
+
+        <%= render "tagged_items_carousel", items: items %>
+
+      </section>
+
+    <% end %>
+  </div>
+</div>
+
+<%= render "taggings/index_footer" %>
+
