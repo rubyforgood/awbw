@@ -9,6 +9,7 @@ export const Grid = Node.create({
   addAttributes() {
     return {
       columns: { default: 2 },
+      rows: { default: 1 },
     }
   },
 
@@ -25,13 +26,24 @@ export const Grid = Node.create({
       5: 'grid-cols-5',
       6: 'grid-cols-6',
     }
+
+    const rowClasses = {
+      1: 'grid-rows-1',
+      2: 'grid-rows-2',
+      3: 'grid-rows-3',
+      4: 'grid-rows-4',
+      5: 'grid-rows-5',
+      6: 'grid-rows-6',
+    }
+
     const colsClass = columnClasses[node.attrs.columns] || 'grid-cols-2'
+    const rowsClass = rowClasses[node.attrs.rows] || 'grid-rows-1'
 
     return [
       'div',
       mergeAttributes(HTMLAttributes, {
         'data-type': 'grid',
-        class: `grid gap-4 ${colsClass}`,
+        class: `grid gap-4 ${colsClass} ${rowsClass}`,
       }),
       0,
     ]
@@ -39,7 +51,6 @@ export const Grid = Node.create({
 
   addCommands() {
     return {
-      // Insert a new grid with given rows and columns
       insertGrid:
         (columns = 2, rows = 2) =>
         ({ commands }) => {
@@ -53,12 +64,11 @@ export const Grid = Node.create({
 
           return commands.insertContent({
             type: this.name,
-            attrs: { columns },
+            attrs: { columns, rows },
             content,
           })
         },
 
-      // Add a new row
       addGridRow:
         () =>
         ({ state, commands }) => {
@@ -78,51 +88,11 @@ export const Grid = Node.create({
             })),
           }
 
+          commands.updateAttributes('grid', { rows: grid.node.attrs.rows + 1 })
           return commands.insertContentAt(grid.pos + grid.node.nodeSize - 1, newRow)
         },
 
-      // Add a new column to all rows
-      //
-
-
-addGridColumn:
-  () =>
-  ({ state, commands }) => {
-    const { selection, schema } = state;
-    const gridPos = findParentNodeClosestToPos(
-      selection.$from,
-      node => node.type.name === 'grid'
-    );
-    if (!gridPos) return false;
-
-    const { node: gridNode, pos } = gridPos;
-    const oldColumns = gridNode.attrs.columns;
-    const newColumns = oldColumns + 1;
-
-    // Update columns attribute first
-    commands.updateAttributes('grid', { columns: newColumns });
-
-    // Collect all row positions
-    const rowPositions = [];
-    let offset = 1;
-    gridNode.forEach(row => {
-      rowPositions.push(pos + offset);
-      offset += row.nodeSize;
-    });
-
-    // Insert a new cell at the end of each row
-    rowPositions.reverse().forEach(rowPos => {
-      commands.insertContentAt(
-        rowPos + state.doc.nodeAt(rowPos).nodeSize - 1,
-        schema.nodes.gridCell.create({}, schema.nodes.paragraph.create())
-      );
-    });
-
-    return true;
-  },
-
-      // Delete grid
-      deleteGrid:
+      addGridColumn:
         () =>
         ({ state, commands }) => {
           const { selection } = state
@@ -132,11 +102,50 @@ addGridColumn:
           )
           if (!grid) return false
 
-          return commands.deleteRange({
-            from: grid.pos,
-            to: grid.pos + grid.node.nodeSize,
+          const newColumns = grid.node.attrs.columns + 1
+          commands.updateAttributes('grid', { columns: newColumns })
+
+          grid.node.forEach((row, offset) => {
+            const rowPos = grid.pos + 1 + offset
+            commands.insertContentAt(
+              rowPos + row.nodeSize - 1,
+              state.schema.nodes.gridCell.create({}, state.schema.nodes.paragraph.create())
+            )
           })
+
+          return true
         },
+
+      addGridCell:
+        () =>
+        ({ state, commands }) => {
+          const { selection } = state
+          const cell = findParentNodeClosestToPos(
+            selection.$from,
+            node => node.type.name === 'gridCell'
+          )
+          if (!cell) return false
+
+          return commands.insertContentAt(
+            cell.pos + cell.node.nodeSize,
+            state.schema.nodes.gridCell.create({}, state.schema.nodes.paragraph.create())
+          )
+        },
+
+      deleteGrid: () => ({ state, commands }) => {
+            const { selection } = state
+            const grid = findParentNodeClosestToPos(
+              selection.$from,
+              node => node.type.name === 'grid'
+            )
+            if (!grid) return false
+
+            return commands.deleteRange({
+              from: grid.pos,
+              to: grid.pos + grid.node.nodeSize,
+            })
+          },
+
     }
   },
 })

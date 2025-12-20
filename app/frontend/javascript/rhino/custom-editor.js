@@ -140,6 +140,7 @@ class CustomEditor extends TipTapEditor {
           <slot name="grid-button">${this.renderDeleteGridButton()}</slot>
           <slot name="grid-button">${this.renderAddGridRowButton()}</slot>
           <slot name="grid-button">${this.renderAddGridColumnButton()}</slot>
+          <slot name="grid-button">${this.renderAddGridCellButton()}</slot>
           <slot name="toolbar-end">${this.renderToolbarEnd()}</slot>
         </role-toolbar>
 
@@ -190,6 +191,23 @@ class CustomEditor extends TipTapEditor {
         class="toolbar-button"
         @click=${() => this.editor.commands.addGridColumn()}
         title="Insert grid column"
+      >
+       + 
+      </button>
+    `
+  }
+
+  renderAddGridCellButton() {
+    if (!this.editor || !this.editor.isActive('grid')) {
+      return html``;
+    }
+
+    return html`
+      <button
+        type="button"
+        class="toolbar-button"
+        @click=${() => this.editor.commands.addGridCell()}
+        title="Insert grid ccell"
       >
        + 
       </button>
