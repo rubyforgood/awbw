@@ -3,23 +3,16 @@
 
     <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 text-center">
       <% if @sector_names.present? %>
-        Explore other sectors
+        Explore other service populations
       <% else %>
-        Explore by sector
+        Explore by service population
       <% end %>
     </h3>
 
     <div class="flex flex-wrap justify-center gap-2 mb-6">
-      <% Sector
-           .has_taggings
-           .published
-           .order(:name)
-           .each do |sector| %>
-
+      <% Sector.published.order(:name).each do |sector| %>
         <% next if sector.name == @sector_names %>
-
         <%= render "sectors/tagging_label", sector: sector %>
-
       <% end %>
     </div>
 
