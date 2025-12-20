@@ -2,7 +2,7 @@ class TaggingsController < ApplicationController
 	def index
 		@sector_names = params[:sector_names].to_s
 		@category_names = params[:category_names].to_s
-		page = [params[:page].to_i, 1].max
+
 		number_of_items_per_page = params[:number_of_items_per_page].present? ? params[:number_of_items_per_page].to_i : 9
 		pages = {
 			workshops: params[:workshops_page],
@@ -13,17 +13,6 @@ class TaggingsController < ApplicationController
 			facilitators: params[:facilitators_page],
 			projects: params[:projects_page],
 			quotes: params[:quotes_page]
-		}
-
-		@section_styles = {
-			workshops:       "bg-indigo-50",
-			community_news:  "bg-orange-50",
-			resources:       "bg-violet-50",
-			events:          "bg-blue-50",
-			stories:         "bg-rose-50",
-			facilitators:    "bg-cyan-50",
-			projects:        "bg-emerald-50",
-			quotes:          "bg-slate-50"
 		}
 
 		@grouped_tagged_items = TaggingSearchService.call(sector_names: @sector_names,
