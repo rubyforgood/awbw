@@ -6,7 +6,7 @@ import { TableRow } from '@tiptap/extension-table-row'
 import Youtube from '@tiptap/extension-youtube'
 import TextAlign from '@tiptap/extension-text-align'
 import { Grid } from './grid/grid'
-import { GridRow } from './grid/gridRow'
+// import { GridRow } from './grid/gridRow'
 import { GridCell } from './grid/gridCell'
 
 function extendRhinoEditor(event) {
@@ -23,7 +23,7 @@ function extendRhinoEditor(event) {
         types: ['heading', 'paragraph'],
       }),
       Grid,
-      GridRow,
+      // GridRow,
       GridCell
   )
 }

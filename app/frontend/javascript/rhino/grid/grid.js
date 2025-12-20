@@ -3,7 +3,7 @@ import { Node, mergeAttributes, findParentNodeClosestToPos } from '@tiptap/core'
 export const Grid = Node.create({
   name: 'grid',
   group: 'block',
-  content: 'gridRow+',
+  content: 'gridCell+',
   isolating: true,
 
   addAttributes() {
@@ -51,101 +51,138 @@ export const Grid = Node.create({
 
   addCommands() {
     return {
-      insertGrid:
-        (columns = 2, rows = 2) =>
-        ({ commands }) => {
-          const content = Array.from({ length: rows }).map(() => ({
-            type: 'gridRow',
-            content: Array.from({ length: columns }).map(() => ({
-              type: 'gridCell',
-              content: [{ type: 'paragraph' }],
-            })),
-          }))
+      insertGrid: (columns = 2, rows = 2) => ({ commands }) => {
+        const content = Array.from({ length: columns * rows }).map(() => ({
+          type: 'gridCell',
+          content: [{ type: 'paragraph' }],
+        }))
 
-          return commands.insertContent({
-            type: this.name,
-            attrs: { columns, rows },
-            content,
-          })
-        },
-
-      addGridRow:
-        () =>
-        ({ state, commands }) => {
-          const { selection } = state
+        return commands.insertContent({
+          type: this.name,
+          attrs: { columns, rows },
+          content,
+        })
+      },
+      addGridRow: () => ({ state, dispatch }) => {
+          const { selection, tr, schema } = state;
           const grid = findParentNodeClosestToPos(
             selection.$from,
             node => node.type.name === 'grid'
-          )
-          if (!grid) return false
+          );
+          if (!grid) return false;
 
-          const columns = grid.node.attrs.columns
-          const newRow = {
-            type: 'gridRow',
-            content: Array.from({ length: columns }).map(() => ({
-              type: 'gridCell',
-              content: [{ type: 'paragraph' }],
-            })),
-          }
+          const { node: gridNode, pos: gridPos } = grid;
+          const columns = gridNode.attrs.columns;
 
-          commands.updateAttributes('grid', { rows: grid.node.attrs.rows + 1 })
-          return commands.insertContentAt(grid.pos + grid.node.nodeSize - 1, newRow)
+          // Create new cells for the row
+          const newCells = Array.from({ length: columns }).map(() =>
+            schema.nodes.gridCell.create({}, [schema.nodes.paragraph.create()])
+          );
+
+          // Insert new cells at the end of the grid
+          let insertPos = gridPos + gridNode.nodeSize - 1; // -1 to insert before the closing node
+          newCells.forEach(cell => {
+            tr.insert(insertPos, cell);
+            insertPos += cell.nodeSize;
+          });
+
+          // Update the rows attribute
+          tr.setNodeMarkup(gridPos, undefined, {
+            ...gridNode.attrs,
+            rows: gridNode.attrs.rows + 1,
+          });
+
+          dispatch(tr);
+          return true;
         },
 
-      addGridColumn:
-        () =>
-        ({ state, commands }) => {
-          const { selection } = state
-          const grid = findParentNodeClosestToPos(
-            selection.$from,
-            node => node.type.name === 'grid'
-          )
-          if (!grid) return false
-
-          const newColumns = grid.node.attrs.columns + 1
-          commands.updateAttributes('grid', { columns: newColumns })
-
-          grid.node.forEach((row, offset) => {
-            const rowPos = grid.pos + 1 + offset
-            commands.insertContentAt(
-              rowPos + row.nodeSize - 1,
-              state.schema.nodes.gridCell.create({}, state.schema.nodes.paragraph.create())
-            )
-          })
-
-          return true
-        },
-
-      addGridCell:
-        () =>
-        ({ state, commands }) => {
-          const { selection } = state
-          const cell = findParentNodeClosestToPos(
-            selection.$from,
-            node => node.type.name === 'gridCell'
-          )
-          if (!cell) return false
-
-          return commands.insertContentAt(
-            cell.pos + cell.node.nodeSize,
-            state.schema.nodes.gridCell.create({}, state.schema.nodes.paragraph.create())
-          )
-        },
-
-      deleteGrid: () => ({ state, commands }) => {
-            const { selection } = state
+      addGridColumn: () => ({ state, dispatch }) => {
+            const { selection, tr, schema } = state;
             const grid = findParentNodeClosestToPos(
               selection.$from,
               node => node.type.name === 'grid'
-            )
-            if (!grid) return false
+            );
+            if (!grid) return false;
 
-            return commands.deleteRange({
-              from: grid.pos,
-              to: grid.pos + grid.node.nodeSize,
-            })
+            const { node: gridNode, pos: gridPos } = grid;
+            const rows = gridNode.attrs.rows;
+
+            // Create new cells equal to number of rows
+            const newCells = Array.from({ length: rows }).map(() =>
+              schema.nodes.gridCell.create({}, [schema.nodes.paragraph.create()])
+            );
+
+            // Insert all new cells at the end of the grid
+            let insertPos = gridPos + gridNode.nodeSize - 1; // before closing node
+            newCells.forEach(cell => {
+              tr.insert(insertPos, cell);
+              insertPos += cell.nodeSize;
+            });
+
+            // Update columns attribute
+            tr.setNodeMarkup(gridPos, undefined, {
+              ...gridNode.attrs,
+              columns: gridNode.attrs.columns + 1,
+            });
+
+            dispatch(tr);
+            return true;
           },
+      addGridCell: () => ({ state, dispatch }) => {
+            const { selection, tr, schema } = state;
 
+            // Find the current grid cell
+            const gridCell = findParentNodeClosestToPos(
+              selection.$from,
+              node => node.type.name === 'gridCell'
+            );
+            if (!gridCell) return false;
+
+            const { pos: cellPos } = gridCell;
+
+            // Find the parent grid
+            const grid = findParentNodeClosestToPos(
+              selection.$from,
+              node => node.type.name === 'grid'
+            );
+            if (!grid) return false;
+
+            const { node: gridNode, pos: gridPos } = grid;
+            const columns = gridNode.attrs.columns;
+
+            // Create a new empty grid cell
+            const newCell = schema.nodes.gridCell.create({}, [
+              schema.nodes.paragraph.create(),
+            ]);
+
+            // Insert it immediately after the current cell
+            tr.insert(cellPos + gridCell.node.nodeSize, newCell);
+
+            // Count total cells after insertion
+            const totalCells = gridNode.childCount + 1; // +1 for the new cell
+            const newRows = Math.ceil(totalCells / columns);
+
+            // Update grid attributes
+            tr.setNodeMarkup(gridPos, undefined, {
+              ...gridNode.attrs,
+              rows: newRows,
+            });
+
+            dispatch(tr);
+            return true;
+          },
+      deleteGrid: () => ({ state, commands }) => {
+        const grid = findParentNodeClosestToPos(
+          state.selection.$from,
+          node => node.type.name === 'grid'
+        )
+        if (!grid) return false
+
+        return commands.deleteRange({
+          from: grid.pos,
+          to: grid.pos + grid.node.nodeSize,
+        })
+      },
     }
   },
 })
