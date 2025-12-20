@@ -134,10 +134,11 @@ class CustomEditor extends TipTapEditor {
           <slot name="before-redo-button"></slot>
           <slot name="redo-button"> ${this.renderRedoButton()} </slot>
 
-          <slot name="grid-button">${this.renderDeleteGridButton()}</slot>
           <slot name="after-redo-button"></slot>
 
           <slot name="grid-button">${this.renderAddGridButton()}</slot>
+          <slot name="grid-button">${this.renderDeleteGridButton()}</slot>
+          <slot name="grid-button">${this.renderAddGridRowButton()}</slot>
           <slot name="toolbar-end">${this.renderToolbarEnd()}</slot>
         </role-toolbar>
 
@@ -159,15 +160,32 @@ class CustomEditor extends TipTapEditor {
     `
   }
 
-  renderDeleteGridButton() {
-    const isGridActive = this.editor?.isActive?.('grid') ?? false
+  renderAddGridRowButton() {
+    if (!this.editor || !this.editor.isActive('grid')) {
+      return html``;
+    }
 
     return html`
       <button
         type="button"
         class="toolbar-button"
-        ?disabled=${!isGridActive}
-        @click=${() => this.editor?.commands?.deleteGrid?.()}
+        @click=${() => this.editor.commands.addGridRow()}
+        title="Insert grid row"
+      >
+       + 
+      </button>
+    `
+  }
+
+  renderDeleteGridButton() {
+    if (!this.editor || !this.editor.isActive('grid')) {
+      return html``;
+    }
+    return html`
+      <button
+        type="button"
+        class="toolbar-button"
+        @click=${() => this.editor.commands.deleteGrid()}
         title="Delete Grid"
       >
         🗑
