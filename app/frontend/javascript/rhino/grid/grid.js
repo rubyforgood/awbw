@@ -44,7 +44,7 @@ export const Grid = Node.create({
     return {
       // Insert a new grid with rows x columns
       insertGrid:
-        (columns = 2, rows = 2) =>
+        (columns = 2, rows = 1) =>
         ({ commands }) => {
           const content = Array.from({ length: rows * columns }).map(() => ({
             type: 'gridCell',
@@ -115,6 +115,25 @@ export const Grid = Node.create({
           }
 
           return commands.editor?.view?.dispatch(tr) || true
+        },
+
+      deleteGrid:
+            () =>
+            ({ state, commands }) => {
+              const { selection } = state
+
+              const grid = findParentNodeClosestToPos(
+                selection.$from,
+                node => node.type.name === 'grid'
+              )
+
+              if (!grid) return false
+
+              // Delete the grid node entirely
+              return commands.deleteRange({
+                from: grid.pos,
+                to: grid.pos + grid.node.nodeSize,
+              })
         },
     }
   },
