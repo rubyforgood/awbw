@@ -4,6 +4,7 @@ class CommunityNewsController < ApplicationController
   def index
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = current_user.super_user? ? CommunityNews.all : Community_news.published
+    unpaginated = unpaginated.search_by_params(params)
     @community_news_count = unpaginated.count
     @community_news = unpaginated.paginate(page: params[:page], per_page: per_page)
   end

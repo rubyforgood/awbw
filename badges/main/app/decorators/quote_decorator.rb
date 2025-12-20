@@ -1,5 +1,4 @@
-class QuoteDecorator < Draper::Decorator
-	delegate_all
+class QuoteDecorator < ApplicationDecorator
 
 	def created_by # TODO - add to model and quote creation
 		object.quotable_item_quotes.last&.quotable&.decorate&.created_by
@@ -23,11 +22,22 @@ class QuoteDecorator < Draper::Decorator
 		end
 	end
 
+	def main_image_url
+		if main_image&.file&.attached?
+			Rails.application.routes.url_helpers.url_for(main_image.file)
+		elsif gallery_images.first&.file&.attached?
+			Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
+		else
+			ActionController::Base.helpers.asset_path("theme_default.png")
+		end
+	end
+
 	def title
 		"#{speaker_name} re #{workshop&.title}"
 	end
 
-	def description
-		object.quote
+	def detail(length: nil)
+		text = object.quote
+		length ? text&.truncate(length) : text
 	end
 end

@@ -1,8 +1,7 @@
-class ResourceDecorator < Draper::Decorator
-  delegate_all
+class ResourceDecorator < ApplicationDecorator
 
-  def description
-    text # TODO - rename field
+  def detail(length: nil)
+    length ? text&.truncate(length) : text  # TODO - rename field
   end
 
   def featured_url

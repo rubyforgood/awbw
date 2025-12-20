@@ -1,7 +1,9 @@
+<% title ||= "Upcoming Events" %>
+
 <section class="py-10 bg-blue-50">
   <div class="max-w-6xl mx-auto px-4">
-    <%= render "dashboard_section_header",
-               title: "Events",
+    <%= render "dashboard/dashboard_section_header",
+               title: title,
                subtitle: "Workshops, trainings, and upcoming gatherings" %>
 
     <% if events.any? %>

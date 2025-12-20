@@ -4,7 +4,7 @@
 <!--    Workshops-->
   <%# end %>
 
-  <!-- FACILITATE -->
+  <!-- CURRICULUM -->
   <div class="relative" data-controller="dropdown">
     <button
       type="button"
@@ -12,14 +12,14 @@
       class="flex items-center gap-1 rounded-md px-3 py-2 text-lg font-medium cursor-pointer
              text-gray-300 hover:bg-white/5 hover:text-white"
       data-action="dropdown#toggle"
-      data-dropdown-payload-param='[{"facilitate_menu":"hidden"}]'>
+      data-dropdown-payload-param='[{"curriculum_menu":"hidden"}]'>
 <!--      <i class="fas fa-handshake-simple text-base"></i>-->
       Curriculum
 <!--      <i class="fas fa-chevron-down text-sm"></i>-->
     </button>
 
     <div
-      id="facilitate_menu"
+      id="curriculum_menu"
       class="hidden absolute left-0 mt-2 w-56 rounded-md bg-white py-1 shadow-lg outline outline-black/5"
       data-dropdown-target="content">
 
@@ -33,6 +33,12 @@
                   class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
         <i class="fas fa-file"></i>
         <span>Resources</span>
+      <% end %>
+
+      <%= link_to tags_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-tag"></i>
+        <span>Tags</span>
       <% end %>
     </div>
   </div>

@@ -1,0 +1,112 @@
+<div class="tags-matrix max-w-7xl mx-auto bg-lime-50 border border-gray-200 rounded-xl shadow p-6">
+
+  <div class="w-full">
+    <div class="mb-10">
+      <h1 class="text-3xl font-semibold text-gray-900 mb-2">
+        Tagging counts
+      </h1>
+      <p class="text-gray-600 max-w-2xl">
+        Total tagged items by service population and category
+      </p>
+    </div>
+
+    <!-- CARD BODY -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+
+        <!-- TABLE HEADER -->
+        <thead class="bg-gray-50 border-b border-gray-200">
+        <tr>
+          <th class="px-4 py-3 text-left font-semibold text-gray-700">
+            Tag
+          </th>
+
+          <% Tag::TAGGABLE_MODELS.keys.each do |key| %>
+            <th class="px-4 py-3 text-center font-semibold text-gray-700">
+              <%= key.to_s.humanize %>
+            </th>
+          <% end %>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        <!-- SECTORS HEADER -->
+        <tr class="bg-gray-100">
+          <td colspan="<%= Tag::TAGGABLE_MODELS.size + 1 %>"
+              class="px-4 py-2 font-semibold text-gray-700">
+            Service populations
+          </td>
+        </tr>
+
+        <% @sectors.each do |sector| %>
+          <tr class="<%= cycle('bg-white', 'bg-gray-50') %> border-t border-gray-200">
+            <td class="px-4 py-2 font-medium text-gray-900">
+              <%= render "sectors/tagging_label", sector: sector %>
+            </td>
+
+            <% Tag::TAGGABLE_MODELS.each do |key, model| %>
+              <% count = tag_count_for(model, tag: sector, type: :sector) %>
+
+              <td class="px-4 py-2 text-center
+                  <%= heatmap_class_for(
+                                                 count,
+                                                 model_key: key,
+                                                 type: :sector,
+                                                 quantiles: @model_heatmap_quantiles
+                                               ) %>">
+                <% if count.positive? %>
+                  <%= link_to count,
+                              tag_link_for(model, tag: sector, type: :sector),
+                              class: "font-medium text-indigo-900 hover:underline" %>
+                <% else %>
+                  <span class="text-gray-400">0</span>
+                <% end %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+
+        <!-- CATEGORIES HEADER -->
+        <tr class="bg-gray-100 border-t border-gray-200">
+          <td colspan="<%= Tag::TAGGABLE_MODELS.size + 1 %>"
+              class="px-4 py-2 font-semibold text-gray-700">
+            Categories
+          </td>
+        </tr>
+
+        <% @categories.each do |category| %>
+          <tr class="<%= cycle('bg-white', 'bg-gray-50') %> border-t border-gray-200">
+            <td class="px-4 py-2 font-medium text-gray-900">
+              <%= render "categories/tagging_label", category: category %>
+            </td>
+
+            <% Tag::TAGGABLE_MODELS.each do |key, model| %>
+              <% count = tag_count_for(model, tag: category, type: :category) %>
+
+              <td class="px-4 py-2 text-center
+                  <%= heatmap_class_for(
+                                                 count,
+                                                 model_key: key,
+                                                 type: :category,
+                                                 quantiles: @model_heatmap_quantiles
+                                               ) %>">
+                <% if count.positive? %>
+                  <%= link_to count,
+                              tag_link_for(model, tag: category, type: :category),
+                              class: "font-medium text-indigo-900 hover:underline" %>
+                <% else %>
+                  <span class="text-gray-400">0</span>
+                <% end %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+
+        </tbody>
+      </table>
+    </div>
+    </div>
+  </div>
+</div>

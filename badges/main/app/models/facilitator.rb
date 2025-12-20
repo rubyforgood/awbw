@@ -1,14 +1,19 @@
 class Facilitator < ApplicationRecord
+  include Linkable, TagFilterable, WindowsTypeFilterable
+
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   has_one :user, inverse_of: :facilitator, dependent: :nullify
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
-  has_many :sectors, through: :sectorable_items
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, through: :user
+  has_many :categories, through: :categorizable_items
+  has_many :sectors, through: :sectorable_items
+
 
   # Image associations
   has_one :avatar_image, -> { where(type: "Images::SquareImage") },
@@ -43,25 +48,25 @@ class Facilitator < ApplicationRecord
     attributes user_phone:      "user.phone"
   end
 
-  scope :searchable, -> { where(profile_is_searchable: true) }
+  scope :active, -> { all } # TODO - implement inactive field
+  scope :published, -> { active.searchable }
+  scope :published, ->(published=nil) { published ? active.searchable(published) : active.searchable }
+  scope :searchable, ->(searchable=nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
   scope :project_name, ->(project_name) {
     return all if project_name.blank?
     left_joins(user: { project_users: :project })
       .where("projects.name LIKE ?", "%#{sanitize_sql_like(project_name)}%")
-      .distinct
-  }
-  scope :sector_name, ->(sector_name) {
-    return all if sector_name.blank?
-    left_joins(sectorable_items: :sector)
-      .where("sectors.name LIKE ?", "%#{sanitize_sql_like(sector_name)}%")
-      .distinct
-  }
+      .distinct }
+  scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 
   def self.search_by_params(params)
     results = self.all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
-    results = results.sector_name(params[:sector_name]) if params[:sector_name].present?
+    results = results.sector_names(params[:sector_names]) if params[:sector_names].present?
+    results = results.sector_names(params[:category_names]) if params[:category_names].present?
     results = results.project_name(params[:project_name]) if params[:project_name].present?
+    results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results
   end
 

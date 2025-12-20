@@ -1,11 +1,10 @@
-class UserDecorator < Draper::Decorator
-  delegate_all
+class UserDecorator < ApplicationDecorator
 
   def title
     name
   end
 
-  def description
+  def detail
     email
   end
 

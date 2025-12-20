@@ -1,8 +1,6 @@
-class ProjectUserDecorator < Draper::Decorator
-	delegate_all
+class ProjectUserDecorator < ApplicationDecorator
 
-
-	def description
+	def detail
 		"#{user.full_name}: #{title.presence || position} - #{project.name}"
 	end
 end

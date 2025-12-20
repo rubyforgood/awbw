@@ -14,7 +14,7 @@ class WorkshopSeriesMembership < ApplicationRecord
       end
 
     if description.present?
-      length ? description.truncate(length) : description
+      length ? description&.truncate(length) : description
     else
       workshop = parent_workshop ? workshop_parent : workshop_child
       workshop.decorate.formatted_objective(length: length)

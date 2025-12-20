@@ -1,7 +1,11 @@
 module PaginationHelper
 	def tailwind_paginate(collection, options = {})
+		raw = collection.respond_to?(:object) ? collection.object : collection
+
+		return nil unless raw.respond_to?(:total_pages)
+
 		will_paginate(
-			collection,
+			raw,
 			{
 				renderer: TailwindPaginationRenderer,
 				inner_window: 2,
@@ -11,4 +15,3 @@ module PaginationHelper
 		)
 	end
 end
-

@@ -1,10 +1,9 @@
-class SectorDecorator < Draper::Decorator
-  delegate_all
+class SectorDecorator < ApplicationDecorator
 
   def title
     name
   end
 
-  def description
+  def detail
   end
 end

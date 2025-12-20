@@ -17,5 +17,9 @@ FactoryBot.define do
         workshop.organizations << create(:organization)
       end
     end
+
+    trait :published do
+      inactive { false }
+    end
   end
 end

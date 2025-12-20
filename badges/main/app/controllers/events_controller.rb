@@ -4,6 +4,7 @@ class EventsController < ApplicationController
 
   def index
     unpaginated = current_user.super_user? ? Event.all : Event.published
+    unpaginated = unpaginated.search_by_params(params)
     @events = unpaginated.order(start_date: :desc)
   end
 

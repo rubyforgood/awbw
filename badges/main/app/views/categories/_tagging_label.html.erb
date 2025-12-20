@@ -1,0 +1,18 @@
+<% category ||= nil %>
+<% name_only ||= false %>
+
+<% if category %>
+
+  <%= link_to taggings_path(category_names: category.name),
+              class: "inline-flex items-center
+                      rounded-md
+                      border border-gray-300
+                      bg-white
+                      text-gray-500
+                      px-3 py-1
+                      text-sm font-medium
+                      hover:bg-gray-100 hover:border-gray-400
+                      transition" do %>
+    <%= "#{category.category_type&.name}: " if !name_only && category.category_type %><%= category.name %>
+  <% end %>
+<% end %>

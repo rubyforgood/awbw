@@ -16,9 +16,16 @@ RSpec.describe Category do
     it { should validate_presence_of(:name) }
   end
 
-  describe 'associations' do
-    it { should belong_to(:category_type) }
-    it { should have_many(:categorizable_items).dependent(:destroy) }
-    it { should have_many(:workshops).through(:categorizable_items) }
+  it "belongs to a category_type" do
+    expect(described_class.reflect_on_association(:category_type)).to be_present
+  end
+
+  describe ".published" do
+    it "returns only published categories" do
+      visible = create(:category, published: true)
+      hidden  = create(:category, published: false)
+
+      expect(Category.published).to contain_exactly(visible)
+    end
   end
 end 

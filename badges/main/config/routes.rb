@@ -26,6 +26,10 @@ Rails.application.routes.draw do
   get 'dashboard/help', to: 'dashboard#help'
   get "image_migration_audit", to: "image_migration_audit#index"
 
+  get "taggings", to: 'taggings#index', as: 'taggings'
+  get "taggings/matrix", to: 'taggings#matrix', as: 'taggings_matrix'
+  get "tags", to: 'tags#index', as: 'tags'
+
   resources :banners
   resources :bookmarks do
     post :search
@@ -74,7 +78,6 @@ Rails.application.routes.draw do
       post :search
     end
   end
-  resources :sectors
   resources :story_ideas
   resources :stories
   resources :windows_types

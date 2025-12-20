@@ -1,20 +1,32 @@
-class FacilitatorDecorator < Draper::Decorator
-  delegate_all
+class FacilitatorDecorator < ApplicationDecorator
 
   def title
     "#{first_name} #{last_name}"
   end
 
-  def description
-    "Facilitator Profile for #{first_name} #{last_name}"
+  def detail(length: nil)
+    text = user.project_users.active.map{|pu| "#{pu.title.presence || pu.position}, #{pu.project.name}"}.join(", ") if user
+    length ? text&.truncate(length) : text
   end
 
   def inactive?
     !user ? false : user&.inactive?
   end
 
+  def main_image
+    avatar
+  end
+
   def pronouns_display
     profile_show_pronouns ? pronouns : nil
+  end
+
+  def main_image_url
+    if avatar_image&.file&.attached?
+      Rails.application.routes.url_helpers.url_for(avatar_image.file)
+    else
+      ActionController::Base.helpers.asset_path("missing.png")
+    end
   end
 
   def member_since_year

@@ -1,9 +1,12 @@
 # coding: utf-8
-class WorkshopDecorator < Draper::Decorator
-  delegate_all
+class WorkshopDecorator < ApplicationDecorator
 
   def created_by
     user
+  end
+
+  def detail(length: nil)
+    length ? description&.truncate(length) : description
   end
 
   def disable_title_field?

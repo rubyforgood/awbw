@@ -1,7 +1,9 @@
+<% title ||= "Popular Resources" %>
+
 <section class="py-10 bg-violet-50">
   <div class="max-w-6xl mx-auto px-4">
-    <%= render "dashboard_section_header",
-               title: "Popular Resources",
+    <%= render "dashboard/dashboard_section_header",
+               title: title,
                subtitle: "Tools and activities used across our network" %>
 
     <% if @resources.any? %>

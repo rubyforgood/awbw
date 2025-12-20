@@ -1,17 +1,17 @@
 <div id="mobile-menu" class="hidden md:hidden">
 
   <div class="space-y-1 px-2 pt-2 pb-3">
-    <!-- Facilitate -->
+    <!-- CURRICULUM -->
     <div data-controller="dropdown">
       <button
         class="mobile-section flex justify-between w-full"
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"mobile-facilitate":"hidden"}]'>
-        Facilitate
+        data-dropdown-payload-param='[{"mobile-curriculum":"hidden"}]'>
+        Curriculum
         <i class="fas fa-chevron-down" data-dropdown-target="arrow"></i>
       </button>
 
-      <div id="mobile-facilitate"
+      <div id="mobile-curriculum"
            class="hidden flex flex-col pl-4 mt-1 mb-3 space-y-2"
            data-dropdown-target="content">
         <%= link_to workshops_path, class: "flex items-center px-4 py-2 text-sm text-white
@@ -23,6 +23,11 @@
                     hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
           <i class="fas fa-file"></i>
           <span>Resources</span>
+        <% end %>
+        <%= link_to tags_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-tag"></i>
+          <span>Tags</span>
         <% end %>
       </div>
     </div>

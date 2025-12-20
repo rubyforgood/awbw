@@ -1,5 +1,4 @@
-class FormBuilderDecorator < Draper::Decorator
-  delegate_all
+class FormBuilderDecorator < ApplicationDecorator
 
   def new_report_url
     if workshop_but_not_family_windows?

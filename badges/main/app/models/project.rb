@@ -1,4 +1,6 @@
 class Project < ApplicationRecord
+  include Linkable, TagFilterable, WindowsTypeFilterable
+
   belongs_to :project_status
   belongs_to :project_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -9,8 +11,13 @@ class Project < ApplicationRecord
   has_many :users, through: :project_users
   has_many :reports, through: :users
   has_many :workshop_logs, through: :users
+
+  has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
+  # has_many through
+  has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
+
   # Image associations
   has_one :logo_image, -> { where(type: "Images::SquareImage") },
           as: :owner, class_name: "Images::SquareImage", dependent: :destroy
@@ -24,8 +31,6 @@ class Project < ApplicationRecord
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :project_users, allow_destroy: true, reject_if: :all_blank
-
-  scope :active, -> { where(inactive: false) }
 
   # SearchCop
   include SearchCop
@@ -53,19 +58,16 @@ class Project < ApplicationRecord
     SQL
       wildcard: wildcard, exact: exact)
   end
-  scope :windows_type_name, ->(windows_type_name) do
-    return all if windows_type_name.blank?
-    if windows_type_name.downcase.include?("adult")
-      windows_type_name = "ADULT WORKSHOP"
-    elsif windows_type_name.downcase.include?("child")
-      windows_type_name = "CHILDREN WORKSHOP"
-    end
-    joins(:windows_type).where("windows_types.name LIKE ?", "%#{ windows_type_name }%")
-  end
+  scope :active, ->(active=nil) { active ? where(inactive: !active) : where(inactive: false) }
+  scope :published, ->(published=nil) { published ? active(published) : active }
+  scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 
   def self.search_by_params(params)
-    projects = Project.all
+    projects = self.all
     projects = projects.search(params[:query]) if params[:query].present?
+    projects = projects.sector_names(params[:sector_names]) if params[:sector_names].present?
+    projects = projects.category_names(params[:category_names]) if params[:category_names].present?
     projects = projects.address(params[:address]) if params[:address].present?
     projects = projects.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     projects
