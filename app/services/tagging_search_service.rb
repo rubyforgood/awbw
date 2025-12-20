@@ -1,6 +1,10 @@
 class TaggingSearchService
 	def self.call(sector_names:, category_names: nil,
 								pages: {}, number_of_items_per_page: nil)
+		if sector_names.blank? && category_names.blank?
+			return empty_results(number_of_items_per_page)
+		end
+
 		{
 			workshops: Workshop
 									 .includes(:sectors, :categories, :windows_type, :main_image, :gallery_images)
@@ -75,5 +79,11 @@ class TaggingSearchService
 								.paginate(page: pages[:quotes] || 1, per_page: number_of_items_per_page)
 								.decorate,
 		}
+	end
+
+	def self.empty_results(per_page)
+		Tag::TAGGABLE_MODELS.keys.index_with do
+			WillPaginate::Collection.create(1, per_page || 9, 0) { |pager| pager.replace([]) }
+		end
 	end
 end
