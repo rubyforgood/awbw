@@ -1,32 +1,48 @@
-<div class="mt-8 mb-12 text-center">
-  <% if @sector_names.present? %>
+<% sector_names = @sector_names.to_s.split("--").join(", ") %>
+<% category_names = @category_names %>
+<% category_full_names = Category.names(@category_names)
+                                 .includes(:category_type)
+                                 .map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }
+                                 .join(", ") %>
 
-    <div class="text-xs text-gray-500 text-italic">
-      Taggings
-    </div>
-    <div class="text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
-      <%= @sector_names.split("--").join(", ") %>
+<div class="mt-8 mb-12 text-center">
+  <div class="taggings-header-sectors text-xs text-gray-500 text-italic">
+    Taggings
+  </div>
+
+  <% if sector_names.present? %>
+    <div class="sector-names text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
+      <%= sector_names %>
     </div>
   <% end %>
 
-  <% if @category_names.present? %>
-    <% unless @sector_names.present? %>
-      <div class="text-xs text-gray-500 text-italic">
-        Taggings
-      </div>
-    <% end %>
-    <p class="mt-2 text-base md:text-lg text-gray-600">
-      <%= @category_names.split("--").join(", ") %>
-    </p>
+  <% if category_names.present? %>
+    <div class="mt-2 text-base md:text-lg text-gray-600">
+      <span class="category-names">
+        <%= category_full_names %>
+      </span>
+    </div>
   <% end %>
 </div>
 
 <div class="flex flex-col">
-  <div class="space-y-6">
+  <div class="grouped-tagged-items space-y-6">
+    <% if sector_names.blank? && category_names.blank? %>
+      <div class="text-center text-gray-400">
+        Select a population or explore tags
+      </div>
+    <% elsif @grouped_tagged_items.values.all?(&:empty?) %>
+      <div class="text-center text-gray-500">
+        No tagged items found for
+        <span class="text-md font-bold">
+        <%= [sector_names.presence, category_full_names.presence].compact.join(", ") %></span>
+      </div>
+    <% end %>
+
     <% @grouped_tagged_items.each do |type, items| %>
       <% next if items.blank? %>
 
-      <% bg_class = @section_styles[type] || "bg-gray-50" %>
+      <% bg_class = Tag.bg_class_for(type) %>
 
       <section class="<%= bg_class %> rounded-2xl px-6 py-8">
         <!-- Section Header -->
