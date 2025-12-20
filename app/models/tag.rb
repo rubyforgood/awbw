@@ -20,6 +20,21 @@ class Tag
 		events:         :blue,
 		facilitators:   :sky,
 		projects:       :emerald,
-		quotes:         :slate
+		quotes:         :slate,
+		tags:           :lime
 	}
+
+	def self.color_for(key)
+		TAGGABLE_COLORS[key.to_sym]
+	end
+
+	def self.bg_class_for(key, intensity: 50)
+		color = color_for(key)
+		color ? "bg-#{color}-#{intensity}" : "bg-gray-50"
+	end
+
+	def self.text_class_for(key, intensity: 700)
+		color = color_for(key)
+		color ? "text-#{color}-#{intensity}" : "text-gray-700"
+	end
 end
