@@ -2,14 +2,16 @@ class TagsController < ApplicationController
 	def index
 		@sectors =
 			Sector
-				.joins(:sectorable_items)
+				.includes(:sectorable_items)
+				.references(:sectorable_items)
 				.published
 				.distinct
 				.order(:name)
 
 		categories =
 			Category
-				.joins(:category_type, :categorizable_items)
+				.includes(:category_type, :categorizable_items)
+				.references(:category_type, :categorizable_items)
 				.published
 				.select("categories.*, metadata.name AS category_type_name")
 				.distinct
