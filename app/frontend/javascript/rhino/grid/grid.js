@@ -180,6 +180,49 @@ export const Grid = Node.create({
             dispatch(tr);
             return true;
           },
+
+          deleteGridCell: () => ({ state, dispatch }) => {
+            const { selection, tr } = state;
+
+            // Find the current grid cell
+            const gridCell = findParentNodeClosestToPos(
+              selection.$from,
+              node => node.type.name === 'gridCell'
+            );
+            if (!gridCell) return false;
+
+            const { pos: cellPos, node: cellNode } = gridCell;
+
+            // Find the parent grid
+            const grid = findParentNodeClosestToPos(
+              selection.$from,
+              node => node.type.name === 'grid'
+            );
+            if (!grid) return false;
+
+            const { node: gridNode, pos: gridPos } = grid;
+            const columns = gridNode.attrs.columns;
+
+            // Delete the current cell
+            tr.delete(cellPos, cellPos + cellNode.nodeSize);
+
+            // Recalculate rows
+            const totalCells = gridNode.childCount - 1; // one less now
+            const newRows = Math.ceil(totalCells / columns);
+
+            // Update grid attributes
+            tr.setNodeMarkup(gridPos, undefined, {
+              ...gridNode.attrs,
+              rows: newRows,
+            });
+
+            // Move selection to a safe position
+            tr.setSelection(TextSelection.near(tr.doc.resolve(gridPos)));
+
+            if (dispatch) dispatch(tr);
+            return true;
+          },
+
           deleteGrid: () => ({ state, dispatch, tr }) => {
             const grid = findParentNodeClosestToPos(
               state.selection.$from,

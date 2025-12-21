@@ -7,6 +7,7 @@ import "rhino-editor/exports/styles/trix.css"
 import { TipTapEditor } from "rhino-editor/exports/elements/tip-tap-editor.js"
 import * as table_icons from "./table-icons.js"
 import * as table_translations from "./table-translations.js"
+import * as grid_icons from "./grid/grid-icons.js"
 import { application } from "../controllers/application"
 import { renderGridMenu } from "./grid/grid-menu.js";
 
@@ -86,6 +87,7 @@ class CustomEditor extends TipTapEditor {
 
           <slot name="after-increase-indentation-button"></slot>
 
+          <slot name="grid-button">${this.renderGridButton()}</slot>
           <slot name="table-button"
             >
             ${this.renderTableButton()}
@@ -98,6 +100,20 @@ class CustomEditor extends TipTapEditor {
           >
           <slot name="after-attach-files-button"></slot>
         <!-- Source Modal button -->
+
+
+          <!-- Undo -->
+          <slot name="before-undo-button"></slot>
+          <!-- @ts-expect-error -->
+          <slot name="undo-button"> ${this.renderUndoButton()} </slot>
+          <slot name="after-undo-button"></slot>
+
+          <!-- Redo -->
+          <slot name="before-redo-button"></slot>
+          <slot name="redo-button"> ${this.renderRedoButton()} </slot>
+
+          <slot name="after-redo-button"></slot>
+
           <slot name="source-modal-button">
             <button
               class="toolbar__button rhino-toolbar-button"
@@ -124,20 +140,6 @@ class CustomEditor extends TipTapEditor {
             </button>
           </slot>
 
-
-          <!-- Undo -->
-          <slot name="before-undo-button"></slot>
-          <!-- @ts-expect-error -->
-          <slot name="undo-button"> ${this.renderUndoButton()} </slot>
-          <slot name="after-undo-button"></slot>
-
-          <!-- Redo -->
-          <slot name="before-redo-button"></slot>
-          <slot name="redo-button"> ${this.renderRedoButton()} </slot>
-
-          <slot name="after-redo-button"></slot>
-
-          <slot name="grid-button">${this.renderAddGridButton()}</slot>
           <slot name="toolbar-end">${this.renderToolbarEnd()}</slot>
         </role-toolbar>
 
@@ -147,17 +149,57 @@ class CustomEditor extends TipTapEditor {
     `;
   }
 
-  renderAddGridButton() {
+  renderGridButton() {
     return html`
       <button
         type="button"
-        class="toolbar-button"
-        @click=${() => this.editor.chain().focus().insertGrid(2, 1).run()}
-        title="Insert grid"
+        class="toolbar__button rhino-toolbar-button"
+        title="Insert grid (Shift + click to enter custom dimensions)"
+        @click=${(event) => {
+          this.editor.chain().focus(); // always focus first
+
+          if (event.shiftKey) {
+            // Prompt user for custom dimensions
+            const input = prompt(
+              "Enter grid dimensions as columns,rows (e.g., 2,4):",
+              "2,2"
+            );
+            if (!input) return;
+
+            const [colsStr, rowsStr] = input.split(",");
+            const columns = parseInt(colsStr.trim(), 10);
+            const rows = parseInt(rowsStr.trim(), 10);
+
+            if (
+              isNaN(rows) || isNaN(columns) ||
+              rows <= 0 || columns <= 0 ||
+              rows > 6 || columns > 6
+            ) {
+              alert("Invalid dimensions! Rows and columns must be between 1 and 6.");
+              return;
+            }
+
+            this.editor.chain().insertGrid(columns, rows).run();
+          } else {
+            // Default grid insertion
+            this.editor.chain().insertGrid().run();
+          }
+        }}
       >
-        ⧉
+
+        <slot name="table-tooltip">
+          <role-tooltip
+            id="table"
+            hoist
+            part="toolbar-tooltip toolbar-tooltip__table"
+            exportparts=${this.__tooltipExportParts}
+          >
+            ${table_translations.insertTable}
+          </role-tooltip>
+        </slot>
+        <slot name="table-icon">${grid_icons.insertGrid}</slot>
       </button>
-    `
+    `;
   }
 
   renderTableButton() {

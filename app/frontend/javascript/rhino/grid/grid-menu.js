@@ -10,22 +10,27 @@ export function renderGridMenu(editor) {
 
   const buttons = [
     {
-      tooltip: "Add Row",
+      title: "Add Row",
       icon: "＋",
       action: () => editor.chain().focus().addGridRow().run(),
     },
     {
-      tooltip: "Add Column",
+      title: "Add Column",
       icon: "＋",
       action: () => editor.chain().focus().addGridColumn().run(),
     },
     {
-      tooltip: "Add Cell",
+      title: "Add Cell",
       icon: "＋",
       action: () => editor.chain().focus().addGridCell().run(),
     },
     {
-      tooltip: "Delete Grid",
+      title: "Delete Cell",
+      icon: "-",
+      action: () => editor.chain().focus().deleteGridCell().run(),
+    },
+    {
+      title: "Delete Grid",
       icon: "🗑",
       action: () => editor.chain().focus().deleteGrid().run(),
     },
@@ -38,6 +43,7 @@ export function renderGridMenu(editor) {
           <button
             class="toolbar__button rhino-toolbar-button"
             type="button"
+            title=${btn.title}
             data-role="toolbar-item"
             aria-disabled="false"
             @click=${btn.action}
