@@ -1,10 +1,6 @@
 import { html } from "lit";
 import "rhino-editor/exports/styles/trix.css"
 
-/**
- * Render the grid menu toolbar (like table menu)
- * @param {Editor} editor - Tiptap editor instance
- */
 export function renderGridMenu(editor) {
   if (!editor || !editor.isActive("grid")) return html``;
 
@@ -33,6 +29,21 @@ export function renderGridMenu(editor) {
       title: "Delete Grid",
       icon: "🗑",
       action: () => editor.chain().focus().deleteGrid().run(),
+    },
+    {
+      title: "Align Top",
+      icon: "↑",
+      action: () => editor.chain().focus().setVerticalAlign("top").run(),
+    },
+    {
+      title: "Align Center",
+      icon: "↕",
+      action: () => editor.chain().focus().setVerticalAlign("center").run(),
+    },
+    {
+      title: "Align Botton",
+      icon: "↓",
+      action: () => editor.chain().focus().setVerticalAlign("bottom").run(),
     },
   ];
 
