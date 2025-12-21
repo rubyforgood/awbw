@@ -8,6 +8,7 @@ import { TipTapEditor } from "rhino-editor/exports/elements/tip-tap-editor.js"
 import * as table_icons from "./table-icons.js"
 import * as table_translations from "./table-translations.js"
 import * as grid_icons from "./grid/grid-icons.js"
+import * as align_icons from "./align-icons.js"
 import { application } from "../controllers/application"
 import { renderGridMenu } from "./grid/grid-menu.js";
 
@@ -468,10 +469,10 @@ class CustomEditor extends TipTapEditor {
     if (!this.editor) return html``;
 
     const alignmentOptions = [
-      { name: 'left', icon: '⬅️' },
-      { name: 'center', icon: '↔️' },
-      { name: 'right', icon: '➡️' },
-      { name: 'justify', icon: '⏹', style: 'margin-inline-end:1rem;' },
+      { name: 'left', icon: align_icons.alignLeft },
+      { name: 'center', icon: align_icons.alignCenter},
+      { name: 'right', icon: align_icons.alignRight},
+      { name: 'justify', icon: align_icons.alignJustify, style: 'margin-inline-end:1rem;' },
     ];
 
     const canAlign = ['paragraph', 'heading'].some(type => this.editor.isActive(type));
