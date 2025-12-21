@@ -1,5 +1,4 @@
 import { Node, mergeAttributes, findParentNodeClosestToPos } from '@tiptap/core'
-import { TextSelection } from '@tiptap/pm/state'
 
 export const GridCell = Node.create({
   name: 'gridCell',
@@ -10,20 +9,10 @@ export const GridCell = Node.create({
   addAttributes() {
     return {
       verticalAlign: {
-        default: 'top', // default alignment
-        parseHTML: element => element.dataset.verticalAlign || 'top',
-        renderHTML: attributes => {
-          const alignClasses = {
-            top: 'justify-start',
-            center: 'justify-center',
-            bottom: 'justify-end',
-          }
-
-          return {
-            'data-vertical-align': attributes.verticalAlign,
-            class: alignClasses[attributes.verticalAlign] || 'justify-start',
-          }
-        },
+        default: 'top',
+      },
+      columnSpan: {
+        default: 1,
       },
     }
   },
@@ -39,11 +28,25 @@ export const GridCell = Node.create({
       bottom: 'justify-end',
     }
 
+    const colSpanClasses = {
+      1: 'col-span-1',
+      2: 'col-span-2',
+      3: 'col-span-3',
+      4: 'col-span-4',
+      5: 'col-span-5',
+      6: 'col-span-6',
+    }
+
+    const verticalClass = alignClasses[node.attrs.verticalAlign] || 'justify-start'
+    const spanClass = colSpanClasses[node.attrs.columnSpan] || 'col-span-1'
+
     return [
       'div',
       mergeAttributes(HTMLAttributes, {
         'data-type': 'grid-cell',
-        class: `border border-gray-300 p-3 rounded flex flex-col ${alignClasses[node.attrs.verticalAlign]}`,
+        'data-vertical-align': node.attrs.verticalAlign,
+        'data-column-span': node.attrs.columnSpan,
+        class: `border border-gray-300 p-3 rounded flex flex-col ${verticalClass} ${spanClass}`,
       }),
       0,
     ]
@@ -52,21 +55,47 @@ export const GridCell = Node.create({
   addCommands() {
     return {
       setVerticalAlign: alignment => ({ state, dispatch }) => {
-        const { selection, tr } = state
         const gridCell = findParentNodeClosestToPos(
-          selection.$from,
+          state.selection.$from,
+          node => node.type.name === 'gridCell'
+        )
+        if (!gridCell) return false
+
+        const { pos, node } = gridCell
+        const tr = state.tr.setNodeMarkup(pos, undefined, {
+          ...node.attrs,
+          verticalAlign: alignment,
+        })
+
+        if (dispatch) dispatch(tr)
+        return true
+      },
+
+      setColumnSpan: span => ({ state, dispatch }) => {
+        const gridCell = findParentNodeClosestToPos(
+          state.selection.$from,
           node => node.type.name === 'gridCell'
         )
         if (!gridCell) return false
 
         const { pos, node } = gridCell
 
-        tr.setNodeMarkup(pos, undefined, {
+        const parentGrid = findParentNodeClosestToPos(
+          state.selection.$from,
+          node => node.type.name === 'grid'
+        )
+        if (!parentGrid) return false
+
+        const maxColumns = parentGrid.node.attrs.columns
+
+        const newSpan = Math.min(span, maxColumns)
+
+        const tr = state.tr.setNodeMarkup(pos, undefined, {
           ...node.attrs,
-          verticalAlign: alignment,
+          columnSpan: newSpan,
         })
 
-        dispatch(tr)
+        if (dispatch) dispatch(tr)
         return true
       },
     }
