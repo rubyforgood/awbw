@@ -1,4 +1,5 @@
 import { Node, mergeAttributes, findParentNodeClosestToPos } from '@tiptap/core'
+import { TextSelection } from '@tiptap/pm/state'
 
 export const Grid = Node.create({
   name: 'grid',
@@ -51,19 +52,32 @@ export const Grid = Node.create({
 
   addCommands() {
     return {
-      insertGrid: (columns = 2, rows = 2) => ({ commands }) => {
-        const content = Array.from({ length: columns * rows }).map(() => ({
-          type: 'gridCell',
-          content: [{ type: 'paragraph' }],
-        }))
+      insertGrid: (columns = 1, rows = 1) => ({ tr, dispatch, editor }) => {
+        const { schema } = editor;
 
-        return commands.insertContent({
-          type: this.name,
-          attrs: { columns, rows },
-          content,
-        })
+        const cells = Array.from({ length: columns * rows }).map(() =>
+          schema.nodes.gridCell.create({}, [schema.nodes.paragraph.create()])
+        );
+
+        const gridNode = schema.nodes.grid.create(
+          { columns, rows },
+          cells
+        );
+
+        if (dispatch) {
+          const offset = tr.selection.from;
+          tr.replaceSelectionWith(gridNode)
+            .scrollIntoView();
+
+          // Focus first cell
+          const firstCellPos = offset + 1;
+          tr.setSelection(TextSelection.near(tr.doc.resolve(firstCellPos)));
+
+          dispatch(tr);
+        }
+
+        return true;
       },
-
       addGridRow: () => ({ state, dispatch }) => {
           const { selection, tr, schema } = state;
           const grid = findParentNodeClosestToPos(
@@ -75,13 +89,12 @@ export const Grid = Node.create({
           const { node: gridNode, pos: gridPos } = grid;
           const columns = gridNode.attrs.columns;
 
-          // Create new cells for the row
           const newCells = Array.from({ length: columns }).map(() =>
             schema.nodes.gridCell.create({}, [schema.nodes.paragraph.create()])
           );
 
           // Insert new cells at the end of the grid
-          let insertPos = gridPos + gridNode.nodeSize - 1; // -1 to insert before the closing node
+          let insertPos = gridPos + gridNode.nodeSize - 1; // insert before closing node
           newCells.forEach(cell => {
             tr.insert(insertPos, cell);
             insertPos += cell.nodeSize;
@@ -108,7 +121,6 @@ export const Grid = Node.create({
             const { node: gridNode, pos: gridPos } = grid;
             const rows = gridNode.attrs.rows;
 
-            // Create new cells equal to number of rows
             const newCells = Array.from({ length: rows }).map(() =>
               schema.nodes.gridCell.create({}, [schema.nodes.paragraph.create()])
             );
@@ -132,7 +144,6 @@ export const Grid = Node.create({
       addGridCell: () => ({ state, dispatch }) => {
             const { selection, tr, schema } = state;
 
-            // Find the current grid cell
             const gridCell = findParentNodeClosestToPos(
               selection.$from,
               node => node.type.name === 'gridCell'
@@ -141,7 +152,6 @@ export const Grid = Node.create({
 
             const { pos: cellPos } = gridCell;
 
-            // Find the parent grid
             const grid = findParentNodeClosestToPos(
               selection.$from,
               node => node.type.name === 'grid'
@@ -151,7 +161,6 @@ export const Grid = Node.create({
             const { node: gridNode, pos: gridPos } = grid;
             const columns = gridNode.attrs.columns;
 
-            // Create a new empty grid cell
             const newCell = schema.nodes.gridCell.create({}, [
               schema.nodes.paragraph.create(),
             ]);
@@ -159,8 +168,7 @@ export const Grid = Node.create({
             // Insert it immediately after the current cell
             tr.insert(cellPos + gridCell.node.nodeSize, newCell);
 
-            // Count total cells after insertion
-            const totalCells = gridNode.childCount + 1; // +1 for the new cell
+            const totalCells = gridNode.childCount + 1; 
             const newRows = Math.ceil(totalCells / columns);
 
             // Update grid attributes
@@ -172,18 +180,22 @@ export const Grid = Node.create({
             dispatch(tr);
             return true;
           },
-      deleteGrid: () => ({ state, commands }) => {
-        const grid = findParentNodeClosestToPos(
-          state.selection.$from,
-          node => node.type.name === 'grid'
-        )
-        if (!grid) return false
+          deleteGrid: () => ({ state, dispatch, tr }) => {
+            const grid = findParentNodeClosestToPos(
+              state.selection.$from,
+              node => node.type.name === 'grid'
+            );
+            if (!grid) return false;
 
-        return commands.deleteRange({
-          from: grid.pos,
-          to: grid.pos + grid.node.nodeSize,
-        })
-      },
+            const { pos, node } = grid;
+
+            tr.delete(pos, pos + node.nodeSize);
+
+            tr.setSelection(TextSelection.near(tr.doc.resolve(pos)));
+
+            if (dispatch) dispatch(tr);
+            return true;
+          },
     }
   },
 })
