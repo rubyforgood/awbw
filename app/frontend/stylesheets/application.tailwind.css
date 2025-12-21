@@ -84,6 +84,8 @@
 }
 
 
+
+/* Custom Rhino Editor  */
 custom-rhino-editor table {
   border-collapse: collapse;
   margin: 0;
@@ -136,5 +138,26 @@ custom-rhino-editor a {
 .tableWrapper {
   padding: 1rem 0;
   overflow-x: auto;
+}
+ 
+/* Prevent pag breaks on images when printing  */
+@media print {
+  table {
+    page-break-inside: auto;
+  }
 
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  td {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 }
