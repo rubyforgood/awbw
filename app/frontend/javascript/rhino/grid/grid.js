@@ -63,6 +63,7 @@ export const Grid = Node.create({
           content,
         })
       },
+
       addGridRow: () => ({ state, dispatch }) => {
           const { selection, tr, schema } = state;
           const grid = findParentNodeClosestToPos(
