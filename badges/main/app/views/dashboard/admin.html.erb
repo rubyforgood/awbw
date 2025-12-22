@@ -11,13 +11,16 @@
         <a href="<%= card[:path] %>"
            class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                   <%= card[:bg_color] %> <%= card[:text_color] %>
-                  hover:<%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
+                  <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
           <div class="text-5xl text-gray-700 flex-shrink-0">
+<!--            <i class="fa-solid <%#= card[:icon] %>" aria-hidden="true"></i>-->
             <%= card[:icon] %>
           </div>
 
           <div class="flex-1">
-            <h3 class="text-xl font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+            <h3 class="text-xl font-bold text-gray-800 break-words">
+              <%= card[:title] %>
+            </h3>
           </div>
 
         </a>
@@ -31,7 +34,7 @@
         <a href="<%= card[:path] %>"
            class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                   <%= card[:bg_color] %> <%= card[:text_color] %>
-                  hover:<%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
+                  <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
           <div class="text-5xl text-gray-700 flex-shrink-0">
             <%= card[:icon] %>
           </div>
@@ -52,7 +55,7 @@
         <a href="<%= card[:path] %>"
            class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                   <%= card[:bg_color] %> <%= card[:text_color] %>
-                  hover:<%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
+                  <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
 
           <div class="text-5xl text-gray-700 flex-shrink-0">
             <%= card[:icon] %>
@@ -70,23 +73,36 @@
 
 <div class="hidden
     bg-black
-    bg-cyan-50
     bg-gray-50 bg-gray-100 bg-gray-200 bg-gray-500
 
     bg-blue-50 bg-blue-100 bg-blue-200 bg-blue-500             events && admin-only
     bg-emerald-50 bg-emerald-100 bg-emerald-200 bg-emerald-500 projects
     bg-green-50 bg-green-100 bg-green-200 bg-green-500         facilitator-only
     bg-indigo-50 bg-indigo-100 bg-indigo-200 bg-indigo-500     workshops
+    bg-lime-50 bg-lime-100 bg-lime-200 bg-lime-500             tags
     bg-orange-50 bg-orange-100 bg-orange-200 bg-orange-500     community-news
+    bg-purple-50 bg-purple-100 bg-purple-200 bg-purple-500     workshop-variations
     bg-rose-50 bg-rose-100 bg-rose-200 bg-rose-500             stories
     bg-sky-50 bg-sky-100 bg-sky-200 bg-sky-500                 facilitators
     bg-slate-50 bg-slate-100 bg-slate-200 bg-slate-500         quotes
+    bg-teal-50 bg-teal-100 bg-teal-200 bg-teal-500             workshop-logs
     bg-violet-50 bg-violet-100 bg-violet-200 bg-violet-500     resources
 
+    hover:bg-blue-50 hover:bg-blue-100 hover:bg-blue-200 hover:bg-blue-500
+    hover:bg-indigo-50 hover:bg-indigo-100 hover:bg-indigo-200 hover:bg-indigo-500
+    hover:bg-emerald-50 hover:bg-emerald-100 hover:bg-emerald-200 hover:bg-emerald-500
+    hover:bg-lime-50 hover:bg-lime-100 hover:bg-lime-200 hover:bg-lime-500
+    hover:bg-orange-50 hover:bg-orange-100 hover:bg-orange-200 hover:bg-orange-500
+    hover:bg-purple-50 hover:bg-purple-100 hover:bg-purple-200 hover:bg-purple-500
+    hover:bg-rose-50 hover:bg-rose-100 hover:bg-rose-200 hover:bg-rose-500
+    hover:bg-sky-50 hover:bg-sky-100 hover:bg-sky-200 hover:bg-sky-500
+    hover:bg-slate-50 hover:bg-slate-100 hover:bg-slate-200 hover:bg-slate-500
+    hover:bg-teal-50 hover:bg-teal-100 hover:bg-teal-200 hover:bg-teal-500
+    hover:bg-violet-50 hover:bg-violet-100 hover:bg-violet-200 hover:bg-violet-500
+
     bg-red-800
+    bg-cyan-50 bg-cyan-100 bg-cyan-200 bg-cyan-500
     bg-pink-50 bg-pink-100 bg-pink-200 bg-pink-500
-    bg-purple-50 bg-purple-100 bg-purple-200 bg-purple-500
-    bg-teal-50 bg-teal-100 bg-teal-200 bg-teal-500
     bg-yellow-50 bg-yellow-100 bg-yellow-200
 
     text-gray-50 text-transparent

@@ -25,7 +25,7 @@ RSpec.describe "Taggings index", type: :request do
 		it "renders successfully" do
 			get taggings_path
 			expect(response).to have_http_status(:ok)
-			expect(response.body).to include("Select a population or explore tags")
+			expect(response.body).to include("Select a service population or explore tags")
 		end
 
 		it "shows sectors as buttons" do

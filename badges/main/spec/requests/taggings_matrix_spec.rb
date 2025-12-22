@@ -51,7 +51,7 @@ RSpec.describe "Taggings matrix", type: :request do
 		it "renders a column for each taggable model" do
 			get taggings_matrix_path
 
-			Tag::TAGGABLE_MODELS.keys.each do |key|
+			Tag::TAGGABLE_META.keys.each do |key|
 				expect(response.body).to include(key.to_s.humanize)
 			end
 		end

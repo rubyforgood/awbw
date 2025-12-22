@@ -102,20 +102,25 @@
         </div>
 
         <!-- Sectors -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors served</h2>
-          <p>
-            <% if @project.sectorable_items.any? %>
-              <div class="flex flex-wrap items-center gap-1">
-                <% @project.sectorable_items.joins(:sector).order("sectors.name").map do |item| %>
-                  <%= sector_button(item.sector) %>
-                <% end %>
-              </div>
-            <% else %>
-              <span class="text-gray-500 italic">No sectors selected.</span>
-            <% end %>
-          </p>
-        </div>
+        <% if true || @project.profile_show_sectors? %>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Service Populations</h2>
+            <p>
+              <% if @project.sectorable_items.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% @project.sectorable_items.joins(:sector).order("sectors.name").map do |si| %>
+                    <%= render "sectors/tagging_label",
+                               sector: si.sector,
+                               display_leader: true,
+                               is_leader: si.is_leader %>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="text-gray-500 italic">None selected.</span>
+              <% end %>
+            </p>
+          </div>
+        <% end %>
 
         <!-- Contact info -->
         <div>

@@ -1,4 +1,4 @@
-<div class="tags-index max-w-7xl mx-auto bg-lime-50 border border-gray-200 rounded-xl shadow p-6">
+<div class="tags-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tags) %> border border-gray-200 rounded-xl shadow p-6">
 
   <!-- HEADER -->
   <div class="w-full mb-10">
@@ -51,7 +51,10 @@
 
           <div class="flex flex-wrap gap-2">
             <% @sectors.each do |sector| %>
-              <%= render "sectors/tagging_label", sector: sector %>
+              <%= render "sectors/tagging_label",
+                         sector: sector,
+                         bg_color: "bg-white",
+                         bg_hover_color: "bg-lime-200" %>
             <% end %>
           </div>
         </section>
@@ -89,7 +92,9 @@
                   <% categories.each do |category| %>
                     <%= render "categories/tagging_label",
                                category: category,
-                               name_only: true %>
+                               name_only: true,
+                               bg_color: "bg-white",
+                               bg_hover_color: "bg-lime-200" %>
                   <% end %>
                 </div>
               </div>

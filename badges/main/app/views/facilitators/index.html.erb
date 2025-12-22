@@ -1,6 +1,6 @@
 <div class="min-h-screen py-8">
   <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+    <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:facilitators) %> border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -53,7 +53,7 @@
                       <% si_name = "#{ si.sector.name }#{ " (#{"leader"})" if si.is_leader? }" %>
                       <span class="inline-flex items-center px-2 py-1 rounded-full text-xs
                       font-medium bg-gray-400 text-white whitespace-nowrap">
-                        <%= link_to si_name, authenticated_root_path %>
+                        <%= link_to si_name, taggings_path(sector_names: si.sector.name) %>
                       </span>
                     <% end %>
                   </div>

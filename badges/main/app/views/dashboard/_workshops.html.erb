@@ -1,6 +1,6 @@
 <% title ||= "Featured Workshops" %>
 
-<section class="mt-6 py-10 bg-indigo-50">
+<section class="mt-6 py-10 <%= DomainTheme.bg_class_for(:workshops) %>">
   <div class="max-w-6xl mx-auto px-4">
     <%= render "dashboard/dashboard_section_header",
                title: title,

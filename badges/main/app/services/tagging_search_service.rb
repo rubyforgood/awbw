@@ -82,7 +82,7 @@ class TaggingSearchService
 	end
 
 	def self.empty_results(per_page)
-		Tag::TAGGABLE_MODELS.keys.index_with do
+		Tag::TAGGABLE_META.keys.index_with do
 			WillPaginate::Collection.create(1, per_page || 9, 0) { |pager| pager.replace([]) }
 		end
 	end

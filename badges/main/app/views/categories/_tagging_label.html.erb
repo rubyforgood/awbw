@@ -1,17 +1,19 @@
 <% category ||= nil %>
 <% name_only ||= false %>
+<% bg_color ||= DomainTheme.bg_class_for(:sectors) %>
+<%# bg_hover_color ||= DomainTheme.bg_class_for(:sectors, hover: true) %>
+<% bg_hover_color ||= "bg-lime-200" %>
 
 <% if category %>
 
   <%= link_to taggings_path(category_names: category.name),
               class: "inline-flex items-center
                       rounded-md
-                      border border-gray-300
-                      bg-white
+                      border border-gray-300 hover:border-gray-400
+                      #{ bg_color } hover:#{ bg_hover_color }
                       text-gray-500
                       px-3 py-1
                       text-sm font-medium
-                      hover:bg-gray-100 hover:border-gray-400
                       transition" do %>
     <%= "#{category.category_type&.name}: " if !name_only && category.category_type %><%= category.name %>
   <% end %>

@@ -1,4 +1,4 @@
-<div class="tags-matrix max-w-7xl mx-auto bg-lime-50 border border-gray-200 rounded-xl shadow p-6">
+<div class="tags-matrix max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tags) %> border border-gray-200 rounded-xl shadow p-6">
 
   <div class="w-full">
     <div class="mb-10">
@@ -22,7 +22,7 @@
               Tag
             </th>
 
-            <% Tag::TAGGABLE_MODELS.keys.each do |key| %>
+            <% Tag::TAGGABLE_META.keys.each do |key| %>
               <th class="px-4 py-3 text-center font-semibold text-gray-700">
                 <%= key.to_s.humanize %>
               </th>
@@ -34,7 +34,7 @@
 
           <!-- SECTORS HEADER -->
           <tr class="bg-gray-100">
-            <td colspan="<%= Tag::TAGGABLE_MODELS.size + 1 %>"
+            <td colspan="<%= Tag::TAGGABLE_META.size + 1 %>"
                 class="px-4 py-2 font-semibold text-gray-700">
               Service populations
             </td>
@@ -46,19 +46,18 @@
                 <%= render "sectors/tagging_label", sector: sector %>
               </td>
 
-              <% Tag::TAGGABLE_MODELS.each do |key, model| %>
-                <% count = tag_count_for(model, tag: sector, type: :sector) %>
+              <% Tag::TAGGABLE_META.each do |key, meta| %>
+                <% klass = meta[:klass] %>
+                <% count = tag_count_for(klass, tag: sector, type: :sector) %>
 
                 <td class="px-4 py-2 text-center
-                  <%= heatmap_class_for(
-                                                   count,
-                                                   model_key: key,
-                                                   type: :sector,
-                                                   quantiles: @model_heatmap_quantiles
-                                                 ) %>">
+                  <%= heatmap_class_for(count,
+                                        model_key: key,
+                                        type: :sector,
+                                        quantiles: @model_heatmap_quantiles) %>">
                   <% if count.positive? %>
                     <%= link_to count,
-                                tag_link_for(model, tag: sector, type: :sector),
+                                tag_link_for(klass, tag: sector, type: :sector),
                                 class: "font-medium text-indigo-900 hover:underline" %>
                   <% else %>
                     <span class="text-gray-400">0</span>
@@ -70,7 +69,7 @@
 
           <!-- CATEGORIES HEADER -->
           <tr class="bg-gray-100 border-t border-gray-200">
-            <td colspan="<%= Tag::TAGGABLE_MODELS.size + 1 %>"
+            <td colspan="<%= Tag::TAGGABLE_META.size + 1 %>"
                 class="px-4 py-2 font-semibold text-gray-700">
               Categories
             </td>
@@ -82,8 +81,9 @@
                 <%= render "categories/tagging_label", category: category %>
               </td>
 
-              <% Tag::TAGGABLE_MODELS.each do |key, model| %>
-                <% count = tag_count_for(model, tag: category, type: :category) %>
+              <% Tag::TAGGABLE_META.each do |key, meta| %>
+                <% klass = meta[:klass] %>
+                <% count = tag_count_for(klass, tag: category, type: :category) %>
 
                 <td class="px-4 py-2 text-center
                   <%= heatmap_class_for(
@@ -94,7 +94,7 @@
                                                  ) %>">
                   <% if count.positive? %>
                     <%= link_to count,
-                                tag_link_for(model, tag: category, type: :category),
+                                tag_link_for(klass, tag: category, type: :category),
                                 class: "font-medium text-indigo-900 hover:underline" %>
                   <% else %>
                     <span class="text-gray-400">0</span>
