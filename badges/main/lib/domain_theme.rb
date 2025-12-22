@@ -1,4 +1,6 @@
 module DomainTheme
+  # New colors must be added to the inline source in `application.tailwind.css`
+  # for tailwind to generate the classes
 	COLORS = {
 		workshops:            :indigo,
 		workshop_variations:  :purple,
