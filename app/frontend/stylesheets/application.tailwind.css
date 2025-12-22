@@ -17,6 +17,9 @@
   --color-transparent: transparent;
 }
 
+/* Used to generate classes from `domain_theme.rb`*/
+@source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,green}-{50,{100..900..100},950}");
+
 /* ✅ Safelist dynamically generated colors */
 @layer utilities {
   .text-transparent { color: transparent; }
