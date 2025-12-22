@@ -90,7 +90,7 @@ class BookmarksController < ApplicationController
     # Resolve polymorphic objects + sort desc
     @bookmark_counts = grouped_counts.group_by(&:first).flat_map do |type, rows|
       ids = rows.map { |_, id, _| id }
-      found = type.constantize.where(id: ids).index_by(&:id)
+      found = type.constantize.where(id: ids).decorate.index_by(&:id)
 
       rows.filter_map do |(_, id, count)|
         [found[id], count] if found[id]
@@ -98,6 +98,8 @@ class BookmarksController < ApplicationController
     end.sort_by { |_, count| -count }
 
     @windows_types_array = WindowsType::TYPES
+
+    @bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS.map{ |type| [ type, type ] }
 
     @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
   end

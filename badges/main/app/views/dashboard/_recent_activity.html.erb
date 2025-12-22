@@ -36,8 +36,12 @@ overflow-hidden flex flex-col md:flex-row">
   </div>
 
   <div class="flex-1 p-4">
-    <% path = (activity.object.is_a?(Resource) ? activity.url ||
-      resource_path(activity) : polymorphic_path(activity)) %>
+    <% if activity.object.is_a?(Resource) || activity.object.is_a?(Address) %>
+      <% path = activity.url || resource_path(activity) %>
+    <% else %>
+      <% path = polymorphic_path(activity) %>
+    <% end %>
+
     <%= link_to path, class: "hover:underline" do %>
       <h3 class="text-lg font-semibold text-gray-900">
         <%= link_to activity.title,

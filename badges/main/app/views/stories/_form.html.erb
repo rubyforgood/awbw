@@ -48,14 +48,19 @@
     </div>
 
     <div class="flex gap-4 mb-6">
-      <%= f.input :youtube_url,
-                  as: :text,
-                  hint: "To embed youtube video",
-                  input_html: { rows: 1, value: f.object.youtube_url || @story_idea&.youtube_url } %>
-      <%= f.input :website_url,
-                  as: :text,
-                  hint: "To link to external website",
-                  input_html: { rows: 1, value: f.object.website_url || @story_idea&.website_url } %>
+      <div class="flex-1">
+        <%= f.input :youtube_url,
+                    as: :text,
+                    hint: "Embed a youtube video",
+                    input_html: { rows: 1, value: f.object.youtube_url || @story_idea&.youtube_url } %>
+      </div>
+
+      <div class="flex-1">
+        <%= f.input :website_url,
+                    as: :text,
+                    hint: "Redirect to this website",
+                    input_html: { rows: 1, value: f.object.website_url || @story_idea&.website_url } %>
+      </div>
     </div>
 
     <div class="flex flex-col md:flex-row md:space-x-4">
@@ -104,9 +109,11 @@
       <%= f.hidden_field :updated_by_id, value: current_user.id %>
 
       <% if f.object.persisted? %>
-        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3">
+        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
           Last updated by: <br>
-          <%= f.object.updated_by&.full_name %> @ <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
+          <%= f.object.updated_by&.full_name %>
+          <br>
+          <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
         </div>
       <% end %>
     </div>
