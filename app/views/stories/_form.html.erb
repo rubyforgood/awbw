@@ -109,9 +109,11 @@
       <%= f.hidden_field :updated_by_id, value: current_user.id %>
 
       <% if f.object.persisted? %>
-        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3">
+        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
           Last updated by: <br>
-          <%= f.object.updated_by&.full_name %> @ <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
+          <%= f.object.updated_by&.full_name %>
+          <br>
+          <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
         </div>
       <% end %>
     </div>
