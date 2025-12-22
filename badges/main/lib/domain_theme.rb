@@ -22,6 +22,9 @@ module DomainTheme
 		story_ideas:          :rose,
 		event_registrations:  :blue,
 
+		banners:              :stone,
+		users:                :stone,
+
 		admin_only:           :blue,
 		user_only:            :green
 	}

@@ -50,7 +50,7 @@ category_type_categories = [
   ["AgeRange", "3-5"],
   ["AgeRange", "6-12"],
   ["AgeRange", "Teen"],
-  ["AgeRange", "Adult"],
+  ["AgeRange", "18+"],
   ["AgeRange", "Mixed-age groups"],
   ["AgeRange", "Family Windows"],
   # ["ArtType", "Boxes", 1],
