@@ -44,10 +44,11 @@ class TaggingsController < ApplicationController
 		# ------------------------------------------------------------------
 		@model_heatmap_stats = {}
 
-		Tag::TAGGABLE_MODELS.each do |key, model_class|
+		Tag::TAGGABLE_META.each do |key, data|
+			klass = data[:klass]
 			@model_heatmap_stats[key] = { sector: {}, category: {} }
 
-			model_class
+			klass
 				.published
 				.joins(:sectors)
 				.group("sectors.id")
@@ -56,7 +57,7 @@ class TaggingsController < ApplicationController
 				@model_heatmap_stats[key][:sector][sector_id] = count
 			end
 
-			model_class
+			klass
 				.published
 				.joins(:categories)
 				.group("categories.id")

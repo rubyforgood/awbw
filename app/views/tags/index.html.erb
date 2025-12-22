@@ -51,7 +51,10 @@
 
           <div class="flex flex-wrap gap-2">
             <% @sectors.each do |sector| %>
-              <%= render "sectors/tagging_label", sector: sector %>
+              <%= render "sectors/tagging_label",
+                         sector: sector,
+                         bg_color: "bg-white",
+                         bg_hover_color: "bg-lime-200" %>
             <% end %>
           </div>
         </section>
@@ -89,7 +92,9 @@
                   <% categories.each do |category| %>
                     <%= render "categories/tagging_label",
                                category: category,
-                               name_only: true %>
+                               name_only: true,
+                               bg_color: "bg-white",
+                               bg_hover_color: "bg-lime-200" %>
                   <% end %>
                 </div>
               </div>

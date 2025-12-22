@@ -150,7 +150,7 @@ RSpec.describe "Event show page", type: :system do
 			sign_in(user)
 			visit event_path(event)
 
-			expect(page).to have_css("div.bg-blue-50")
+			expect(page).to have_css("div.bg-blue-50") # <%= DomainTheme.bg_class_for(:events) %>
 			expect(page).to have_css("div.bg-white.rounded-lg.shadow.p-8")
 		end
 	end

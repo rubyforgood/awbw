@@ -37,13 +37,13 @@ class FacilitatorDecorator < ApplicationDecorator
     years = member_since ? (Time.zone.now.year - member_since.year) : 0
     badges = []
     badges << ["Legacy Facilitator (10+ years)", "yellow"] if years >= 10
-    badges << ["Seasoned Facilitator (3-10 years)", "gray"] if member_since.present? && years >= 3
+    badges << ["Seasoned Facilitator (3-10 years)", DomainTheme.bg_class_for(:facilitators)] if member_since.present? && years >= 3
     badges << ["New Facilitator (<3 years)", "green"] if member_since.present? && years < 3
     badges << ["Spotlighted Facilitator", "gray"] if stories_as_spotlighted_facilitator
-    badges << ["Events Attended", "blue"] if user.events.any?
-    badges << ["Workshop Author", "indigo"] if user.workshops.any? # indigo
-    badges << ["Story Author", "rose"] if user.stories_as_creator.any? # pink
-    badges << ["Sector Leader", "purple"] if sectorable_items.where(is_leader: true).any?
+    badges << ["Events Attended", DomainTheme.bg_class_for(:events)] if user.events.any?
+    badges << ["Workshop Author", DomainTheme.bg_class_for(:workshops)] if user.workshops.any? # indigo
+    badges << ["Story Author", DomainTheme.bg_class_for(:stories)] if user.stories_as_creator.any? # pink
+    badges << ["Sector Leader", DomainTheme.bg_class_for(:sectors)] if sectorable_items.where(is_leader: true).any?
     badges << ["Blog Contributor", "orange"] if true # || user.respond_to?(:blogs) && user.blogs.any? # red
     badges
   end

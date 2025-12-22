@@ -40,7 +40,7 @@ RSpec.describe TaggingSearchService do
 				)
 
 				expect(result).to be_a(Hash)
-				expect(result.keys).to match_array(Tag::TAGGABLE_MODELS.keys)
+				expect(result.keys).to match_array(Tag::TAGGABLE_META.keys)
 
 				result.each do |_, collection|
 					expect(collection).to eq([])

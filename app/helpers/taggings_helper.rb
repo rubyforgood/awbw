@@ -1,7 +1,7 @@
 module TaggingsHelper
 
 	def tagged_index_path(type, sector_names:, category_names:)
-		model = Tag::TAGGABLE_MODELS.fetch(type)
+		klass = Tag::TAGGABLE_META.fetch(type)[:klass]
 
 		params = {}
 
@@ -15,7 +15,7 @@ module TaggingsHelper
 			params[:categories] = hashify_ids(category_ids)
 		end
 
-		polymorphic_path(model, params)
+		polymorphic_path(klass, params)
 	end
 
 	private
