@@ -99,6 +99,8 @@ class BookmarksController < ApplicationController
 
     @windows_types_array = WindowsType::TYPES
 
+    @bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS.map{ |type| [ type, type ] }
+
     @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
   end
 
