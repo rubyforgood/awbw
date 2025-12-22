@@ -44,7 +44,7 @@
     <%= render "shared/form_image_fields", f: f, include_main_image: true %>
 
     <% if current_user.super_user? %>
-      <div class="flex items-start gap-6 bg-blue-50 p-4 rounded-lg">
+      <div class="flex items-start gap-6 admin-only bg-blue-100 p-4 rounded-lg">
         <%= f.input :inactive, as: :boolean, label: "Hidden?", input_html: { checked: f.object.id ? f.object.inactive : false } %>
 
         <%= f.input :ordering, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
@@ -85,3 +85,4 @@
                  class: "btn btn-primary" %>
   </div>
 <% end %>
+</div>
