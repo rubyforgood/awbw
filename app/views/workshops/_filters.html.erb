@@ -7,7 +7,7 @@
 <!-- Search Fields -->
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 py-0 mb-0">
-  <% [[:title, "Title"], [:author_name, "Author name"], [:query, "Full-text"]].each do |field, placeholder| %>
+  <% [[:title, "Title contains"], [:author_name, "Author name contains"], [:query, "Full-text contains"]].each do |field, placeholder| %>
     <div class="relative">
       <%= text_field_tag field,
                          params[field],
