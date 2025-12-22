@@ -10,4 +10,13 @@ class Category < ApplicationRecord
 
   # Validations
   validates_presence_of :name, uniqueness: true
+
+  # Scopes
+  scope :category_type_id, ->(category_type_id) {
+    category_type_id.present? ? where(metadatum_id: category_type_id) : all }
+  scope :category_name, ->(category_name) {
+    category_name.present? ? where("categories.name LIKE ?", "%#{category_name}%") : all }
+  scope :published, ->(published=nil) {
+    ["true", "false"].include?(published) ? where(published: published) : where(published: true) }
+  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 end

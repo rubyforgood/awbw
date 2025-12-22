@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+
   # temporary direct routes to images for migration audit
   resources :attachments, only: [:show]
   resources :media_files, only: [:show]
@@ -38,6 +39,7 @@ Rails.application.routes.draw do
       get :personal
     end
   end
+  resources :categories
   resources :community_news
   resources :event_registrations
   resources :events do

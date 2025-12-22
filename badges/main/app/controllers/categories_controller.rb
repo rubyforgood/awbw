@@ -1,0 +1,76 @@
+class CategoriesController < ApplicationController
+  before_action :set_category, only: [:show, :edit, :update, :destroy]
+
+  def index
+    per_page = params[:number_of_items_per_page].presence || 25
+    @category_types = CategoryType.order(:name)
+
+    unpaginated = Category.joins(:category_type)
+    filtered = unpaginated.category_type_id(params[:category_type_id])
+                          .category_name(params[:category_name])
+                          .published_search(params[:published_search])
+                          .order("metadata.name ASC, categories.name ASC")
+    @categories = filtered.paginate(page: params[:page], per_page: per_page)
+
+    @count_display = if @categories.total_entries == unpaginated.count
+                       unpaginated.count
+                     else
+                       "#{@categories.total_entries}/#{unpaginated.count}"
+                     end
+  end
+
+  def show
+  end
+
+  def new
+    @category = Category.new
+    set_form_variables
+  end
+
+  def edit
+    set_form_variables
+  end
+
+  def create
+    @category = Category.new(category_params)
+
+    if @category.save
+      redirect_to categories_path, notice: "Category was successfully created."
+    else
+      set_form_variables
+      render :new, status: :unprocessable_content
+    end
+  end
+
+  def update
+    if @category.update(category_params)
+      redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other
+    else
+      set_form_variables
+      render :edit, status: :unprocessable_content
+    end
+  end
+
+  def destroy
+    @category.destroy!
+    redirect_to categories_path, notice: "Category was successfully destroyed."
+  end
+
+  # Optional hooks for setting variables for forms or index
+  def set_form_variables
+    @category_types = CategoryType.order(:name)
+  end
+
+  private
+
+  def set_category
+    @category = Category.find(params[:id])
+  end
+
+  # Strong parameters
+  def category_params
+    params.require(:category).permit(
+      :name, :category_type_id, :metadatum_id, :published
+    )
+  end
+end
