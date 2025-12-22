@@ -90,7 +90,7 @@ class BookmarksController < ApplicationController
     # Resolve polymorphic objects + sort desc
     @bookmark_counts = grouped_counts.group_by(&:first).flat_map do |type, rows|
       ids = rows.map { |_, id, _| id }
-      found = type.constantize.where(id: ids).index_by(&:id)
+      found = type.constantize.where(id: ids).decorate.index_by(&:id)
 
       rows.filter_map do |(_, id, count)|
         [found[id], count] if found[id]
