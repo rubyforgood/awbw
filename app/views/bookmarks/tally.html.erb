@@ -26,7 +26,7 @@
                                                                      bookmarkable_id: bookmarkable.id),
                                                       class: "hover:underline" %></td>
           <td>
-            <%= bookmarkable.class.name %>
+            <%= bookmarkable.object.class.name %>
           </td>
           <td class="px-4 py-2">
             <% if bookmarkable.is_a?(Workshop) || (bookmarkable.is_a?(Resource) && bookmarkable.windows_type_id) %>
