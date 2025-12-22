@@ -25,7 +25,7 @@ module AdminDashboardCardsHelper
 		[
 			custom_card("Activity logs", dashboard_recent_activities_path, icon: "🧭"),
 			custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
-			model_card(:event_registrations, icon: "🎟️", intensity: 100, title: "Event Registrations"),
+			model_card(:event_registrations, icon: "🎟️", intensity: 100),
 			model_card(:quotes, icon: "💬", intensity: 100),
 			model_card(:story_ideas, icon: "✍️", intensity: 100),
 			custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
@@ -40,10 +40,10 @@ module AdminDashboardCardsHelper
 	# -----------------------------
 	def reference_cards
 		[
-			custom_card("Categories", authenticated_root_path, icon: "🗂️"),
-			custom_card("Sectors", authenticated_root_path, icon: "🏭"),
-			custom_card("Project Statuses", authenticated_root_path, icon: "🧮"),
-			custom_card("Windows Types", windows_types_path, icon: "🪟"),
+			custom_card("Categories", authenticated_root_path, icon: "🗂️", color: :lime, intensity: 100),
+			custom_card("Service populations", authenticated_root_path, icon: "🏭", color: :lime, intensity: 100),
+			custom_card("Project statuses", authenticated_root_path, icon: "🧮", color: :emerald, intensity: 100),
+			custom_card("Windows types", windows_types_path, icon: "🪟"),
 		]
 	end
 
