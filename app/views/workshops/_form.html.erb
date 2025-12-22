@@ -293,10 +293,35 @@
           </svg>
         </button>
 
-        <div
-          id="tags"
-          class="hidden border border-gray-300 p-4 rounded-b-md"
-        >
+        <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
+
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+
+            <!-- Header -->
+            <h3 class="text-base font-semibold text-gray-800 mb-3">
+              Service Populations
+            </h3>
+
+            <!-- Checkbox List -->
+            <div class="flex flex-wrap gap-3">
+              <% @sectors.each do |sector| %>
+                <% id = "workshop_sector_ids_#{sector.id}" %>
+                <label for="<%= id %>" class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                  <%= check_box_tag "workshop[sector_ids][]",
+                                    sector.id,
+                                    @workshop.sector_ids.include?(sector.id),
+                                    id: id,
+                                    class: "h-4 w-4 text-blue-600 rounded" %>
+
+                  <span class="text-sm text-gray-700 whitespace-nowrap">
+                    <%= sector.name %>
+                  </span>
+                </label>
+              <% end %>
+            </div>
+
+          </div>
+
           <div class="form-group space-y-6">
             <% @categories_grouped.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
@@ -325,33 +350,6 @@
                 </div>
               </div>
             <% end %>
-
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-
-              <!-- Header -->
-              <h3 class="text-base font-semibold text-gray-800 mb-3">
-                Sectors (Service Populations)
-              </h3>
-
-              <!-- Checkbox List -->
-              <div class="flex flex-wrap gap-3">
-                <% @sectors.each do |sector| %>
-                  <% id = "workshop_sector_ids_#{sector.id}" %>
-                  <label for="<%= id %>" class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                    <%= check_box_tag "workshop[sector_ids][]",
-                                      sector.id,
-                                      @workshop.sector_ids.include?(sector.id),
-                                      id: id,
-                                      class: "h-4 w-4 text-blue-600 rounded" %>
-
-                    <span class="text-sm text-gray-700 whitespace-nowrap">
-                      <%= sector.name %>
-                    </span>
-                  </label>
-                <% end %>
-              </div>
-
-            </div>
 
           </div>
 
