@@ -1,67 +1,87 @@
 <% sector_names = @sector_names.to_s.split("--").join(", ") %>
-<% category_names = @category_names %>
-<% category_full_names = Category.names(@category_names)
-                                 .includes(:category_type)
-                                 .map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }
-                                 .join(", ") %>
+<% category_full_names =
+     Category.names(@category_names)
+             .includes(:category_type)
+             .map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }
+             .join(", ")
+%>
 
-<div class="mt-8 mb-12 text-center">
-  <div class="taggings-header-sectors text-xs text-gray-500 text-italic">
-    Taggings
+<div class="taggings-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tags) %> border border-gray-200 rounded-xl shadow p-6">
+
+  <!-- HEADER -->
+  <div class="w-full mb-10">
+    <div class="mb-6">
+      <h1 class="text-3xl font-semibold text-gray-900 mb-2">
+        Taggings
+      </h1>
+
+      <p class="text-gray-600 max-w-2xl">
+        Content tagged by service population or thematic category.
+      </p>
+    </div>
+
+    <!-- ACTIVE FILTERS -->
+    <% if sector_names.present? || category_full_names.present? %>
+      <div class="mt-4 text-center">
+        <% if sector_names.present? %>
+          <div class="text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
+            <%= sector_names %>
+          </div>
+        <% end %>
+
+        <% if category_full_names.present? %>
+          <div class="mt-2 text-base md:text-lg text-gray-600">
+            <%= category_full_names %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
-  <% if sector_names.present? %>
-    <div class="sector-names text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
-      <%= sector_names %>
-    </div>
-  <% end %>
+  <!-- BODY -->
+  <div class="space-y-6">
 
-  <% if category_names.present? %>
-    <div class="mt-2 text-base md:text-lg text-gray-600">
-      <span class="category-names">
-        <%= category_full_names %>
-      </span>
-    </div>
-  <% end %>
-</div>
-
-<div class="flex flex-col">
-  <div class="grouped-tagged-items space-y-6">
-    <% if sector_names.blank? && category_names.blank? %>
-      <div class="text-center text-gray-400">
-        Select a population or explore tags
+    <!-- EMPTY / NO RESULTS STATES -->
+    <% if sector_names.blank? && category_full_names.blank? %>
+      <div class="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-400">
+        Select a service population or explore tags to view related content.
       </div>
+
     <% elsif @grouped_tagged_items.values.all?(&:empty?) %>
-      <div class="text-center text-gray-500">
+      <div class="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-500">
         No tagged items found for
-        <span class="text-md font-bold">
-        <%= [sector_names.presence, category_full_names.presence].compact.join(", ") %></span>
+        <span class="font-semibold text-gray-700">
+          <%= [sector_names.presence, category_full_names.presence].compact.join(", ") %>
+        </span>
       </div>
     <% end %>
 
+    <!-- RESULTS -->
     <% @grouped_tagged_items.each do |type, items| %>
       <% next if items.blank? %>
 
-      <% bg_class = Tag.bg_class_for(type) %>
+      <% bg_class = DomainTheme.bg_class_for(type) %>
 
-      <section class="<%= bg_class %> rounded-2xl px-6 py-8">
-        <!-- Section Header -->
+      <section class="<%= bg_class %> rounded-xl px-6 py-8 border border-gray-200">
+        <!-- SECTION HEADER -->
         <div class="mb-6 text-center">
-          <div class="text-xl font-semibold text-gray-900">
-            <% type_header = "<span class='section-title'>#{ type.to_s.humanize } (#{
-              items.object.total_entries
-            }) <span class='text-sm'><span class='fa fa-external-link-alt'></span></span></span>" %>
-            <%= link_to type_header.html_safe,
-                        tagged_index_path(type, sector_names: @sector_names, category_names: @category_names),
-                        class: "hover:underline" %>
-          </div>
+          <% type_header = "#{type.to_s.humanize} (#{items.object.total_entries})" %>
+
+          <h2 class="text-xl font-semibold text-gray-900">
+            <%= link_to tagged_index_path(type,
+                                          sector_names: @sector_names,
+                                          category_names: @category_names),
+                        class: "hover:underline inline-flex items-center gap-2" do %>
+              <span><%= type_header %></span>
+              <i class="fa fa-external-link-alt text-sm text-gray-500"></i>
+            <% end %>
+          </h2>
         </div>
 
         <%= render "tagged_items_carousel", items: items %>
-
       </section>
-
     <% end %>
+
   </div>
 </div>
 
