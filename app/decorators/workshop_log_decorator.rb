@@ -1,5 +1,9 @@
 class WorkshopLogDecorator < ApplicationDecorator
 
+	def detail(length: nil)
+		length ? description&.truncate(length) : description
+	end
+
 	def main_image_url
 		if main_image&.file&.attached?
 			Rails.application.routes.url_helpers.url_for(main_image.file)

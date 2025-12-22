@@ -4,6 +4,10 @@ class WorkshopVariationDecorator < ApplicationDecorator
     "#{workshop_link} >> #{name}".html_safe
   end
 
+  def detail(length: nil)
+    length ? description&.truncate(length) : description
+  end
+
   def display_code
     if legacy
       html = Nokogiri::HTML(code)
