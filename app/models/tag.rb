@@ -49,8 +49,8 @@ class Tag
 			title: key.to_s.humanize,
 			path: meta[:path].call,
 			icon: meta[:icon],
-			bg_color: bg_class_for(key),
-			hover_bg_color: bg_class_for(key, intensity: 100),
+			bg_color: DomainTheme.bg_class_for(key),
+			hover_bg_color: DomainTheme.bg_class_for(key, intensity: 100),
 			text_color: "text-gray-800"
 		}
 	end

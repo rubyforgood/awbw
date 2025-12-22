@@ -1,6 +1,6 @@
 <% title ||= "Upcoming Events" %>
 
-<section class="py-10 bg-blue-50">
+<section class="py-10 <%= DomainTheme.bg_class_for(:events) %>">
   <div class="max-w-6xl mx-auto px-4">
     <%= render "dashboard/dashboard_section_header",
                title: title,
