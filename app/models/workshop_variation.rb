@@ -16,6 +16,8 @@ class WorkshopVariation < ApplicationRecord
 
   scope :active, -> { where(inactive: false) }
 
+  delegate :windows_type, to: :workshop
+
   def description
     code # TODO - rename this field
   end
