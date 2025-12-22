@@ -93,15 +93,26 @@
         <!-- Sectors -->
         <% if @facilitator.profile_show_sectors? %>
           <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Service Populations</h2>
             <p>
               <% if @facilitator.sectorable_items.any? %>
-                <%= @facilitator.sectorable_items.joins(:sector).order("sectors.name").map do |item| %>
-                  <% "#{item.sector.name}#{ " (Leader)" if item.is_leader? }" %>
-                <% end.join(", ") %>
-              <% else %>
-                <span class="text-gray-500 italic">No sectors selected.</span>
-              <% end %>
+              <div class="flex flex-wrap gap-2">
+                <% @facilitator
+                     .sectorable_items
+                     .includes(:sector)
+                     .order("sectors.name")
+                     .each do |si| %>
+
+                  <%= render "sectors/tagging_label",
+                             sector: si.sector,
+                             display_leader: true,
+                             is_leader: si.is_leader %>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="text-gray-500 italic">None selected.</span>
+            <% end %>
+
             </p>
           </div>
         <% end %>
