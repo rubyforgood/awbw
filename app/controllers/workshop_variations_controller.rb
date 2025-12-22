@@ -1,14 +1,19 @@
 class WorkshopVariationsController < ApplicationController
 
   def index
-    if current_user.super_user?
-      @workshop_variations = WorkshopVariation.joins(:workshop).
-        where(workshops: { inactive: false }).
-        order('workshops.title, workshop_variations.name').
-        paginate(page: params[:page], per_page: 25)
-    else
+    unless current_user.super_user?
       redirect_to authenticated_root_path
+      return
     end
+
+    @workshop_variations =
+      WorkshopVariation
+        .joins(:workshop)
+        .includes(:workshop)
+        .where(workshops: { inactive: false })
+        .order("workshops.title, workshop_variations.name")
+        .paginate(page: params[:page], per_page: 25)
+        .decorate
   end
 
   def new
