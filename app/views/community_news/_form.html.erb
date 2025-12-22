@@ -63,7 +63,7 @@
     <% if @community_news.persisted? && current_user&.super_user? %>
       <%= link_to "Delete", @community_news, method: :delete,
                   data: { confirm: "Are you sure?" },
-                  class: "inline-flex items-center px-4 py-2 border border-red-300 text-red-700 bg-white hover:bg-red-50 rounded-lg transition" %>
+                  class: "btn btn-danger-outline" %>
     <% end %>
 
     <%= link_to "Cancel", community_news_index_path,
