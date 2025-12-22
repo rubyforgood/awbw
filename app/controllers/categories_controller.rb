@@ -70,7 +70,7 @@ class CategoriesController < ApplicationController
   # Strong parameters
   def category_params
     params.require(:category).permit(
-      :name, :category_type, :published
+      :name, :category_type_id, :metadatum_id, :published
     )
   end
 end

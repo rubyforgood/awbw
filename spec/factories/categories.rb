@@ -1,11 +1,8 @@
 FactoryBot.define do
   factory :category do
-    # Needs a unique name
     sequence(:name) { |n| "Category Name #{n}" }
     published { false }
-
-    # Association: belongs_to :metadatum
-    association :category_type
+    association :category_type #  belongs_to :metadatum
 
     trait :published do
       published { true }

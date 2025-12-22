@@ -1,26 +1,35 @@
 require 'rails_helper'
 
 RSpec.describe "categories/index", type: :view do
-  before(:each) do
+  let(:admin) { create(:user, :admin) }
+
+  let!(:type_a) { create(:category_type, name: "Type A") }
+  let!(:type_b) { create(:category_type, name: "Type B") }
+
+  before do
     assign(:categories, [
-      Category.create!(
-        name: "Name",
-        category_type: nil,
-        published: false
-      ),
-      Category.create!(
-        name: "Name",
-        category_type: nil,
-        published: false
-      )
+      create(:category, name: "Category One", category_type: type_a, published: true),
+      create(:category, name: "Category Two", category_type: type_b, published: false)
     ])
+
+    assign(:category_types, [type_a, type_b])
+
+    allow(view).to receive(:current_user).and_return(admin)
   end
 
-  it "renders a list of categories" do
+  it "renders each category with name, type, and published label" do
     render
-    cell_selector = 'div>p'
-    assert_select cell_selector, text: Regexp.new("Name".to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(nil.to_s), count: 2
-    assert_select cell_selector, text: Regexp.new(false.to_s), count: 2
+
+    # NAME
+    expect(rendered).to include("Category One")
+    expect(rendered).to include("Category Two")
+
+    # CATEGORY TYPE
+    expect(rendered).to include("Type A")
+    expect(rendered).to include("Type B")
+
+    # PUBLISHED?
+    expect(rendered).to include("Yes") # for first category
+    expect(rendered).to include("No")  # for second category
   end
 end
