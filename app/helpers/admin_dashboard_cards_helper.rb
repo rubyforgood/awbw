@@ -40,7 +40,7 @@ module AdminDashboardCardsHelper
 	# -----------------------------
 	def reference_cards
 		[
-			custom_card("Categories", authenticated_root_path, icon: "🗂️", color: :lime, intensity: 100),
+			model_card(:categories, icon: "🗂️", intensity: 100),
 			custom_card("Service populations", authenticated_root_path, icon: "🏭", color: :lime, intensity: 100),
 			custom_card("Project statuses", authenticated_root_path, icon: "🧮", color: :emerald, intensity: 100),
 			custom_card("Windows types", windows_types_path, icon: "🪟"),

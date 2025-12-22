@@ -56,7 +56,7 @@ category_type_categories = [
   # ["ArtType", "Boxes", 1],
   ["ArtType", "Clay", 11],
   ["ArtType", "Collage", 2],
-  ["ArtType", "Coioring"], # fake id
+  ["ArtType", "Coloring"], # fake id
   ["ArtType", "Cray-Pas (crayon, oil pastels)", 3],
   ["ArtType", "Digital Media", 21],
   ["ArtType", "Dolls", 10],
