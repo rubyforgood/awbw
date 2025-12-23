@@ -62,8 +62,16 @@ class Resource < ApplicationRecord
   scope :kind, -> (kind) { where("kind like ?", kind ) }
   scope :leader_spotlights, -> { kind("LeaderSpotlight") }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
-  scope :published, -> (published=nil) { published.present? ?
-           where(inactive: !published).published_kinds : where(inactive: false).published_kinds }
+  scope :published, ->(published=nil) {
+    if ["true", "false"].include?(published)
+      result = where(inactive: published == "true" ? false : true)
+    else
+      result = where(inactive: false)
+    end
+    result.published_kinds
+  }
+  scope :published_search, ->(published_search=nil) { published_search.present? ? published(published_search) : published_kinds }
+
   scope :recent, -> { published.by_created }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
@@ -79,7 +87,7 @@ class Resource < ApplicationRecord
     resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.kind(params[:kind]) if params[:kind].present?
-    resources = resources.published(params[:published]) if params[:published].present?
+    resources = resources.published_search(params[:published_search]) if params[:published_search].present?
     resources = resources.featured(params[:featured]) if params[:featured].present?
     resources
   end

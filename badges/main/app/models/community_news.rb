@@ -34,9 +34,13 @@ class CommunityNews < ApplicationRecord
   end
 
   scope :featured, -> { where(featured: true) }
-  scope :published, ->(published=nil) { published ? where(published: published) : where(published: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :community_news_name, ->(community_news_name) {
+    community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
+  scope :published, ->(published=nil) {
+    ["true", "false"].include?(published) ? where(published: published) : where(published: true) }
+  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)
     community_news = self.all
@@ -44,7 +48,7 @@ class CommunityNews < ApplicationRecord
     community_news = community_news.sector_names(params[:sector_names]) if params[:sector_names].present?
     community_news = community_news.category_names(params[:category_names]) if params[:category_names].present?
     community_news = community_news.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
-    community_news = community_news.published(params[:published]) if params[:published].present?
+    community_news = community_news.published_search(params[:published_search]) if params[:published_search].present?
     community_news
   end
 end
