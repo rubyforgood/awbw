@@ -6,7 +6,7 @@
   </div>
 
   <!-- CLICKABLE CARD -->
-  <%= link_to story_path(story),
+  <%= link_to story.link_target, target: "_blank", rel: "noopener",
               class: "flex flex-col md:flex-row md:items-center gap-4 cursor-pointer block" do %>
 
     <!-- LEFT: TEXT (leave right padding equal to bookmark width) -->

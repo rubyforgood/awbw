@@ -10,8 +10,8 @@
           <%= render "bookmarks/editable_bookmark_button", resource: @story %>
         </span>
 
-        <% if @story.website_url.present? %>
-          <%= link_to "Website", safe_url(@story.website_url),
+        <% if @story.external_url.present? %>
+          <%= link_to "Website", safe_url(@story.external_url), target: "_blank", rel: "noopener",
                       class: "btn btn-secondary-outline" %>
         <% end %>
 

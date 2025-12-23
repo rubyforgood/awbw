@@ -62,6 +62,10 @@ class Story < ApplicationRecord
     title
   end
 
+  def external_url
+    website_url
+  end
+
   def organization_name
     project&.name
   end

@@ -12,6 +12,11 @@
                       class: "admin-only bg-blue-100 btn btn-primary-outline") %>
         <% end %>
 
+        <% if @resource.external_url.present? %>
+          <%= link_to "Website", safe_url(@resource.external_url), target: "_blank", rel: "noopener",
+                      class: "btn btn-secondary-outline" %>
+        <% end %>
+
         <%= link_to ("<span title='Download #{@resource.kind} image'>" +
           " Download <span class='fa fa-download'></span></span>").html_safe,
                     resource_download_path(@resource),

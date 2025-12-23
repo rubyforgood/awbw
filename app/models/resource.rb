@@ -109,6 +109,10 @@ class Resource < ApplicationRecord
     title || id
   end
 
+  def external_url
+    url
+  end
+
   def download_attachment
     main_image || gallery_images.first || attachments.first
   end

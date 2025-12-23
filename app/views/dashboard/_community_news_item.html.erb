@@ -6,7 +6,8 @@
   </div>
 
   <!-- CARD BODY (clickable) -->
-  <%= link_to community_news_path(news),
+
+  <%= link_to news.link_target, target: "_blank", rel: "noopener",
               class: "flex flex-row items-start gap-4 block z-10" do %>
 
     <!-- LEFT: TITLE + BODY -->

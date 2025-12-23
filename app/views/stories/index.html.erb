@@ -47,7 +47,7 @@
                         <%= link_to (image_tag story.main_image.file,
                                       class: "w-full rounded shadow-sm border border-gray-200",
                                       alt: story.title),
-                                    story_path(story) %>
+                                    story.link_target, target: "_blank", rel: "noopener" %>
                       <% else %>
                         <svg class="w-6 h-6 text-gray-400"
                              fill="currentColor" viewBox="0 0 20 18"></svg>
@@ -57,7 +57,7 @@
                     <!-- TITLE + BADGES -->
                     <span class="inline-flex items-center gap-2">
                       <%= link_to title_with_badges(story, show_hidden_badge: current_user.super_user?).html_safe,
-                                  story_path(story),
+                                  story.link_target, target: "_blank", rel: "noopener",
                                   class: "font-bold hover:text-indigo-800 hover:underline" %>
                     </span>
                   </td>
@@ -75,7 +75,8 @@
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
                   <td class="px-4 py-2 text-sm text-gray-500">
-                    <%= link_to "View", story_path(story), class: "btn btn-secondary-outline" %>
+                    <%= link_to "View", story.link_target, target: "_blank", rel: "noopener",
+                                class: "btn btn-secondary-outline" %>
                     <% if current_user.super_user? %>
                       <%= link_to "Edit", edit_story_path(story),
                                   class: "admin-only bg-blue-100 btn btn-secondary-outline" %>

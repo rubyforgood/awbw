@@ -4,12 +4,6 @@ class ResourceDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text  # TODO - rename field
   end
 
-  def featured_url
-    return "" if url.nil?
-    url.empty? ? h.resource_path(resource) : url
-  end
-
-
   def main_image_url
     if main_image&.file&.attached?
       Rails.application.routes.url_helpers.url_for(main_image.file)
