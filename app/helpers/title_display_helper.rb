@@ -5,8 +5,9 @@ module TitleDisplayHelper
 		fragments = []
 
 		# --- Hidden badge ---
-		if show_hidden_badge && record.respond_to?(:inactive?) &&
-			record.inactive? && controller_name != "dashboard"
+		if show_hidden_badge && controller_name != "dashboard" && (
+			record.respond_to?(:inactive?) && record.inactive? && controller_name != "dashboard" ||
+			record.respond_to?(:published?) && !record.published?)
 			fragments << content_tag(
 				:span,
 				content_tag(:i, "", class: "fa-solid fa-eye-slash mr-1") + " Hidden",
