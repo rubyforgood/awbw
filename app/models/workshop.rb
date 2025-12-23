@@ -1,5 +1,5 @@
 class Workshop < ApplicationRecord
-  include Linkable, TagFilterable, WindowsTypeFilterable
+  include TagFilterable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
   belongs_to :windows_type

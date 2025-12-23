@@ -1,5 +1,5 @@
 class Event < ApplicationRecord
-  include Linkable, TagFilterable, WindowsTypeFilterable
+  include TagFilterable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User", optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy

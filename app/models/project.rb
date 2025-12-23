@@ -1,5 +1,5 @@
 class Project < ApplicationRecord
-  include Linkable, TagFilterable, WindowsTypeFilterable
+  include TagFilterable, WindowsTypeFilterable
 
   belongs_to :project_status
   belongs_to :project_obligation, optional: true
