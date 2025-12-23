@@ -42,7 +42,7 @@
                     <%= link_to (image_tag news.main_image.file,
                                   class: "w-full rounded shadow-sm border border-gray-200",
                                   alt: news.title),
-                                          community_news_path(news) %>
+                                news.link_target, target: "_blank", rel: "noopener" %>
                   <% else %>
                     <svg class="w-6 h-6 text-gray-400"
                          fill="currentColor" viewBox="0 0 20 18"></svg>
@@ -52,7 +52,7 @@
                 <!-- TITLE + BADGES -->
                 <span class="inline-flex items-center gap-2">
                   <%= link_to title_with_badges(news, show_hidden_badge: current_user.super_user?).html_safe,
-                              community_news_path(news),
+                              news.link_target, target: "_blank", rel: "noopener",
                               class: "font-bold hover:text-indigo-800 hover:underline" %>
                 </span>
               </td>
@@ -78,7 +78,7 @@
                   <% end %>
 
                   <%= link_to "View",
-                              community_news_path(news),
+                              news.link_target, target: "_blank", rel: "noopener",
                               class: "btn btn-secondary-outline" %>
                 </div>
               </td>

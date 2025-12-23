@@ -1,5 +1,5 @@
 class Quote < ApplicationRecord
-  include Linkable, TagFilterable, WindowsTypeFilterable
+  include TagFilterable, WindowsTypeFilterable
 
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy

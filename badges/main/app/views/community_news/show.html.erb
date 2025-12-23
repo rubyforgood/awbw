@@ -16,6 +16,11 @@
           <%= link_to "Edit", edit_community_news_path(@community_news),
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>
+
+        <% if @community_news.external_url.present? %>
+          <%= link_to "Website", safe_url(@community_news.external_url), target: "_blank", rel: "noopener",
+                      class: "btn btn-secondary-outline" %>
+        <% end %>
       </div>
 
       <!-- Header Row -->

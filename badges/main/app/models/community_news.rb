@@ -51,4 +51,8 @@ class CommunityNews < ApplicationRecord
     community_news = community_news.published_search(params[:published_search]) if params[:published_search].present?
     community_news
   end
+
+  def external_url
+    reference_url
+  end
 end
