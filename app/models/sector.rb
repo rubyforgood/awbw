@@ -14,7 +14,11 @@ class Sector < ApplicationRecord
   validates_presence_of :name, uniqueness: true
 
   # Scopes
-  scope :published, -> { where(published: true).
-                         order(Arel.sql("CASE WHEN name = 'Other' THEN 1 ELSE 0 END, LOWER(name) ASC")) }
+  scope :published, ->(published=nil) {
+    ["true", "false"].include?(published) ? where(published: published) : where(published: true) }
+  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
+  scope :sector_name, ->(sector_name) {
+    sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
+
 end

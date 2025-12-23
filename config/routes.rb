@@ -52,12 +52,6 @@ Rails.application.routes.draw do
   resources :projects
   resources :project_users
   resources :quotes
-  resources :users do
-    member do
-      get :generate_facilitator
-    end
-  end
-  resources :user_forms
 
   resources :monthly_reports
   get 'reports/:id/edit_story', to: 'reports#edit_story', as: 'reports_edit_story'
@@ -71,6 +65,7 @@ Rails.application.routes.draw do
 
   get 'reports/annual', to: 'reports#annual'
   resources :reports
+
   resources :resources do
     get :download
     member do
@@ -80,8 +75,15 @@ Rails.application.routes.draw do
       post :search
     end
   end
+  resources :sectors
   resources :story_ideas
   resources :stories
+  resources :users do
+    member do
+      get :generate_facilitator
+    end
+  end
+  resources :user_forms
   resources :windows_types
   resources :workshop_ideas
   resources :workshop_logs
