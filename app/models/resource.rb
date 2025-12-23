@@ -66,9 +66,9 @@ class Resource < ApplicationRecord
     if ["true", "false"].include?(published)
       result = where(inactive: published == "true" ? false : true)
     else
-      result = where(published: true)
+      result = where(inactive: false)
     end
-    result = result.published_kinds
+    result.published_kinds
   }
   scope :published_search, ->(published_search=nil) { published_search.present? ? published(published_search) : published_kinds }
 
