@@ -27,7 +27,7 @@ RSpec.describe "/community_news", type: :request do
       published: false,
       featured: false,
       author_id: admin.id,
-      reference_url: "Reference Url",
+      reference_url: "www.google.com",
       project: nil,
       windows_type: nil,
       created_by_id: admin.id,
@@ -40,6 +40,7 @@ RSpec.describe "/community_news", type: :request do
       title: nil,
       body: nil,
       author_id: nil,
+      reference_url: "reference url",
       created_by_id: nil,
       updated_by_id: nil,
     }

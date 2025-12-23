@@ -32,7 +32,9 @@ RSpec.describe "community_news/index", type: :view do
 
   before(:each) do
     sign_in admin
-    assign(:community_news, paginated([community_news1, community_news2]))
+    assign(:community_news,
+           CommunityNewsDecorator.decorate_collection(
+             paginated([community_news1, community_news2])))
   end
 
   it "renders a list of community_news" do

@@ -17,7 +17,7 @@ RSpec.describe "/stories", type: :request do
   # This should return the minimal set of attributes required to create a valid
   # Story. As you add validations to Story, be sure to
   # adjust the attributes here as well.
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:windows_type) { create(:windows_type) }
   let(:workshop) { create(:workshop) }
   let(:project) { create(:project) }

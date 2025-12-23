@@ -5,7 +5,7 @@ RSpec.describe "stories/edit", type: :view do
   let(:story) { create(:story, created_by: user, updated_by: user, body: "MyBody", youtube_url: "Youtube_url") }
 
   before(:each) do
-    assign(:story, story)
+    assign(:story, story.decorate)
     assign(:windows_types, [])
     assign(:workshops, [])
     assign(:projects, [])

@@ -7,24 +7,27 @@ class StoriesController < ApplicationController
     filtered = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
                           .search_by_params(params)
                           .order(created_at: :desc)
-    @stories = filtered.paginate(page: params[:page], per_page: per_page)
+    @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
-    @count_display = if @stories.total_entries == unpaginated.count
+    @count_display = if filtered.count == unpaginated.count
                        unpaginated.count
                      else
-                       "#{@stories.total_entries}/#{unpaginated.count}"
+                       "#{filtered.count}/#{unpaginated.count}"
                      end
   end
 
   def show
+    @story = @story.decorate
   end
 
   def new
-    @story = Story.new
+    @story = Story.new.decorate
+    @story = @story.decorate
     set_form_variables
   end
 
   def edit
+    @story = @story.decorate
     set_form_variables
   end
 
@@ -34,6 +37,7 @@ class StoriesController < ApplicationController
     if @story.save
       redirect_to stories_path, notice: "Story was successfully created."
     else
+      @story = @story.decorate
       set_form_variables
       render :new, status: :unprocessable_content
     end
@@ -43,6 +47,7 @@ class StoriesController < ApplicationController
     if @story.update(story_params.except(:images))
       redirect_to stories_path, notice: "Story was successfully updated.", status: :see_other
     else
+      @story = @story.decorate
       set_form_variables
       render :edit, status: :unprocessable_content
     end
