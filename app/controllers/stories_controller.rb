@@ -4,12 +4,16 @@ class StoriesController < ApplicationController
   def index
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = current_user.super_user? ? Story.all : Story.published
-    unpaginated = unpaginated.search_by_params(params)
-    @stories = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
+    filtered = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
+                          .search_by_params(params)
                           .order(created_at: :desc)
-                          .paginate(page: params[:page], per_page: per_page)
+    @stories = filtered.paginate(page: params[:page], per_page: per_page)
 
-    @stories_count = unpaginated.size
+    @count_display = if @stories.total_entries == unpaginated.count
+                       unpaginated.count
+                     else
+                       "#{@stories.total_entries}/#{unpaginated.count}"
+                     end
   end
 
   def show

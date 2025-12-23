@@ -39,15 +39,21 @@ class Story < ApplicationRecord
 
   # Scopes
   scope :featured, -> { where(featured: true) }
-  scope :published, ->(published=nil) { published ? where(published: published) : where(published: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :story_name, ->(story_name) {
+    story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
+  scope :published, ->(published=nil) {
+    ["true", "false"].include?(published) ? where(published: published) : where(published: true) }
+  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)
     stories = self.all
     stories = stories.search(params[:query]) if params[:query].present?
     stories = stories.sector_names(params[:sector_names]) if params[:sector_names].present?
     stories = stories.category_names(params[:category_names]) if params[:category_names].present?
+    stories = stories.story_name(params[:story_name]) if params[:story_name].present?
+    stories = stories.published_search(params[:published_search]) if params[:published_search].present?
     stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     stories
   end
