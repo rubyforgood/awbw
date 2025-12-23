@@ -1,0 +1,37 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <!-- Title -->
+        <h1 class="text-2xl font-semibold text-gray-900">
+          Service population details
+        </h1>
+
+        <!-- Buttons Group -->
+        <div class="flex items-center gap-2">
+          <%= link_to("Index", sectors_path, class: "btn btn-secondary-outline") %>
+          <% if current_user.super_user? %>
+            <%= link_to("Edit", edit_sector_path(@sector), class: "btn btn-primary-outline") %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="mt-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+
+              <div class="mb-3">
+                <p class="font-bold text-gray-700">Name:</p>
+                <p class="text-gray-900"><%= @sector.name %></p>
+              </div>
+              <div class="mb-3">
+                <p class="font-bold text-gray-700">Published:</p>
+                <p class="text-gray-900"><%= @sector.published %></p>
+              </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

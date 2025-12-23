@@ -1,0 +1,39 @@
+<!-- Filters -->
+<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+  <%= form_with url: sectors_path,
+                method: :get,
+                local: true,
+                class: "grid grid-cols-1 md:grid-cols-5 gap-4 items-end" do |f| %>
+
+    <!-- Name Search -->
+    <div>
+      <%= f.label :sector_name, "Name Contains",
+                  class: "block text-sm font-medium text-gray-700" %>
+
+      <%= f.text_field :sector_name,
+                       value: params[:sector_name],
+                       class: "mt-1 block w-full rounded-md border border-gray-300 p-2",
+                       oninput: "this.form.requestSubmit()" %>
+    </div>
+
+    <!-- Published -->
+    <div>
+      <%= f.label :published_search, "Published",
+                  class: "block text-sm font-medium text-gray-700" %>
+
+      <%= f.select :published_search,
+                   options_for_select([["All", ""], ["Published", "true"], ["Hidden", "false"]], params[:published_search]),
+                   {},
+                   class: "mt-1 block w-full rounded-md border border-gray-300 p-2",
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <!-- Clear -->
+    <div>
+      <%= link_to "Clear",
+                  sectors_path,
+                  class: "btn btn-utility-outline whitespace-nowrap" %>
+    </div>
+
+  <% end %>
+</div>

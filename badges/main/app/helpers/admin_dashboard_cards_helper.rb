@@ -40,8 +40,13 @@ module AdminDashboardCardsHelper
 	# -----------------------------
 	def reference_cards
 		[
-			model_card(:categories, icon: "🗂️", intensity: 100),
-			custom_card("Service populations", authenticated_root_path, icon: "🏭", color: :lime, intensity: 100),
+			model_card(:categories, icon: "🗂️",
+								 intensity: 100,
+								 params: { published_search: true }),
+			model_card(:sectors, icon: "🏭",
+								 intensity: 100,
+								 title: "Service populations",
+								 params: { published_search: true }),
 			custom_card("Project statuses", authenticated_root_path, icon: "🧮", color: :emerald, intensity: 100),
 			custom_card("Windows types", windows_types_path, icon: "🪟"),
 		]
@@ -50,10 +55,10 @@ module AdminDashboardCardsHelper
 	# ============================================================
 	# CARD BUILDERS
 	# ============================================================
-	def model_card(key, title: nil, icon:, intensity: 50)
+	def model_card(key, title: nil, icon:, intensity: 50, params: {})
 		{
 			title: title || key.to_s.humanize,
-			path: polymorphic_path(key.to_s.classify.constantize),
+			path: polymorphic_path(key.to_s.classify.constantize, params),
 			icon: icon,
 			bg_color: DomainTheme.bg_class_for(key, intensity: intensity),
 			hover_bg_color: DomainTheme.bg_class_for(key, intensity: intensity == 50 ? 100 : intensity + 100, hover: true),

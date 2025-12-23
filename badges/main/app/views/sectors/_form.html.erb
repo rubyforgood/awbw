@@ -1,9 +1,9 @@
-<%= simple_form_for(@category) do |f| %>
+<%= simple_form_for(@sector) do |f| %>
   <div class="space-y-6">
 
     <!-- Errors -->
     <%= f.error_notification %>
-    <%= render "shared/errors", resource: @category if @category.errors.any? %>
+    <%= render "shared/errors", resource: @sector if @sector.errors.any? %>
 
     <!-- One-line Flex Fields -->
     <div class="flex flex-wrap gap-6">
@@ -15,18 +15,6 @@
                     input_html: { class: "form-control" } %>
       </div>
 
-      <!-- Category Type -->
-      <div class="flex-1 min-w-[220px]">
-        <%= f.input :metadatum_id,
-                    label: "Category Type",
-                    collection: @category_types,
-                    label_method: :name,
-                    value_method: :id,
-                    include_blank: "Select a Type",
-                    input_html: { class: "form-control" } %>
-      </div>
-
-      <!-- Published -->
       <div class="flex items-center min-w-[150px] pt-6">
         <%= f.input :published,
                     as: :boolean,
@@ -40,19 +28,19 @@
     <!-- Actions -->
     <div class="flex flex-wrap justify-end gap-3 pt-6">
 
-      <% if @category.persisted? && current_user.super_user? %>
+      <% if @sector.persisted? && current_user.super_user? %>
         <%= link_to "Delete",
-                    @category,
+                    @sector,
                     method: :delete,
                     data: { confirm: "Are you sure you want to delete this category?" },
                     class: "btn btn-danger-outline" %>
       <% end %>
 
-      <%= link_to "Cancel", categories_path,
+      <%= link_to "Cancel", sectors_path,
                   class: "btn btn-secondary-outline" %>
 
       <%= f.button :submit,
-                   "Save Category",
+                   "Save Sector",
                    class: "btn btn-primary" %>
     </div>
 
