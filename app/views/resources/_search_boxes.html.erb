@@ -24,10 +24,10 @@
              class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">
         Published
       </label>
-      <%= select_tag :published,
+      <%= select_tag :published_search,
                      options_for_select(
                        [["All", ""], ["Published", "true"], ["Hidden", "false"]],
-                       params[:published]
+                       params[:published_search]
                      ),
                      class: "border border-gray-300 rounded-lg px-3 py-2 text-gray-700 w-full",
                      onchange: "this.form.submit();" %>

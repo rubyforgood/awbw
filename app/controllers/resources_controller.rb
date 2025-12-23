@@ -1,18 +1,19 @@
 class ResourcesController < ApplicationController
 
   def index
+    per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = Resource.where(kind: Resource::PUBLISHED_KINDS) #TODO - #FIXME brittle
                           .includes(:main_image, :gallery_images, :attachments)
-                          .search_by_params(params)
+    filtered = unpaginated.search_by_params(params)
                           .by_created
-    @resources = unpaginated.paginate(page: params[:page], per_page: 24)
+    @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
-    @resources_count = unpaginated.size
+    @count_display = if @resources.total_entries == unpaginated.count
+                       unpaginated.count
+                     else
+                       "#{@resources.total_entries}/#{unpaginated.count}"
+                     end
     @sortable_fields = Resource::PUBLISHED_KINDS
-
-    respond_to do |format|
-      format.html
-    end
   end
 
   def stories
