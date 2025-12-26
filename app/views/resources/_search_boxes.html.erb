@@ -9,6 +9,7 @@
          collection_unselected_class: default_btn,
          collection_selected_class: selected_btn,
          turbo_frame: "resource_results" },
+         autocomplete: "off",
   class: "space-y-2" do %>
   <!-- Search Fields -->
   <div class="flex flex-wrap md:flex-nowrap items-end gap-6">
@@ -41,9 +42,7 @@
     </div>
 
     <!-- KINDS -->
-    <div class="min-w-[150px]">
-      <%= render "search_boxes_kinds", sortable_fields: Resource::PUBLISHED_KINDS, default_btn: default_btn %>
-    </div>
+    <div class="min-w-[150px]"><%= render "search_boxes_kinds", default_btn: default_btn %></div>
 
     <!-- CLEAR FILTERS -->
     <div class="min-w-[120px] pb-3">

@@ -4,7 +4,7 @@
   </h3>
 
   <div class="flex flex-wrap gap-2">
-    <% sortable_fields.each do |sortable_field| %>
+    <% Resource::PUBLISHED_KINDS.each do |sortable_field| %>
       <% name = sortable_field.is_a?(String) ? sortable_field : sortable_field.name %>
 
       <label
@@ -16,9 +16,9 @@
           <%= default_btn %>
         "
       >
-        <%= check_box_tag(:kind, name, name.to_s == params[:kind],
-                          id: "kind_#{name}",
-                          class: "hidden") %>
+        <%= check_box_tag("kind[]", name, Array(params[:kind]).include?(name),
+                        id: "kind_#{name}",
+                        class: "hidden") %>
         <%= name.titleize.pluralize %>
       </label>
     <% end %>

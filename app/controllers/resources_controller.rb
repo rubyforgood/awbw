@@ -9,12 +9,14 @@ class ResourcesController < ApplicationController
         .by_created
       @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
-      @count_display = if filtered.count == unfiltered.count
-        unfiltered.count
-      else
-        "#{filtered.count}/#{unfiltered.count}"
-      end
-      @sortable_fields = Resource::PUBLISHED_KINDS
+      total_count = unfiltered.count
+      filtered_count = filtered.count
+      @count_display = if filtered_count == total_count
+                         total_count
+                       else
+                         "#{filtered_count}/#{total_count}"
+                       end
+
       render :search_results
     else
       render :index
