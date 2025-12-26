@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Tags frames", type: :request do
+RSpec.describe "Tags index", type: :request do
   let!(:sector) { create(:sector, :published, name: "Youth") }
   let!(:category_type) { create(:category_type, name: "Theme") }
   let!(:category) { create(:category, :published, name: "Healing", category_type: category_type) }
