@@ -10,6 +10,13 @@ RSpec.describe "Tags frames", type: :request do
 
     before { sign_in user }
 
+    it "renders Service Populations and Categories skeleton" do
+      get tags_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Service Populations")
+      expect(response.body).to include("Categories")
+    end
+
     it "renders sectors frame" do
       get tags_sectors_path
       expect(response).to have_http_status(:ok)
