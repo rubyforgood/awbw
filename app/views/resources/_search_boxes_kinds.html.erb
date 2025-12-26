@@ -13,33 +13,20 @@
     <% sortable_fields.each do |sortable_field| %>
       <% name = sortable_field.is_a?(String) ? sortable_field : sortable_field.name %>
 
-      <label for="kind_<%= name %>"
-             class="
+      <label
+        for="kind_<%= name %>"
+        class="
           inline-flex items-center cursor-pointer
           px-4 py-2 rounded-lg font-medium text-sm
           transition-all duration-150
           <%= name.to_s == params[:kind] ? selected_btn : default_btn %>
-        ">
-        <%= check_box_tag(:kind, name, name.to_s == params[:kind],
+        "
+      >
+        <%= radio_button_tag(:kind, name, name.to_s == params[:kind],
                           id: "kind_#{name}",
                           class: "hidden") %>
         <%= name.titleize.pluralize %>
       </label>
-
-      <script>
-          document.addEventListener("turbo:load", function () {
-              const el = document.getElementById("kind_<%= name %>")
-              if (el) {
-                  el.addEventListener("change", function () {
-                      const url = new URL(window.location.href)
-                      url.searchParams.set("kind", "<%= name %>")
-                      url.searchParams.delete("show_all")
-                      window.location.href = url.toString()
-                  })
-              }
-          })
-      </script>
-
     <% end %>
   </div>
 </div>
