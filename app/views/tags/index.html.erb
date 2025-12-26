@@ -1,5 +1,4 @@
 <div class="tags-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tags) %> border border-gray-200 rounded-xl shadow p-6">
-
   <!-- HEADER -->
   <div class="w-full mb-10">
     <div class="flex items-start justify-between gap-6 mb-10">
@@ -15,94 +14,73 @@
 
       <!-- Action button -->
       <%# if current_user.super_user? %>
-<!--        <div class="flex-shrink-0 pt-1">-->
-          <%#= link_to "Manage sectors",
-                      authenticated_root_path,
-                      class: "whitespace-nowrap btn btn-secondary-outline" %>
-          <%#= link_to "Manage categories",
-                      authenticated_root_path,
-                      class: "whitespace-nowrap btn btn-secondary-outline" %>
-<!--        </div>-->
+      <!-- <div class="flex-shrink-0 pt-1"> -->
+      <%#
+        = link_to "Manage sectors",
+        authenticated_root_path,
+        class: "whitespace-nowrap btn btn-secondary-outline"
+      %>
+      <%#
+        = link_to "Manage categories",
+        authenticated_root_path,
+        class: "whitespace-nowrap btn btn-secondary-outline"
+      %>
+      <!-- </div> -->
       <%# end %>
     </div>
 
     <div class="space-y-6">
+      <!-- SERVICE POPULATIONS -->
+      <section class="bg-lime-100 border border-lime-200 rounded-xl p-6">
+        <div class="flex items-start justify-between gap-6 mb-5">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">
+              Service Populations
+            </h2>
+            <p class="text-sm text-slate-600">
+              Who this content is intended to support
+            </p>
+          </div>
 
-        <!-- SERVICE POPULATIONS -->
-        <section class="bg-lime-100 border border-lime-200 rounded-xl p-6">
-          <div class="flex items-start justify-between gap-6 mb-5">
-            <div>
-              <h2 class="text-lg font-semibold text-slate-900">
-                Service Populations
-              </h2>
-              <p class="text-sm text-slate-600">
-                Who this content is intended to support
-              </p>
-            </div>
-
-            <% if current_user.super_user? %>
-              <div class="flex-shrink-0">
-                <%= link_to "Manage sectors",
+          <% if current_user.super_user? %>
+            <div class="flex-shrink-0">
+              <%= link_to "Manage sectors",
                             authenticated_root_path,
                             class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
-              </div>
-            <% end %>
-          </div>
-
-          <div class="flex flex-wrap gap-2">
-            <% @sectors.each do |sector| %>
-              <%= render "sectors/tagging_label",
-                         sector: sector,
-                         bg_color: "bg-white",
-                         bg_hover_color: "bg-lime-200" %>
-            <% end %>
-          </div>
-        </section>
-
-
-        <!-- CATEGORIES -->
-        <section class="bg-lime-100 border border-lime-200 rounded-xl p-6">
-          <div class="flex items-start justify-between gap-6 mb-5">
-            <div>
-              <h2 class="text-lg font-semibold text-stone-900">
-                Categories
-              </h2>
-              <p class="text-sm text-stone-600">
-                Themes and topics represented across content
-              </p>
             </div>
+          <% end %>
+        </div>
 
-            <% if current_user.super_user? %>
-              <div class="flex-shrink-0">
-                <%= link_to "Manage categories",
+        <%= turbo_frame_tag :sectors_tags, src: tags_sectors_path do %>
+          <% render "loading" %>
+        <% end %>
+      </section>
+
+      <!-- CATEGORIES -->
+      <section class="bg-lime-100 border border-lime-200 rounded-xl p-6">
+        <div class="flex items-start justify-between gap-6 mb-5">
+          <div>
+            <h2 class="text-lg font-semibold text-stone-900">
+              Categories
+            </h2>
+            <p class="text-sm text-stone-600">
+              Themes and topics represented across content
+            </p>
+          </div>
+
+          <% if current_user.super_user? %>
+            <div class="flex-shrink-0">
+              <%= link_to "Manage categories",
                             authenticated_root_path,
                             class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
-              </div>
-            <% end %>
-          </div>
+            </div>
+          <% end %>
+        </div>
 
-          <div class="space-y-8">
-            <% @categories_by_type.each do |type, categories| %>
-              <div>
-                <div class="text-sm font-semibold text-stone-800 mb-3 uppercase tracking-wide">
-                  <%= type.titleize %>
-                </div>
-
-                <div class="flex flex-wrap gap-2">
-                  <% categories.each do |category| %>
-                    <%= render "categories/tagging_label",
-                               category: category,
-                               name_only: true,
-                               bg_color: "bg-white",
-                               bg_hover_color: "bg-lime-200" %>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </section>
-
-
-      </div>
+        <%= turbo_frame_tag :categories_tags, src: tags_categories_path do %>
+          <%= render "loading" %>
+        <% end %>
+      </section>
+    </div>
   </div>
 </div>
