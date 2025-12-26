@@ -24,7 +24,6 @@
     <%= turbo_frame_tag :resource_results, src: resources_path do %>
       <div class="min-h-screen">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-          <!-- Repeat this card skeleton as many times as needed -->
           <% 9.times do %>
             <div class="relative">
               <div class="flex flex-row flex-wrap bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -74,9 +73,6 @@
         </div>
       </div>
     <% end %>
-
-    <!-- Pagination -->
-    <div class="pagination flex justify-center mt-6 w-full"><%= tailwind_paginate @resources %></div>
   </div>
 </div>
 

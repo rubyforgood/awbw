@@ -71,7 +71,8 @@
           <%= link_to(
                 content_tag(:span, "", class: "far fa-edit"),
                 edit_resource_path(resource.object),
-                class: "admin-only bg-blue-100 btn btn-secondary-outline"
+                class: "admin-only bg-blue-100 btn btn-secondary-outline",
+                data: {turbo: false}
               ) %>
         <% end %>
 
