@@ -1,19 +1,24 @@
 class ResourcesController < ApplicationController
 
   def index
-    per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Resource.where(kind: Resource::PUBLISHED_KINDS) #TODO - #FIXME brittle
-                          .includes(:main_image, :gallery_images, :attachments)
-    filtered = unpaginated.search_by_params(params)
-                          .by_created
-    @resources = filtered.paginate(page: params[:page], per_page: per_page).decorate
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      unfiltered = Resource.where(kind: Resource::PUBLISHED_KINDS) # TODO - #FIXME brittle
+        .includes(:main_image, :gallery_images, :attachments)
+      filtered = unfiltered.search_by_params(params)
+        .by_created
+      @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
-    @count_display = if filtered.count == unpaginated.count
-                       unpaginated.count
-                     else
-                       "#{filtered.count}/#{unpaginated.count}"
-                     end
-    @sortable_fields = Resource::PUBLISHED_KINDS
+      @count_display = if filtered.count == unfiltered.count
+        unfiltered.count
+      else
+        "#{filtered.count}/#{unfiltered.count}"
+      end
+      @sortable_fields = Resource::PUBLISHED_KINDS
+      render :search_results
+    else
+      render :index
+    end
   end
 
   def stories
