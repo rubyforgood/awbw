@@ -60,13 +60,9 @@
 
       <!-- TITLE -->
       <div class="mt-3 mb-2">
-<<<<<<< HEAD
         <%= link_to item.link_target,
                     target: item.external_link? ? "_blank" : "",
                     rel: "noopener noreferrer",
-=======
-        <%= link_to item.object_link_target,
->>>>>>> 7a7d10fc (Only implement link_target w Linkable, otherwise use object_link_target via decorator (called from taggings index))
                     class: "inline-flex min-w-0 max-w-full text-lg font-semibold
                             text-gray-900 leading-tight hover:underline" do %>
           <%= item.title.truncate(50) %>
