@@ -40,7 +40,6 @@ class BookmarksController < ApplicationController
   def create
     @bookmark = current_user.bookmarks.find_or_create_by(bookmark_params)
     @bookmarkable = @bookmark.bookmarkable
-    @bookmarkable.update(led_count: @bookmarkable.led_count + 1) if @bookmarkable.has_attribute?(:led_count)
     respond_to do |format|
       format.html {
         redirect_to authenticated_root_path, notice: "#{@bookmark.bookmarkable_type} added to your bookmarks."
@@ -63,7 +62,6 @@ class BookmarksController < ApplicationController
     if @bookmark
       @bookmark.destroy
       @bookmarkable = @bookmark.bookmarkable
-      @bookmarkable.update(led_count: @bookmarkable.led_count - 1) if @bookmarkable.has_attribute?(:led_count)
       respond_to do |format|
         format.html {
           redirect_to authenticated_root_path, notice: "Bookmark has been deleted."

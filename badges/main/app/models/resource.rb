@@ -103,11 +103,6 @@ class Resource < ApplicationRecord
     "#{self.title} (#{self.kind.upcase})" unless self.kind.nil?
   end
 
-  # Methods
-  def led_count
-    0
-  end
-
   def name
     title || id
   end

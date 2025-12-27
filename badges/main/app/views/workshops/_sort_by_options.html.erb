@@ -18,6 +18,14 @@
   <label class="flex items-center gap-1 cursor-pointer">
     <%= radio_button_tag :sort, "led",
                          @sort == "led" %>
+    <span class="text-sm">Most led</span>
+  </label>
+</div>
+
+<div class="flex items-center gap-1">
+  <label class="flex items-center gap-1 cursor-pointer">
+    <%= radio_button_tag :sort, "popularity",
+                         @sort == "popularity" %>
     <span class="text-sm">Most bookmarked</span>
   </label>
 </div>

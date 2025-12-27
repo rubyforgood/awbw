@@ -5,7 +5,11 @@
     <%= render "bookmarks/editable_bookmark_button", resource: workshop.object %>
     <%= tag.span id: dom_id(workshop, :bookmark_count_facilitator), class: "text-gray-600 text-sm" do %>
       (Bookmarked by
-      <%= pluralize(workshop.led_count, "facilitator") %>)
+      <%= pluralize(workshop.bookmarks.count, "facilitator") %>,
+    <% end %>
+    <%= tag.span id: dom_id(workshop, :led_count), class: "text-gray-600 text-sm" do %>
+      Led:
+      <%= pluralize(workshop.led_count, "time") %>)
     <% end %>
   </div>
 
