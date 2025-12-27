@@ -1,24 +1,24 @@
 # frozen_string_literal: true
 
 class WorkshopsController < ApplicationController
-
   def index
-    search_service = WorkshopSearchService.new(params,
-                                               super_user: current_user.super_user?).call
-    @sort = search_service.sort
-
-    @workshops = search_service.workshops
-                               .includes(:categories, :sectors, :windows_type, :user, :images, :bookmarks)
-                               .paginate(page: params[:page], per_page: params[:per_page] || 50)
-
-    @workshops_count = search_service.workshops.size
-
     @category_types = CategoryType.includes(:categories).published.decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
+    if turbo_frame_request?
+      search_service = WorkshopSearchService.new(params,
+        super_user: current_user.super_user?).call
+      @sort = search_service.sort
 
-    respond_to do |format|
-      format.html
+      @workshops = search_service.workshops
+        .includes(:categories, :sectors, :windows_type, :user, :images, :bookmarks)
+        .paginate(page: params[:page], per_page: params[:per_page] || 50)
+
+      @workshops_count = search_service.workshops.size
+
+      render :workshop_results
+    else
+      render :index
     end
   end
 

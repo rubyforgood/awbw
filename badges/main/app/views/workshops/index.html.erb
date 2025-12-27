@@ -25,8 +25,8 @@
   <!-- Search Form -->
   <div class="w-full">
     <%= form_tag(workshops_path, method: :get,
-                 data: {turbo_stream: true, turbo_frame: "frame_list",
-                        controller: "collection share-url"}, class: "space-y-6") do %>
+                 data: {turbo_stream: true, turbo_frame: "workshop_results",
+                        controller: "collection share-url"}, autocomplete: "off", class: "space-y-6") do %>
       <%= render "filters" %>
       <div><hr class="border-gray-300 my-6"></div>
 
@@ -46,24 +46,64 @@
     <% end %>
 
     <!-- Workshops List -->
-    <%= turbo_frame_tag "frame_list" do %>
-      <%= turbo_stream.replace("filters_applied", partial: "filters_applied") %>
-      <%= turbo_stream.replace("workshops_count", partial: "workshops_count") %>
-      <%= turbo_stream.replace("copy_url", partial: "shared/copy_url") %>
+    <%= turbo_frame_tag "workshop_results", src: workshops_path  do %>
+      <%= render "workshops_count" %>
       <div class="mt-6">
-        <% if @workshops.any? %>
-          <div id="workshops-list" class="space-y-4 animate-fade">
-            <% @workshops.each do |workshop| %>
-              <%= render "workshops/index_row", workshop: workshop.decorate,
-                         breadcrumb: "Workshops", link_route: workshop_path(workshop) %>
-            <% end %>
-          </div>
-          <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @workshops %></div>
-        <% else %>
-          <p class="text-gray-600">
-            Your search returned no results. Please try again.
-          </p>
-        <% end %>
+        <div class="space-y-4 animate-pulse">
+          <% 3.times do %>
+            <div class="flex flex-col sm:flex-row border-b border-gray-200 bg-white gap-4 p-4">
+              <!-- 1️⃣ Image skeleton -->
+              <div class="flex-shrink-0 w-full sm:w-32 h-32 sm:h-24 bg-gray-200 rounded"></div>
+
+              <!-- Content -->
+              <div class="flex flex-col sm:flex-row gap-4 flex-1">
+                <!-- Title / metadata -->
+                <div class="flex flex-1 gap-4">
+                  <!-- Bookmark placeholder -->
+                  <div class="flex-shrink-0 pt-1 w-6">
+                    <div class="w-5 h-5 bg-gray-200 rounded"></div>
+                  </div>
+
+                  <!-- Title + metadata -->
+                  <div class="flex flex-col gap-2 flex-1 min-w-0">
+                    <!-- Badge -->
+                    <div class="h-5 w-32 bg-gray-200 rounded-full"></div>
+
+                    <!-- Title -->
+                    <div class="h-6 w-3/4 bg-gray-300 rounded"></div>
+
+                    <!-- Author + date -->
+                    <div class="h-4 w-1/2 bg-gray-200 rounded"></div>
+
+                    <!-- Bookmark count -->
+                    <div class="h-4 w-40 bg-gray-200 rounded"></div>
+
+                    <!-- Age ranges -->
+                    <div class="h-4 w-48 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div class="flex flex-1 gap-4 pr-4 sm:pr-3">
+                  <!-- Empty bookmark spacer -->
+                  <div class="w-6 flex-shrink-0"></div>
+
+                  <!-- Description text -->
+                  <div class="flex-1 space-y-2">
+                    <div class="h-4 w-full bg-gray-200 rounded"></div>
+
+                    <div class="h-4 w-5/6 bg-gray-200 rounded"></div>
+
+                    <div class="h-4 w-2/3 bg-gray-200 rounded"></div>
+
+                    <!-- Tags -->
+                    <div class="mt-3 h-4 w-1/2 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
       </div>
     <% end %>
   </div>
