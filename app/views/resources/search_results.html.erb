@@ -1,5 +1,6 @@
 <%= turbo_frame_tag :resource_results do %>
-  <%= @count_display %>
+  <%= turbo_stream.replace("resource_count", partial: "resource_count") %>
+  <%= turbo_stream.replace("copy_url", partial: "shared/copy_url") %>
   <% if @resources.any? %>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <% @resources.each do |resource| %>
