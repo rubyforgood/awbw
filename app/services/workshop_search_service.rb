@@ -5,8 +5,13 @@ class WorkshopSearchService
 	def initialize(params = {}, super_user: false)
 		@params = params
 		@super_user = super_user
-		@workshops = Workshop.all
 		@sort = default_sort
+		@workshops =
+			if @sort == "popularity"
+				Workshop.with_bookmarks_count
+			else
+				Workshop.all
+			end
 	end
 
 	# Main entry point
@@ -196,45 +201,55 @@ class WorkshopSearchService
 
 	def order_by_params
 		case sort
-		when 'created'
-			# order by year/month desc, then created_at desc, then title asc
+		when "created"
 			@workshops = @workshops.order(
 				Arel.sql(<<~SQL.squish)
-          CASE WHEN year IS NOT NULL AND month IS NOT NULL THEN 1 ELSE 2 END ASC,
-          year DESC,
-          month DESC,
-          created_at DESC,
-          title ASC
-        SQL
+        CASE WHEN year IS NOT NULL AND month IS NOT NULL THEN 1 ELSE 2 END ASC,
+        year DESC,
+        month DESC,
+        created_at DESC,
+        title ASC
+      SQL
 			)
-		when 'led'
+		when "led"
 			@workshops = @workshops.order(led_count: :desc, title: :asc)
-		when 'title'
+		when "popularity"
+			@workshops = @workshops.order(
+				Arel.sql("bookmarks_count DESC, title ASC")
+			)
+		when "title"
 			@workshops = @workshops.order(title: :asc)
-		when 'keywords'
-			# already ordered in filter_by_query
+		when "keywords"
+			# already ordered
 		else
 			@workshops = @workshops.order(created_at: :asc, title: :asc)
 		end
 	end
 
+
 	# --- Handle distinct + order by FIELD(id, ...) for complex joins ---
 	def resolve_ids_order
-		return if sort == 'keywords' # ordering is already handled if this is the case
+		return if sort == "keywords"
 
-		# Determine sort columns for select
-		sort_columns = case sort
-									 when 'created' then [:id, :created_at, :year, :month, :title]
-									 when 'led'     then [:id, :led_count, :title]
-									 when 'title'   then [:id, :title]
-									 else [:id, :title]
-									 end
+		sort_columns =
+			case sort
+			when "created"    then [:id, :created_at, :year, :month, :title]
+			when "led"        then [:id, :led_count, :title]
+			when "popularity" then [:id, :bookmarks_count, :title]
+			when "title"      then [:id, :title]
+			else [:id, :title]
+			end
 
-    workshop_ids = @workshops
-      .select(*sort_columns)
-      .order(sort_columns)
-      .map(&:id)
-		@workshops = Workshop.where(id: workshop_ids)
-												 .order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
+		workshop_ids =
+			@workshops
+				.select(*sort_columns)
+				.order(sort_columns)
+				.map(&:id)
+
+		@workshops =
+			Workshop
+				.where(id: workshop_ids)
+				.order(Arel.sql("FIELD(id, #{workshop_ids.join(',')})"))
 	end
+
 end
