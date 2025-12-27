@@ -63,7 +63,7 @@ class Resource < ApplicationRecord
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds)
   }
-  scope :leader_spotlights, -> { kind("LeaderSpotlight") }
+  scope :leader_spotlights, -> { kinds("LeaderSpotlight") }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
   scope :published, ->(published=nil) {
     if ["true", "false"].include?(published)
