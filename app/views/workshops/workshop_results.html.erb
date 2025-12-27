@@ -5,6 +5,7 @@
 
   <%= turbo_stream.replace("copy_url", partial: "copy_url") %>
 
+  <%= render "workshops_count" %>
   <div class="mt-6">
     <% if @workshops.any? %>
       <div id="workshops-list" class="space-y-4 animate-fade">
