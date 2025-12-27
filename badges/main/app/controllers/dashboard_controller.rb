@@ -1,5 +1,4 @@
 class DashboardController < ApplicationController
-  skip_before_action :authenticate_user!, only: :help
   include AdminDashboardCardsHelper
 
   def index

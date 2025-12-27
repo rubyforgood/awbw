@@ -1,0 +1,45 @@
+<div class="<%= controller_name %>-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(controller_name.to_sym) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="w-full">
+    <div class="flex items-start justify-between mb-6">
+      <div class="pr-6">
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">
+          Tutorials (<%= @count_display %>)
+        </h2>
+
+        <p class="text-gray-600 max-w-2xl">
+          Step-by-step guides to help you get the most out of the platform
+        </p>
+      </div>
+
+      <div class="text-right text-end">
+        <% if current_user.super_user? %>
+          <%= link_to "New #{Tutorial.model_name.human.downcase}",
+                       new_tutorial_path,
+                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "search_boxes" rescue nil %>
+
+    <div class="overflow-x-auto">
+      <!-- Tutorials -->
+      <div class="space-y-16">
+        <% if @tutorials.any? %>
+          <% @tutorials.each do |tutorial| %>
+            <%= render "tutorial", tutorial: tutorial %>
+          <% end %>
+
+          <!-- Pagination -->
+          <div class="pagination flex justify-center mt-12">
+            <%= tailwind_paginate @tutorials %>
+          </div>
+        <% else %>
+          <div class="text-gray-500 italic">
+            No tutorials found matching your filters.
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

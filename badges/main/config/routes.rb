@@ -24,7 +24,6 @@ Rails.application.routes.draw do
   post 'contact_us', to: 'contact_us#create'
   get 'dashboard/admin', to: 'dashboard#admin'
   get 'dashboard/recent_activities', to: 'dashboard#recent_activities'
-  get 'dashboard/help', to: 'dashboard#help'
   get "image_migration_audit", to: "image_migration_audit#index"
 
   get "taggings", to: "taggings#index", as: "taggings"
@@ -80,6 +79,7 @@ Rails.application.routes.draw do
   resources :sectors
   resources :story_ideas
   resources :stories
+  resources :tutorials
   resources :users do
     member do
       get :generate_facilitator
