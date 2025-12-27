@@ -1,6 +1,8 @@
 <%# app/views/stories/_story_card.html.erb %>
 <%# locals: story:, href: story_path(story) by default, show_meta: true, show_excerpt: true %>
-<% href       = local_assigns.fetch(:href, story.link_target, target: "_blank", rel: "noopener") %>
+<% href       = local_assigns.fetch(:href,
+                                    story.link_target,
+                                    target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer") %>
 <% show_meta  = local_assigns.fetch(:show_meta, true) %>
 <% show_excerpt = local_assigns.fetch(:show_excerpt, true) %>
 

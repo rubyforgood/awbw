@@ -5,17 +5,17 @@ class CategoriesController < ApplicationController
     per_page = params[:number_of_items_per_page].presence || 25
     @category_types = CategoryType.order(:name)
 
-    unpaginated = Category.joins(:category_type)
-    filtered = unpaginated.category_type_id(params[:category_type_id])
+    unfiltered = Category.joins(:category_type)
+    filtered = unfiltered.category_type_id(params[:category_type_id])
                           .category_name(params[:category_name])
                           .published_search(params[:published_search])
                           .order("metadata.name ASC, categories.name ASC")
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
 
-    @count_display = if @categories.total_entries == unpaginated.count
-                       unpaginated.count
+    @count_display = if filtered.count == unfiltered.count
+                       unfiltered.count
                      else
-                       "#{@categories.total_entries}/#{unpaginated.count}"
+                       "#{filtered.count}/#{unfiltered.count}"
                      end
   end
 

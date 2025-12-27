@@ -458,7 +458,7 @@ DEPENDENCIES
   better_errors
   binding_of_caller
   bootsnap
-  brakeman (~> 7.1.1)
+  brakeman (~> 7.1.2)
   bundler-audit
   capybara (~> 3.36)
   cocoon (~> 1.2.6)

@@ -15,7 +15,7 @@ class FacilitatorsController < ApplicationController
                      .search_by_params(params.to_unsafe_h)
                      .includes(:user).references(:user)
                      .order(:first_name, :last_name)
-    @facilitators_count = facilitators.size
+    @count_display = facilitators.size
     @facilitators = facilitators.paginate(page: params[:page], per_page: per_page)
   end
 

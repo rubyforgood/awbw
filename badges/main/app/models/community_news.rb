@@ -1,5 +1,5 @@
 class CommunityNews < ApplicationRecord
-  include Linkable, TagFilterable, WindowsTypeFilterable
+  include TagFilterable, WindowsTypeFilterable
 
   belongs_to :project, optional: true
   belongs_to :windows_type, optional: true
@@ -52,7 +52,4 @@ class CommunityNews < ApplicationRecord
     community_news
   end
 
-  def external_url
-    reference_url
-  end
 end

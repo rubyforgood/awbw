@@ -5,7 +5,7 @@ RSpec.describe "stories/show", type: :view do
   let(:story_idea) { create(:story_idea, :with_story,
                             created_by: admin, updated_by: admin,
                             body: "MyBody", youtube_url: "Youtube_url") }
-  let(:story) { story_idea.stories.first }
+  let(:story) { story_idea.stories.first.decorate }
 
   before(:each) do
     sign_in admin

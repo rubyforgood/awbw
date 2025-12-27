@@ -6,22 +6,22 @@ class ResourcesController < ApplicationController
                           .includes(:main_image, :gallery_images, :attachments)
     filtered = unpaginated.search_by_params(params)
                           .by_created
-    @resources = filtered.paginate(page: params[:page], per_page: per_page)
+    @resources = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
-    @count_display = if @resources.total_entries == unpaginated.count
+    @count_display = if filtered.count == unpaginated.count
                        unpaginated.count
                      else
-                       "#{@resources.total_entries}/#{unpaginated.count}"
+                       "#{filtered.count}/#{unpaginated.count}"
                      end
     @sortable_fields = Resource::PUBLISHED_KINDS
   end
 
   def stories
-    @stories = Resource.story.paginate(page: params[:page], per_page: 6)
+    @stories = Resource.story.paginate(page: params[:page], per_page: 6).decorate
   end
 
   def new
-    @resource = Resource.new
+    @resource = Resource.new.decorate
     set_form_variables
   end
 
@@ -47,6 +47,7 @@ class ResourcesController < ApplicationController
     if @resource.save
       redirect_to resources_path
     else
+      @resource = @resource.decorate
       set_form_variables
       flash[:alert] = "Unable to save #{@resource.title.titleize}"
       render :new

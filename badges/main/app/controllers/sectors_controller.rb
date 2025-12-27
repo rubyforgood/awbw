@@ -3,16 +3,16 @@ class SectorsController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Sector.all
-    filtered = unpaginated.sector_name(params[:sector_name])
+    unfiltered = Sector.all
+    filtered = unfiltered.sector_name(params[:sector_name])
                           .published_search(params[:published_search])
                           .order(:name)
     @sectors = filtered.paginate(page: params[:page], per_page: per_page)
 
-    @count_display = if @sectors.total_entries == unpaginated.count
-                       unpaginated.count
+    @count_display = if filtered.count == unfiltered.count
+                       unfiltered.count
                      else
-                       "#{@sectors.total_entries}/#{unpaginated.count}"
+                       "#{filtered.count}/#{unfiltered.count}"
                      end
   end
 

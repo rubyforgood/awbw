@@ -1,5 +1,5 @@
 class Resource < ApplicationRecord
-  include Linkable, TagFilterable, WindowsTypeFilterable
+  include TagFilterable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
   PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
@@ -107,10 +107,6 @@ class Resource < ApplicationRecord
 
   def name
     title || id
-  end
-
-  def external_url
-    url
   end
 
   def download_attachment
