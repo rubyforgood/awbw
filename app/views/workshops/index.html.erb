@@ -49,7 +49,7 @@
     <%= turbo_frame_tag "frame_list" do %>
       <%= turbo_stream.replace("filters_applied", partial: "filters_applied") %>
       <%= turbo_stream.replace("workshops_count", partial: "workshops_count") %>
-      <%= turbo_stream.replace("copy_url", partial: "copy_url") %>
+      <%= turbo_stream.replace("copy_url", partial: "shared/copy_url") %>
       <div class="mt-6">
         <% if @workshops.any? %>
           <div id="workshops-list" class="space-y-4 animate-fade">
@@ -58,10 +58,7 @@
                          breadcrumb: "Workshops", link_route: workshop_path(workshop) %>
             <% end %>
           </div>
-
-          <div class="pagination flex justify-center mt-12">
-            <%= tailwind_paginate @workshops %>
-          </div>
+          <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @workshops %></div>
         <% else %>
           <p class="text-gray-600">
             Your search returned no results. Please try again.
