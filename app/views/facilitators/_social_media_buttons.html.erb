@@ -3,7 +3,7 @@
 
 <div class="flex flex-wrap items-center justify-center md:justify-start gap-1">
   <% if facilitator.linked_in_url.present? %>
-    <%= link_to facilitator.linked_in_url, target: "_blank", rel: "noopener",
+    <%= link_to facilitator.linked_in_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-[#0A66C2]
                          transition-colors duration-200" do %>
@@ -12,7 +12,7 @@
   <% end %>
 
   <% if facilitator.instagram_url.present? %>
-    <%= link_to facilitator.instagram_url, target: "_blank", rel: "noopener",
+    <%= link_to facilitator.instagram_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-gradient-to-tr
                          hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF]
@@ -22,7 +22,7 @@
   <% end %>
 
   <% if facilitator.facebook_url.present? %>
-    <%= link_to facilitator.facebook_url, target: "_blank", rel: "noopener",
+    <%= link_to facilitator.facebook_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-[#1877F2]
                          transition-colors duration-200" do %>
@@ -31,7 +31,7 @@
   <% end %>
 
   <% if facilitator.twitter_url.present? %>
-    <%= link_to facilitator.twitter_url, target: "_blank", rel: "noopener",
+    <%= link_to facilitator.twitter_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-[#1DA1F2]
                          transition-colors duration-200" do %>
@@ -40,7 +40,7 @@
   <% end %>
 
   <% if facilitator.youtube_url.present? %>
-    <%= link_to facilitator.youtube_url, target: "_blank", rel: "noopener",
+    <%= link_to facilitator.youtube_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-[#FF0000]
                          text-gray-600 hover:text-white

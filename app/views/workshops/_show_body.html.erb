@@ -127,7 +127,7 @@
             <div class="flex flex-wrap gap-4">
 
               <% if workshop.main_image&.file&.attached? %>
-                <%= link_to url_for(workshop.main_image.file), target: "_blank", rel: "noopener" do %>
+                <%= link_to url_for(workshop.main_image.file), target: "_blank", rel: "noopener noreferrer" do %>
                   <%= image_tag url_for(workshop.main_image.file),
                                 alt: "Main Image",
                                 class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
@@ -136,7 +136,7 @@
 
               <% workshop.gallery_images.each_with_index do |gallery_image, idx| %>
                 <% if gallery_image.file&.attached? %>
-                  <%= link_to url_for(gallery_image.file), target: "_blank", rel: "noopener" do %>
+                  <%= link_to url_for(gallery_image.file), target: "_blank", rel: "noopener noreferrer" do %>
                     <%= image_tag url_for(gallery_image.file),
                                   alt: "Gallery Image #{idx + 1}",
                                   class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
