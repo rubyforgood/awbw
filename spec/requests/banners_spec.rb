@@ -91,9 +91,11 @@ RSpec.describe "/banners", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          content: "Updated welcome message for AWBW"
+        )
+      end
 
       it "updates the requested banner" do
         banner = Banner.create! valid_attributes

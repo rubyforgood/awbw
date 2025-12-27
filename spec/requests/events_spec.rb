@@ -134,9 +134,11 @@ RSpec.describe "/events", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          title: "Updated Event Title"
+        )
+      end
 
       context "when signed in as admin" do
         it "updates the requested event" do

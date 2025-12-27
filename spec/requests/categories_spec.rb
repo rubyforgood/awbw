@@ -85,9 +85,11 @@ RSpec.describe "/categories", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          name: "Updated Category Name"
+        )
+      end
 
       it "updates the requested category" do
         category = Category.create! valid_attributes

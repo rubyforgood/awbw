@@ -111,9 +111,11 @@ RSpec.describe "/community_news", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          title: "Updated Community News Title"
+        )
+      end
 
       it "updates the requested community_news" do
         community_news = CommunityNews.create! valid_attributes

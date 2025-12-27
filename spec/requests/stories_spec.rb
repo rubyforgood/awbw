@@ -109,9 +109,11 @@ RSpec.describe "/stories", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          title: "A Great Story (Edited)"
+        )
+      end
 
       it "updates the requested story" do
         story = Story.create! valid_attributes

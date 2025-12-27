@@ -100,9 +100,11 @@ RSpec.describe "/users", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          first_name: "Janet"
+        )
+      end
 
       it "updates the requested user" do
         user = User.create! valid_attributes
