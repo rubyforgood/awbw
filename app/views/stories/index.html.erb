@@ -1,24 +1,21 @@
-<div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="border border-gray-200 <%= DomainTheme.bg_class_for(:stories) %> rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
-      <!-- Header Row -->
-      <div class="w-full">
-        <div class="flex items-start justify-between mb-6">
-          <div class="pr-6">
-            <h2 class="text-2xl font-semibold mb-2"><%= Story.model_name.human.pluralize %> (<%= @count_display %>)</h2>
-          </div>
-          <div class="text-right text-end">
-            <% if current_user.super_user? %>
-              <%= link_to "New Story",
-                          new_story_path,
-                          class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-            <% end %>
-          </div>
-        </div>
+<div class="community-news-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="w-full">
+    <div class="flex items-start justify-between mb-6">
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">Stories (<%= @count_display %>)</h2>
+      </div>
+      <div class="text-right text-end">
+        <% if current_user.super_user? %>
+          <%= link_to "New Story",
+                      new_story_path,
+                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
+    </div>
 
-        <%= render "search_boxes" %>
+    <%= render "search_boxes" %>
 
-        <% if @stories.any? %>
+    <% if @stories.any? %>
           <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
@@ -109,8 +106,6 @@
             <% end %>
           </div>
         <% end %>
-      </div>
-    </div>
+
   </div>
 </div>
-
