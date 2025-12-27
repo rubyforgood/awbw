@@ -1,77 +1,64 @@
-# spec/requests/tags_spec.rb
 require "rails_helper"
 
 RSpec.describe "Tags index", type: :request do
-	let!(:sector) do
-		create(:sector, :published, name: "Youth")
-	end
+  let!(:sector) { create(:sector, :published, name: "Youth") }
+  let!(:category_type) { create(:category_type, name: "Theme") }
+  let!(:category) { create(:category, :published, name: "Healing", category_type: category_type) }
 
-	let!(:category_type) do
-		create(:category_type, name: "Theme")
-	end
+  describe "as a regular user" do
+    let(:user) { create(:user) }
 
-	let!(:category) do
-		create(
-			:category,
-			:published,
-			name: "Healing",
-			category_type: category_type
-		)
-	end
+    before { sign_in user }
 
-	describe "as a regular user" do
-		let(:user) { create(:user) }
+    it "renders Service Populations and Categories skeleton" do
+      get tags_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Service Populations")
+      expect(response.body).to include("Categories")
+    end
 
-		before do
-			sign_in user
-			get tags_path
-		end
+    it "renders sectors frame" do
+      get tags_sectors_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Youth")
+    end
 
-		it "renders successfully" do
-			expect(response).to have_http_status(:ok)
-		end
+    it "renders categories frame" do
+      get tags_categories_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Healing")
+    end
 
-		it "shows published sectors" do
-			expect(response.body).to include("Youth")
-		end
+    it "does NOT show admin-only controls" do
+      get tags_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Manage sectors")
+      expect(response.body).not_to include("Manage categories")
+    end
+  end
 
-		it "shows published categories" do
-			expect(response.body).to include("Healing")
-		end
+  describe "as a super user (admin)" do
+    let(:admin) { create(:user, :admin) }
 
-		it "does NOT show admin-only controls" do
-			expect(response.body).not_to include("Manage sectors")
-			expect(response.body).not_to include("Manage categories")
-		end
-	end
+    before { sign_in admin }
 
-	describe "as a super user (admin)" do
-		let(:admin) { create(:user, :admin) }
+    it "renders sectors frame with admin controls" do
+      get tags_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Manage sectors")
+    end
 
-		before do
-			sign_in admin
-			get tags_path
-		end
+    it "renders categories frame with admin controls" do
+      get tags_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Manage categories")
+    end
+  end
 
-		it "renders successfully" do
-			expect(response).to have_http_status(:ok)
-		end
-
-		it "shows admin controls" do
-			expect(response.body).to include("Manage sectors")
-			expect(response.body).to include("Manage categories")
-		end
-
-		it "still shows sectors and categories" do
-			expect(response.body).to include("Youth")
-			expect(response.body).to include("Healing")
-		end
-	end
-
-	describe "when not signed in" do
-		it "redirects to sign-in" do
-			get tags_path
-			expect(response).to redirect_to(new_user_session_path)
-		end
-	end
+  describe "when not signed in" do
+    it "redirects to sign-in" do
+      get tags_path
+      expect(response).to redirect_to(new_user_session_path)
+    end
+  end
 end

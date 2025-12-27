@@ -27,9 +27,11 @@ Rails.application.routes.draw do
   get 'dashboard/help', to: 'dashboard#help'
   get "image_migration_audit", to: "image_migration_audit#index"
 
-  get "taggings", to: 'taggings#index', as: 'taggings'
-  get "taggings/matrix", to: 'taggings#matrix', as: 'taggings_matrix'
-  get "tags", to: 'tags#index', as: 'tags'
+  get "taggings", to: "taggings#index", as: "taggings"
+  get "taggings/matrix", to: "taggings#matrix", as: "taggings_matrix"
+  get "tags", to: "tags#index", as: "tags"
+  get "tags/sectors", to: "tags#sectors", as: "tags_sectors"
+  get "tags/categories", to: "tags#categories", as: "tags_categories"
 
   resources :banners
   resources :bookmarks do
