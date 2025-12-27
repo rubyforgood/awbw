@@ -16,7 +16,7 @@
           <%= default_btn %>
         "
       >
-        <%= check_box_tag("kind[]", name, Array(params[:kind]).include?(name),
+        <%= check_box_tag("kinds[]", name, Array(params[:kinds]).include?(name),
                         id: "kind_#{name}",
                         class: "hidden") %>
         <%= name.titleize.pluralize %>
