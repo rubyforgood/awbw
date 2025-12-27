@@ -1,5 +1,4 @@
 class ResourcesController < ApplicationController
-
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
@@ -17,7 +16,7 @@ class ResourcesController < ApplicationController
                          "#{filtered_count}/#{total_count}"
                        end
 
-      render :search_results
+      render :resource_results
     else
       render :index
     end
@@ -65,11 +64,11 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:id])
     @resource.user ||= current_user
     if @resource.update(resource_params)
-      flash[:notice] = 'Resource updated.'
+      flash[:notice] = "Resource updated."
       redirect_to resources_path
     else
       set_form_variables
-      flash[:alert] = 'Failed to update Resource.'
+      flash[:alert] = "Failed to update Resource."
       render :edit
     end
   end
@@ -80,7 +79,6 @@ class ResourcesController < ApplicationController
     redirect_to resources_path, notice: "Resource was successfully destroyed."
   end
 
-
   def search
     process_search
     @sortable_fields = Resource::PUBLISHED_KINDS
@@ -88,10 +86,10 @@ class ResourcesController < ApplicationController
   end
 
   def download
-    if params[:attachment_id].to_i > 0
-      attachment = Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
+    attachment = if params[:attachment_id].to_i > 0
+      Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
     else
-      attachment = Resource.find(params[:resource_id]).download_attachment
+      Resource.find(params[:resource_id]).download_attachment
     end
 
     if attachment&.file&.blob.present?
@@ -99,13 +97,13 @@ class ResourcesController < ApplicationController
     else
       if params[:from] == "resources_index"
         path = resources_path
-			elsif params[:from] == "dashboard_index"
-				path = authenticated_root_path
-			else
-				resource_path(params[:resource_id])
-			end
+      elsif params[:from] == "dashboard_index"
+        path = authenticated_root_path
+      else
+        resource_path(params[:resource_id])
+      end
       redirect_to path,
-                  alert: "File not found or not attached."
+        alert: "File not found or not attached."
     end
   end
 
@@ -117,8 +115,8 @@ class ResourcesController < ApplicationController
 
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
-                   .order(:first_name, :last_name)
-                   .map{|u| [u.full_name, u.id] }
+      .order(:first_name, :last_name)
+      .map { |u| [u.full_name, u.id] }
   end
 
   def process_search
