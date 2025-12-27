@@ -42,7 +42,9 @@
                     <%= link_to (image_tag news.main_image.file,
                                   class: "w-full rounded shadow-sm border border-gray-200",
                                   alt: news.title),
-                                news.link_target, news.external_link? ? "_blank" : "", rel: "noopener noreferrer" %>
+                                news.link_target,
+                                target: news.external_link? ? "_blank" : "",
+                                rel: "noopener noreferrer" %>
                   <% else %>
                     <svg class="w-6 h-6 text-gray-400"
                          fill="currentColor" viewBox="0 0 20 18"></svg>
