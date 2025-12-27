@@ -1,27 +1,33 @@
 class ResourcesController < ApplicationController
-
   def index
-    per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Resource.where(kind: Resource::PUBLISHED_KINDS) #TODO - #FIXME brittle
-                          .includes(:main_image, :gallery_images, :attachments)
-    filtered = unpaginated.search_by_params(params)
-                          .by_created
-    @resources = filtered.paginate(page: params[:page], per_page: per_page)
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      unfiltered = Resource.where(kind: Resource::PUBLISHED_KINDS) # TODO - #FIXME brittle
+        .includes(:main_image, :gallery_images, :attachments)
+      filtered = unfiltered.search_by_params(params)
+        .by_created
+      @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
-    @count_display = if @resources.total_entries == unpaginated.count
-                       unpaginated.count
-                     else
-                       "#{@resources.total_entries}/#{unpaginated.count}"
-                     end
-    @sortable_fields = Resource::PUBLISHED_KINDS
+      total_count = unfiltered.count
+      filtered_count = filtered.count
+      @count_display = if filtered_count == total_count
+                         total_count
+                       else
+                         "#{filtered_count}/#{total_count}"
+                       end
+
+      render :resource_results
+    else
+      render :index
+    end
   end
 
   def stories
-    @stories = Resource.story.paginate(page: params[:page], per_page: 6)
+    @stories = Resource.story.paginate(page: params[:page], per_page: 6).decorate
   end
 
   def new
-    @resource = Resource.new
+    @resource = Resource.new.decorate
     set_form_variables
   end
 
@@ -47,6 +53,7 @@ class ResourcesController < ApplicationController
     if @resource.save
       redirect_to resources_path
     else
+      @resource = @resource.decorate
       set_form_variables
       flash[:alert] = "Unable to save #{@resource.title.titleize}"
       render :new
@@ -57,11 +64,11 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:id])
     @resource.user ||= current_user
     if @resource.update(resource_params)
-      flash[:notice] = 'Resource updated.'
+      flash[:notice] = "Resource updated."
       redirect_to resources_path
     else
       set_form_variables
-      flash[:alert] = 'Failed to update Resource.'
+      flash[:alert] = "Failed to update Resource."
       render :edit
     end
   end
@@ -72,7 +79,6 @@ class ResourcesController < ApplicationController
     redirect_to resources_path, notice: "Resource was successfully destroyed."
   end
 
-
   def search
     process_search
     @sortable_fields = Resource::PUBLISHED_KINDS
@@ -80,10 +86,10 @@ class ResourcesController < ApplicationController
   end
 
   def download
-    if params[:attachment_id].to_i > 0
-      attachment = Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
+    attachment = if params[:attachment_id].to_i > 0
+      Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
     else
-      attachment = Resource.find(params[:resource_id]).download_attachment
+      Resource.find(params[:resource_id]).download_attachment
     end
 
     if attachment&.file&.blob.present?
@@ -91,13 +97,13 @@ class ResourcesController < ApplicationController
     else
       if params[:from] == "resources_index"
         path = resources_path
-			elsif params[:from] == "dashboard_index"
-				path = authenticated_root_path
-			else
-				resource_path(params[:resource_id])
-			end
+      elsif params[:from] == "dashboard_index"
+        path = authenticated_root_path
+      else
+        resource_path(params[:resource_id])
+      end
       redirect_to path,
-                  alert: "File not found or not attached."
+        alert: "File not found or not attached."
     end
   end
 
@@ -109,8 +115,8 @@ class ResourcesController < ApplicationController
 
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
-                   .order(:first_name, :last_name)
-                   .map{|u| [u.full_name, u.id] }
+      .order(:first_name, :last_name)
+      .map { |u| [u.full_name, u.id] }
   end
 
   def process_search

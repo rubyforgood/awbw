@@ -27,7 +27,7 @@ RSpec.describe "/community_news", type: :request do
       published: false,
       featured: false,
       author_id: admin.id,
-      reference_url: "Reference Url",
+      reference_url: "www.google.com",
       project: nil,
       windows_type: nil,
       created_by_id: admin.id,
@@ -40,6 +40,7 @@ RSpec.describe "/community_news", type: :request do
       title: nil,
       body: nil,
       author_id: nil,
+      reference_url: "reference url",
       created_by_id: nil,
       updated_by_id: nil,
     }
@@ -110,9 +111,11 @@ RSpec.describe "/community_news", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          title: "Updated Community News Title"
+        )
+      end
 
       it "updates the requested community_news" do
         community_news = CommunityNews.create! valid_attributes

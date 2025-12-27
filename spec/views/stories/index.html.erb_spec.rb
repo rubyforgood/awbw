@@ -7,7 +7,8 @@ RSpec.describe "stories/index", type: :view do
 
   before(:each) do
     sign_in user
-    assign(:stories, paginated([story1, story2]))
+    assign(:stories,
+           StoryDecorator.decorate_collection(paginated([story1, story2])))
   end
 
   it "renders a list of stories" do

@@ -18,7 +18,7 @@
         <% end %>
 
         <% if @community_news.external_url.present? %>
-          <%= link_to "Website", safe_url(@community_news.external_url), target: "_blank", rel: "noopener",
+          <%= link_to "Website", safe_url(@community_news.external_url), target: "_blank", rel: "noopener noreferrer",
                       class: "btn btn-secondary-outline" %>
         <% end %>
       </div>
@@ -75,28 +75,28 @@
 
             <!-- Facebook -->
             <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{community_news_url}",
-                        target: "_blank", rel: "noopener",
+                        target: "_blank", rel: "noopener noreferrer",
                         class: "text-blue-600 hover:text-blue-800" do %>
               <i class="fab fa-facebook-square fa-lg"></i>
             <% end %>
 
             <!-- X / Twitter -->
             <%= link_to "https://twitter.com/intent/tweet?url=#{community_news_url}&text=#{community_news_title}",
-                        target: "_blank", rel: "noopener",
+                        target: "_blank", rel: "noopener noreferrer",
                         class: "text-sky-500 hover:text-sky-700" do %>
               <i class="fab fa-x-twitter fa-lg"></i>
             <% end %>
 
             <!-- LinkedIn -->
             <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{community_news_url}",
-                        target: "_blank", rel: "noopener",
+                        target: "_blank", rel: "noopener noreferrer",
                         class: "text-blue-700 hover:text-blue-900" do %>
               <i class="fab fa-linkedin fa-lg"></i>
             <% end %>
 
             <!-- Pinterest -->
             <%= link_to "https://pinterest.com/pin/create/button/?url=#{community_news_url}&description=#{community_news_title}",
-                        target: "_blank", rel: "noopener",
+                        target: "_blank", rel: "noopener noreferrer",
                         class: "text-red-600 hover:text-red-800" do %>
               <i class="fab fa-pinterest-square fa-lg"></i>
             <% end %>

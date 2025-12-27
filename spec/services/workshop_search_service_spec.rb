@@ -12,6 +12,11 @@ RSpec.describe WorkshopSearchService, type: :service do
 		create(:workshop, title: "Keyword Match", year: 2025, month: 1, created_at: 2.days.ago, led_count: 1)
 	end
 
+	let!(:bookmark_1) { create(:bookmark, bookmarkable: workshop_1) }
+	let!(:bookmark_2) { create(:bookmark, bookmarkable: workshop_1) }
+
+	let!(:bookmark_3) { create(:bookmark, bookmarkable: workshop_2) }
+
 	describe "#call" do
 		context "sorting by created" do
 			it "orders by year/month desc, then created_at desc, then title asc" do
@@ -46,6 +51,19 @@ RSpec.describe WorkshopSearchService, type: :service do
 																																		 [2, "B Workshop"],
 																																		 [1, "Keyword Match"]
 																																	 ])
+			end
+		end
+
+		context "sorting by bookmarks (popularity)" do
+			it "orders by bookmarks_count desc, then title asc" do
+				service = WorkshopSearchService.new({ sort: 'bookmarks' }).call
+				workshops = service.workshops
+
+				expect(workshops.map { |w| [w.bookmarks_count.to_i, w.title] }).to eq([
+																																								[2, "A Workshop"],
+																																								[1, "B Workshop"],
+																																								[0, "Keyword Match"]
+																																							])
 			end
 		end
 

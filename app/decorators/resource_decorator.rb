@@ -1,7 +1,12 @@
 class ResourceDecorator < ApplicationDecorator
+  include ::Linkable
 
   def detail(length: nil)
     length ? text&.truncate(length) : text  # TODO - rename field
+  end
+
+  def external_url
+    object.url
   end
 
   def main_image_url

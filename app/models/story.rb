@@ -1,5 +1,5 @@
 class Story < ApplicationRecord
-  include Linkable, TagFilterable, WindowsTypeFilterable
+  include TagFilterable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -60,10 +60,6 @@ class Story < ApplicationRecord
 
   def name
     title
-  end
-
-  def external_url
-    website_url
   end
 
   def organization_name

@@ -87,6 +87,11 @@ class Workshop < ApplicationRecord
     ) #{sort_order == "asc" ? "ASC" : "DESC"}
     SQL
   }
+  scope :with_bookmarks_count, -> {
+    left_joins(:bookmarks)
+      .select("workshops.*, COUNT(bookmarks.id) AS bookmarks_count")
+      .group("workshops.id")
+  }
 
   # Search Cop
   include SearchCop

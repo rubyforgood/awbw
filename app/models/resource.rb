@@ -1,5 +1,5 @@
 class Resource < ApplicationRecord
-  include Linkable, TagFilterable, WindowsTypeFilterable
+  include TagFilterable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
   PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
@@ -59,8 +59,11 @@ class Resource < ApplicationRecord
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :featured, -> (featured=nil) { featured.present? ? where(featured: featured) : where(featured: true) }
-  scope :kind, -> (kind) { where("kind like ?", kind ) }
-  scope :leader_spotlights, -> { kind("LeaderSpotlight") }
+  scope :kinds, ->(kinds) {
+    kinds = Array(kinds).flatten.map(&:to_s)
+    where(kind: kinds)
+  }
+  scope :leader_spotlights, -> { kinds("LeaderSpotlight") }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
   scope :published, ->(published=nil) {
     if ["true", "false"].include?(published)
@@ -86,7 +89,7 @@ class Resource < ApplicationRecord
     resources = resources.category_names(params[:category_names]) if params[:category_names].present?
     resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     resources = resources.title(params[:title]) if params[:title].present?
-    resources = resources.kind(params[:kind]) if params[:kind].present?
+    resources = resources.kinds(params[:kinds]) if params[:kinds].present?
     resources = resources.published_search(params[:published_search]) if params[:published_search].present?
     resources = resources.featured(params[:featured]) if params[:featured].present?
     resources
@@ -100,17 +103,8 @@ class Resource < ApplicationRecord
     "#{self.title} (#{self.kind.upcase})" unless self.kind.nil?
   end
 
-  # Methods
-  def led_count
-    0
-  end
-
   def name
     title || id
-  end
-
-  def external_url
-    url
   end
 
   def download_attachment

@@ -83,9 +83,11 @@ RSpec.describe "/sectors", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          name: "Updated Sector Name"
+        )
+      end
 
       it "updates the requested sector" do
         sector = Sector.create! valid_attributes

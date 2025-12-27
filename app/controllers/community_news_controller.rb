@@ -3,26 +3,28 @@ class CommunityNewsController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = current_user.super_user? ? CommunityNews.all : Community_news.published
-    filtered = unpaginated.search_by_params(params)
-    @community_news = filtered.paginate(page: params[:page], per_page: per_page)
+    unfiltered = current_user.super_user? ? CommunityNews.all : Community_news.published
+    filtered = unfiltered.search_by_params(params)
+    @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
-    @count_display = if @community_news.total_entries == unpaginated.count
-                       unpaginated.count
+    @count_display = if filtered.count == unfiltered.count
+                       unfiltered.count
                      else
-                       "#{@community_news.total_entries}/#{unpaginated.count}"
+                       "#{filtered.count}/#{unfiltered.count}"
                      end
   end
 
   def show
+    @community_news = @community_news.decorate
   end
 
   def new
-    @community_news = CommunityNews.new
+    @community_news = CommunityNews.new.decorate
     set_form_variables
   end
 
   def edit
+    @community_news = @community_news.decorate
     set_form_variables
   end
 
@@ -33,6 +35,7 @@ class CommunityNewsController < ApplicationController
       redirect_to community_news_index_path,
                   notice: "Community news was successfully created."
     else
+      @community_news = @community_news.decorate
       set_form_variables
       render :new, status: :unprocessable_content
     end
