@@ -113,11 +113,11 @@ RSpec.describe "/users", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the user" do
+      it "redirects to the users index" do
         user = User.create! valid_attributes
         patch user_url(user), params: { user: new_attributes }
         user.reload
-        expect(response).to redirect_to(user_url(user))
+        expect(response).to redirect_to(users_url)
       end
     end
 

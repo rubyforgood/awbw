@@ -122,11 +122,11 @@ RSpec.describe "/stories", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the story" do
+      it "redirects to the stories index" do
         story = Story.create! valid_attributes
         patch story_url(story), params: { story: new_attributes }
         story.reload
-        expect(response).to redirect_to(story_url(story))
+        expect(response).to redirect_to(stories_url)
       end
     end
 

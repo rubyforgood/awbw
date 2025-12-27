@@ -13,7 +13,7 @@ require 'rails_helper'
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
 RSpec.describe "/banners", type: :request do
-    let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin) }
 
   let(:valid_attributes) do
     {
@@ -69,7 +69,7 @@ RSpec.describe "/banners", type: :request do
         }.to change(Banner, :count).by(1)
       end
 
-      it "redirects to the created banner" do
+      it "redirects to the banners index" do
         post banners_url, params: { banner: valid_attributes }
         expect(response).to redirect_to(banners_url)
       end
@@ -104,11 +104,11 @@ RSpec.describe "/banners", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the banner" do
+      it "redirects to the banners index" do
         banner = Banner.create! valid_attributes
         patch banner_url(banner), params: { banner: new_attributes }
         banner.reload
-        expect(response).to redirect_to(banner_url(banner))
+        expect(response).to redirect_to(banners_url)
       end
     end
 

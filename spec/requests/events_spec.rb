@@ -151,7 +151,7 @@ RSpec.describe "/events", type: :request do
           expect(event.title).to eq(new_attributes[:title])
         end
 
-        it "redirects to the event" do
+        it "redirects to the events index" do
           sign_in user
           allow_any_instance_of(ApplicationController).
             to receive(:current_user).and_return(admin)
@@ -159,7 +159,7 @@ RSpec.describe "/events", type: :request do
           patch event_url(event), params: { event: new_attributes }
           event.reload
 
-          expect(response).to redirect_to(event_url(event))
+          expect(response).to redirect_to(events_url)
         end
       end
 
