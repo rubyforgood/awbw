@@ -4,20 +4,23 @@ class <%= controller_class_name %>Controller < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = <%= orm_class.all(class_name) %>
-    @<%= plural_table_name %>_count = unpaginated.count
-    @<%= plural_table_name %> = unpaginated.paginate(page: params[:page], per_page: per_page)
+    unfiltered = <%= orm_class.all(class_name) %>
+    filtered = unfiltered.search_by_params(params)
+    @count_display = filtered.count == unfiltered.count ? unfiltered.count : "#{filtered.count}/#{unfiltered.count}"
+    @<%= plural_table_name %> = filtered.paginate(page: params[:page], per_page: per_page).decorate
   end
 
   def show
+    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>
   end
 
   def new
-    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>
+    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>.decorate
     set_form_variables
   end
 
   def edit
+    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>.decorate
     set_form_variables
   end
 
@@ -27,6 +30,7 @@ class <%= controller_class_name %>Controller < ApplicationController
     if @<%= orm_instance.save %>
       redirect_to <%= index_helper %>_path, notice: "<%= human_name %> was successfully created."
     else
+      @<%= singular_table_name %> = <%= orm_class.build(class_name) %>.decorate
       set_form_variables
       render :new, status: :unprocessable_content
     end
@@ -36,6 +40,7 @@ class <%= controller_class_name %>Controller < ApplicationController
     if @<%= orm_instance.update("#{singular_table_name}_params") %>
       redirect_to <%= index_helper %>_path, notice: "<%= human_name %> was successfully updated.", status: :see_other
     else
+      @<%= singular_table_name %> = <%= orm_class.build(class_name) %>.decorate
       set_form_variables
       render :edit, status: :unprocessable_content
     end
