@@ -1,0 +1,42 @@
+<hr>
+
+<article id="tutorial-<%= tutorial.id %>"
+         class="tutorial-block scroll-mt-24">
+
+  <header class="mb-4 flex w-full items-center gap-4">
+    <h2 class="text-2xl font-semibold text-gray-900">
+      <%= link_to tutorial.title,
+                  tutorial_path(tutorial),
+                  class: "hover:underline" %>
+    </h2>
+
+    <% if current_user&.super_user? %>
+      <%= link_to "Edit",
+                  edit_tutorial_path(tutorial),
+                  class: "admin-only ml-auto bg-blue-100 btn btn-secondary-outline" %>
+    <% end %>
+  </header>
+
+  <!-- Embedded Video -->
+  <% if tutorial.youtube_url.present? %>
+    <div class="mb-6">
+      <div class="relative w-full overflow-hidden rounded-lg shadow-sm" style="padding-top: 56.25%;">
+        <iframe
+          src="<%= youtube_embed_url(tutorial.youtube_url) %>"
+          title="<%= tutorial.title %>"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          class="absolute inset-0 h-full w-full border-0">
+        </iframe>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Body -->
+  <% if tutorial.body.present? %>
+    <div class="prose prose-gray max-w-none mb-6">
+      <%= tutorial.body.to_s.html_safe %>
+    </div>
+  <% end %>
+
+</article>

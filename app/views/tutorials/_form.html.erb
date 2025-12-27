@@ -1,0 +1,43 @@
+<%= simple_form_for(tutorial, html: { multipart: true }) do |f| %>
+  <%= render 'shared/errors', resource: tutorial if tutorial.errors.any? %>
+
+  <div class="p-3">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <%= f.input :title, as: :text,
+                    input_html: { rows: 2,
+                                  value: f.object.title } %>
+      </div>
+      <div class="flex gap-4">
+        <%= f.input :published, as: :boolean, wrapper_html: { class: "flex items-center" } %>
+        <%= f.input :featured, as: :boolean, wrapper_html: { class: "flex items-center" } %>
+      </div>
+    </div>
+
+    <div class="flex gap-4 mb-6">
+      <div class="flex-1">
+        <%= f.input :youtube_url,
+                    as: :text,
+                    hint: "Embed a youtube video",
+                    input_html: { rows: 1, value: f.object.youtube_url } %>
+      </div>
+      <div class="flex-1">
+        <%= f.input :position,
+                    as: :integer,
+                    hint: "Order to display tutorials in (lower numbers display first)" %>
+      </div>
+    </div>
+
+    <%= render "shared/form_image_fields", f: f, include_main_image: true %>
+
+    <div class="mb-3">
+      <%= f.input :body, as: :text,
+                  input_html: { rows: 10, value: f.object.body } %>
+    </div>
+
+    <div class="form-actions mt-3">
+      <%= link_to "Cancel", tutorials_path, class: "btn btn-secondary-outline ms-2" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

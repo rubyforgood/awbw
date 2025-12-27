@@ -10,8 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_17_163623) do
-  create_table "action_text_rich_texts", charset: "utf8mb3", force: :cascade do |t|
+ActiveRecord::Schema[8.1].define(version: 2025_12_27_183814) do
+  create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -198,6 +198,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_163623) do
     t.integer "windows_type_id"
     t.string "youtube_url"
     t.index ["author_id"], name: "index_community_news_on_author_id"
+    t.index ["body"], name: "index_community_news_on_body", type: :fulltext
     t.index ["created_by_id"], name: "index_community_news_on_created_by_id"
     t.index ["project_id"], name: "index_community_news_on_project_id"
     t.index ["updated_by_id"], name: "index_community_news_on_updated_by_id"
@@ -627,6 +628,20 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_163623) do
     t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_story_ideas_on_windows_type_id"
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
+  end
+
+  create_table "tutorials", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.boolean "featured", default: false, null: false
+    t.integer "position", default: 10, null: false
+    t.boolean "published", default: false, null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.string "youtube_url"
+    t.index ["featured"], name: "index_tutorials_on_featured"
+    t.index ["published"], name: "index_tutorials_on_published"
+    t.index ["title"], name: "index_tutorials_on_title"
   end
 
   create_table "user_form_form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
