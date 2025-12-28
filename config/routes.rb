@@ -34,6 +34,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "analytics", to: "analytics#index"
+    post "analytics/print", to: "analytics#print"
   end
 
   resources :banners
