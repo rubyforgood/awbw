@@ -44,13 +44,13 @@ module Admin
         "CommunityNews" => CommunityNews
       }.freeze
 
-      klass = printable_models[params[:printable_type]]
-      return head :bad_request unless klass
+			klass = printable_models[params[:printable_type]]
+			return head :bad_request unless klass
 
-      record = klass.find_by(id: params[:printable_id])
-      return head :not_found unless record
+			record = klass.find_by(id: params[:printable_id])
+			return head :not_found unless record
 
-      record.increment_print_count!
+			record.increment_print_count!
 
       head :ok
     end
