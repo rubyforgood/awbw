@@ -31,9 +31,9 @@ class UsersController < ApplicationController
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
 
-    if params[:facilitator_id].present?
-      @user.facilitator = Facilitator.where(params[:facilitator_id]).first
-    end
+    # assign facilitator
+    facilitator_id = params[:facilitator_id].presence || params.dig(:user, :facilitator_id).presence
+    @user.facilitator = Facilitator.find(facilitator_id) if facilitator_id
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
