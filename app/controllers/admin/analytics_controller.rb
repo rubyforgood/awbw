@@ -1,5 +1,4 @@
 module Admin
-
   class AnalyticsController < Admin::BaseController
     protect_from_forgery with: :null_session
 

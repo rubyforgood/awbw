@@ -89,6 +89,15 @@
                  color: :events
       %>
 
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Workshop variations",
+                 records: @most_viewed_workshop_variations,
+                 path_method: :workshop_variation_path,
+                 metric: :view_count,
+                 color: :workshop_variations
+      %>
+
       <%= render "admin/analytics/popular_list",
                  title: "Workshop variations",
                  records: @most_viewed_workshop_variations,
