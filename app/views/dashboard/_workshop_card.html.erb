@@ -9,7 +9,7 @@
   </div>
 
   <!-- FULLY CLICKABLE CARD CONTENT -->
-  <%= link_to workshop_path(workshop), class: "block h-full" do %>
+  <%= link_to workshop_path(workshop), data: { turbo_prefetch: false }, class: "block h-full" do %>
 
     <!-- Image -->
     <div class="h-24 w-full rounded overflow-visible">

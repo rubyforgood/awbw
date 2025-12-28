@@ -21,7 +21,7 @@
 
   <!-- 1️⃣ Image -->
   <div class="flex-shrink-0 w-full sm:w-32 h-32 sm:h-24 bg-gray-100 rounded overflow-hidden">
-    <%= link_to workshop_path(workshop) do %>
+    <%= link_to workshop_path(workshop), data: { turbo_prefetch: false } do %>
       <img class="object-cover w-full h-full" src="<%= workshop.main_image_url %>">
     <% end %>
   </div>
@@ -43,7 +43,7 @@
         <!-- Title with badges (single column, bookmark stays separate) -->
         <%= link_to link_route,
                     class: "hover:underline block",
-                    data: { turbo: false } do %>
+                    data: { turbo_prefetch: false, turbo: false } do %>
           <%= title_with_badges(workshop, show_hidden_badge: current_user.super_user?,
                                 display_windows_type: true).html_safe %>
         <% end %>

@@ -7,6 +7,7 @@
     <h2 class="text-2xl font-semibold text-gray-900">
       <%= link_to tutorial.title,
                   tutorial_path(tutorial),
+                  data: { turbo_prefetch: false },
                   class: "hover:underline" %>
     </h2>
 
