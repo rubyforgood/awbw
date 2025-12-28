@@ -31,9 +31,14 @@ RSpec.describe "users/show", type: :view do
     expect(rendered).to include("Last Name")
   end
 
-  it "renders authored workshops" do
+  it "renders devise data" do
     render
-    expect(rendered).to include("Mindful Art")
+    expect(rendered).to include("Current sign-in")
+  end
+
+  it "renders audit data" do
+    render
+    expect(rendered).to include(I18n.l(user.updated_at, format: :long))
   end
 
   it "renders affiliated projects" do

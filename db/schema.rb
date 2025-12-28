@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_27_183814) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_28_021327) do
   create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
@@ -205,6 +205,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_27_183814) do
     t.index ["windows_type_id"], name: "index_community_news_on_windows_type_id"
   end
 
+  create_table "contact_methods", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "address_id"
+    t.string "contact_type"
+    t.bigint "contactable_id", null: false
+    t.string "contactable_type", null: false
+    t.datetime "created_at", null: false
+    t.boolean "inactive", default: false, null: false
+    t.boolean "is_primary", default: false, null: false
+    t.string "kind", null: false
+    t.datetime "updated_at", null: false
+    t.string "value", null: false
+    t.index ["address_id"], name: "index_contact_methods_on_address_id"
+    t.index ["contactable_type", "contactable_id"], name: "index_contact_methods_on_contactable"
+  end
+
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_id"
@@ -232,26 +247,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_27_183814) do
   create_table "facilitators", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "best_time_to_call"
     t.text "bio", size: :medium
-    t.string "city"
-    t.string "country"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"
     t.string "display_name_preference"
+    t.string "email"
+    t.string "email_2"
+    t.string "email_2_type", default: "personal", null: false
+    t.string "email_type"
     t.string "facebook_url"
     t.string "first_name", null: false
     t.string "instagram_url"
     t.string "last_name", null: false
     t.string "linked_in_url"
-    t.string "mailing_address_type"
     t.date "member_since"
     t.text "notes"
-    t.string "phone_number"
-    t.string "phone_number_2"
-    t.string "phone_number_3"
-    t.string "phone_number_type"
-    t.string "primary_email_address"
-    t.string "primary_email_address_type"
     t.boolean "profile_is_searchable", default: true, null: false
     t.boolean "profile_show_affiliations", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
@@ -269,13 +279,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_27_183814) do
     t.boolean "profile_show_workshop_variations", default: true, null: false
     t.boolean "profile_show_workshops", default: true, null: false
     t.string "pronouns"
-    t.string "state"
-    t.string "street_address"
     t.string "twitter_url"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.string "youtube_url"
-    t.string "zip"
     t.index ["created_by_id"], name: "index_facilitators_on_created_by_id"
     t.index ["updated_by_id"], name: "index_facilitators_on_updated_by_id"
   end
@@ -690,6 +697,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_27_183814) do
     t.datetime "current_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
     t.string "email", default: "", null: false
+    t.string "email_type", default: "work", null: false
     t.string "encrypted_password", default: "", null: false
     t.integer "facilitator_id"
     t.string "first_name", default: ""
@@ -962,6 +970,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_27_183814) do
   add_foreign_key "community_news", "users", column: "created_by_id"
   add_foreign_key "community_news", "users", column: "updated_by_id"
   add_foreign_key "community_news", "windows_types"
+  add_foreign_key "contact_methods", "addresses"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "users", column: "registrant_id"
   add_foreign_key "events", "users", column: "created_by_id"

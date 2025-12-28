@@ -1,11 +1,4 @@
 class FacilitatorsController < ApplicationController
-  # Skip login requirement for new facilitator form
-  # temporarily skipping authentication for all actions for development ease
-  #TODO: remove :index & :show from skip_before_action
-  if Rails.env.development?
-    skip_before_action :authenticate_user!, only: [:index, :show, :update, :edit, :new, :create]
-  end
-
   before_action :set_facilitator, only: %i[ show edit update destroy ]
 
   def index
@@ -24,7 +17,8 @@ class FacilitatorsController < ApplicationController
   end
 
   def new
-    @facilitator = Facilitator.new
+    set_user
+    @facilitator = @user ? FacilitatorFromUserService.new(user: @user).call : Facilitator.new
     set_form_variables
   end
 
@@ -33,7 +27,8 @@ class FacilitatorsController < ApplicationController
   end
 
   def create
-    @facilitator = Facilitator.new(facilitator_params)
+    @facilitator = Facilitator.new(facilitator_params.except(:user_attributes))
+    @facilitator.user ||= (User.find(params[:facilitator][:user_attributes][:id]) if params[:facilitator][:user_attributes])
 
     respond_to do |format|
       if @facilitator.save
@@ -70,19 +65,24 @@ class FacilitatorsController < ApplicationController
       @facilitator = Facilitator.find(params[:id])
     end
 
-    def set_form_variables
-      # Set user
+    def set_user
       if params[:user_id].present?
-        linked_user = User.find_by(id: params[:user_id])
-        if linked_user
-          @facilitator.user = linked_user
-          linked_user.facilitator = @facilitator
+        @user ||= User.find_by(id: params[:user_id])
+        if @user
+          @facilitator&.user ||= @user
+          @user.facilitator ||= @facilitator
         end
       end
-      @facilitator.build_user if @facilitator.user.blank? # Build a fresh one if missing
+    end
+
+    def set_form_variables
+      set_user
+      # @facilitator.build_user if @facilitator.user.blank? # Build a fresh one if missing
       @facilitator.build_avatar_image if @facilitator.avatar_image.blank?
 
-      @facilitator.user.project_users.first || @facilitator.user.project_users.build
+      if @facilitator.user
+        @facilitator.user.project_users.first || @facilitator.user.project_users.build
+      end
       projects = if current_user.super_user?
                    Project.active
                  else
@@ -91,16 +91,16 @@ class FacilitatorsController < ApplicationController
       @projects_array = projects.order(:name).pluck(:name, :id)
     end
 
+
     # Only allow a list of trusted parameters through.
     def facilitator_params
       params.require(:facilitator).permit(
         :first_name, :last_name,
-        :primary_email_address, :primary_email_address_type,
+        :email, :email_type,
+        :email_2, :email_2_type,
         :street_address, :city, :state, :zip, :country, :mailing_address_type,
-        :phone_number, :phone_number_type,
-        :phone_number_2, :phone_number_3, :best_time_to_call,
+        :best_time_to_call,
         :date_of_birth,
-        :created_by_id, :updated_by_id,
         :bio, :notes,
         :display_name_preference,
         :pronouns,
@@ -126,8 +126,35 @@ class FacilitatorsController < ApplicationController
         :instagram_url,
         :youtube_url,
         :twitter_url,
+        :created_by_id, :updated_by_id,
         avatar_image_attributes: [:id, :file, :_destroy],
         sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy],
+        addresses_attributes: [
+          :id,
+          :address_type,
+          :street_address,
+          :city,
+          :state,
+          :zip_code,
+          :country,
+          :county,
+          :district,
+          :locality,
+          :phone,
+          :_destroy
+        ],
+        contact_methods_attributes: [
+          :id,
+          :address_id,
+          :contactable_id,
+          :contactable_type,
+          :contact_type,
+          :kind,
+          :value,
+          :is_primary,
+          :inactive,
+          :_destroy
+        ],
         user_attributes: [
           :id, :facilitator_id,
           :first_name,

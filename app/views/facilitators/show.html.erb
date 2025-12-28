@@ -64,6 +64,16 @@
         </div>
       </div>
 
+      <% unless @facilitator.user %>
+        <div>
+          Not associated with a user!
+          <br>
+          <%= link_to "Create user",
+                      new_user_path(facilitator_id: @facilitator.id),
+                      class: "btn btn-primary" %>
+        </div>
+      <% end %>
+
       <hr class="my-8 border-gray-200">
 
       <!-- Info grid -->
@@ -72,7 +82,7 @@
         <% if @facilitator.profile_show_affiliations? %>
           <div>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Organizational affiliations</h2>
-            <% if @facilitator.user.project_users.active.any? %>
+            <% if @facilitator.user && @facilitator.user.project_users.active.any? %>
               <ul class="space-y-2">
                 <% @facilitator.user.project_users.active.each do |pu| %>
                   <li>
@@ -121,15 +131,17 @@
         <div>
           <% if @facilitator.profile_show_email? || @facilitator.profile_show_phone? %>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h2>
-            <% if @facilitator.profile_show_email? %>
+            <% email = @facilitator.user&.email || @facilitator.email %>
+            <% if @facilitator.profile_show_email? && email.present? %>
               <p class="text-gray-700 mb-1">
-                📧 <%= mail_to @facilitator.user.email, @facilitator.user.email,
-                              class: "text-blue-600 hover:underline" %>
+                📧 <%= mail_to email, email, class: "text-blue-600 hover:underline" %>
               </p>
             <% end %>
-            <% if @facilitator.profile_show_phone? && @facilitator.user.phone.present? %>
+
+            <% phone = @facilitator.phone_number || @facilitator.user&.phone %>
+            <% if @facilitator.profile_show_phone? && phone.present? %>
               <p class="text-gray-700 mb-1">
-                📞 <%= link_to @facilitator.user.phone, "tel:#{@facilitator.user.phone}",
+                📞 <%= link_to phone, "tel:#{phone}",
                               class: "text-blue-600 hover:underline" %>
               </p>
             <% end %>
@@ -165,7 +177,7 @@
           <% if @facilitator.profile_show_workshops? %>
             <div>
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
-              <% if @facilitator.user.workshops.any? %>
+              <% if @facilitator.user && @facilitator.user.workshops.any? %>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   <% @facilitator.user.workshops.order(created_at: :desc).each do |workshop| %>
                     <%= render "show_card", record: workshop.decorate, title_font_size: "text-sm" %>
@@ -181,7 +193,7 @@
           <% if @facilitator.profile_show_workshop_variations? %>
             <div class="mt-10">
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop variations authored</h2>
-              <% if @facilitator.user.workshop_variations_as_creator.any? %>
+              <% if @facilitator.user && @facilitator.user.workshop_variations_as_creator.any? %>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   <% @facilitator.user.workshop_variations_as_creator.order(created_at: :desc).each do |workshop_variation| %>
                     <%= render "show_card",
@@ -200,7 +212,7 @@
           <% if @facilitator.profile_show_stories? %>
             <div class="mt-10">
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories authored/featured</h2>
-              <% stories = Story.where(id: @facilitator.user.stories_as_creator.pluck(:id) +
+              <% stories = Story.where(id: @facilitator.user&.stories_as_creator&.pluck(:id).to_a +
                 @facilitator.stories_as_spotlighted_facilitator.pluck(:id)) %>
               <% if stories.any? %>
                 <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6">
@@ -272,7 +284,7 @@
             <% if @facilitator.profile_show_workshop_ideas? %>
               <div class="p-3">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop ideas submitted</h2>
-                <% if @facilitator.user.workshop_ideas_as_creator.any? %>
+                <% if @facilitator.user && @facilitator.user.workshop_ideas_as_creator.any? %>
                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <% @facilitator.user.workshop_ideas_as_creator.order(created_at: :desc).each do |idea| %>
                       <%= render "show_card",
@@ -289,7 +301,7 @@
             <% if @facilitator.profile_show_story_ideas? %>
               <div class="mt-6 p-3">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3">Story ideas submitted</h2>
-                <% if @facilitator.user.story_ideas_as_creator.any? %>
+                <% if @facilitator.user && @facilitator.user.story_ideas_as_creator.any? %>
                   <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6">
                     <% @facilitator.user.story_ideas_as_creator.order(created_at: :desc).each do |story_idea| %>
                       <%= render "show_card",
@@ -307,7 +319,7 @@
             <% if @facilitator.profile_show_workshop_logs? %>
             <div class="mt-6 p-3">
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop logs submitted</h2>
-              <% if @facilitator.user.workshop_logs.any? %>
+              <% if @facilitator.user && @facilitator.user.workshop_logs.any? %>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   <% @facilitator.user.workshop_logs.order(date: :desc, created_at: :desc).each do |workshop_log| %>
                     <%= render "show_card",
