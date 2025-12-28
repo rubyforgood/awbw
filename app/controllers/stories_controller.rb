@@ -18,6 +18,12 @@ class StoriesController < ApplicationController
 
   def show
     @story = @story.decorate
+    @story.increment_view_count!(session: session, request: request)
+
+    if @story.external_url.present?
+      redirect_to @story.external_url, allow_other_host: true
+      return
+    end
   end
 
   def new

@@ -16,6 +16,12 @@ class CommunityNewsController < ApplicationController
 
   def show
     @community_news = @community_news.decorate
+    @community_news.increment_view_count!(session: session, request: request)
+
+    if @community_news.external_url.present?
+      redirect_to @community_news.external_url, allow_other_host: true
+      return
+    end
   end
 
   def new

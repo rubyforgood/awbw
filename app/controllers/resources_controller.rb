@@ -38,8 +38,13 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(resource_id_param).decorate
+    @resource.increment_view_count!(session: session, request: request)
     load_forms
-    render :show
+
+    if @resource.external_url.present?
+      redirect_to @resource.external_url, allow_other_host: true
+      return
+    end
   end
 
   def rhino_text
@@ -86,6 +91,9 @@ class ResourcesController < ApplicationController
   end
 
   def download
+    @resource = Resource.find(params[:resource_id])
+    @resource.increment!(:download_count)
+
     attachment = if params[:attachment_id].to_i > 0
       Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
     else
