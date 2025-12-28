@@ -1,4 +1,6 @@
 class WorkshopVariation < ApplicationRecord
+  include Trendable, ViewCountable
+
   belongs_to :workshop
   belongs_to :created_by, class_name: 'User', optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -15,6 +17,8 @@ class WorkshopVariation < ApplicationRecord
   accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
 
   scope :active, -> { where(inactive: false) }
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
+  scope :published, -> { all }
 
   delegate :windows_type, to: :workshop
 

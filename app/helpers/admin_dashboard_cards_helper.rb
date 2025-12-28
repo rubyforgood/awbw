@@ -5,9 +5,9 @@ module AdminDashboardCardsHelper
 	def system_cards
 		[
 			model_card(:banners, icon: "📣"),
+			model_card(:faqs, icon: "❔", title: "FAQs"),
 			model_card(:community_news, icon: "📰"),
 			model_card(:events, icon: "📆"),
-			model_card(:faqs, icon: "❔", title: "FAQs"),
 			model_card(:stories, icon: "🗣️"),
 			custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime),
 			model_card(:resources, icon: "📚"),
@@ -24,14 +24,15 @@ module AdminDashboardCardsHelper
 	def user_content_cards
 		[
 			custom_card("Activity logs", dashboard_recent_activities_path, icon: "🧭"),
+			custom_card("Analytics dashboard", admin_analytics_path, icon: "📊"),
 			custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
 			model_card(:event_registrations, icon: "🎟️", intensity: 100),
-			model_card(:quotes, icon: "💬", intensity: 100),
 			model_card(:story_ideas, icon: "✍️", intensity: 100),
 			custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
 			model_card(:workshop_variations, icon: "🔀", intensity: 100),
 			model_card(:workshop_ideas, icon: "💡", intensity: 100),
 			model_card(:workshop_logs, icon: "📝", intensity: 100),
+			model_card(:quotes, icon: "💬", intensity: 100),
 		]
 	end
 

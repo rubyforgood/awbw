@@ -1,5 +1,5 @@
 class Resource < ApplicationRecord
-  include TagFilterable, WindowsTypeFilterable
+  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
   PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
@@ -56,6 +56,7 @@ class Resource < ApplicationRecord
 
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :featured, -> (featured=nil) { featured.present? ? where(featured: featured) : where(featured: true) }
