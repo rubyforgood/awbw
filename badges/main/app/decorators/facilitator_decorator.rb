@@ -40,9 +40,9 @@ class FacilitatorDecorator < ApplicationDecorator
     badges << ["Seasoned Facilitator (3-10 years)", DomainTheme.bg_class_for(:facilitators)] if member_since.present? && years >= 3
     badges << ["New Facilitator (<3 years)", "green"] if member_since.present? && years < 3
     badges << ["Spotlighted Facilitator", "gray"] if stories_as_spotlighted_facilitator
-    badges << ["Events Attended", DomainTheme.bg_class_for(:events)] if user.events.any?
-    badges << ["Workshop Author", DomainTheme.bg_class_for(:workshops)] if user.workshops.any? # indigo
-    badges << ["Story Author", DomainTheme.bg_class_for(:stories)] if user.stories_as_creator.any? # pink
+    badges << ["Events Attended", DomainTheme.bg_class_for(:events)] if user && user.events.any?
+    badges << ["Workshop Author", DomainTheme.bg_class_for(:workshops)] if user && user.workshops.any? # indigo
+    badges << ["Story Author", DomainTheme.bg_class_for(:stories)] if user && user.stories_as_creator.any? # pink
     badges << ["Sector Leader", DomainTheme.bg_class_for(:sectors)] if sectorable_items.where(is_leader: true).any?
     badges << ["Blog Contributor", "orange"] if true # || user.respond_to?(:blogs) && user.blogs.any? # red
     badges

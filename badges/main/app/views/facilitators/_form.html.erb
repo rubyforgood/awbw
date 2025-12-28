@@ -4,106 +4,139 @@
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
+  <div class="flex gap-8 items-start">
+    <div class="flex-1" style="flex: 0 0 75%;">
+      <div class="space-y-6">
+        <div class="flex flex-col md:flex-row gap-4">
+          <%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %>
+          <%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %>
+          <%= f.input :pronouns %>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4">
+          <%= f.input :date_of_birth,
+                      as: :string,
+                      input_html: {
+                        type: "date",
+                        class: "w-full rounded-md border-gray-300 shadow-sm
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      } %>
+          <%= f.input :member_since,
+                      as: :string,
+                      label: "Facilitator since",
+                      hint: "Pick Jan 1 if you only know the year",
+                      input_html: {
+                        type: "date",
+                        class: "w-full rounded-md border-gray-300 shadow-sm
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avatar -->
+    <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
+      <!-- AVATAR -->
+      <%= f.fields_for :avatar_image do |img| %>
+        <div class="w-full flex flex-col text-center items-center gap-4">
+          <%= render "shared/form_image_field",
+                     f: img,
+                     field: :avatar_image,
+                     resource: img.object,
+                     label: "Avatar" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="emails">
+    <h3 class="font-semibold text-gray-700 mb-2">Emails</h3>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <div class="flex flex-col md:flex-row gap-4">
+        <% if f.object.user %>
+          <div>
+            <label class="block text-md font-medium text-gray-700 mb-1">Primary email</label>
+            <span class="text-gray-900 font-medium">
+              <%= f.object.user&.email || f.object.email %>
+            </span>
+            <p class="text-sm text-gray-500 mt-1">Only
+              <% if current_user.super_user? && f.object.user&.persisted? %>
+                <%= link_to "editable by admins",
+                            edit_user_path(f.object.user),
+                            class: "underline" %>
+              <% else %>
+                editable by admins
+              <% end %>
+            </p>
+          </div>
+          <div>
+            <label class="block text-md font-medium text-gray-700 mb-1">Email type</label>
+            <span class="text-gray-900 font-medium">
+              <%= f.object.user&.email_type || f.object.email_type %>
+            </span>
+          </div>
+        <% else %>
+          <%= f.input :email, label: "Primary email" %>
+          <%= f.input :email_type,
+                      label: "Primary email type",
+                      as: :select,
+                      collection: Facilitator::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
+        <% end %>
+        <%= f.input :email_2, label: "Secondary email" %>
+        <%= f.input :email_2_type,
+                    label: "Secondary email type",
+                    as: :select,
+                    collection: Facilitator::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
+      </div>
+    </div>
+  </div>
+
+  <div class="phones">
+    <div class="form-group space-y-4">
+      <div class="font-semibold text-gray-700">
+        Phones
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+        <%= f.input :best_time_to_call %>
+        <%= f.simple_fields_for :contact_methods do |f| %>
+          <%= render "contact_methods/contact_method_fields", f: f %>
+        <% end %>
+
+        <%= link_to_add_association "➕ Add phone",
+                                    f,
+                                    :contact_methods,
+                                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="addresses">
+    <!-- Primary Address Choice -->
+    <div class="flex flex-col md:flex-row gap-4">
+      <%#= f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %>
+    </div>
+
+    <div class="form-group space-y-4">
+      <div class="font-semibold text-gray-700">
+        Addresses
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+
+        <%= f.simple_fields_for :addresses do |f| %>
+          <%= render "addresses/address_fields", f: f %>
+        <% end %>
+
+        <%= link_to_add_association "➕ Add address",
+                                    f,
+                                    :addresses,
+                                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  </div>
+
   <!-- USER FIELDS -->
   <%= f.fields_for :user do |u| %>
     <%= u.hidden_field :facilitator_id, value: f.object.id %>
-
-    <div class="flex gap-8 items-start">
-      <div class="flex-1" style="flex: 0 0 75%;">
-        <div class="space-y-6">
-          <div class="flex flex-col md:flex-row gap-4">
-            <%= f.input :first_name %>
-            <%= f.input :last_name %>
-
-            <div>
-              <label class="block text-md font-medium text-gray-700 mb-1">Email</label>
-              <span class="text-gray-900 font-medium"><%= u.object.email %></span>
-              <p class="text-sm text-gray-500 mt-1">Only
-              <%= current_user.super_user? &&
-                    u.object.persisted? ? (link_to "editable by admins",
-                                                   edit_user_path(u.object)) : "editable by admins" %></p>
-            </div>
-          </div>
-
-          <div class="flex flex-col md:flex-row gap-4">
-            <%= f.input :pronouns %>
-            <%= f.input :date_of_birth,
-                        as: :string,
-                        input_html: {
-                          type: "date",
-                          class: "w-full rounded-md border-gray-300 shadow-sm
-                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                        } %>
-            <%= f.input :member_since,
-                        as: :string,
-                        label: "Facilitator since",
-                        hint: "Pick Jan 1 if you only know the year",
-                        input_html: {
-                          type: "date",
-                          class: "w-full rounded-md border-gray-300 shadow-sm
-                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                        } %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Avatar -->
-      <div class="flex flex-col items-center gap-4" style="flex: 0 0 25%;">
-        <!-- AVATAR -->
-        <%= f.fields_for :avatar_image do |img| %>
-          <div class="w-full flex flex-col text-center items-center gap-4">
-            <%= render "shared/form_image_field",
-                       f: img,
-                       field: :avatar_image,
-                       resource: img.object,
-                       label: "Avatar" %>
-          </div>
-        <% end %>
-      </div>
-    </div>
-
-    <div class="phones">
-      <h3 class="font-semibold text-gray-700 mb-2">Phones</h3>
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-        <div class="flex flex-col md:flex-row gap-4">
-          <%= f.input :phone_number %>
-          <%= f.input :phone_number_2 %>
-          <%= f.input :phone_number_3 %>
-          <%= f.input :best_time_to_call %>
-        </div>
-      </div>
-    </div>
-
-    <div class="addresses">
-      <!-- Primary Address Choice -->
-      <div class="flex flex-col md:flex-row gap-4">
-        <%#= f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %>
-      </div>
-
-      <!-- Work Address -->
-      <div>
-        <h3 class="font-semibold text-gray-700 mb-2">Work address</h3>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-          <div class="flex flex-col md:flex-row gap-6 w-full">
-            <%= f.input :street_address, label: 'Street', as: :text, input_html: { rows: 1 } %>
-            <%= f.input :city, as: :text, input_html: { rows: 1 } %>
-            <%= f.input :state %>
-            <%= f.input :zip %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Home Address -->
-<!--      <div>-->
-<!--        <h3 class="font-semibold text-gray-700 mb-2">Home Address</h3>-->
-<!--        <div class="flex flex-col md:flex-row gap-6 w-full">-->
-          <%#= f.input :address2, label: 'Street2', as: :text, input_html: { rows: 1 } %>
-          <%#= f.input :city2, as: :text, input_html: { rows: 1 } %>
-          <%#= f.input :state2 %>
-          <%#= f.input :zip2 %>
-<!--        </div>-->
-<!--      </div>-->
-    </div>
 
     <!-- Organization Connections (PROJECT_USERS) -->
     <div class="form-group space-y-4">

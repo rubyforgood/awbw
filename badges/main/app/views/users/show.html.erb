@@ -6,55 +6,154 @@
       <div class="flex justify-end mb-6">
         <% if current_user.super_user? %>
           <%= link_to "Users", users_path, class: "btn btn-secondary-outline mr-2" %>
+          <%= link_to "Facilitator profile",
+                      facilitator_path(@user.facilitator),
+                      class: "btn btn-secondary-outline mr-2" if @user.facilitator %>
           <%= link_to "Edit", edit_user_path(@user), class: "btn btn-primary-outline" %>
         <% end %>
       </div>
 
       <!-- Main two-column layout -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-10">
+
         <!-- Left column: name + avatar -->
         <div class="flex flex-col items-center md:items-start text-center md:text-left">
-          <h2 class="font-bold text-3xl text-gray-900 mb-4"><%= @user.name %></h2>
+          <h2 class="font-bold text-3xl text-gray-900 mb-4">
+            <%= @user.name %>
+          </h2>
 
           <% if @user.avatar.attached? %>
             <%= image_tag url_for(@user.avatar),
                           id: "avatar-preview",
-                          class: "w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm" %>
+                          class: "w-16 h-16 rounded-full object-cover border border-gray-300 shadow-sm" %>
           <% else %>
             <%= image_tag "missing.png",
                           id: "avatar-preview",
-                          class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
+                          class: "w-16 h-16 rounded-full object-cover border border-dashed border-gray-300" %>
           <% end %>
         </div>
 
-        <!-- Right column: organizations -->
+        <!-- Identity -->
         <div>
-          <h5 class="text-sm font-semibold uppercase text-gray-700 mb-2">
-            Organization affiliations:
-          </h5>
-          <ul class="text-gray-800">
-            <% @user.project_users.each do |project_user| %>
-              <li>
-                <%= "#{project_user.project.name} - #{project_user.position}" %>
-              </li>
-            <% end %>
-          </ul>
+          <h4 class="text-sm font-semibold uppercase text-gray-700 mb-3">
+            Identity
+          </h4>
+
+          <dl class="space-y-2 text-sm">
+            <div>
+              <dt class="font-medium text-gray-500">Email</dt>
+              <dd class="text-gray-900"><%= @user.email.presence || "—" %></dd>
+            </div>
+
+            <div>
+              <dt class="font-medium text-gray-500">Phone</dt>
+              <dd class="text-gray-900"><%= @user.phone.presence || "—" %></dd>
+            </div>
+          </dl>
         </div>
+
+        <div>
+          <% unless @user.facilitator %>
+            Not associated with a facilitator!
+            <br>
+            <%= link_to "Create facilitator",
+                        new_facilitator_path(user_id: @user.id),
+                        class: "btn btn-primary" if @user.persisted? %>
+          <% end %>
+        </div>
+
       </div>
 
-      <!-- Workshops authored -->
-      <div class="mt-10">
-        <h5 class="text-sm font-semibold uppercase text-gray-700 mb-2">
-          Workshops authored:
-        </h5>
-        <ul class="text-gray-800 space-y-2">
-          <% @user.workshops.each do |workshop| %>
-            <%= render "workshops/index_row",
-                       workshop: workshop.decorate,
-                       link_route: workshop_path(workshop),
-                       hide_tags: true %>
-          <% end %>
-        </ul>
+      <!-- Devise / Account Details -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <!-- Account Status -->
+        <div>
+          <h4 class="text-sm font-semibold uppercase text-gray-700 mb-3">
+            Account status
+          </h4>
+
+          <dl class="space-y-2 text-sm">
+            <div>
+              <dt class="font-medium text-gray-500">Active</dt>
+              <dd class="text-gray-900">
+                <%= @user.inactive? ? "No" : "Yes" %>
+              </dd>
+            </div>
+
+            <div>
+              <dt class="font-medium text-gray-500">Super user</dt>
+              <dd class="text-gray-900">
+                <%= @user.super_user? ? "Yes" : "No" %>
+              </dd>
+            </div>
+
+            <% if @user.respond_to?(:locked_at) %>
+              <div>
+                <dt class="font-medium text-gray-500">Locked</dt>
+                <dd class="text-gray-900">
+                  <%= @user.locked_at.present? ? "Yes" : "No" %>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+
+        <!-- Authentication -->
+        <div>
+          <h4 class="text-sm font-semibold uppercase text-gray-700 mb-3">
+            Authentication
+          </h4>
+
+          <dl class="space-y-2 text-sm">
+            <% if @user.respond_to?(:sign_in_count) %>
+              <div>
+                <dt class="font-medium text-gray-500">Sign-in count</dt>
+                <dd class="text-gray-900"><%= @user.sign_in_count %></dd>
+              </div>
+            <% end %>
+
+            <% if @user.respond_to?(:current_sign_in_at) %>
+              <div>
+                <dt class="font-medium text-gray-500">Current sign-in</dt>
+                <dd class="text-gray-900">
+                  <%= l(@user.current_sign_in_at, format: :long) if @user.current_sign_in_at %>
+                </dd>
+              </div>
+            <% end %>
+
+            <% if @user.respond_to?(:last_sign_in_at) %>
+              <div>
+                <dt class="font-medium text-gray-500">Last sign-in</dt>
+                <dd class="text-gray-900">
+                  <%= l(@user.last_sign_in_at, format: :long) if @user.last_sign_in_at %>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+
+        <!-- Audit -->
+        <div>
+          <h4 class="text-sm font-semibold uppercase text-gray-700 mb-3">
+            Audit
+          </h4>
+
+          <dl class="space-y-2 text-sm">
+            <div>
+              <dt class="font-medium text-gray-500">Created at</dt>
+              <dd class="text-gray-900">
+                <%= @user.created_at.present? ? l(@user.created_at, format: :long) : "—" %>
+              </dd>
+            </div>
+
+            <div>
+              <dt class="font-medium text-gray-500">Updated at</dt>
+              <dd class="text-gray-900"><%= l(@user.updated_at, format: :long) %></dd>
+            </div>
+          </dl>
+        </div>
+
       </div>
 
     </div>

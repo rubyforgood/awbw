@@ -1,6 +1,8 @@
 <%= simple_form_for @user, html: { multipart: true, class: "space-y-8" } do |f| %>
   <%= render 'shared/errors', resource: user if user.errors.any? %>
 
+  <%= f.hidden_field :facilitator_id, value: params[:facilitator_id] %>
+
   <!-- Basic Info + Avatar -->
   <!-- Container -->
   <div class="flex gap-8 items-start">
@@ -43,8 +45,13 @@
               </div>
             </div>
           <% else %>
-            <%= f.input :first_name, input_html: { value: @facilitator&.first_name || f.object.first_name } %>
-            <%= f.input :last_name, input_html: { value: @facilitator&.last_name || f.object.last_name } %>
+            <div>
+              Not associated with a facilitator!
+              <br>
+              <%= link_to "Create facilitator",
+                          new_facilitator_path(user_id: @user.id),
+                          class: "btn btn-primary" if @user.persisted? %>
+            </div>
           <% end %>
 
           <div class="md:flex-grow md:basis-1/3">
@@ -52,7 +59,7 @@
               <div class="admin-only bg-blue-100 w-full">
                 <%= f.input :email,
                             hint: "Only editable by admins",
-                            input_html: { value: f.object.email.presence || @facilitator&.primary_email_address,
+                            input_html: { value: f.object.email.presence || @facilitator&.email,
                                           class: "w-full" },
                             wrapper_html: { class: "w-full" } %>
               </div>
@@ -63,7 +70,7 @@
                 </label>
                 <div class="flex gap-x-2 items-center">
                 <span class="text-gray-900 font-medium mb-2">
-                  <%= f.object.email.presence || @facilitator&.primary_email_address %>
+                  <%= f.object.email.presence || @facilitator&.email %>
                 </span>
                 </div>
                 <p class="text-sm text-gray-500 mt-1">

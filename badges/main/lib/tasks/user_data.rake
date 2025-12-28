@@ -9,7 +9,7 @@ namespace :user_data do
 			facilitator = Facilitator.where(
 				first_name: user.first_name,
 				last_name: user.last_name,
-				primary_email_address: user.email,
+				email: user.email,
 				phone_number: user.phone,
 				street_address: user.address,
 				city: user.city,

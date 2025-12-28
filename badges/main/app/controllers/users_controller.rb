@@ -31,6 +31,10 @@ class UsersController < ApplicationController
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
 
+    # assign facilitator
+    facilitator_id = params[:facilitator_id].presence || params.dig(:user, :facilitator_id).presence
+    @user.facilitator = Facilitator.find(facilitator_id) if facilitator_id
+
     if @user.save
       # @user.notifications.create(notification_type: 0)
       redirect_to users_path, notice: "User was successfully created."
@@ -85,33 +89,7 @@ class UsersController < ApplicationController
     if @user.facilitator.present?
       redirect_to @user.facilitator and return
     else
-      @facilitator = Facilitator.new(
-        user: @user,
-        first_name: @user.first_name,
-        last_name: @user.last_name,
-        primary_email_address: @user.email,
-        phone_number: @user.phone,
-        phone_number_2: @user.phone2,
-        phone_number_3: @user.phone3,
-        best_time_to_call: @user.best_time_to_call,
-        date_of_birth: @user.birthday,
-        street_address: @user.address,
-        city: @user.city,
-        state: @user.state,
-        zip: @user.zip,
-        created_by: current_user,
-        updated_by: current_user,
-        notes: @user.notes,
-        # comment: @user.comment,
-        # t.string "address2"
-        # t.integer "agency_id"
-        # t.string "city2"
-        # t.boolean "inactive", default: false
-        # t.integer "primary_address"
-        # t.string "state2"
-        # t.string "subscribecode"
-        # t.string "zip2"
-      )
+      @facilitator = FacilitatorFromUserService(user: @user).call
       if @facilitator.save
         redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
       else
@@ -126,9 +104,13 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
-  def set_form_variables
+  def set_facilitator
     @facilitator = @user.facilitator ||
-      Facilitator.where(id: params[:facilitator_id]).first if params[:facilitator_id].present?
+      (Facilitator.where(id: params[:facilitator_id]).first if params[:facilitator_id].present?)
+  end
+
+  def set_form_variables
+    set_facilitator
     @user.project_users.first || @user.project_users.build
     projects = if current_user.super_user?
                  Project.active
