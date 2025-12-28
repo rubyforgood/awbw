@@ -44,8 +44,7 @@
                                   alt: news.title),
                                 community_news_path(news),
                                 data: { turbo_prefetch: false },
-                                target: news.external_link? ? "_blank" : "",
-                                rel: "noopener noreferrer" %>
+                                target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer" %>
                   <% else %>
                     <svg class="w-6 h-6 text-gray-400"
                          fill="currentColor" viewBox="0 0 20 18"></svg>

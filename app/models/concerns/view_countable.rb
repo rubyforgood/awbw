@@ -24,7 +24,7 @@ module ViewCountable
 				"ua=#{request.user_agent}"
 		end
 
-		return unless request.get?
+		return unless request.request_method.in?(%w[GET HEAD])
 		return unless request.format.html? || request.format.turbo_stream?
 
 		session_key = :"viewed_#{self.class.name}_ids"

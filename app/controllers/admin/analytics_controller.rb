@@ -37,9 +37,20 @@ module Admin
 		end
 
 		def print
-			record = params[:printable_type].constantize.find(params[:printable_id])
+			printable_models = {
+				"Resource" => Resource,
+				"Story" => Story,
+				"Workshop" => Workshop,
+				"CommunityNews" => CommunityNews
+			}.freeze
+
+			klass = printable_models[params[:printable_type]]
+			return head :bad_request unless klass
+
+			record = klass.find_by(id: params[:printable_id])
+			return head :not_found unless record
+
 			record.increment_print_count!
-			Rails.logger.info "Incremented print count for #{record.class.name} ID #{record.id}"
 
 			head :ok
 		end

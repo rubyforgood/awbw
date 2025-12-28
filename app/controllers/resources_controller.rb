@@ -1,4 +1,5 @@
 class ResourcesController < ApplicationController
+  include ExternallyRedirectable
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
@@ -42,7 +43,7 @@ class ResourcesController < ApplicationController
     load_forms
 
     if @resource.external_url.present?
-      redirect_to @resource.external_url, allow_other_host: true
+      redirect_to_external @resource.link_target
       return
     end
   end

@@ -1,4 +1,5 @@
 class StoriesController < ApplicationController
+  include ExternallyRedirectable
   before_action :set_story, only: [:show, :edit, :update, :destroy]
 
   def index
@@ -21,7 +22,7 @@ class StoriesController < ApplicationController
     @story.increment_view_count!(session: session, request: request)
 
     if @story.external_url.present?
-      redirect_to @story.external_url, allow_other_host: true
+      redirect_to_external @story.link_target
       return
     end
   end

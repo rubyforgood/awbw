@@ -1,4 +1,5 @@
 class CommunityNewsController < ApplicationController
+  include ExternallyRedirectable
   before_action :set_community_news, only: [:show, :edit, :update, :destroy]
 
   def index
@@ -19,7 +20,7 @@ class CommunityNewsController < ApplicationController
     @community_news.increment_view_count!(session: session, request: request)
 
     if @community_news.external_url.present?
-      redirect_to @community_news.external_url, allow_other_host: true
+      redirect_to_external @community_news.link_target
       return
     end
   end
