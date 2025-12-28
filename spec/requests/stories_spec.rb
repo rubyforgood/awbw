@@ -27,6 +27,7 @@ RSpec.describe "/stories", type: :request do
       title: "A Great Story",
       body: "Once upon a time, there was a great Rails developer...",
       youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      website_url: "https://www.example.com",
       published: true,
       windows_type_id: windows_type.id,
       workshop_id: workshop.id,
@@ -57,10 +58,33 @@ RSpec.describe "/stories", type: :request do
   end
 
   describe "GET /show" do
-    it "renders a successful response" do
-      story = Story.create! valid_attributes
-      get story_url(story)
-      expect(response).to be_successful
+    context "when story has NO external link" do
+      let(:story) do
+        Story.create!(
+          valid_attributes.merge(website_url: nil)
+        )
+      end
+
+      it "renders the show page" do
+        get story_url(story)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "when story HAS an external link" do
+      let(:story) do
+        Story.create!(
+          valid_attributes.merge(website_url: "www.google.com")
+        )
+      end
+
+      it "redirects to the external URL" do
+        get story_url(story)
+
+        expect(response).to have_http_status(:found)
+        expect(response).to redirect_to("https://www.google.com")
+      end
     end
   end
 

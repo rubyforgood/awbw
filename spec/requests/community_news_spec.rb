@@ -23,7 +23,6 @@ RSpec.describe "/community_news", type: :request do
     {
       title: "Title2",
       body: "MyText",
-      youtube_url: "Youtube Url",
       published: false,
       featured: false,
       author_id: admin.id,
@@ -59,12 +58,36 @@ RSpec.describe "/community_news", type: :request do
   end
 
   describe "GET /show" do
-    it "renders a successful response" do
-      community_news = CommunityNews.create! valid_attributes
-      get community_news_url(community_news)
-      expect(response).to be_successful
+    context "when community_news has NO external link" do
+      let(:community_news) do
+        CommunityNews.create!(
+          valid_attributes.merge(reference_url: nil)
+        )
+      end
+
+      it "renders the show page" do
+        get community_news_url(community_news)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "when community_news HAS an external link" do
+      let(:community_news) do
+        CommunityNews.create!(
+          valid_attributes.merge(reference_url: "www.google.com")
+        )
+      end
+
+      it "redirects to the external URL" do
+        get community_news_url(community_news)
+
+        expect(response).to have_http_status(:found)
+        expect(response).to redirect_to("https://www.google.com")
+      end
     end
   end
+
 
   describe "GET /new" do
     it "renders a successful response" do

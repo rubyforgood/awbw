@@ -61,8 +61,8 @@ class ResourcesController < ApplicationController
     else
       @resource = @resource.decorate
       set_form_variables
-      flash[:alert] = "Unable to save #{@resource.title.titleize}"
-      render :new
+      flash[:alert] = "Unable to save #{@resource.title.presence || 'resource'}"
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -75,7 +75,7 @@ class ResourcesController < ApplicationController
     else
       set_form_variables
       flash[:alert] = "Failed to update Resource."
-      render :edit
+      render :edit, status: :unprocessable_content
     end
   end
 
