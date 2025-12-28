@@ -32,6 +32,11 @@ Rails.application.routes.draw do
   get "tags/sectors", to: "tags#sectors", as: "tags_sectors"
   get "tags/categories", to: "tags#categories", as: "tags_categories"
 
+  namespace :admin do
+    get "analytics", to: "analytics#index"
+    post "analytics/print", to: "analytics#print"
+  end
+
   resources :banners
   resources :bookmarks do
     post :search

@@ -84,6 +84,7 @@ class WorkshopsController < ApplicationController
 
   def show
     set_show
+    @workshop.increment_view_count!(session: session, request: request)
   end
 
   def update

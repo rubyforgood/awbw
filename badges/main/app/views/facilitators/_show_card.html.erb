@@ -23,7 +23,7 @@
       border-b md:border-b-0 md:border-r border-gray-200">
       <!-- IMAGE -->
       <div class="relative w-12 h-12 md:w-16 md:h-16">
-        <%= link_to polymorphic_path(record.object), class: "block w-full h-full" do %>
+        <%= link_to polymorphic_path(record.object), data: { turbo_prefetch: false }, class: "block w-full h-full" do %>
           <img
             src="<%= record.main_image_url %>"
             alt="<%= record_title.truncate(25) %>"
@@ -38,6 +38,7 @@
     <div class="flex-1 min-w-0 pl-4 pr-10 py-1 flex flex-col justify-start">
       <div class="my-2">
         <%= link_to polymorphic_path(record.object),
+                    data: { turbo_prefetch: false },
                     class: "inline-flex min-w-0 max-w-full text-lg font-semibold
                             text-gray-900 leading-tight hover:underline" do %>
           <%= title_with_badges(record, font_size: title_font_size,

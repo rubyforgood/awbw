@@ -1,5 +1,5 @@
 class Story < ApplicationRecord
-  include TagFilterable, WindowsTypeFilterable
+  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -38,6 +38,7 @@ class Story < ApplicationRecord
   end
 
   # Scopes
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :featured, -> { where(featured: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }

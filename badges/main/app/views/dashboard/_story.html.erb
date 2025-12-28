@@ -6,7 +6,8 @@
   </div>
 
   <!-- CLICKABLE CARD -->
-  <%= link_to story.link_target,
+  <%= link_to story_path(story),
+              data: { turbo_prefetch: false },
               target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer",
               class: "flex flex-col md:flex-row md:items-center gap-4 cursor-pointer block" do %>
 

@@ -1,21 +1,21 @@
 <div class="community-news-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:community_news) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="w-full">
         <div class="flex items-start justify-between mb-6">
-          <div class="pr-6">
-            <h2 class="text-2xl font-semibold mb-2">Community news (<%= @count_display %>)</h2>
-          </div>
-          <div class="text-right text-end">
-            <% if current_user.super_user? %>
-              <%= link_to "New Post",
-                          new_community_news_path,
-                          class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-            <% end %>
-          </div>
-        </div>
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">Community news (<%= @count_display %>)</h2>
+      </div>
+      <div class="text-right text-end">
+        <% if current_user.super_user? %>
+          <%= link_to "New Post",
+                      new_community_news_path,
+                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
+    </div>
 
-        <%= render "search_boxes" %>
+    <%= render "search_boxes" %>
 
-        <% if @community_news.any? %>
+    <% if @community_news.any? %>
       <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -42,9 +42,9 @@
                     <%= link_to (image_tag news.main_image.file,
                                   class: "w-full rounded shadow-sm border border-gray-200",
                                   alt: news.title),
-                                news.link_target,
-                                target: news.external_link? ? "_blank" : "",
-                                rel: "noopener noreferrer" %>
+                                community_news_path(news),
+                                data: { turbo_prefetch: false },
+                                target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer" %>
                   <% else %>
                     <svg class="w-6 h-6 text-gray-400"
                          fill="currentColor" viewBox="0 0 20 18"></svg>
@@ -54,7 +54,9 @@
                 <!-- TITLE + BADGES -->
                 <span class="inline-flex items-center gap-2">
                   <%= link_to title_with_badges(news, show_hidden_badge: current_user.super_user?).html_safe,
-                              news.link_target, target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
+                              community_news_path(news),
+                              data: { turbo_prefetch: false },
+                              target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                               class: "font-bold hover:text-indigo-800 hover:underline" %>
                 </span>
               </td>
@@ -80,7 +82,7 @@
                   <% end %>
 
                   <%= link_to "View",
-                              news.link_target,
+                              community_news_path(news),
                               target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                               class: "btn btn-secondary-outline" %>
                 </div>

@@ -1,5 +1,5 @@
 class Workshop < ApplicationRecord
-  include TagFilterable, WindowsTypeFilterable
+  include TagFilterable, PrintCountable, Trendable, ViewCountable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
   belongs_to :windows_type
@@ -67,6 +67,7 @@ class Workshop < ApplicationRecord
 
 
   # Scopes
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }

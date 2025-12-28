@@ -7,7 +7,9 @@
 
   <!-- CARD BODY (clickable) -->
 
-  <%= link_to news.link_target, target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
+  <%= link_to community_news_path(news),
+              data: { turbo_prefetch: false },
+              target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
               class: "flex flex-row items-start gap-4 block z-10" do %>
 
     <!-- LEFT: TITLE + BODY -->

@@ -10,6 +10,7 @@ class EventsController < ApplicationController
 
   def show
     @event = @event.decorate
+    @event.increment_view_count!(session: session, request: request)
   end
 
   def new # all logged in users can create events

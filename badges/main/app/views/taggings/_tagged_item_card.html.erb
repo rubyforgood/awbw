@@ -24,9 +24,8 @@
 
       <!-- IMAGE / ICON -->
       <div class="relative w-18 h-18">
-        <%= link_to item.link_target,
-                    target: item.external_link? ? "_blank" : "",
-                    rel: "noopener noreferrer",
+        <%= link_to polymorphic_path(item),
+                    target: item.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                     class: "block w-full h-full" do %>
 
           <% if item.class == ResourceDecorator %>
@@ -60,9 +59,8 @@
 
       <!-- TITLE -->
       <div class="mt-3 mb-2">
-        <%= link_to item.link_target,
-                    target: item.external_link? ? "_blank" : "",
-                    rel: "noopener noreferrer",
+        <%= link_to polymorphic_path(item),
+                    target: item.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                     class: "inline-flex min-w-0 max-w-full text-lg font-semibold
                             text-gray-900 leading-tight hover:underline" do %>
           <%= item.title.truncate(50) %>

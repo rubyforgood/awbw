@@ -10,6 +10,8 @@ class ProjectsController < ApplicationController
   end
 
   def show
+    @project.increment_view_count!(session: session, request: request)
+
     # Reuse WorkshopLogsController#index logic programmatically
     workshop_logs_controller = WorkshopLogsController.new
     workshop_logs_controller.request = request

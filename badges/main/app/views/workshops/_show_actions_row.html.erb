@@ -26,13 +26,18 @@
                   class: "btn btn-secondary-outline admin-only bg-blue-100" %>
     <% end %>
 
-    <%= link_to '#',
-                onclick: 'window.print()',
-                class: "inline-flex items-center gap-2 px-4 py-2 border border-gray-400 text-gray-600
-                        rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-200
-                        font-medium shadow-sm text-sm" do %>
+    <button
+      type="button"
+      class="inline-flex items-center gap-2 px-4 py-2 border border-gray-400 text-gray-600
+         rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-200
+         font-medium shadow-sm text-sm"
+      data-controller="print"
+      data-action="click->print#trackAndPrint"
+      data-printable-type="<%= workshop.class.name %>"
+      data-printable-id="<%= workshop.id %>">
+
       <i class="fas fa-print text-base flex-shrink-0"></i>
       <span class="leading-none text-sm py-[2.75px]">Print</span>
-    <% end %>
+    </button>
   </div>
 </div>

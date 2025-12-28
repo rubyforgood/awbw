@@ -1,4 +1,5 @@
 class ResourcesController < ApplicationController
+  include ExternallyRedirectable
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
@@ -38,8 +39,13 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(resource_id_param).decorate
+    @resource.increment_view_count!(session: session, request: request)
     load_forms
-    render :show
+
+    if @resource.external_url.present?
+      redirect_to_external @resource.link_target
+      return
+    end
   end
 
   def rhino_text
@@ -55,8 +61,8 @@ class ResourcesController < ApplicationController
     else
       @resource = @resource.decorate
       set_form_variables
-      flash[:alert] = "Unable to save #{@resource.title.titleize}"
-      render :new
+      flash[:alert] = "Unable to save #{@resource.title.presence || 'resource'}"
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -69,7 +75,7 @@ class ResourcesController < ApplicationController
     else
       set_form_variables
       flash[:alert] = "Failed to update Resource."
-      render :edit
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -86,6 +92,9 @@ class ResourcesController < ApplicationController
   end
 
   def download
+    @resource = Resource.find(params[:resource_id])
+    @resource.increment!(:download_count)
+
     attachment = if params[:attachment_id].to_i > 0
       Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
     else

@@ -14,6 +14,7 @@ class FacilitatorsController < ApplicationController
 
   def show
     @facilitator = Facilitator.find(params[:id]).decorate
+    @facilitator.increment_view_count!(session: session, request: request)
   end
 
   def new

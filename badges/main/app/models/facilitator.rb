@@ -1,5 +1,5 @@
 class Facilitator < ApplicationRecord
-  include TagFilterable, WindowsTypeFilterable
+  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -55,6 +55,7 @@ class Facilitator < ApplicationRecord
   end
 
   scope :active, -> { all } # TODO - implement inactive field
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :published, -> { active.searchable }
   scope :published, ->(published=nil) { published ? active.searchable(published) : active.searchable }
   scope :searchable, ->(searchable=nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }

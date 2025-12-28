@@ -1,0 +1,160 @@
+<div class="max-w-7xl mx-auto px-6 py-8 space-y-10">
+
+  <h1 class="text-3xl font-bold text-gray-900">
+    Analytics dashboard
+  </h1>
+
+  <!-- Summary -->
+  <section>
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">
+      View counts
+    </h2>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <% @summary.each do |label, value| %>
+        <div class="<%= DomainTheme.bg_class_for(label) %> border rounded-lg p-4 shadow-sm">
+          <div class="text-sm text-gray-500 uppercase">
+            <%= label.to_s.humanize %>
+          </div>
+          <div class="text-2xl font-bold text-gray-900">
+            <%= number_with_delimiter(value) %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <!-- Popular Content -->
+  <section>
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">
+      Most viewed
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Workshops",
+                 records: @most_viewed_workshops,
+                 path_method: :workshop_path,
+                 metric: :view_count,
+                 color: :workshops
+      %>
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Most printed workshops",
+                 records: @most_printed_workshops,
+                 path_method: :workshop_path,
+                 metric: :print_count,
+                 color: :workshops
+      %>
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Resources",
+                 records: @most_viewed_resources,
+                 path_method: :resource_path,
+                 metric: :view_count,
+                 color: :resources
+      %>
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Most downloaded resources",
+                 records: @most_downloaded_resources,
+                 path_method: :resource_path,
+                 metric: :download_count,
+                 color: :resources
+      %>
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Community news",
+                 records: @most_viewed_community_news,
+                 path_method: :community_news_path,
+                 metric: :view_count,
+                 color: :community_news
+      %>
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Stories",
+                 records: @most_viewed_stories,
+                 path_method: :story_path,
+                 metric: :view_count,
+                 color: :stories
+      %>
+
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Events",
+                 records: @most_viewed_events,
+                 path_method: :event_path,
+                 metric: :view_count,
+                 color: :events
+      %>
+
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Workshop variations",
+                 records: @most_viewed_workshop_variations,
+                 path_method: :workshop_variation_path,
+                 metric: :view_count,
+                 color: :workshop_variations
+      %>
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Quotes",
+                 records: @most_viewed_quotes,
+                 path_method: :quote_path,
+                 metric: :view_count,
+                 color: :quotes
+      %>
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Facilitators",
+                 records: @most_viewed_facilitators,
+                 path_method: :facilitator_path,
+                 metric: :view_count,
+                 color: :facilitators
+      %>
+
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Projects",
+                 records: @most_viewed_projects,
+                 path_method: :project_path,
+                 metric: :view_count,
+                 color: :projects
+      %>
+
+
+      <%= render "admin/analytics/popular_list",
+                 title: "Tutorials",
+                 records: @most_viewed_tutorials,
+                 path_method: :tutorial_path,
+                 metric: :view_count,
+                 color: :tutorials
+      %>
+    </div>
+  </section>
+
+  <!-- Zero Engagement -->
+  <section>
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">
+      No engagement
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <%= render "zero_list",
+                 title: "Workshops",
+                 records: @zero_engagement_workshops,
+                 path_method: :workshop_path,
+                 color: :workshops
+      %>
+
+      <%= render "zero_list",
+                 title: "Resources",
+                 records: @zero_engagement_resources,
+                 path_method: :resource_path,
+                 color: :resources
+      %>
+    </div>
+  </section>
+
+</div>

@@ -33,7 +33,7 @@ class QuoteDecorator < ApplicationDecorator
 	end
 
 	def title
-		"#{speaker_name} re #{workshop&.title}"
+		"#{attribution} re #{workshop&.title}"
 	end
 
 	def detail(length: nil)

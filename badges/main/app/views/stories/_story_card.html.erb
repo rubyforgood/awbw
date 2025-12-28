@@ -1,13 +1,13 @@
 <%# app/views/stories/_story_card.html.erb %>
 <%# locals: story:, href: story_path(story) by default, show_meta: true, show_excerpt: true %>
 <% href       = local_assigns.fetch(:href,
-                                    story.link_target,
+                                    story_path(story),
                                     target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer") %>
 <% show_meta  = local_assigns.fetch(:show_meta, true) %>
 <% show_excerpt = local_assigns.fetch(:show_excerpt, true) %>
 
 <article class="w-full">
-  <%= link_to href, class: "group block focus:outline-none" do %>
+  <%= link_to href, data: { turbo_prefetch: false }, class: "group block focus:outline-none" do %>
     <%# Cover image (16:9), no border %>
     <% if story.respond_to?(:main_image) && story.main_image&.file&.attached? %>
       <% cover = story.main_image.file %>
