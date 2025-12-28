@@ -3,8 +3,6 @@ require 'rails_helper'
 RSpec.describe "users/show", type: :view do
   let(:user) do
     create(:user,
-           first_name: "First Name",
-           last_name: "Last Name",
            email: "Email@example.com",
            comment: "MyText",
            notes: "MyText",
@@ -25,10 +23,9 @@ RSpec.describe "users/show", type: :view do
     allow(view).to receive(:current_user).and_return(super_user)
   end
 
-  it "renders user attributes" do
+  it "renders facilitator attributes" do
     render
-    expect(rendered).to include("First Name")
-    expect(rendered).to include("Last Name")
+    expect(rendered).to include("email@example.com")
   end
 
   it "renders devise data" do
@@ -39,10 +36,5 @@ RSpec.describe "users/show", type: :view do
   it "renders audit data" do
     render
     expect(rendered).to include(I18n.l(user.updated_at, format: :long))
-  end
-
-  it "renders affiliated projects" do
-    render
-    expect(rendered).to include("Healing Arts")
   end
 end

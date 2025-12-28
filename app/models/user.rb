@@ -46,7 +46,6 @@ class User < ApplicationRecord
     reject_if: proc { |attrs| attrs["project_id"].blank? || attrs["title"].blank? }
 
   # Validations
-  validates :first_name, :last_name, presence: true
   validates :email, presence: true, uniqueness: {case_sensitive: false}
 
   # Search Cop
