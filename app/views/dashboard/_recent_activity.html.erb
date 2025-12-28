@@ -14,8 +14,9 @@ overflow-hidden flex flex-col md:flex-row">
       <div class="text-sm text-gray-500 font-medium pt-2">
         <% if activity.respond_to?(:created_by) && activity.created_by.present? %>
           by <%= link_to activity.created_by.full_name,
-                      user_path(activity.created_by),
-                      class: "hover:underline" %>
+                         user_path(activity.created_by),
+                         data: { turbo_prefetch: false },
+                         class: "hover:underline" %>
         <% end %>
       </div>
     <% end %>
@@ -23,7 +24,7 @@ overflow-hidden flex flex-col md:flex-row">
 
   <div class="w-20 bg-white flex items-top justify-center pt-3">
     <% if main_image_url(activity.object).present? %>
-      <%= link_to polymorphic_path(activity.object) do %>
+      <%= link_to polymorphic_path(activity.object), data: { turbo_prefetch: false } do %>
         <img src="<%= main_image_url(activity.object) %>"
              alt=""
              class="w-20 h-16 object-cover rounded">
@@ -36,16 +37,13 @@ overflow-hidden flex flex-col md:flex-row">
   </div>
 
   <div class="flex-1 p-4">
-    <% if activity.object.is_a?(Resource) || activity.object.is_a?(Address) %>
-      <% path = activity.url || resource_path(activity) %>
-    <% else %>
-      <% path = polymorphic_path(activity) %>
-    <% end %>
+    <% path = polymorphic_path(activity) %>
 
     <%= link_to path, class: "hover:underline" do %>
       <h3 class="text-lg font-semibold text-gray-900">
         <%= link_to activity.title,
                     path,
+                    data: { turbo_prefetch: false },
                     class: "hover:underline" %>
       </h3>
 
@@ -57,6 +55,7 @@ overflow-hidden flex flex-col md:flex-row">
         <% if activity.object.is_a?(Resource) && activity.download_attachment&.file&.attached? %>
           <%= link_to raw("<span class='fa fa-download'></span>"),
                       resource_download_path(activity),
+                      data: { turbo_prefetch: false },
                       class: "btn btn-utility" %>
         <% end %>
       </div>
