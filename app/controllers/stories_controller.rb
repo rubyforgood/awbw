@@ -1,6 +1,6 @@
 class StoriesController < ApplicationController
   include ExternallyRedirectable
-  before_action :set_story, only: [:show, :edit, :update, :destroy]
+  before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -12,9 +12,9 @@ class StoriesController < ApplicationController
 
     @count_display = if filtered.count == unpaginated.count
                        unpaginated.count
-                     else
+    else
                        "#{filtered.count}/#{unpaginated.count}"
-                     end
+    end
   end
 
   def show
@@ -23,7 +23,7 @@ class StoriesController < ApplicationController
 
     if @story.external_url.present?
       redirect_to_external @story.link_target
-      return
+      nil
     end
   end
 
@@ -105,8 +105,8 @@ class StoriesController < ApplicationController
       :title, :body, :featured, :published, :youtube_url, :website_url,
       :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy]
+      main_image_attributes: [ :id, :file, :_destroy ],
+      gallery_images_attributes: [ :id, :file, :_destroy ]
     )
   end
 end

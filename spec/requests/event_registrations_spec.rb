@@ -11,7 +11,7 @@ RSpec.describe "EventRegistrations", type: :request do
     it "paginates results" do
       registrations = create_list(:event_registration, 3)
 
-      get event_registrations_path, params: {number_of_items_per_page: 1}
+      get event_registrations_path, params: { number_of_items_per_page: 1 }
 
       expect(response).to have_http_status(:success)
 
@@ -27,7 +27,7 @@ RSpec.describe "EventRegistrations", type: :request do
     context "with valid parameters" do
       it "creates a new EventRegistration" do
         expect {
-          post event_registrations_path, params: {event_registration: {event_id: event.id, registrant_id: user.id}}
+          post event_registrations_path, params: { event_registration: { event_id: event.id, registrant_id: user.id } }
         }.to change(EventRegistration, :count).by(1)
 
         registration = EventRegistration.last
@@ -39,7 +39,7 @@ RSpec.describe "EventRegistrations", type: :request do
     context "with invalid parameters" do
       it "does not create a new EventRegistration" do
         expect {
-          post event_registrations_path, params: {event_id: nil}
+          post event_registrations_path, params: { event_id: nil }
         }.to change(EventRegistration, :count).by(0)
       end
     end
@@ -48,7 +48,7 @@ RSpec.describe "EventRegistrations", type: :request do
       before { sign_out user }
 
       it "redirects to sign in page" do
-        post event_registrations_path, params: {event_id: event.id}
+        post event_registrations_path, params: { event_id: event.id }
         expect(response).to redirect_to(new_user_session_path)
       end
     end
@@ -62,7 +62,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
       it "updates the event registration" do
         patch event_registration_path(registration), params: {
-          event_registration: {event_id: new_event.id}
+          event_registration: { event_id: new_event.id }
         }
 
         expect(response).to redirect_to(event_registrations_path)
@@ -74,7 +74,7 @@ RSpec.describe "EventRegistrations", type: :request do
     context "with invalid parameters" do
       it "renders edit with unprocessable status" do
         patch event_registration_path(registration), params: {
-          event_registration: {event_id: nil}
+          event_registration: { event_id: nil }
         }
 
         expect(response).to have_http_status(:unprocessable_content)
@@ -86,7 +86,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
       it "redirects to sign in page" do
         patch event_registration_path(registration), params: {
-          event_registration: {event_id: event.id}
+          event_registration: { event_id: event.id }
         }
 
         expect(response).to redirect_to(new_user_session_path)
@@ -112,7 +112,7 @@ RSpec.describe "EventRegistrations", type: :request do
       it "sets an alert flash" do
         allow_any_instance_of(EventRegistration).to receive(:destroy).and_return(false)
         allow_any_instance_of(EventRegistration).to receive_message_chain(:errors, :full_messages)
-          .and_return(["Could not delete"])
+          .and_return([ "Could not delete" ])
 
         delete event_registration_path(registration)
 

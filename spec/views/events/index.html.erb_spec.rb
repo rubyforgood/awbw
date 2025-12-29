@@ -20,7 +20,7 @@ RSpec.describe "events/index", type: :view do
       registration_close_date: nil,
       publicly_visible: true)
   }
-  let(:events) { [event_open, event_open] }
+  let(:events) { [ event_open, event_open ] }
 
   before do
     assign(:events, events)
@@ -28,7 +28,7 @@ RSpec.describe "events/index", type: :view do
   end
 
   it "renders each event with checkbox and details" do
-    assign(:events, [event_open, event_open_2, event_closed])
+    assign(:events, [ event_open, event_open_2, event_closed ])
     render
 
     events.each do |event|
@@ -66,7 +66,7 @@ RSpec.describe "events/index", type: :view do
 
   context "when events have minimal data" do
     let(:event_with_minimal_data) { create(:event, title: "Minimal Event", description: nil) }
-    let(:events) { [event_with_minimal_data] }
+    let(:events) { [ event_with_minimal_data ] }
 
     it "handles minimal data gracefully" do
       render
@@ -79,4 +79,3 @@ RSpec.describe "events/index", type: :view do
     end
   end
 end
-

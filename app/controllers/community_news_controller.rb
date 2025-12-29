@@ -1,6 +1,6 @@
 class CommunityNewsController < ApplicationController
   include ExternallyRedirectable
-  before_action :set_community_news, only: [:show, :edit, :update, :destroy]
+  before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -10,9 +10,9 @@ class CommunityNewsController < ApplicationController
 
     @count_display = if filtered.count == unfiltered.count
                        unfiltered.count
-                     else
+    else
                        "#{filtered.count}/#{unfiltered.count}"
-                     end
+    end
   end
 
   def show
@@ -21,7 +21,7 @@ class CommunityNewsController < ApplicationController
 
     if @community_news.external_url.present?
       redirect_to_external @community_news.link_target
-      return
+      nil
     end
   end
 
@@ -71,7 +71,7 @@ class CommunityNewsController < ApplicationController
     @organizations = Project.pluck(:name, :id).sort_by(&:first)
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @community_news.author_id))
-                   .map{|u| [u.full_name, u.id]}.sort_by(&:first)
+                   .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
   end
 
   private
@@ -84,11 +84,11 @@ class CommunityNewsController < ApplicationController
   def community_news_params
     params.require(:community_news).permit(
       :title, :body, :published, :featured,
-      :reference_url,:youtube_url,
+      :reference_url, :youtube_url,
       :project_id, :windows_type_id,
       :author_id, :created_by_id, :updated_by_id,
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy]
+      main_image_attributes: [ :id, :file, :_destroy ],
+      gallery_images_attributes: [ :id, :file, :_destroy ]
     )
   end
 end

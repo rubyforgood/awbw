@@ -1,5 +1,4 @@
 class ReportDecorator < ApplicationDecorator
-
   def created_by
     user
   end
@@ -17,7 +16,7 @@ class ReportDecorator < ApplicationDecorator
   end
 
   def monthly?
-    type.include?('Monthly')
+    type.include?("Monthly")
   end
 
   def display_date

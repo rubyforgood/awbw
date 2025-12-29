@@ -4,5 +4,4 @@ class TutorialDecorator < Draper::Decorator
   def display_text
     "<div class='reset-list-items'>#{body}</div>".html_safe
   end
-
 end

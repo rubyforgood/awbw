@@ -44,8 +44,8 @@ class Story < ApplicationRecord
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :story_name, ->(story_name) {
     story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
-  scope :published, ->(published=nil) {
-    ["true", "false"].include?(published) ? where(published: published) : where(published: true) }
+  scope :published, ->(published = nil) {
+    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)

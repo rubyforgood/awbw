@@ -1,6 +1,6 @@
 class AddContactInfoToFacilitators < ActiveRecord::Migration[6.1]
   def change
-    add_column :facilitators, :primary_email_address, :string, null: false 
+    add_column :facilitators, :primary_email_address, :string, null: false
     add_column :facilitators, :primary_email_address_type, :string, null: false
     add_column :facilitators, :street_address, :string, null: false
     add_column :facilitators, :city, :string, null: false

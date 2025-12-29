@@ -62,4 +62,3 @@ RSpec.describe Workshop do
 
   # Add tests for scopes, methods like #rating, #log_count, SearchCop etc.
 end
-

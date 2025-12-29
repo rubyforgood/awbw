@@ -6,7 +6,7 @@ RSpec.describe "windows_types/index", type: :view do
   let(:windows_type2) { create(:windows_type, name: "Children", short_name: "CHILDREN") }
 
   before(:each) do
-    assign(:windows_types, paginated([windows_type1, windows_type2]))
+    assign(:windows_types, paginated([ windows_type1, windows_type2 ]))
     allow(view).to receive(:current_user).and_return(admin)
   end
 

@@ -4,4 +4,4 @@ FactoryBot.define do
 
     association :windows_type
   end
-end 
+end

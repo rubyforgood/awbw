@@ -18,4 +18,4 @@ FactoryBot.define do
       short_name { "COMBINED" }
     end
   end
-end 
+end

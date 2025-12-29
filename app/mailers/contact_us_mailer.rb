@@ -1,5 +1,5 @@
 class ContactUsMailer < ApplicationMailer
-  default from: 'contactus@no-reply.com'
+  default from: "contactus@no-reply.com"
 
   def hello(contact_us)
     @contact_us = contact_us

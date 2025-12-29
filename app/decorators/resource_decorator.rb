@@ -28,7 +28,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def truncated_text(ln = 100)
-    h.truncate(html.text.gsub(/(<[^>]+>)/, ''), length: ln)
+    h.truncate(html.text.gsub(/(<[^>]+>)/, ""), length: ln)
   end
 
   def display_title
@@ -48,7 +48,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def display_date
-    created_at.strftime('%B %Y')
+    created_at.strftime("%B %Y")
   end
 
   def display_text
@@ -56,11 +56,11 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def card_class
-    kind == 'Theme' ? 'circular-border' : 'normal'
+    kind == "Theme" ? "circular-border" : "normal"
   end
 
   def toolkit_and_form?
-    kind == 'ToolkitAndForm'
+    kind == "ToolkitAndForm"
   end
 
   private
@@ -70,6 +70,6 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def type_link
-    h.link_to 'Resources', h.resources_path
+    h.link_to "Resources", h.resources_path
   end
 end

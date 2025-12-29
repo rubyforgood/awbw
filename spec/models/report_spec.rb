@@ -28,4 +28,3 @@ RSpec.describe Report do
     it { should validate_content_type_of(:form_file).rejecting("text/plain", "text/xml") }
   end
 end
-

@@ -42,7 +42,7 @@ RSpec.describe "users/index", type: :view do
 
     before do
       paginated = WillPaginate::Collection.create(1, 10, 1) do |pager|
-        pager.replace([user_without_facilitator])
+        pager.replace([ user_without_facilitator ])
       end
 
       assign(:users, paginated)

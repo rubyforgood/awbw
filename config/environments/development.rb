@@ -75,6 +75,6 @@ Rails.application.configure do
   # needed for codespaces
   config.hosts << ".app.github.dev"
 
-  feature_flag_variables = File.join(Rails.root, 'config', 'feature_flag_variables.rb')
+  feature_flag_variables = File.join(Rails.root, "config", "feature_flag_variables.rb")
   load(feature_flag_variables) if File.exist?(feature_flag_variables)
 end

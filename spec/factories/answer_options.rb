@@ -3,4 +3,4 @@ FactoryBot.define do
     name { "Option Text" }
     order { 1 }
   end
-end 
+end

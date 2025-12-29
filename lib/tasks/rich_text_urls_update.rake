@@ -5,7 +5,7 @@ include Rails.application.routes.url_helpers
 
 namespace :rich_text_urls_update do
   desc "Update picture URLs in all text columns for models with optional start/end IDs"
-  task :images, [:start_id, :finish_id] => :environment do |t, args|
+  task :images, [ :start_id, :finish_id ] => :environment do |t, args|
     run_update(
       dry_run: false,
       html_attr: "src",
@@ -15,7 +15,7 @@ namespace :rich_text_urls_update do
   end
 
   desc "Update link URLs in all text columns for models with optional start/end IDs"
-  task :links, [:start_id, :finish_id] => :environment do |t, args|
+  task :links, [ :start_id, :finish_id ] => :environment do |t, args|
     run_update(
       dry_run: false,
       html_attr: "href",
@@ -81,7 +81,7 @@ namespace :rich_text_urls_update do
     csv_file = Rails.root.join("tmp", dry_run ? "dry_run_picture_urls_#{timestamp}.csv" : "updated_picture_urls_#{timestamp}.csv")
 
     CSV.open(csv_file, "w") do |csv|
-      csv << ["model", "record_id", "column", "old_url", "aws_key", "status", "error", "replacement_url"]
+      csv << [ "model", "record_id", "column", "old_url", "aws_key", "status", "error", "replacement_url" ]
 
       models.each do |model|
         text_columns = model.columns.select { |c| c.type == :text }.map(&:name)
@@ -133,7 +133,7 @@ namespace :rich_text_urls_update do
       when ->(u) { u.start_with?(aws_prefix_2) }
         key = url.sub(aws_prefix_2, "")
       else
-        csv << [model.name, record.id, column, url, nil, "skipped", "No Matching Url", nil]
+        csv << [ model.name, record.id, column, url, nil, "skipped", "No Matching Url", nil ]
         next
       end
 
@@ -142,9 +142,9 @@ namespace :rich_text_urls_update do
       if dry_run
         begin
           s3_client.head_object(bucket: bucket, key: key)
-          csv << [model.name, record.id, column, url, key, "success", nil, nil]
+          csv << [ model.name, record.id, column, url, key, "success", nil, nil ]
         rescue Aws::S3::Errors::NotFound, Aws::S3::Errors::NoSuchKey
-          csv << [model.name, record.id, column, url, key, "skipped", "Key not found", nil]
+          csv << [ model.name, record.id, column, url, key, "skipped", "Key not found", nil ]
         end
         next
       end
@@ -195,10 +195,10 @@ namespace :rich_text_urls_update do
           record.update_column(column, new_content)
           # Log success
           puts "#{model.name} # #{record.id} updated"
-          csv << [model.name, record.id, column, url, key, "updated", nil, new_url]
+          csv << [ model.name, record.id, column, url, key, "updated", nil, new_url ]
         end
       rescue => e
-        csv << [model.name, record.id, column, url, key, "error", "#{e.class}: #{e.message}", nil]
+        csv << [ model.name, record.id, column, url, key, "error", "#{e.class}: #{e.message}", nil ]
       ensure
         temp&.close
       end

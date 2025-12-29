@@ -8,7 +8,7 @@ RSpec.describe "projects/index", type: :view do
   let!(:project2) { create(:project, name: "Project 2") }
 
   before(:each) do
-    assign(:projects, paginated([project1, project2]))
+    assign(:projects, paginated([ project1, project2 ]))
     assign(:project_statuses, create_list(:project_status, 3))
     allow(view).to receive(:current_user).and_return(user)
     render

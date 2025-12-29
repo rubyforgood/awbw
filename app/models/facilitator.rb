@@ -28,7 +28,7 @@ class Facilitator < ApplicationRecord
   validates :first_name, presence: true
   validates :last_name, presence: true
 
-  CONTACT_TYPES = ["work", "personal"].freeze
+  CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
   # TODO: add validation for zip code containing only numbers
@@ -40,7 +40,7 @@ class Facilitator < ApplicationRecord
   accepts_nested_attributes_for :avatar_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
-                                reject_if: proc { |attrs| attrs['sector_id'].blank? }
+                                reject_if: proc { |attrs| attrs["sector_id"].blank? }
   accepts_nested_attributes_for :user, update_only: true
 
   # Search Cop
@@ -57,8 +57,8 @@ class Facilitator < ApplicationRecord
   scope :active, -> { all } # TODO - implement inactive field
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :published, -> { active.searchable }
-  scope :published, ->(published=nil) { published ? active.searchable(published) : active.searchable }
-  scope :searchable, ->(searchable=nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
+  scope :published, ->(published = nil) { published ? active.searchable(published) : active.searchable }
+  scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
   scope :project_name, ->(project_name) {
     return all if project_name.blank?
     left_joins(user: { project_users: :project })

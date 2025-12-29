@@ -1,5 +1,4 @@
 class SectorDecorator < ApplicationDecorator
-
   def title
     name
   end

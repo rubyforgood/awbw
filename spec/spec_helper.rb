@@ -29,7 +29,7 @@ if ENV["CI"]
     end
   SimpleCov.at_exit do
     SimpleCov.result.format!
-    File.write("coverage/summary.json", JSON.dump({covered_percent: SimpleCov.result.covered_percent}))
+    File.write("coverage/summary.json", JSON.dump({ covered_percent: SimpleCov.result.covered_percent }))
   end
   SimpleCov.start "rails" do
     enable_coverage :branch

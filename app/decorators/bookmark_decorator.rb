@@ -15,8 +15,8 @@ class BookmarkDecorator < ApplicationDecorator
   end
 
   def content
-    if bookmarkable_class_name == 'Workshop'
-      h.render '/workshops/show', workshop: bookmarkable, sectors: bookmarkable.sectors,
+    if bookmarkable_class_name == "Workshop"
+      h.render "/workshops/show", workshop: bookmarkable, sectors: bookmarkable.sectors,
                                        new_bookmark: bookmarkable.bookmarks.build,
                                        quotes: bookmarkable.quotes, leader_spotlights: bookmarkable.leader_spotlights,
                                        workshop_variations: bookmarkable.workshop_variations
@@ -28,16 +28,16 @@ class BookmarkDecorator < ApplicationDecorator
   end
 
   def bookmarks_link
-    h.link_to 'My Bookmarks',h.bookmarks_path, class: 'underline'
+    h.link_to "My Bookmarks", h.bookmarks_path, class: "underline"
   end
 
   def bookmarkable_link
-    if bookmarkable_class_name == 'Workshop'
+    if bookmarkable_class_name == "Workshop"
       bookmarkable.breadcrumb_link
     end
   end
 
-  def bookmarkable_image_url(fallback: 'missing.png')
+  def bookmarkable_image_url(fallback: "missing.png")
     if bookmarkable.respond_to?(:images) && bookmarkable.images.first&.file&.attached?
       Rails.application.routes.url_helpers.rails_blob_path(bookmarkable.images.first.file, only_path: true)
     elsif bookmarkable_type == "Workshop"

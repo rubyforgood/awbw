@@ -24,7 +24,6 @@ RSpec.describe "tutorials/edit", type: :view do
     render
 
     assert_select "form[action=?][method=?]", tutorial_path(tutorial), "post" do
-
       assert_select "textarea[name=?]", "tutorial[title]"
       assert_select "textarea[name=?]", "tutorial[body]"
       assert_select "input[name=?][type=checkbox]", "tutorial[published]"

@@ -1,10 +1,9 @@
 namespace :monthly_report do
+  task reorder: :environment do
+    questions = [ "If this is a quote or story from a participant please indicate the following",
+                 "Age", "Gender Identity", "Service Population" ]
 
-  task :reorder => :environment do
-    questions = ["If this is a quote or story from a participant please indicate the following",
-                 "Age", "Gender Identity", "Service Population"]
-
-    forms = FormBuilder.where('name LIKE ?', '%Monthly Report%')
+    forms = FormBuilder.where("name LIKE ?", "%Monthly Report%")
 
     forms.each do |form|
       questions.each do |q|

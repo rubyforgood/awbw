@@ -1,5 +1,5 @@
 class FaqsController < ApplicationController
-  before_action :set_faq, only: [:show, :edit, :update, :destroy]
+  before_action :set_faq, only: [ :show, :edit, :update, :destroy ]
 
   def index
     faqs = current_user.super_user? ? Faq.all : Faq.active

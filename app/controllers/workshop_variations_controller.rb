@@ -1,5 +1,4 @@
 class WorkshopVariationsController < ApplicationController
-
   def index
     unless current_user.super_user?
       redirect_to authenticated_root_path
@@ -28,7 +27,7 @@ class WorkshopVariationsController < ApplicationController
   def create
     @workshop_variation = WorkshopVariation.new(workshop_variation_params)
     if @workshop_variation.save
-      flash[:notice] = 'Workshop Variation has been created.'
+      flash[:notice] = "Workshop Variation has been created."
       if params[:from] == "workshop_show"
         redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
       elsif params[:from] == "index"
@@ -64,10 +63,10 @@ class WorkshopVariationsController < ApplicationController
     @workshop_variation = WorkshopVariation.find(params[:id])
 
     if @workshop_variation.update(workshop_variation_params)
-      flash[:notice] = 'Workshop Variation updated successfully.'
+      flash[:notice] = "Workshop Variation updated successfully."
       redirect_to workshop_variations_path
     else
-      flash[:alert] = 'Unable to update Workshop Variation.'
+      flash[:alert] = "Unable to update Workshop Variation."
       set_form_variables
       render :edit
     end
@@ -82,12 +81,11 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [:name, :code, :inactive, :ordering,
+      [ :name, :code, :inactive, :ordering,
        :youtube_url, :created_by_id, :workshop_id,
-       main_image_attributes: [:id, :file, :_destroy],
-       gallery_images_attributes: [:id, :file, :_destroy]
+       main_image_attributes: [ :id, :file, :_destroy ],
+       gallery_images_attributes: [ :id, :file, :_destroy ]
       ]
     )
   end
-
 end

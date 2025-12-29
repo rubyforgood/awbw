@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [:show, :edit, :update, :destroy, :generate_facilitator]
+  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator ]
 
   def index
     return redirect_to authenticated_root_path unless current_user.super_user?
@@ -8,7 +8,6 @@ class UsersController < ApplicationController
     users = User.search_by_params(params).order(:first_name, :last_name)
     @users_count = users.size
     @users = users.paginate(page: params[:page], per_page: per_page)
-
   end
 
   def new
@@ -57,7 +56,7 @@ class UsersController < ApplicationController
       # @user.notifications.create(notification_type: 1)
       redirect_to users_path, notice: "User was successfully updated."
     else
-      flash[:alert] = 'Unable to update user.'
+      flash[:alert] = "Unable to update user."
       set_form_variables
       render :edit, status: :unprocessable_content
     end
@@ -77,7 +76,7 @@ class UsersController < ApplicationController
 
     if @user.update_with_password(password_params)
       bypass_sign_in(@user)
-      flash[:notice] = 'Your Password was updated.'
+      flash[:notice] = "Your Password was updated."
       redirect_to authenticated_root_path
     else
       flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
@@ -114,9 +113,9 @@ class UsersController < ApplicationController
     @user.project_users.first || @user.project_users.build
     projects = if current_user.super_user?
                  Project.active
-               else
+    else
                  current_user.projects
-               end
+    end
     @projects_array = projects.order(:name).pluck(:name, :id)
   end
 
@@ -136,8 +135,8 @@ class UsersController < ApplicationController
       :notes, :primary_address, :avatar, :subscribecode,
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
       :confirmed, :inactive, :super_user, :legacy, :legacy_id,
-      avatar_image_attributes: [:id, :file, :_destroy],
-      project_users_attributes: [:id, :project_id, :position, :title, :inactive, :_destroy]
+      avatar_image_attributes: [ :id, :file, :_destroy ],
+      project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
     )
   end
 end

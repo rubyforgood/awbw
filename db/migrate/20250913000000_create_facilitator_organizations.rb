@@ -7,7 +7,7 @@ class CreateFacilitatorOrganizations < ActiveRecord::Migration[6.1]
       t.timestamps
     end
 
-    add_index :facilitator_organizations, [:facilitator_id, :organization_id],
+    add_index :facilitator_organizations, [ :facilitator_id, :organization_id ],
               unique: true, name: 'index_facilitator_organizations_on_ids'
   end
 end

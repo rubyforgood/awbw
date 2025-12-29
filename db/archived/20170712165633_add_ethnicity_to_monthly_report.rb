@@ -31,9 +31,8 @@ class AddEthnicityToMonthlyReport < ActiveRecord::Migration
                                      instructional_hint: "Enter in an estimated number of people who fall under these ethnicities",
                                      ordering: 850, answer_type: 3, status: 1)
 
-      [ ["African American", 800], ["White", 750], ["Asian/Pacific Islander", 700],
-        ["Native American", 650], ["Latino/a", 600], ["Other", 600] ].each do |e|
-
+      [ [ "African American", 800 ], [ "White", 750 ], [ "Asian/Pacific Islander", 700 ],
+        [ "Native American", 650 ], [ "Latino/a", 600 ], [ "Other", 600 ] ].each do |e|
         f.form_fields << FormField.new(question: e[0], ordering: e[1], answer_type: 0, status: 1)
       end
 

@@ -3,4 +3,4 @@ FactoryBot.define do
     association :workshop
     association :resource
   end
-end 
+end

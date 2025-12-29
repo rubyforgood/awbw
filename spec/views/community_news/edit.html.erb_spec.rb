@@ -31,7 +31,6 @@ RSpec.describe "community_news/edit", type: :view do
     render
 
     assert_select "form[action=?][method=?]", community_news_path(community_news), "post" do
-
       assert_select "textarea[name=?]", "community_news[title]"
 
       assert_select "textarea[name=?]", "community_news[body]"

@@ -7,4 +7,4 @@ FactoryBot.define do
     file_file_size { 1024 }
     file_updated_at { Time.zone.now }
   end
-end 
+end

@@ -1,5 +1,4 @@
 class WorkshopIdeaDecorator < ApplicationDecorator
-
   def main_image_url
     if main_image&.file&.attached?
       Rails.application.routes.url_helpers.url_for(main_image.file)
@@ -22,24 +21,24 @@ class WorkshopIdeaDecorator < ApplicationDecorator
 
   def labels_spanish
     {
-      objective_spanish: 'Objectivo',
-      materials_spanish: 'Materiales',
-      optional_materials_spanish: 'Materiales Opcionales',
-      timeframe_spanish: 'Periodo de tiempo',
-      age_range_spanish: 'Rango de edad',
-      setup_spanish: 'Preparativos',
-      introduction_spanish: 'Introducción',
-      demonstration_spanish: 'Demostración',
-      opening_circle_spanish: 'Círculo de apertura',
-      visualization_spanish: 'Visualización',
-      warm_up_spanish: 'Comenzando',
-      creation_spanish: 'Creación',
-      closing_spanish: 'Clausura',
-      misc_instructions_spanish: 'Instrucciones de misceláneos',
-      project_spanish: 'Projecto',
-      description_spanish: 'Descripción',
-      notes_spanish: 'Notas',
-      tips_spanish: 'Consejos',
+      objective_spanish: "Objectivo",
+      materials_spanish: "Materiales",
+      optional_materials_spanish: "Materiales Opcionales",
+      timeframe_spanish: "Periodo de tiempo",
+      age_range_spanish: "Rango de edad",
+      setup_spanish: "Preparativos",
+      introduction_spanish: "Introducción",
+      demonstration_spanish: "Demostración",
+      opening_circle_spanish: "Círculo de apertura",
+      visualization_spanish: "Visualización",
+      warm_up_spanish: "Comenzando",
+      creation_spanish: "Creación",
+      closing_spanish: "Clausura",
+      misc_instructions_spanish: "Instrucciones de misceláneos",
+      project_spanish: "Projecto",
+      description_spanish: "Descripción",
+      notes_spanish: "Notas",
+      tips_spanish: "Consejos"
     }
   end
 end

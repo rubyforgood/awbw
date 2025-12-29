@@ -4,4 +4,4 @@ FactoryBot.define do
 
     association :answer_option
   end
-end 
+end

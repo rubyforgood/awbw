@@ -1,7 +1,7 @@
 module ExternallyRedirectable
-	extend ActiveSupport::Concern
+  extend ActiveSupport::Concern
 
-	def redirect_to_external(url)
-		redirect_to url, allow_other_host: true
-	end
+  def redirect_to_external(url)
+    redirect_to url, allow_other_host: true
+  end
 end

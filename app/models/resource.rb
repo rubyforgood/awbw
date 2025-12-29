@@ -2,8 +2,8 @@ class Resource < ApplicationRecord
   include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
-  PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
-  KINDS = PUBLISHED_KINDS + ["Resource", "Story"]
+  PUBLISHED_KINDS = [ "Handout", "Scholarship", "Template", "Toolkit", "Form" ]
+  KINDS = PUBLISHED_KINDS + [ "Resource", "Story" ]
 
   has_rich_text :rhino_text
 
@@ -59,29 +59,29 @@ class Resource < ApplicationRecord
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
-  scope :featured, -> (featured=nil) { featured.present? ? where(featured: featured) : where(featured: true) }
+  scope :featured, ->(featured = nil) { featured.present? ? where(featured: featured) : where(featured: true) }
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds)
   }
   scope :leader_spotlights, -> { kinds("LeaderSpotlight") }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
-  scope :published, ->(published=nil) {
-    if ["true", "false"].include?(published)
+  scope :published, ->(published = nil) {
+    if [ "true", "false" ].include?(published)
       result = where(inactive: published == "true" ? false : true)
     else
       result = where(inactive: false)
     end
     result.published_kinds
   }
-  scope :published_search, ->(published_search=nil) { published_search.present? ? published(published_search) : published_kinds }
+  scope :published_search, ->(published_search = nil) { published_search.present? ? published(published_search) : published_kinds }
 
   scope :recent, -> { published.by_created }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
-  scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
+  scope :story, -> { where(kind: [ "Story", "LeaderSpotlight" ]).order(created_at: :desc) }
   scope :theme, -> { where(kind: "Theme") }
-  scope :title, -> (title) { where("title like ?", "%#{ title }%") }
+  scope :title, ->(title) { where("title like ?", "%#{ title }%") }
 
   def self.search_by_params(params)
     resources = all
@@ -97,7 +97,7 @@ class Resource < ApplicationRecord
   end
 
   def story?
-    ["Story", "LeaderSpotlight"].include? self.kind
+    [ "Story", "LeaderSpotlight" ].include? self.kind
   end
 
   def custom_label_list
@@ -113,13 +113,13 @@ class Resource < ApplicationRecord
   end
 
   def type_enum
-    types.map { |title| [title.titleize, title ]}
+    types.map { |title| [ title.titleize, title ] }
   end
 
   def types
-    ['Resource', 'LeaderSpotlight', 'SectorImpact',
-     'Story', 'Theme', 'Scholarship', 'TemplateAndHandout',
-     'ToolkitAndForm'
+    [ "Resource", "LeaderSpotlight", "SectorImpact",
+     "Story", "Theme", "Scholarship", "TemplateAndHandout",
+     "ToolkitAndForm"
     ]
   end
 
@@ -133,6 +133,6 @@ class Resource < ApplicationRecord
 
   private
   def self.reject?(resource)
-    resource['_create'] == '0'
+    resource["_create"] == "0"
   end
 end

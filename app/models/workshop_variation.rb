@@ -2,7 +2,7 @@ class WorkshopVariation < ApplicationRecord
   include Trendable, ViewCountable
 
   belongs_to :workshop
-  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: "User", optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   # Image associations
   has_many :images, as: :owner, dependent: :destroy

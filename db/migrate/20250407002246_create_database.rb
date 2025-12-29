@@ -1,16 +1,16 @@
 class CreateDatabase < ActiveRecord::Migration[4.2]
-  # sure we could just run raw sql, but at this point I am not even 100% sure 
+  # sure we could just run raw sql, but at this point I am not even 100% sure
   # what DB we will be using in a two weeks.
   class SchemaMigration < ActiveRecord::Base
   end
 
   def up
-    # 20210823001213 is the version of the last archived migration. If that 
-    # migration is present then we can assume the schema is already up to date 
+    # 20210823001213 is the version of the last archived migration. If that
+    # migration is present then we can assume the schema is already up to date
     # and we don't need to run anything.
     #
     # If some migrations are missing, then running this migration is going to
-    # ruin your day because it likely already includes DB objects that are 
+    # ruin your day because it likely already includes DB objects that are
     # already present in your target DB.
     #
     # This really only works well if you are working with a fresh DB or the
@@ -37,26 +37,26 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "created_at"
       t.datetime "updated_at"
     end
-  
-    add_index "admins", ["email"], name: "index_admins_on_email", unique: true, using: :btree
-    add_index "admins", ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true, using: :btree
-  
+
+    add_index "admins", [ "email" ], name: "index_admins_on_email", unique: true, using: :btree
+    add_index "admins", [ "reset_password_token" ], name: "index_admins_on_reset_password_token", unique: true, using: :btree
+
     create_table "age_ranges", force: :cascade do |t|
       t.string   "name",            limit: 255
       t.datetime "created_at",                  null: false
       t.datetime "updated_at",                  null: false
       t.integer  "windows_type_id", limit: 4
     end
-  
-    add_index "age_ranges", ["windows_type_id"], name: "index_age_ranges_on_windows_type_id", using: :btree
-  
+
+    add_index "age_ranges", [ "windows_type_id" ], name: "index_age_ranges_on_windows_type_id", using: :btree
+
     create_table "answer_options", force: :cascade do |t|
       t.string   "name",       limit: 255
       t.integer  "order",      limit: 4
       t.datetime "created_at",             null: false
       t.datetime "updated_at",             null: false
     end
-  
+
     create_table "attachments", force: :cascade do |t|
       t.integer  "owner_id",          limit: 4
       t.string   "owner_type",        limit: 255
@@ -67,23 +67,23 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.integer  "file_file_size",    limit: 4
       t.datetime "file_updated_at"
     end
-  
+
     create_table "banners", force: :cascade do |t|
       t.text     "content",    limit: 65535
       t.boolean  "show"
       t.datetime "created_at",               null: false
       t.datetime "updated_at",               null: false
     end
-  
+
     create_table "bookmark_annotations", force: :cascade do |t|
       t.integer  "bookmark_id", limit: 4
       t.text     "annotation",  limit: 16777215
       t.datetime "created_at",                   null: false
       t.datetime "updated_at",                   null: false
     end
-  
-    add_index "bookmark_annotations", ["bookmark_id"], name: "index_bookmark_annotations_on_bookmark_id", using: :btree
-  
+
+    add_index "bookmark_annotations", [ "bookmark_id" ], name: "index_bookmark_annotations_on_bookmark_id", using: :btree
+
     create_table "bookmarks", force: :cascade do |t|
       t.integer  "user_id",           limit: 4
       t.string   "bookmarkable_type", limit: 255
@@ -91,9 +91,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "created_at",                    null: false
       t.datetime "updated_at",                    null: false
     end
-  
-    add_index "bookmarks", ["user_id"], name: "index_bookmarks_on_user_id", using: :btree
-  
+
+    add_index "bookmarks", [ "user_id" ], name: "index_bookmarks_on_user_id", using: :btree
+
     create_table "categories", force: :cascade do |t|
       t.integer  "metadatum_id", limit: 4
       t.string   "name",         limit: 255
@@ -102,9 +102,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "updated_at",                               null: false
       t.boolean  "published",                default: false
     end
-  
-    add_index "categories", ["metadatum_id"], name: "index_categories_on_metadatum_id", using: :btree
-  
+
+    add_index "categories", [ "metadatum_id" ], name: "index_categories_on_metadatum_id", using: :btree
+
     create_table "categorizable_items", force: :cascade do |t|
       t.integer  "categorizable_id",   limit: 4
       t.string   "categorizable_type", limit: 255
@@ -114,9 +114,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "updated_at",                                    null: false
       t.boolean  "inactive",                       default: true
     end
-  
-    add_index "categorizable_items", ["category_id"], name: "index_categorizable_items_on_category_id", using: :btree
-  
+
+    add_index "categorizable_items", [ "category_id" ], name: "index_categorizable_items_on_category_id", using: :btree
+
     create_table "ckeditor_assets", force: :cascade do |t|
       t.string   "data_file_name",    limit: 255, null: false
       t.string   "data_content_type", limit: 255
@@ -130,10 +130,10 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "updated_at",                    null: false
       t.string   "actual_url",        limit: 255
     end
-  
-    add_index "ckeditor_assets", ["assetable_type", "assetable_id"], name: "idx_ckeditor_assetable", using: :btree
-    add_index "ckeditor_assets", ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type", using: :btree
-  
+
+    add_index "ckeditor_assets", [ "assetable_type", "assetable_id" ], name: "idx_ckeditor_assetable", using: :btree
+    add_index "ckeditor_assets", [ "assetable_type", "type", "assetable_id" ], name: "idx_ckeditor_assetable_type", using: :btree
+
     create_table "faqs", force: :cascade do |t|
       t.string   "question",   limit: 255
       t.text     "answer",     limit: 16777215
@@ -142,7 +142,7 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.boolean  "inactive"
       t.integer  "ordering",   limit: 4
     end
-  
+
     create_table "footers", force: :cascade do |t|
       t.string   "phone",             limit: 255
       t.string   "children_program",  limit: 255
@@ -151,7 +151,7 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "created_at",                    null: false
       t.datetime "updated_at",                    null: false
     end
-  
+
     create_table "form_builders", force: :cascade do |t|
       t.string   "name",            limit: 255
       t.integer  "owner_type",      limit: 4
@@ -160,19 +160,19 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.text     "description",     limit: 16777215
       t.integer  "windows_type_id", limit: 4
     end
-  
-    add_index "form_builders", ["windows_type_id"], name: "index_form_builders_on_windows_type_id", using: :btree
-  
+
+    add_index "form_builders", [ "windows_type_id" ], name: "index_form_builders_on_windows_type_id", using: :btree
+
     create_table "form_field_answer_options", force: :cascade do |t|
       t.integer  "form_field_id",    limit: 4
       t.integer  "answer_option_id", limit: 4
       t.datetime "created_at",                 null: false
       t.datetime "updated_at",                 null: false
     end
-  
-    add_index "form_field_answer_options", ["answer_option_id"], name: "index_form_field_answer_options_on_answer_option_id", using: :btree
-    add_index "form_field_answer_options", ["form_field_id"], name: "index_form_field_answer_options_on_form_field_id", using: :btree
-  
+
+    add_index "form_field_answer_options", [ "answer_option_id" ], name: "index_form_field_answer_options_on_answer_option_id", using: :btree
+    add_index "form_field_answer_options", [ "form_field_id" ], name: "index_form_field_answer_options_on_form_field_id", using: :btree
+
     create_table "form_fields", force: :cascade do |t|
       t.integer  "form_id",            limit: 4
       t.datetime "created_at",                                    null: false
@@ -186,9 +186,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.integer  "status",             limit: 4,   default: 1
       t.integer  "parent_id",          limit: 4
     end
-  
-    add_index "form_fields", ["form_id"], name: "index_form_fields_on_form_id", using: :btree
-  
+
+    add_index "form_fields", [ "form_id" ], name: "index_form_fields_on_form_id", using: :btree
+
     create_table "forms", force: :cascade do |t|
       t.string   "owner_type",      limit: 255
       t.integer  "owner_id",        limit: 4
@@ -196,9 +196,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "updated_at",                  null: false
       t.integer  "form_builder_id", limit: 4
     end
-  
-    add_index "forms", ["form_builder_id"], name: "index_forms_on_form_builder_id", using: :btree
-  
+
+    add_index "forms", [ "form_builder_id" ], name: "index_forms_on_form_builder_id", using: :btree
+
     create_table "images", force: :cascade do |t|
       t.integer  "owner_id",          limit: 4
       t.string   "owner_type",        limit: 255
@@ -210,9 +210,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "file_updated_at"
       t.integer  "report_id",         limit: 4
     end
-  
-    add_index "images", ["owner_id"], name: "index_images_on_owner_id", using: :btree
-  
+
+    add_index "images", [ "owner_id" ], name: "index_images_on_owner_id", using: :btree
+
     create_table "locations", force: :cascade do |t|
       t.string   "city",       limit: 255
       t.string   "state",      limit: 255
@@ -220,7 +220,7 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "created_at",             null: false
       t.datetime "updated_at",             null: false
     end
-  
+
     create_table "media_files", force: :cascade do |t|
       t.string   "file_file_name",    limit: 255
       t.string   "file_content_type", limit: 255
@@ -229,7 +229,7 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.integer  "report_id",         limit: 4
       t.integer  "workshop_log_id",   limit: 4
     end
-  
+
     create_table "metadata", force: :cascade do |t|
       t.string   "name",       limit: 255
       t.string   "legacy_id",  limit: 255
@@ -237,7 +237,7 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "updated_at",                             null: false
       t.boolean  "published",              default: false
     end
-  
+
     create_table "monthly_reports", force: :cascade do |t|
       t.string   "month",                    limit: 255
       t.integer  "project_id",               limit: 4
@@ -258,10 +258,10 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "created_at",                                null: false
       t.datetime "updated_at",                                null: false
     end
-  
-    add_index "monthly_reports", ["project_id"], name: "index_monthly_reports_on_project_id", using: :btree
-    add_index "monthly_reports", ["project_user_id"], name: "index_monthly_reports_on_project_user_id", using: :btree
-  
+
+    add_index "monthly_reports", [ "project_id" ], name: "index_monthly_reports_on_project_id", using: :btree
+    add_index "monthly_reports", [ "project_user_id" ], name: "index_monthly_reports_on_project_user_id", using: :btree
+
     create_table "notifications", force: :cascade do |t|
       t.datetime "created_at",                    null: false
       t.datetime "updated_at",                    null: false
@@ -269,26 +269,26 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.string   "noticeable_type",   limit: 255
       t.integer  "noticeable_id",     limit: 4
     end
-  
+
     create_table "permissions", force: :cascade do |t|
       t.string   "security_cat", limit: 255
       t.datetime "created_at",               null: false
       t.datetime "updated_at",               null: false
       t.integer  "legacy_id",    limit: 4
     end
-  
+
     create_table "project_obligations", force: :cascade do |t|
       t.string   "name",       limit: 255
       t.datetime "created_at",             null: false
       t.datetime "updated_at",             null: false
     end
-  
+
     create_table "project_statuses", force: :cascade do |t|
       t.string   "name",       limit: 255
       t.datetime "created_at",             null: false
       t.datetime "updated_at",             null: false
     end
-  
+
     create_table "project_users", force: :cascade do |t|
       t.integer  "agency_id",      limit: 4
       t.integer  "user_id",        limit: 4
@@ -298,11 +298,11 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.integer  "project_id",     limit: 4
       t.string   "filemaker_code", limit: 255
     end
-  
-    add_index "project_users", ["agency_id"], name: "index_project_users_on_agency_id", using: :btree
-    add_index "project_users", ["project_id"], name: "index_project_users_on_project_id", using: :btree
-    add_index "project_users", ["user_id"], name: "index_project_users_on_user_id", using: :btree
-  
+
+    add_index "project_users", [ "agency_id" ], name: "index_project_users_on_agency_id", using: :btree
+    add_index "project_users", [ "project_id" ], name: "index_project_users_on_project_id", using: :btree
+    add_index "project_users", [ "user_id" ], name: "index_project_users_on_user_id", using: :btree
+
     create_table "projects", force: :cascade do |t|
       t.string   "name",              limit: 255
       t.integer  "location_id",       limit: 4
@@ -321,11 +321,11 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.boolean  "legacy",                             default: false
       t.integer  "project_status_id", limit: 4
     end
-  
-    add_index "projects", ["location_id"], name: "index_projects_on_location_id", using: :btree
-    add_index "projects", ["project_status_id"], name: "index_projects_on_project_status_id", using: :btree
-    add_index "projects", ["windows_type_id"], name: "index_projects_on_windows_type_id", using: :btree
-  
+
+    add_index "projects", [ "location_id" ], name: "index_projects_on_location_id", using: :btree
+    add_index "projects", [ "project_status_id" ], name: "index_projects_on_project_status_id", using: :btree
+    add_index "projects", [ "windows_type_id" ], name: "index_projects_on_windows_type_id", using: :btree
+
     create_table "quotable_item_quotes", force: :cascade do |t|
       t.string   "quotable_type", limit: 255
       t.integer  "quotable_id",   limit: 4
@@ -334,9 +334,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "created_at",                null: false
       t.datetime "updated_at",                null: false
     end
-  
-    add_index "quotable_item_quotes", ["quote_id"], name: "index_quotable_item_quotes_on_quote_id", using: :btree
-  
+
+    add_index "quotable_item_quotes", [ "quote_id" ], name: "index_quotable_item_quotes_on_quote_id", using: :btree
+
     create_table "quotes", force: :cascade do |t|
       t.text     "quote",        limit: 16777215
       t.boolean  "inactive",                      default: true
@@ -349,9 +349,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.string   "gender",       limit: 1
       t.string   "speaker_name", limit: 255
     end
-  
-    add_index "quotes", ["workshop_id"], name: "index_quotes_on_workshop_id", using: :btree
-  
+
+    add_index "quotes", [ "workshop_id" ], name: "index_quotes_on_workshop_id", using: :btree
+
     create_table "report_form_field_answers", force: :cascade do |t|
       t.integer  "report_id",        limit: 4
       t.integer  "form_field_id",    limit: 4
@@ -360,11 +360,11 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "updated_at"
       t.integer  "answer_option_id", limit: 4
     end
-  
-    add_index "report_form_field_answers", ["answer_option_id"], name: "index_report_form_field_answers_on_answer_option_id", using: :btree
-    add_index "report_form_field_answers", ["form_field_id"], name: "index_report_form_field_answers_on_form_field_id", using: :btree
-    add_index "report_form_field_answers", ["report_id"], name: "index_report_form_field_answers_on_report_id", using: :btree
-  
+
+    add_index "report_form_field_answers", [ "answer_option_id" ], name: "index_report_form_field_answers_on_answer_option_id", using: :btree
+    add_index "report_form_field_answers", [ "form_field_id" ], name: "index_report_form_field_answers_on_form_field_id", using: :btree
+    add_index "report_form_field_answers", [ "report_id" ], name: "index_report_form_field_answers_on_report_id", using: :btree
+
     create_table "reports", force: :cascade do |t|
       t.string   "type",                   limit: 255
       t.integer  "owner_id",               limit: 4
@@ -391,11 +391,11 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.integer  "adults_first_time",      limit: 4,   default: 0
       t.integer  "adults_ongoing",         limit: 4,   default: 0
     end
-  
-    add_index "reports", ["project_id"], name: "index_reports_on_project_id", using: :btree
-    add_index "reports", ["user_id"], name: "index_reports_on_user_id", using: :btree
-    add_index "reports", ["windows_type_id"], name: "index_reports_on_windows_type_id", using: :btree
-  
+
+    add_index "reports", [ "project_id" ], name: "index_reports_on_project_id", using: :btree
+    add_index "reports", [ "user_id" ], name: "index_reports_on_user_id", using: :btree
+    add_index "reports", [ "windows_type_id" ], name: "index_reports_on_windows_type_id", using: :btree
+
     create_table "resources", force: :cascade do |t|
       t.string   "title",           limit: 255
       t.string   "author",          limit: 255
@@ -417,11 +417,11 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.integer  "ordering",        limit: 4
       t.integer  "legacy_id",       limit: 4
     end
-  
-    add_index "resources", ["user_id"], name: "index_resources_on_user_id", using: :btree
-    add_index "resources", ["windows_type_id"], name: "index_resources_on_windows_type_id", using: :btree
-    add_index "resources", ["workshop_id"], name: "index_resources_on_workshop_id", using: :btree
-  
+
+    add_index "resources", [ "user_id" ], name: "index_resources_on_user_id", using: :btree
+    add_index "resources", [ "windows_type_id" ], name: "index_resources_on_windows_type_id", using: :btree
+    add_index "resources", [ "workshop_id" ], name: "index_resources_on_workshop_id", using: :btree
+
     create_table "sectorable_items", force: :cascade do |t|
       t.integer  "sectorable_id",   limit: 4
       t.string   "sectorable_type", limit: 255
@@ -430,16 +430,16 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "updated_at",                                 null: false
       t.boolean  "inactive",                    default: true
     end
-  
-    add_index "sectorable_items", ["sector_id"], name: "index_sectorable_items_on_sector_id", using: :btree
-  
+
+    add_index "sectorable_items", [ "sector_id" ], name: "index_sectorable_items_on_sector_id", using: :btree
+
     create_table "sectors", force: :cascade do |t|
       t.string   "name",       limit: 255
       t.datetime "created_at",                             null: false
       t.datetime "updated_at",                             null: false
       t.boolean  "published",              default: false
     end
-  
+
     create_table "user_form_form_fields", force: :cascade do |t|
       t.integer  "form_field_id", limit: 4
       t.integer  "user_form_id",  limit: 4
@@ -447,30 +447,30 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "created_at",                     null: false
       t.datetime "updated_at",                     null: false
     end
-  
-    add_index "user_form_form_fields", ["form_field_id"], name: "index_user_form_form_fields_on_form_field_id", using: :btree
-    add_index "user_form_form_fields", ["user_form_id"], name: "index_user_form_form_fields_on_user_form_id", using: :btree
-  
+
+    add_index "user_form_form_fields", [ "form_field_id" ], name: "index_user_form_form_fields_on_form_field_id", using: :btree
+    add_index "user_form_form_fields", [ "user_form_id" ], name: "index_user_form_form_fields_on_user_form_id", using: :btree
+
     create_table "user_forms", force: :cascade do |t|
       t.integer  "user_id",    limit: 4
       t.integer  "form_id",    limit: 4
       t.datetime "created_at",           null: false
       t.datetime "updated_at",           null: false
     end
-  
-    add_index "user_forms", ["form_id"], name: "index_user_forms_on_form_id", using: :btree
-    add_index "user_forms", ["user_id"], name: "index_user_forms_on_user_id", using: :btree
-  
+
+    add_index "user_forms", [ "form_id" ], name: "index_user_forms_on_form_id", using: :btree
+    add_index "user_forms", [ "user_id" ], name: "index_user_forms_on_user_id", using: :btree
+
     create_table "user_permissions", force: :cascade do |t|
       t.integer  "user_id",       limit: 4
       t.integer  "permission_id", limit: 4
       t.datetime "created_at",              null: false
       t.datetime "updated_at",              null: false
     end
-  
-    add_index "user_permissions", ["permission_id"], name: "index_user_permissions_on_permission_id", using: :btree
-    add_index "user_permissions", ["user_id"], name: "index_user_permissions_on_user_id", using: :btree
-  
+
+    add_index "user_permissions", [ "permission_id" ], name: "index_user_permissions_on_permission_id", using: :btree
+    add_index "user_permissions", [ "user_id" ], name: "index_user_permissions_on_user_id", using: :btree
+
     create_table "users", force: :cascade do |t|
       t.string   "email",                  limit: 255,      default: "",    null: false
       t.string   "encrypted_password",     limit: 255,      default: "",    null: false
@@ -514,11 +514,11 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.datetime "avatar_updated_at"
       t.boolean  "super_user",                              default: false
     end
-  
-    add_index "users", ["agency_id"], name: "index_users_on_agency_id", using: :btree
-    add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
-    add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
-  
+
+    add_index "users", [ "agency_id" ], name: "index_users_on_agency_id", using: :btree
+    add_index "users", [ "email" ], name: "index_users_on_email", unique: true, using: :btree
+    add_index "users", [ "reset_password_token" ], name: "index_users_on_reset_password_token", unique: true, using: :btree
+
     create_table "windows_types", force: :cascade do |t|
       t.string   "name",       limit: 255
       t.datetime "created_at",             null: false
@@ -526,17 +526,17 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.integer  "legacy_id",  limit: 4
       t.string   "short_name", limit: 255
     end
-  
+
     create_table "workshop_age_ranges", force: :cascade do |t|
       t.integer  "workshop_id",  limit: 4
       t.integer  "age_range_id", limit: 4
       t.datetime "created_at",             null: false
       t.datetime "updated_at",             null: false
     end
-  
-    add_index "workshop_age_ranges", ["age_range_id"], name: "index_workshop_age_ranges_on_age_range_id", using: :btree
-    add_index "workshop_age_ranges", ["workshop_id"], name: "index_workshop_age_ranges_on_workshop_id", using: :btree
-  
+
+    add_index "workshop_age_ranges", [ "age_range_id" ], name: "index_workshop_age_ranges_on_age_range_id", using: :btree
+    add_index "workshop_age_ranges", [ "workshop_id" ], name: "index_workshop_age_ranges_on_workshop_id", using: :btree
+
     create_table "workshop_logs", force: :cascade do |t|
       t.integer  "workshop_id",                 limit: 4
       t.integer  "user_id",                     limit: 4
@@ -558,21 +558,21 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.integer  "num_participants_on_going",   limit: 4,        default: 0
       t.integer  "num_participants_first_time", limit: 4,        default: 0
     end
-  
-    add_index "workshop_logs", ["project_id"], name: "index_workshop_logs_on_project_id", using: :btree
-    add_index "workshop_logs", ["user_id"], name: "index_workshop_logs_on_user_id", using: :btree
-    add_index "workshop_logs", ["workshop_id"], name: "index_workshop_logs_on_workshop_id", using: :btree
-  
+
+    add_index "workshop_logs", [ "project_id" ], name: "index_workshop_logs_on_project_id", using: :btree
+    add_index "workshop_logs", [ "user_id" ], name: "index_workshop_logs_on_user_id", using: :btree
+    add_index "workshop_logs", [ "workshop_id" ], name: "index_workshop_logs_on_workshop_id", using: :btree
+
     create_table "workshop_resources", force: :cascade do |t|
       t.integer  "workshop_id", limit: 4
       t.integer  "resource_id", limit: 4
       t.datetime "created_at",            null: false
       t.datetime "updated_at",            null: false
     end
-  
-    add_index "workshop_resources", ["resource_id"], name: "index_workshop_resources_on_resource_id", using: :btree
-    add_index "workshop_resources", ["workshop_id"], name: "index_workshop_resources_on_workshop_id", using: :btree
-  
+
+    add_index "workshop_resources", [ "resource_id" ], name: "index_workshop_resources_on_resource_id", using: :btree
+    add_index "workshop_resources", [ "workshop_id" ], name: "index_workshop_resources_on_workshop_id", using: :btree
+
     create_table "workshop_variations", force: :cascade do |t|
       t.integer  "workshop_id",  limit: 4
       t.datetime "created_at",                                    null: false
@@ -584,9 +584,9 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.boolean  "legacy",                        default: false
       t.integer  "variation_id", limit: 4
     end
-  
-    add_index "workshop_variations", ["workshop_id"], name: "index_workshop_variations_on_workshop_id", using: :btree
-  
+
+    add_index "workshop_variations", [ "workshop_id" ], name: "index_workshop_variations_on_workshop_id", using: :btree
+
     create_table "workshops", force: :cascade do |t|
       t.string   "title",                      limit: 255
       t.string   "full_name",                  limit: 255
@@ -666,12 +666,12 @@ class CreateDatabase < ActiveRecord::Migration[4.2]
       t.text     "extra_field",                limit: 65535
       t.text     "extra_field_spanish",        limit: 65535
     end
-  
-    add_index "workshops", ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
-    add_index "workshops", ["title"], name: "workshop_fullsearch_title", type: :fulltext
-    add_index "workshops", ["user_id"], name: "index_workshops_on_user_id", using: :btree
-    add_index "workshops", ["windows_type_id"], name: "index_workshops_on_windows_type_id", using: :btree
-  
+
+    add_index "workshops", [ "title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2" ], name: "workshop_fullsearch", type: :fulltext
+    add_index "workshops", [ "title" ], name: "workshop_fullsearch_title", type: :fulltext
+    add_index "workshops", [ "user_id" ], name: "index_workshops_on_user_id", using: :btree
+    add_index "workshops", [ "windows_type_id" ], name: "index_workshops_on_windows_type_id", using: :btree
+
     add_foreign_key "age_ranges", "windows_types"
     add_foreign_key "bookmark_annotations", "bookmarks"
     add_foreign_key "bookmarks", "users"

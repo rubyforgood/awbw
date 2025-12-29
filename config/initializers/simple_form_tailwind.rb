@@ -31,7 +31,7 @@ SimpleForm.setup do |config|
   end
 
   # Boolean fields
-  config.wrappers :tailwind_boolean, tag: 'fieldset', class: "mb-4" do |b|
+  config.wrappers :tailwind_boolean, tag: "fieldset", class: "mb-4" do |b|
     b.use :html5
     b.optional :readonly
 
@@ -59,23 +59,23 @@ SimpleForm.setup do |config|
   end
 
 
-  config.wrappers :tailwind_multi_select, class: 'mb-4' do |b|
+  config.wrappers :tailwind_multi_select, class: "mb-4" do |b|
     b.use :html5
     b.optional :readonly
 
-    b.use :label, class: 'block font-medium mb-1 text-gray-700'
+    b.use :label, class: "block font-medium mb-1 text-gray-700"
 
     # Input wrapper
-    b.wrapper :input_wrapper, class: 'relative' do |ba|
+    b.wrapper :input_wrapper, class: "relative" do |ba|
       ba.use :input,
-             class: 'w-full rounded border border-gray-300 p-2 focus:ring focus:ring-blue-300 focus:border-blue-500',
-             error_class: 'border-red-500',
-             valid_class: 'border-green-500',
+             class: "w-full rounded border border-gray-300 p-2 focus:ring focus:ring-blue-300 focus:border-blue-500",
+             error_class: "border-red-500",
+             valid_class: "border-green-500",
              multiple: true
 
       # Full error below the input
-      ba.use :full_error, wrap_with: { tag: :p, class: 'text-red-500 text-sm mt-1' }
-      ba.use :hint, wrap_with: { tag: :p, class: 'text-gray-500 text-sm mt-1' }
+      ba.use :full_error, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" }
+      ba.use :hint, wrap_with: { tag: :p, class: "text-gray-500 text-sm mt-1" }
     end
   end
 

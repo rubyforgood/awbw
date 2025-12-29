@@ -1,7 +1,8 @@
 # coding: utf-8
+
 class SetWorkshopLogRequiredFields < ActiveRecord::Migration
     def change
-      questions = ["Total # On-going Participants",
+      questions = [ "Total # On-going Participants",
                    "Total # First-Time Participants",
                    "Age Groups",
                    "Gender Identity",

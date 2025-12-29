@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe WindowsType do
-
   describe 'associations' do
     it { should have_many(:workshops) }
     it { should have_many(:age_ranges) }
@@ -18,4 +17,4 @@ RSpec.describe WindowsType do
   end
 
   # Add tests for methods like #label, #log_label, etc.
-end 
+end

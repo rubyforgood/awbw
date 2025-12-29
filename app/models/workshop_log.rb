@@ -80,27 +80,27 @@ class WorkshopLog < Report
   end
 
   def num_ongoing
-    field_ids = FormField.where('question LIKE ? OR ?', '%on-going%', '%ongoing%')
+    field_ids = FormField.where("question LIKE ? OR ?", "%on-going%", "%ongoing%")
     report_form_field_answers.where(form_field_id: field_ids)
       .sum(:answer).to_i if field_ids.any?
   end
 
   def num_first_time
-    field_ids = FormField.where('question LIKE ?', '%first%')
+    field_ids = FormField.where("question LIKE ?", "%first%")
     report_form_field_answers.where(form_field_id: field_ids)
       .sum(:answer).to_i if field_ids.any?
   end
 
   def combined_num_ongoing(field_type)
     ongoing = "%Ongoing #{field_type}"
-    field_ids = FormField.where('question LIKE ?', "%#{ongoing}%")
+    field_ids = FormField.where("question LIKE ?", "%#{ongoing}%")
     report_form_field_answers.where(form_field_id: field_ids)
       .sum(:answer).to_i if field_ids.any?
   end
 
   def combined_num_first_time(field_type)
     first_time = "First-time #{field_type}"
-    field_ids = FormField.where('question LIKE ?', "%#{first_time}%")
+    field_ids = FormField.where("question LIKE ?", "%#{first_time}%")
     report_form_field_answers.where(form_field_id: field_ids)
       .sum(:answer).to_i if field_ids.any?
   end
@@ -113,7 +113,7 @@ class WorkshopLog < Report
 
   def log_fields
     if form_builder
-      form_builder.forms[0].form_fields.where('ordering is not null and status = 1').
+      form_builder.forms[0].form_fields.where("ordering is not null and status = 1").
         order(ordering: :desc).all
     else
       []
@@ -125,7 +125,7 @@ class WorkshopLog < Report
   end
 
   def date_label
-   date ? date.strftime('%m/%d/%Y') : created_at.strftime('%m/%d/%Y')
+   date ? date.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
   end
 
   def workshop_quotes
@@ -149,5 +149,4 @@ class WorkshopLog < Report
   end
 
   protected
-
 end

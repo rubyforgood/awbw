@@ -31,7 +31,7 @@ RSpec.describe "events/show", type: :view do
     expect(rendered).to have_content("10 am")
 
     expect(rendered).to have_content("4 pm")
-    
+
     expect(rendered).to have_content("Registration closed") # 2024 is in the past
   end
 

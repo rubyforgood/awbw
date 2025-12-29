@@ -91,13 +91,13 @@ class BookmarksController < ApplicationController
       found = type.constantize.where(id: ids).decorate.index_by(&:id)
 
       rows.filter_map do |(_, id, count)|
-        [found[id], count] if found[id]
+        [ found[id], count ] if found[id]
       end
     end.sort_by { |_, count| -count }
 
     @windows_types_array = WindowsType::TYPES
 
-    @bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS.map{ |type| [ type, type ] }
+    @bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS.map { |type| [ type, type ] }
 
     @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
   end
@@ -108,8 +108,7 @@ class BookmarksController < ApplicationController
     @sortable_fields = WindowsType.where("name NOT LIKE ?", "%COMBINED%")
     @windows_types_array = WindowsType::TYPES
     bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS
-    @bookmarkable_types = bookmarkable_types.map{ |type| [ type, type ] }
-
+    @bookmarkable_types = bookmarkable_types.map { |type| [ type, type ] }
   end
 
   def load_workshop_data

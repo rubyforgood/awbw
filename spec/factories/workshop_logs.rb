@@ -5,6 +5,5 @@ FactoryBot.define do
     association :owner, factory: :workshop
 
     workshop { owner }
-
   end
 end

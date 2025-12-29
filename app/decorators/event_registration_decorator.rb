@@ -1,5 +1,4 @@
 class EventRegistrationDecorator < ApplicationDecorator
-
   def title
     name
   end
@@ -10,5 +9,4 @@ class EventRegistrationDecorator < ApplicationDecorator
   def main_image_url
     event.decorate.main_image_url
   end
-
 end

@@ -14,7 +14,6 @@ RSpec.describe "workshop_ideas/new", type: :view do
     render
 
     assert_select "form[action=?][method=?]", workshop_ideas_path, "post" do
-
       assert_select "textarea[name=?]", "workshop_idea[title]"
 
       assert_select "textarea[name=?]", "workshop_idea[description]"

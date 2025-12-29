@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe "/categories", type: :request do
-
   let(:valid_attributes) do
     {
       name: "Test Category",

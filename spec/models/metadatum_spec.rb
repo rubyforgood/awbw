@@ -23,4 +23,4 @@ RSpec.describe Metadatum do
       expect(Metadatum.published).not_to include(unpublished_meta)
     end
   end
-end 
+end

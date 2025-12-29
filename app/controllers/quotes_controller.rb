@@ -1,9 +1,9 @@
 class QuotesController < ApplicationController
-  before_action :set_quote, only: [:show, :edit, :update, :destroy]
+  before_action :set_quote, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Quote.where.not(quote: [nil, ""])
+    unpaginated = Quote.where.not(quote: [ nil, "" ])
                        .search_by_params(params)
                        .order(created_at: :desc)
     @quotes_count = unpaginated.count

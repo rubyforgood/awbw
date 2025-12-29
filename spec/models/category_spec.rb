@@ -28,4 +28,4 @@ RSpec.describe Category do
       expect(Category.published).to contain_exactly(visible)
     end
   end
-end 
+end
