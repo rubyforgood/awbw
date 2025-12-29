@@ -1,26 +1,5 @@
-Encoding:
-  Enabled: false
+# Omakase Ruby styling for Rails
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
 
-Documentation:
-  Enabled: false
-
-ClassAndModuleChildren:
-  Enabled: false
-
-ClassLength:
-  Enabled: false
-
-MethodLength:
-  Enabled: false
-
-AbcSize:
-  Max: 30
-
-DoubleNegation:
-  Enabled: false
-
-AllCops:
-  Exclude:
-    - "bin/**/*"
-    - "db/**/*"
-    - "config/**/*"
+# Your own specialized rules go here
