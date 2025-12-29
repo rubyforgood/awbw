@@ -7,4 +7,4 @@ FactoryBot.define do
     # Needs a sectorable instance, e.g., a Workshop or Resource
     association :sectorable, factory: :workshop
   end
-end 
+end

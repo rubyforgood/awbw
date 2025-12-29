@@ -5,4 +5,4 @@ FactoryBot.define do
 
     position { :default }
   end
-end 
+end

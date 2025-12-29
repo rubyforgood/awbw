@@ -22,5 +22,4 @@ class CommunityNewsDecorator < ApplicationDecorator
       ActionController::Base.helpers.asset_path("theme_default.png")
     end
   end
-
 end

@@ -19,7 +19,7 @@ class Event < ApplicationRecord
 
   # Validations
   validates_presence_of :title, :start_date, :end_date
-  validates_inclusion_of :publicly_visible, in: [true, false]
+  validates_inclusion_of :publicly_visible, in: [ true, false ]
 
   # Nested attributes
   accepts_nested_attributes_for :main_image, allow_destroy: true, reject_if: :all_blank
@@ -33,8 +33,8 @@ class Event < ApplicationRecord
 
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :featured, -> { where(featured: true) }
-  scope :published, ->(published=nil) { publicly_visible(published) }
-  scope :publicly_visible, ->(publicly_visible=nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }
+  scope :published, ->(published = nil) { publicly_visible(published) }
+  scope :publicly_visible, ->(publicly_visible = nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 

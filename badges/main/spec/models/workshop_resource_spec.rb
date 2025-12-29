@@ -21,4 +21,4 @@ RSpec.describe WorkshopResource do
   #   # expect(build(:workshop_resource)).to be_valid
   #   pending("Requires functional workshop/resource factories and associations uncommented")
   # end
-end 
+end

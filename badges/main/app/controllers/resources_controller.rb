@@ -13,9 +13,9 @@ class ResourcesController < ApplicationController
       filtered_count = filtered.count
       @count_display = if filtered_count == total_count
                          total_count
-                       else
+      else
                          "#{filtered_count}/#{total_count}"
-                       end
+      end
 
       render :resource_results
     else
@@ -44,7 +44,7 @@ class ResourcesController < ApplicationController
 
     if @resource.external_url.present?
       redirect_to_external @resource.link_target
-      return
+      nil
     end
   end
 
@@ -125,7 +125,7 @@ class ResourcesController < ApplicationController
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
       .order(:first_name, :last_name)
-      .map { |u| [u.full_name, u.id] }
+      .map { |u| [ u.full_name, u.id ] }
   end
 
   def process_search
@@ -142,10 +142,10 @@ class ResourcesController < ApplicationController
     params.require(:resource).permit(
       :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy],
-      categorizable_items_attributes: [:id, :category_id, :_destroy], category_ids: [],
-      sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy], sector_ids: []
+      main_image_attributes: [ :id, :file, :_destroy ],
+      gallery_images_attributes: [ :id, :file, :_destroy ],
+      categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
+      sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
     )
   end
 

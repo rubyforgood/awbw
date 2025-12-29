@@ -16,7 +16,7 @@ class WorkshopLogCreationWizardController < ApplicationController
   def update
     @user = current_user
     @agencies = current_user.projects
-    windows_type_id = params['workshop']['workshop_logs_attributes'].values[0]['windows_type_id']
+    windows_type_id = params["workshop"]["workshop_logs_attributes"].values[0]["windows_type_id"]
     @windows_type = WindowsType.find(windows_type_id)
     send("update_#{step}")
     render_wizard unless @new_workshop
@@ -41,8 +41,8 @@ class WorkshopLogCreationWizardController < ApplicationController
   def load_previous_report
     if id_param
       @old_report = Report.find_by(id: id_param)
-      date_array = @old_report.date.to_s.split('-')
-      @date = date_array[1] + '-' + date_array[2] + '-' + date_array[0]
+      date_array = @old_report.date.to_s.split("-")
+      @date = date_array[1] + "-" + date_array[2] + "-" + date_array[0]
     end
   end
 
@@ -56,7 +56,7 @@ class WorkshopLogCreationWizardController < ApplicationController
     find_or_build_workshop
     if @workshop.save
       if @new_workshop
-        flash[:notice] = 'Thanks for reporting on a new workshop.  Please fill out the workshop details below.'
+        flash[:notice] = "Thanks for reporting on a new workshop.  Please fill out the workshop details below."
         redirect_to edit_workshop_path(@workshop)
       else
         jump_to(:confirmation, workshop_id: @workshop.id)
@@ -101,7 +101,7 @@ class WorkshopLogCreationWizardController < ApplicationController
     explored_sectors = []
     @workshop.sectors.build
     Sector.published.each do |sector|
-      #byebug
+      # byebug
       unless @workshop.sectorable_items.map(&:sector_id).include?(sector.id)
         @workshop.sectorable_items.build(sector_id: sector.id)
       end
@@ -153,23 +153,23 @@ class WorkshopLogCreationWizardController < ApplicationController
     adjust_date
     params.require(:workshop).permit(
       :title, :date, :windows_type_id,
-      workshop_logs_attributes: [:user_id, :rating, :reaction, :similarities, :is_embodied_art_workshop,
+      workshop_logs_attributes: [ :user_id, :rating, :reaction, :similarities, :is_embodied_art_workshop,
                                  :successes, :challenges, :differences, :date,
                                  :suggestions, :questions, :lead_similar, :project_id,
                                  :num_participants_on_going, :num_participants_first_time,
                                  report_form_field_answers_attributes:
-                                  [:form_field_id, :answer_option_id, :answer, :_create]
+                                  [ :form_field_id, :answer_option_id, :answer, :_create ]
                                 ],
-      #sectorable_items_attributes: [:_create, :sector_id, :is_leader],
-      #sectors_attributes: [:_create, :name],
-      quotes_attributes: [:quote, :age],
+      # sectorable_items_attributes: [:_create, :sector_id, :is_leader],
+      # sectors_attributes: [:_create, :name],
+      quotes_attributes: [ :quote, :age ],
     )
   end
 
   def adjust_date
-    date = sent_date.split('-')
+    date = sent_date.split("-")
     if date.count > 2
-      new_date = date[1] + '-' + date[0] + '-' + date[2]
+      new_date = date[1] + "-" + date[0] + "-" + date[2]
       params["workshop"]["workshop_logs_attributes"][date_index]["date"] = new_date
     end
   end
@@ -179,9 +179,9 @@ class WorkshopLogCreationWizardController < ApplicationController
     index = date_index
     if index.present?
       puts index
-      return hash[index]["date"]
+      hash[index]["date"]
     else
-      return ''
+      ""
     end
   end
 
@@ -195,7 +195,7 @@ class WorkshopLogCreationWizardController < ApplicationController
         break
       end
     end
-    return index
+    index
   end
 
   def set_breadcrumb

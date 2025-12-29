@@ -61,7 +61,7 @@ class Workshop < ApplicationRecord
                                 allow_destroy: true
   accepts_nested_attributes_for :workshop_logs, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :workshop_series_children,
-                                reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
+                                reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true
   accepts_nested_attributes_for :workshop_variations, reject_if: proc { |object| object.nil? }
 
@@ -73,11 +73,11 @@ class Workshop < ApplicationRecord
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
-  scope :published, -> (published=nil) { published.to_s.present? ?
+  scope :published, ->(published = nil) { published.to_s.present? ?
            where(inactive: !published) : where(inactive: false) }
-  scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
+  scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
-  scope :order_by_date, ->(sort_order="asc") {
+  scope :order_by_date, ->(sort_order = "asc") {
     order(Arel.sql(<<~SQL.squish))
     COALESCE(
       STR_TO_DATE(
@@ -97,7 +97,7 @@ class Workshop < ApplicationRecord
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes all: [:title, :full_name, # no spanish alternatives
+    attributes all: [ :title, :full_name, # no spanish alternatives
 
                      :objective, :materials, :setup, :introduction,
                      :demonstration, :opening_circle, :warm_up, :opening_circle,
@@ -105,11 +105,11 @@ class Workshop < ApplicationRecord
 
                      :objective_spanish, :materials_spanish, :setup_spanish, :introduction_spanish,
                      :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish, :opening_circle_spanish,
-                     :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish, :misc2_spanish]
+                     :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish, :misc2_spanish ]
     # attributes category: ["categories.name"]
     # attributes sector: ["sectors.name"]
     # attributes user: ["first_name", "last_name"]
-    options :all, type: :text, default: true#, default_operator: :or
+    options :all, type: :text, default: true# , default_operator: :or
   end
 
   def self.grouped_by_sector
@@ -197,7 +197,7 @@ class Workshop < ApplicationRecord
     return "00:00" if total_minutes == 0
 
     # Custom rounding: minimum 15 min, then nearest 15
-    total_minutes = [15, (total_minutes / 15.0).round * 15].max
+    total_minutes = [ 15, (total_minutes / 15.0).round * 15 ].max
 
     hours, minutes = total_minutes.divmod(60)
 

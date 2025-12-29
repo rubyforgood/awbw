@@ -1,20 +1,20 @@
 # config valid only for current version of Capistrano
-lock '3.4.1'
+lock "3.4.1"
 
-set :application, 'awbw'
-set :repo_url, 'git@github.com:awindowbetweenworlds/awbw-dashboard.git'
-set :branch, 'master'
+set :application, "awbw"
+set :repo_url, "git@github.com:awindowbetweenworlds/awbw-dashboard.git"
+set :branch, "master"
 
-set :deploy_to, '/home/devteam/public_html/awbw/'
+set :deploy_to, "/home/devteam/public_html/awbw/"
 
 SSHKit.config.command_map[:rake]  = "bundle exec rake"
 SSHKit.config.command_map[:rails] = "bundle exec rails"
 
 namespace :deploy do
-  desc 'Restart application'
+  desc "Restart application"
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
-      execute :touch, release_path.join('tmp/restart.txt')
+      execute :touch, release_path.join("tmp/restart.txt")
     end
   end
 
@@ -30,6 +30,4 @@ namespace :deploy do
   end
 end
 
-set :linked_dirs, %w{public/system}
-
-
+set :linked_dirs, %w[public/system]

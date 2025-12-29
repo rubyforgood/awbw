@@ -1,5 +1,5 @@
 class SectorsController < ApplicationController
-  before_action :set_sector, only: [:show, :edit, :update, :destroy]
+  before_action :set_sector, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -11,9 +11,9 @@ class SectorsController < ApplicationController
 
     @count_display = if filtered.count == unfiltered.count
                        unfiltered.count
-                     else
+    else
                        "#{filtered.count}/#{unfiltered.count}"
-                     end
+    end
   end
 
   def show

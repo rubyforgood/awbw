@@ -20,7 +20,6 @@ RSpec.describe "tutorials/new", type: :view do
     render
 
     assert_select "form[action=?][method=?]", tutorials_path, "post" do
-
       assert_select "textarea[name=?]", "tutorial[title]"
       assert_select "textarea[name=?]", "tutorial[body]"
       assert_select "input[name=?][type=checkbox]", "tutorial[published]"

@@ -7,7 +7,7 @@ RSpec.describe "story_ideas/index", type: :view do
 
   before(:each) do
     # Simulate a single page of paginated results
-    assign(:story_ideas, paginated([story_idea1, story_idea2]))
+    assign(:story_ideas, paginated([ story_idea1, story_idea2 ]))
   end
 
   it "renders a list of story_ideas" do

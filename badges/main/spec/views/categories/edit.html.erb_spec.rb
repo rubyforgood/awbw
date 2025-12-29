@@ -7,7 +7,7 @@ RSpec.describe "categories/edit", type: :view do
 
   before do
     assign(:category, category)
-    assign(:category_types, [category_type])
+    assign(:category_types, [ category_type ])
     allow(view).to receive(:current_user).and_return(admin)
   end
 

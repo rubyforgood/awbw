@@ -58,9 +58,9 @@ class Project < ApplicationRecord
     SQL
       wildcard: wildcard, exact: exact)
   end
-  scope :active, ->(active=nil) { active ? where(inactive: !active) : where(inactive: false) }
+  scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
-  scope :published, ->(published=nil) { published ? active(published) : active }
+  scope :published, ->(published = nil) { published ? active(published) : active }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 

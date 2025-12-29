@@ -16,4 +16,4 @@ RSpec.describe AnswerOption do
   it 'is valid with valid attributes' do
     expect(build(:answer_option)).to be_valid
   end
-end 
+end

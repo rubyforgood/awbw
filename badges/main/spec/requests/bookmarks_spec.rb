@@ -2,20 +2,20 @@
 require "rails_helper"
 
 RSpec.describe "Bookmarks", type: :request do
-	let(:user) { create(:user) }
-	let!(:bookmark) { create(:bookmark, user: user) }
+  let(:user) { create(:user) }
+  let!(:bookmark) { create(:bookmark, user: user) }
   let(:workshop) { create(:workshop) }
 
-	before do
-		sign_in user
-	end
+  before do
+    sign_in user
+  end
 
   describe "POST /bookmarks" do
     it "creates a bookmark and responds with turbo_stream" do
       expect {
         post bookmarks_path,
-          params: {bookmark: {bookmarkable_id: workshop.id, bookmarkable_type: "Workshop"}},
-          headers: {"Accept" => "text/vnd.turbo-stream.html"}
+          params: { bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" } },
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change(Bookmark, :count).by(1)
 
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
@@ -27,7 +27,7 @@ RSpec.describe "Bookmarks", type: :request do
     it "destroys a bookmark and responds with turbo_stream" do
       expect {
         delete bookmark_path(bookmark),
-          headers: {"Accept" => "text/vnd.turbo-stream.html"}
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change(Bookmark, :count).by(-1)
 
       expect(Bookmark.exists?(bookmark.id)).to be_falsey

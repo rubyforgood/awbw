@@ -12,9 +12,9 @@ class ReportsController < ApplicationController
 
     if (@report = current_user.submitted_monthly_report(@date,
                                                         @form_builder.windows_type))
-      redirect_to( :action => :edit, :id => @report,
-                   :month => @month, :year => @year,
-                   :form_builder_id => @form_builder.id )
+      redirect_to(action: :edit, id: @report,
+                   month: @month, year: @year,
+                   form_builder_id: @form_builder.id)
     else
       render_form
       render :new
@@ -45,7 +45,7 @@ class ReportsController < ApplicationController
   def edit
     build_month_and_year
     find_form_builder
-    @report    = current_user.submitted_monthly_report( @date, @form_builder.windows_type )
+    @report    = current_user.submitted_monthly_report(@date, @form_builder.windows_type)
     @agencies  = current_user.projects.
                  where(windows_type_id: @report.windows_type_id)
     @month = @report.date.month
@@ -69,24 +69,24 @@ class ReportsController < ApplicationController
 
     if params[:report]
       ActiveRecord::Base.transaction do
-        @report.update_attributes( report_params )
+        @report.update_attributes(report_params)
 
-        @saved = @report.delete_and_update_all( quotes_params, log_fields,
-                                                params[:image] )
+        @saved = @report.delete_and_update_all(quotes_params, log_fields,
+                                                params[:image])
       end
 
       if @saved
-        flash[:notice] = 'Thanks for reporting on a update report. '
+        flash[:notice] = "Thanks for reporting on a update report. "
         redirect_to authenticated_root_path
       else
         @agencies  = current_user.projects.
                        where(windows_type_id: @report.windows_type_id)
 
-        flash[:alert] = 'ERROR!!!!!!!!!!!!!!'
+        flash[:alert] = "ERROR!!!!!!!!!!!!!!"
         render :edit
       end
     else
-      flash[:alert] = 'Please select some populations that attended this report!!!'
+      flash[:alert] = "Please select some populations that attended this report!!!"
       redirect_to reports_edit_story_path(@report)
     end
   end
@@ -96,23 +96,23 @@ class ReportsController < ApplicationController
 
     if params[:report]
       ActiveRecord::Base.transaction do
-        @report.update_attributes( report_params )
-        @saved = @report.delete_and_update_all( quotes_params, log_fields,
-                                                params[:image] )
+        @report.update_attributes(report_params)
+        @saved = @report.delete_and_update_all(quotes_params, log_fields,
+                                                params[:image])
       end
 
       if @saved
-        flash[:notice] = 'Thanks for reporting on a update report. '
+        flash[:notice] = "Thanks for reporting on a update report. "
         redirect_to authenticated_root_path
       else
         @agencies  = current_user.projects.
                        where(windows_type_id: @report.windows_type_id)
 
-        flash[:alert] = 'ERROR!!!!!!!!!!!!!!'
+        flash[:alert] = "ERROR!!!!!!!!!!!!!!"
         render :edit
       end
     else
-      flash[:alert] = 'Please select some populations that attended this report!!!'
+      flash[:alert] = "Please select some populations that attended this report!!!"
       redirect_to edit_report_path(@report)
     end
   end
@@ -123,21 +123,21 @@ class ReportsController < ApplicationController
     report_type = "story"
     report_type = "monthly report" unless @report.owner_id == 7
 
-    if params[:sectorable_items] or params[:form_builder_id] == '7'
+    if params[:sectorable_items] or params[:form_builder_id] == "7"
       if @report.save
         flash[:notice] = "Your #{report_type} has been successfully submitted."
-        redirect_to '/'
+        redirect_to "/"
       else
-        @form_builder = FormBuilder.find( @report.owner_id )
+        @form_builder = FormBuilder.find(@report.owner_id)
         build_month_and_year
 
         flash[:alert] = "There was a problem submitting your form: " +
                         "#{@report.errors.full_messages.join(" ")}"
 
-        redirect_to :action =>'new', :form_builder_id => @report.owner_id
+        redirect_to action: "new", form_builder_id: @report.owner_id
       end
     else
-      flash[:alert] = 'Please select some populations that attended this monthly report!!!'
+      flash[:alert] = "Please select some populations that attended this monthly report!!!"
       redirect_to "/reports/monthly?form_builder_id=#{params[:form_builder_id]}&year=#{params[:year]}&month=#{params[:month]}"
     end
   end
@@ -145,7 +145,7 @@ class ReportsController < ApplicationController
   def create_story
     build_new_report
     @report.type = "Story"
-    @report.report_form_field_answers.build( log_fields )
+    @report.report_form_field_answers.build(log_fields)
 
 
     if !params[:workshop_id].empty?
@@ -157,15 +157,15 @@ class ReportsController < ApplicationController
 
     if @report.save
       flash[:notice] = "Your Story has been successfully submitted."
-      redirect_to '/'
+      redirect_to "/"
     else
-      @form_builder = FormBuilder.find( @report.owner_id )
+      @form_builder = FormBuilder.find(@report.owner_id)
       build_month_and_year
 
       flash[:alert] = "There was a problem submitting your form: " +
                       "#{@report.errors.full_messages.join(" ")}"
 
-      redirect_to :action =>'share_story', :form_bilder_id => @report.owner_id
+      redirect_to action: "share_story", form_bilder_id: @report.owner_id
     end
   end
 
@@ -173,7 +173,7 @@ class ReportsController < ApplicationController
 
   def find_form_builder
     if params[:form_builder_id]
-      @form_builder = FormBuilder.find( params[:form_builder_id] ).decorate
+      @form_builder = FormBuilder.find(params[:form_builder_id]).decorate
     else
       @form_builder = FormBuilder
         .monthly
@@ -193,12 +193,12 @@ class ReportsController < ApplicationController
   end
 
   def build_new_report
-    @report = current_user.reports.build( report_params )
-    @report.image = Image.new( file: params[:image] ) unless params[:image].blank?
+    @report = current_user.reports.build(report_params)
+    @report.image = Image.new(file: params[:image]) unless params[:image].blank?
 
     quotes = []
-    quotes_params.each{ |q|
-      quotes << Quote.new( quote: q[:quote], age: q[:age], gender: q[:gender] )
+    quotes_params.each { |q|
+      quotes << Quote.new(quote: q[:quote], age: q[:age], gender: q[:gender])
     }
 
     @report.quotes = quotes
@@ -230,38 +230,37 @@ class ReportsController < ApplicationController
       @report.date, @report.windows_type
     )
 
-    logs = @workshop_logs.map{|k, v| v}.flatten
-    @total_ongoing    = logs.reduce(0){|sum, l| sum = sum + l.num_ongoing}
-    @total_first_time = logs.reduce(0) {|sum, l| sum = sum + l.num_first_time}
+    logs = @workshop_logs.map { |k, v| v }.flatten
+    @total_ongoing    = logs.reduce(0) { |sum, l| sum = sum + l.num_ongoing }
+    @total_first_time = logs.reduce(0) { |sum, l| sum = sum + l.num_first_time }
   end
 
   def build_month_and_year
     @month = params[:month] ? params[:month] : Date.current.month
     @year  = params[:year] ? params[:year] : Date.current.year
-    @date  = Date.new( @year.to_i, @month.to_i )
+    @date  = Date.new(@year.to_i, @month.to_i)
   end
 
   def report_params
     params[:report].delete(:form_file) if params[:report][:form_file].blank?
 
-    params[:report][:media_files_attributes].each do |k,v|
+    params[:report][:media_files_attributes].each do |k, v|
       params[:report][:media_files_attributes].delete(k) if params[:report][:media_files_attributes][k][:file].blank?
-
     end
 
     params.require(:report).permit(
       :image, :form_file, :type, :project_id, :date, :workshop_name, :owner_id, :workshop_id,
       :owner_type, :windows_type_id, report_form_field_answers_attributes:
-      [:form_field_id, :answer_option_id, :answer, :_create],
-      media_files_attributes: [:file],
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy]
+      [ :form_field_id, :answer_option_id, :answer, :_create ],
+      media_files_attributes: [ :file ],
+      main_image_attributes: [ :id, :file, :_destroy ],
+      gallery_images_attributes: [ :id, :file, :_destroy ]
     )
   end
 
   def log_fields
     log_fields_params.map do |k, v|
-      { :form_field_id => k, :answer => v, :report_id => @report.id }
+      { form_field_id: k, answer: v, report_id: @report.id }
     end
   end
 
@@ -271,15 +270,14 @@ class ReportsController < ApplicationController
 
   def quotes_params
     return [] if params[:quotes].nil?
-    params[:quotes].permit!.map{|k, v| v}
+    params[:quotes].permit!.map { |k, v| v }
   end
 
   def build_date
     @month = Date.current.month
     @year  = Date.current.year
     @date = params[:report][:date] ?
-              Date.strptime( params[:report][:date], '%Y-%m' ) :
-              Date.new( @year.to_i, @month.to_i )
+              Date.strptime(params[:report][:date], "%Y-%m") :
+              Date.new(@year.to_i, @month.to_i)
   end
-
 end

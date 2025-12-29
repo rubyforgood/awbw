@@ -1,7 +1,7 @@
 module PrintCountable
-	extend ActiveSupport::Concern
+  extend ActiveSupport::Concern
 
-	def increment_print_count!
-		increment!(:print_count)
-	end
+  def increment_print_count!
+    increment!(:print_count)
+  end
 end

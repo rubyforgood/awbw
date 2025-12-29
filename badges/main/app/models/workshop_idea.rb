@@ -27,11 +27,11 @@ class WorkshopIdea < ApplicationRecord
   accepts_nested_attributes_for :main_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :workshop_series_children,
-                                reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
+                                reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true
 
   # Scopes
-  scope :title, -> (title) { where("workshop_ideas.title like ?", "%#{ title }%") }
+  scope :title, ->(title) { where("workshop_ideas.title like ?", "%#{ title }%") }
   scope :author_name, ->(author_name) { joins(:created_by).
     where("users.first_name like ? or users.last_name like ? or users.email like ?",
           "%#{author_name}%", "%#{author_name}%", "%#{author_name}%") }
@@ -51,7 +51,7 @@ class WorkshopIdea < ApplicationRecord
     return "00:00" if total_minutes == 0
 
     # Custom rounding: minimum 15 min, then nearest 15
-    total_minutes = [15, (total_minutes / 15.0).round * 15].max
+    total_minutes = [ 15, (total_minutes / 15.0).round * 15 ].max
 
     hours, minutes = total_minutes.divmod(60)
 

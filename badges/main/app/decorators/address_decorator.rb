@@ -1,5 +1,4 @@
 class AddressDecorator < ApplicationDecorator
-
   def title
     name
   end
@@ -11,5 +10,4 @@ class AddressDecorator < ApplicationDecorator
   def url
     Rails.application.routes.url_helpers.polymorphic_path(addressable)
   end
-
 end

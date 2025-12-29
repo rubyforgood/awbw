@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_action :set_project, only: [:show, :edit, :update, :destroy]
+  before_action :set_project, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -25,7 +25,7 @@ class ProjectsController < ApplicationController
                                      .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
            MAX(COALESCE(date, created_at)) AS max_dt")
                                      .order("max_dt DESC")
-                                     .map { |record| [Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym] }
+                                     .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
 
     @year_options = workshop_logs.pluck(
       Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
@@ -82,7 +82,7 @@ class ProjectsController < ApplicationController
     @project_statuses = ProjectStatus.all
     @facilitators_array = Facilitator.joins(:user)
                                      .order(:first_name, :last_name)
-                                     .map{|f| [f.name, f.user.id] }
+                                     .map { |f| [ f.name, f.user.id ] }
     @project.project_users = @project.project_users
                                      .includes(:project)
                                      .sort_by { |pu| pu.user.facilitator&.name.to_s.downcase }
@@ -104,18 +104,18 @@ class ProjectsController < ApplicationController
       :name, :description, :start_date, :end_date, :mission_vision_values, :internal_id,
       :inactive, :notes, :agency_type,  :agency_type_other, :website_url,
       :project_status_id, :location_id, :windows_type_id,
-      logo_image_attributes: [:id, :file, :_destroy],
+      logo_image_attributes: [ :id, :file, :_destroy ],
       sectorable_items_attributes: [
         :id,
         :sector_id,
-        :_destroy,
+        :_destroy
       ],
       project_users_attributes: [
         :id,
         :user_id,
         :inactive,
         :title,
-        :_destroy,
+        :_destroy
       ],
       addresses_attributes: [
         :id,
@@ -133,7 +133,7 @@ class ProjectsController < ApplicationController
         :la_city_council_district,
         :la_supervisorial_district,
         :la_service_planning_area,
-        :_destroy,
+        :_destroy
       ]
     )
   end

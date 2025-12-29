@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe FormBuilder do
-
   describe 'associations' do
     it { should belong_to(:windows_type) }
     it { should have_many(:forms) }

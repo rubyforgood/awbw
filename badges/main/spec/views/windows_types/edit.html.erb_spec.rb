@@ -16,7 +16,6 @@ RSpec.describe "windows_types/edit", type: :view do
     render
 
     assert_select "form[action=?][method=?]", windows_type_path(windows_type), "post" do
-
       assert_select "textarea[name=?]", "windows_type[name]"
 
       # TEXT FIELDS

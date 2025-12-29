@@ -1,2 +1,2 @@
-require 'will_paginate/array'
+require "will_paginate/array"
 WillPaginate.per_page = 12

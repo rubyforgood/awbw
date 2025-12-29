@@ -6,4 +6,4 @@ FactoryBot.define do
 
     answer { "User response text" }
   end
-end 
+end

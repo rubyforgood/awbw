@@ -3,16 +3,16 @@ class EventRegistration < ApplicationRecord
   belongs_to :event
 
   # Validations
-  validates :registrant_id, uniqueness: {scope: :event_id}
+  validates :registrant_id, uniqueness: { scope: :event_id }
   validates :event_id, presence: true
 
   # Scopes
-  scope :registrant_name, -> (registrant_name){ joins(:registrant).where(
+  scope :registrant_name, ->(registrant_name) { joins(:registrant).where(
     "LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
     OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
     OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
     OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
-  scope :event_title, -> (event_title){ joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
+  scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
 
   def self.search_by_params(params)
     registrations = EventRegistration.all

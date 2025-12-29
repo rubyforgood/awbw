@@ -1,5 +1,4 @@
 class StoryIdeaDecorator < ApplicationDecorator
-
   def title
     name
   end

@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe ProjectUser do
-
   describe 'associations' do
     it { should belong_to(:project) }
     it { should belong_to(:user) }
@@ -23,4 +22,4 @@ RSpec.describe ProjectUser do
     # expect(build(:project_user)).to be_valid
     # pending("Requires functional project/user factories and associations uncommented")
   end
-end 
+end

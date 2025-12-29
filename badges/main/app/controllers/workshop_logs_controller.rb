@@ -1,5 +1,5 @@
 class WorkshopLogsController < ApplicationController
-  before_action :set_workshop, only: [:index]
+  before_action :set_workshop, only: [ :index ]
 
   def index
     @per_page = params[:number_of_items_per_page].presence || 10
@@ -47,10 +47,10 @@ class WorkshopLogsController < ApplicationController
     end
 
     if success
-      flash[:notice] = 'Thanks for reporting on a workshop.'
+      flash[:notice] = "Thanks for reporting on a workshop."
       redirect_to authenticated_root_path
     else
-      flash.now[:alert] = 'Failed to update workshop log.'
+      flash.now[:alert] = "Failed to update workshop log."
       set_form_variables
       render :edit, status: :unprocessable_content
     end
@@ -61,10 +61,10 @@ class WorkshopLogsController < ApplicationController
     @workshop_log = WorkshopLog.new(workshop_log_params)
 
     if @workshop_log.save
-      flash[:notice] = 'Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile.'
+      flash[:notice] = "Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile."
       redirect_to authenticated_root_path
     else
-      flash.now[:alert] = 'Failed to create workshop log.'
+      flash.now[:alert] = "Failed to create workshop log."
       set_form_variables
       render :new, status: :unprocessable_content
     end
@@ -79,10 +79,10 @@ class WorkshopLogsController < ApplicationController
       if current_user.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
         render :show
       else
-        redirect_to authenticated_root_path, error: 'You do not have permission to view this page.'
+        redirect_to authenticated_root_path, error: "You do not have permission to view this page."
       end
     else
-      redirect_to authenticated_root_path, error: 'Unable to find that Workshop Log.'
+      redirect_to authenticated_root_path, error: "Unable to find that Workshop Log."
     end
   end
 
@@ -95,11 +95,11 @@ class WorkshopLogsController < ApplicationController
 
 
   def validate_new
-    @date         = Date.new( params[:year].to_i, params[:month].to_i )
+    @date         = Date.new(params[:year].to_i, params[:month].to_i)
     @windows_type = WindowsType.find(params[:windows_type])
-    @report       = current_user.submitted_monthly_report( @date, @windows_type, params[:project_id] )
+    @report       = current_user.submitted_monthly_report(@date, @windows_type, params[:project_id])
 
-    render json: { :validate => @report.nil? }.to_json
+    render json: { validate: @report.nil? }.to_json
   end
 
   def set_index_variables # needs to not be private
@@ -107,7 +107,7 @@ class WorkshopLogsController < ApplicationController
                                      .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
            MAX(COALESCE(date, created_at)) AS max_dt")
                                      .order("max_dt DESC")
-                                     .map { |record| [Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym] }
+                                     .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
 
     @year_options = WorkshopLog.pluck(
       Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
@@ -119,9 +119,9 @@ class WorkshopLogsController < ApplicationController
     @projects = if current_user.super_user?
                   # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
                   Project.active.order(:name)
-                else
+    else
                   current_user.projects.order(:name)
-                end
+    end
     # @workshops = Workshop.joins(:workshop_logs)
     #                      .order(:title)
   end
@@ -141,9 +141,9 @@ class WorkshopLogsController < ApplicationController
 
     workshops = if current_user.super_user?
                   Workshop.all
-                else
+    else
                   Workshop.published
-                end
+    end
     @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id))
                           .distinct
                           .order(title: :asc)
@@ -184,9 +184,9 @@ class WorkshopLogsController < ApplicationController
   end
 
   def set_default_values
-    workshop_log = params[:workshop_log];
+    workshop_log = params[:workshop_log]
     workshop_log.to_unsafe_h.map do |k, v|
-      if k.include?('_ongoing') || k.include?('_first_time')
+      if k.include?("_ongoing") || k.include?("_first_time")
         workshop_log[k] = 0 if v.nil? || v.blank?
       end
     end
@@ -203,16 +203,16 @@ class WorkshopLogsController < ApplicationController
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :owner_id,:owner_type, :user_id, :project_id, :date,
-      :workshop_name, :workshop_id, :windows_type_id, :other_description, #:user,
+      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :user_id, :project_id, :date,
+      :workshop_name, :workshop_id, :windows_type_id, :other_description, # :user,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
-        quote_attributes: [:id, :quote, :age, :workshop_id, :_destroy]],
+        quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
       all_quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
-        quote_attributes: [:id, :quote, :age, :workshop_id, :_destroy]],
-      report_form_field_answers_attributes: [:id, :form_field_id, :answer_option_id,
-                                             :answer, :report_id, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy])
+        quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
+      report_form_field_answers_attributes: [ :id, :form_field_id, :answer_option_id,
+                                             :answer, :report_id, :_destroy ],
+      gallery_images_attributes: [ :id, :file, :_destroy ])
   end
 end

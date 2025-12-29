@@ -46,12 +46,12 @@ class User < ApplicationRecord
     reject_if: proc { |attrs| attrs["project_id"].blank? || attrs["title"].blank? }
 
   # Validations
-  validates :email, presence: true, uniqueness: {case_sensitive: false}
+  validates :email, presence: true, uniqueness: { case_sensitive: false }
 
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes [:email, :first_name, :last_name, :phone]
+    attributes [ :email, :first_name, :last_name, :phone ]
     attributes user: "projects.name"
   end
 

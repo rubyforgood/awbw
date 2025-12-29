@@ -4,7 +4,7 @@ RSpec.describe "facilitators/edit", type: :view do
     let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
-  let(:facilitator) { create(:facilitator, pronouns: "sdfsdf")}
+  let(:facilitator) { create(:facilitator, pronouns: "sdfsdf") }
 
   before(:each) do
     assign(:facilitator, facilitator)

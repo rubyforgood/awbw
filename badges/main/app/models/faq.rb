@@ -13,7 +13,7 @@ class Faq < ApplicationRecord
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes [:question, :answer]
+    attributes [ :question, :answer ]
   end
 
   def self.search_by_params(params)

@@ -1,29 +1,28 @@
 Rails.application.routes.draw do
-
   # temporary direct routes to images for migration audit
-  resources :attachments, only: [:show]
-  resources :media_files, only: [:show]
+  resources :attachments, only: [ :show ]
+  resources :media_files, only: [ :show ]
   namespace :images do
-    resources :main_images, only: [:show]
-    resources :gallery_images, only: [:show]
-    resources :rich_texts, only: [:show]
+    resources :main_images, only: [ :show ]
+    resources :gallery_images, only: [ :show ]
+    resources :rich_texts, only: [ :show ]
   end
-  resources :images, only: [:show]
+  resources :images, only: [ :show ]
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
   devise_for :users,
-             controllers: { registrations: 'registrations',
-                            passwords: 'passwords' }
-  get 'users/change_password', to: 'users#change_password', as:'change_password'
-  post 'users/update_password', to: 'users#update_password', as: 'update_password'
+             controllers: { registrations: "registrations",
+                            passwords: "passwords" }
+  get "users/change_password", to: "users#change_password", as: "change_password"
+  post "users/update_password", to: "users#update_password", as: "update_password"
 
-  post 'workshop_logs/validate_new', to: 'workshop_logs#validate_new'
+  post "workshop_logs/validate_new", to: "workshop_logs#validate_new"
 
-  get 'contact_us', to: 'contact_us#index'
-  post 'contact_us', to: 'contact_us#create'
-  get 'dashboard/admin', to: 'dashboard#admin'
-  get 'dashboard/recent_activities', to: 'dashboard#recent_activities'
+  get "contact_us", to: "contact_us#index"
+  post "contact_us", to: "contact_us#create"
+  get "dashboard/admin", to: "dashboard#admin"
+  get "dashboard/recent_activities", to: "dashboard#recent_activities"
   get "image_migration_audit", to: "image_migration_audit#index"
 
   get "taggings", to: "taggings#index", as: "taggings"
@@ -53,23 +52,23 @@ Rails.application.routes.draw do
   end
   resources :facilitators
   resources :faqs
-  resources :notifications, only: [:show]
+  resources :notifications, only: [ :show ]
   resources :organizations
   resources :projects
   resources :project_users
   resources :quotes
 
   resources :monthly_reports
-  get 'reports/:id/edit_story', to: 'reports#edit_story', as: 'reports_edit_story'
-  put 'reports/update_story/:id', to: 'reports#update_story', as: 'reports_update_story'
-  post 'reports/share_story', to: 'reports#create_story', as: 'create_story'
-  get 'reports/share_story', to: 'reports#share_story'
+  get "reports/:id/edit_story", to: "reports#edit_story", as: "reports_edit_story"
+  put "reports/update_story/:id", to: "reports#update_story", as: "reports_update_story"
+  post "reports/share_story", to: "reports#create_story", as: "create_story"
+  get "reports/share_story", to: "reports#share_story"
 
-  get 'reports/monthly', to: 'monthly_reports#monthly'
-  get 'reports/monthly_select_type', to: 'monthly_reports#monthly_select_type'
-  get 'monthly_reports', to: 'monthly_reports#monthly'
+  get "reports/monthly", to: "monthly_reports#monthly"
+  get "reports/monthly_select_type", to: "monthly_reports#monthly_select_type"
+  get "monthly_reports", to: "monthly_reports#monthly"
 
-  get 'reports/annual', to: 'reports#annual'
+  get "reports/annual", to: "reports#annual"
   resources :reports
 
   resources :resources do
@@ -104,7 +103,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :authentications, only: [:create]
+      resources :authentications, only: [ :create ]
       resources :quotes
       resources :bookmarks
     end

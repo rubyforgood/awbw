@@ -10,7 +10,7 @@ class NotificationMailer < ApplicationMailer
   def report_notification(notification)
     @notification = notification
     @noticeable   = notification.noticeable
-    @type = 'Report'
+    @type = "Report"
     if @noticeable.respond_to? :windows_type
       target = @noticeable.windows_type.name
     else
@@ -31,7 +31,7 @@ class NotificationMailer < ApplicationMailer
     end
 
     if @report.story?
-      @type = 'Story'
+      @type = "Story"
       @mail_to = "eaeevans@awbw.org, cturekrials@awbw.org, rhernandez@awbw.org"
     else
       case target

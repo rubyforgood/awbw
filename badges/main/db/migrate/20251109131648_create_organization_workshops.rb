@@ -7,6 +7,6 @@ class CreateOrganizationWorkshops < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :organization_workshops, [:organization_id, :workshop_id], unique: true, name: 'index_organization_workshops_on_ids'
+    add_index :organization_workshops, [ :organization_id, :workshop_id ], unique: true, name: 'index_organization_workshops_on_ids'
   end
 end

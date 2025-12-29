@@ -15,9 +15,9 @@ RSpec.describe ContactUsMailer do
 
       mail = described_class.hello(contact_params)
 
-      expect(mail.to).to eq(['cturek@awbw.org'])
+      expect(mail.to).to eq([ 'cturek@awbw.org' ])
       expect(mail.subject).to eq('Test Subject')
-      expect(mail.from).to eq(['test@example.com'])
+      expect(mail.from).to eq([ 'test@example.com' ])
     end
 
     xit 'sends to the children program email when q is "children"' do
@@ -33,7 +33,7 @@ RSpec.describe ContactUsMailer do
 
       mail = described_class.hello(contact_params)
 
-      expect(mail.to).to eq(['cturekrials@awbw.org'])
+      expect(mail.to).to eq([ 'cturekrials@awbw.org' ])
     end
 
     xit 'sends to the general program email when q is "general"' do
@@ -49,7 +49,7 @@ RSpec.describe ContactUsMailer do
 
       mail = described_class.hello(contact_params)
 
-      expect(mail.to).to eq(['programs@awbw.org'])
+      expect(mail.to).to eq([ 'programs@awbw.org' ])
     end
 
     xit 'defaults to the general program email when q is nil' do
@@ -65,7 +65,7 @@ RSpec.describe ContactUsMailer do
 
       mail = described_class.hello(contact_params)
 
-      expect(mail.to).to eq(['programs@awbw.org'])
+      expect(mail.to).to eq([ 'programs@awbw.org' ])
     end
 
     xit 'renders the email content correctly' do

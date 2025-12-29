@@ -1,5 +1,5 @@
 class EventRegistrationsController < ApplicationController
-  before_action :set_event_registration, only: [:show, :edit, :update, :destroy]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25

@@ -10,7 +10,7 @@ RSpec.describe FormField do
     it { should have_many(:answer_options).through(:form_field_answer_options) }
     it { should have_many(:childs).class_name('FormField').with_foreign_key('parent_id') }
     # belongs_to :parent is implied but not explicitly stated, test if needed
-    # it { should belong_to(:parent).class_name('FormField').optional } 
+    # it { should belong_to(:parent).class_name('FormField').optional }
 
     it { should accept_nested_attributes_for(:form_field_answer_options) }
   end
@@ -24,11 +24,11 @@ RSpec.describe FormField do
   end
 
   describe 'enums' do
-    it { should define_enum_for(:status).with_values([:inactive, :active]) }
-    it { should define_enum_for(:answer_type).with_values([:free_form_input_one_line, :free_form_input_paragraph, 
+    it { should define_enum_for(:status).with_values([ :inactive, :active ]) }
+    it { should define_enum_for(:answer_type).with_values([ :free_form_input_one_line, :free_form_input_paragraph,
                                                             :multiple_choice_radio, :no_user_input, :multiple_choice_checkbox,
-                                                            :group_header]) }
-    it { should define_enum_for(:answer_datatype).with_values([:text_alphanumeric, :number_integer, :number_decimal, :date,]) }
+                                                            :group_header ]) }
+    it { should define_enum_for(:answer_datatype).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
   end
 
   # it 'is valid with valid attributes' do
@@ -38,4 +38,4 @@ RSpec.describe FormField do
   # end
 
   # Add tests for methods like #name, #multiple_choice?, #html_id, etc.
-end 
+end

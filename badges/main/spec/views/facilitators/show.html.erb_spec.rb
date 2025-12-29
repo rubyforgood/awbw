@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe "facilitators/show", type: :view do
   let(:admin) { create(:user, :admin) }
 
-  let(:facilitator) { create(:facilitator)}
+  let(:facilitator) { create(:facilitator) }
 
   before do
     assign(:facilitator, facilitator.decorate)

@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe "/events", type: :request do
-
   let(:valid_attributes) {
     {
       "title": "sample title",
@@ -64,11 +63,11 @@ RSpec.describe "/events", type: :request do
     describe 'when signed in as an admin' do
       it "renders a successful response" do
         sign_in admin
-  
+
         allow_any_instance_of(ApplicationController).
           to receive(:current_user).and_return(admin)
         get edit_event_url(event)
-  
+
         expect(response).to be_successful
       end
     end
@@ -147,7 +146,7 @@ RSpec.describe "/events", type: :request do
             to receive(:current_user).and_return(admin)
           patch event_url(event), params: { event: new_attributes }
           event.reload
-          
+
           expect(event.title).to eq(new_attributes[:title])
         end
 

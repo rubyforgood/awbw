@@ -22,4 +22,4 @@ RSpec.describe UserForm do
   #   # expect(build(:user_form)).to be_valid
   #   pending("Requires functional user/form factories and associations uncommented")
   # end
-end 
+end

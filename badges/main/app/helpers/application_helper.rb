@@ -1,5 +1,4 @@
 module ApplicationHelper
-
   def root_link_path
     user_signed_in? ? authenticated_root_path : unauthenticated_root_path
   end
@@ -9,11 +8,11 @@ module ApplicationHelper
   end
 
   def checked?(param = false)
-    param == '1'
+    param == "1"
   end
 
   def months_with_year
-    (1..12).collect{ |m| "#{m}/#{today.year}"}
+    (1..12).collect { |m| "#{m}/#{today.year}" }
   end
 
   def current_month_with_year
@@ -50,7 +49,7 @@ module ApplicationHelper
   end
 
   def ra_path(obj, action = nil)
-    action = action.nil? ? '' : "#{action}_"
+    action = action.nil? ? "" : "#{action}_"
 
     if obj.form_builder and obj.form_builder.name == "Share a Story"
       if action.empty?
@@ -70,7 +69,7 @@ module ApplicationHelper
 
     if obj.type == "WorkshopLog"
       send("#{action}workshop_log_path", obj)
-    elsif obj.type != "WorkshopLog" and action == 'edit_'
+    elsif obj.type != "WorkshopLog" and action == "edit_"
       send("#{action}report_path", obj, form_builder_id: obj.form_builder,
            month: obj.date.month,
            year: obj.date.year)
@@ -82,9 +81,9 @@ module ApplicationHelper
   def sortable_field_display_name(name)
     case name
     when :adult
-      'Adult Windows'
+      "Adult Windows"
     when :children
-      'Children\'s Windows'
+      "Children's Windows"
     else
       name.to_s.titleize
     end
@@ -92,33 +91,33 @@ module ApplicationHelper
 
   def icon_for_mimetype(mime)
     mimes = {
-        'image' => 'fa-file-image',
-        'audio' => 'fa-file-audio',
-        'video' => 'fa-file-video',
+        "image" => "fa-file-image",
+        "audio" => "fa-file-audio",
+        "video" => "fa-file-video",
         # Documents
-        'application/pdf' => 'fa-file-pdf',
-        'application/msword' => 'fa-file-word',
-        'application/vnd.ms-word' => 'fa-file-word',
-        'application/vnd.oasis.opendocument.text' => 'fa-file-word',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'fa-file-word',
-        'application/vnd.ms-excel': 'fa-file-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'fa-file-excel',
-        'application/vnd.oasis.opendocument.spreadsheet' => 'fa-file-excel',
-        'application/vnd.ms-powerpoint' => 'fa-file-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml' => 'fa-file-powerpoint',
-        'application/vnd.oasis.opendocument.presentation' => 'fa-file-powerpoint',
+        "application/pdf" => "fa-file-pdf",
+        "application/msword" => "fa-file-word",
+        "application/vnd.ms-word" => "fa-file-word",
+        "application/vnd.oasis.opendocument.text" => "fa-file-word",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => "fa-file-word",
+        'application/vnd.ms-excel': "fa-file-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => "fa-file-excel",
+        "application/vnd.oasis.opendocument.spreadsheet" => "fa-file-excel",
+        "application/vnd.ms-powerpoint" => "fa-file-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml" => "fa-file-powerpoint",
+        "application/vnd.oasis.opendocument.presentation" => "fa-file-powerpoint",
 
         # Archives
-        'application/gzip' => 'fa-file-archive',
-        'application/zip' => 'fa-file-archive',
+        "application/gzip" => "fa-file-archive",
+        "application/zip" => "fa-file-archive"
     }
 
     if mime
-      m = mimes[mime.split('/').first]
+      m = mimes[mime.split("/").first]
       m ||= mimes[mime]
     end
 
-    m ||= 'fa-file'
+    m ||= "fa-file"
 
     "fas #{m}"
   end

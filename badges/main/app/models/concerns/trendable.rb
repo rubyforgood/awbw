@@ -1,16 +1,16 @@
 # app/models/concerns/trendable.rb
 module Trendable
-	extend ActiveSupport::Concern
+  extend ActiveSupport::Concern
 
-	included do
-		scope :trending, ->(limit = 10) {
-			order(Arel.sql(trending_sql)).limit(limit)
-		}
-	end
+  included do
+    scope :trending, ->(limit = 10) {
+      order(Arel.sql(trending_sql)).limit(limit)
+    }
+  end
 
-	class_methods do
-		def trending_sql
-			<<~SQL
+  class_methods do
+    def trending_sql
+      <<~SQL
         (
           view_count
           /
@@ -20,6 +20,6 @@ module Trendable
           )
         ) DESC
       SQL
-		end
-	end
+    end
+  end
 end

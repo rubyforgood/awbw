@@ -21,4 +21,4 @@ RSpec.describe Location do
       expect(location.name).to eq("#{attrs[:city]}, #{attrs[:state]}")
     end
   end
-end 
+end

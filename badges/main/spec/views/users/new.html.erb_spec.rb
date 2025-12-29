@@ -14,7 +14,6 @@ RSpec.describe "users/new.html.erb", type: :view do
     render
 
     assert_select "form[action=?][method=?]", users_path, "post" do
-
       assert_select "input[name=?]", "user[email]"
 
       assert_select "textarea[name=?]", "user[comment]"

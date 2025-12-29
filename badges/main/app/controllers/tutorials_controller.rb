@@ -1,5 +1,5 @@
 class TutorialsController < ApplicationController
-  before_action :set_tutorial, only: [:show, :edit, :update, :destroy]
+  before_action :set_tutorial, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -67,8 +67,8 @@ class TutorialsController < ApplicationController
   def tutorial_params
     params.require(:tutorial).permit(
       :title, :body, :rhino_body, :featured, :published, :position, :youtube_url,
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy],
+      main_image_attributes: [ :id, :file, :_destroy ],
+      gallery_images_attributes: [ :id, :file, :_destroy ],
     )
   end
 end

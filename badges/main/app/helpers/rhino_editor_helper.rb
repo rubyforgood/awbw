@@ -11,15 +11,15 @@ module RhinoEditorHelper
       value: value.respond_to?(:to_trix_html) ? value.to_trix_html : value
     )
 
-    modal = content_tag(:div, data: {rhino_source_target: "modal"}, class: "hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50") do
+    modal = content_tag(:div, data: { rhino_source_target: "modal" }, class: "hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50") do
       content_tag(:div, class: "bg-white p-4 rounded shadow-lg w-3/4 max-w-2xl") do
         safe_join([
           content_tag(:h2, "Edit HTML", class: "text-lg font-bold mb-2"),
-          content_tag(:textarea, nil, data: {rhino_source_target: "textarea"}, class: "w-full h-64 p-2 border rounded prose"),
+          content_tag(:textarea, nil, data: { rhino_source_target: "textarea" }, class: "w-full h-64 p-2 border rounded prose"),
           content_tag(:div, class: "mt-2 text-right") do
             safe_join([
-              content_tag(:button, "Cancel", data: {action: "click->rhino-source#hide"}, class: "mr-2 px-4 py-2 bg-gray-200 rounded"),
-              content_tag(:button, "Save", data: {action: "click->rhino-source#save"}, class: "px-4 py-2 bg-blue-600 text-white rounded")
+              content_tag(:button, "Cancel", data: { action: "click->rhino-source#hide" }, class: "mr-2 px-4 py-2 bg-gray-200 rounded"),
+              content_tag(:button, "Save", data: { action: "click->rhino-source#save" }, class: "px-4 py-2 bg-blue-600 text-white rounded")
             ])
           end
         ])
@@ -36,8 +36,8 @@ module RhinoEditorHelper
       }
     )
 
-    content_tag(:div, data: {controller: "rhino-source"}) do
-      safe_join([modal, hidden, editor])
+    content_tag(:div, data: { controller: "rhino-source" }) do
+      safe_join([ modal, hidden, editor ])
     end
   end
 end

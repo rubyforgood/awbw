@@ -13,7 +13,7 @@ RSpec.describe "/resources", type: :request do
       inactive: false,
       kind: Resource::PUBLISHED_KINDS.first,
       windows_type_id: windows_type.id,
-      user_id: user.id,
+      user_id: user.id
     }
   end
 

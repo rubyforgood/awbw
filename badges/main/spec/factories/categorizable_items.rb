@@ -7,4 +7,4 @@ FactoryBot.define do
     # Needs a categorizable instance, e.g., a Workshop
     association :categorizable, factory: :workshop
   end
-end 
+end

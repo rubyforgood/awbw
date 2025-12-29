@@ -9,4 +9,4 @@ FactoryBot.define do
 
     # Add other attributes if any (e.g., created_at, updated_at are handled by Rails)
   end
-end 
+end

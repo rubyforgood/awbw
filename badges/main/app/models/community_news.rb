@@ -39,8 +39,8 @@ class CommunityNews < ApplicationRecord
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :community_news_name, ->(community_news_name) {
     community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
-  scope :published, ->(published=nil) {
-    ["true", "false"].include?(published) ? where(published: published) : where(published: true) }
+  scope :published, ->(published = nil) {
+    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)
@@ -52,5 +52,4 @@ class CommunityNews < ApplicationRecord
     community_news = community_news.published_search(params[:published_search]) if params[:published_search].present?
     community_news
   end
-
 end

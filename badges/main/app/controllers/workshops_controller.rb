@@ -99,11 +99,11 @@ class WorkshopsController < ApplicationController
     @workshop.sectors = Sector.where(id: selected_sector_ids)
 
     if @workshop.update(workshop_params)
-      flash[:notice] = 'Workshop updated successfully.'
+      flash[:notice] = "Workshop updated successfully."
       redirect_to workshops_path
     else
       set_form_variables
-      flash[:alert] = 'Unable to update the workshop.'
+      flash[:alert] = "Unable to update the workshop."
       render :edit
     end
   end
@@ -120,11 +120,11 @@ class WorkshopsController < ApplicationController
     @workshop.sectors = Sector.where(id: selected_sector_ids)
 
     if @workshop.save
-      flash[:notice] = 'Workshop created successfully.'
+      flash[:notice] = "Workshop created successfully."
       redirect_to workshops_path(sort: "created")
     else
       set_form_variables
-      flash.now[:alert] = 'Unable to save the workshop.'
+      flash.now[:alert] = "Unable to save the workshop."
       render :new
     end
   end
@@ -165,8 +165,8 @@ class WorkshopsController < ApplicationController
     @windows_types = WindowsType.all
     @workshop_ideas = WorkshopIdea.order(created_at: :desc)
                                   .map { |wi|
-                                    ["#{wi.created_at.strftime("%Y-%m-%d")
-                                    } - (#{wi.created_by.full_name}): #{wi.title}", wi.id] }
+                                    [ "#{wi.created_at.strftime("%Y-%m-%d")
+                                    } - (#{wi.created_by.full_name}): #{wi.title}", wi.id ] }
     @categories_grouped =
       Category
         .includes(:category_type)
@@ -184,7 +184,7 @@ class WorkshopsController < ApplicationController
   end
 
   def view_all_workshops?
-    params[:search][:view_all] == '1'
+    params[:search][:view_all] == "1"
   end
 
   def workshop_params
@@ -217,11 +217,11 @@ class WorkshopsController < ApplicationController
 
       category_ids: [],
       sector_ids: [],
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy],
-      workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
+      main_image_attributes: [ :id, :file, :_destroy ],
+      gallery_images_attributes: [ :id, :file, :_destroy ],
+      workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
-                                            :series_order, :_destroy],
+                                            :series_order, :_destroy ],
     )
   end
 

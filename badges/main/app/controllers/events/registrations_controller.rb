@@ -1,6 +1,6 @@
 module Events
   class RegistrationsController < ApplicationController
-    before_action :set_event, only: [:create, :destroy]
+    before_action :set_event, only: [ :create, :destroy ]
 
     def create
       @event_registration = @event.event_registrations.new(registrant: current_user)

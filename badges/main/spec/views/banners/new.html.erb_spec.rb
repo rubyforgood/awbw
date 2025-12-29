@@ -17,7 +17,6 @@ RSpec.describe "banners/new", type: :view do
     render
 
     assert_select "form[action=?][method=?]", banners_path, "post" do
-
       assert_select "textarea[name=?]", "banner[content]"
 
       assert_select "input[name=?]", "banner[show]"

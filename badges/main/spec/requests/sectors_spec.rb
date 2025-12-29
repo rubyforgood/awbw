@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe "/sectors", type: :request do
-
   let(:valid_attributes) do
     {
       name: "Test Sector",

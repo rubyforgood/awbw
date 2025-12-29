@@ -1,5 +1,5 @@
 class WorkshopIdeasController < ApplicationController
-  before_action :set_workshop_idea, only: [:show, :edit, :update, :destroy]
+  before_action :set_workshop_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -90,11 +90,11 @@ class WorkshopIdeasController < ApplicationController
       :visualization, :visualization_spanish,
       :warm_up, :warm_up_spanish,
 
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy],
-      workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
+      main_image_attributes: [ :id, :file, :_destroy ],
+      gallery_images_attributes: [ :id, :file, :_destroy ],
+      workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
-                                            :series_order, :_destroy],
+                                            :series_order, :_destroy ],
     )
   end
 end

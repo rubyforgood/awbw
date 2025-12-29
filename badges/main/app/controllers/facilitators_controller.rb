@@ -86,9 +86,9 @@ class FacilitatorsController < ApplicationController
       end
       projects = if current_user.super_user?
                    Project.active
-                 else
+      else
                    current_user.projects
-                 end
+      end
       @projects_array = projects.order(:name).pluck(:name, :id)
     end
 
@@ -128,8 +128,8 @@ class FacilitatorsController < ApplicationController
         :youtube_url,
         :twitter_url,
         :created_by_id, :updated_by_id,
-        avatar_image_attributes: [:id, :file, :_destroy],
-        sectorable_items_attributes: [:id, :sector_id, :is_leader, :_destroy],
+        avatar_image_attributes: [ :id, :file, :_destroy ],
+        sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ],
         addresses_attributes: [
           :id,
           :address_type,

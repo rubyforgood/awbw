@@ -1,5 +1,4 @@
 class BannerDecorator < ApplicationDecorator
-
   def title
     content.truncate(50)
   end
@@ -7,5 +6,4 @@ class BannerDecorator < ApplicationDecorator
   def detail
     content
   end
-
 end

@@ -11,7 +11,7 @@ class CreateOrganizations < ActiveRecord::Migration[6.1]
       t.string :phone, null: false
       t.text :mission
       t.string :project_id
-      
+
       t.timestamps
     end
   end

@@ -1,5 +1,4 @@
 class UserDecorator < ApplicationDecorator
-
   def title
     name
   end
@@ -18,11 +17,11 @@ class UserDecorator < ApplicationDecorator
   end
 
   def last_logged_in
-    return 'never' unless last_sign_in_at
+    return "never" unless last_sign_in_at
     "#{h.time_ago_in_words(last_sign_in_at)} ago"
   end
 
   def display_primary_address
-    primary_address == 1 ? 'work' : 'home'
+    primary_address == 1 ? "work" : "home"
   end
 end

@@ -12,7 +12,7 @@ RSpec.describe "categories/index", type: :view do
       create(:category, name: "Category Two", category_type: type_b, published: false)
     ])
 
-    assign(:category_types, [type_a, type_b])
+    assign(:category_types, [ type_a, type_b ])
 
     allow(view).to receive(:current_user).and_return(admin)
   end

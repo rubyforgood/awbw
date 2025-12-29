@@ -8,5 +8,4 @@ class ChangeExtraFieldDataType < ActiveRecord::Migration
     change_column :workshops, :extra_field, :string
     change_column :workshops, :extra_field_spanish, :string
   end
-
 end

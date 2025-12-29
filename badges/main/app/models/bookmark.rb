@@ -2,12 +2,12 @@ class Bookmark < ApplicationRecord
   belongs_to :user
   belongs_to :bookmarkable, polymorphic: true
 
-  BOOKMARKABLE_MODELS = ["CommunityNews", "Event", "Facilitator", "Project", "Resource", "Story", "StoryIdea",
-                        "Workshop", "WorkshopIdea", "WorkshopLog", "WorkshopVariation"]
+  BOOKMARKABLE_MODELS = [ "CommunityNews", "Event", "Facilitator", "Project", "Resource", "Story", "StoryIdea",
+                        "Workshop", "WorkshopIdea", "WorkshopLog", "WorkshopVariation" ]
 
-  scope :for_workshops, -> { where(bookmarkable_type: 'Workshop') }
-  scope :bookmarkable_type, -> (bookmarkable_type) { bookmarkable_type.present? ? where(bookmarkable_type: bookmarkable_type) : all }
-  scope :bookmarkable_attributes, -> (bookmarkable_type, bookmarkable_id) {
+  scope :for_workshops, -> { where(bookmarkable_type: "Workshop") }
+  scope :bookmarkable_type, ->(bookmarkable_type) { bookmarkable_type.present? ? where(bookmarkable_type: bookmarkable_type) : all }
+  scope :bookmarkable_attributes, ->(bookmarkable_type, bookmarkable_id) {
     bookmarkable_type.present? && bookmarkable_id.present? ? where(bookmarkable_type: bookmarkable_type,
                                                                    bookmarkable_id: bookmarkable_id) : all }
 
@@ -27,7 +27,7 @@ class Bookmark < ApplicationRecord
     bookmarks
   end
 
-  def self.sorted(sort_by=nil) # sort and sort_by are namespaced
+  def self.sorted(sort_by = nil) # sort and sort_by are namespaced
     sort_by ||= "newest"
     case sort_by
     when "newest"        then self.sort_by_newest
@@ -37,7 +37,7 @@ class Bookmark < ApplicationRecord
     end
   end
 
-  def self.filter_by_params(params={})
+  def self.filter_by_params(params = {})
     bookmarks = self.all
 
     bookmarks = bookmarks.bookmarkable_type(params[:bookmarkable_type])
@@ -161,7 +161,7 @@ class Bookmark < ApplicationRecord
   def self.user_name(user_name)
     return all unless user_name.present?
 
-    user_name_sanitized = user_name.strip.gsub(/\s+/, '')
+    user_name_sanitized = user_name.strip.gsub(/\s+/, "")
 
     bookmarks = self.left_outer_joins(:user)
 
@@ -184,6 +184,4 @@ class Bookmark < ApplicationRecord
       name: "%#{user_name_sanitized}%"
     )
   end
-
-
 end

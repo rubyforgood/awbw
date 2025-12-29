@@ -3,5 +3,3 @@ class AddVariationIdToWorkshopVariations < ActiveRecord::Migration
     add_column :workshop_variations, :variation_id, :integer
   end
 end
-
-

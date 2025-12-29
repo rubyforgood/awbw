@@ -23,4 +23,4 @@ RSpec.describe SectorableItem do
   #   # expect(build(:sectorable_item)).to be_valid
   #   pending("Requires functional sector/sectorable factories and associations uncommented")
   # end
-end 
+end

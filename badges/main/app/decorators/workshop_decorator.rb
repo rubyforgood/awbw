@@ -1,6 +1,6 @@
 # coding: utf-8
-class WorkshopDecorator < ApplicationDecorator
 
+class WorkshopDecorator < ApplicationDecorator
   def created_by
     user
   end
@@ -49,11 +49,11 @@ class WorkshopDecorator < ApplicationDecorator
 
   def breadcrumb_link
     return title unless id
-    h.link_to title, h.workshop_path(self), class: 'underline'
+    h.link_to title, h.workshop_path(self), class: "underline"
   end
 
   def breadcrumbs_title
-    h.link_to 'Workshops', h.workshops_path, class: 'underline'
+    h.link_to "Workshops", h.workshops_path, class: "underline"
   end
 
   def detail_breadcrumbs
@@ -92,7 +92,7 @@ class WorkshopDecorator < ApplicationDecorator
     if legacy
       html = html_objective
 
-      html.search('.TextHeader2').each do |header|
+      html.search(".TextHeader2").each do |header|
         header.children.remove
       end
 
@@ -100,8 +100,8 @@ class WorkshopDecorator < ApplicationDecorator
       obj ||= html.text.split("Objective:")[1]
       obj ||= html.text
 
-      h.truncate(obj.gsub(title, '').
-          gsub(/(Heart Story Example|Table set-up)/, '').squish, length: length)
+      h.truncate(obj.gsub(title, "").
+          gsub(/(Heart Story Example|Table set-up)/, "").squish, length: length)
     else
       h.truncate(html_objective.text.html_safe.squish, length: length)
     end
@@ -115,7 +115,7 @@ class WorkshopDecorator < ApplicationDecorator
 
 
   def display_fields
-    [:objective, :materials, :optional_materials, :timeframe,
+    [ :objective, :materials, :optional_materials, :timeframe,
      :age_range, :setup, :introduction, :demonstration,
      :opening_circle, :warm_up,
      :visualization, :creation, :closing, :notes, :tips, :misc1, :misc2
@@ -135,26 +135,26 @@ class WorkshopDecorator < ApplicationDecorator
 
   def labels_spanish
     {
-      objective_spanish: 'Objectivo',
-      materials_spanish: 'Materiales',
-      optional_materials_spanish: 'Materiales Opcionales',
-      timeframe_spanish: 'Periodo de tiempo',
-      age_range_spanish: 'Rango de edad',
-      setup_spanish: 'Preparativos',
-      introduction_spanish: 'Introducción',
-      demonstration_spanish: 'Demostración',
-      opening_circle_spanish: 'Círculo de apertura',
-      visualization_spanish: 'Visualización',
-      warm_up_spanish: 'Comenzando',
-      creation_spanish: 'Creación',
-      closing_spanish: 'Clausura',
-      misc_instructions_spanish: 'Instrucciones de misceláneos',
-      project_spanish: 'Projecto',
-      description_spanish: 'Descripción',
-      notes_spanish: 'Notas',
-      tips_spanish: 'Consejos',
-      misc1_spanish: 'Misc 1',
-      misc2_spanish: 'Misc 2'
+      objective_spanish: "Objectivo",
+      materials_spanish: "Materiales",
+      optional_materials_spanish: "Materiales Opcionales",
+      timeframe_spanish: "Periodo de tiempo",
+      age_range_spanish: "Rango de edad",
+      setup_spanish: "Preparativos",
+      introduction_spanish: "Introducción",
+      demonstration_spanish: "Demostración",
+      opening_circle_spanish: "Círculo de apertura",
+      visualization_spanish: "Visualización",
+      warm_up_spanish: "Comenzando",
+      creation_spanish: "Creación",
+      closing_spanish: "Clausura",
+      misc_instructions_spanish: "Instrucciones de misceláneos",
+      project_spanish: "Projecto",
+      description_spanish: "Descripción",
+      notes_spanish: "Notas",
+      tips_spanish: "Consejos",
+      misc1_spanish: "Misc 1",
+      misc2_spanish: "Misc 2"
     }
   end
 

@@ -83,8 +83,8 @@ class EventsController < ApplicationController
                                   :start_date, :end_date,
                                   :registration_close_date,
                                   :publicly_visible,
-                                  main_image_attributes: [:id, :file, :_destroy],
-                                  gallery_images_attributes: [:id, :file, :_destroy]
+                                  main_image_attributes: [ :id, :file, :_destroy ],
+                                  gallery_images_attributes: [ :id, :file, :_destroy ]
                                   )
   end
 
