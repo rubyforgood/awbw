@@ -51,6 +51,7 @@ module Admin
       return head :not_found unless record
 
       record.increment_print_count!
+
       head :ok
     end
   end

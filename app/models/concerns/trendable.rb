@@ -1,6 +1,5 @@
 # app/models/concerns/trendable.rb
 module Trendable
-
   extend ActiveSupport::Concern
 
   included do

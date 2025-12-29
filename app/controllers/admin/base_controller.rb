@@ -1,5 +1,4 @@
 module Admin
-
   class BaseController < ApplicationController
     before_action :require_super_user
 
