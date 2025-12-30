@@ -54,7 +54,7 @@ class ProjectsController < ApplicationController
     @project = Project.new(project_params)
 
     if @project.save
-      redirect_to projects_path, notice: "Project was successfully created."
+      redirect_to projects_path, notice: "Organization was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -63,7 +63,7 @@ class ProjectsController < ApplicationController
 
   def update
     if @project.update(project_params)
-      redirect_to projects_path, notice: "Project was successfully updated.", status: :see_other
+      redirect_to projects_path, notice: "Organization was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content
@@ -72,7 +72,7 @@ class ProjectsController < ApplicationController
 
   def destroy
     @project.destroy!
-    redirect_to projects_path, notice: "Project was successfully destroyed."
+    redirect_to projects_path, notice: "Organization was successfully destroyed."
   end
 
   # Optional hooks for setting variables for forms or index
