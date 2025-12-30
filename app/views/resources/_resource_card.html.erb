@@ -16,13 +16,11 @@
       flex-shrink-0
       w-40 md:w-40
       flex flex-col items-center text-center justify-center py-4 pb-3 px-3
-      border-b md:border-b-0 md:border-r border-gray-200
-    ">
+      border-b md:border-b-0 md:border-r border-gray-200">
       <!-- IMAGE -->
       <div class="relative w-32 h-32">
         <%= link_to resource_path(resource),
                     data: { turbo_prefetch: false },
-                    target: resource.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                     class: "block w-full h-full" do %>
 
           <!-- fallback icon -->
