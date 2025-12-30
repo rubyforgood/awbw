@@ -6,7 +6,7 @@ RSpec.describe "workshop_ideas/index", type: :view do
   let(:workshop_idea2) { create(:workshop_idea, created_by: user, updated_by: user, title: "MyStory2") }
 
   before(:each) do
-    assign(:workshop_ideas, paginated([ workshop_idea1, workshop_idea2 ]))
+    assign(:workshop_ideas, WorkshopIdeaDecorator.decorate_collection(paginated([ workshop_idea1, workshop_idea2 ])))
     allow(view).to receive(:current_user).and_return(user)
   end
 
