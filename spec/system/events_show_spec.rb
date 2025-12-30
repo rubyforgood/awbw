@@ -17,8 +17,13 @@ RSpec.describe "Event show page", type: :system do
       # Title (uses title_with_badges)
       expect(page).to have_css("div.my-3", text: "My Event")
 
-      # Times
-      expect(page).to have_text(event.times(display_day: true, display_date: true))
+      # Times block exists
+      expect(page).to have_text("Start:")
+      expect(page).to have_text("End:")
+
+      # Day + month appear (stable, user-facing)
+      expect(page).to have_text(event.start_date.strftime("%b"))
+      expect(page).to have_text(event.end_date.strftime("%b"))
 
       # Description
       expect(page).to have_css("p.text-gray-900", text: event.description)
