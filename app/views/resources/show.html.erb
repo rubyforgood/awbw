@@ -52,26 +52,6 @@
         <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
           <%= @resource.display_text %>
         </div>
-
-        <!-- Attachments -->
-        <% if @resource.attachments.any? %>
-          <div class="mt-6">
-            <p class="font-medium text-gray-700 mb-2">Attachment:</p>
-            <ul class="flex flex-wrap gap-2">
-              <% @resource.attachments.each do |attachment| %>
-                <% if attachment.file&.attached? %>
-                  <li>
-                    <%= link_to ("<span title='Download #{@resource.kind}'>" +
-                      " #{ attachment.file_file_name } <span class='fa fa-download'></span></span>").html_safe,
-                                resource_download_path(@resource,
-                                                       attachment_id: attachment.id),
-                                class: "btn btn-utility" if attachment&.file&.attached? %>
-                  </li>
-                <% end %>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
       </div>
     </div>
   </div>
