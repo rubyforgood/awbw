@@ -31,12 +31,12 @@
             <%= render "resources/resource_icon", kind: resource.kind %>
           </div>
 
-          <img
-            src="<%= resource.main_image_url %>"
-            alt="<%= resource.title.truncate(25) %>"
-            class="w-full h-full object-cover rounded-lg shadow-sm"
-            onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';"
-            />
+          <%= render "media/display_image",
+                     resource: resource.object,
+                     width: "32", height: "32",
+                     link: false,
+                     link_to_object: false,
+                     file: resource.display_image %>
         <% end %>
       </div>
 

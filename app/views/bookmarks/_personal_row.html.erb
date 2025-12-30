@@ -4,25 +4,21 @@
   id="bookmarkable-<%= bookmarkable.id %>"
   class="
     flex flex-col md:flex-row <%= "admin-only bg-blue-100" if bookmarkable.inactive? %> border-b
-    border-gray-200 list-group-item-custom gap-4 py-4 mb-0
-  "
->
+    border-gray-200 list-group-item-custom gap-4 py-4 mb-0">
   <div
     id="bookmarkable-<%= bookmarkable.id %>-anchor"
-    style="position: relative; top: -200px;"
-  ></div>
+    style="position: relative; top: -200px;"></div>
   <!-- 1️⃣ Bookmark -->
   <%= render "bookmarks/editable_bookmark_icon", resource: bookmarkable.object %>
 
   <!-- 1️⃣ Image -->
   <div class="flex flex-col items-center w-12">
     <!-- Image -->
-    <div class="w-12 h-8 bg-gray-100 rounded overflow-hidden">
-      <%= link_to polymorphic_path(bookmarkable) do %>
-        <%= image_tag(bookmark.decorate.bookmarkable_image_url, class: "object-cover w-full h-full",
-                        alt: "#{ bookmarkable.object.class.name } image") %>
-      <% end %>
-    </div>
+    <%= render "media/display_image",
+               resource: bookmarkable,
+               width: 12, height: 8,
+               link_to_object: true,
+               file: bookmark.decorate.display_image %>
 
     <!-- Type -->
     <div class="mt-1 text-xs text-gray-600 font-medium text-center">

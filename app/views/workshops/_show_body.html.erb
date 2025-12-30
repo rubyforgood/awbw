@@ -125,25 +125,12 @@
             <hr class="border-gray-300 mb-2">
 
             <div class="flex flex-wrap gap-4">
-
-              <% if workshop.main_image&.file&.attached? %>
-                <%= link_to url_for(workshop.main_image.file), target: "_blank", rel: "noopener noreferrer" do %>
-                  <%= image_tag url_for(workshop.main_image.file),
-                                alt: "Main Image",
-                                class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+              <div class="attachments">
+                <%= render "media/display_image", item: workshop.main_image, item_type: "Main" %>
+                <% workshop.gallery_images.each_with_index do |gallery_image, idx| %>
+                  <%= render "media/display_image", item: gallery_image, idx: idx %>
                 <% end %>
-              <% end %>
-
-              <% workshop.gallery_images.each_with_index do |gallery_image, idx| %>
-                <% if gallery_image.file&.attached? %>
-                  <%= link_to url_for(gallery_image.file), target: "_blank", rel: "noopener noreferrer" do %>
-                    <%= image_tag url_for(gallery_image.file),
-                                  alt: "Gallery Image #{idx + 1}",
-                                  class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
-                  <% end %>
-                <% end %>
-              <% end %>
-
+              </div>
             </div>
           </div>
         <% end %>
