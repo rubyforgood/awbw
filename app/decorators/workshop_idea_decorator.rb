@@ -1,5 +1,4 @@
 class WorkshopIdeaDecorator < ApplicationDecorator
-
   def default_display_image
     "workshop_default.jpg"
   end

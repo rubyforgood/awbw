@@ -6,7 +6,7 @@ namespace :resources do
   task migrate_pdfs: :environment do
     dry_run = ENV["DRY_RUN"] == "true"
 
-    scope = Resource.where.not(url: [nil, ""]).where.not(
+    scope = Resource.where.not(url: [ nil, "" ]).where.not(
       kind: [ "Story", "LeaderSpotlight", "SectorImpact", "Scholarship", "Theme" ])
 
     puts "Found #{scope.count} resources with legacy PDF URLs"
