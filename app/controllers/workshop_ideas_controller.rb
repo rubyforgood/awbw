@@ -5,7 +5,7 @@ class WorkshopIdeasController < ApplicationController
     per_page = params[:number_of_items_per_page].presence || 25
     workshop_ideas = WorkshopIdea.search(params.slice(:title, :author_name))
     @workshop_ideas_count = workshop_ideas.size
-    @workshop_ideas = workshop_ideas.paginate(page: params[:page], per_page: per_page)
+    @workshop_ideas = workshop_ideas.paginate(page: params[:page], per_page: per_page).decorate
   end
 
   def show
