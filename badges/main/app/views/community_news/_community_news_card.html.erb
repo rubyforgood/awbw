@@ -1,0 +1,31 @@
+<div class="relative bg-white shadow-sm rounded-xl p-4 hover:shadow-md transition cursor-pointer">
+
+  <!-- BOOKMARK (clickable) -->
+  <div class="absolute top-3 right-3 z-20 cursor-pointer">
+    <%= render "bookmarks/editable_bookmark_icon", resource: news.object %>
+  </div>
+
+  <!-- CARD BODY (clickable) -->
+
+  <%= link_to community_news_path(news),
+              data: { turbo_prefetch: false },
+              target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
+              class: "flex flex-row items-start gap-4 block z-10" do %>
+
+    <!-- LEFT: TITLE + BODY -->
+    <div class="flex-1 pr-10"> <!-- padding so text doesn't go under the bookmark -->
+      <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+        <%= news.title %>
+      </h3>
+
+<!--      <p class="text-gray-600 text-sm mt-1 line-clamp-3">-->
+        <%#= strip_tags(news.body) %>
+<!--      </p>-->
+
+<!--      <p class="text-xs text-gray-400 mt-2">-->
+        <%#= news.created_at.to_date.to_s(:long) %>
+<!--      </p>-->
+    </div>
+
+  <% end %>
+</div>

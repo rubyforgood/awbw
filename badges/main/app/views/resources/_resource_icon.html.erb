@@ -1,7 +1,20 @@
+<% kind ||= nil %>
+<% variant ||= :gallery %>
+<% height ||= nil %>
+<% width ||= nil %>
+
+<%
+  sizes = {
+    hero: "w-#{width || "32"} h-#{height || "32"} text-gray-300",
+    gallery: "w-#{width || "18"} h-#{height || "18"} text-gray-300",
+    index: "w-#{width} h-#{height} shrink-0 overflow-hidden rounded border border-gray-300",
+  }.fetch(variant)
+%>
+
 <% case kind %>
 <% when "Resource" %>
   <svg
-    class="w-18 h-18 text-gray-300"
+    class="<%= sizes %>"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -15,7 +28,7 @@
   </svg>
 <% when "Template" %>
   <svg
-    class="w-18 h-18 text-gray-300"
+    class="<%= sizes %>"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -29,7 +42,7 @@
   </svg>
 <% when "Handout" %>
   <svg
-    class="w-18 h-18 text-gray-300"
+    class="<%= sizes %>"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -43,7 +56,7 @@
   </svg>
 <% when "Scholarship" %>
   <svg
-    class="w-18 h-18 text-gray-300"
+    class="<%= sizes %>"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -63,7 +76,7 @@
   </svg>
 <% when "Toolkit" %>
   <svg
-    class="w-18 h-18 text-gray-300"
+    class="<%= sizes %>"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -83,7 +96,7 @@
   </svg>
 <% when "Form" %>
   <svg
-    class="w-18 h-18 text-gray-300"
+    class="<%= sizes %>"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -97,7 +110,7 @@
   </svg>
 <% else %>
   <svg
-    class="w-18 h-18 text-gray-300"
+    class="<%= sizes %>"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"

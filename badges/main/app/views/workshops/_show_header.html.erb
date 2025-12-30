@@ -1,10 +1,11 @@
 <div class="relative w-full h-64 md:h-80 lg:h-96 overflow-hidden">
   <!-- Background image -->
-  <img
-    src="<%= workshop.main_image_url %>"
-    alt="<%= workshop.title %>"
-    class="absolute inset-0 w-full h-full object-cover"
-    />
+  <%= render "media/display_image",
+             resource: workshop,
+             width: "full", height: "x",
+             link: false,
+             link_to_object: false,
+             file: workshop.display_image %>
 
   <!-- Bottom blurred overlay -->
   <div

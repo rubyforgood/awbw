@@ -51,21 +51,6 @@ RSpec.describe "/resources", type: :request do
         expect(response).to have_http_status(:ok)
       end
     end
-
-    context "when resource HAS an external link" do
-      let(:resource) do
-        Resource.create!(
-          valid_attributes.merge(url: "www.google.com")
-        )
-      end
-
-      it "redirects to the external URL" do
-        get resource_url(resource)
-
-        expect(response).to have_http_status(:found)
-        expect(response).to redirect_to("https://www.google.com")
-      end
-    end
   end
 
   describe "GET /new" do

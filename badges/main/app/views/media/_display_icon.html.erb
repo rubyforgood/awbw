@@ -1,0 +1,14 @@
+<% variant ||= :gallery %>
+<% resource ||= nil %>
+<% height ||= nil %>
+<% width ||= nil %>
+
+<div class="flex items-center justify-center
+            bg-gray-100 border border-gray-300 rounded
+            w-full h-full">
+  <%= render "resources/resource_icon",
+             kind: resource.kind,
+             height: height,
+             width: width,
+             variant: variant %>
+</div>

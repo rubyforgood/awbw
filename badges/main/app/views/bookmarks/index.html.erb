@@ -30,13 +30,7 @@
                 <td class="px-4 py-2"><%= bookmark.user&.full_name %></td>
                 <td class="px-4 py-2"><%= bookmark.bookmarkable_type %></td>
                 <td class="px-4 py-2">
-                  <% if item.respond_to?(:name) %>
-                    <%= link_to item.name, polymorphic_path(item), class: "text-blue-600 hover:underline" %>
-                  <% elsif item.respond_to?(:title) %>
-                    <%= link_to item.title, polymorphic_path(item), class: "text-blue-600 hover:underline" %>
-                  <% else %>
-                    N/A
-                  <% end %>
+                  <%= link_to item.title, polymorphic_path(item), class: "text-blue-600 hover:underline" %>
                 </td>
                 <td class="px-4 py-2"><%= bookmark.created_at.strftime("%b %d, %Y %H:%M") %></td>
                 <td class="px-4 py-2"><%= bookmark.bookmarkable.bookmarks_count %></td>

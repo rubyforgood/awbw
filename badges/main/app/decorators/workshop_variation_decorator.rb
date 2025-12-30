@@ -7,6 +7,11 @@ class WorkshopVariationDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
+  def default_display_image
+    return workshop.main_image.file if workshop.respond_to?(:main_image) && workshop.main_image&.file&.attached?
+    "workshop_default.jpg"
+  end
+
   def display_code
     if legacy
       html = Nokogiri::HTML(code)
@@ -23,10 +28,6 @@ class WorkshopVariationDecorator < ApplicationDecorator
     else
       code
     end
-  end
-
-  def main_image_url
-    workshop.decorate.main_image_url
   end
 
   private

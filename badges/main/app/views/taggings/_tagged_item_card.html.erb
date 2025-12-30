@@ -34,14 +34,12 @@
             </div>
           <% end %>
 
-          <% if item.main_image_url.present? %>
-            <img
-              src="<%= item.main_image_url %>"
-              alt="<%= item.title.to_s.truncate(25) %>"
-              class="w-full h-full object-cover rounded-lg shadow-sm"
-              onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';"
-              />
-          <% end %>
+          <%= render "media/display_image",
+                     resource: item.object,
+                     width: "full", height: "full",
+                     link: false,
+                     link_to_object: false,
+                     file: item.display_image %>
 
         <% end %>
       </div>

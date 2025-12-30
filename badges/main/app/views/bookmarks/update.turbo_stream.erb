@@ -1,12 +1,6 @@
 <%= turbo_stream.replace dom_id(@bookmarkable, :bookmark_icon), partial: "editable_bookmark_icon", locals: {resource: @bookmarkable} %>
 <%= turbo_stream.replace dom_id(@bookmarkable, :bookmark_button), partial: "editable_bookmark_button", locals: {resource: @bookmarkable} %>
 
-<%= turbo_stream.update dom_id(@bookmarkable, :led_count) do  %>
-  Led:
-  <%= @bookmarkable.led_count %>
-  <%= "time".pluralize(@bookmarkable.led_count) %>)
-<% end  %>
-
 <%= turbo_stream.update dom_id(@bookmarkable, :bookmark_count) do  %>
   Bookmarked:
   <%= @bookmarkable.bookmarks_count %>

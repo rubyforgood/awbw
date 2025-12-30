@@ -28,4 +28,12 @@ class EventRegistration < ApplicationRecord
   def name
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
+
+  def checked_in?
+    # checked_in_at.present?
+  end
+
+  def paid?
+    # paid_at.present?
+  end
 end

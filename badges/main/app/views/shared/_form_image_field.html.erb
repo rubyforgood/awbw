@@ -6,24 +6,33 @@
     - Parent has_many_attached
     - Image gallery display
     ------------------------------------------ %>
-<% f ||= nil %>
 
+<% f ||= nil %>
 <% raise "form_image_field requires f:" if f.nil? %>
 
-<% resource ||= f.object %>
+<% media ||= f.object %>
 <% field_name ||= :file %>
 <% label ||= field_name.to_s.titleize %>
 <% hint ||= nil %>
 <% rounded ||= false %>
 <% multiple ||= false %>
-<% image ||= nil %>
+<% file ||= nil %>
 <% use_profile_placeholder ||= false %>
-
 <% show_file_field = show_file_field.to_s.present? ? show_file_field : true %>
 <% show_existing   = show_existing.to_s.present? ? show_existing : true %>
+<% file =
+    if file.present?
+      file
+    elsif media.respond_to?(field_name)
+      media.public_send(field_name)
+    end
+%>
+<% blob        = file&.attached? ? file.blob : nil %>
+<% is_image    = blob&.image? %>
+<% is_pdf      = blob&.content_type == "application/pdf" %>
 
-<div data-controller="file-preview"
-     class="text-center">
+<div data-controller="file-preview" class="text-center">
+
   <%= f.label label, class: "block font-medium gap-1 text-gray-700 string required" %>
 
   <% if hint %>
@@ -31,65 +40,47 @@
   <% end %>
 
   <div class="flex flex-col items-center gap-2">
+
     <% if show_existing %>
-      <% active_storage_attachment =
-           if image.present?
-             image
-           elsif resource.respond_to?(field_name)
-             file = resource.public_send(field_name)
-           else
-             nil
-           end
-      %>
-      <%# if active_storage_attachment.respond_to?(:attached?) &&
-        active_storage_attachment.attached? &&
-        active_storage_attachment.blob.present? %>
-      <% if active_storage_attachment&.attached? %>
-        <%= image_tag url_for(active_storage_attachment),
-                      alt: "#{label} Image",
+
+      <%# ---------- IMAGE ---------- %>
+      <% if is_image %>
+        <%= image_tag file,
+                      alt: "#{label}",
                       data: { file_preview_target: "preview" },
-                      class: "w-32 h-32 #{rounded ? 'rounded-full' : ''} object-cover border border-gray-300 shadow-sm" %>
-      <% elsif use_profile_placeholder %>
-        <%= image_tag "missing.png",
+                      class: "w-32 h-32 object-cover border border-gray-300 shadow-sm #{rounded ? 'rounded-full' : ''}" %>
+
+        <%# ---------- PDF PREVIEW ---------- %>
+      <% elsif is_pdf && file.previewable? %>
+        <%= image_tag file.preview(resize_to_limit: [300, 300]),
+                      alt: "#{label} PDF preview",
                       data: { file_preview_target: "preview" },
-                      class: "w-32 h-32 #{rounded ? 'rounded-full' : ''} object-cover border border-gray-300 shadow-sm" %>
+                      class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
+
+        <%# ---------- PLACEHOLDER ---------- %>
       <% else %>
         <div class="relative w-32 h-32">
-          <%# ALWAYS render an <img> for Stimulus to target %>
-          <img
-            data-file-preview-target="preview"
-            src="<%= active_storage_attachment&.attached? ? url_for(active_storage_attachment) : "" %>"
-            alt="<%= "#{label} Image" %>"
-            class="w-32 h-32 object-cover border border-gray-300 shadow-sm
-                 <%= rounded ? 'rounded-full' : '' %>
-                 <%= active_storage_attachment&.attached? ? '' : 'hidden' %>"
-            />
+          <img data-file-preview-target="preview"
+               class="hidden w-32 h-32 object-cover border border-gray-300 shadow-sm" />
 
-          <%# Placeholder icon – only visible when nothing is attached %>
-          <div
-            data-file-preview-target="placeholder"
-            class="absolute inset-0 flex items-center justify-center
-                 border border-gray-300 shadow-sm bg-gray-50 text-gray-400 text-6xl
-                 <%= rounded ? 'rounded-full' : '' %>
-                 <%= active_storage_attachment&.attached? ? 'hidden' : '' %>">
+          <div data-file-preview-target="placeholder"
+               class="absolute inset-0 flex items-center justify-center
+                      border border-gray-300 shadow-sm bg-gray-50 text-gray-400 text-6xl">
             <i class="fa-regular fa-image"></i>
           </div>
         </div>
       <% end %>
+
       <div data-file-preview-target="filename"
-           class="text-center text-sm text-gray-500">
-        <%= if active_storage_attachment&.attached?
-              active_storage_attachment.blob.filename.to_s
-            else
-              "No file selected"
-            end %>
+           class="text-center text-sm text-gray-500 break-all max-w-[8rem]">
+        <%= blob ? blob.filename.to_s : "No file selected" %>
       </div>
+
     <% end %>
 
     <% if show_file_field %>
       <div class="flex items-center gap-3">
 
-        <!-- Choose File Button -->
         <div class="relative w-28">
           <%= f.file_field field_name,
                            data: {
@@ -105,21 +96,20 @@
           </button>
         </div>
 
-        <!-- Remove Button -->
-        <% if f.object.persisted? && f.object.file.attached? %>
+        <% if media.persisted? && file&.attached? %>
           <div class="flex items-center gap-1">
             <%= f.check_box :_destroy,
                             class: "h-4 w-4 appearance-none checked:bg-red-600
-                            bg-gray-100 text-white border border-gray-300 rounded cursor-pointer
-                            checked:border-red-600 checked:text-white" %>
+                                    bg-gray-100 text-white border border-gray-300 rounded cursor-pointer
+                                    checked:border-red-600 checked:text-white" %>
 
-            <%= f.label :_destroy,
-                        "Remove",
-                        class: "text-sm cursor-pointer" %>
+            <%= f.label :_destroy, "Remove", class: "text-sm cursor-pointer" %>
           </div>
         <% end %>
+
       </div>
     <% end %>
+
   </div>
 </div>
 

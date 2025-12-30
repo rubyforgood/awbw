@@ -9,7 +9,7 @@
     <% if stories.any? %>
       <div class="space-y-4">
         <% stories.first(3).each do |story| %>
-          <%= render "dashboard/story", story: story %>
+          <%= render "stories/story_card", story: story %>
         <% end %>
       </div>
 

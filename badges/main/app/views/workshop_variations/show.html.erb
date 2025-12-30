@@ -29,9 +29,9 @@
       <h2 class="text-3xl font-semibold text-gray-900">
         <%= @workshop_variation.name %>
         <% if @workshop_variation.inactive? %>
-        <span class="text-lg font-normal text-red-500 mb-3">
-          [HIDDEN]
-        </span>
+          <span class="text-lg font-normal text-red-500 mb-3">
+            [HIDDEN]
+          </span>
         <% end %>
       </h2>
 
@@ -48,20 +48,7 @@
       </div>
 
       <!-- Main Image -->
-      <%# if @workshop_variation.main_image.present? %>
-<!--        <div class="flex justify-start">-->
-          <%# image_url = @workshop_variation.main_image rescue nil %>
-          <%# if image_url %>
-            <%#= link_to image_url, download: @workshop_variation.main_image.file_file_name do %>
-              <%#= image_tag image_url,
-                            class: 'w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 object-cover',
-                            alt: @workshop_variation.name,
-                            onerror: "this.onerror=null;this.src='/assets/missing.png';" %>
-            <%# end %>
-          <%# end %>
-<!--        </div>-->
-      <%# end %>
-
+      <%= render "media/display_media", resource: @workshop_variation %>
 
       <!-- URL -->
       <% if @workshop_variation.youtube_url.present? %>

@@ -1,5 +1,4 @@
-<div class="curriculum-detail">
-  <div class="bc"><%= @bookmark.breadcrumbs %></div>
-    <%= @bookmark.content %>
-  </div>
-</div> 
+<%= render "bookmarks/personal_row",
+           bookmark: @bookmark,
+           breadcrumb: "My Bookmarks",
+           link_route: polymorphic_path(@bookmark.bookmarkable) %>

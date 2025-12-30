@@ -151,7 +151,7 @@ class WorkshopsController < ApplicationController
   def set_show
     @workshop = Workshop.find(params[:id]).decorate
     @quotes = Quote.where(workshop_id: @workshop.id).active
-    @leader_spotlights = @workshop.resources.published.leader_spotlights
+    @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(inactive: false)
     @workshop_variations = @workshop.workshop_variations.active
     @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
   end

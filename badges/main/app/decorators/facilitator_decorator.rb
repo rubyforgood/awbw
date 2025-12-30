@@ -8,24 +8,25 @@ class FacilitatorDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text
   end
 
+  def default_display_image
+    "missing.png"
+  end
+
   def inactive?
     !user ? false : user&.inactive?
   end
 
   def main_image
-    avatar
+    avatar_image
   end
 
   def pronouns_display
     profile_show_pronouns ? pronouns : nil
   end
 
-  def main_image_url
-    if avatar_image&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(avatar_image.file)
-    else
-      ActionController::Base.helpers.asset_path("missing.png")
-    end
+  def default_display_image
+    return avatar_image.file if respond_to?(:avatar_image) && avatar_image&.file&.attached?
+    "missing.png"
   end
 
   def member_since_year

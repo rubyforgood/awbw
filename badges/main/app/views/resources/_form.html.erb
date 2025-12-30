@@ -2,7 +2,7 @@
   <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
 
   <!-- First Row -->
-  <div class="title-row flex flex-wrap gap-4 mb-4">
+  <div class="title-row flex flex-wrap gap-4 my-6 py-6">
     <div class="flex-1 min-w-[200px]">
       <%= f.input :title,
                   as: :text,
@@ -21,13 +21,35 @@
         </div>
       </div>
     </div>
+
+    <% if f.object.url.present? %>
+      <div class="flex-[0_0_50%] min-w-[150px] bg-red-200 p-3">
+        <label class="block text-md font-medium text-gray-700 mb-1">Attachment URL</label>
+        <span class="text-gray-900 font-medium">
+          <%= link_to f.object.url, f.object.url, target: "_blank", class: "underline" %>
+        </span>
+        <br>
+        <div class="text-red-500">
+          Download this file and reupload below.
+        </div>
+        <% if params[:admin].present? %>
+          <%= f.input :url, # TODO - remove this value after reattaching
+                      label: "Where the attachment is stored -- NEEDS TO BE REATTACHED",
+                      as: :text,
+                      hint: "Enter full url, e.g. https://example.com",
+                      input_html: { class: "w-full rounded border-gray-300 px-2 py-1",
+                                    rows: 1 },
+                      label_html: { class: "font-medium mb-1 block" } %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
   <div class="title-row flex flex-wrap gap-4 mb-4">
     <div class="flex-1 min-w-[200px]">
       <%= f.input :kind,
                   as: :select,
-                  collection: Resource::PUBLISHED_KINDS,
+                  collection: Resource::PUBLISHED_KINDS.include?(f.object.kind) ? Resource::PUBLISHED_KINDS : Resource::KINDS,
                   selected: f.object.kind,
                   input_html: { class: "w-full rounded border-gray-300" } %>
     </div>
@@ -66,18 +88,7 @@
   <%= rhino_editor(f, :text) %>
 
   <!-- Second Row -->
-  <div class="url-row flex flex-wrap gap-4 mb-4">
-    <!-- URL Input: max half width -->
-    <div class="flex-[0_0_50%] min-w-[150px]">
-      <%= f.input :url,
-                  as: :text,
-                  hint: "Enter full url, e.g. https://example.com",
-                  input_html: { class: "w-full rounded border-gray-300 px-2 py-1",
-                                rows: 1 },
-                  label_html: { class: "font-medium mb-1 block" } %>
-    </div>
-
-    <!-- Ordering Input -->
+  <div class="url-row flex flex-wrap gap-4 my-4">
     <div class="flex-[0_0_150px]">
       <%= f.input :ordering,
                   as: :integer,
@@ -93,22 +104,42 @@
 
   <% if @resource.attachments.any? %>
     <div class="bg-red-200 p-3 pb-9">
-      <h3 class="text-lg font-medium mt-6 mb-2">Attachments (need to reattach)</h3>
+      <h3 class="text-lg font-medium mt-6 mb-2">Legacy Attachments (need to download and upload above)</h3>
       <ul class="list-disc pl-5">
-        <% @resource.attachments.each do |attachment| %>
+        <% Array(@resource.attachments).each_with_index do |attachment, i| %>
+          <% unless attachment.present? %>
+            <li class="text-red-600">Attachment[<%= i %>] is NIL</li>
+            <% next %>
+          <% end %>
+
+          <% unless attachment.respond_to?(:persisted?) %>
+            <li class="text-red-600">
+              Attachment[<%= i %>] is <%= attachment.class.name %> (not an AR model)
+            </li>
+            <% next %>
+          <% end %>
+
           <li>
+            <% if attachment.persisted? && attachment.respond_to?(:file) && attachment.file.respond_to?(:attached?) &&
+              attachment.file.attached? %>
+              <%= link_to url_for(attachment.file), class: "underline" do %>
+                <%= attachment.file.filename %>
+              <% end %>
+            <% else %>
+              <span class="text-gray-500">
+                Attachment[<%= i %>] persisted?=<%= attachment.persisted? %>,
+                file?=<%= attachment.respond_to?(:file) %>,
+                attached?=<%= attachment.file.respond_to?(:attached?) %>,
+                is_attached?=<%= attachment.file.attached? %>
+              </span>
+            <% end %>
+            <br>
             <%= attachment.file_file_name %>
-            <%# if attachment&.persisted? %>
-            <%#
-              = link_to attachment.file_file_name,
-              url_for(attachment.file), class: "hover:underline"
-            %>
-            <%# else %>
-            <%# = attachment.file_file_name %>
-            <%# end %>
+            <%= render "shared/form_image_field", f: f, object: attachment %>
           </li>
         <% end %>
       </ul>
+
     </div>
   <% end %>
 

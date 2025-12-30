@@ -29,6 +29,7 @@
         <!-- Title -->
         <div class="font-semibold text-gray-900 mb-2">
           <%= title_with_badges(@resource, font_size: "text-3xl") %>
+          <%= "(#{@resource.windows_type&.short_name})" if @resource.windows_type %>
         </div>
 
         <!-- Author and Date -->
@@ -37,76 +38,20 @@
             <div class="flex items-center text-gray-600 text-sm gap-2">
               <span><%= @resource.author %></span>
               <% unless @resource.story? %>
-                    <span class="<%= "border-l border-gray-400 pl-2" if @resource.author.present? %>">
-                      <%= @resource.display_date %>
-                    </span>
+                <span class="<%= "border-l border-gray-400 pl-2" if @resource.author.present? %>">
+                  <%= @resource.display_date %>
+                </span>
               <% end %>
             </div>
           <% end %>
         </div>
 
-        <div class="images">
-          <!-- Hero Image -->
-          <% if @resource.main_image&.file&.attached? %>
-            <div class="mb-8">
-              <%= image_tag @resource.main_image.file,
-                            class: "w-full rounded-lg shadow-sm border border-gray-200",
-                            alt: @resource.title %>
-            </div>
-          <% end %>
-
-          <!-- Gallery Images -->
-          <% if @resource.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
-            <div class="resource-gallery single-resource-detail text-center mb-4">
-              <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
-                <% @resource.gallery_images.each_with_index do |gallery_image, idx| %>
-                  <% if gallery_image.file&.attached? %>
-                    <%= image_tag url_for(gallery_image.file),
-                                  alt: "Gallery Image #{idx + 1}",
-                                  data: { file_preview_target: "preview" },
-                                  class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        </div>
-
-
-        <!-- URL -->
-        <% if @resource.url.present? %>
-          <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
-            <%= link_to @resource.url, @resource.url, target: "_blank",
-                        rel: "noopener noreferrer",
-                        class: "text-blue-600 hover:underline break-words" %>
-          </div>
-        <% end %>
-
+        <%= render "media/display_media", resource: @resource %>
 
         <!-- Main Text -->
         <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
           <%= @resource.display_text %>
         </div>
-
-        <!-- Attachments -->
-        <% if @resource.attachments.any? %>
-          <div class="mt-6">
-            <p class="font-medium text-gray-700 mb-2">Attachment:</p>
-            <ul class="flex flex-wrap gap-2">
-              <% @resource.attachments.each do |attachment| %>
-                <% if attachment.file&.attached? %>
-                  <li>
-                    <%= link_to ("<span title='Download #{@resource.kind}'>" +
-                      " #{ attachment.file_file_name } <span class='fa fa-download'></span></span>").html_safe,
-                                resource_download_path(@resource,
-                                                       attachment_id: attachment.id),
-                                class: "btn btn-utility" if attachment&.file&.attached? %>
-                  </li>
-                <% end %>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
       </div>
     </div>
   </div>

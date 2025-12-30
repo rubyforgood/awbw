@@ -21,7 +21,7 @@ class StoriesController < ApplicationController
     @story = @story.decorate
     @story.increment_view_count!(session: session, request: request)
 
-    if @story.external_url.present?
+    if @story.external_url.present? && !params[:no_redirect].present?
       redirect_to_external @story.link_target
       nil
     end

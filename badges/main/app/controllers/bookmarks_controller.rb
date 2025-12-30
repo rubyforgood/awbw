@@ -3,11 +3,12 @@ class BookmarksController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page] || 25
-    bookmarks = Bookmark.search(params)
-    bookmarks = bookmarks.sorted(params[:sort])
+    unfiltered = Bookmark.all
+    filtered = unfiltered.search(params)
+    filtered = filtered.sorted(params[:sort])
 
-    @bookmarks = bookmarks.paginate(page: params[:page], per_page: per_page)
-    @bookmarks_count = bookmarks.length
+    @bookmarks = filtered.paginate(page: params[:page], per_page: per_page).decorate
+    @bookmarks_count = unfiltered.length
     @windows_types_array = WindowsType::TYPES
     set_index_variables
     respond_to do |format|

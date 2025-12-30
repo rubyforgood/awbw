@@ -11,22 +11,14 @@
 
   <!-- 1️⃣ Thumbnail + Title Row -->
   <div class="flex flex-col md:flex-row gap-2">
-
     <!-- Thumbnail -->
-    <div class="flex-shrink-0 w-32 h-24 rounded overflow-hidden bg-gray-100 relative">
-      <%= link_to event_path(event), data: { turbo_prefetch: false }, class: "block w-full h-full" do %>
-        <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-4xl fallback-icon"
-             style="<%= event.main_image_url.present? ? 'display:none;' : 'display:flex;' %>">
-          <i class="fa-regular fa-image"></i>
-        </div>
+    <%= render "media/display_image",
+               resource: event,
+               width: 32, height: 24,
+               variant: :index,
+               link_to_object: true,
+               file: event.display_image %>
 
-        <% if event.main_image_url.present? %>
-          <img src="<%= event.main_image_url %>"
-               class="object-cover w-full h-full"
-               onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';">
-        <% end %>
-      <% end %>
-    </div>
 
     <!-- Title + badges -->
     <div class="flex flex-col gap-2 flex-1 min-w-0 pr-1 mr-4 mt-1">

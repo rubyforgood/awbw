@@ -88,29 +88,7 @@
 
           <!-- Right Column -->
           <div class="md:col-span-2 space-y-6">
-
-            <!-- Main Image Hero Image -->
-            <% if @event.main_image&.file&.attached? %>
-              <div>
-                <%= image_tag @event.main_image.file,
-                              class: "w-full rounded-lg shadow-sm border border-gray-200",
-                              alt: @event.main_image.file.blob.filename.to_s %>
-              </div>
-            <% end %>
-
-            <!-- Gallery Image Thumbnails -->
-            <% if @event.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
-              <div class="flex flex-wrap justify-start gap-3">
-                <% @event.gallery_images.each_with_index do |gallery_image, idx| %>
-                  <% if gallery_image.file&.attached? %>
-                    <%= image_tag url_for(gallery_image.file),
-                                  alt: "Gallery Image #{idx + 1}: #{gallery_image.file.blob.filename.to_s}",
-                                  class: "w-24 h-24 object-cover rounded border shadow-sm" %>
-                  <% end %>
-                <% end %>
-              </div>
-            <% end %>
-
+            <%= render "media/display_media", resource: @event %>
           </div>
         </div>
 

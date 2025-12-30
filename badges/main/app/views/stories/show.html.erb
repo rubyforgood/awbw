@@ -54,32 +54,7 @@
           <% end %>
         </div>
 
-        <div class="images">
-          <!-- Hero Image -->
-          <% if @story.main_image&.file&.attached? %>
-            <div class="mb-8">
-              <%= image_tag @story.main_image.file,
-                            class: "w-full rounded-lg shadow-sm border border-gray-200",
-                            alt: @story.title %>
-            </div>
-          <% end %>
-
-          <!-- Gallery Images -->
-          <% if @story.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
-            <div class="story-gallery single-story-detail text-center mb-4">
-              <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
-                <% @story.gallery_images.each_with_index do |gallery_image, idx| %>
-                  <% if gallery_image.file&.attached? %>
-                    <%= image_tag url_for(gallery_image.file),
-                                  alt: "Gallery Image #{idx + 1}",
-                                  data: { file_preview_target: "preview" },
-                                  class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        </div>
+        <%= render "media/display_media", resource: @story %>
 
         <!-- Story Body Text -->
         <div class="prose prose-lg max-w-none text-gray-700 mb-10">
