@@ -3,7 +3,7 @@ class Resource < ApplicationRecord
   include Rails.application.routes.url_helpers
 
   PUBLISHED_KINDS = [ "Handout", "Scholarship", "Template", "Toolkit", "Form" ]
-  KINDS = PUBLISHED_KINDS + [ "Resource", "Story" ]
+  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme" ]
 
   has_rich_text :rhino_text
 
