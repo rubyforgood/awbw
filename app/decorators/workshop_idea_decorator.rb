@@ -1,7 +1,7 @@
 class WorkshopIdeaDecorator < ApplicationDecorator
 
   def default_display_image
-    "workshop_default.png"
+    "workshop_default.jpg"
   end
 
   def display_spanish_fields
