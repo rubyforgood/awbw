@@ -18,9 +18,9 @@ class Project < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
-  # Image associations
-  has_one :logo_image, -> { where(type: "Images::SquareImage") },
-          as: :owner, class_name: "Images::SquareImage", dependent: :destroy
+  # Asset associations
+  has_one :logo_image, -> { where(type: "SquareAsset") },
+          as: :owner, class_name: "SquareAsset", dependent: :destroy
 
   # Validations
   validates :name, presence: true

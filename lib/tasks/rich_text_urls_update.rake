@@ -30,51 +30,51 @@ namespace :rich_text_urls_update do
 
   def run_update(dry_run:, html_attr:, start_id: nil, finish_id: nil)
     models = [
-      Address,
-      AnswerOption,
-      Attachment,
-      Banner,
-      Bookmark,
-      Category,
-      CategorizableItem,
-      CommunityNews,
-      EventRegistration,
-      Event,
-      Facilitator,
-      Faq,
-      FormBuilder,
-      FormFieldAnswerOption,
-      FormField,
-      Form,
-      Image,
-      Location,
-      MediaFile,
-      CategoryType,
-      MonthlyReport,
-      Notification,
-      ProjectObligation,
-      ProjectStatus,
-      ProjectUser,
-      Project,
-      QuotableItemQuote,
-      Quote,
-      ReportFormFieldAnswer,
-      Report,
-      Resource,
-      SectorableItem,
-      Sector,
-      Story,
-      StoryIdea,
-      UserFormFormField,
-      UserForm,
-      User,
-      WindowsType,
-      WorkshopIdea,
-      WorkshopLog,
-      WorkshopResource,
-      WorkshopSeriesMembership,
-      WorkshopVariation,
-      Workshop
+			Address,
+			AnswerOption,
+			Attachment,
+			Banner,
+			Bookmark,
+			Category,
+			CategorizableItem,
+			CommunityNews,
+			EventRegistration,
+			Event,
+			Facilitator,
+			Faq,
+			FormBuilder,
+			FormFieldAnswerOption,
+			FormField,
+			Form,
+			Media,
+			Location,
+			MediaFile,
+			CategoryType,
+			MonthlyReport,
+			Notification,
+			ProjectObligation,
+			ProjectStatus,
+			ProjectUser,
+			Project,
+			QuotableItemQuote,
+			Quote,
+			ReportFormFieldAnswer,
+			Report,
+			Resource,
+			SectorableItem,
+			Sector,
+			Story,
+			StoryIdea,
+			UserFormFormField,
+			UserForm,
+			User,
+			WindowsType,
+			WorkshopIdea,
+			WorkshopLog,
+			WorkshopResource,
+			WorkshopSeriesMembership,
+			WorkshopVariation,
+			Workshop
     ]
 
     timestamp = Time.now.strftime("%Y%m%d_%H%M%S")
@@ -151,7 +151,7 @@ namespace :rich_text_urls_update do
 
       begin
         blob = ActiveStorage::Blob.find_by(aws_key: key)
-        image = record.images.build(type: "Images::RichText")
+        image = record.images.build(type: "RichTextAsset")
         file_name = File.basename(key)
         temp = nil
 
@@ -188,7 +188,7 @@ namespace :rich_text_urls_update do
           # Verify attachment and association
           record.images.reload
           unless record.images.include?(image) && image.file.attached?
-            raise "Image not associated with record or file missing"
+            raise "Media not associated with record or file missing"
           end
           content = record.public_send(column)
           new_content = content.gsub(url, new_url)

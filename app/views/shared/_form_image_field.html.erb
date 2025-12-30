@@ -1,10 +1,10 @@
 <%# ------------------------------------------
     Shared image field partial
     Supports:
-    - Pattern B wrapper model (Image + file)
+    - Pattern B wrapper model (Media + file)
     - Parent has_one_attached
     - Parent has_many_attached
-    - Image gallery display
+    - Media gallery display
     ------------------------------------------ %>
 
 <% f ||= nil %>
@@ -73,7 +73,7 @@
 
       <div data-file-preview-target="filename"
            class="text-center text-sm text-gray-500 break-all max-w-[8rem]">
-        <%= blob ? blob.filename.to_s : "No file selected" %>
+        <%= blob ? link_to(blob.filename.to_s, url_for(file), class: "underline") : "No file selected" %>
       </div>
 
     <% end %>

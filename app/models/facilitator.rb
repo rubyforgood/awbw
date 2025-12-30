@@ -19,9 +19,9 @@ class Facilitator < ApplicationRecord
   has_many :sectors, through: :sectorable_items
 
 
-  # Image associations
-  has_one :avatar_image, -> { where(type: "Images::SquareImage") },
-          as: :owner, class_name: "Images::SquareImage",
+  # Asset associations
+  has_one :avatar_image, -> { where(type: "SquareAsset") },
+          as: :owner, class_name: "SquareAsset",
           dependent: :destroy# new active storage
 
   # Validations

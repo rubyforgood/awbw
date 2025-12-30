@@ -16,7 +16,7 @@ class FacilitatorDecorator < ApplicationDecorator
     !user ? false : user&.inactive?
   end
 
-  def main_image
+  def primary_asset
     avatar_image
   end
 

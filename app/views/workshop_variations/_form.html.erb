@@ -41,7 +41,7 @@
                   input_html: { class: "w-full" } %>
     </div>
 
-    <%= render "shared/form_image_fields", f: f, include_main_image: true %>
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
     <% if current_user.super_user? %>
       <div class="flex items-start gap-6 admin-only bg-blue-100 p-4 rounded-lg">

@@ -36,9 +36,9 @@ class ImageMigrationAuditController < ApplicationController
           paperclip: [ :file ]
     ) if models_to_audit.empty? || models_to_audit.include?("attachment")
 
-    audit(Image,
-          as: [ :file ],
-          paperclip: [ :file ]
+    audit(Media,
+					as: [ :file ],
+					paperclip: [ :file ]
     ) if models_to_audit.empty? || models_to_audit.include?("image")
 
     audit(MediaFile,

@@ -1,0 +1,2 @@
+class SquareAsset < Asset
+end

@@ -7,7 +7,7 @@ class EventRegistrationDecorator < ApplicationDecorator
   end
 
   def default_display_image
-    return event.main_image.file if event.respond_to?(:main_image) && event.main_image&.file&.attached?
+    return event.primary_asset.file if event.respond_to?(:primary_asset) && event.primary_asset&.file&.attached?
     "theme_default.png"
   end
 end

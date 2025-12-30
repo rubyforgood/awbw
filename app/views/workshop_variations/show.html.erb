@@ -47,8 +47,8 @@
         </div>
       </div>
 
-      <!-- Main Image -->
-      <%= render "media/display_media", resource: @workshop_variation %>
+      <!-- Primary Asset -->
+      <%= render "assets/display_image", resource: @workshop_variation %>
 
       <!-- URL -->
       <% if @workshop_variation.youtube_url.present? %>

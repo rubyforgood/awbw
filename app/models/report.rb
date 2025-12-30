@@ -14,13 +14,13 @@ class Report < ApplicationRecord
   # Images
   has_one_attached :image # old paperclip -- TODO convert these to MainImage records
   has_one_attached :form_file # old paperclip -- TODO convert these to GalleryImage records
-  # Image associations
+  # Asset associations
   has_many :images, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
   has_many :media_files, dependent: :destroy # TODO - convert to GalleryImages
-  has_one :main_image, -> { where(type: "Images::MainImage") },
-          as: :owner, class_name: "Images::MainImage", dependent: :destroy
-  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
-           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :secondary_assets, -> { where(type: "SecondaryAsset") },
+           as: :owner, class_name: "SecondaryAsset", dependent: :destroy
 
   # has_many through
   has_many :form_fields, through: :form
@@ -34,8 +34,8 @@ class Report < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :media_files, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :main_image, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :secondary_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :all_quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :report_form_field_answers,
@@ -98,7 +98,7 @@ class Report < ApplicationRecord
 
     unless image.blank?
       self.image.destroy if self.image
-      self.image = Image.new(file: image)
+      self.image = PrimaryAsset.new(file: image)
     end
 
     save
