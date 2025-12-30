@@ -41,11 +41,6 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(resource_id_param).decorate
     @resource.increment_view_count!(session: session, request: request)
     load_forms
-
-    if @resource.external_url.present?
-      redirect_to_external @resource.link_target
-      nil
-    end
   end
 
   def rhino_text
