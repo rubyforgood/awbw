@@ -28,10 +28,10 @@
         <% if @bookmarks.any? %>
           <div id="bookmarks-list" class="space-y-4">
             <% @bookmarks.each do |bookmark| %>
-              <%= render 'bookmarks/personal_row',
+              <%= render "bookmarks/personal_row",
                          bookmark: bookmark,
-                         breadcrumb: 'My Bookmarks',
-                         link_route: workshop_path(bookmark.bookmarkable_id) %>
+                         breadcrumb: "My Bookmarks",
+                         link_route: polymorphic_path(bookmark.bookmarkable) %>
             <% end %>
           </div>
 
