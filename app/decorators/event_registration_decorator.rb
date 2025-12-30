@@ -6,7 +6,8 @@ class EventRegistrationDecorator < ApplicationDecorator
   def detail
   end
 
-  def main_image_url
-    event.decorate.main_image_url
+  def default_display_image
+    return event.main_image.file if event.respond_to?(:main_image) && event.main_image&.file&.attached?
+    "theme_default.png"
   end
 end

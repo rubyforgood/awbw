@@ -7,6 +7,11 @@ class UserDecorator < ApplicationDecorator
     email
   end
 
+  def default_display_image
+    return avatar_image.file if respond_to?(:avatar_image) && avatar_image&.file&.attached?
+    "missing.png"
+  end
+
   def full_name
     return unless user
     if first_name.empty?

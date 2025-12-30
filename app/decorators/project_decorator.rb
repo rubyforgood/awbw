@@ -3,12 +3,9 @@ class ProjectDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
-  def main_image_url
-    if logo_image&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(logo_image.file)
-    else
-      ActionController::Base.helpers.asset_path("theme_default.png")
-    end
+  def default_display_image
+    return logo_image.file if respond_to?(:logo_image) && logo_image&.file&.attached?
+    "theme_default.png"
   end
 
   def title

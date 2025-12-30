@@ -5,18 +5,16 @@ class ResourceDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text  # TODO - rename field
   end
 
-  def external_url
-    object.url
+  def default_display_image
+    kind.downcase.to_sym
   end
 
-  def main_image_url
-    if main_image&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(main_image.file)
-    elsif gallery_images.first&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
-    else
-      ActionController::Base.helpers.asset_path("theme_default.png")
-    end
+  def kind_display
+    kind == "Scholarship" ? "Scholar-ship" : (kind.present? ? kind.titleize : "Resource")
+  end
+
+  def external_url
+    object.url
   end
 
   def truncated_author
