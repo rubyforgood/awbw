@@ -10,13 +10,13 @@
 
   <!-- FULLY CLICKABLE CARD CONTENT -->
   <%= link_to workshop_path(workshop), data: { turbo_prefetch: false }, class: "block h-full" do %>
-
     <!-- Image -->
-    <div class="h-24 w-full rounded overflow-visible">
-      <img class="w-full h-full object-cover"
-           src="<%= workshop.main_image_url %>"
-           alt="workshop">
-    </div>
+    <%= render "media/display_image",
+               resource: workshop,
+               width: "full", height: "24",
+               link: false,
+               link_to_object: false,
+               file: workshop.display_image %>
 
     <!-- Content section -->
     <div class="p-4 pb-8"><!-- add bottom padding so text never overlaps the bookmark -->

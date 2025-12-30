@@ -9,7 +9,7 @@
     <% if community_news.any? %>
       <div class="space-y-4">
         <% community_news.first(3).each do |news| %>
-          <%= render "dashboard/community_news_item", news: news %>
+          <%= render "community_news/community_news_card", news: news %>
         <% end %>
       </div>
 
