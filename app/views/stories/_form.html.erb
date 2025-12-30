@@ -20,14 +20,14 @@
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :windows_type_id,
                     collection: @windows_types, label_method: :short_name, value_method: :id,
-                    selected: f.object.windows_type_id || @story_idea&.windows_type_id,
+                    selected: f.object.windows_type_id || @story_idea&.windows_type_id || params[:windows_type_id],
                     prompt: "Select Windows Type" %>
       </div>
 
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :workshop_id,
                     collection: @workshops, label_method: :title, value_method: :id,
-                    selected: f.object.workshop_id || @story_idea&.workshop_id,
+                    selected: f.object.workshop_id || @story_idea&.workshop_id || params[:workshop_id],
                     prompt: "Select Workshop" %>
       </div>
 
