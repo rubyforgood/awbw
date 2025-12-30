@@ -116,7 +116,7 @@
    # -------------------------------------------------- %>
 <% if link && link_href.present? %>
   <% link_options = if link_to_object
-                      { class: "display-image-link", data: { turbo_prefetch: false } }
+                      { class: "display-image-link", data: { turbo_frame: "_top" } }
                     else
                       { class: "display-image-link", target: "_blank", rel: "noopener noreferrer" }
                     end
