@@ -88,22 +88,22 @@
         <% end %>
 
         <% workshop_sections = { "Objective" => workshop.objective,
-                                   "Age Range" => workshop.age_range,
-                                   "Materials" => workshop.materials,
-                                   "Optional Materials" => workshop.optional_materials,
-                                   "Suggested time frame" => workshop.time_frame_total,
-                                   "Setup" => workshop.setup,
-                                   "Introduction" => workshop.introduction,
-                                   "Demonstration" => workshop.demonstration,
-                                   "Opening" => workshop.opening_circle,
-                                   "Warm Up" => workshop.warm_up,
-                                   "Visualization" => workshop.visualization,
-                                   "Creation" => workshop.creation,
-                                   "Closing" => workshop.closing,
-                                   "Notes" => workshop.notes,
-                                   "Tips" => workshop.tips,
-                                   "Miscellaneous" => workshop.misc1,
-                                   "Miscellaneous 2" => workshop.misc2 } %>
+                                 "Age range" => workshop.age_range,
+                                 "Materials" => workshop.materials,
+                                 "Optional materials" => workshop.optional_materials,
+                                 "Suggested time frame" => workshop.time_frame_total,
+                                 "Setup" => workshop.setup,
+                                 "Introduction" => workshop.introduction,
+                                 "Demonstration" => workshop.demonstration,
+                                 "Opening" => workshop.opening_circle,
+                                 "Warm up" => workshop.warm_up,
+                                 "Visualization" => workshop.visualization,
+                                 "Creation" => workshop.creation,
+                                 "Closing" => workshop.closing,
+                                 "Notes" => workshop.notes,
+                                 "Tips" => workshop.tips,
+                                 "Miscellaneous" => workshop.misc1,
+                                 "Miscellaneous 2" => workshop.misc2 } %>
         <% workshop_sections.each do |title, content| %>
           <% next if content.blank? ||
               (title == "Suggested time frame" && content == "00:00") %>
@@ -146,9 +146,9 @@
         <!-- Spanish -->
         <div id="spanish-content" data-tabs-target="tabContent" class="hidden">
           <% workshop_sections_spanish = { "Objetivo" => workshop.objective_spanish,
-                                           "Age Range" => workshop.age_range_spanish,
+                                           "Rango de edad" => workshop.age_range_spanish,
                                            "Materiales" => workshop.materials_spanish,
-                                           "Materiales Opcionales" => workshop.optional_materials_spanish,
+                                           "Materiales opcionales" => workshop.optional_materials_spanish,
                                            "Setup" => workshop.setup_spanish,
                                            "Tiempo sugerido" => workshop.time_frame_total,
                                            "Introducción" => workshop.introduction_spanish,
