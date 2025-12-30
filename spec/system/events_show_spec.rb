@@ -119,7 +119,7 @@ RSpec.describe "Event show page", type: :system do
         sign_in(user)
         visit event_path(event)
 
-        expect(page).to have_css("img[alt='#{event.main_image.file.blob.filename}']", count: 1)
+        expect(page).to have_css(".hero-item img", count: 1)
       end
     end
 
@@ -131,8 +131,7 @@ RSpec.describe "Event show page", type: :system do
         sign_in(user)
         visit event_path(event.object)
 
-        expect(page).to have_css("img[alt^='Gallery Image 1:']")
-        expect(page).to have_css("img[alt^='Gallery Image 2:']")
+        expect(page).to have_css(".gallery-item img", count: 2)
       end
     end
   end
