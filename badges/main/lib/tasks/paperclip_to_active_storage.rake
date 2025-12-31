@@ -10,8 +10,8 @@ namespace :paperclip_to_active_storage do
     {
       User => [ :avatar ],
       Attachment => [ :file ],
-      MediaFile => [ :file ],
       Image => [ :file ],
+      MediaFile => [ :file ],
       Workshop => [ :thumbnail, :header ],
       Report => [ :form_file ]
     }

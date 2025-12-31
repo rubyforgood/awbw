@@ -38,10 +38,10 @@ class Workshop < ApplicationRecord
   has_one_attached :header # old paperclip -- TODO convert these to MainImage records
   has_many :attachments, as: :owner, dependent: :destroy # old paperclip -- TODO convert these to GalleryImage records
   has_many :images, as: :owner, dependent: :destroy # old paperclip -- TODO convert these to GalleryImage records
-  has_one :main_image, -> { where(type: "Images::MainImage") },
-          as: :owner, class_name: "Images::MainImage", dependent: :destroy
-  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
-           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   # Callbacks
   before_save :set_time_frame
@@ -53,8 +53,8 @@ class Workshop < ApplicationRecord
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
   # Nested attributes
-  accepts_nested_attributes_for :main_image, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :gallery_images, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :quotes, reject_if: proc { |object| object["quote"].nil? }
   accepts_nested_attributes_for :sectors,
                                 reject_if: proc { |object| object["_create"] == "0" || !object["_create"] },

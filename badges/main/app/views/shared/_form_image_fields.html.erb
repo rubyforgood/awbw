@@ -6,13 +6,13 @@
     - Add another file button (bottom-right)
 
     NOTE:
-    - Image/PDF preview logic lives in shared/_form_image_field
+    - Media/PDF preview logic lives in shared/_form_image_field
     - This wrapper intentionally does NOT render previews directly
    ------------------------------------------ %>
 
 <% section_title       ||= "Images/attachments" %>
 <% section_subtitle    ||= nil %>
-<% include_main_image  ||= false %>
+<% include_primary_asset  ||= false %>
 
 <div class="image-fields my-3">
   <hr class="my-6 border-gray-200">
@@ -41,22 +41,22 @@
       data-association-insertion-method="append">
 
       <%# ---- MAIN IMAGE ---- %>
-      <% if include_main_image %>
-        <%= f.fields_for :main_image do |img| %>
+      <% if include_primary_asset %>
+        <%= f.fields_for :primary_asset do |img| %>
           <div class="flex flex-col text-left items-left gap-1 w-full md:w-1/3 lg:w-1/4 mb-6">
             <%= render "shared/form_image_field",
-                       f: img, label: "Main media" %>
+                       f: img, label: "Primary media" %>
           </div>
         <% end %>
       <% end %>
 
       <%# ---- GALLERY IMAGES ---- %>
       <% counter = 1 %>
-      <%= f.fields_for :gallery_images do |img| %>
+      <%= f.fields_for :gallery_assets do |img| %>
         <div class="flex flex-col text-left items-left gap-1 w-full md:w-1/3 lg:w-1/4 mb-6">
           <%= render "shared/form_image_field",
                      f: img,
-                     label: "Gallery media #{counter}" %>
+                     label: "Secondary media #{counter}" %>
         </div>
         <% counter += 1 %>
       <% end %>
@@ -67,17 +67,99 @@
     <div class="mt-4 flex justify-end">
       <%= link_to_add_association "Add another file",
                                   f,
-                                  :gallery_images,
+                                  :gallery_assets,
                                   insertion_node: ".image-fields-row",
                                   insertion_method: :append,
                                   partial: "shared/form_image_field_insert",
                                   render_options: {
                                     locals: {
                                       label: "Additional gallery image",
-                                      resource: f.object.gallery_images.build,
+                                      resource: f.object.gallery_assets.build,
                                     }
                                   },
                                   class: "text-blue-600 hover:text-blue-800 font-medium text-sm pr-2 pb-6" %>
     </div>
   </div>
+
+  <% if f.object.respond_to?(:images) && f.object.images.any? %>
+    <div class="bg-red-200 p-3 pb-9">
+      <h3 class="text-lg font-medium mt-6 mb-2">
+        Legacy Images (need to manually download and upload above, then remove)
+      </h3>
+      <ul class="list-disc pl-5">
+        <% Array(f.object.images).each_with_index do |image, i| %>
+          <% unless image.present? %>
+            <li class="text-red-600">Attachment[<%= i %>] is NIL</li>
+            <% next %>
+          <% end %>
+
+          <% unless image.respond_to?(:persisted?) %>
+            <li class="text-red-600">
+              Attachment[<%= i %>] is <%= image.class.name %> (not an AR model)
+            </li>
+            <% next %>
+          <% end %>
+
+          <% unless image.persisted? && image.respond_to?(:file) &&
+            image.file.respond_to?(:attached?) &&
+            image.file.attached? %>
+              <span class="text-gray-500">
+                Attachment[<%= i %>] persisted?=<%= image.persisted? %>,
+                file?=<%= image.respond_to?(:file) %>,
+                attached?=<%= image.file.respond_to?(:attached?) %>,
+                is_attached?=<%= image.file.attached? %>
+              </span>
+          <% end %>
+          <div class="my-6">
+            <%= render "shared/form_image_field", f: f,
+                       object: image,
+                       file: image.file,
+                       label: "Image #{i + 1}" %>
+          </div>
+        <% end %>
+      </ul>
+
+    </div>
+  <% end %>
+
+  <% if f.object.respond_to?(:attachments) && f.object.attachments.any? %>
+    <div class="bg-red-200 p-3 pb-9">
+      <h3 class="text-lg font-medium mt-6 mb-2">
+        Legacy Attachments (need to manually download and upload above, then remove)
+      </h3>
+      <ul class="list-disc pl-5">
+        <% Array(f.object.attachments).each_with_index do |attachment, i| %>
+          <% unless attachment.present? %>
+            <li class="text-red-600">Attachment[<%= i %>] is NIL</li>
+            <% next %>
+          <% end %>
+
+          <% unless attachment.respond_to?(:persisted?) %>
+            <li class="text-red-600">
+              Attachment[<%= i %>] is <%= attachment.class.name %> (not an AR model)
+            </li>
+            <% next %>
+          <% end %>
+
+          <% unless attachment.persisted? && attachment.respond_to?(:file) &&
+            attachment.file.respond_to?(:attached?) &&
+            attachment.file.attached? %>
+              <span class="text-gray-500">
+                Attachment[<%= i %>] persisted?=<%= attachment.persisted? %>,
+                file?=<%= attachment.respond_to?(:file) %>,
+                attached?=<%= attachment.file.respond_to?(:attached?) %>,
+                is_attached?=<%= attachment.file.attached? %>
+              </span>
+          <% end %>
+          <div class="my-6">
+            <%= render "shared/form_image_field", f: f,
+                       object: attachment,
+                       file: attachment.file,
+                       label: "Attachment #{i + 1}" %>
+          </div>
+        <% end %>
+      </ul>
+
+    </div>
+  <% end %>
 </div>

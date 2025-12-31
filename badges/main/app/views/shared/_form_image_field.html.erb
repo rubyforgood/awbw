@@ -1,16 +1,16 @@
 <%# ------------------------------------------
     Shared image field partial
     Supports:
-    - Pattern B wrapper model (Image + file)
+    - Pattern B wrapper model (Media + file)
     - Parent has_one_attached
     - Parent has_many_attached
-    - Image gallery display
+    - Media gallery display
     ------------------------------------------ %>
 
 <% f ||= nil %>
 <% raise "form_image_field requires f:" if f.nil? %>
 
-<% media ||= f.object %>
+<% asset ||= f.object %>
 <% field_name ||= :file %>
 <% label ||= field_name.to_s.titleize %>
 <% hint ||= nil %>
@@ -23,8 +23,8 @@
 <% file =
     if file.present?
       file
-    elsif media.respond_to?(field_name)
-      media.public_send(field_name)
+    elsif asset.respond_to?(field_name)
+      asset.public_send(field_name)
     end
 %>
 <% blob        = file&.attached? ? file.blob : nil %>
@@ -73,7 +73,7 @@
 
       <div data-file-preview-target="filename"
            class="text-center text-sm text-gray-500 break-all max-w-[8rem]">
-        <%= blob ? blob.filename.to_s : "No file selected" %>
+        <%= blob ? link_to(blob.filename.to_s, url_for(file), class: "underline") : "No file selected" %>
       </div>
 
     <% end %>
@@ -96,7 +96,7 @@
           </button>
         </div>
 
-        <% if media.persisted? && file&.attached? %>
+        <% if asset.persisted? && file&.attached? %>
           <div class="flex items-center gap-1">
             <%= f.check_box :_destroy,
                             class: "h-4 w-4 appearance-none checked:bg-red-600

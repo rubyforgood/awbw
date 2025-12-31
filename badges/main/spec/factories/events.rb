@@ -13,15 +13,15 @@ FactoryBot.define do
       end
     end
 
-    trait :main_image_with_file do
+    trait :primary_asset_with_file do
       after(:build) do |event|
-        event.main_image = build(:image, :with_file, owner: event)
+        event.primary_asset = build(:image, :with_file, owner: event)
       end
     end
 
-    trait :gallery_image_with_file do
+    trait :gallery_assets_with_file do
       after(:build) do |event|
-        event.gallery_images << build(:image, :with_file, owner: event)
+        event.gallery_assets << build(:image, :with_file, owner: event)
       end
     end
   end

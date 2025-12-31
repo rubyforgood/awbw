@@ -4,17 +4,17 @@ class Tutorial < ApplicationRecord
   has_rich_text :rhino_body
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  # Image associations
-  has_one :main_image, -> { where(type: "Images::MainImage") },
-          as: :owner, class_name: "Images::MainImage", dependent: :destroy
-  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
-           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+  # Asset associations
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }
 
   # Nested attributes
-  accepts_nested_attributes_for :main_image, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :gallery_images, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
 
   # SearchCop
   include SearchCop

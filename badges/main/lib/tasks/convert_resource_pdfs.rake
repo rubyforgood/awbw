@@ -20,7 +20,7 @@ namespace :resources do
         uri = URI.parse(resource.url)
         filename = File.basename(uri.path.presence || "resource-#{resource.id}.pdf")
 
-        image_class = resource.main_image.blank? ? Images::MainImage : Images::GalleryImage
+        image_class = resource.primary_asset.blank? ? PrimaryAsset : GalleryAsset
 
         puts "  Resource type: #{resource.kind}"
         puts "  Target image type: #{image_class.name}"

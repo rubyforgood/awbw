@@ -22,13 +22,13 @@ class Resource < ApplicationRecord
   has_many :related_workshops, through: :sectors, source: :workshops
   has_many :sectors, through: :sectorable_items, source: :sector
 
-  # Image associations
+  # Asset associations
   has_many :attachments, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
   has_many :images, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
-  has_one :main_image, -> { where(type: "Images::MainImage") },
-          as: :owner, class_name: "Images::MainImage", dependent: :destroy
-  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
-           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   # Default values
   attribute :inactive, :boolean, default: false
@@ -38,8 +38,8 @@ class Resource < ApplicationRecord
   validates :kind, presence: true
 
   # Nested attributes
-  accepts_nested_attributes_for :main_image, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :gallery_images, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :categorizable_items,
                                  allow_destroy: true,
@@ -109,7 +109,7 @@ class Resource < ApplicationRecord
   end
 
   def download_attachment
-    main_image || gallery_images.first || attachments.first
+    primary_asset || gallery_assets.first || attachments.first
   end
 
   def type_enum

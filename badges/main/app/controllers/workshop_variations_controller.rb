@@ -75,16 +75,16 @@ class WorkshopVariationsController < ApplicationController
   private
 
   def set_form_variables
-    @workshop_variation.build_main_image if @workshop_variation.main_image.blank?
-    @workshop_variation.gallery_images.build
+    @workshop_variation.build_primary_asset if @workshop_variation.primary_asset.blank?
+    @workshop_variation.gallery_assets.build
   end
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
       [ :name, :code, :inactive, :ordering,
        :youtube_url, :created_by_id, :workshop_id,
-       main_image_attributes: [ :id, :file, :_destroy ],
-       gallery_images_attributes: [ :id, :file, :_destroy ]
+       primary_asset_attributes: [ :id, :file, :_destroy ],
+       gallery_assets_attributes: [ :id, :file, :_destroy ]
       ]
     )
   end

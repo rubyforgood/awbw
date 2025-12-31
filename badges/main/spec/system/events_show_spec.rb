@@ -118,7 +118,7 @@ RSpec.describe "Event show page", type: :system do
   describe "images" do
     context "with main image" do
       it "displays the hero image" do
-        event.main_image = create(:main_image, :with_file, owner: event)
+        event.primary_asset = create(:primary_asset, :with_file, owner: event)
         event.save!
 
         sign_in(user)
@@ -131,7 +131,7 @@ RSpec.describe "Event show page", type: :system do
     context "with gallery images" do
       it "shows each gallery thumbnail" do
         2.times do
-          event.object.gallery_images << create(:gallery_image, :with_file, owner: event.object)
+          event.object.gallery_assets << create(:gallery_assets, :with_file, owner: event.object)
         end
         sign_in(user)
         visit event_path(event.object)
