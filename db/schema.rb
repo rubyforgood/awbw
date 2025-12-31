@@ -108,10 +108,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_072619) do
 
   create_table "assets", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "file_content_type"
-    t.string "file_file_name"
-    t.integer "file_file_size"
-    t.datetime "file_updated_at"
     t.integer "owner_id"
     t.string "owner_type"
     t.integer "report_id"
