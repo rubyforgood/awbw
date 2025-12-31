@@ -1,5 +1,4 @@
 namespace :assets do
-
   desc "Copy ActiveStorage Attachment, Image, MediaFile, and 'Header' records into Asset records"
   task generate: [
     :copy_images_to_assets,
