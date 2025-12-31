@@ -79,7 +79,6 @@ class FacilitatorsController < ApplicationController
     def set_form_variables
       set_user
       # @facilitator.build_user if @facilitator.user.blank? # Build a fresh one if missing
-      @facilitator.build_avatar_image if @facilitator.avatar_image.blank?
 
       if @facilitator.user
         @facilitator.user.project_users.first || @facilitator.user.project_users.build
@@ -96,6 +95,7 @@ class FacilitatorsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def facilitator_params
       params.require(:facilitator).permit(
+        :avatar,
         :first_name, :last_name,
         :email, :email_type,
         :email_2, :email_2_type,
@@ -128,7 +128,6 @@ class FacilitatorsController < ApplicationController
         :youtube_url,
         :twitter_url,
         :created_by_id, :updated_by_id,
-        avatar_image_attributes: [ :id, :file, :_destroy ],
         sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ],
         addresses_attributes: [
           :id,

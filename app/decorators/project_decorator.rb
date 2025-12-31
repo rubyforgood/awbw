@@ -4,7 +4,7 @@ class ProjectDecorator < ApplicationDecorator
   end
 
   def default_display_image
-    return logo_image.file if respond_to?(:logo_image) && logo_image&.file&.attached?
+    return logo if respond_to?(:logo) && logo&.attached?
     "theme_default.png"
   end
 

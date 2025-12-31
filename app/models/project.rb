@@ -19,15 +19,16 @@ class Project < ApplicationRecord
   has_many :sectors, through: :sectorable_items
 
   # Asset associations
-  has_one :logo_image, -> { where(type: "SquareAsset") },
-          as: :owner, class_name: "SquareAsset", dependent: :destroy
+  has_one_attached :logo
 
   # Validations
+  validates :logo,
+            content_type: %w[image/png image/jpeg image/webp],
+            size: { less_than: 5.megabytes }
   validates :name, presence: true
   validates :project_status_id, presence: true
 
   # Nested attributes
-  accepts_nested_attributes_for :logo_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :project_users, allow_destroy: true, reject_if: :all_blank

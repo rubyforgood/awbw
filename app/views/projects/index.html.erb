@@ -80,15 +80,19 @@
           <% @projects.each do |project| %>
             <tr class="hover:bg-gray-50 transition">
               <td class="px-4 py-2 text-center">
-                <% if project.logo_image&.file&.blob&.persisted? %>
-                  <%= link_to (image_tag url_for(project.logo_image.file),
-                                         class: "w-10 h-10 rounded-full object-cover
-                                           border border-gray-300 shadow-sm mx-auto").html_safe,
-                              project_path(project) %>
-                <% else %>
-                  <%= link_to project_path(project) do %>
-                    <svg class="w-10 h-10 text-gray-400 bg-gray-200 rounded-full"
-                         fill="currentColor" viewBox="0 0 20 18"></svg>
+                <%= link_to project_path(project) do %>
+                  <% if project.logo.attached? %>
+                    <%= image_tag(
+                          project.logo,
+                          class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm mx-auto"
+                        ) %>
+                  <% else %>
+                    <%= link_to project_path(project) do %>
+                      <svg class="w-10 h-10 text-gray-400 bg-gray-200 rounded-full"
+                           fill="currentColor"
+                           viewBox="0 0 20 18"
+                           aria-hidden="true"></svg>
+                    <% end %>
                   <% end %>
                 <% end %>
               </td>

@@ -77,8 +77,6 @@ class ProjectsController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @project.build_logo_image if @project.logo_image.blank?
-
     @project_statuses = ProjectStatus.all
     @facilitators_array = Facilitator.joins(:user)
                                      .order(:first_name, :last_name)
@@ -102,9 +100,8 @@ class ProjectsController < ApplicationController
   def project_params
     params.require(:project).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values, :internal_id,
-      :inactive, :notes, :agency_type,  :agency_type_other, :website_url,
+      :inactive, :logo, :notes, :agency_type,  :agency_type_other, :website_url,
       :project_status_id, :location_id, :windows_type_id,
-      logo_image_attributes: [ :id, :file, :_destroy ],
       sectorable_items_attributes: [
         :id,
         :sector_id,

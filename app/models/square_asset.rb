@@ -1,2 +1,0 @@
-class SquareAsset < Asset
-end

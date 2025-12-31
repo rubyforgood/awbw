@@ -17,7 +17,7 @@ class FacilitatorDecorator < ApplicationDecorator
   end
 
   def primary_asset
-    avatar_image
+    avatar
   end
 
   def pronouns_display
@@ -25,7 +25,7 @@ class FacilitatorDecorator < ApplicationDecorator
   end
 
   def default_display_image
-    return avatar_image.file if respond_to?(:avatar_image) && avatar_image&.file&.attached?
+    return avatar if respond_to?(:avatar) && avatar&.attached?
     "missing.png"
   end
 

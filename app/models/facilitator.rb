@@ -18,13 +18,13 @@ class Facilitator < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
-
   # Asset associations
-  has_one :avatar_image, -> { where(type: "SquareAsset") },
-          as: :owner, class_name: "SquareAsset",
-          dependent: :destroy# new active storage
+  has_one_attached :avatar
 
   # Validations
+  validates :avatar,
+            content_type: %w[image/png image/jpeg image/webp],
+            size: { less_than: 5.megabytes }
   validates :first_name, presence: true
   validates :last_name, presence: true
 
@@ -37,7 +37,6 @@ class Facilitator < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :avatar_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }

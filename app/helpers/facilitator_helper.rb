@@ -8,8 +8,8 @@ module FacilitatorHelper
       facilitator = facilitator.decorate
 
       # --- Avatar ---
-      avatar = if facilitator.avatar_image.present?
-                 image_tag url_for(facilitator.avatar_image.file),
+      avatar = if facilitator.avatar.present?
+                 image_tag url_for(facilitator.avatar),
                            class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
       elsif facilitator.user&.avatar.present?
                  image_tag url_for(facilitator.user.avatar),

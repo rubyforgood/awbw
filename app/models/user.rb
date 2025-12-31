@@ -38,7 +38,7 @@ class User < ApplicationRecord
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   has_many :windows_types, through: :projects
   # Images
-  has_one_attached :avatar # old paperclip -- TODO convert these to SquareImage belonging to Facilitator
+  has_one_attached :avatar
 
   # Nested attributes
   accepts_nested_attributes_for :user_forms

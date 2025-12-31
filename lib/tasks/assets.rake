@@ -123,16 +123,13 @@ namespace :assets do
   # ----------------------------
   # Helpers
   # ----------------------------
-  def map_image_type(image_type)
+  def map_image_type(image_type) # needed only for staging data - TODO - delete this method post-migration
     {
       "MainImage"            => "PrimaryAsset",
       "GalleryImage"         => "SecondaryAsset",
-      "SquareImage"          => "SquareAsset",
-      "Square"               => "SquareAsset",
       "RichText"             => "RichTextAsset",
       "Images::MainImage"    => "PrimaryAsset",
       "Images::GalleryImage" => "SecondaryAsset",
-      "Images::SquareImage"  => "SquareAsset",
       "Images::RichText"     => "RichTextAsset"
     }.fetch(image_type, "Asset")
   end
