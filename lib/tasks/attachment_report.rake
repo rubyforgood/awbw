@@ -8,15 +8,15 @@ namespace :attachment_report do
 
   def run_attachment_report(start_id: nil, finish_id: nil)
     models = [
-			Address, AgeRange, AnswerOption, Attachment, Banner, Bookmark,
-			Category, CategorizableItem, CommunityNews, EventRegistration, Event,
-			Facilitator, Faq, FormBuilder, FormFieldAnswerOption, FormField, Form,
-			Media, Location, MediaFile, CategoryType, MonthlyReport, Notification,
-			ProjectObligation, ProjectStatus, ProjectUser, Project,
-			QuotableItemQuote, Quote, ReportFormFieldAnswer, Report, Resource,
-			SectorableItem, Sector, Story, StoryIdea, UserFormFormField, UserForm,
-			User, WindowsType, WorkshopAgeRange, WorkshopIdea, WorkshopLog,
-			WorkshopResource, WorkshopSeriesMembership, WorkshopVariation, Workshop
+      Address, AgeRange, AnswerOption, Attachment, Banner, Bookmark,
+      Category, CategorizableItem, CommunityNews, EventRegistration, Event,
+      Facilitator, Faq, FormBuilder, FormFieldAnswerOption, FormField, Form,
+      Media, Location, MediaFile, CategoryType, MonthlyReport, Notification,
+      ProjectObligation, ProjectStatus, ProjectUser, Project,
+      QuotableItemQuote, Quote, ReportFormFieldAnswer, Report, Resource,
+      SectorableItem, Sector, Story, StoryIdea, UserFormFormField, UserForm,
+      User, WindowsType, WorkshopAgeRange, WorkshopIdea, WorkshopLog,
+      WorkshopResource, WorkshopSeriesMembership, WorkshopVariation, Workshop
     ]
 
     timestamp = Time.now.strftime("%Y%m%d_%H%M%S")

@@ -8,12 +8,12 @@ CSV_PATH = Rails.root.join("tmp/migration_log.csv")
 namespace :paperclip_to_active_storage do
   def migration_map
     {
-			User => [ :avatar ],
-			Attachment => [ :file ],
-			MediaFile => [ :file ],
-			Media => [:file ],
-			Workshop => [ :thumbnail, :header ],
-			Report => [ :form_file ]
+      User => [ :avatar ],
+      Attachment => [ :file ],
+      Image => [ :file ],
+      MediaFile => [ :file ],
+      Workshop => [ :thumbnail, :header ],
+      Report => [ :form_file ]
     }
   end
 
