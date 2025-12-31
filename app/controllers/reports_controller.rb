@@ -194,7 +194,7 @@ class ReportsController < ApplicationController
 
   def build_new_report
     @report = current_user.reports.build(report_params)
-    @report.image = PrimaryAsset.new(file: params[:image]) unless params[:image].blank?
+    @report.image = Image.new(file: params[:image]) unless params[:image].blank?
 
     quotes = []
     quotes_params.each { |q|

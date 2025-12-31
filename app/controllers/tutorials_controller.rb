@@ -67,7 +67,7 @@ class TutorialsController < ApplicationController
   def tutorial_params
     params.require(:tutorial).permit(
       :title, :body, :rhino_body, :featured, :published, :position, :youtube_url,
-      primary_media_attributes: [ :id, :file, :_destroy ],
+      primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
     )
   end

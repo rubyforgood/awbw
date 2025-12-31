@@ -46,7 +46,7 @@ namespace :rich_text_urls_update do
       FormFieldAnswerOption,
       FormField,
       Form,
-      Media,
+      Image,
       Location,
       MediaFile,
       CategoryType,

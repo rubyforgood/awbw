@@ -98,7 +98,7 @@ class Report < ApplicationRecord
 
     unless image.blank?
       self.image.destroy if self.image
-      self.image = PrimaryAsset.new(file: image)
+      self.image = Image.new(file: image)
     end
 
     save

@@ -1,5 +1,5 @@
 module ImageHelper
-  def main_image_url(record)
+  def main_image_url(record) # leaving this until api is refactored
     return nil unless record.present?
 
     # All possible attachment names used across your models
