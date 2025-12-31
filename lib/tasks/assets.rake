@@ -6,7 +6,7 @@ namespace :assets do
     :copy_attachments_to_assets,
     :copy_media_files_to_assets,
     :assign_primary_assets,
-    :ensure_one_primary_asset,
+    :ensure_one_primary_asset
   ]
 
   desc "Copy images or attachments to PrimaryAsset, if no PrimaryAsset exists"
