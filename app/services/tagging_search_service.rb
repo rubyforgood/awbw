@@ -52,7 +52,7 @@ class TaggingSearchService
                  .decorate,
 
       facilitators: Facilitator
-                      .includes(:sectors, :avatar)
+                      .includes(:sectors)
                       .published
                       .searchable
                       .sector_names(sector_names)
@@ -62,7 +62,7 @@ class TaggingSearchService
                       .decorate,
 
       projects: Project
-                  .includes(:sectors, :logo)
+                  .includes(:sectors)
                   .published
                   .sector_names(sector_names)
                   .category_names(category_names)
