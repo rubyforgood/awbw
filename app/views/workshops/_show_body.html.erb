@@ -125,7 +125,7 @@
             <hr class="border-gray-300 mb-2">
 
             <div class="flex flex-wrap gap-4">
-              <div class="attachments">
+              <div class="assets">
                 <%= render "assets/display_image", item: workshop.primary_asset, item_type: "Main" %>
                 <% workshop.secondary_assets.each_with_index do |secondary_assets, idx| %>
                   <%= render "assets/display_image", item: secondary_assets, idx: idx %>
