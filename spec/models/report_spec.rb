@@ -8,7 +8,7 @@ RSpec.describe Report do
     it { should belong_to(:owner).optional }
     it { should have_one(:form) }
     it { should have_one(:primary_asset) }
-    it { should have_many(:secondary_assets) }
+    it { should have_many(:gallery_assets) }
     it { should have_many(:form_fields).through(:form) }
     it { should have_many(:report_form_field_answers).dependent(:destroy) }
     it { should have_many(:quotable_item_quotes).dependent(:nullify) }

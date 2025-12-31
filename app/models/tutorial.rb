@@ -7,14 +7,14 @@ class Tutorial < ApplicationRecord
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
-  has_many :secondary_assets, -> { where(type: "SecondaryAsset") },
-           as: :owner, class_name: "SecondaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :secondary_assets, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
 
   # SearchCop
   include SearchCop

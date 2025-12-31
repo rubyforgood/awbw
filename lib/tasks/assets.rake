@@ -165,7 +165,7 @@ namespace :assets do
 
       asset = Asset.create!(
         owner: attachment.owner,
-        type: "SecondaryAsset"
+        type: "GalleryAsset"
       )
 
       asset.file.attach(attachment.file.blob)
@@ -210,7 +210,7 @@ namespace :assets do
 
       asset = Asset.create!(
         owner: owner,
-        type: "SecondaryAsset"
+        type: "GalleryAsset"
       )
 
       asset.file.attach(media_file.file.blob)
@@ -242,10 +242,10 @@ namespace :assets do
   def map_image_type(image_type) # needed only for staging data - TODO - delete this method post-migration
     {
       "MainImage"            => "PrimaryAsset",
-      "GalleryImage"         => "SecondaryAsset",
+      "GalleryImage"         => "GalleryAsset",
       "RichText"             => "RichTextAsset",
       "Images::MainImage"    => "PrimaryAsset",
-      "Images::GalleryImage" => "SecondaryAsset",
+      "Images::GalleryImage" => "GalleryAsset",
       "Images::RichText"     => "RichTextAsset"
     }.fetch(image_type, "PrimaryAsset")
   end

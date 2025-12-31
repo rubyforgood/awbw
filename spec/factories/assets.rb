@@ -6,7 +6,7 @@ FactoryBot.define do
 
     # --- Traits for type-specific subclasses ---
     factory :primary_asset, class: "PrimaryAsset"
-    factory :secondary_assets, class: "SecondaryAsset"
+    factory :gallery_assets, class: "GalleryAsset"
 
     trait :with_file do
       after(:build) do |image|

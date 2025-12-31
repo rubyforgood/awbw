@@ -52,7 +52,7 @@
 
       <%# ---- GALLERY IMAGES ---- %>
       <% counter = 1 %>
-      <%= f.fields_for :secondary_assets do |img| %>
+      <%= f.fields_for :gallery_assets do |img| %>
         <div class="flex flex-col text-left items-left gap-1 w-full md:w-1/3 lg:w-1/4 mb-6">
           <%= render "shared/form_image_field",
                      f: img,
@@ -67,14 +67,14 @@
     <div class="mt-4 flex justify-end">
       <%= link_to_add_association "Add another file",
                                   f,
-                                  :secondary_assets,
+                                  :gallery_assets,
                                   insertion_node: ".image-fields-row",
                                   insertion_method: :append,
                                   partial: "shared/form_image_field_insert",
                                   render_options: {
                                     locals: {
                                       label: "Additional gallery image",
-                                      resource: f.object.secondary_assets.build,
+                                      resource: f.object.gallery_assets.build,
                                     }
                                   },
                                   class: "text-blue-600 hover:text-blue-800 font-medium text-sm pr-2 pb-6" %>

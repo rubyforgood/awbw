@@ -119,7 +119,7 @@
           </div>
         <% end %>
         <% if workshop.primary_asset&.file&.attached? ||
-          workshop.secondary_assets.any? { |img| img.persisted? && img.file.attached? } %>
+          workshop.gallery_assets.any? { |img| img.persisted? && img.file.attached? } %>
           <div class="workshop-gallery single-workshop-detail mb-4">
             <h3 class="text-lg font-semibold mb-1">Gallery</h3>
             <hr class="border-gray-300 mb-2">
@@ -127,8 +127,8 @@
             <div class="flex flex-wrap gap-4">
               <div class="assets">
                 <%= render "assets/display_image", item: workshop.primary_asset, item_type: "Main" %>
-                <% workshop.secondary_assets.each_with_index do |secondary_assets, idx| %>
-                  <%= render "assets/display_image", item: secondary_assets, idx: idx %>
+                <% workshop.gallery_assets.each_with_index do |gallery_assets, idx| %>
+                  <%= render "assets/display_image", item: gallery_assets, idx: idx %>
                 <% end %>
               </div>
             </div>

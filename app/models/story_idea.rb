@@ -15,8 +15,8 @@ class StoryIdea < ApplicationRecord
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
-  has_many :secondary_assets, -> { where(type: "SecondaryAsset") },
-           as: :owner, class_name: "SecondaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   # Validations
   validates :created_by_id, presence: true
@@ -29,7 +29,7 @@ class StoryIdea < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :secondary_assets, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
 
   def name
     "StoryIdea ##{id}"

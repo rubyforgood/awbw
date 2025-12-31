@@ -7,7 +7,7 @@ class TaggingSearchService
 
     {
       workshops: Workshop
-                   .includes(:sectors, :categories, :windows_type, :primary_asset, :secondary_assets)
+                   .includes(:sectors, :categories, :windows_type, :primary_asset, :gallery_assets)
                    .published
                    .sector_names(sector_names)
                    .category_names(category_names)
@@ -16,7 +16,7 @@ class TaggingSearchService
                    .decorate,
 
       resources: Resource
-                   .includes(:windows_type, :primary_asset, :secondary_assets)
+                   .includes(:windows_type, :primary_asset, :gallery_assets)
                    .published
                    .sector_names(sector_names)
                    .category_names(category_names)
@@ -25,7 +25,7 @@ class TaggingSearchService
                    .decorate,
 
       community_news: CommunityNews
-                        .includes(:windows_type, :primary_asset, :secondary_assets)
+                        .includes(:windows_type, :primary_asset, :gallery_assets)
                         .published
                         .sector_names(sector_names)
                         .category_names(category_names)
@@ -34,7 +34,7 @@ class TaggingSearchService
                         .decorate,
 
       events: Event
-                .includes(:event_registrations, :primary_asset, :secondary_assets)
+                .includes(:event_registrations, :primary_asset, :gallery_assets)
                 .published
                 .sector_names(sector_names)
                 .category_names(category_names)
@@ -43,7 +43,7 @@ class TaggingSearchService
                 .decorate,
 
       stories: Story
-                 .includes(:windows_type, :primary_asset, :secondary_assets)
+                 .includes(:windows_type, :primary_asset, :gallery_assets)
                  .published
                  .sector_names(sector_names)
                  .category_names(category_names)
@@ -71,7 +71,7 @@ class TaggingSearchService
                   .decorate,
 
       quotes: Quote
-                .includes(:sectors, :primary_asset, :secondary_assets)
+                .includes(:sectors, :primary_asset, :gallery_assets)
                 .published
                 .sector_names(sector_names)
                 .category_names(category_names)

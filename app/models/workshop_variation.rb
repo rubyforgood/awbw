@@ -8,13 +8,13 @@ class WorkshopVariation < ApplicationRecord
   has_many :images, as: :owner, dependent: :destroy
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
-  has_many :secondary_assets, -> { where(type: "SecondaryAsset") },
-           as: :owner, class_name: "SecondaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
 
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :secondary_assets, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
 
   scope :active, -> { where(inactive: false) }
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }

@@ -254,7 +254,7 @@ class ReportsController < ApplicationController
       [ :form_field_id, :answer_option_id, :answer, :_create ],
       media_files_attributes: [ :file ],
       primary_asset_attributes: [ :id, :file, :_destroy ],
-      secondary_assets_attributes: [ :id, :file, :_destroy ]
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 

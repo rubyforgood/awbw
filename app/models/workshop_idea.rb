@@ -18,14 +18,14 @@ class WorkshopIdea < ApplicationRecord
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
-  has_many :secondary_assets, -> { where(type: "SecondaryAsset") },
-           as: :owner, class_name: "SecondaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   before_save :set_time_frame
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :secondary_assets, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true

@@ -52,7 +52,7 @@ class StoryIdeasController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
-    @story_idea.secondary_assets.build
+    @story_idea.gallery_assets.build
 
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @projects = (@user || current_user).projects.order(:name)
@@ -87,7 +87,7 @@ class StoryIdeasController < ApplicationController
       :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
       primary_asset_attributes: [ :id, :file, :_destroy ],
-      secondary_assets_attributes: [ :id, :file, :_destroy ]
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 end

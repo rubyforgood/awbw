@@ -54,7 +54,7 @@ class TutorialsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @tutorial.build_primary_asset if @tutorial.primary_asset.blank?
-    @tutorial.secondary_assets.build
+    @tutorial.gallery_assets.build
   end
 
   private
@@ -68,7 +68,7 @@ class TutorialsController < ApplicationController
     params.require(:tutorial).permit(
       :title, :body, :rhino_body, :featured, :published, :position, :youtube_url,
       primary_media_attributes: [ :id, :file, :_destroy ],
-      secondary_assets_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
     )
   end
 end

@@ -131,7 +131,7 @@ RSpec.describe "Event show page", type: :system do
     context "with gallery images" do
       it "shows each gallery thumbnail" do
         2.times do
-          event.object.secondary_assets << create(:secondary_assets, :with_file, owner: event.object)
+          event.object.gallery_assets << create(:gallery_assets, :with_file, owner: event.object)
         end
         sign_in(user)
         visit event_path(event.object)

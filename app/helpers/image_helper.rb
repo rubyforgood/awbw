@@ -4,7 +4,7 @@ module ImageHelper
 
     # All possible attachment names used across your models
     attachment_candidates = [ "primary_asset", "avatar", "photo", "banner", "hero_image",
-                             "secondary_assets", "images", "attachments", "media_files" ]
+                             "gallery_assets", "images", "attachments", "media_files" ]
 
     attachment_candidates.each do |name|
       next unless record.respond_to?(name)
@@ -25,7 +25,7 @@ module ImageHelper
         return url_for(value.file)
       end
 
-      # CASE 3 — Collection (e.g., StoryIdea.secondary_assets)
+      # CASE 3 — Collection (e.g., StoryIdea.gallery_assets)
       # value = ActiveRecord::Associations::CollectionProxy each item is an Media STI instance
       if value.is_a?(Enumerable)
         img = value.find { |img| img.respond_to?(:file) &&

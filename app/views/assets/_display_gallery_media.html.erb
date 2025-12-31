@@ -1,10 +1,10 @@
 <!-- Gallery Media -->
-<% secondary_assets = resource.secondary_assets.select { |img| img.file.attached? } %>
-<% if secondary_assets.any? %>
+<% gallery_assets = resource.gallery_assets.select { |img| img.file.attached? } %>
+<% if gallery_assets.any? %>
   <div class="<%= resource.class.table_name %>-gallery text-center mb-4">
     <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-4xl">
-      <% secondary_assets.each_with_index do |secondary_assets, idx| %>
-        <%= render "assets/display_image", item: secondary_assets, idx: idx %>
+      <% gallery_assets.each_with_index do |gallery_assets, idx| %>
+        <%= render "assets/display_image", item: gallery_assets, idx: idx %>
       <% end %>
     </div>
   </div>

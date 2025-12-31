@@ -68,7 +68,7 @@ class EventsController < ApplicationController
   def set_form_variables
     @event = @event.decorate
     @event.build_primary_asset if @event.primary_asset.blank?
-    @event.secondary_assets.build
+    @event.gallery_assets.build
   end
 
   def set_event
@@ -84,7 +84,7 @@ class EventsController < ApplicationController
                                   :registration_close_date,
                                   :publicly_visible,
                                   primary_asset_attributes: [ :id, :file, :_destroy ],
-                                  secondary_assets_attributes: [ :id, :file, :_destroy ]
+                                  gallery_assets_attributes: [ :id, :file, :_destroy ]
                                   )
   end
 

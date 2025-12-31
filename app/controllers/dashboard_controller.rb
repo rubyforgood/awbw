@@ -2,29 +2,29 @@ class DashboardController < ApplicationController
   include AdminDashboardCardsHelper
 
   def index
-    workshops = Workshop.includes(:sectors, :categories, :windows_type, :primary_asset, :secondary_assets)
+    workshops = Workshop.includes(:sectors, :categories, :windows_type, :primary_asset, :gallery_assets)
                         .featured
                         .published
                         .decorate
     @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
 
-    @resources = Resource.includes(:windows_type, :primary_asset, :secondary_assets)
+    @resources = Resource.includes(:windows_type, :primary_asset, :gallery_assets)
                          .featured
                          .published
                          .by_most_viewed(6)
                          .order(ordering: :asc, created_at: :desc)
                          .decorate
-    @stories = Story.includes(:windows_type, :primary_asset, :secondary_assets)
+    @stories = Story.includes(:windows_type, :primary_asset, :gallery_assets)
                     .featured
                     .published
                     .order(:title)
                     .decorate
-    @community_news = CommunityNews.includes(:windows_type, :primary_asset, :secondary_assets)
+    @community_news = CommunityNews.includes(:windows_type, :primary_asset, :gallery_assets)
                                    .featured
                                    .published
                                    .order(updated_at: :desc)
                                    .decorate
-    @events = Event.includes(:event_registrations, :primary_asset, :secondary_assets)
+    @events = Event.includes(:event_registrations, :primary_asset, :gallery_assets)
                    .featured
                    .published
                    .order(:start_date)

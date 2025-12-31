@@ -76,7 +76,7 @@ class WorkshopVariationsController < ApplicationController
 
   def set_form_variables
     @workshop_variation.build_primary_asset if @workshop_variation.primary_asset.blank?
-    @workshop_variation.secondary_assets.build
+    @workshop_variation.gallery_assets.build
   end
 
   def workshop_variation_params
@@ -84,7 +84,7 @@ class WorkshopVariationsController < ApplicationController
       [ :name, :code, :inactive, :ordering,
        :youtube_url, :created_by_id, :workshop_id,
        primary_asset_attributes: [ :id, :file, :_destroy ],
-       secondary_assets_attributes: [ :id, :file, :_destroy ]
+       gallery_assets_attributes: [ :id, :file, :_destroy ]
       ]
     )
   end

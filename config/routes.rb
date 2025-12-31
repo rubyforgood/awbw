@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   resources :media_files, only: [ :show ]
   namespace :images do
     resources :primary_assets, only: [ :show ]
-    resources :secondary_assets, only: [ :show ]
+    resources :gallery_assets, only: [ :show ]
     resources :rich_texts, only: [ :show ]
   end
   resources :images, only: [ :show ]
