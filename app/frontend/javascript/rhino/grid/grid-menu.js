@@ -16,6 +16,13 @@ export function renderGridMenu(editor) {
       icon: "−",
       action: () => editor.chain().focus().deleteLastGridCell().run(),
     },
+
+    {
+      title: "Toggle Border",
+      icon: "border",
+      action: () => editor.chain().focus().toggleCellBorder().run(),
+    },
+
     {
       title: "Add Column",
       icon: "＋",

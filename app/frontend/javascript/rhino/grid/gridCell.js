@@ -13,16 +13,19 @@ export const GridCell = Node.create({
   addAttributes() {
     return {
       verticalAlign: {
-        default: "top",
+        default: "top", // top | center | bottom
       },
       columnSpan: {
         default: 1,
+      },
+      hasBorder: {
+        default: true,
       },
     };
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-type="grid-cell"]' }];
+    return [{ tag: "div[data-type='grid-cell']" }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
@@ -43,15 +46,26 @@ export const GridCell = Node.create({
 
     const verticalClass =
       alignClasses[node.attrs.verticalAlign] || alignClasses.top;
-
     const spanClass =
       colSpanClasses[node.attrs.columnSpan] || colSpanClasses[1];
+
+    // Border class: solid if hasBorder, otherwise helper class for editor CSS
+    const borderClass = node.attrs.hasBorder ? "border border-gray-300" : "";
 
     return [
       "div",
       mergeAttributes(HTMLAttributes, {
         "data-type": "grid-cell",
-        class: `border border-gray-300 p-3 rounded flex flex-col ${verticalClass} ${spanClass}`,
+        hasborder: node.attrs.hasBorder ? "true" : "false",
+        class: [
+          "grid-cell-editor", // always present for editor dashed border
+          borderClass,
+          "p-3 rounded flex flex-col",
+          verticalClass,
+          spanClass,
+        ]
+          .filter(Boolean)
+          .join(" "),
       }),
       0,
     ];
@@ -59,18 +73,42 @@ export const GridCell = Node.create({
 
   addCommands() {
     return {
-      setVerticalAlign:
-        (alignment) =>
+      /**
+       * Toggle solid/dashed border
+       */
+      toggleCellBorder:
+        () =>
         ({ state, dispatch }) => {
-          const gridCell = findParentNodeClosestToPos(
+          const cell = findParentNodeClosestToPos(
             state.selection.$from,
             (node) => node.type.name === "gridCell",
           );
-          if (!gridCell) return false;
+          if (!cell) return false;
 
-          const { pos, node } = gridCell;
+          const { pos, node } = cell;
           const tr = state.tr.setNodeMarkup(pos, undefined, {
             ...node.attrs,
+            hasBorder: !node.attrs.hasBorder,
+          });
+
+          if (dispatch) dispatch(tr);
+          return true;
+        },
+
+      /**
+       * Set vertical alignment
+       */
+      setVerticalAlign:
+        (alignment) =>
+        ({ state, dispatch }) => {
+          const cell = findParentNodeClosestToPos(
+            state.selection.$from,
+            (node) => node.type.name === "gridCell",
+          );
+          if (!cell) return false;
+
+          const tr = state.tr.setNodeMarkup(cell.pos, undefined, {
+            ...cell.node.attrs,
             verticalAlign: alignment,
           });
 
@@ -78,33 +116,9 @@ export const GridCell = Node.create({
           return true;
         },
 
-      // setColumnSpan: span => ({ state, dispatch }) => {
-      //   const gridCell = findParentNodeClosestToPos(
-      //     state.selection.$from,
-      //     node => node.type.name === 'gridCell'
-      //   )
-      //   if (!gridCell) return false
-      //
-      //   const { pos, node } = gridCell
-      //
-      //   const parentGrid = findParentNodeClosestToPos(
-      //     state.selection.$from,
-      //     node => node.type.name === 'grid'
-      //   )
-      //   if (!parentGrid) return false
-      //
-      //   const maxColumns = parentGrid.node.attrs.columns
-      //
-      //   const newSpan = Math.min(span, maxColumns)
-      //
-      //   const tr = state.tr.setNodeMarkup(pos, undefined, {
-      //     ...node.attrs,
-      //     columnSpan: newSpan,
-      //   })
-      //
-      //   if (dispatch) dispatch(tr)
-      //   return true
-      // },
+      /**
+       * Set column span (clamped by parent grid)
+       */
       setColumnSpan:
         (span) =>
         ({ state, dispatch }) => {
@@ -120,7 +134,7 @@ export const GridCell = Node.create({
           );
           if (!grid) return false;
 
-          const max = grid.node.attrs.columns;
+          const max = grid.node.attrs.columns || 1;
           const safeSpan = Math.max(1, Math.min(span, max));
 
           const tr = state.tr.setNodeMarkup(cell.pos, undefined, {

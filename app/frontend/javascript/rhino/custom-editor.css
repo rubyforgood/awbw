@@ -52,3 +52,7 @@ custom-rhino-editor a {
 custom-rhino-editor a:hover {
   color: #1e40af; /* Tailwind blue-800 */
 }
+
+/* Dashed border for grid cells that have hasBorder=false (editor only) */
+custom-rhino-editor .grid-cell-editor[hasborder="false"] {
+  border: 2px dashed #ced4da; }
