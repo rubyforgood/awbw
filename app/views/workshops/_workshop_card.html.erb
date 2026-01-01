@@ -10,8 +10,8 @@
 
   <!-- FULLY CLICKABLE CARD CONTENT -->
   <%= link_to workshop_path(workshop), data: { turbo_prefetch: false }, class: "block h-full" do %>
-    <!-- Image -->
-    <%= render "media/display_image",
+    <!-- Media -->
+    <%= render "assets/display_image",
                resource: workshop,
                width: "full", height: "24",
                link: false,

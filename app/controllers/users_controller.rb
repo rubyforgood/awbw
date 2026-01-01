@@ -129,13 +129,12 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :first_name, :last_name, :email,
+      :avatar, :first_name, :last_name, :email,
       :address, :address2, :city, :city2, :state, :state2, :zip, :zip2,
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :comment,
       :notes, :primary_address, :avatar, :subscribecode,
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
       :confirmed, :inactive, :super_user, :legacy, :legacy_id,
-      avatar_image_attributes: [ :id, :file, :_destroy ],
       project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
     )
   end

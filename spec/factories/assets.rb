@@ -1,12 +1,12 @@
 FactoryBot.define do
-  factory :image do
+  factory :asset do
     association :owner, factory: :user
 
     # Default to no type -- must use a trait
 
     # --- Traits for type-specific subclasses ---
-    factory :main_image, class: "Images::MainImage"
-    factory :gallery_image, class: "Images::GalleryImage"
+    factory :primary_asset, class: "PrimaryAsset"
+    factory :gallery_assets, class: "GalleryAsset"
 
     trait :with_file do
       after(:build) do |image|

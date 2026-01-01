@@ -24,7 +24,7 @@
       <!-- IMAGE -->
       <div class="relative w-12 h-12 md:w-16 md:h-16">
         <%= link_to polymorphic_path(record.object), data: { turbo_prefetch: false }, class: "block w-full h-full" do %>
-          <%= render "media/display_image",
+          <%= render "assets/display_image",
                      resource: record.object,
                      width: "full", height: "full",
                      link: false,

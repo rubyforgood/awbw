@@ -8,7 +8,7 @@ class WorkshopVariationDecorator < ApplicationDecorator
   end
 
   def default_display_image
-    return workshop.main_image.file if workshop.respond_to?(:main_image) && workshop.main_image&.file&.attached?
+    return workshop.primary_asset.file if workshop.respond_to?(:primary_asset) && workshop.primary_asset&.file&.attached?
     "workshop_default.jpg"
   end
 

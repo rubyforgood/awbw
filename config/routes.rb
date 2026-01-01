@@ -3,8 +3,8 @@ Rails.application.routes.draw do
   resources :attachments, only: [ :show ]
   resources :media_files, only: [ :show ]
   namespace :images do
-    resources :main_images, only: [ :show ]
-    resources :gallery_images, only: [ :show ]
+    resources :primary_assets, only: [ :show ]
+    resources :gallery_assets, only: [ :show ]
     resources :rich_texts, only: [ :show ]
   end
   resources :images, only: [ :show ]

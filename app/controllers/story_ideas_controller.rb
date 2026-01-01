@@ -51,8 +51,8 @@ class StoryIdeasController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @story_idea.build_main_image if @story_idea.main_image.blank?
-    @story_idea.gallery_images.build
+    @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
+    @story_idea.gallery_assets.build
 
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @projects = (@user || current_user).projects.order(:name)
@@ -69,7 +69,7 @@ class StoryIdeasController < ApplicationController
   #
   #   respond_to do |format|
   #     format.turbo_stream
-  #     format.html { redirect_to edit_story_path(@story_idea), notice: "Image removed." }
+  #     format.html { redirect_to edit_story_path(@story_idea), notice: "Asset removed." }
   #   end
   # end
 
@@ -86,8 +86,8 @@ class StoryIdeasController < ApplicationController
       :permission_given, :publish_preferences, :promoted_to_story,
       :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
-      main_image_attributes: [ :id, :file, :_destroy ],
-      gallery_images_attributes: [ :id, :file, :_destroy ]
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 end

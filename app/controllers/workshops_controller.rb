@@ -157,8 +157,8 @@ class WorkshopsController < ApplicationController
   end
 
   def set_form_variables
-    @workshop.build_main_image if @workshop.main_image.blank?
-    @workshop.gallery_images.build
+    @workshop.build_primary_asset if @workshop.primary_asset.blank?
+    @workshop.gallery_assets.build
 
     @age_ranges = Category.includes(:category_type).where("metadata.name = 'AgeRange'").pluck(:name)
     @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
@@ -217,8 +217,8 @@ class WorkshopsController < ApplicationController
 
       category_ids: [],
       sector_ids: [],
-      main_image_attributes: [ :id, :file, :_destroy ],
-      gallery_images_attributes: [ :id, :file, :_destroy ],
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :series_order, :_destroy ],

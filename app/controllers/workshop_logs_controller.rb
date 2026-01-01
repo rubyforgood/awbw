@@ -129,7 +129,7 @@ class WorkshopLogsController < ApplicationController
   private
 
   def set_form_variables
-    @workshop_log.gallery_images.build
+    @workshop_log.gallery_assets.build
 
     if params[:workshop_id].present?
       @workshop = Workshop.where(id: params[:workshop_id]).last
@@ -213,6 +213,6 @@ class WorkshopLogsController < ApplicationController
         quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
       report_form_field_answers_attributes: [ :id, :form_field_id, :answer_option_id,
                                              :answer, :report_id, :_destroy ],
-      gallery_images_attributes: [ :id, :file, :_destroy ])
+      gallery_assets_attributes: [ :id, :file, :_destroy ])
   end
 end

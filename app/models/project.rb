@@ -18,16 +18,17 @@ class Project < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
-  # Image associations
-  has_one :logo_image, -> { where(type: "Images::SquareImage") },
-          as: :owner, class_name: "Images::SquareImage", dependent: :destroy
+  # Asset associations
+  has_one_attached :logo
 
   # Validations
+  validates :logo,
+            content_type: %w[image/png image/jpeg image/webp],
+            size: { less_than: 5.megabytes }
   validates :name, presence: true
   validates :project_status_id, presence: true
 
   # Nested attributes
-  accepts_nested_attributes_for :logo_image, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :project_users, allow_destroy: true, reject_if: :all_blank

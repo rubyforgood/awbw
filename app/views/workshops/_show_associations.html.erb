@@ -74,7 +74,7 @@
           <% @leader_spotlights.each do |spotlight| %>
             <div class="flex flex-col items-center space-y-2 max-w-[120px] mb-3">
               <%= link_to resource_path(spotlight), class: "flex flex-col items-center text-center" do %>
-                <%= render "media/display_image",
+                <%= render "assets/display_image",
                            resource: spotlight,
                            width: 10, height: 10,
                            variant: :index,

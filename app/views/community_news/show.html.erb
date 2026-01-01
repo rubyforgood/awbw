@@ -38,7 +38,8 @@
             <p><strong>Organization Name:</strong> <%= @community_news.project&.name %></p>
           </div>
 
-          <%= render "media/display_media", resource: @community_news %>
+          <!-- Assets -->
+          <%= render "assets/display_assets", resource: @community_news %>
 
           <!-- community_news Body Text -->
           <div class="prose prose-lg max-w-none text-gray-700 mb-10">

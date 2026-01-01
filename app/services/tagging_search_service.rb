@@ -7,7 +7,7 @@ class TaggingSearchService
 
     {
       workshops: Workshop
-                   .includes(:sectors, :categories, :windows_type, :main_image, :gallery_images)
+                   .includes(:sectors, :categories, :windows_type, :primary_asset, :gallery_assets)
                    .published
                    .sector_names(sector_names)
                    .category_names(category_names)
@@ -16,7 +16,7 @@ class TaggingSearchService
                    .decorate,
 
       resources: Resource
-                   .includes(:windows_type, :main_image, :gallery_images)
+                   .includes(:windows_type, :primary_asset, :gallery_assets)
                    .published
                    .sector_names(sector_names)
                    .category_names(category_names)
@@ -25,7 +25,7 @@ class TaggingSearchService
                    .decorate,
 
       community_news: CommunityNews
-                        .includes(:windows_type, :main_image, :gallery_images)
+                        .includes(:windows_type, :primary_asset, :gallery_assets)
                         .published
                         .sector_names(sector_names)
                         .category_names(category_names)
@@ -34,7 +34,7 @@ class TaggingSearchService
                         .decorate,
 
       events: Event
-                .includes(:event_registrations, :main_image, :gallery_images)
+                .includes(:event_registrations, :primary_asset, :gallery_assets)
                 .published
                 .sector_names(sector_names)
                 .category_names(category_names)
@@ -43,7 +43,7 @@ class TaggingSearchService
                 .decorate,
 
       stories: Story
-                 .includes(:windows_type, :main_image, :gallery_images)
+                 .includes(:windows_type, :primary_asset, :gallery_assets)
                  .published
                  .sector_names(sector_names)
                  .category_names(category_names)
@@ -52,7 +52,7 @@ class TaggingSearchService
                  .decorate,
 
       facilitators: Facilitator
-                      .includes(:sectors, :avatar_image)
+                      .includes(:sectors)
                       .published
                       .searchable
                       .sector_names(sector_names)
@@ -62,7 +62,7 @@ class TaggingSearchService
                       .decorate,
 
       projects: Project
-                  .includes(:sectors, :logo_image)
+                  .includes(:sectors)
                   .published
                   .sector_names(sector_names)
                   .category_names(category_names)
@@ -71,7 +71,7 @@ class TaggingSearchService
                   .decorate,
 
       quotes: Quote
-                .includes(:sectors, :main_image, :gallery_images)
+                .includes(:sectors, :primary_asset, :gallery_assets)
                 .published
                 .sector_names(sector_names)
                 .category_names(category_names)

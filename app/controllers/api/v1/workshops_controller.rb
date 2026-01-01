@@ -16,7 +16,8 @@ class Api::V1::WorkshopsController < Api::V1::ApiController
           { quotes: { only: :quote } },
           { sectors: { only: :name } }
         ],
-        methods: [ :main_image_url, :sector_hashtags ]
+        methods: [ :main_image_url, # leaving this until api is refactored
+                   :sector_hashtags ]
       }
     })
 

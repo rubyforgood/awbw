@@ -4,7 +4,7 @@ class ResourcesController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       unfiltered = Resource.where(kind: Resource::PUBLISHED_KINDS) # TODO - #FIXME brittle
-        .includes(:main_image, :gallery_images, :attachments)
+        .includes(:primary_asset, :gallery_assets, :attachments)
       filtered = unfiltered.search_by_params(params)
         .by_created
       @resources = filtered.paginate(page: params[:page], per_page: per_page)
@@ -114,8 +114,8 @@ class ResourcesController < ApplicationController
   private
 
   def set_form_variables
-    @resource.build_main_image if @resource.main_image.blank?
-    @resource.gallery_images.build
+    @resource.build_primary_asset if @resource.primary_asset.blank?
+    @resource.gallery_assets.build
 
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
@@ -137,8 +137,8 @@ class ResourcesController < ApplicationController
     params.require(:resource).permit(
       :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :ordering,
-      main_image_attributes: [ :id, :file, :_destroy ],
-      gallery_images_attributes: [ :id, :file, :_destroy ],
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
       categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
     )

@@ -253,8 +253,8 @@ class ReportsController < ApplicationController
       :owner_type, :windows_type_id, report_form_field_answers_attributes:
       [ :form_field_id, :answer_option_id, :answer, :_create ],
       media_files_attributes: [ :file ],
-      main_image_attributes: [ :id, :file, :_destroy ],
-      gallery_images_attributes: [ :id, :file, :_destroy ]
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 

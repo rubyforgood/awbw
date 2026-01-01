@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_28_035546) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_30_072619) do
   create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
@@ -104,6 +104,18 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_28_035546) do
     t.string "name"
     t.integer "order"
     t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "assets", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "owner_id"
+    t.string "owner_type"
+    t.integer "report_id"
+    t.string "type", default: "PrimaryAsset", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_assets_on_owner_id"
+    t.index ["owner_type"], name: "index_assets_on_owner_type"
+    t.index ["type"], name: "index_assets_on_type"
   end
 
   create_table "attachments", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

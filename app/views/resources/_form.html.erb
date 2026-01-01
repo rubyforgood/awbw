@@ -100,48 +100,7 @@
   </div>
 
   <!-- Third Row -->
-  <%= render "shared/form_image_fields", f: f, include_main_image: true %>
-
-  <% if @resource.attachments.any? %>
-    <div class="bg-red-200 p-3 pb-9">
-      <h3 class="text-lg font-medium mt-6 mb-2">Legacy Attachments (need to download and upload above)</h3>
-      <ul class="list-disc pl-5">
-        <% Array(@resource.attachments).each_with_index do |attachment, i| %>
-          <% unless attachment.present? %>
-            <li class="text-red-600">Attachment[<%= i %>] is NIL</li>
-            <% next %>
-          <% end %>
-
-          <% unless attachment.respond_to?(:persisted?) %>
-            <li class="text-red-600">
-              Attachment[<%= i %>] is <%= attachment.class.name %> (not an AR model)
-            </li>
-            <% next %>
-          <% end %>
-
-          <li>
-            <% if attachment.persisted? && attachment.respond_to?(:file) && attachment.file.respond_to?(:attached?) &&
-              attachment.file.attached? %>
-              <%= link_to url_for(attachment.file), class: "underline" do %>
-                <%= attachment.file.filename %>
-              <% end %>
-            <% else %>
-              <span class="text-gray-500">
-                Attachment[<%= i %>] persisted?=<%= attachment.persisted? %>,
-                file?=<%= attachment.respond_to?(:file) %>,
-                attached?=<%= attachment.file.respond_to?(:attached?) %>,
-                is_attached?=<%= attachment.file.attached? %>
-              </span>
-            <% end %>
-            <br>
-            <%= attachment.file_file_name %>
-            <%= render "shared/form_image_field", f: f, object: attachment %>
-          </li>
-        <% end %>
-      </ul>
-
-    </div>
-  <% end %>
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
   <!-- Form Actions -->
   <div class="flex gap-2 mt-4">

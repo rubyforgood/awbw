@@ -1,8 +1,8 @@
-<%# shared/_media_image.html.erb %>
+<%# shared/_display_image.html.erb %>
 
 <% resource ||= nil %>
 <% item ||= nil %>
-<% field_name ||= :main_image %>
+<% field_name ||= :primary_asset %>
 <% file ||= item&.file || resource&.try(field_name)&.file || file %>
 
 <% variant ||= :gallery %>
@@ -10,7 +10,7 @@
 <% link ||= link_to_object %>
 <% display_open_pdf_link ||= false %>
 <% idx ||= 0 %>
-<% item_type ||= "Media" %>
+<% item_type ||= "PrimaryAsset" %>
 
 <% width ||= "32" %>
 <% height ||= width %>
@@ -92,7 +92,7 @@
 
     <% elsif icon_display %>
       <div class="<%= sizes[:image] %> hover:opacity-95 transition-opacity">
-        <%= render "media/display_icon",
+        <%= render "assets/display_icon",
                    resource: resource,
                    width: 18,
                    height: 18,

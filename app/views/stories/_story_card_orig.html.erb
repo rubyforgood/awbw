@@ -9,8 +9,8 @@
 <article class="w-full">
   <%= link_to href, data: { turbo_prefetch: false }, class: "group block focus:outline-none" do %>
     <%# Cover image (16:9), no border %>
-    <% if story.respond_to?(:main_image) && story.main_image&.file&.attached? %>
-      <% cover = story.main_image.file %>
+    <% if story.respond_to?(:primary_asset) && story.primary_asset&.file&.attached? %>
+      <% cover = story.primary_asset.file %>
     <% elsif story.respond_to?(:images) && story.images.first&.file&.attached? %>
       <% cover = story.images.attachments.first.file %>
     <% end %>

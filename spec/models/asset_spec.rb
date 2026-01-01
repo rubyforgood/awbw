@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe Image do
+RSpec.describe Asset do
   # pending "add some examples to (or delete) #{__FILE__}"
 
   describe "associations" do
@@ -17,7 +17,7 @@ RSpec.describe Image do
     # Presence validation for file itself is usually handled by Paperclip/ActiveStorage
 
     # TODO Move these to specific STI models as each will have different content types
-    # it { should validate_content_type_of(:file).allowing(Image::ACCEPTED_CONTENT_TYPES) }
+    # it { should validate_content_type_of(:file).allowing(Media::ACCEPTED_CONTENT_TYPES) }
     # it { should validate_content_type_of(:file).rejecting("text/plain", "text/xml") }
   end
 
