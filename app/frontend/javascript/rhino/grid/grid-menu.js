@@ -1,21 +1,11 @@
 import { html } from "lit";
-import "rhino-editor/exports/styles/trix.css"
-import { findParentNodeClosestToPos } from '@tiptap/core';
+import "rhino-editor/exports/styles/trix.css";
+import { findParentNodeClosestToPos } from "@tiptap/core";
 
 export function renderGridMenu(editor) {
   if (!editor || !editor.isActive("grid")) return html``;
 
   const buttons = [
-    {
-      title: "Add Row",
-      icon: "＋",
-      action: () => editor.chain().focus().addGridRow().run(),
-    },
-    {
-      title: "Add Column",
-      icon: "＋",
-      action: () => editor.chain().focus().addGridColumn().run(),
-    },
     {
       title: "Add Cell",
       icon: "＋",
@@ -23,8 +13,19 @@ export function renderGridMenu(editor) {
     },
     {
       title: "Delete Cell",
-      icon: "-",
-      action: () => editor.chain().focus().deleteGridCell().run(),
+      icon: "−",
+      action: () => editor.chain().focus().deleteLastGridCell().run(),
+    },
+    {
+      title: "Add Column",
+      icon: "＋",
+      action: () => editor.chain().focus().increaseGridColumns().run(),
+    },
+
+    {
+      title: "Remove Column",
+      icon: "−",
+      action: () => editor.chain().focus().decreaseGridColumns().run(),
     },
     {
       title: "Delete Grid",
@@ -58,14 +59,14 @@ export function renderGridMenu(editor) {
         // Find the current grid cell
         const gridCell = findParentNodeClosestToPos(
           state.selection.$from,
-          node => node.type.name === "gridCell"
+          (node) => node.type.name === "gridCell",
         );
         if (!gridCell) return;
 
         // Find the parent grid node
         const parentGrid = findParentNodeClosestToPos(
           state.selection.$from,
-          node => node.type.name === "grid"
+          (node) => node.type.name === "grid",
         );
         if (!parentGrid) return;
 
@@ -73,12 +74,14 @@ export function renderGridMenu(editor) {
 
         const span = prompt(
           `Enter column span (1–${maxColumns}):`,
-          gridCell.node.attrs.columnSpan
+          gridCell.node.attrs.columnSpan,
         );
         const num = parseInt(span, 10);
 
         if (!num || num < 1 || num > maxColumns) {
-          alert(`Invalid input! Please enter a number between 1 and ${maxColumns} or add more columns first.`);
+          alert(
+            `Invalid input! Please enter a number between 1 and ${maxColumns} or add more columns first.`,
+          );
           return;
         }
 
@@ -88,13 +91,12 @@ export function renderGridMenu(editor) {
         }
       },
     },
-
   ];
 
   return html`
     <role-toolbar class="toolbar" part="toolbar" role="toolbar">
       ${buttons.map(
-        btn => html`
+        (btn) => html`
           <button
             class="toolbar__button rhino-toolbar-button"
             type="button"
@@ -103,15 +105,12 @@ export function renderGridMenu(editor) {
             aria-disabled="false"
             @click=${btn.action}
           >
-            <role-tooltip
-              hoist
-              part="toolbar-tooltip toolbar-tooltip__table"
-            >
+            <role-tooltip hoist part="toolbar-tooltip toolbar-tooltip__table">
               ${btn.tooltip}
             </role-tooltip>
             <span part="toolbar__icon">${btn.icon}</span>
           </button>
-        `
+        `,
       )}
     </role-toolbar>
   `;
