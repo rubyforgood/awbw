@@ -61,9 +61,12 @@
     end
 %>
 
-<%# --------------------------------------------------
-   # Inner content (NO LINKS HERE)
-   # -------------------------------------------------- %>
+<%#
+  --------------------------------------------------
+  # Inner content (NO LINKS HERE)
+  # --------------------------------------------------
+%>
+
 <% inner = capture do %>
   <div class="<%= variant %>-item <%= resource&.class&.table_name %>-<%= idx %> <%= sizes[:wrapper] %>">
     <% if active_storage_file %>
@@ -73,15 +76,11 @@
               class: "#{sizes[:image]} hover:opacity-95 transition-opacity",
               alt: "#{item_type} preview #{idx + 1} (#{active_storage_file.blob.filename})"
             ) %>
-
       <% elsif active_storage_file.content_type == "application/pdf" %>
         <div class="flex items-center gap-3 p-4 border rounded-lg bg-gray-50">
           <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
-          <span class="font-medium underline hover:no-underline">
-            <%= active_storage_file.blob.filename %>
-          </span>
+          <span class="font-medium underline hover:no-underline"><%= active_storage_file.blob.filename %></span>
         </div>
-
       <% else %>
         <%= image_tag(
               active_storage_file,
@@ -89,7 +88,6 @@
               alt: "#{item_type} image #{idx + 1} (#{active_storage_file.blob.filename})"
             ) %>
       <% end %>
-
     <% elsif icon_display %>
       <div class="<%= sizes[:image] %> hover:opacity-95 transition-opacity">
         <%= render "assets/display_icon",
@@ -105,27 +103,25 @@
             class: sizes[:image],
             alt: "#{item_type} fallback image #{idx + 1}"
           ) %>
-
     <% end %>
-
   </div>
 <% end %>
 
-<%# --------------------------------------------------
-   # Optional link wrapper
-   # -------------------------------------------------- %>
+<%#
+  --------------------------------------------------
+  # Optional link wrapper
+  # --------------------------------------------------
+%>
+
 <% if link && link_href.present? %>
   <% link_options = if link_to_object
-                      { class: "display-image-link", data: { turbo_prefetch: false } }
+                      { class: "display-image-link", data: { turbo_frame: "_top", turbo_prefetch: false } }
                     else
                       { class: "display-image-link", target: "_blank", rel: "noopener noreferrer" }
-                    end
-  %>
-
+                    end %>
   <%= link_to link_href, **link_options do %>
     <%= inner %>
   <% end %>
-
   <% if active_storage_file&.previewable? && display_open_pdf_link &&
     active_storage_file.content_type == "application/pdf" %>
     <div class="mt-2 text-sm text-gray-600">
