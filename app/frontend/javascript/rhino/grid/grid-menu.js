@@ -48,14 +48,12 @@ export function renderGridMenu(editor) {
 
         const { state } = editor;
 
-        // Find the current grid cell
         const gridCell = findParentNodeClosestToPos(
           state.selection.$from,
           (node) => node.type.name === "gridCell",
         );
         if (!gridCell) return;
 
-        // Find the parent grid node
         const parentGrid = findParentNodeClosestToPos(
           state.selection.$from,
           (node) => node.type.name === "grid",
@@ -77,7 +75,6 @@ export function renderGridMenu(editor) {
           return;
         }
 
-        // Use chain() safely
         if (editor.chain) {
           editor.chain().focus().setColumnSpan(num).run();
         }

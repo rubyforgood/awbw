@@ -2,20 +2,18 @@
 // extends the default tiptap editor to have a toolbar
 // with table editing buttons in it.
 
-import { html } from "lit"
-import "rhino-editor/exports/styles/trix.css"
-import { TipTapEditor } from "rhino-editor/exports/elements/tip-tap-editor.js"
-import * as table_icons from "./table-icons.js"
-import * as table_translations from "./table-translations.js"
-import * as grid_icons from "./grid/grid-icons.js"
-import * as align_icons from "./align-icons.js"
-import { application } from "../controllers/application"
+import { html } from "lit";
+import "rhino-editor/exports/styles/trix.css";
+import { TipTapEditor } from "rhino-editor/exports/elements/tip-tap-editor.js";
+import * as table_icons from "./table-icons.js";
+import * as table_translations from "./table-translations.js";
+import * as grid_icons from "./grid/grid-icons.js";
+import * as align_icons from "./align-icons.js";
+import { application } from "../controllers/application";
 import { renderGridMenu } from "./grid/grid-menu.js";
 
 class CustomEditor extends TipTapEditor {
-
   renderToolbar() {
-
     if (this.readonly) return html``;
 
     return html`
@@ -89,23 +87,18 @@ class CustomEditor extends TipTapEditor {
           <slot name="after-increase-indentation-button"></slot>
 
           <slot name="grid-button">${this.renderGridButton()}</slot>
-          <slot name="table-button"
-            >
-            ${this.renderTableButton()}
-            </slot
-          >
+          <slot name="table-button"> ${this.renderTableButton()} </slot>
           <!-- Attachments -->
           <slot name="before-attach-files-button"></slot>
           <slot name="attach-files-button"
             >${this.renderAttachmentButton()}</slot
           >
           <slot name="after-attach-files-button"></slot>
-        <!-- Source Modal button -->
-
+          <!-- Source Modal button -->
 
           <!-- Undo -->
           <slot name="before-undo-button"></slot>
-          <!-- @ts-expect-error -->
+
           <slot name="undo-button"> ${this.renderUndoButton()} </slot>
           <slot name="after-undo-button"></slot>
 
@@ -120,13 +113,14 @@ class CustomEditor extends TipTapEditor {
               class="toolbar__button rhino-toolbar-button"
               type="button"
               @click=${() => {
-                const modalController = application.getControllerForElementAndIdentifier(
-                  document.querySelector("[data-controller='rhino-source']"),
-                  "rhino-source"
-                )
+                const modalController =
+                  application.getControllerForElementAndIdentifier(
+                    document.querySelector("[data-controller='rhino-source']"),
+                    "rhino-source",
+                  );
                 if (modalController) {
-                  modalController.registerEditor(this.editor)
-                  modalController.show()
+                  modalController.registerEditor(this.editor);
+                  modalController.show();
                 }
               }}
             >
@@ -144,8 +138,7 @@ class CustomEditor extends TipTapEditor {
           <slot name="toolbar-end">${this.renderToolbarEnd()}</slot>
         </role-toolbar>
 
-        ${this.renderTableMenu()}
-        ${renderGridMenu(this.editor)}
+        ${this.renderTableMenu()} ${renderGridMenu(this.editor)}
       </slot>
     `;
   }
@@ -157,13 +150,13 @@ class CustomEditor extends TipTapEditor {
         class="toolbar__button rhino-toolbar-button"
         title="Insert grid (Shift + click to enter custom dimensions)"
         @click=${(event) => {
-          this.editor.chain().focus(); // always focus first
+          this.editor.chain().focus();
 
           if (event.shiftKey) {
             // Prompt user for custom dimensions
             const input = prompt(
               "Enter grid dimensions as columns,rows (e.g., 2,4):",
-              "2,2"
+              "2,2",
             );
             if (!input) return;
 
@@ -172,11 +165,16 @@ class CustomEditor extends TipTapEditor {
             const rows = parseInt(rowsStr.trim(), 10);
 
             if (
-              isNaN(rows) || isNaN(columns) ||
-              rows <= 0 || columns <= 0 ||
-              rows > 6 || columns > 6
+              isNaN(rows) ||
+              isNaN(columns) ||
+              rows <= 0 ||
+              columns <= 0 ||
+              rows > 6 ||
+              columns > 6
             ) {
-              alert("Invalid dimensions! Rows and columns must be between 1 and 6.");
+              alert(
+                "Invalid dimensions! Rows and columns must be between 1 and 6.",
+              );
               return;
             }
 
@@ -187,7 +185,6 @@ class CustomEditor extends TipTapEditor {
           }
         }}
       >
-
         <slot name="table-tooltip">
           <role-tooltip
             id="table"
@@ -216,8 +213,12 @@ class CustomEditor extends TipTapEditor {
         aria-describedby="table"
         aria-disabled=${isDisabled}
         data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+        @click=${function (e) {
+          this.editor
+            .chain()
+            .focus()
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run();
         }}
       >
         <slot name="table-tooltip">
@@ -231,236 +232,235 @@ class CustomEditor extends TipTapEditor {
           </role-tooltip>
         </slot>
         <slot name="table-icon">${table_icons.insertTable}</slot>
-
       </button>
     `;
   }
   renderTableMenu() {
-    if (!this.editor || !this.editor.isActive('table')) {
+    if (!this.editor || !this.editor.isActive("table")) {
       return html``;
     }
     return html`
       <role-toolbar class="toolbar" part="toolbar" role="toolbar">
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().deleteTable().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.deleteTable}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.deleteTable}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().addColumnBefore().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.addColumnBefore}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.addColumnBefore}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().addColumnAfter().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.addColumnAfter}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.addColumnAfter}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().deleteColumn().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.deleteColumn}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.deleteColumn}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().addRowBefore().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.addRowBefore}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.addRowBefore}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().addRowAfter().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.addRowAfter}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.addRowAfter}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().deleteRow().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.deleteRow}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.deleteRow}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().mergeOrSplit().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.mergeOrSplit}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.mergeOrSplit}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().toggleHeaderRow().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.toggleHeaderRow}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.toggleHeaderRow}</slot>
-      </button>
-      <button
-        class="toolbar__button rhino-toolbar-button"
-        type="button"
-        aria-describedby="table"
-        aria-disabled="false"
-        data-role="toolbar-item"
-        @click=${function(e) {
-          this.editor.chain().focus().toggleHeaderColumn().run()
-        }}
-      >
-        <slot name="table-tooltip">
-          <role-tooltip
-            id="table"
-            hoist
-            part="toolbar-tooltip toolbar-tooltip__table"
-            exportparts=${this.__tooltipExportParts}
-          >
-            ${table_translations.toggleHeaderColumn}
-          </role-tooltip>
-        </slot>
-        <slot name="table-icon">${table_icons.toggleHeaderColumn}</slot>
-      </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().deleteTable().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.deleteTable}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.deleteTable}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().addColumnBefore().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.addColumnBefore}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.addColumnBefore}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().addColumnAfter().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.addColumnAfter}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.addColumnAfter}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().deleteColumn().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.deleteColumn}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.deleteColumn}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().addRowBefore().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.addRowBefore}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.addRowBefore}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().addRowAfter().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.addRowAfter}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.addRowAfter}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().deleteRow().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.deleteRow}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.deleteRow}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().mergeOrSplit().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.mergeOrSplit}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.mergeOrSplit}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().toggleHeaderRow().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.toggleHeaderRow}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.toggleHeaderRow}</slot>
+        </button>
+        <button
+          class="toolbar__button rhino-toolbar-button"
+          type="button"
+          aria-describedby="table"
+          aria-disabled="false"
+          data-role="toolbar-item"
+          @click=${function (e) {
+            this.editor.chain().focus().toggleHeaderColumn().run();
+          }}
+        >
+          <slot name="table-tooltip">
+            <role-tooltip
+              id="table"
+              hoist
+              part="toolbar-tooltip toolbar-tooltip__table"
+              exportparts=${this.__tooltipExportParts}
+            >
+              ${table_translations.toggleHeaderColumn}
+            </role-tooltip>
+          </slot>
+          <slot name="table-icon">${table_icons.toggleHeaderColumn}</slot>
+        </button>
       </role-toolbar>
     `;
   }
@@ -469,31 +469,38 @@ class CustomEditor extends TipTapEditor {
     if (!this.editor) return html``;
 
     const alignmentOptions = [
-      { name: 'left', icon: align_icons.alignLeft },
-      { name: 'center', icon: align_icons.alignCenter},
-      { name: 'right', icon: align_icons.alignRight},
-      { name: 'justify', icon: align_icons.alignJustify, style: 'margin-inline-end:1rem;' },
+      { name: "left", icon: align_icons.alignLeft },
+      { name: "center", icon: align_icons.alignCenter },
+      { name: "right", icon: align_icons.alignRight },
+      {
+        name: "justify",
+        icon: align_icons.alignJustify,
+        style: "margin-inline-end:1rem;",
+      },
     ];
 
-    const canAlign = ['paragraph', 'heading'].some(type => this.editor.isActive(type));
+    const canAlign = ["paragraph", "heading"].some((type) =>
+      this.editor.isActive(type),
+    );
     if (!canAlign) return html``;
 
     return html`
       ${alignmentOptions.map(
-        align => html`
+        (align) => html`
           <button
             class="toolbar__button rhino-toolbar-button"
             type="button"
-            style=${align.style || ''}
+            style=${align.style || ""}
             aria-disabled=${!this.editor}
-            @click=${() => this.editor.chain().focus().setTextAlign(align.name).run()}
+            @click=${() =>
+              this.editor.chain().focus().setTextAlign(align.name).run()}
           >
             ${align.icon}
           </button>
-        `
+        `,
       )}
     `;
   }
 }
 
-CustomEditor.define("custom-rhino-editor")
+CustomEditor.define("custom-rhino-editor");

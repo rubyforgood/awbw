@@ -70,9 +70,6 @@ export const Grid = Node.create({
           return true;
         },
 
-      /**
-       * Add ONE new cell to the grid
-       */
       addGridCell:
         () =>
         ({ state, dispatch }) => {
