@@ -7,6 +7,11 @@ export function renderGridMenu(editor) {
 
   const buttons = [
     {
+      title: "Delete Grid",
+      icon: "🗑",
+      action: () => editor.chain().focus().deleteGrid().run(),
+    },
+    {
       title: "Add Cell",
       icon: "＋",
       action: () => editor.chain().focus().addGridCell().run(),
@@ -34,31 +39,11 @@ export function renderGridMenu(editor) {
       icon: "−",
       action: () => editor.chain().focus().decreaseGridColumns().run(),
     },
-    {
-      title: "Delete Grid",
-      icon: "🗑",
-      action: () => editor.chain().focus().deleteGrid().run(),
-    },
-    {
-      title: "Align Top",
-      icon: "↑",
-      action: () => editor.chain().focus().setVerticalAlign("top").run(),
-    },
-    {
-      title: "Align Center",
-      icon: "↕",
-      action: () => editor.chain().focus().setVerticalAlign("center").run(),
-    },
-    {
-      title: "Align Botton",
-      icon: "↓",
-      action: () => editor.chain().focus().setVerticalAlign("bottom").run(),
-    },
+
     {
       title: "Set Column Span",
       icon: "S",
       action: () => {
-        // Make sure editor is defined
         if (!editor) return;
 
         const { state } = editor;
@@ -97,6 +82,21 @@ export function renderGridMenu(editor) {
           editor.chain().focus().setColumnSpan(num).run();
         }
       },
+    },
+    {
+      title: "Align Top",
+      icon: "↑",
+      action: () => editor.chain().focus().setVerticalAlign("top").run(),
+    },
+    {
+      title: "Align Center",
+      icon: "↕",
+      action: () => editor.chain().focus().setVerticalAlign("center").run(),
+    },
+    {
+      title: "Align Botton",
+      icon: "↓",
+      action: () => editor.chain().focus().setVerticalAlign("bottom").run(),
     },
   ];
 

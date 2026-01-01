@@ -58,7 +58,7 @@ export const GridCell = Node.create({
         "data-type": "grid-cell",
         hasborder: node.attrs.hasBorder ? "true" : "false",
         class: [
-          "grid-cell-editor", // always present for editor dashed border
+          "grid-cell-editor",
           borderClass,
           "p-3 rounded flex flex-col",
           verticalClass,
@@ -73,9 +73,6 @@ export const GridCell = Node.create({
 
   addCommands() {
     return {
-      /**
-       * Toggle solid/dashed border
-       */
       toggleCellBorder:
         () =>
         ({ state, dispatch }) => {
@@ -94,10 +91,6 @@ export const GridCell = Node.create({
           if (dispatch) dispatch(tr);
           return true;
         },
-
-      /**
-       * Set vertical alignment
-       */
       setVerticalAlign:
         (alignment) =>
         ({ state, dispatch }) => {
@@ -115,10 +108,6 @@ export const GridCell = Node.create({
           if (dispatch) dispatch(tr);
           return true;
         },
-
-      /**
-       * Set column span (clamped by parent grid)
-       */
       setColumnSpan:
         (span) =>
         ({ state, dispatch }) => {
