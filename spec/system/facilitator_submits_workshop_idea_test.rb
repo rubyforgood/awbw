@@ -2,29 +2,28 @@
 require 'rails_helper'
 
 RSpec.describe "Facilitators can submit a workshop idea", type: :system do
-  describe "Navigate to Workshop Idea page" do 
-    context "When Facilitator is logged in" do 
+  describe "Navigate to Workshop Idea page" do
+    context "When Facilitator is logged in" do
       before do
         create(:windows_type, :adult)
         create(:windows_type, :children)
         create(:windows_type, :combined)
-        
+
         user = create(:user)
         create(:facilitator, user: user)
         sign_in user
 
       visit new_workshop_idea_path
-        
       end
-      
+
       it "shows the new workshop form" do
         expect(page).to have_content("New Workshop idea")
-      end 
-      
+      end
+
       it "submits the form when clicking Submit" do
          fill_in 'workshop_idea_title', with: 'My Amazing Workshop'
             select 'ADULT WINDOWS', from: 'workshop_idea_windows_type_id'
-            #select 'Adult', from:'workshop_idea_age_range'
+            # select 'Adult', from:'workshop_idea_age_range'
             fill_in 'workshop_idea_objective', with: 'Learn something new'
             fill_in 'workshop_idea_description', with: 'This is a test workshop description.'
             fill_in 'workshop_idea_materials', with: 'Paper, markers'
@@ -48,12 +47,12 @@ RSpec.describe "Facilitators can submit a workshop idea", type: :system do
             # Submit
             click_button 'Submit'
             expect(page).to have_content('Workshop idea was successfully created')
-      end 
-      
-      it "cancels the form when clicking Cancel" do 
+      end
+
+      it "cancels the form when clicking Cancel" do
           fill_in 'workshop_idea_title', with: 'My unsubmitted Workshop'
              select 'ADULT WINDOWS', from: 'workshop_idea_windows_type_id'
-             #select 'Adult', from:'workshop_idea_age_range'
+            # select 'Adult', from:'workshop_idea_age_range'
             fill_in 'workshop_idea_objective', with: 'Learn nothing new'
             fill_in 'workshop_idea_description', with: 'This is a test workshop description.'
             fill_in 'workshop_idea_materials', with: 'Paper, markers'
@@ -74,11 +73,11 @@ RSpec.describe "Facilitators can submit a workshop idea", type: :system do
             fill_in 'workshop_idea_notes', with: 'Some notes'
             fill_in 'workshop_idea_tips', with: 'Some tips'
             attach_file('workshop_primary_media', Rails.root.join('spec/fixtures/some_file.png')) if page.has_field?('workshop_idea_primary_asset_attributes_file')
-            #Cancel
+            # Cancel
             click_link 'Cancel'
-            expect(page).to have_content('Featured Workshops')  
-            expect(page).to have_content('Community News')  
+            expect(page).to have_content('Featured Workshops')
+            expect(page).to have_content('Community News')
       end
-    end  
-  end  
-end  
+    end
+  end
+end
