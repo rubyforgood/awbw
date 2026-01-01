@@ -151,7 +151,7 @@ namespace :rich_text_urls_update do
 
       begin
         blob = ActiveStorage::Blob.find_by(aws_key: key)
-        image = record.images.build(type: "RichTextAsset")
+        asset = record.assets.build(type: "RichTextAsset")
         file_name = File.basename(key)
         temp = nil
 
@@ -180,14 +180,14 @@ namespace :rich_text_urls_update do
             )
             blob.update!(aws_key: key)
           end
-          image.file.attach(blob)
-          image.save!
+          asset.file.attach(blob)
+          asset.save!
 
-          new_url = url_for(image.file)
+          new_url = url_for(asset.file)
 
           # Verify attachment and association
-          record.images.reload
-          unless record.images.include?(image) && image.file.attached?
+          record.assets.reload
+          unless record.assets.include?(asset) && asset.file.attached?
             raise "Media not associated with record or file missing"
           end
           content = record.public_send(column)
