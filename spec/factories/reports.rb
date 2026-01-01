@@ -28,4 +28,4 @@ FactoryBot.define do
     type { "MonthlyReport" }
     # Add specific attributes or associations for MonthlyReport if needed
   end
-end 
+end

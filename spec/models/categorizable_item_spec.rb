@@ -24,4 +24,4 @@ RSpec.describe CategorizableItem do
   #   # expect(build(:categorizable_item, categorizable: workshop, category: category)).to be_valid
   #   pending("Requires functional category/workshop factories and associations uncommented")
   # end
-end 
+end

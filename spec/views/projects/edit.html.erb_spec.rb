@@ -6,7 +6,7 @@ RSpec.describe "projects/edit", type: :view do
 
   let(:project_status) { create(:project_status) }
   let(:windows_type) { create(:windows_type) }
-  
+
   let(:project) {
     Project.create!(
       windows_type: windows_type,
@@ -27,7 +27,6 @@ RSpec.describe "projects/edit", type: :view do
 
   it "renders the edit project form" do
     assert_select "form[action=?][method=?]", project_path(project), "post" do
-
       assert_select "select[name=?]", "project[windows_type_id]"
 
       assert_select "textarea[name=?]", "project[name]"

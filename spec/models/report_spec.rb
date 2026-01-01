@@ -7,12 +7,12 @@ RSpec.describe Report do
     it { should belong_to(:windows_type) }
     it { should belong_to(:owner).optional }
     it { should have_one(:form) }
-    it { should have_one(:main_image) }
-    it { should have_many(:gallery_images) }
+    it { should have_one(:primary_asset) }
+    it { should have_many(:gallery_assets) }
     it { should have_many(:form_fields).through(:form) }
     it { should have_many(:report_form_field_answers).dependent(:destroy) }
-    it { should have_many(:quotable_item_quotes).dependent(:destroy) }
-    it { should have_many(:quotes).through(:quotable_item_quotes).dependent(:destroy) }
+    it { should have_many(:quotable_item_quotes).dependent(:nullify) }
+    it { should have_many(:quotes).through(:all_quotable_item_quotes).dependent(:nullify) }
     it { should have_many(:notifications).dependent(:destroy) }
     it { should have_many(:sectorable_items).dependent(:destroy) }
     it { should have_many(:sectors).through(:sectorable_items).dependent(:destroy) }
@@ -28,4 +28,3 @@ RSpec.describe Report do
     it { should validate_content_type_of(:form_file).rejecting("text/plain", "text/xml") }
   end
 end
-

@@ -4,4 +4,4 @@ FactoryBot.define do
     association :user_form
     text { "User input value" }
   end
-end 
+end

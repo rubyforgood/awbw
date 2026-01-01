@@ -47,9 +47,13 @@ gem "stimulus-rails", "~> 1.3"
 
 gem "active_storage_validations", "~> 3.0"
 
+group :development do
+  gem "rubocop-rails-omakase", require: false
+end
+
 group :development, :test do
   gem "better_errors"
-  gem "brakeman", "~> 7.1.1", require: false
+  gem "brakeman", "~> 7.1.2", require: false
   gem "bundler-audit", require: false
   gem "capybara", "~> 3.36"
   gem "dotenv-rails"

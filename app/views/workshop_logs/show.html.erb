@@ -30,23 +30,8 @@
         </div>
       </div>
 
-      <div class="images">
-        <!-- Gallery Images -->
-        <% if @workshop_log.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
-          <div class="workshop_log-gallery single-workshop_log-detail text-center mb-4">
-            <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
-              <% @workshop_log.gallery_images.each_with_index do |gallery_image, idx| %>
-                <% if gallery_image.file&.attached? %>
-                  <%= image_tag url_for(gallery_image.file),
-                                alt: "Gallery Image #{idx + 1}",
-                                data: { file_preview_target: "preview" },
-                                class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-      </div>
+      <!-- Assets -->
+      <%= render "assets/display_gallery_media", resource: @workshop_log %>
 
       <!-- Participant Counts -->
       <div>
@@ -130,7 +115,7 @@
               <div>
                 <div class="relative bg-gray-100 italic leading-relaxed p-6 rounded-2xl">
                   <div class="font-semibold text-gray-700 italic text-lg">
-                    <%= link_to quote.description, quote_path(quote.object), class: "hover:underline" %>
+                    <%= link_to quote.detail, quote_path(quote.object), class: "hover:underline" %>
                     <span class="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded-full">
                       <span class="fa fa-eye-slash"></span>
                       Hidden

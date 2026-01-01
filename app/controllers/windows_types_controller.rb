@@ -1,5 +1,5 @@
 class WindowsTypesController < ApplicationController
-  before_action :set_windows_type, only: [:show, :edit, :update, :destroy]
+  before_action :set_windows_type, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -55,7 +55,7 @@ class WindowsTypesController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @categories = Category.age_ranges.order(:name)
+    @categories = Category.age_ranges.published.order(:name)
     @windows_type.categorizable_items.build
   end
 

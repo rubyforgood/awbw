@@ -6,7 +6,7 @@ RSpec.describe "banners/index", type: :view do
   let(:banner2) { create(:banner) }
 
   before(:each) do
-    assign(:banners, paginated([banner1, banner2]))
+    assign(:banners, paginated([ banner1, banner2 ]))
     allow(view).to receive(:current_user).and_return(admin)
   end
 

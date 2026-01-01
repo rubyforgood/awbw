@@ -1,6 +1,4 @@
-class ReportDecorator < Draper::Decorator
-  delegate_all
-
+class ReportDecorator < ApplicationDecorator
   def created_by
     user
   end
@@ -18,7 +16,7 @@ class ReportDecorator < Draper::Decorator
   end
 
   def monthly?
-    type.include?('Monthly')
+    type.include?("Monthly")
   end
 
   def display_date

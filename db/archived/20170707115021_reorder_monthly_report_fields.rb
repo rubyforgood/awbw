@@ -1,6 +1,6 @@
 class ReorderMonthlyReportFields < ActiveRecord::Migration
   def change
-    questions = ["If this is a quote or story from a participant please indicate the following", "Age", "Gender Identity", "Service Population"]
+    questions = [ "If this is a quote or story from a participant please indicate the following", "Age", "Gender Identity", "Service Population" ]
 
     forms = FormBuilder.where('name LIKE ?', '%Monthly Report%')
 
@@ -15,7 +15,7 @@ class ReorderMonthlyReportFields < ActiveRecord::Migration
     end
 
     print "\nUpdating some question labels: "
-    
+
     forms.each do |form|
       print "."
       field = form.form_fields.

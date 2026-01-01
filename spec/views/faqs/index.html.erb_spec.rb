@@ -17,7 +17,7 @@ RSpec.describe "faqs/index", type: :view do
 
     before do
       allow(view).to receive(:current_user).and_return(super_user)
-      assign(:faqs, paginate_faqs([faq1, faq2, inactive_faq]))
+      assign(:faqs, paginate_faqs([ faq1, faq2, inactive_faq ]))
       render
     end
 
@@ -44,7 +44,7 @@ RSpec.describe "faqs/index", type: :view do
     before do
       allow(view).to receive(:current_user).and_return(regular_user)
 
-      assign(:faqs, paginate_faqs([faq1, faq2]))
+      assign(:faqs, paginate_faqs([ faq1, faq2 ]))
       render
     end
 
@@ -65,7 +65,7 @@ RSpec.describe "faqs/index", type: :view do
 
     before do
       allow(view).to receive(:current_user).and_return(regular_user)
-      assign(:faqs, paginate_faqs([faq1, faq2]))
+      assign(:faqs, paginate_faqs([ faq1, faq2 ]))
       render
     end
 

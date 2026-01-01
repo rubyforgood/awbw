@@ -1,0 +1,36 @@
+<section class="other-categories mt-24 pt-6 border-t border-gray-100">
+  <div class="max-w-7xl mx-auto">
+
+    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 text-center">
+      <% if @sector_names.present? %>
+        Explore other service populations
+      <% else %>
+        Explore by service population
+      <% end %>
+    </h3>
+
+    <div class="flex flex-wrap justify-center gap-2 mb-6">
+      <% Sector.published.order(:name).each do |sector| %>
+        <% next if sector.name == @sector_names %>
+        <%= render "sectors/tagging_label", sector: sector %>
+      <% end %>
+    </div>
+
+    <!-- Explore all tags -->
+    <div class="text-center">
+      <%= link_to tags_path,
+                  class: "
+                    inline-flex items-center
+                    text-sm font-medium
+                    text-indigo-600
+                    hover:text-indigo-800
+                    hover:underline
+                    transition
+                  " do %>
+        Explore all tags
+        <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+      <% end %>
+    </div>
+
+  </div>
+</section>

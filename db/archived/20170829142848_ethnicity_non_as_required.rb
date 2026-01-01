@@ -5,7 +5,7 @@ class EthnicityNonAsRequired < ActiveRecord::Migration
     forms.each do |f|
       parent_field = f.form_fields.find_by(question: "Ethnicity")
 
-      parent_field.childs.each{|c| c.update(is_required: false)}
+      parent_field.childs.each { |c| c.update(is_required: false) }
     end
   end
 end

@@ -1,5 +1,4 @@
-class BookmarkDecorator < Draper::Decorator
-  delegate_all
+class BookmarkDecorator < ApplicationDecorator
   delegate :current_page, :total_pages, :limit_value
   decorates_association :bookmarkable
 
@@ -7,8 +6,12 @@ class BookmarkDecorator < Draper::Decorator
     "Bookmark of #{bookmarkable_class_name} ##{bookmarkable.id}"
   end
 
-  def description
+  def detail
     "Bookmarkable: #{bookmarkable_class_name} ##{bookmarkable.id} (#{bookmarkable.title})"
+  end
+
+  def display_image
+    bookmarkable.decorate.display_image
   end
 
   def breadcrumbs
@@ -16,8 +19,8 @@ class BookmarkDecorator < Draper::Decorator
   end
 
   def content
-    if bookmarkable_class_name == 'Workshop'
-      h.render '/workshops/show', workshop: bookmarkable, sectors: bookmarkable.sectors,
+    if bookmarkable_class_name == "Workshop"
+      h.render "/workshops/show", workshop: bookmarkable, sectors: bookmarkable.sectors,
                                        new_bookmark: bookmarkable.bookmarks.build,
                                        quotes: bookmarkable.quotes, leader_spotlights: bookmarkable.leader_spotlights,
                                        workshop_variations: bookmarkable.workshop_variations
@@ -29,11 +32,11 @@ class BookmarkDecorator < Draper::Decorator
   end
 
   def bookmarks_link
-    h.link_to 'My Bookmarks',h.bookmarks_path, class: 'underline'
+    h.link_to "My Bookmarks", h.bookmarks_path, class: "underline"
   end
 
   def bookmarkable_link
-    if bookmarkable_class_name == 'Workshop'
+    if bookmarkable_class_name == "Workshop"
       bookmarkable.breadcrumb_link
     end
   end

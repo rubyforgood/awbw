@@ -1,14 +1,18 @@
 class WorkshopVariationsController < ApplicationController
-
   def index
-    if current_user.super_user?
-      @workshop_variations = WorkshopVariation.joins(:workshop).
-        where(workshops: { inactive: false }).
-        order('workshops.title, workshop_variations.name').
-        paginate(page: params[:page], per_page: 25)
-    else
+    unless current_user.super_user?
       redirect_to authenticated_root_path
+      return
     end
+
+    @workshop_variations =
+      WorkshopVariation
+        .joins(:workshop)
+        .includes(:workshop)
+        .where(workshops: { inactive: false })
+        .order("workshops.title, workshop_variations.name")
+        .paginate(page: params[:page], per_page: 25)
+        .decorate
   end
 
   def new
@@ -23,7 +27,7 @@ class WorkshopVariationsController < ApplicationController
   def create
     @workshop_variation = WorkshopVariation.new(workshop_variation_params)
     if @workshop_variation.save
-      flash[:notice] = 'Workshop Variation has been created.'
+      flash[:notice] = "Workshop Variation has been created."
       if params[:from] == "workshop_show"
         redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
       elsif params[:from] == "index"
@@ -39,6 +43,8 @@ class WorkshopVariationsController < ApplicationController
 
   def show
     @workshop_variation = WorkshopVariation.find(params[:id]).decorate
+    @workshop_variation.increment_view_count!(session: session, request: request)
+
     @workshop = @workshop_variation.workshop.decorate
     @bookmark = current_user.bookmarks.find_by(bookmarkable: @workshop)
     @new_bookmark = @workshop.bookmarks.build
@@ -57,10 +63,10 @@ class WorkshopVariationsController < ApplicationController
     @workshop_variation = WorkshopVariation.find(params[:id])
 
     if @workshop_variation.update(workshop_variation_params)
-      flash[:notice] = 'Workshop Variation updated successfully.'
+      flash[:notice] = "Workshop Variation updated successfully."
       redirect_to workshop_variations_path
     else
-      flash[:alert] = 'Unable to update Workshop Variation.'
+      flash[:alert] = "Unable to update Workshop Variation."
       set_form_variables
       render :edit
     end
@@ -69,18 +75,17 @@ class WorkshopVariationsController < ApplicationController
   private
 
   def set_form_variables
-    @workshop_variation.build_main_image if @workshop_variation.main_image.blank?
-    @workshop_variation.gallery_images.build
+    @workshop_variation.build_primary_asset if @workshop_variation.primary_asset.blank?
+    @workshop_variation.gallery_assets.build
   end
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [:name, :code, :inactive, :ordering,
+      [ :name, :code, :inactive, :ordering,
        :youtube_url, :created_by_id, :workshop_id,
-       main_image_attributes: [:id, :file, :_destroy],
-       gallery_images_attributes: [:id, :file, :_destroy]
+       primary_asset_attributes: [ :id, :file, :_destroy ],
+       gallery_assets_attributes: [ :id, :file, :_destroy ]
       ]
     )
   end
-
 end

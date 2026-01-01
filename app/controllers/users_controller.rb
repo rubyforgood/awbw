@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [:show, :edit, :update, :destroy, :generate_facilitator]
+  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator ]
 
   def index
     return redirect_to authenticated_root_path unless current_user.super_user?
@@ -8,7 +8,6 @@ class UsersController < ApplicationController
     users = User.search_by_params(params).order(:first_name, :last_name)
     @users_count = users.size
     @users = users.paginate(page: params[:page], per_page: per_page)
-
   end
 
   def new
@@ -30,6 +29,10 @@ class UsersController < ApplicationController
     # Optional: assign random password if none provided
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
+
+    # assign facilitator
+    facilitator_id = params[:facilitator_id].presence || params.dig(:user, :facilitator_id).presence
+    @user.facilitator = Facilitator.find(facilitator_id) if facilitator_id
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
@@ -53,7 +56,7 @@ class UsersController < ApplicationController
       # @user.notifications.create(notification_type: 1)
       redirect_to users_path, notice: "User was successfully updated."
     else
-      flash[:alert] = 'Unable to update user.'
+      flash[:alert] = "Unable to update user."
       set_form_variables
       render :edit, status: :unprocessable_content
     end
@@ -73,7 +76,7 @@ class UsersController < ApplicationController
 
     if @user.update_with_password(password_params)
       bypass_sign_in(@user)
-      flash[:notice] = 'Your Password was updated.'
+      flash[:notice] = "Your Password was updated."
       redirect_to authenticated_root_path
     else
       flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
@@ -85,19 +88,7 @@ class UsersController < ApplicationController
     if @user.facilitator.present?
       redirect_to @user.facilitator and return
     else
-      @facilitator = Facilitator.new(
-        user: @user,
-        first_name: @user.first_name,
-        last_name: @user.last_name,
-        primary_email_address: @user.email,
-        phone_number: @user.phone,
-        street_address: @user.address,
-        city: @user.city,
-        state: @user.state,
-        zip: @user.zip,
-        created_by: current_user,
-        updated_by: current_user
-      )
+      @facilitator = FacilitatorFromUserService(user: @user).call
       if @facilitator.save
         redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
       else
@@ -112,13 +103,19 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
+  def set_facilitator
+    @facilitator = @user.facilitator ||
+      (Facilitator.where(id: params[:facilitator_id]).first if params[:facilitator_id].present?)
+  end
+
   def set_form_variables
+    set_facilitator
     @user.project_users.first || @user.project_users.build
     projects = if current_user.super_user?
                  Project.active
-               else
+    else
                  current_user.projects
-               end
+    end
     @projects_array = projects.order(:name).pluck(:name, :id)
   end
 
@@ -132,14 +129,13 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :first_name, :last_name, :email,
+      :avatar, :first_name, :last_name, :email,
       :address, :address2, :city, :city2, :state, :state2, :zip, :zip2,
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :comment,
       :notes, :primary_address, :avatar, :subscribecode,
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
       :confirmed, :inactive, :super_user, :legacy, :legacy_id,
-      avatar_image_attributes: [:id, :file, :_destroy],
-      project_users_attributes: [:id, :project_id, :position, :inactive, :_destroy]
+      project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
     )
   end
 end

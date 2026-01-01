@@ -20,7 +20,7 @@ RSpec.describe "community_news/show", type: :view do
       windows_type: nil,
       created_by: create(:user),
       updated_by: create(:user),
-    ))
+    ).decorate)
   end
 
   it "renders attributes in <p>" do

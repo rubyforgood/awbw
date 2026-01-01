@@ -1,14 +1,17 @@
 class QuotesController < ApplicationController
-  before_action :set_quote, only: [:show, :edit, :update, :destroy]
+  before_action :set_quote, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Quote.where.not(quote: [nil, ""]).order(created_at: :desc)
+    unpaginated = Quote.where.not(quote: [ nil, "" ])
+                       .search_by_params(params)
+                       .order(created_at: :desc)
     @quotes_count = unpaginated.count
     @quotes = unpaginated.paginate(page: params[:page], per_page: per_page)
   end
 
   def show
+    @quote.increment_view_count!(session: session, request: request)
   end
 
   def new

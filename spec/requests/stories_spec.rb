@@ -13,11 +13,10 @@ require 'rails_helper'
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
 RSpec.describe "/stories", type: :request do
-  
   # This should return the minimal set of attributes required to create a valid
   # Story. As you add validations to Story, be sure to
   # adjust the attributes here as well.
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:windows_type) { create(:windows_type) }
   let(:workshop) { create(:workshop) }
   let(:project) { create(:project) }
@@ -27,6 +26,7 @@ RSpec.describe "/stories", type: :request do
       title: "A Great Story",
       body: "Once upon a time, there was a great Rails developer...",
       youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      website_url: "https://www.example.com",
       published: true,
       windows_type_id: windows_type.id,
       workshop_id: workshop.id,
@@ -57,10 +57,33 @@ RSpec.describe "/stories", type: :request do
   end
 
   describe "GET /show" do
-    it "renders a successful response" do
-      story = Story.create! valid_attributes
-      get story_url(story)
-      expect(response).to be_successful
+    context "when story has NO external link" do
+      let(:story) do
+        Story.create!(
+          valid_attributes.merge(website_url: nil)
+        )
+      end
+
+      it "renders the show page" do
+        get story_url(story)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "when story HAS an external link" do
+      let(:story) do
+        Story.create!(
+          valid_attributes.merge(website_url: "www.google.com")
+        )
+      end
+
+      it "redirects to the external URL" do
+        get story_url(story)
+
+        expect(response).to have_http_status(:found)
+        expect(response).to redirect_to("https://www.google.com")
+      end
     end
   end
 
@@ -109,9 +132,11 @@ RSpec.describe "/stories", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          title: "A Great Story (Edited)"
+        )
+      end
 
       it "updates the requested story" do
         story = Story.create! valid_attributes
@@ -120,11 +145,11 @@ RSpec.describe "/stories", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the story" do
+      it "redirects to the stories index" do
         story = Story.create! valid_attributes
         patch story_url(story), params: { story: new_attributes }
         story.reload
-        expect(response).to redirect_to(story_url(story))
+        expect(response).to redirect_to(stories_url)
       end
     end
 

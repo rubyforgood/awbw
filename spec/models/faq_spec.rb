@@ -30,7 +30,7 @@ RSpec.describe Faq do
       let!(:first_faq) { create(:faq, ordering: 0) }
 
       it "returns FAQs ordered by ordering ascending" do
-        expect(Faq.reorder(nil).by_order).to eq([first_faq, second_faq, third_faq])
+        expect(Faq.reorder(nil).by_order).to eq([ first_faq, second_faq, third_faq ])
       end
     end
   end
@@ -40,7 +40,7 @@ RSpec.describe Faq do
     let!(:inactive_faq) { create(:faq, question: "Admin only FAQ", inactive: true) }
 
     it "returns all when no params" do
-      expect(Faq.search_by_params({})).to match_array([active_faq, inactive_faq])
+      expect(Faq.search_by_params({})).to match_array([ active_faq, inactive_faq ])
     end
 
     it "filters by query (case-insensitive substring)" do
@@ -65,5 +65,3 @@ RSpec.describe Faq do
     end
   end
 end
-
-

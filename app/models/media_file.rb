@@ -4,10 +4,10 @@ class MediaFile < ApplicationRecord
   # Images
   has_one_attached :file
 
-  FORM_FILE_CONTENT_TYPES = ["image/jpeg", "image/png",
+  FORM_FILE_CONTENT_TYPES = [ "image/jpeg", "image/png",
     "application/pdf", "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ]
   validates :file, content_type: FORM_FILE_CONTENT_TYPES
 end

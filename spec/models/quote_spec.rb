@@ -46,4 +46,4 @@ RSpec.describe Quote do
   it 'is valid with valid attributes' do
     expect(build(:quote)).to be_valid
   end
-end 
+end

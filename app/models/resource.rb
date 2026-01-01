@@ -1,8 +1,11 @@
 class Resource < ApplicationRecord
+  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
-  PUBLISHED_KINDS = ["Handout", "Scholarship", "Template", "Toolkit", "Form"]
-  KINDS = PUBLISHED_KINDS + ["Resource", "Story"]
+  PUBLISHED_KINDS = [ "Handout", "Scholarship", "Template", "Toolkit", "Form" ]
+  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme" ]
+
+  has_rich_text :rhino_text
 
   belongs_to :user
   belongs_to :workshop, optional: true
@@ -19,13 +22,13 @@ class Resource < ApplicationRecord
   has_many :related_workshops, through: :sectors, source: :workshops
   has_many :sectors, through: :sectorable_items, source: :sector
 
-  # Image associations
+  # Asset associations
   has_many :attachments, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
   has_many :images, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
-  has_one :main_image, -> { where(type: "Images::MainImage") },
-          as: :owner, class_name: "Images::MainImage", dependent: :destroy
-  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
-           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   # Default values
   attribute :inactive, :boolean, default: false
@@ -35,8 +38,8 @@ class Resource < ApplicationRecord
   validates :kind, presence: true
 
   # Nested attributes
-  accepts_nested_attributes_for :main_image, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :gallery_images, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :categorizable_items,
                                  allow_destroy: true,
@@ -53,58 +56,70 @@ class Resource < ApplicationRecord
 
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
-  scope :featured, -> (featured=nil) { featured.present? ? where(featured: featured) : where(featured: true) }
-  scope :kind, -> (kind) { where("kind like ?", kind ) }
-  scope :leader_spotlights, -> { kind("LeaderSpotlight") }
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
+  scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :featured, ->(featured = nil) { featured.present? ? where(featured: featured) : where(featured: true) }
+  scope :kinds, ->(kinds) {
+    kinds = Array(kinds).flatten.map(&:to_s)
+    where(kind: kinds)
+  }
+  scope :leader_spotlights, -> { kinds("LeaderSpotlight") }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
-  scope :published, -> (published=nil) { published.present? ?
-                                           where(inactive: !published) : where(inactive: false) }
+  scope :published, ->(published = nil) {
+    if [ "true", "false" ].include?(published)
+      result = where(inactive: published == "true" ? false : true)
+    else
+      result = where(inactive: false)
+    end
+    result.published_kinds
+  }
+  scope :published_search, ->(published_search = nil) { published_search.present? ? published(published_search) : published_kinds }
+
   scope :recent, -> { published.by_created }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
-  scope :story, -> { where(kind: ["Story", "LeaderSpotlight"]).order(created_at: :desc) }
+  scope :story, -> { where(kind: [ "Story", "LeaderSpotlight" ]).order(created_at: :desc) }
   scope :theme, -> { where(kind: "Theme") }
-  scope :title, -> (title) { where("title like ?", "%#{ title }%") }
+  scope :title, ->(title) { where("title like ?", "%#{ title }%") }
+
+  def self.search_by_params(params)
+    resources = all
+    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
+    resources = resources.sector_names(params[:sector_names]) if params[:sector_names].present?
+    resources = resources.category_names(params[:category_names]) if params[:category_names].present?
+    resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    resources = resources.title(params[:title]) if params[:title].present?
+    resources = resources.kinds(params[:kinds]) if params[:kinds].present?
+    resources = resources.published_search(params[:published_search]) if params[:published_search].present?
+    resources = resources.featured(params[:featured]) if params[:featured].present?
+    resources
+  end
 
   def story?
-    ["Story", "LeaderSpotlight"].include? self.kind
+    [ "Story", "LeaderSpotlight" ].include? self.kind
   end
 
   def custom_label_list
     "#{self.title} (#{self.kind.upcase})" unless self.kind.nil?
   end
 
-  # Methods
-  def led_count
-    0
-  end
-
   def name
     title || id
   end
 
-  def main_image_url
-    if main_image&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(main_image.file)
-    elsif gallery_images.first&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
-    else
-      ActionController::Base.helpers.asset_path("theme_default.png")
-    end
-  end
-
   def download_attachment
-    main_image || gallery_images.first || attachments.first
+    primary_asset || gallery_assets.first || attachments.first
   end
 
   def type_enum
-    types.map { |title| [title.titleize, title ]}
+    types.map { |title| [ title.titleize, title ] }
   end
 
   def types
-    ['Resource', 'LeaderSpotlight', 'SectorImpact',
-     'Story', 'Theme', 'Scholarship', 'TemplateAndHandout',
-     'ToolkitAndForm'
+    [ "Resource", "LeaderSpotlight", "SectorImpact",
+     "Story", "Theme", "Scholarship", "TemplateAndHandout",
+     "ToolkitAndForm"
     ]
   end
 
@@ -116,18 +131,8 @@ class Resource < ApplicationRecord
     created_at.month
   end
 
-  def self.search_by_params(params)
-    resources = all
-    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
-    resources = resources.title(params[:title]) if params[:title].present?
-    resources = resources.kind(params[:kind]) if params[:kind].present?
-    resources = resources.published(params[:published]) if params[:published].present?
-    resources = resources.featured(params[:featured]) if params[:featured].present?
-    resources
-  end
-
   private
   def self.reject?(resource)
-    resource['_create'] == '0'
+    resource["_create"] == "0"
   end
 end

@@ -1,35 +1,11 @@
 class WorkshopLog < Report
   belongs_to :workshop
-  belongs_to :user
-  belongs_to :project
-  has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
-  has_many :all_quotable_item_quotes,
-           ->(wl) { where(quotable_id: wl.id,
-                          quotable_type: %w[WorkshopLog Report]) }, # needed bc some are stored w type Report
-           class_name: "QuotableItemQuote",
-           inverse_of: :quotable
-  has_many :quotes, through: :all_quotable_item_quotes
-  has_many :report_form_field_answers,
-           foreign_key: :report_id, inverse_of: :report,
-           dependent: :destroy
-  # Image associations
-  has_many :media_files, dependent: :destroy # TODO - convert these to GalleryImages
-  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
-           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
-
-  # Nested attributes
-  accepts_nested_attributes_for :gallery_images, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :quotable_item_quotes, allow_destroy: true,
-                                reject_if: ->(attributes) { false } # allow empty
-  accepts_nested_attributes_for :all_quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :report_form_field_answers, allow_destroy: true,
-                                reject_if: ->(attributes) { false } # allow empty
 
   # Validations
+  validates :date, presence: true
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
             :children_first_time, :teens_first_time, :adults_first_time,
             numericality: { greater_than_or_equal_to: 0, only_integer: true }
-  validates :date, presence: true
 
   # Callbacks
   after_save :update_owner_and_date
@@ -76,9 +52,17 @@ class WorkshopLog < Report
     title
   end
 
+  def workshop_name
+    workshop&.title
+  end
+
+  def windows_type_name
+    windows_type&.short_name
+  end
+
   def type_title
     if windows_type
-      "#{windows_type.short_name} #{type}"
+      "#{windows_type_name} #{type}"
     else
       "#{type}"
     end
@@ -96,27 +80,27 @@ class WorkshopLog < Report
   end
 
   def num_ongoing
-    field_ids = FormField.where('question LIKE ? OR ?', '%on-going%', '%ongoing%')
+    field_ids = FormField.where("question LIKE ? OR ?", "%on-going%", "%ongoing%")
     report_form_field_answers.where(form_field_id: field_ids)
       .sum(:answer).to_i if field_ids.any?
   end
 
   def num_first_time
-    field_ids = FormField.where('question LIKE ?', '%first%')
+    field_ids = FormField.where("question LIKE ?", "%first%")
     report_form_field_answers.where(form_field_id: field_ids)
       .sum(:answer).to_i if field_ids.any?
   end
 
   def combined_num_ongoing(field_type)
     ongoing = "%Ongoing #{field_type}"
-    field_ids = FormField.where('question LIKE ?', "%#{ongoing}%")
+    field_ids = FormField.where("question LIKE ?", "%#{ongoing}%")
     report_form_field_answers.where(form_field_id: field_ids)
       .sum(:answer).to_i if field_ids.any?
   end
 
   def combined_num_first_time(field_type)
     first_time = "First-time #{field_type}"
-    field_ids = FormField.where('question LIKE ?', "%#{first_time}%")
+    field_ids = FormField.where("question LIKE ?", "%#{first_time}%")
     report_form_field_answers.where(form_field_id: field_ids)
       .sum(:answer).to_i if field_ids.any?
   end
@@ -129,7 +113,7 @@ class WorkshopLog < Report
 
   def log_fields
     if form_builder
-      form_builder.forms[0].form_fields.where('ordering is not null and status = 1').
+      form_builder.forms[0].form_fields.where("ordering is not null and status = 1").
         order(ordering: :desc).all
     else
       []
@@ -141,7 +125,7 @@ class WorkshopLog < Report
   end
 
   def date_label
-   date ? date.strftime('%m/%d/%Y') : created_at.strftime('%m/%d/%Y')
+   date ? date.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
   end
 
   def workshop_quotes
@@ -160,9 +144,9 @@ class WorkshopLog < Report
     changes = {}
     changes[:date] = created_at if date.blank?
     changes[:owner_id] = workshop_id if owner_id.blank?
+    changes[:owner_type] = "Workshop" if workshop_id
     update_columns(changes) if changes.any?
   end
 
   protected
-
 end

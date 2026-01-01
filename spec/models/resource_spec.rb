@@ -5,8 +5,8 @@ RSpec.describe Resource do
 
   describe 'associations' do
     # Nested Attributes
-    it { should accept_nested_attributes_for(:main_image).allow_destroy(true) }
-    it { should accept_nested_attributes_for(:gallery_images).allow_destroy(true) }
+    it { should accept_nested_attributes_for(:primary_asset).allow_destroy(true) }
+    it { should accept_nested_attributes_for(:gallery_assets).allow_destroy(true) }
   end
 
   describe 'validations' do

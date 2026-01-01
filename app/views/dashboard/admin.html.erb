@@ -1,18 +1,40 @@
 <section class="mt-10 px-8">
   <div class="flex flex-col items-start mb-4">
-    <h2 class="text-3xl text-gray-700 m-2">Admin Dashboard</h2>
+    <h2 class="text-3xl text-gray-700 my-2">Admin Dashboard</h2>
   </div>
 
   <div class="flex gap-6">
     <!-- Column 1 -->
     <div class="flex flex-col gap-4 flex-1">
-      User-generated content
+      Admin-generated
+      <% @system_cards.each do |card| %>
+        <a href="<%= card[:path] %>"
+           class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+                  <%= card[:bg_color] %> <%= card[:text_color] %>
+                  <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
+          <div class="text-5xl text-gray-700 flex-shrink-0">
+<!--            <i class="fa-solid <%#= card[:icon] %>" aria-hidden="true"></i>-->
+            <%= card[:icon] %>
+          </div>
+
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-gray-800 break-words">
+              <%= card[:title] %>
+            </h3>
+          </div>
+
+        </a>
+      <% end %>
+    </div>
+
+    <!-- Column 2 -->
+    <div class="flex flex-col gap-4 flex-1">
+      User-generated
       <% @user_content_cards.each do |card| %>
         <a href="<%= card[:path] %>"
            class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                   <%= card[:bg_color] %> <%= card[:text_color] %>
-                  hover:bg-gray-100 transition-colors transition-shadow duration-300 p-4">
-
+                  <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
           <div class="text-5xl text-gray-700 flex-shrink-0">
             <%= card[:icon] %>
           </div>
@@ -24,30 +46,16 @@
         </a>
       <% end %>
     </div>
+  </div>
 
-    <!-- Column 2 -->
-    <div class="flex flex-col gap-4 flex-1">
-      System settings
-      <% @system_cards.each do |card| %>
-        <a href="<%= card[:path] %>"
-           class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
-                  <%= card[:bg_color] %> <%= card[:text_color] %>
-                  hover:bg-gray-100 transition-colors transition-shadow duration-300 p-4">
-          <div class="text-5xl text-gray-700 flex-shrink-0">
-            <%= card[:icon] %>
-          </div>
-
-          <div class="flex-1">
-            <h3 class="text-xl font-bold text-gray-800 break-words"><%= card[:title] %></h3>
-          </div>
-
-        </a>
-      <% end %>
+  <div class="mt-20">
+    Base data
+    <div class="flex gap-6 mt-3">
       <% @reference_cards.each do |card| %>
         <a href="<%= card[:path] %>"
            class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                   <%= card[:bg_color] %> <%= card[:text_color] %>
-                  hover:bg-gray-100 transition-colors transition-shadow duration-300 p-4">
+                  <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
 
           <div class="text-5xl text-gray-700 flex-shrink-0">
             <%= card[:icon] %>
@@ -66,14 +74,10 @@
 <div class="hidden
     bg-black
     bg-gray-50 bg-gray-100 bg-gray-200 bg-gray-500
-    bg-blue-50 bg-blue-100 bg-blue-200 bg-blue-500
-    bg-green-50 bg-green-100 bg-green-200 bg-green-500
-    bg-indigo-50 bg-indigo-100 bg-indigo-200 bg-indigo-500
-    bg-orange-50 bg-orange-100 bg-orange-200 bg-orange-500
-    bg-pink-50 bg-pink-100 bg-pink-200 bg-pink-500
-    bg-purple-50 bg-purple-100 bg-purple-200 bg-purple-500
+
     bg-red-800
-    bg-rose-50 bg-rose-100 bg-rose-200 bg-rose-500
+    bg-cyan-50 bg-cyan-100 bg-cyan-200 bg-cyan-500
+    bg-pink-50 bg-pink-100 bg-pink-200 bg-pink-500
     bg-yellow-50 bg-yellow-100 bg-yellow-200
 
     text-gray-50 text-transparent

@@ -20,4 +20,3 @@ RSpec.describe MediaFile do
     expect(media_file).to be_valid
   end
 end
-

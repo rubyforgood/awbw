@@ -1,0 +1,125 @@
+<div class="min-h-screen bg-gray-100 py-10 px-4">
+  <div class="max-w-lg mx-auto">
+
+    <!-- Ticket Container -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+
+      <!-- Ticket Header -->
+      <div class="<%= DomainTheme.bg_class_for(:events, intensity: 600) %> text-white px-6 py-4">
+        <div class="flex items-center justify-between gap-4">
+
+          <!-- Left: Logo -->
+          <div class="flex items-center gap-3 shrink-0">
+            <%= image_tag(
+                  "logo.png",
+                  alt: "Organization logo",
+                  class: "h-8 w-auto"
+                ) %>
+          </div>
+
+          <!-- Center: Title -->
+          <div class="text-center flex-1">
+            <h1 class="text-xl font-semibold tracking-wide">
+              Event Ticket
+            </h1>
+            <p class="text-sm opacity-90">
+              Registration Confirmation
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Ticket Body -->
+      <div class="px-6 py-6 space-y-5">
+        <!-- Assets -->
+        <%= render "assets/display_image",
+                   resource: @event_registration.event,
+                   width: 56, height: 48,
+                   variant: :index,
+                   link_to_object: true,
+                   file: @event_registration.event.decorate.display_image %>
+
+        <!-- Event Name -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 leading-tight">
+            <%= @event_registration.event.title %>
+          </h2>
+        </div>
+
+        <!-- Divider (perforation style) -->
+        <div class="relative my-6">
+          <div class="border-t border-dashed border-gray-300"></div>
+          <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
+          <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
+        </div>
+
+        <!-- Ticket Details -->
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+
+          <div>
+            <p class="text-gray-500 uppercase tracking-wide text-xs">Date</p>
+            <p class="font-medium text-gray-900">
+              <%= @event_registration.event.decorate.times(display_day: true, display_date: true) %>
+            </p>
+          </div>
+
+          <%# if @event_registration.event.location.present? %>
+            <div>
+              <p class="text-gray-500 uppercase tracking-wide text-xs">Location</p>
+              <p class="font-medium text-gray-900">
+                TBA<%#= @event_registration.event.location %>
+              </p>
+            </div>
+          <%# end %>
+
+          <div class="my-4">
+            <p class="text-gray-500 uppercase tracking-wide text-xs">Registrant</p>
+            <p class="font-medium text-gray-900">
+              <%= @event_registration.registrant.full_name %>
+            </p>
+          </div>
+
+          <div class="my-4">
+            <p class="text-gray-500 uppercase tracking-wide text-xs">Ticket #</p>
+            <p class="font-mono text-gray-900">
+              <%= @event_registration.id %>
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-gray-200"></div>
+
+        <!-- Status + Meta -->
+        <div class="flex items-center justify-between mt-4">
+          <div>
+            <% registration_color = @event_registration.checked_in? ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800" %>
+            <% payment_color = @event_registration.paid? ? "bg-green-100 text-green-800" : "bg-yellow-100 text-orange-800" %>
+
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium <%= registration_color %>">
+              <%= @event_registration.checked_in? ? "Checked In" : "Registered" %>
+            </span>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium <%= payment_color %>">
+              <%= @event_registration.paid? ? "Paid" : "Payment due" %>
+            </span>
+          </div>
+
+          <p class="text-xs text-gray-500">
+            Registered on <%= @event_registration.created_at.strftime("%B %d, %Y") %>
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- Ticket Footer -->
+      <div class="bg-gray-50 px-6 py-4 text-center text-xs text-gray-500">
+        Please present this ticket at check-in
+      </div>
+
+    </div>
+
+  </div>
+</div>

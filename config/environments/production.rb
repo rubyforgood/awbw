@@ -49,7 +49,16 @@ Rails.application.configure do
   # Store uploaded files on the digitalocean (see config/storage.yml for options).
   config.active_storage.service = :digitalocean
 
-  Rails.application.routes.default_url_options[:host] = ENV.fetch("APP_HOST", "localhost")
+  app_host = ENV.fetch("APP_HOST", "localhost")
+
+  Rails.application.routes.default_url_options[:host] = app_host
+
+  config.after_initialize do
+    ActiveStorage::Current.url_options = {
+      protocol: Rails.env.production? ? "https" : "http",
+      host: app_host
+    }
+  end
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true

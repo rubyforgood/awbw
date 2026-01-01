@@ -70,28 +70,31 @@ RSpec.describe Bookmark, type: :model do
       create_list(:bookmark, 7, bookmarkable: workshop2, created_at: 4.days.ago)
     end
 
-    it 'sorts by title by default' do
+    it 'sorts by newest-bookmarked by default' do
       params = {}
       result = Bookmark.search(params)
-      expect(result.first.bookmarkable.title).to eq("Alpha")
+      result = result.sorted(params[:sort])
+      expect(result.first.bookmarkable.title).to eq("Bravo")
     end
 
-    it 'sorts by led count when sort=led' do
-      params = { sort: "led" }
+    it 'sorts by title when sort=title' do
+      params = { sort: "title" }
       result = Bookmark.search(params)
-      expect(result.first.bookmarkable.led_count).to eq(workshop1.led_count)
+      result = result.sorted(params[:sort])
       expect(result.first.bookmarkable).to eq(workshop1)
     end
 
-    it 'sorts by led count when sort=bookmark_count' do
-      params = { sort: "bookmark_count" }
+    it 'sorts by led count when sort=popularity' do
+      params = { sort: "popularity" }
       result = Bookmark.search(params)
+      result = result.sorted(params[:sort])
       expect(result.first.bookmarkable).to eq(workshop2)
     end
 
-    it 'sorts by created_at when sort=created' do
-      params = { sort: "created" }
+    it 'sorts by created_at when sort=newest' do
+      params = { sort: "newest" }
       result = Bookmark.search(params)
+      result = result.sorted(params[:sort])
       expect(result.first.created_at).to eq(bookmark2.created_at)
       expect(result.first.bookmarkable).to eq(workshop2)
     end

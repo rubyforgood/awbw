@@ -2,7 +2,7 @@
 <% community_news_title = ERB::Util.url_encode(@community_news.title) %>
 <div class="min-h-screen py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-orange-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+    <div class="<%= DomainTheme.bg_class_for(:community_news) %> border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
         <span class="inline-block text-sm">
@@ -16,16 +16,21 @@
           <%= link_to "Edit", edit_community_news_path(@community_news),
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>
+
+        <% if @community_news.external_url.present? %>
+          <%= link_to "Website", safe_url(@community_news.external_url), target: "_blank", rel: "noopener noreferrer",
+                      class: "btn btn-secondary-outline" %>
+        <% end %>
       </div>
 
       <!-- Header Row -->
-      <div class="w-full">
+      <div class="w-full bg-white rounded-lg shadow-md p-6 space-y-6">
         <div class="max-w-3xl mx-auto px-4 py-10 text-gray-800">
 
           <!-- Title -->
-          <h1 class="text-3xl font-bold mb-2 text-gray-900 leading-tight">
-            <%= @community_news.title %>
-          </h1>
+          <div class="font-bold my-6 text-gray-900 leading-tight">
+            <%= title_with_badges(@community_news, font_size: "text-3xl") %>
+          </div>
 
           <!-- Meta Data (exact screenshot style) -->
           <div class="text-sm text-gray-600 space-y-0.5 mb-6">
@@ -33,30 +38,8 @@
             <p><strong>Organization Name:</strong> <%= @community_news.project&.name %></p>
           </div>
 
-          <!-- Hero Image -->
-          <% if @community_news.main_image&.file&.attached? %>
-            <div class="mb-8">
-              <%= image_tag @community_news.main_image.file,
-                            class: "w-full rounded-lg shadow-sm border border-gray-200",
-                            alt: @community_news.title %>
-            </div>
-          <% end %>
-
-          <!-- Gallery Images -->
-          <% if @community_news.gallery_images.any? { |img| img.persisted? && img.file.attached? } %>
-            <div class="community_news-gallery single-community_news-detail text-center mb-4">
-              <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-3xl">
-                <% @community_news.gallery_images.each_with_index do |gallery_image, idx| %>
-                  <% if gallery_image.file&.attached? %>
-                    <%= image_tag url_for(gallery_image.file),
-                                  alt: "Gallery Image #{idx + 1}",
-                                  data: { file_preview_target: "preview" },
-                                  class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
+          <!-- Assets -->
+          <%= render "assets/display_assets", resource: @community_news %>
 
           <!-- community_news Body Text -->
           <div class="prose prose-lg max-w-none text-gray-700 mb-10">
@@ -70,28 +53,28 @@
 
             <!-- Facebook -->
             <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{community_news_url}",
-                        target: "_blank", rel: "noopener",
+                        target: "_blank", rel: "noopener noreferrer",
                         class: "text-blue-600 hover:text-blue-800" do %>
               <i class="fab fa-facebook-square fa-lg"></i>
             <% end %>
 
             <!-- X / Twitter -->
             <%= link_to "https://twitter.com/intent/tweet?url=#{community_news_url}&text=#{community_news_title}",
-                        target: "_blank", rel: "noopener",
+                        target: "_blank", rel: "noopener noreferrer",
                         class: "text-sky-500 hover:text-sky-700" do %>
               <i class="fab fa-x-twitter fa-lg"></i>
             <% end %>
 
             <!-- LinkedIn -->
             <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{community_news_url}",
-                        target: "_blank", rel: "noopener",
+                        target: "_blank", rel: "noopener noreferrer",
                         class: "text-blue-700 hover:text-blue-900" do %>
               <i class="fab fa-linkedin fa-lg"></i>
             <% end %>
 
             <!-- Pinterest -->
             <%= link_to "https://pinterest.com/pin/create/button/?url=#{community_news_url}&description=#{community_news_title}",
-                        target: "_blank", rel: "noopener",
+                        target: "_blank", rel: "noopener noreferrer",
                         class: "text-red-600 hover:text-red-800" do %>
               <i class="fab fa-pinterest-square fa-lg"></i>
             <% end %>

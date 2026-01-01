@@ -1,0 +1,50 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="<%= DomainTheme.bg_class_for(:tutorials) %> border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+      <!-- Top Right Utility Buttons -->
+      <div class="text-right mb-4 space-x-1">
+        <span class="inline-block text-md">
+          <%= render "bookmarks/editable_bookmark_button", resource: @tutorial.object %>
+        </span>
+
+        <% if current_user.super_user? %>
+          <%= link_to("Edit", edit_tutorial_path(@tutorial),
+                      class: "admin-only bg-blue-100 btn btn-primary-outline") %>
+        <% end %>
+      </div>
+
+      <!-- Resource Card -->
+      <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+
+        <!-- Title -->
+        <div class="font-semibold text-gray-900 my-6">
+          <%= title_with_badges(@tutorial, font_size: "text-3xl") %>
+        </div>
+
+        <!-- Embedded Video -->
+        <% if @tutorial.youtube_url.present? %>
+          <div class="mb-6">
+            <div class="relative w-full overflow-hidden rounded-lg shadow-sm" style="padding-top: 56.25%;">
+              <iframe
+                src="<%= youtube_embed_url(@tutorial.youtube_url) %>"
+                title="<%= @tutorial.title %>"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                class="absolute inset-0 h-full w-full border-0">
+              </iframe>
+            </div>
+          </div>
+        <% end %>
+
+        <%= render "assets/display_assets", resource: @tutorial %>
+
+
+        <!-- Main Text -->
+        <div class="prose leading-relaxed text-gray-800 text-left text-start pb-10 mb-10">
+          <%= @tutorial.display_text %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

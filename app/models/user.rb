@@ -38,21 +38,20 @@ class User < ApplicationRecord
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   has_many :windows_types, through: :projects
   # Images
-  has_one_attached :avatar # old paperclip -- TODO convert these to SquareImage belonging to Facilitator
+  has_one_attached :avatar
 
   # Nested attributes
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :project_users, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["organization_id"].blank? }
+    reject_if: proc { |attrs| attrs["project_id"].blank? || attrs["title"].blank? }
 
   # Validations
-  validates :first_name, :last_name, presence: true
-  validates :email, presence: true, uniqueness: {case_sensitive: false}
+  validates :email, presence: true, uniqueness: { case_sensitive: false }
 
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes [:email, :first_name, :last_name, :phone]
+    attributes [ :email, :first_name, :last_name, :phone ]
     attributes user: "projects.name"
   end
 

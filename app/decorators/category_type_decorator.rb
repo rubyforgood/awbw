@@ -1,10 +1,8 @@
-class CategoryTypeDecorator < Draper::Decorator
-	delegate_all
+class CategoryTypeDecorator < ApplicationDecorator
+  def title
+    name.titleize
+  end
 
-	def title
-		name.titleize
-	end
-
-	def description
-	end
+  def detail
+  end
 end

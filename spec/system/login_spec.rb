@@ -14,14 +14,18 @@ RSpec.describe "User login", type: :system do
     expect(page).to_not have_css("img[src*='missing.png']")
   end
 
-  it "shows default avatar when logged out, then user avatar after login" do
-    visit new_user_session_path
-    fill_in "Email", with: user.email
-    fill_in "Password", with: user.password
-    click_button "Log in"
+  scenario "User login shows avatar only after login" do
+    visit unauthenticated_root_path
 
-    File.write("tmp/capybara-page.html", page.html)
+    # Logged out state
+    expect(page).not_to have_css("#avatar")
 
-    expect(page).to have_css("#avatar", wait: 5)
+    # Log in
+    sign_in user
+    visit authenticated_root_path
+
+    # Logged in state
+    expect(page).to have_css("#avatar")
+    expect(page).to have_css("#avatar-image")
   end
 end

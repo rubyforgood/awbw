@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./pagination.css";
 @import "./components/buttons";
+@plugin "@tailwindcss/typography";
 
 @source "../../views/**/*.html.erb";
 @source "../../javascript/**/*.js";
@@ -15,6 +16,9 @@
   --color-success: var(--color-green-500);
   --color-transparent: transparent;
 }
+
+/* Used to generate classes from `domain_theme.rb`*/
+@source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,green}-{50,{100..900..100},950}");
 
 /* ✅ Safelist dynamically generated colors */
 @layer utilities {
@@ -72,4 +76,68 @@
 .readonly input,
 .readonly textarea {
   @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.is-active {
+  @apply text-primary border-b-2 border-primary font-bold bg-gray-100;
+}
+
+
+custom-rhino-editor table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+custom-rhino-editor table td, custom-rhino-editor table th {
+  border: 2px solid #ced4da;
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 3px 5px;
+  position: relative;
+  vertical-align: top;
+}
+custom-rhino-editor table td > *, custom-rhino-editor table th > * {
+  margin-bottom: 0;
+}
+custom-rhino-editor table th {
+  background-color: #f1f3f5;
+  font-weight: bold;
+  text-align: left;
+}
+custom-rhino-editor table .selectedCell:after {
+  background: rgba(200, 200, 255, 0.4);
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+custom-rhino-editor table .column-resize-handle {
+  background-color: #adf;
+  bottom: -2px;
+  position: absolute;
+  right: -2px;
+  pointer-events: none;
+  top: 0;
+  width: 4px;
+}
+custom-rhino-editor table p {
+  margin: 0;
+}
+custom-rhino-editor a {
+  @apply underline text-blue-600 hover:text-blue-800;
+}
+.tableWrapper {
+  padding: 1rem 0;
+  overflow-x: auto;
+
 }

@@ -15,4 +15,4 @@ FactoryBot.define do
     # A minimal factory might skip the file if not strictly needed for validation
     # or associate with a pre-existing owner if that's sufficient for the test.
   end
-end 
+end

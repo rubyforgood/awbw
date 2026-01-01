@@ -1,9 +1,12 @@
-class EventDecorator < Draper::Decorator
-  delegate_all
+class EventDecorator < ApplicationDecorator
   decorates_association :bookmarkable
 
   def date
     start_date.strftime("%B %d, %Y")
+  end
+
+  def detail(length: nil)
+    length ? description&.truncate(length) : description
   end
 
   def calendar_links
@@ -79,21 +82,26 @@ class EventDecorator < Draper::Decorator
       t
     end
 
+    parts_for = lambda do |d, prefix: nil|
+      parts = []
+      parts << prefix if prefix
+      parts << "#{day.call(d)}, " if display_day
+      parts << "#{date.call(d)} @ " if display_date
+      parts << format_time.call(d)
+      parts.join
+    end
+
     # --------------------------------------------------
     # DIFFERENT DAY → two lines
     # --------------------------------------------------
     if s.to_date != e.to_date
-      line1 = "Start: "
-      line1 << "#{day.call(s)}, " if display_day
-      line1 << "#{date.call(s)} @ " if display_date
-      line1 << format_time.call(s)
-
-      line2 = "End: "
-      line2 << "#{day.call(e)}, " if display_day
-      line2 << "#{date.call(e)} @ " if display_date
-      line2 << format_time.call(e)
-
-      return "#{line1}<br>#{line2}"
+      return h.safe_join(
+        [
+          parts_for.call(s, prefix: "Start: "),
+          parts_for.call(e, prefix: "End: ")
+        ],
+        h.tag.br
+      )
     end
 
     # --------------------------------------------------
@@ -101,15 +109,14 @@ class EventDecorator < Draper::Decorator
     # --------------------------------------------------
     same_exact_time = (s.hour == e.hour) && (s.min == e.min)
 
-    line = ""
-    line << "#{day.call(s)}, " if display_day
-    line << "#{date.call(s)} @ " if display_date
+    parts = []
+    parts << "#{day.call(s)}, " if display_day
+    parts << "#{date.call(s)} @ " if display_date
 
     if same_exact_time
       # Only one time
-      line << format_time.call(s)
+      parts << format_time.call(s)
     else
-      # Start time
       s_hour = s.strftime("%-l")
       s_min  = s.strftime("%M")
       s_ampm = s.strftime("%P")
@@ -118,24 +125,24 @@ class EventDecorator < Draper::Decorator
       e_min  = e.strftime("%M")
       e_ampm = e.strftime("%P")
 
-      hide_start_min = (s_min == "00")
-      hide_end_min   = (e_min == "00")
+      hide_start_min  = (s_min == "00")
+      hide_end_min    = (e_min == "00")
       hide_start_ampm = (s_ampm == e_ampm)
 
       # Start
-      line << s_hour
-      line << ":#{s_min}" unless hide_start_min
-      line << " #{s_ampm}" unless hide_start_ampm
-
-      line << " - "
+      start_time = s_hour.dup
+      start_time << ":#{s_min}" unless hide_start_min
+      start_time << " #{s_ampm}" unless hide_start_ampm
 
       # End
-      line << e_hour
-      line << ":#{e_min}" unless hide_end_min
-      line << " #{e_ampm}"
+      end_time = e_hour.dup
+      end_time << ":#{e_min}" unless hide_end_min
+      end_time << " #{e_ampm}"
+
+      parts << "#{start_time} - #{end_time}"
     end
 
-    line
+    h.safe_join(parts)
   end
 
   def breadcrumbs
@@ -143,8 +150,8 @@ class EventDecorator < Draper::Decorator
   end
 
   def content
-    if bookmarkable_class_name == 'Workshop'
-      h.render '/workshops/show', workshop: bookmarkable, sectors: bookmarkable.sectors,
+    if bookmarkable_class_name == "Workshop"
+      h.render "/workshops/show", workshop: bookmarkable, sectors: bookmarkable.sectors,
                                        new_bookmark: bookmarkable.bookmarks.build,
                                        quotes: bookmarkable.quotes, leader_spotlights: bookmarkable.leader_spotlights,
                                        workshop_variations: bookmarkable.workshop_variations
@@ -156,11 +163,11 @@ class EventDecorator < Draper::Decorator
   end
 
   def bookmarks_link
-    h.link_to 'My Bookmarks',h.bookmarks_path, class: 'underline'
+    h.link_to "My Bookmarks", h.bookmarks_path, class: "underline"
   end
 
   def bookmarkable_link
-    if bookmarkable_class_name == 'Event'
+    if bookmarkable_class_name == "Event"
       bookmarkable.breadcrumb_link
     end
   end

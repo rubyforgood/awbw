@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe WorkshopVariation do
-
   describe 'associations' do
     it { should belong_to(:workshop) }
   end
@@ -18,4 +17,4 @@ RSpec.describe WorkshopVariation do
   #   # expect(build(:workshop_variation)).to be_valid
   #   pending("Requires functional workshop factory and association uncommented")
   # end
-end 
+end

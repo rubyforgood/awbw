@@ -4,10 +4,13 @@ class EventsController < ApplicationController
 
   def index
     unpaginated = current_user.super_user? ? Event.all : Event.published
+    unpaginated = unpaginated.search_by_params(params)
     @events = unpaginated.order(start_date: :desc)
   end
 
   def show
+    @event = @event.decorate
+    @event.increment_view_count!(session: session, request: request)
   end
 
   def new # all logged in users can create events
@@ -16,7 +19,6 @@ class EventsController < ApplicationController
   end
 
   def edit
-    @event = @event.decorate
     set_form_variables
     unless @event.created_by == current_user || current_user.super_user?
       redirect_to events_path, alert: "You are not authorized to edit this event."
@@ -64,8 +66,9 @@ class EventsController < ApplicationController
   private
 
   def set_form_variables
-    @event.build_main_image if @event.main_image.blank?
-    @event.gallery_images.build
+    @event = @event.decorate
+    @event.build_primary_asset if @event.primary_asset.blank?
+    @event.gallery_assets.build
   end
 
   def set_event
@@ -80,8 +83,8 @@ class EventsController < ApplicationController
                                   :start_date, :end_date,
                                   :registration_close_date,
                                   :publicly_visible,
-                                  main_image_attributes: [:id, :file, :_destroy],
-                                  gallery_images_attributes: [:id, :file, :_destroy]
+                                  primary_asset_attributes: [ :id, :file, :_destroy ],
+                                  gallery_assets_attributes: [ :id, :file, :_destroy ]
                                   )
   end
 

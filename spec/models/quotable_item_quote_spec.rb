@@ -22,4 +22,4 @@ RSpec.describe QuotableItemQuote do
   #   # expect(build(:quotable_item_quote)).to be_valid
   #   pending("Requires functional quote/quotable factories and associations uncommented")
   # end
-end 
+end

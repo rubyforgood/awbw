@@ -1,10 +1,8 @@
-class NotificationDecorator < Draper::Decorator
-	delegate_all
+class NotificationDecorator < ApplicationDecorator
+  def title
+    "Re #{noticeable_type} ##{noticeable_id}"
+  end
 
-	def title
-		"Re #{noticeable_type} ##{noticeable_id}"
-	end
-
-	def description
-	end
+  def detail
+  end
 end

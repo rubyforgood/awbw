@@ -1,8 +1,12 @@
-class StoryDecorator < Draper::Decorator
-  delegate_all
+class StoryDecorator < ApplicationDecorator
+  include ::Linkable
 
-  def description
-    body.truncate(50)
+  def detail(length: 50)
+    body&.truncate(length)
+  end
+
+  def external_url
+    object.website_url
   end
 
   def inactive?

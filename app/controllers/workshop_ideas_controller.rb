@@ -1,11 +1,11 @@
 class WorkshopIdeasController < ApplicationController
-  before_action :set_workshop_idea, only: [:show, :edit, :update, :destroy]
+  before_action :set_workshop_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
     workshop_ideas = WorkshopIdea.search(params.slice(:title, :author_name))
     @workshop_ideas_count = workshop_ideas.size
-    @workshop_ideas = workshop_ideas.paginate(page: params[:page], per_page: per_page)
+    @workshop_ideas = workshop_ideas.paginate(page: params[:page], per_page: per_page).decorate
   end
 
   def show
@@ -47,12 +47,12 @@ class WorkshopIdeasController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @workshop_idea.build_main_image if @workshop_idea.main_image.blank?
-    @workshop_idea.gallery_images.build
+    @workshop_idea.build_primary_asset if @workshop_idea.primary_asset.blank?
+    @workshop_idea.gallery_assets.build
 
     @age_ranges = Category.includes(:category_type).where("metadata.name = 'AgeRange'").pluck(:name)
     @potential_series_workshops = Workshop.published.order(:title)
-    @category_types = CategoryType.published.includes(:categories).decorate
+    @category_types = CategoryType.includes(:categories).published.decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
   end
@@ -90,11 +90,11 @@ class WorkshopIdeasController < ApplicationController
       :visualization, :visualization_spanish,
       :warm_up, :warm_up_spanish,
 
-      main_image_attributes: [:id, :file, :_destroy],
-      gallery_images_attributes: [:id, :file, :_destroy],
-      workshop_series_children_attributes: [:id, :workshop_child_id, :workshop_parent_id, :theme_name,
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
+      workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
-                                            :series_order, :_destroy],
+                                            :series_order, :_destroy ],
     )
   end
 end

@@ -1,67 +1,70 @@
-<div class="min-h-screen py-8">
-  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
-      <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">
-            <%%= <%= plural_table_name.classify %>.model_name.human.pluralize %> (<%%= @<%= plural_table_name %>_count %>)
-          </h1>
-          <div class="flex gap-2">
-            <%%= link_to("New " + <%= singular_table_name.classify %>.model_name.human.downcase,
-                                new_<%= singular_table_name %>_path,
-                                class: "btn btn-primary-outline") %>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full table-fixed border-collapse border border-gray-200">
-            <thead class="w-full bg-gray-100">
-              <%% if @<%= plural_table_name %>.any? %>
-              <tr class="w-full">
-                <%% attributes = @<%= plural_table_name %>.first.attributes.keys - ["id", "created_at", "updated_at"] if @<%= plural_table_name %>.any? %>
-                <%% attributes&.each do |attribute| %>
-                  <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 min-w-[120px] whitespace-nowrap">
-                    <%%= attribute.humanize %>
-                  </th>
-                <%% end %>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 min-w-[20px] whitespace-nowrap">
-                  Actions
-                </th>
-              </tr>
-              <%% end %>
-            </thead>
-
-            <tbody class="w-full divide-y divide-gray-200">
-              <%% @<%= plural_table_name %>.each do |<%= singular_table_name %>| %>
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                  <%% attributes.each do |attribute| %>
-                    <td class="px-4 py-2 text-sm text-gray-800 whitespace-nowrap">
-                      <%%= <%= singular_table_name %>[attribute] %>
-                    </td>
-                  <%% end %>
-                  <td class="px-4 py-2 flex gap-2 justify-center">
-                    <%%= link_to "Edit", edit_<%= singular_table_name %>_path(<%= singular_table_name %>),
-                                class: "btn btn-secondary-outline" %>
-                  </td>
-                </tr>
-              <%% end %>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Empty state -->
-        <%% unless @<%= plural_table_name %>.any? %>
-          <p class="text-gray-500 text-center py-6">
-            No <%%= <%= plural_table_name.classify %>.model_name.human.pluralize %> found.
-          </p>
-        <%% end %>
-
-        <!-- Pagination -->
-        <div class="pagination flex justify-center mt-12">
-          <%%= tailwind_paginate @<%= plural_table_name %> %>
-        </div>
+<div class="<%%= controller_name %>-index max-w-7xl mx-auto <%%= DomainTheme.bg_class_for(controller_name.to_sym) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="w-full">
+    <div class="flex items-start justify-between mb-6">
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">
+          <%%= <%= singular_table_name.classify %>.model_name.human.titleize %>
+          (<%%= @count_display %>)
+        </h2>
       </div>
+
+      <div class="text-right text-end">
+        <%% if current_user.super_user? %>
+          <%%= link_to "New #{<%= singular_table_name.classify %>.model_name.human.downcase}",
+                       new_<%= singular_table_name %>_path,
+                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <%% end %>
+      </div>
+    </div>
+
+    <%%= render "search_boxes" rescue nil %>
+
+    <div class="overflow-x-auto">
+      <table class="w-full table-fixed border-collapse border border-gray-200">
+        <thead class="w-full bg-gray-100">
+          <%% if @<%= plural_table_name %>.any? %>
+          <tr class="w-full">
+            <%% attributes = @<%= plural_table_name %>.first.attributes.keys - ["id", "created_at", "updated_at"] if @<%= plural_table_name %>.any? %>
+            <%% attributes&.each do |attribute| %>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 min-w-[120px] whitespace-nowrap">
+                <%%= attribute.humanize %>
+              </th>
+            <%% end %>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 min-w-[20px] whitespace-nowrap">
+              Actions
+            </th>
+          </tr>
+          <%% end %>
+        </thead>
+
+        <tbody class="w-full divide-y divide-gray-200">
+          <%% @<%= plural_table_name %>.each do |<%= singular_table_name %>| %>
+            <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <%% attributes.each do |attribute| %>
+                <td class="px-4 py-2 text-sm text-gray-800 whitespace-nowrap">
+                  <%%= <%= singular_table_name %>[attribute] %>
+                </td>
+              <%% end %>
+              <td class="px-4 py-2 flex gap-2 justify-center">
+                <%%= link_to "Edit", edit_<%= singular_table_name %>_path(<%= singular_table_name %>),
+                            class: "btn btn-secondary-outline" %>
+              </td>
+            </tr>
+          <%% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty state -->
+    <%% unless @<%= plural_table_name %>.any? %>
+      <p class="text-gray-500 text-center py-6">
+        No <%%= <%= plural_table_name.classify %>.model_name.human.pluralize %> found.
+      </p>
+    <%% end %>
+
+    <!-- Pagination -->
+    <div class="pagination flex justify-center mt-12">
+      <%%= tailwind_paginate @<%= plural_table_name %> %>
     </div>
   </div>
 </div>

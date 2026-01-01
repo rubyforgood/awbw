@@ -1,0 +1,142 @@
+<div class="flex items-center space-x-2">
+
+  <%#= link_to workshops_path, class: "rounded-md px-3 py-2 text-lg font-medium text-gray-300 hover:bg-white/5 hover:text-white" do %>
+<!--    Workshops-->
+  <%# end %>
+
+  <!-- CURRICULUM -->
+  <div class="relative" data-controller="dropdown">
+    <button
+      type="button"
+      id="facilitate_button"
+      class="flex items-center gap-1 rounded-md px-3 py-2 text-lg font-medium cursor-pointer
+             text-gray-300 hover:bg-white/5 hover:text-white"
+      data-action="dropdown#toggle"
+      data-dropdown-payload-param='[{"curriculum_menu":"hidden"}]'>
+<!--      <i class="fas fa-handshake-simple text-base"></i>-->
+      Curriculum
+<!--      <i class="fas fa-chevron-down text-sm"></i>-->
+    </button>
+
+    <div
+      id="curriculum_menu"
+      class="hidden absolute left-0 mt-2 w-56 rounded-md bg-white py-1 shadow-lg outline outline-black/5"
+      data-dropdown-target="content">
+
+      <%= link_to workshops_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-palette"></i>
+        <span>Workshops</span>
+      <% end %>
+
+      <%= link_to resources_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-file"></i>
+        <span>Resources</span>
+      <% end %>
+
+      <%= link_to tags_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-tag"></i>
+        <span>Tags</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- COMMUNITY -->
+  <div class="relative" data-controller="dropdown">
+    <button
+      type="button"
+      id="community_button"
+      class="flex items-center gap-1 rounded-md px-3 py-2 text-lg font-medium cursor-pointer
+             text-gray-300 hover:bg-white/5 hover:text-white"
+      data-action="dropdown#toggle"
+      data-dropdown-payload-param='[{"community_menu":"hidden"}]'>
+<!--      <i class="fas fa-users text-base"></i>-->
+      Community
+<!--      <i class="fas fa-chevron-down text-sm"></i>-->
+    </button>
+
+    <div
+      id="community_menu"
+      class="hidden absolute left-0 mt-2 w-56 rounded-md bg-white py-1 shadow-lg outline outline-black/5"
+      data-dropdown-target="content">
+
+      <%= link_to community_news_index_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-newspaper"></i>
+        <span>Community news</span>
+      <% end %>
+
+      <%= link_to stories_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-file-alt"></i>
+        <span>Stories</span>
+      <% end %>
+
+      <%= link_to events_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-calendar"></i>
+        <span>Events</span>
+      <% end %>
+
+      <%= link_to facilitators_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-user-friends"></i>
+        <span>Facilitators</span>
+      <% end %>
+
+      <%= link_to projects_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-building"></i>
+        <span>Organizations</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- HELP -->
+  <div class="relative" data-controller="dropdown">
+    <button
+      type="button"
+      id="help_button"
+      class="flex items-center gap-2 rounded-md px-3 py-2 text-lg font-medium cursor-pointer
+             text-gray-300 hover:bg-white/5 hover:text-white"
+      data-action="dropdown#toggle"
+      data-dropdown-payload-param='[{"help_menu":"hidden"}]'>
+<!--      <i class="fas fa-circle-info text-base"></i>-->
+      Help
+<!--      <i class="fas fa-chevron-down text-sm"></i>-->
+    </button>
+
+    <div
+      id="help_menu"
+      class="hidden absolute left-0 mt-2 w-56 rounded-md bg-white py-1 shadow-lg outline outline-black/5"
+      data-dropdown-target="content">
+
+      <%= link_to faqs_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-question-circle"></i>
+        <span>FAQs</span>
+      <% end %>
+
+      <%= link_to contact_us_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-envelope"></i>
+        <span>Contact us</span>
+      <% end %>
+
+      <%= link_to "https://www.awbw.org", target: "_blank", rel: "noopener noreferrer",
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-globe"></i>
+        <span>Public website</span>
+      <% end %>
+
+      <%= link_to tutorials_path,
+                  class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+        <i class="fas fa-circle-info"></i>
+        <span>Tutorials</span>
+      <% end %>
+    </div>
+  </div>
+
+</div>

@@ -1,12 +1,15 @@
-class UserDecorator < Draper::Decorator
-  delegate_all
-
+class UserDecorator < ApplicationDecorator
   def title
     name
   end
 
-  def description
+  def detail
     email
+  end
+
+  def default_display_image
+    return avatar if respond_to?(:avatar) && avatar&.attached?
+    "missing.png"
   end
 
   def full_name
@@ -19,11 +22,11 @@ class UserDecorator < Draper::Decorator
   end
 
   def last_logged_in
-    return 'never' unless last_sign_in_at
+    return "never" unless last_sign_in_at
     "#{h.time_ago_in_words(last_sign_in_at)} ago"
   end
 
   def display_primary_address
-    primary_address == 1 ? 'work' : 'home'
+    primary_address == 1 ? "work" : "home"
   end
 end

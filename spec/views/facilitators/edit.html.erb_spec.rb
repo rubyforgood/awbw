@@ -4,7 +4,7 @@ RSpec.describe "facilitators/edit", type: :view do
     let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
-  let(:facilitator) { create(:facilitator, pronouns: "sdfsdf")}
+  let(:facilitator) { create(:facilitator, pronouns: "sdfsdf") }
 
   before(:each) do
     assign(:facilitator, facilitator)
@@ -17,8 +17,8 @@ RSpec.describe "facilitators/edit", type: :view do
   end
 
   it "has a form with the facilitator fields" do
-    expect(rendered).to have_field('First name', with: facilitator.user.first_name)
-    expect(rendered).to have_field('Last name', with: facilitator.user.last_name)
+    expect(rendered).to have_field('First name', with: facilitator.first_name)
+    expect(rendered).to have_field('Last name', with: facilitator.last_name)
     expect(rendered).to have_field('Pronouns', with: facilitator.pronouns)
     expect(rendered).to have_checked_field('facilitator_profile_show_pronouns') if facilitator.profile_show_pronouns
   end

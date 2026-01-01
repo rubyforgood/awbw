@@ -6,5 +6,4 @@ class MakeInactiveDefaultToTrueOnQuotes < ActiveRecord::Migration
   def down
     change_column :quotes, :inactive, :boolean, default: false
   end
-
 end

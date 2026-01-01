@@ -27,4 +27,3 @@ RSpec.describe Attachment do
   #   expect(build(:attachment, owner: create(:user))).to be_valid
   # end
 end
-

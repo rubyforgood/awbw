@@ -3,4 +3,4 @@ FactoryBot.define do
     sequence(:name) { |n| "Metadatum Name #{n}" }
     published { true }
   end
-end 
+end

@@ -1,6 +1,6 @@
 <div class="min-h-screen py-8">
   <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+    <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:quotes) %> border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -14,7 +14,8 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="rounded-xl bg-white p-6">
+          <div class="overflow-x-auto">
           <table class="w-full border-collapse border border-gray-200">
             <thead class="bg-gray-100">
             <tr>
@@ -44,19 +45,26 @@
 <!--                      <span-->
 <!--                        class="inline-flex items-center px-2 py-0.5 rounded-full-->
 <!--                               text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">-->
-<!--                        🌟 Featured-->
+<!--                        🌟 Dashboard feature -->
 <!--                      </span>-->
                     <%# end %>
                   </div>
                   <div class="font-semibold text-lg text-gray-700">
-                    <%= link_to h(quote.description), quote_path(quote.object), class: "hover:underline" %>
+                    <%= link_to h(quote.detail), quote_path(quote.object), class: "hover:underline" %>
                   </div>
                   <div class="italic text-gray-700 mt-1">
                     <%= "-- " %>
                     <%= quote.attribution %>
                     <%= "@ " + quote.created_at.strftime("%m-%d-%-Y") %>
                     <%= ("re " + link_to(quote.workshop.title, workshop_path(quote.workshop),
-                                        class: "hover:underline") if quote.workshop).to_s.html_safe %>
+                                         class: "hover:underline") if quote.workshop).to_s.html_safe %>
+                    <% quote.quotable_item_quotes.each do |qiq| %>
+                      <% if qiq.quotable %>
+                        from: <%= link_to qiq.quotable.title,
+                                    polymorphic_path(qiq.quotable),
+                                    class: "hover:underline" %>
+                      <% end %>
+                    <% end %>
                   </div>
                 </td>
                 <td class="px-4 py-2 text-center whitespace-nowrap">
@@ -68,6 +76,7 @@
             <% end %>
             </tbody>
           </table>
+        </div>
         </div>
 
         <!-- Empty state -->

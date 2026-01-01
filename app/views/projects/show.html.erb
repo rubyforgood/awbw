@@ -2,8 +2,12 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-8">
       <!-- Header actions -->
-      <div class="flex justify-end mb-6">
-        <%= link_to "Organizations", projects_path, class: "btn btn-secondary-outline mr-2" %>
+      <div class="flex justify-end mb-6 gap-2">
+
+        <%= link_to "Organizations", projects_path, class: "btn btn-secondary-outline" %>
+        <span class="inline-block text-sm">
+          <%= render "bookmarks/editable_bookmark_button", resource: @project %>
+        </span>
         <% if current_user.super_user? %>
           <%= link_to "Edit", edit_project_path(@project),
                       class: "admin-only bg-green-100 btn btn-primary-outline" %>
@@ -13,8 +17,8 @@
       <!-- Header: avatar + name + pronouns -->
       <div class="flex flex-col md:flex-row md:items-center md:gap-8 mb-10">
         <div class="flex-shrink-0 flex justify-center md:justify-start">
-          <% if @project.logo_image&.file&.attached? %>
-            <%= image_tag url_for(@project.logo_image.file),
+          <% if @project.logo&.attached? %>
+            <%= image_tag url_for(@project.logo),
                           class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
           <% else %>
             <%= image_tag "missing.png",
@@ -79,38 +83,40 @@
       <!-- Info grid -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Organization affiliations -->
-        <% if true || @project.profile_show_facilitator? %>
-          <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Windows facilitators</h2>
-            <% if @project.project_users.active.any? %>
-              <ul class="space-y-2">
-                <% @project.project_users.active.each do |pu| %>
-                  <li>
-                    <%= link_to pu.user.facilitator.name, facilitator_path(pu.user.facilitator),
-                                class: "text-blue-600 hover:underline font-medium" %>
-                    <% if pu.position.present? %>
-                      <span class="text-gray-600">– <%= pu.title.presence || pu.position.humanize %></span>
-                    <% end %>
-                  </li>
-                <% end %>
-              </ul>
-            <% else %>
-              <p class="text-gray-500 italic">No facilitators listed.</p>
-            <% end %>
-          </div>
-        <% end %>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Windows facilitators</h2>
+          <% if @project.project_users.active.any? %>
+            <ul class="space-y-2">
+              <% @project.project_users.active.each do |pu| %>
+                <li class="whitespace-nowrap">
+                  <%= pu.user.facilitator ? facilitator_profile_button(pu.user.facilitator) : pu.user.name %>
+                  <% if pu.position.present? %>
+                    <span class="text-gray-600">– <%= pu.title.presence || pu.position.humanize %></span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-gray-500 italic">No facilitators listed.</p>
+          <% end %>
+        </div>
 
         <!-- Sectors -->
         <% if true || @project.profile_show_sectors? %>
           <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors served</h2>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Service Populations</h2>
             <p>
               <% if @project.sectorable_items.any? %>
-                <%= @project.sectorable_items.joins(:sector).order("sectors.name").map do |item| %>
-                  <% "#{item.sector.name}#{ " (Leader)" if item.is_leader? }" %>
-                <% end.join(", ") %>
+                <div class="flex flex-wrap gap-2">
+                  <% @project.sectorable_items.joins(:sector).order("sectors.name").map do |si| %>
+                    <%= render "sectors/tagging_label",
+                               sector: si.sector,
+                               display_leader: true,
+                               is_leader: si.is_leader %>
+                  <% end %>
+                </div>
               <% else %>
-                <span class="text-gray-500 italic">No sectors selected.</span>
+                <span class="text-gray-500 italic">None selected.</span>
               <% end %>
             </p>
           </div>

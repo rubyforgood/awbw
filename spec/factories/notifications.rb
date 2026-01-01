@@ -8,4 +8,4 @@ FactoryBot.define do
        allow(notification).to receive(:send_notice).and_return(true)
     end
   end
-end 
+end

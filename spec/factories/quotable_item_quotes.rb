@@ -7,4 +7,4 @@ FactoryBot.define do
     # Needs a quotable instance, e.g., a Report
     association :quotable, factory: :report
   end
-end 
+end

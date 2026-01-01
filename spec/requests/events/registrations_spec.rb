@@ -6,7 +6,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
   before { sign_in user }
 
-  let(:turbo_headers) { {"Accept" => "text/vnd.turbo-stream.html"} }
+  let(:turbo_headers) { { "Accept" => "text/vnd.turbo-stream.html" } }
 
   describe "POST /events/:event_id/registrations" do
     context "when successful" do
@@ -29,7 +29,7 @@ RSpec.describe "Events::Registrations", type: :request do
           .and_return(false)
         allow_any_instance_of(EventRegistration)
           .to receive_message_chain(:errors, :full_messages)
-          .and_return(["Cannot register"])
+          .and_return([ "Cannot register" ])
       end
 
       it "returns turbo stream with alert" do
@@ -79,7 +79,7 @@ RSpec.describe "Events::Registrations", type: :request do
           .and_return(false)
         allow_any_instance_of(EventRegistration)
           .to receive_message_chain(:errors, :full_messages)
-          .and_return(["Cannot delete"])
+          .and_return([ "Cannot delete" ])
       end
 
       it "returns turbo stream with alert" do

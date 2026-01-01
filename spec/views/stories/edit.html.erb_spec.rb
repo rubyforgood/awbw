@@ -5,7 +5,7 @@ RSpec.describe "stories/edit", type: :view do
   let(:story) { create(:story, created_by: user, updated_by: user, body: "MyBody", youtube_url: "Youtube_url") }
 
   before(:each) do
-    assign(:story, story)
+    assign(:story, story.decorate)
     assign(:windows_types, [])
     assign(:workshops, [])
     assign(:projects, [])
@@ -17,7 +17,6 @@ RSpec.describe "stories/edit", type: :view do
     render
 
     assert_select "form[action=?][method=?]", story_path(story), "post" do
-
       assert_select "select[name=?]", "story[windows_type_id]"
 
       assert_select "select[name=?]", "story[project_id]"

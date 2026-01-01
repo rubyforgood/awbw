@@ -1,22 +1,21 @@
-<div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-orange-50 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
-      <!-- Header Row -->
-      <div class="w-full">
+<div class="community-news-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:community_news) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="w-full">
         <div class="flex items-start justify-between mb-6">
-          <div class="pr-6">
-            <h2 class="text-2xl font-semibold mb-2">Community News (<%= @community_news_count %>)</h2>
-          </div>
-          <div class="text-right text-end">
-            <% if current_user.super_user? %>
-              <%= link_to "New Post",
-                          new_community_news_path,
-                          class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-            <% end %>
-          </div>
-        </div>
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">Community news (<%= @count_display %>)</h2>
+      </div>
+      <div class="text-right text-end">
+        <% if current_user.super_user? %>
+          <%= link_to "New Post",
+                      new_community_news_path,
+                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
+    </div>
 
-        <% if @community_news.any? %>
+    <%= render "search_boxes" %>
+
+    <% if @community_news.any? %>
       <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -38,22 +37,20 @@
                   <%= render "bookmarks/editable_bookmark_icon", resource: news %>
                 </span>
 
-                <span class="w-24 h-14 rounded bg-gray-200 flex items-center justify-center shrink-0 mr-2">
-                  <% if news.main_image&.file&.blob&.persisted? %>
-                    <%= link_to (image_tag news.main_image.file,
-                                  class: "w-full rounded shadow-sm border border-gray-200",
-                                  alt: news.title),
-                                          community_news_path(news) %>
-                  <% else %>
-                    <svg class="w-6 h-6 text-gray-400"
-                         fill="currentColor" viewBox="0 0 20 18"></svg>
-                  <% end %>
-                </span>
+                <!-- Assets -->
+                <%= render "assets/display_image",
+                           resource: news,
+                           width: 24, height: 14,
+                           variant: :index,
+                           link_to_object: true,
+                           file: news.display_image %>
 
                 <!-- TITLE + BADGES -->
                 <span class="inline-flex items-center gap-2">
-                  <%= link_to title_with_badges(news, admin: current_user.super_user?).html_safe,
+                  <%= link_to title_with_badges(news, show_hidden_badge: current_user.super_user?).html_safe,
                               community_news_path(news),
+                              data: { turbo_prefetch: false },
+                              target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                               class: "font-bold hover:text-indigo-800 hover:underline" %>
                 </span>
               </td>
@@ -80,6 +77,7 @@
 
                   <%= link_to "View",
                               community_news_path(news),
+                              target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                               class: "btn btn-secondary-outline" %>
                 </div>
               </td>
@@ -108,7 +106,5 @@
       </div>
     <% end %>
       </div>
-    </div>
-  </div>
 </div>
 

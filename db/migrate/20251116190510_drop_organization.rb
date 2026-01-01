@@ -32,7 +32,7 @@ class DropOrganization < ActiveRecord::Migration[8.1]
       t.references :organization, null: false
       t.timestamps
     end
-    add_index :facilitator_organizations, [:facilitator_id, :organization_id],
+    add_index :facilitator_organizations, [ :facilitator_id, :organization_id ],
               unique: true, name: 'index_facilitator_organizations_on_ids'
 
     create_table :organization_workshops do |t|
@@ -40,7 +40,7 @@ class DropOrganization < ActiveRecord::Migration[8.1]
       t.references :workshop, null: false
       t.timestamps
     end
-    add_index :organization_workshops, [:organization_id, :workshop_id], unique: true, name: 'index_organization_workshops_on_ids'
+    add_index :organization_workshops, [ :organization_id, :workshop_id ], unique: true, name: 'index_organization_workshops_on_ids'
 
 
     rename_column :facilitators, :profile_show_affiliations, :profile_show_organizations

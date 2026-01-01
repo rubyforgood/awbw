@@ -1,0 +1,55 @@
+<div
+  data-controller="carousel"
+  class="relative swiper"
+  data-carousel-options-value='{
+    "slidesPerView": "auto",
+    "spaceBetween": 16
+  }'>
+  <!-- SLIDES -->
+  <div class="swiper-wrapper">
+    <% items.each do |item| %>
+      <div
+        class="
+    swiper-slide
+    shrink-0
+basis-[360px]
+    max-w-[360px]
+  "
+      >
+        <%= render "tagged_item_card", item: item %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- NEXT BUTTON -->
+  <button
+    class="
+      swiper-button-next-custom
+      absolute top-1/2 -translate-y-1/2 right-2
+      w-12 h-12 rounded-full
+      bg-white border border-gray-300
+      text-gray-700
+      shadow-md hover:shadow-lg
+      flex items-center justify-center
+      transition hover:bg-gray-50
+      z-40"
+    aria-label="Next">
+    <i class="fa-solid fa-chevron-right text-xl"></i>
+  </button>
+
+  <!-- PREV BUTTON -->
+  <button
+    class="
+      swiper-button-prev-custom
+      absolute top-1/2 -translate-y-1/2 left-2
+      w-12 h-12 rounded-full
+      bg-white border border-gray-300
+      text-gray-700
+      shadow-md hover:shadow-lg
+      flex items-center justify-center
+      transition hover:bg-gray-50
+      z-40"
+    aria-label="Previous">
+    <i class="fa-solid fa-chevron-left text-xl"></i>
+  </button>
+</div>

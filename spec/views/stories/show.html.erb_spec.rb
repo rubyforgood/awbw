@@ -8,7 +8,7 @@ RSpec.describe "stories/show", type: :view do
   before(:each) do
     sign_in user
     allow(view).to receive(:current_user).and_return(user)
-    assign(:story, story)
+    assign(:story, story.decorate)
   end
 
   it "renders attributes in <p>" do

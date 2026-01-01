@@ -1,4 +1,5 @@
 class Workshop < ApplicationRecord
+  include TagFilterable, PrintCountable, Trendable, ViewCountable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
 
   belongs_to :windows_type
@@ -8,7 +9,7 @@ class Workshop < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
-  has_many :resources, dependent: :restrict_with_error
+  has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :workshop_logs, dependent: :destroy, as: :owner
   has_many :workshop_resources, dependent: :destroy
@@ -29,7 +30,7 @@ class Workshop < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
   has_many :quotes, through: :quotable_item_quotes
-  has_many :resources, through: :workshop_resources
+  has_many :resources, through: :workshop_resources, source: :resource
   has_many :sectors, through: :sectorable_items
 
   # Images
@@ -37,10 +38,10 @@ class Workshop < ApplicationRecord
   has_one_attached :header # old paperclip -- TODO convert these to MainImage records
   has_many :attachments, as: :owner, dependent: :destroy # old paperclip -- TODO convert these to GalleryImage records
   has_many :images, as: :owner, dependent: :destroy # old paperclip -- TODO convert these to GalleryImage records
-  has_one :main_image, -> { where(type: "Images::MainImage") },
-          as: :owner, class_name: "Images::MainImage", dependent: :destroy
-  has_many :gallery_images, -> { where(type: "Images::GalleryImage") },
-           as: :owner, class_name: "Images::GalleryImage", dependent: :destroy
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
 
   # Callbacks
   before_save :set_time_frame
@@ -52,38 +53,51 @@ class Workshop < ApplicationRecord
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
   # Nested attributes
-  accepts_nested_attributes_for :main_image, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :gallery_images, reject_if: :all_blank, allow_destroy: true
-  accepts_nested_attributes_for :categorizable_items,
-                                reject_if: proc { |attrs| attrs["category_id"].blank? },
-                                allow_destroy: true
-  accepts_nested_attributes_for :sectorable_items, reject_if: proc { |object| object["_create"] == "0" },
-                                allow_destroy: true
+  accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :quotes, reject_if: proc { |object| object["quote"].nil? }
   accepts_nested_attributes_for :sectors,
                                 reject_if: proc { |object| object["_create"] == "0" || !object["_create"] },
                                 allow_destroy: true
   accepts_nested_attributes_for :workshop_logs, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :workshop_series_children,
-                                reject_if: proc { |attributes| attributes['workshop_child_id'].blank? },
+                                reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true
-  accepts_nested_attributes_for :workshop_variations,
-    reject_if: proc { |object| object.nil? }
+  accepts_nested_attributes_for :workshop_variations, reject_if: proc { |object| object.nil? }
 
 
   # Scopes
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
+  scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }
-  scope :published, -> (published=nil) { published.to_s.present? ?
-                                           where(inactive: !published) : where(inactive: false) }
-  scope :title, -> (title) { where("workshops.title like ?", "%#{ title }%") }
+  scope :published, ->(published = nil) { published.to_s.present? ?
+           where(inactive: !published) : where(inactive: false) }
+  scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
+  scope :order_by_date, ->(sort_order = "asc") {
+    order(Arel.sql(<<~SQL.squish))
+    COALESCE(
+      STR_TO_DATE(
+        CONCAT(workshops.year, '-', LPAD(workshops.month, 2, '0'), '-01'),
+        '%Y-%m-%d'
+      ),
+      DATE(workshops.created_at)
+    ) #{sort_order == "asc" ? "ASC" : "DESC"}
+    SQL
+  }
+  scope :with_bookmarks_count, -> {
+    left_joins(:bookmarks)
+      .select("workshops.*, COUNT(bookmarks.id) AS bookmarks_count")
+      .group("workshops.id")
+  }
 
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes all: [:title, :full_name, # no spanish alternatives
+    attributes all: [ :title, :full_name, # no spanish alternatives
 
                      :objective, :materials, :setup, :introduction,
                      :demonstration, :opening_circle, :warm_up, :opening_circle,
@@ -91,11 +105,11 @@ class Workshop < ApplicationRecord
 
                      :objective_spanish, :materials_spanish, :setup_spanish, :introduction_spanish,
                      :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish, :opening_circle_spanish,
-                     :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish, :misc2_spanish]
+                     :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish, :misc2_spanish ]
     # attributes category: ["categories.name"]
     # attributes sector: ["sectors.name"]
     # attributes user: ["first_name", "last_name"]
-    options :all, type: :text, default: true#, default_operator: :or
+    options :all, type: :text, default: true# , default_operator: :or
   end
 
   def self.grouped_by_sector
@@ -109,9 +123,9 @@ class Workshop < ApplicationRecord
 
   def date
     if month.present? && year.present?
-      "#{month}/#{year}"
+      Date.new(year.to_i, month.to_i).strftime("%B %Y")
     else
-      "#{created_at.month}/#{created_at.year}"
+      created_at.strftime("%B %Y")
     end
   end
 
@@ -157,16 +171,6 @@ class Workshop < ApplicationRecord
     workshop_logs.size
   end
 
-  def main_image_url
-    if main_image&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(main_image.file)
-    elsif gallery_images.first&.file&.attached?
-      Rails.application.routes.url_helpers.url_for(gallery_images.first.file)
-    else
-      ActionController::Base.helpers.asset_path("workshop_default.jpg")
-    end
-  end
-
   def sector_hashtags
     sectors.map do |sector|
       "\#{sector.name.split(" ")[0].downcase}"
@@ -193,7 +197,7 @@ class Workshop < ApplicationRecord
     return "00:00" if total_minutes == 0
 
     # Custom rounding: minimum 15 min, then nearest 15
-    total_minutes = [15, (total_minutes / 15.0).round * 15].max
+    total_minutes = [ 15, (total_minutes / 15.0).round * 15 ].max
 
     hours, minutes = total_minutes.divmod(60)
 

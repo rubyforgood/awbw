@@ -19,7 +19,6 @@ RSpec.describe "faqs/edit", type: :view do
     render
 
     assert_select "form[action=?][method=?]", faq_path(faq), "post" do
-
       assert_select "input[name=?]", "faq[question]"
 
       assert_select "textarea[name=?]", "faq[answer]"

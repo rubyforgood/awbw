@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe "/events", type: :request do
-
   let(:valid_attributes) {
     {
       "title": "sample title",
@@ -64,11 +63,11 @@ RSpec.describe "/events", type: :request do
     describe 'when signed in as an admin' do
       it "renders a successful response" do
         sign_in admin
-  
+
         allow_any_instance_of(ApplicationController).
           to receive(:current_user).and_return(admin)
         get edit_event_url(event)
-  
+
         expect(response).to be_successful
       end
     end
@@ -134,9 +133,11 @@ RSpec.describe "/events", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          title: "Updated Event Title"
+        )
+      end
 
       context "when signed in as admin" do
         it "updates the requested event" do
@@ -145,11 +146,11 @@ RSpec.describe "/events", type: :request do
             to receive(:current_user).and_return(admin)
           patch event_url(event), params: { event: new_attributes }
           event.reload
-          
+
           expect(event.title).to eq(new_attributes[:title])
         end
 
-        it "redirects to the event" do
+        it "redirects to the events index" do
           sign_in user
           allow_any_instance_of(ApplicationController).
             to receive(:current_user).and_return(admin)
@@ -157,7 +158,7 @@ RSpec.describe "/events", type: :request do
           patch event_url(event), params: { event: new_attributes }
           event.reload
 
-          expect(response).to redirect_to(event_url(event))
+          expect(response).to redirect_to(events_url)
         end
       end
 

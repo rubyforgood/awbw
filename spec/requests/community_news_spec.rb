@@ -13,25 +13,23 @@ require 'rails_helper'
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
 RSpec.describe "/community_news", type: :request do
-  
-  # This should return the minimal set of attributes required to create a valid
-  # CommunityNews. As you add validations to CommunityNews, be sure to
-  # adjust the attributes here as well.
+    # This should return the minimal set of attributes required to create a valid
+    # CommunityNews. As you add validations to CommunityNews, be sure to
+    # adjust the attributes here as well.
     let(:admin) { create(:user, super_user: true) }
 
   let(:valid_attributes) {
     {
       title: "Title2",
       body: "MyText",
-      youtube_url: "Youtube Url",
       published: false,
       featured: false,
       author_id: admin.id,
-      reference_url: "Reference Url",
+      reference_url: "www.google.com",
       project: nil,
       windows_type: nil,
       created_by_id: admin.id,
-      updated_by_id: admin.id,
+      updated_by_id: admin.id
     }
   }
 
@@ -40,8 +38,9 @@ RSpec.describe "/community_news", type: :request do
       title: nil,
       body: nil,
       author_id: nil,
+      reference_url: "reference url",
       created_by_id: nil,
-      updated_by_id: nil,
+      updated_by_id: nil
     }
   }
 
@@ -58,12 +57,36 @@ RSpec.describe "/community_news", type: :request do
   end
 
   describe "GET /show" do
-    it "renders a successful response" do
-      community_news = CommunityNews.create! valid_attributes
-      get community_news_url(community_news)
-      expect(response).to be_successful
+    context "when community_news has NO external link" do
+      let(:community_news) do
+        CommunityNews.create!(
+          valid_attributes.merge(reference_url: nil)
+        )
+      end
+
+      it "renders the show page" do
+        get community_news_url(community_news)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "when community_news HAS an external link" do
+      let(:community_news) do
+        CommunityNews.create!(
+          valid_attributes.merge(reference_url: "www.google.com")
+        )
+      end
+
+      it "redirects to the external URL" do
+        get community_news_url(community_news)
+
+        expect(response).to have_http_status(:found)
+        expect(response).to redirect_to("https://www.google.com")
+      end
     end
   end
+
 
   describe "GET /new" do
     it "renders a successful response" do
@@ -110,9 +133,11 @@ RSpec.describe "/community_news", type: :request do
 
   describe "PATCH /update" do
     context "with valid parameters" do
-      let(:new_attributes) {
-        skip("Add a hash of attributes valid for your model")
-      }
+      let(:new_attributes) do
+        valid_attributes.merge(
+          title: "Updated Community News Title"
+        )
+      end
 
       it "updates the requested community_news" do
         community_news = CommunityNews.create! valid_attributes

@@ -9,6 +9,15 @@
                         change_password_path,
                         class: "btn btn-secondary-outline" %>
           <% end %>
+          <% if @facilitator.user %>
+            <%= link_to "User account",
+                        edit_user_path(@facilitator.user),
+                        class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+          <% else %>
+            <%= link_to "Create user account",
+                        new_user_path(facilitator_id: @facilitator.id),
+                        class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+          <% end %>
           <%= link_to "Profile",
                       facilitator_path(@facilitator),
                       class: "btn btn-secondary-outline" %>

@@ -156,7 +156,6 @@ RSpec.describe "/faqs", type: :request do
     end
 
     context "with invalid parameters" do
-
       it "renders a 422 response" do
         patch faq_url(faq), params: { faq: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)

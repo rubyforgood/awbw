@@ -11,4 +11,4 @@ FactoryBot.define do
       name { 'Other' }
     end
   end
-end 
+end

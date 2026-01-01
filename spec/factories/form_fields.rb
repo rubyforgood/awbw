@@ -12,4 +12,4 @@ FactoryBot.define do
 
     # Add other attributes based on schema if needed
   end
-end 
+end

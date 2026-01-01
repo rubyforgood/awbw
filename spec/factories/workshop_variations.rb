@@ -6,4 +6,4 @@ FactoryBot.define do
     sequence(:ordering) { |n| n }
     inactive { false }
   end
-end 
+end

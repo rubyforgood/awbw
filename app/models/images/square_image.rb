@@ -1,4 +1,4 @@
 module Images
-	class SquareImage < Image
-	end
+  class SquareImage < Image
+  end
 end

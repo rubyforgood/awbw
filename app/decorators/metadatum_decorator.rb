@@ -1,5 +1,4 @@
-class MetadatumDecorator < Draper::Decorator
-  delegate_all
+class MetadatumDecorator < ApplicationDecorator
   decorates_association :categories
 
   def display_name

@@ -8,6 +8,6 @@ class Form < ApplicationRecord
   accepts_nested_attributes_for :form_fields, allow_destroy: true
 
   def name
-    owner ? "#{owner.try(:name)} Form" : 'New Form'
+    owner ? "#{owner.try(:name)} Form" : "New Form"
   end
 end

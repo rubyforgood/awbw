@@ -18,7 +18,6 @@ RSpec.describe "windows_types/new", type: :view do
     render
 
     assert_select "form[action=?][method=?]", windows_types_path, "post" do
-
       # TEXT FIELDS
       assert_select "textarea[name=?]", "windows_type[name]"
 

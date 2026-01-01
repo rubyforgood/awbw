@@ -3,4 +3,4 @@ FactoryBot.define do
     association :user
     association :form
   end
-end 
+end

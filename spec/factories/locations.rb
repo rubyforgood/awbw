@@ -4,4 +4,4 @@ FactoryBot.define do
     state { Faker::Address.state_abbr }
     country { Faker::Address.country }
   end
-end 
+end

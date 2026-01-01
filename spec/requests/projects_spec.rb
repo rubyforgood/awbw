@@ -1,7 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "/projects", type: :request do
-
   let(:user) { create(:user) }
   let(:admin) { create(:user, super_user: true) }
 
@@ -16,7 +15,7 @@ RSpec.describe "/projects", type: :request do
       end_date: Date.today + 6.months,
       project_status_id: project_status.id,
       inactive: false,
-      notes: "Runs bi-weekly at community centers.",
+      notes: "Runs bi-weekly at community centers."
     }
   end
 
@@ -25,7 +24,7 @@ RSpec.describe "/projects", type: :request do
       name: "", # required field missing
       description: nil,
       project_status_id: nil,
-      windows_type_id: nil,
+      windows_type_id: nil
     }
   end
 

@@ -16,5 +16,5 @@
 # end
 
 ActiveSupport::Inflector.inflections(:en) do |inflect|
-	inflect.irregular 'community_news', 'community_news'
+  inflect.irregular "community_news", "community_news"
 end

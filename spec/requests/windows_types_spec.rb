@@ -5,7 +5,7 @@ RSpec.describe "/windows_types", type: :request do
   let(:valid_attributes) { { name: "Windows Type A", short_name: "WTA", legacy_id: 100 } }
   let(:invalid_attributes) { { name: "", # invalid because required
                                short_name: nil   } } # invalid because required
-  let(:new_attributes) { { name: "Updated Name", short_name: "UPD"} }
+  let(:new_attributes) { { name: "Updated Name", short_name: "UPD" } }
 
   before do
     sign_in create(:user, :admin)

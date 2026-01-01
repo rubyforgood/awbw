@@ -35,4 +35,4 @@ RSpec.describe WorkshopLog do
   describe 'callbacks' do
     # Test after_save :update_workshop_log_count
   end
-end 
+end

@@ -1,109 +1,42 @@
 class DashboardController < ApplicationController
-  skip_before_action :authenticate_user!, only: :help
+  include AdminDashboardCardsHelper
 
   def index
-    workshops = Workshop.includes(:sectors, :categories, :windows_type, :main_image, :gallery_images)
+    workshops = Workshop.includes(:sectors, :categories, :windows_type, :primary_asset, :gallery_assets)
                         .featured
                         .published
                         .decorate
     @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
 
-    @resources = Resource.includes(:windows_type, :main_image, :gallery_images)
+    @resources = Resource.includes(:windows_type, :primary_asset, :gallery_assets)
                          .featured
                          .published
-                         .published_kinds
+                         .by_most_viewed(6)
                          .order(ordering: :asc, created_at: :desc)
                          .decorate
-    @stories = Story.includes(:windows_type, :main_image, :gallery_images)
-                    .featured.published
+    @stories = Story.includes(:windows_type, :primary_asset, :gallery_assets)
+                    .featured
+                    .published
                     .order(:title)
                     .decorate
-    @community_news = CommunityNews.includes(:windows_type, :main_image, :gallery_images)
+    @community_news = CommunityNews.includes(:windows_type, :primary_asset, :gallery_assets)
                                    .featured
                                    .published
                                    .order(updated_at: :desc)
                                    .decorate
-    @events = Event.includes(:event_registrations, :main_image, :gallery_images)
+    @events = Event.includes(:event_registrations, :primary_asset, :gallery_assets)
                    .featured
-                   .publicly_visible
+                   .published
                    .order(:start_date)
                    .decorate
   end
 
   def admin
-    if current_user.super_user?
-      @user_content_cards = [
-        { title: "Bookmarks tally", path: tally_bookmarks_path, icon: "🔖",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Recent Activity", path: dashboard_recent_activities_path, icon: "🧭",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Event Registrations", path: event_registrations_path, icon: "🎟️",
-          bg_color: "bg-blue-100", text_color: "text-blue-800" },
-        { title: "!!!Quotes", path: authenticated_root_path, icon: "💬",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Story Ideas", path: story_ideas_path, icon: "✍️️",
-          bg_color: "bg-rose-100", text_color: "text-rose-800" },
-        { title: "Workshop Variations", path: workshop_variations_path, icon: "🔀",
-          bg_color: "bg-purple-100", text_color: "text-purple-800" },
-        { title: "Workshop Ideas", path: workshop_ideas_path, icon: "💡",
-          bg_color: "bg-indigo-100", text_color: "text-indigo-800" },
+    return redirect_to authenticated_root_path, alert: "You do not have permission." unless current_user.super_user?
 
-
-        { title: "!!!Vision Seeds", path: authenticated_root_path, icon: "🌱",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "!!!Annual Reports", path: authenticated_root_path, icon: "📊",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Workshop Logs", path: workshop_logs_path, icon: "📝",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-      ]
-
-      @system_cards = [
-        { title: "Banners", path: banners_path, icon: "📣",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "CommunityNews", path: community_news_index_path, icon: "📣",
-          bg_color: "bg-orange-50", text_color: "text-gray-800" },
-        { title: "Events", path: events_path, icon: "📆",
-          bg_color: "bg-blue-50", text_color: "text-gray-800" },
-        { title: "FAQs", path: faqs_path, icon: "❔",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Stories", path: stories_path, icon: "🗣️",
-          bg_color: "bg-rose-50", text_color: "text-gray-800" },
-        { title: "Resources", path: resources_path, icon: "📚",
-          bg_color: "bg-violet-50", text_color: "text-gray-800" },
-        { title: "Workshops", path: workshops_path, icon: "🎨",
-          bg_color: "bg-indigo-50", text_color: "text-gray-800" },
-
-
-
-
-        { title: "Facilitators", path: facilitators_path, icon: "🧑‍🎨",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Organizations", path: projects_path, icon: "🏫",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "Users", path: users_path, icon: "👥",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "!!!Forms", path: authenticated_root_path, icon: "📋",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-
-      ]
-
-      @reference_cards = [
-        { title: "!!!Categories", path: authenticated_root_path, icon: "🗂️",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "!!!Sectors", path: authenticated_root_path, icon: "🏭",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "!!!Project Statuses", path: authenticated_root_path, icon: "🧮️",
-          bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        { title: "WindowsTypes", path: windows_types_path, icon: "🪟",
-                  bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        # { title: "FormFields", path: authenticated_root_path, icon: "✏️",
-        #           bg_color: "bg-gray-50", text_color: "text-gray-800" },
-        # { title: "FormAnswerOptions", path: authenticated_root_path, icon: "🗳️",
-        #           bg_color: "bg-gray-50", text_color: "text-gray-800" },
-      ]
-    else
-      redirect_to authenticated_root_path, alert: 'You do not have permission.'
-    end
+    @system_cards       = system_cards
+    @user_content_cards = user_content_cards
+    @reference_cards    = reference_cards
   end
 
   def recent_activities
@@ -124,10 +57,9 @@ class DashboardController < ApplicationController
       recent.concat(StoryIdea.order(updated_at: :desc).limit(10))
       recent.concat(Quote.order(updated_at: :desc).limit(10))
       recent.concat(Resource.order(updated_at: :desc).limit(10))
-      recent.concat(Report.where(owner_type: 'MonthlyReport').order(updated_at: :desc).limit(10))
+      recent.concat(Report.where(owner_type: "MonthlyReport").order(updated_at: :desc).limit(10))
       # recent.concat(Report.where(owner_id: 7).order(updated_at: :desc).limit(10)) # TODO: remove hard-coded
       recent.concat(Address.order(updated_at: :desc).limit(10))
-      recent.concat(AgeRange.order(updated_at: :desc).limit(10))
       recent.concat(Bookmark.order(updated_at: :desc).limit(10))
       recent.concat(Category.order(updated_at: :desc).limit(10))
       recent.concat(CommunityNews.order(updated_at: :desc).limit(10))

@@ -1,0 +1,48 @@
+<%= simple_form_for(@sector) do |f| %>
+  <div class="space-y-6">
+
+    <!-- Errors -->
+    <%= f.error_notification %>
+    <%= render "shared/errors", resource: @sector if @sector.errors.any? %>
+
+    <!-- One-line Flex Fields -->
+    <div class="flex flex-wrap gap-6">
+
+      <!-- Name -->
+      <div class="flex-1 min-w-[220px]">
+        <%= f.input :name,
+                    label: "Name",
+                    input_html: { class: "form-control" } %>
+      </div>
+
+      <div class="flex items-center min-w-[150px] pt-6">
+        <%= f.input :published,
+                    as: :boolean,
+                    label: "Published?",
+                    wrapper_html: { class: "flex items-center gap-2" },
+                    input_html: { class: "form-checkbox" } %>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-wrap justify-end gap-3 pt-6">
+
+      <% if @sector.persisted? && current_user.super_user? %>
+        <%= link_to "Delete",
+                    @sector,
+                    method: :delete,
+                    data: { confirm: "Are you sure you want to delete this category?" },
+                    class: "btn btn-danger-outline" %>
+      <% end %>
+
+      <%= link_to "Cancel", sectors_path,
+                  class: "btn btn-secondary-outline" %>
+
+      <%= f.button :submit,
+                   "Save Sector",
+                   class: "btn btn-primary" %>
+    </div>
+
+  </div>
+<% end %>

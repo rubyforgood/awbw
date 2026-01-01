@@ -43,7 +43,7 @@ RSpec.configure do |config|
   config.include PaginationHelpers
 
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
-  config.fixture_paths = ["#{::Rails.root}/spec/fixtures"]
+  config.fixture_paths = [ "#{::Rails.root}/spec/fixtures" ]
 
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
   # examples within a transaction, remove the following line or assign false
@@ -75,6 +75,11 @@ RSpec.configure do |config|
   # config.filter_gems_from_backtrace("gem name")
 
   # ensure that warden is configured for running in test mode.
+
+  config.before(:each, type: :system) do
+    driven_by(:selenium_chrome_headless)
+  end
+
   config.before(:suite) { Warden.test_mode! }
   config.after { Warden.test_reset! }
 

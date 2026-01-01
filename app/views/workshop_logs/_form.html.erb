@@ -1,4 +1,5 @@
-<%= simple_form_for(@workshop_log) do |f| %>
+<div class="rounded-xl bg-white p-6">
+  <%= simple_form_for(@workshop_log) do |f| %>
   <%= f.input :user_id, as: :hidden, input_html: { value: params[:user_id] || current_user.id } %>
   <%= f.input :windows_type_id, as: :hidden, input_html: { value: @windows_type_id } %>
 
@@ -100,7 +101,7 @@
   </div>
 
   <!-- Upload Section -->
-  <%= render "shared/form_image_fields", f: f, include_main_image: false,
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: false,
              section_title: "Upload Images / Media Releases",
              section_subtitle: "Attach photos, PDFs, or signed media release forms" %>
 
@@ -114,3 +115,4 @@
     <%= f.button :submit, "Save Log", class: "btn btn-primary" %>
   </div>
 <% end %>
+</div>

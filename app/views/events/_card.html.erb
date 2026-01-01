@@ -1,9 +1,8 @@
 <% event = event.decorate %>
 
-<%= tag.div id: dom_id(event, :card), class: "
-  relative bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md
-  transition p-4 flex flex-col gap-4
-" do %>
+<%= tag.div id: dom_id(event, :card),
+            class: "relative bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md
+  transition p-4 flex flex-col gap-4" do %>
 
   <!-- 📌 Bookmark -->
   <div class="absolute top-3 right-3 z-20">
@@ -11,30 +10,22 @@
   </div>
 
   <!-- 1️⃣ Thumbnail + Title Row -->
-  <div class="flex flex-col md:flex-row gap-4">
-
+  <div class="flex flex-col md:flex-row gap-2">
     <!-- Thumbnail -->
-    <div class="flex-shrink-0 w-32 h-24 rounded overflow-hidden bg-gray-100 relative">
-      <%= link_to event_path(event), class: "block w-full h-full" do %>
-        <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-4xl fallback-icon"
-             style="<%= main_image_url(event).present? ? 'display:none;' : 'display:flex;' %>">
-          <i class="fa-regular fa-image"></i>
-        </div>
+    <%= render "assets/display_image",
+               resource: event,
+               width: 32, height: 24,
+               variant: :index,
+               link_to_object: true,
+               file: event.display_image %>
 
-        <% if main_image_url(event).present? %>
-          <img src="<%= main_image_url(event) %>"
-               class="object-cover w-full h-full"
-               onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';">
-        <% end %>
-      <% end %>
-    </div>
 
     <!-- Title + badges -->
-    <div class="flex flex-col gap-2 flex-1 min-w-0 mr-4">
+    <div class="flex flex-col gap-2 flex-1 min-w-0 pr-1 mr-4 mt-1">
       <%= link_to event_path(event),
                   class: "hover:underline block leading-tight",
-                  data: { turbo: false } do %>
-        <%= title_with_badges(event, admin: current_user.super_user?).html_safe %>
+                  data: { turbo_prefetch: false, turbo: false } do %>
+        <%= title_with_badges(event, show_hidden_badge: current_user.super_user?).html_safe %>
       <% end %>
     </div>
 

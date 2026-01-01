@@ -29,8 +29,9 @@
             <thead class="bg-gray-100">
               <tr>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Event</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Event date</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Registrant</th>
-                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Created</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Registered at</th>
                 <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
               </tr>
             </thead>
@@ -39,9 +40,12 @@
               <% @event_registrations.each do |event_registration| %>
                 <tr id="<%= dom_id(event_registration) %>" class="hover:bg-gray-50 transition-colors duration-150">
                   <td class="px-4 py-2 text-sm text-gray-800">
-                    <%= link_to event_registration.event.name,
-                              event_path(event_registration.event),
-                              class: "btn btn-secondary-outline" %>
+                    <%= link_to event_registration.event.name.truncate(50),
+                                event_path(event_registration.event),
+                                class: "btn btn-secondary-outline whitespace-nowrap" %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-800">
+                    <%= event_registration.event.decorate.times(display_day: true, display_date: true).html_safe %>
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-800">
                     <%# FIXME not all users have facilitators %>

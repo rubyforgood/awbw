@@ -1,11 +1,9 @@
-class FaqDecorator < Draper::Decorator
-	delegate_all
+class FaqDecorator < ApplicationDecorator
+  def title
+    question
+  end
 
-	def title
-		question
-	end
-
-	def description
-		answer
-	end
+  def detail
+    answer
+  end
 end
