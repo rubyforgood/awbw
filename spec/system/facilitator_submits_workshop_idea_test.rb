@@ -12,8 +12,9 @@ RSpec.describe "Facilitators can submit a workshop idea", type: :system do
         user = create(:user)
         create(:facilitator, user: user)
         sign_in user
+
+      visit new_workshop_idea_path
         
-        visit new_workshop_idea_path
       end
       
       it "shows the new workshop form" do
