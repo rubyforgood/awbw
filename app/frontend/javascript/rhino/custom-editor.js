@@ -49,6 +49,8 @@ class CustomEditor extends TipTapEditor {
           <slot name="heading-button">${this.renderHeadingButton()}</slot>
           <slot name="after-heading-button"></slot>
 
+          <slot name="hr-button">${this.renderHorizontalRuleButton()}</slot>
+
           <!-- Blockquote -->
           <slot name="before-blockquote-button"></slot>
           <slot name="blockquote-button">${this.renderBlockquoteButton()}</slot>
@@ -168,6 +170,31 @@ class CustomEditor extends TipTapEditor {
     `;
   }
 
+  renderHorizontalRuleButton() {
+    return html`
+      <button
+        class="toolbar__button rhino-toolbar-button"
+        type="button"
+        aria-describedby="horizontal rule"
+        data-role="toolbar-item"
+        @click="${(event) => {
+          this.editor.chain().focus().setHorizontalRule().run();
+        }}"
+      >
+        <slot name="table-tooltip">
+          <role-tooltip
+            id="horiztaon-rule"
+            hoist
+            part="toolbar-tooltip toolbar-tooltip__table"
+            exportparts=${this.__tooltipExportParts}
+          >
+            Horizontal Rule
+          </role-tooltip>
+        </slot>
+        <slot name="table-icon">---</slot>
+      </button>
+    `;
+  }
   renderTableButton() {
     const tableEnabled = true; // Boolean(this.editor?.commands.setAttachment);
 
