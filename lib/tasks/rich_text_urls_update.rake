@@ -109,6 +109,7 @@ namespace :rich_text_urls_update do
       url = match[regex, 1] # extract the actual URL
       aws_prefix = "https://s3.amazonaws.com/awbwassets/"
       aws_prefix_2 = "http://s3.amazonaws.com/awbwassets/"
+      aws_prefix_3 = "//s3.amazonaws.com/awbwassets/"
       dashboard_url = nil
       key = nil
       puts url
@@ -132,6 +133,8 @@ namespace :rich_text_urls_update do
         key = url.sub(aws_prefix, "")
       when ->(u) { u.start_with?(aws_prefix_2) }
         key = url.sub(aws_prefix_2, "")
+      when ->(u) { u.start_with?(aws_prefix_3) }
+        key = url.sub(aws_prefix_3, "")
       else
         csv << [ model.name, record.id, column, url, nil, "skipped", "No Matching Url", nil ]
         next
