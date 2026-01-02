@@ -10,6 +10,8 @@ class WorkshopVariation < ApplicationRecord
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :rich_text_assets, -> { where(type: "RichTextAsset") },
+         as: :owner, class_name: "RichTextAsset", dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
 
