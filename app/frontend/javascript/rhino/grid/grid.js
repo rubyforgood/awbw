@@ -162,13 +162,13 @@ export const Grid = Node.create({
 
           if (nextCols === currentCols) return true;
 
-          // 1️⃣ Update grid columns
+          // Update grid columns
           tr.setNodeMarkup(grid.pos, undefined, {
             ...grid.node.attrs,
             columns: nextCols,
           });
 
-          // 2️⃣ Clamp cell spans if needed
+          // Clamp cell spans if needed
           grid.node.forEach((child, offset) => {
             if (child.type.name !== "gridCell") return;
 
