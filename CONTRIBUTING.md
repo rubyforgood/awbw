@@ -113,7 +113,7 @@ Please let us know by opening up an issue! We have many new contributors come th
 6. If you create a new model run `bundle exec annotate` from the root of the app
 7. **Create RSpec tests** to validate that your work fixes the issue (if you need help with this, please reach out!). Read guidelines [here](#writing-browsersystemfeature-testsspecs).
 8. **Run the tests** and make sure all tests pass successfully; if any fail, fix the issues causing the failures. Read guidelines [here](#test-before-submitting-pull-requests).
-9.  Run `rubocop -a` to autocorrect linting issues. Manually fix anything not autocorrected. [Read rubocop documentation here](https://docs.rubocop.org/rubocop/1.82/usage/basic_usage.html).
+9.  Run `rubocop -a` to autocorrect linting issues. Manually fix anything not autocorrected. Read rubocop documentation [here](https://docs.rubocop.org/rubocop/1.82/usage/basic_usage.html).
 10. **Final commit** if tests/linting require changes.
 11. **Squash smaller commits.** Read guidelines [here](#squashing-commits).
 12. **Push** up the branch
