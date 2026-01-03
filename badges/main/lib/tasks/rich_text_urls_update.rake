@@ -129,6 +129,12 @@ namespace :rich_text_urls_update do
       when ->(u) { u.start_with?("http://legacy.awbw.org/awbw") }
         key = url.sub(%r{^http://legacy\.awbw\.org}, "")
         dashboard_url = "https://dashboard.awbw.org#{key}"
+      when ->(u) { u.start_with?("https://res.cloudinary.com/") }
+        key = "https://res.cloudinary.com/"
+        dashboard_url = "https://res.cloudinary.com/"
+      when ->(u) { u.start_with?("http://res.cloudinary.com/") }
+        key = "http://res.cloudinary.com/"
+        dashboard_url = "http://res.cloudinary.com/"
       when ->(u) { u.start_with?(aws_prefix) } # matches URLs starting with the AWS prefix
         key = url.sub(aws_prefix, "")
       when ->(u) { u.start_with?(aws_prefix_2) }
@@ -186,7 +192,7 @@ namespace :rich_text_urls_update do
           asset.file.attach(blob)
           asset.save!
 
-          new_url = url_for(asset.file)
+          new_url = rails_blob_path(asset.file, only_path: true)
 
           # Verify attachment and association
           record.rich_text_assets.reload
