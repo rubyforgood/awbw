@@ -88,7 +88,7 @@ class UsersController < ApplicationController
     if @user.facilitator.present?
       redirect_to @user.facilitator and return
     else
-      @facilitator = FacilitatorFromUserService(user: @user).call
+      @facilitator = FacilitatorFromUserService.new(user: @user).call
       if @facilitator.save
         redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
       else
