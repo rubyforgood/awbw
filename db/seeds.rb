@@ -29,11 +29,9 @@ FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_c
 FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).first_or_create!(id: 5)
 
 puts "Creating ProjectStatuses…"
-ProjectStatus.where(name: "Active").first_or_create!(id: 1)
-ProjectStatus.where(name: "Inactive").first_or_create!(id: 2)
-ProjectStatus.where(name: "Pending").first_or_create!(id: 3)
-ProjectStatus.where(name: "Reinstate").first_or_create!(id: 4)
-ProjectStatus.where(name: "Suspended").first_or_create!(id: 5)
+ProjectStatus::PROJECT_STATUSES.each_with_index do |status, idx|
+  ProjectStatus.where(name: status).first_or_create!(id: idx + 1)
+end
 
 puts "Creating ProjectObligations…"
 ProjectObligation::OBLIGATION_TYPES.each do |obligation_type|

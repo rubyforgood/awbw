@@ -61,6 +61,7 @@ class Project < ApplicationRecord
   end
   scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
+  scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
   scope :published, ->(published = nil) { published ? active(published) : active }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
@@ -72,6 +73,7 @@ class Project < ApplicationRecord
     projects = projects.category_names(params[:category_names]) if params[:category_names].present?
     projects = projects.address(params[:address]) if params[:address].present?
     projects = projects.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    projects = projects.project_ids(params[:project_ids]) if params[:project_ids].present?
     projects
   end
 

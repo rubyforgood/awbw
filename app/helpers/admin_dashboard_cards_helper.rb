@@ -48,7 +48,7 @@ module AdminDashboardCardsHelper
                  intensity: 100,
                  title: "Service populations",
                  params: { published_search: true }),
-      custom_card("Project statuses", authenticated_root_path, icon: "🧮", color: :emerald, intensity: 100),
+      custom_card("Project statuses", project_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       custom_card("Windows types", windows_types_path, icon: "🪟")
     ]
   end

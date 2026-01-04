@@ -14,50 +14,7 @@
       </div>
 
       <!-- Optional filters -->
-      <div class="mb-4">
-        <%= form_with url: projects_path, method: :get, local: true, class: "flex flex-wrap items-end gap-3" do %>
-          <div>
-            <%= label_tag :query, "Name", class: "text-sm font-medium text-gray-700 mb-1 block" %>
-            <%= text_field_tag :query, params[:query],
-                               class: "w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                               onkeypress: "if(event.key === 'Enter'){ this.form.requestSubmit(); }" %>
-          </div>
-          <div>
-            <%= label_tag :windows_type_name, "Windows type", class: "text-sm font-medium text-gray-700 mb-1 block" %>
-            <%= select_tag :windows_type_name,
-                           options_for_select(WindowsType::TYPES.map { |wt| [wt, wt] },
-                                              params[:windows_type_name]),
-                           include_blank: "All types",
-                           class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           onchange: "this.form.requestSubmit()" %>
-          </div>
-          <div>
-            <%= label_tag :address, "Address", class: "text-sm font-medium text-gray-700 mb-1 block" %>
-            <%= text_field_tag :address, params[:address],
-                               class: "w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                               onkeypress: "if(event.key === 'Enter'){ this.form.requestSubmit(); }" %>
-          </div>
-
-          <% if current_user.super_user? %>
-            <div class="admin-only bg-blue-100">
-              <%= label_tag :status, "Status", class: "text-sm font-medium text-gray-700 mb-1 block" %>
-              <%= select_tag :project_status,
-                             options_for_select(@project_statuses.map { |ps| [ps.name, ps.id] },
-                                                params[:project_status]),
-                             include_blank: "All statuses",
-                             class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                             onchange: "this.form.requestSubmit()" %>
-            </div>
-          <% end %>
-
-          <%= link_to "Clear filters", projects_path,
-                      class: "btn btn-utility-outline w-full sm:w-auto" %>
-        <% end %>
-      </div>
+      <%= render "search_boxes" %>
 
       <!-- Projects table -->
       <div class="rounded-xl bg-white p-6">
