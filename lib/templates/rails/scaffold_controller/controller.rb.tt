@@ -11,7 +11,7 @@ class <%= controller_class_name %>Controller < ApplicationController
   end
 
   def show
-    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>
+    @<%= singular_table_name %> = @<%= singular_table_name %>.decorate
   end
 
   def new
@@ -20,7 +20,7 @@ class <%= controller_class_name %>Controller < ApplicationController
   end
 
   def edit
-    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>.decorate
+    @<%= singular_table_name %> = @<%= singular_table_name %>.decorate
     set_form_variables
   end
 
