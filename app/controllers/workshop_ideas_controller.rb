@@ -24,6 +24,12 @@ class WorkshopIdeasController < ApplicationController
     @workshop_idea = WorkshopIdea.new(workshop_idea_params)
 
     if @workshop_idea.save
+      NotificationServices::CreateNotification.call(
+        noticeable: @story_idea,
+        kind: :record_created,
+        recipient_role: (current_user.super_user? ? :admin : :facilitator),
+        recipient_email: current_user.email,
+        notification_type: 0)
       redirect_to workshop_ideas_path, notice: "Workshop idea was successfully created."
     else
       set_form_variables

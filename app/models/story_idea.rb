@@ -11,6 +11,7 @@ class StoryIdea < ApplicationRecord
   belongs_to :windows_type
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :stories
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },

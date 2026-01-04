@@ -1,5 +1,6 @@
 class WorkshopLog < Report
   belongs_to :workshop
+  has_many :notifications, as: :noticeable, dependent: :destroy
 
   # Validations
   validates :date, presence: true
