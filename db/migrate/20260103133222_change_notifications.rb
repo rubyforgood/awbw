@@ -11,7 +11,7 @@ class ChangeNotifications < ActiveRecord::Migration[8.1]
       t.datetime :delivered_at
     end
 
-    add_index :notifications, [:noticeable_type, :noticeable_id]
+    add_index :notifications, [ :noticeable_type, :noticeable_id ]
     add_index :notifications, :kind
   end
 end

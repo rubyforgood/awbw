@@ -24,7 +24,7 @@ class NotificationMailer < ApplicationMailer
 
     primary_asset = @noticeable.primary_asset
     gallery_assets = @noticeable.gallery_assets
-    @attachments = Asset.where(id: [primary_asset&.id] + gallery_assets.pluck(:id))
+    @attachments = Asset.where(id: [ primary_asset&.id ] + gallery_assets.pluck(:id))
     @quotes      = @noticeable.quotes if @noticeable.respond_to?(:quotes)
     @answers     = @noticeable.report_form_field_answers if @noticeable.respond_to?(:report_form_field_answers)
 
