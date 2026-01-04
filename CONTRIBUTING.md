@@ -113,15 +113,16 @@ Please let us know by opening up an issue! We have many new contributors come th
 6. If you create a new model run `bundle exec annotate` from the root of the app
 7. **Create RSpec tests** to validate that your work fixes the issue (if you need help with this, please reach out!). Read guidelines [here](#writing-browsersystemfeature-testsspecs).
 8. **Run the tests** and make sure all tests pass successfully; if any fail, fix the issues causing the failures. Read guidelines [here](#test-before-submitting-pull-requests).
-9. **Final commit** if tests needed fixing.
-10. **Squash smaller commits.** Read guidelines [here](#squashing-commits).
-11. **Push** up the branch
-12. **Create a pull request** and indicate the addressed issue (e.g. `Resolves #1`) in the title, which will ensure the issue gets closed automatically when the pull request gets merged. Read PR guidelines [here](#pull-requests).
-13. **Code review**: At this point, someone will work with you on doing a code review. The automated tests will run linting, rspec, and brakeman tests. If the automated tests give :+1: to the PR merging, we can then do any additional (staging) testing as needed.
+9.  Run `rubocop -a` to autocorrect linting issues. Manually fix anything not autocorrected. Read rubocop documentation [here](https://docs.rubocop.org/rubocop/1.82/usage/basic_usage.html).
+10. **Final commit** if tests/linting require changes.
+11. **Squash smaller commits.** Read guidelines [here](#squashing-commits).
+12. **Push** up the branch
+13. **Create a pull request** and indicate the addressed issue (e.g. `Resolves #1`) in the title, which will ensure the issue gets closed automatically when the pull request gets merged. Read PR guidelines [here](#pull-requests).
+14. **Code review**: At this point, someone will work with you on doing a code review. The automated tests will run linting, rspec, and brakeman tests. If the automated tests give :+1: to the PR merging, we can then do any additional (staging) testing as needed.
 
-14. **Merge**: Finally if all looks good the core team will merge your code in; if your feature branch was in this main repository, the branch will be deleted after the PR is merged.
+15. **Merge**: Finally if all looks good the core team will merge your code in; if your feature branch was in this main repository, the branch will be deleted after the PR is merged.
 
-15. Deploys are currently done about once a week! Read the deployment process [here](#deployment-process).
+16. Deploys are currently done about once a week! Read the deployment process [here](#deployment-process).
 
 ## Issues
 
