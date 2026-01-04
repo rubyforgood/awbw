@@ -44,6 +44,20 @@ Rails.application.configure do
     }
   end
 
+  config.action_mailer.delivery_method = :file
+  config.after_initialize do
+    if ActionMailer::Base.delivery_method == :smtp
+      raise "SMTP must not be enabled in development"
+    end
+  end
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.show_previews = true
+  config.action_mailer.preview_paths = [ "#{Rails.root}/lib/mailer_previews" ]
+
+  config.action_mailer.file_settings = {
+    location: Rails.root.join("tmp/mail")
+  }
+
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 

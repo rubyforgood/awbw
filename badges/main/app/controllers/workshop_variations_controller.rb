@@ -27,6 +27,13 @@ class WorkshopVariationsController < ApplicationController
   def create
     @workshop_variation = WorkshopVariation.new(workshop_variation_params)
     if @workshop_variation.save
+      NotificationServices::CreateNotification.call(
+        noticeable: @workshop_variation,
+        kind: :record_created,
+        recipient_role: (current_user.super_user? ? :admin : :facilitator),
+        recipient_email: current_user.email,
+        notification_type: 0)
+
       flash[:notice] = "Workshop Variation has been created."
       if params[:from] == "workshop_show"
         redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")

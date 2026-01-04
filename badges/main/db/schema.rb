@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_30_072619) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
   create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
@@ -431,10 +431,19 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_072619) do
 
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
+    t.datetime "delivered_at"
+    t.text "email_body_html"
+    t.text "email_body_text"
+    t.text "email_subject"
+    t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"
     t.integer "notification_type"
+    t.string "recipient_email", null: false
+    t.string "recipient_role", null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["kind"], name: "index_notifications_on_kind"
+    t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
   end
 
   create_table "permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

@@ -15,17 +15,19 @@ User.in_batches do |batch|
 end
 
 puts "Creating WindowsTypes…"
-adult_type = WindowsType.where(name: "ADULT WINDOWS", legacy_id: 1, short_name: "ADULT").first_or_create!
-childrens_type = WindowsType.where(name: "CHILDREN'S WINDOWS", legacy_id: 2, short_name: "CHILDREN").first_or_create!
-combined_type = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS",
-                                  legacy_id: 3, short_name: "COMBINED").first_or_create!
+adult_type = WindowsType.where(name: "ADULT WINDOWS")
+                        .first_or_create!(legacy_id: 1, short_name: "ADULT")
+childrens_type = WindowsType.where(name: "CHILDREN'S WINDOWS")
+                            .first_or_create!(legacy_id: 2, short_name: "CHILDREN")
+combined_type = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS")
+                           .first_or_create!(legacy_id: 3, short_name: "COMBINED")
 
 puts "Creating FormBuilders…"
 FormBuilder.where(name: "Adult Monthly Report", windows_type: adult_type).first_or_create!(id: 4)
 FormBuilder.where(name: "Adult Workshop Log", windows_type: adult_type).first_or_create!(id: 3)
 FormBuilder.where(name: "Children's Monthly Report", windows_type: childrens_type).first_or_create!(id: 2)
 FormBuilder.where(name: "Children's Workshop Log", windows_type: childrens_type).first_or_create!(id: 1)
-FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_create!(id: 10)
+FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_create!(id: 7)
 FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).first_or_create!(id: 5)
 
 puts "Creating ProjectStatuses…"

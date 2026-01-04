@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+      body { font-family: Arial, sans-serif; color: #333; }
+      h1 { color: #2c3e50; }
+      h2 { font-size: 1.1em; color: #2c3e50; margin-bottom: 0.5em; }
+      p { margin: 0.5em 0; }
+      ul { margin: 0.5em 0 1em 1.5em; }
+      a { color: #1a73e8; text-decoration: none; }
+      .footer { margin-top: 2em; font-size: 0.85em; color: #888; }
+      .section { margin-bottom: 1.5em; }
+      img { max-width: 100%; height: auto; border-radius: 4px; }
+  </style>
+</head>
+
+<body>
+<h1>
+  <%= @noticeable_klass %>
+  <%= @notification_type %>
+</h1>
+
+<p>Hello,</p>
+
+<p>
+  A <strong><%= @noticeable_klass %></strong>
+  was <strong><%= @notification_type %></strong>
+  <% if @user.present? %>
+    by <strong><%= @user.name %></strong>.
+  <% end %>
+</p>
+
+<div class="section">
+  <hr>
+  <h2>
+    <%= @noticeable.title %>
+    <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
+      <span class="h4">
+        (<%= @noticeable.windows_type.short_name %>)
+      </span>
+    <% end %>
+  </h2>
+  <!-- Optional object-specific metadata -->
+
+</div>
+
+<div class="section">
+  <p><%= simple_format(@noticeable.detail(length: 9999)) %></p>
+</div>
+
+<!-- Primary Asset -->
+<% if @noticeable.primary_asset&.file&.attached? %>
+  <div class="section">
+    <h2>Primary Image</h2>
+    <%= image_tag url_for(@noticeable.primary_asset.file) %>
+  </div>
+<% end %>
+
+<!-- Gallery Assets -->
+<% if @noticeable.gallery_assets.any? %>
+  <div class="section">
+    <h2>Additional assets</h2>
+    <ul>
+      <% @noticeable.gallery_assets.each do |asset| %>
+        <li>
+          <% if asset.file.image? %>
+            <%= image_tag url_for(asset.file), width: 120 %>
+          <% else %>
+            <%= asset.file.filename.to_s %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<% if @noticeable.respond_to?(:quotes) && @noticeable.quotes.any? %>
+  <div class="section">
+    <h2>Quotes</h2>
+    <ul>
+      <% @noticeable.quotes.each do |quote| %>
+        <li><%= quote.quote %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<% if @noticeable.respond_to?(:report_form_field_answers) && @noticeable.report_form_field_answers.any? %>
+  <div class="section">
+    <h2>Form Answers</h2>
+    <ul>
+      <% @noticeable.report_form_field_answers.each do |answer| %>
+        <li>
+          <strong><%= answer.name %>:</strong>
+          <%= answer.answer %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<!-- CTA -->
+<% if @noticeable.respond_to?(:to_param) %>
+  <p>
+    <%= link_to "View Submission", polymorphic_url(@noticeable) %>
+  </p>
+<% end %>
+
+<div class="footer">
+  This is an automated message from AWBW.
+</div>
+</body>
+</html>

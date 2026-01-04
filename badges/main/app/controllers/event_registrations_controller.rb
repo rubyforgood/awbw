@@ -24,6 +24,13 @@ class EventRegistrationsController < ApplicationController
     @event_registration = EventRegistration.new(event_registration_params)
 
     if @event_registration.save
+      NotificationServices::CreateNotification.call(
+        noticeable: @event_registration,
+        kind: :record_created,
+        recipient_role: (current_user.super_user? ? :admin : :facilitator),
+        recipient_email: current_user.email,
+        notification_type: 0)
+
       respond_to do |format|
         format.html {
           redirect_to event_registrations_path,
