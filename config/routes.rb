@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-
   # temporary direct routes to images for migration audit
   resources :attachments, only: [ :show ]
   resources :media_files, only: [ :show ]

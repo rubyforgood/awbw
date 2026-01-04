@@ -13,7 +13,6 @@ RSpec.describe "project_statuses/edit", type: :view do
     render
 
     assert_select "form[action=?][method=?]", project_status_path(project_status), "post" do
-
       assert_select "input[name=?]", "project_status[name]"
     end
   end
