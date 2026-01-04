@@ -1,5 +1,5 @@
 FactoryBot.define do
   factory :project_status do
-    name { "Active" }
+    sequence(:name) { |n| "Status #{n}" }
   end
 end

@@ -3,7 +3,7 @@ FactoryBot.define do
     association :windows_type
     association :project
     association :workshop
-    title { "My Title" }
+    title { Faker::Lorem.sentence }
     body { "My Body" }
     association :created_by, factory: :user
     association :updated_by, factory: :user

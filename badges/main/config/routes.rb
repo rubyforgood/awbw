@@ -55,6 +55,7 @@ Rails.application.routes.draw do
   resources :notifications, only: [ :show ]
   resources :organizations
   resources :projects
+  resources :project_statuses
   resources :project_users
   resources :quotes
 

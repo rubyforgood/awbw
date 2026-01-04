@@ -6,8 +6,8 @@
     <!-- LEFT SIDE (3/4) -->
     <div>
       <!-- Project Name + Hidden -->
-      <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4 mb-6">
-        <div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="md:col-span-2">
           <%= f.input :name,
                       label: "Project Name",
                       as: :text,
@@ -16,11 +16,24 @@
                         autofocus: true,
                         rows: 1,
                         class: "w-full rounded-md border-gray-300 shadow-sm
-                        focus:border-blue-500 focus:ring focus:ring-blue-200"
+                          focus:border-blue-500 focus:ring focus:ring-blue-200"
                       } %>
         </div>
 
-        <div class="flex items-center">
+        <div class="md:col-span-1">
+          <%= f.input :project_status_id,
+                      label: "Project status",
+                      as: :select,
+                      required: true,
+                      collection: @project_statuses,
+                      selected: f.object.project_status_id,
+                      input_html: {
+                        class: "w-full rounded-md border-gray-300 shadow-sm
+                          focus:ring-blue-500 focus:border-blue-500"
+                      } %>
+        </div>
+
+        <div class="md:col-span-1 md:self-end">
           <%= f.input :inactive,
                       as: :boolean,
                       label: "Hidden?",
