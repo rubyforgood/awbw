@@ -10,12 +10,12 @@ RSpec.describe "windows_types/index", type: :view do
     allow(view).to receive(:current_user).and_return(admin)
   end
 
-  it "renders a list of story_ideas" do
+  it "renders a list of windows_types" do
     render
     expect(rendered).to include(windows_type1.short_name, windows_type2.short_name)
   end
 
-  it "renders a friendly message when no workshop_ideas exist" do
+  it "renders a friendly message when no windows_types exist" do
     assign(:windows_types, paginated([]))
     render
     expect(rendered).to match(/No Windows types found/)

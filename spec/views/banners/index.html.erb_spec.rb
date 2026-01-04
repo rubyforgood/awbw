@@ -10,7 +10,7 @@ RSpec.describe "banners/index", type: :view do
     allow(view).to receive(:current_user).and_return(admin)
   end
 
-  it "renders a list of story_ideas" do
+  it "renders a list of banners" do
     render
     expect(rendered).to include(banner1.content, banner2.content)
   end
