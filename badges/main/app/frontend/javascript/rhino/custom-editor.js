@@ -49,6 +49,8 @@ class CustomEditor extends TipTapEditor {
           <slot name="heading-button">${this.renderHeadingButton()}</slot>
           <slot name="after-heading-button"></slot>
 
+          <slot name="hr-button">${this.renderHorizontalRuleButton()}</slot>
+
           <!-- Blockquote -->
           <slot name="before-blockquote-button"></slot>
           <slot name="blockquote-button">${this.renderBlockquoteButton()}</slot>
@@ -148,42 +150,10 @@ class CustomEditor extends TipTapEditor {
       <button
         type="button"
         class="toolbar__button rhino-toolbar-button"
-        title="Insert grid (Shift + click to enter custom dimensions)"
-        @click=${(event) => {
-          this.editor.chain().focus();
-
-          if (event.shiftKey) {
-            // Prompt user for custom dimensions
-            const input = prompt(
-              "Enter grid dimensions as columns,rows (e.g., 2,4):",
-              "2,2",
-            );
-            if (!input) return;
-
-            const [colsStr, rowsStr] = input.split(",");
-            const columns = parseInt(colsStr.trim(), 10);
-            const rows = parseInt(rowsStr.trim(), 10);
-
-            if (
-              isNaN(rows) ||
-              isNaN(columns) ||
-              rows <= 0 ||
-              columns <= 0 ||
-              rows > 6 ||
-              columns > 6
-            ) {
-              alert(
-                "Invalid dimensions! Rows and columns must be between 1 and 6.",
-              );
-              return;
-            }
-
-            this.editor.chain().insertGrid(columns, rows).run();
-          } else {
-            // Default grid insertion
-            this.editor.chain().insertGrid().run();
-          }
-        }}
+        title="Insert grid"
+        @click="${(event) => {
+          this.editor.chain().focus().insertGrid().run();
+        }}"
       >
         <slot name="table-tooltip">
           <role-tooltip
@@ -200,6 +170,31 @@ class CustomEditor extends TipTapEditor {
     `;
   }
 
+  renderHorizontalRuleButton() {
+    return html`
+      <button
+        class="toolbar__button rhino-toolbar-button"
+        type="button"
+        aria-describedby="horizontal rule"
+        data-role="toolbar-item"
+        @click="${(event) => {
+          this.editor.chain().focus().setHorizontalRule().run();
+        }}"
+      >
+        <slot name="table-tooltip">
+          <role-tooltip
+            id="horiztaon-rule"
+            hoist
+            part="toolbar-tooltip toolbar-tooltip__table"
+            exportparts=${this.__tooltipExportParts}
+          >
+            Horizontal Rule
+          </role-tooltip>
+        </slot>
+        <slot name="table-icon">---</slot>
+      </button>
+    `;
+  }
   renderTableButton() {
     const tableEnabled = true; // Boolean(this.editor?.commands.setAttachment);
 
