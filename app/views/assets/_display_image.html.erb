@@ -1,5 +1,3 @@
-<%# shared/_display_image.html.erb %>
-
 <% resource ||= nil %>
 <% item ||= nil %>
 <% field_name ||= :primary_asset %>
@@ -25,6 +23,24 @@
 
   return unless icon_display || active_storage_file || asset_fallback
 
+  # Tailwind width / height maps
+  width_classes = {
+  "18"   => "w-18",
+  "24"   => "w-24",
+  "32"   => "w-32",
+  "full" => "w-full"
+  }.freeze
+
+  height_classes = {
+  "18"   => "h-18",
+  "24"   => "h-24",
+  "32"   => "h-32",
+  "full" => "h-full"
+  }.freeze
+
+  width_class  = width_classes.fetch(width.to_s, "w-auto")
+  height_class = height_classes.fetch(height.to_s, "h-auto")
+
   # --------------------------------------------------
   # Variant sizing
   # --------------------------------------------------
@@ -34,16 +50,18 @@
       image:   "w-full rounded-lg shadow-sm border border-gray-200",
       preview: [1200, 1200]
     },
+
     gallery: {
-      wrapper: "flex grow", #inline-flex shrink-0"
-      image:   "w-#{width} h-#{height} object-cover rounded border border-gray-300
+      wrapper: "flex grow",
+      image:   "#{width_class} #{height_class} object-cover rounded border border-gray-300
                 shadow-sm hover:opacity-90 transition-opacity",
       preview: [300, 300]
     },
+
     index: {
-      wrapper: "w-#{width} h-#{height} shrink-0 overflow-hidden rounded border border-gray-300",
+      wrapper: "#{width_class} #{height_class} shrink-0 overflow-hidden rounded border border-gray-300",
       image:   "w-full h-full object-cover"
-    },
+    }
   }.fetch(variant)
 
   # --------------------------------------------------
@@ -114,16 +132,18 @@
 %>
 
 <% if link && link_href.present? %>
-  <% link_options = if link_to_object
-                      { class: "display-image-link", data: { turbo_frame: "_top", turbo_prefetch: false } }
-                    else
-                      { class: "display-image-link", target: "_blank", rel: "noopener noreferrer" }
-                    end %>
+  <% link_options =
+      if link_to_object
+        { class: "display-image-link", data: { turbo_frame: "_top", turbo_prefetch: false } }
+      else
+        { class: "display-image-link", target: "_blank", rel: "noopener noreferrer" }
+      end %>
   <%= link_to link_href, **link_options do %>
     <%= inner %>
   <% end %>
-  <% if active_storage_file&.previewable? && display_open_pdf_link &&
-    active_storage_file.content_type == "application/pdf" %>
+  <% if active_storage_file&.previewable? &&
+        display_open_pdf_link &&
+        active_storage_file.content_type == "application/pdf" %>
     <div class="mt-2 text-sm text-gray-600">
       <%= link_to "Open PDF",
                   rails_blob_path(file, disposition: :inline),
