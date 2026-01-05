@@ -59,7 +59,9 @@ class Workshop < ApplicationRecord
   has_rich_text :rhino_closing
   has_rich_text :rhino_notes
   has_rich_text :rhino_tips
-  has_rich_text :extra_field
+  has_rich_text :rhino_misc1
+  has_rich_text :rhino_misc2
+  has_rich_text :rhino_extra_field
 
   has_rich_text :rhino_objective_spanish
   has_rich_text :rhino_materials_spanish

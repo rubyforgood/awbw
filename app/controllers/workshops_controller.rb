@@ -87,6 +87,12 @@ class WorkshopsController < ApplicationController
     @workshop.increment_view_count!(session: session, request: request)
   end
 
+  def rhino_text
+    set_show
+    @workshop.increment_view_count!(session: session, request: request)
+    render :show_test
+  end
+
   def update
     @workshop = Workshop.find(params[:id])
 

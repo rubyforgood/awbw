@@ -105,6 +105,9 @@ Rails.application.routes.draw do
     collection do
       post :search
     end
+    member do
+      get :rhino_text
+    end
   end
 
   namespace :api do
