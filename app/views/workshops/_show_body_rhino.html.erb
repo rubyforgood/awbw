@@ -86,11 +86,11 @@
     </ul>
 
     <!-- Tab contents -->
-    <div class="mt-4 ml-2 default-link prose">
+    <div class="mt-4 ml-2 default-link">
       <!-- English / Details -->
       <div id="english-content" data-tabs-target="tabContent">
         <% unless workshop.rhino_extra_field.blank? %>
-          <div class="prose text-sm mb-4"><%= workshop.rhino_extra_field.html_safe %></div>
+          <div class="text-sm mb-4"><%= workshop.rhino_extra_field %></div>
         <% end %>
 
         <% workshop_sections = { "Objective" => workshop.rhino_objective,
@@ -123,7 +123,7 @@
                            title: title, content: content, language: "english" %>
             <% else %>
               <hr class="border-gray-300 mb-2">
-              <div class="prose text-sm after:clear-both after:block after:content-['']"><%= content.html_safe %></div>
+              <div class="text-sm after:clear-both after:block after:content-['']"><%= content %></div>
             <% end %>
           </div>
         <% end %>
@@ -186,9 +186,7 @@
                            title: title, content: content, language: "spanish" %>
               <% else %>
                 <hr class="border-gray-300 mb-2">
-                <div class="prose text-sm after:clear-both after:block after:content-['']">
-                  <%= content.html_safe %>
-                </div>
+                <div class="text-sm after:clear-both after:block after:content-['']"><%= content %></div>
               <% end %>
             </div>
           <% end %>
