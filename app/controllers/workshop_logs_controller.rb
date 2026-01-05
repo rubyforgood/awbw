@@ -61,6 +61,13 @@ class WorkshopLogsController < ApplicationController
     @workshop_log = WorkshopLog.new(workshop_log_params)
 
     if @workshop_log.save
+      NotificationServices::CreateNotification.call(
+        noticeable: @workshop_log,
+        kind: :record_created,
+        recipient_role: (current_user.super_user? ? :admin : :facilitator),
+        recipient_email: current_user.email,
+        notification_type: 0)
+
       flash[:notice] = "Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile."
       redirect_to authenticated_root_path
     else
@@ -139,12 +146,11 @@ class WorkshopLogsController < ApplicationController
       @workshop = Workshop.new
     end
 
-    workshops = if current_user.super_user?
-                  Workshop.all
-    else
-                  Workshop.published
+    workshops = Workshop.includes(:windows_type)
+    unless current_user.super_user?
+      workshops = workshops.published
     end
-    @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id))
+    @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id).includes(:windows_type))
                           .distinct
                           .order(title: :asc)
 
@@ -165,7 +171,7 @@ class WorkshopLogsController < ApplicationController
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
 
     @windows_type_id = params[:windows_type_id].presence || @workshop.windows_type_id ||
-      WindowsType.where(short_name: "COMBINED")
+      WindowsType.where(short_name: "COMBINED").last.id
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder
     if form

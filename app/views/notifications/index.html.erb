@@ -1,0 +1,83 @@
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-gray-900">
+      Notifications
+    </h1>
+  </div>
+
+  <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-left font-medium text-gray-600">Sent</th>
+<!--        <th class="px-4 py-3 text-left font-medium text-gray-600">Kind</th>-->
+        <th class="px-4 py-3 text-left font-medium text-gray-600">Recipient</th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600">Subject</th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600">Record</th>
+        <th class="px-4 py-3 text-right font-medium text-gray-600"></th>
+      </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-100">
+      <% @notifications.each do |notification| %>
+        <tr class="hover:bg-gray-50">
+          <!-- Sent -->
+          <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
+            <% if notification.delivered_at.present? %>
+              <%= time_ago_in_words(notification.delivered_at) %> ago
+            <% else %>
+              <span class="text-red-600 font-medium">Not sent</span>
+            <% end %>
+          </td>
+
+          <!-- Kind -->
+<!--          <td class="px-4 py-3 text-gray-700">-->
+            <%#= notification.kind.to_s.humanize %>
+<!--          </td>-->
+
+          <!-- Recipient -->
+          <td class="px-4 py-3 text-gray-700">
+            <%= notification.recipient_email %>
+          </td>
+
+          <!-- Subject -->
+          <td class="px-4 py-3 text-gray-900 font-medium">
+            <%= notification.email_subject.presence || "—" %>
+          </td>
+
+          <!-- Record -->
+          <td class="px-4 py-3 text-gray-700">
+            <% if notification.noticeable.present? %>
+              <%= link_to notification.noticeable.class.name,
+                          polymorphic_path(notification.noticeable),
+                          class: "btn btn-secondary-outline" %>
+            <% else %>
+              <span class="text-gray-400">—</span>
+            <% end %>
+          </td>
+
+          <!-- Actions -->
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            <%= link_to "View",
+                        notification_path(notification),
+                        class: "btn btn-secondary-outline" %>
+          </td>
+        </tr>
+      <% end %>
+
+      <% if @notifications.empty? %>
+        <tr>
+          <td colspan="6" class="px-4 py-6 text-center text-gray-500">
+            No notifications found.
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination flex justify-center mt-12">
+    <%= tailwind_paginate @notifications %>
+  </div>
+</div>

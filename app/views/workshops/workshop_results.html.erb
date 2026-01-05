@@ -7,7 +7,7 @@
 
   <div class="mt-6">
     <% if @workshops.any? %>
-      <div id="workshops-list" class="space-y-4 animate-fade">
+      <div id="workshops-list" class="space-y-4 animate-fade blur-on-submit">
         <% @workshops.each do |workshop| %>
           <%= render "workshops/index_row", workshop: workshop.decorate,
                    breadcrumb: "Workshops", link_route: workshop_path(workshop) %>

@@ -24,6 +24,7 @@ RUN apt-get update -qq && apt-get install -y \
   yarn \
   imagemagick \
   libvips \
+  poppler-utils \
   tzdata \
   libxml2-dev \
   libxslt1-dev \
@@ -46,14 +47,17 @@ RUN bundle install --without development test
 # Without these build args the asset precompilation will fail.
 
 # Precompile assets (if applicable)
-RUN SECRET_KEY_BASE=1 bundle exec rake assets:precompile
-
+RUN SECRET_KEY_BASE=1 \
+    MANDRILL_USERNAME=dummy \
+    MANDRILL_APIKEY=dummy \
+    bundle exec rake assets:precompile
 
 FROM base AS server
 
 RUN apt-get update -qq && apt-get install --no-install-recommends -y \
     imagemagick \
     libvips \
+    poppler-utils \
     tzdata \
     libxml2 \
     libxslt1.1 \

@@ -1,6 +1,6 @@
 <% module_namespacing do -%>
 class <%= controller_class_name %>Controller < ApplicationController
-  before_action :set_<%= singular_table_name %>, only: [:show, :edit, :update, :destroy]
+  before_action :set_<%= singular_table_name %>, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
@@ -11,7 +11,7 @@ class <%= controller_class_name %>Controller < ApplicationController
   end
 
   def show
-    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>
+    @<%= singular_table_name %> = @<%= singular_table_name %>.decorate
   end
 
   def new
@@ -20,7 +20,7 @@ class <%= controller_class_name %>Controller < ApplicationController
   end
 
   def edit
-    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>.decorate
+    @<%= singular_table_name %> = @<%= singular_table_name %>.decorate
     set_form_variables
   end
 

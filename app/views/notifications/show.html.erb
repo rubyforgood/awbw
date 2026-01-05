@@ -1,0 +1,147 @@
+<%# =========================================
+   Notification Detail
+   Safe email preview + metadata
+   ========================================= %>
+<style>
+    .email-preview-wrapper {
+        all: initial;
+        display: block;
+    }
+
+    .email-preview-content {
+        all: revert;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #111;
+    }
+
+    .email-preview-content img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .email-preview-content table {
+        max-width: 100%;
+    }
+</style>
+<div class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">
+        Notification
+      </h1>
+
+      <p class="text-sm text-gray-500">
+        <%= @notification.kind.to_s.humanize %>
+        • Created <%= time_ago_in_words(@notification.created_at) %> ago
+      </p>
+    </div>
+
+    <div class="text-right text-sm">
+      <% if @notification.delivered_at.present? %>
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 text-green-700">
+          <i class="fas fa-check-circle"></i>
+          Delivered
+        </span>
+      <% else %>
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-yellow-100 text-yellow-700">
+          <i class="fas fa-clock"></i>
+          Pending
+        </span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Metadata -->
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+    <dl class="space-y-3 text-sm">
+
+      <div class="flex items-start gap-4">
+        <dt class="w-28 text-gray-500">To</dt>
+        <dd class="text-gray-900 font-medium break-all">
+          <%= @notification.recipient_email || "—" %>
+        </dd>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <dt class="w-28 text-gray-500">Subject</dt>
+        <dd class="text-gray-900 font-medium">
+          <%= @notification.email_subject.presence || "—" %>
+        </dd>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <dt class="w-28 text-gray-500">Sent at</dt>
+        <dd class="text-gray-900">
+          <%= @notification.delivered_at&.strftime("%B %d, %Y %l:%M %p") || "Not sent" %>
+        </dd>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <dt class="w-28 text-gray-500">Noticeable</dt>
+        <dd class="text-gray-900">
+          <% if @notification.noticeable.present? %>
+            <%= link_to @notification.noticeable.class.name,
+                        polymorphic_path(@notification.noticeable),
+                        class: "text-blue-600 hover:underline" %>
+          <% else %>
+            —
+          <% end %>
+        </dd>
+      </div>
+
+    </dl>
+  </div>
+
+
+
+  <!-- Email Preview -->
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+
+    <div class="border-b px-4 py-2 bg-gray-50 flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-gray-700">
+        Email Preview
+      </h2>
+      <span class="text-xs text-gray-500">Sandboxed</span>
+    </div>
+
+    <% if @notification.email_body_html.present? %>
+      <div class="bg-gray-50 p-4">
+        <iframe
+          srcdoc="<%= @notification.email_body_html %>"
+          class="w-full border-0"
+          style="height: 1800px;"
+          sandbox=""
+        ></iframe>
+      </div>
+
+    <% elsif @notification.email_body_text.present? %>
+      <div class="p-4">
+        <pre class="whitespace-pre-wrap text-sm text-gray-800">
+          <%= @notification.email_body_text %>
+        </pre>
+      </div>
+
+    <% else %>
+      <div class="p-4 text-sm text-gray-500 italic">
+        No email body captured.
+      </div>
+    <% end %>
+
+  </div>
+
+  <!-- Actions -->
+  <div class="flex justify-between items-center">
+    <%= link_to "← Back to Notifications",
+                notifications_path,
+                class: "text-sm text-blue-600 hover:underline" %>
+
+    <%# Optional resend hook %>
+    <%#= button_to "Resend",
+                  resend_notification_path(@notification),
+                  method: :post,
+                  class: "btn btn-secondary" %>
+  </div>
+
+</div>

@@ -25,6 +25,7 @@ class Story < ApplicationRecord
   validates :windows_type_id, presence: true
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
+  validates :title, presence: true, uniqueness: true
   validates :body, presence: true
 
   # Nested attributes
