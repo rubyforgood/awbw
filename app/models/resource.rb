@@ -134,6 +134,14 @@ class Resource < ApplicationRecord
     created_at.month
   end
 
+  def published?
+    !inactive? && published_kind?
+  end
+
+  def published_kind?
+    self.class::PUBLISHED_KINDS.include?(kind)
+  end
+
   private
   def self.reject?(resource)
     resource["_create"] == "0"
