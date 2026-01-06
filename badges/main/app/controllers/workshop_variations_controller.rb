@@ -10,7 +10,7 @@ class WorkshopVariationsController < ApplicationController
         .joins(:workshop)
         .includes(:workshop)
         .where(workshops: { inactive: false })
-        .order("workshops.title, workshop_variations.name")
+        .order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
         .paginate(page: params[:page], per_page: 25)
         .decorate
   end
