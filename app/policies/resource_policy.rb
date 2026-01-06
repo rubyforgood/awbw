@@ -12,6 +12,10 @@ class ResourcePolicy < ApplicationPolicy
   def index?
     true
   end
+
+  def filter_published?
+    admin?
+  end
   #
   # def update?
   #   # here we can access our context and record
