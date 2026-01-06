@@ -38,6 +38,12 @@
                 <%= @event.times(display_day: true, display_date: true) %>
               </div>
 
+              <% if @event.labelled_cost %>
+                <div>
+                  <%= @event.labelled_cost %>
+                </div>
+              <% end %>
+
               <div class="registration-section flex flex-col gap-4 mb-6">
                 <!-- ⭐ BUTTONS -->
                 <div class="flex flex-wrap items-center gap-3">

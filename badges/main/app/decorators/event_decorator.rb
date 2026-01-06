@@ -149,6 +149,12 @@ class EventDecorator < ApplicationDecorator
     "#{bookmarks_link} >> #{bookmarkable_link}".html_safe
   end
 
+  def labelled_cost
+    return if cost_cents.blank? || cost_cents.zero?
+
+    "Cost: $#{cost}"
+  end
+
   def content
     if bookmarkable_class_name == "Workshop"
       h.render "/workshops/show", workshop: bookmarkable, sectors: bookmarkable.sectors,

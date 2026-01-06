@@ -76,7 +76,8 @@ class EventsController < ApplicationController
   end
 
   def event_params
-    params.require(:event).permit(:created_by_id,
+    params.require(:event).permit(:cost,
+                                  :created_by_id,
                                   :title,
                                   :description,
                                   :featured,

@@ -74,6 +74,30 @@
     </div>
   </div>
 
+  <% if show_feature?(:stripe_payments) %>
+    <div class="mb-6">
+      <div class="flex items-center justify-between gap-2 mb-1">
+        <%= f.label :cost, "Event Cost", class: "block font-medium" %>
+        <span class="text-sm text-gray-600">Enter $0 if the event is free</span>
+      </div>
+      <div class="relative">
+        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+        <%= f.text_field :cost,
+                         type: 'number',
+                         step: '0.01',
+                         min: '0',
+                         placeholder: '0.00',
+                         oninput: "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
+                         class: "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+      </div>
+      <% if f.object.errors[:cost].any? %>
+        <p class="text-red-500 text-sm mt-1">
+          Cost <%= f.object.errors[:cost].join(", ") %>
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+
   <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
   <div class="flex items-center justify-between gap-4">
