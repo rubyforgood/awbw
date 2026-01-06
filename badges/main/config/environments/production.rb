@@ -50,7 +50,6 @@ Rails.application.configure do
   config.active_storage.service = :digitalocean
 
   app_host = ENV.fetch("APP_HOST", "localhost")
-
   Rails.application.routes.default_url_options[:host] = app_host
 
   config.after_initialize do
@@ -96,8 +95,8 @@ Rails.application.configure do
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = {
-    host: "example.com",
-    protocol: "https"
+    host: ENV.fetch("APP_HOST", "localhost"),
+    protocol: Rails.env.production? ? "https" : "http"
   }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
