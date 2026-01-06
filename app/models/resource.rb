@@ -31,6 +31,7 @@ class Resource < ApplicationRecord
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :rich_text_assets, -> { where(type: "RichTextAsset") },
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
 
   # Default values
   attribute :inactive, :boolean, default: false

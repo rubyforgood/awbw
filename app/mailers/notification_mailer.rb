@@ -2,7 +2,7 @@ class NotificationMailer < ApplicationMailer
   def reset_password_notification(resource)
     @resource = resource
     message = mail(
-      to: "programs@awbw.org",
+      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "Reset Password Request"
     )
     persist_email(notification, message)
@@ -28,11 +28,8 @@ class NotificationMailer < ApplicationMailer
     @quotes      = @noticeable.quotes if @noticeable.respond_to?(:quotes)
     @answers     = @noticeable.report_form_field_answers if @noticeable.respond_to?(:report_form_field_answers)
 
-    if @noticeable_klass == WorkshopLog
-    end
-
     mail(
-      to: ENV.fetch("REPLY_EMAIL", "programs@awbw.org"),
+      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "New #{@noticeable_klass} Submission by #{@user.name}"
     )
   end
@@ -44,39 +41,19 @@ class NotificationMailer < ApplicationMailer
     @notification = notification
     @noticeable   = notification.noticeable
     @type = "Report"
-    if @noticeable.respond_to? :windows_type
-      target = @noticeable.windows_type.name
-    else
-      target = ""
-    end
 
     if @noticeable.class == User
       @user        = @noticeable
     else
       @report      = @noticeable
-      @attachments = @report.media_files
-      @quotes      = @report.quotes
-      @user        = @noticeable.user
-      @answers     = @report.report_form_field_answers
-    end
-
-    if @report.type == "WorkshopLog"
-    end
-
-    if @report.story?
-      @type = "Story"
-      @mail_to = "eaeevans@awbw.org, cturekrials@awbw.org, rhernandez@awbw.org"
-    else
-      case target
-      when "ADULT WORKSHOP LOG"
-        @mail_to = "cturek@awbw.org"
-      else
-        @mail_to = "rhernandez@awbw.org"
-      end
+      @attachments = @report.assets
+      @quotes      = @report.quotes if @report.respond_to?(:quotes)
+      @user        = @noticeable.respond_to?(:user) ? @noticeable.user : @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
+      @answers     = @report.report_form_field_answers if @report.respond_to?(:report_form_field_answers)
     end
 
     mail(
-      to: @mail_to,
+      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "New #{@type} Submission by #{@user.name}"
     )
   end

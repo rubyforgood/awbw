@@ -80,7 +80,9 @@
     <h2>Quotes</h2>
     <ul>
       <% @noticeable.quotes.each do |quote| %>
-        <li><%= quote.quote %></li>
+        <li>
+          <%= @quote.detail %> -- <%= @quote.attribution %>
+        </li>
       <% end %>
     </ul>
   </div>

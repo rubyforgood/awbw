@@ -20,7 +20,7 @@
             <table class="table table-responsive table-bordered table-curved">
               <thead>
               <tr id="table-thead-tr">
-                <th class="text-center">Name</th>
+                <th class="text-left">Name</th>
                 <th class="text-left">Description</th>
                 <th class="text-start text-nowrap">Workshop</th>
                 <th class="text-center">Author</th>
@@ -40,14 +40,31 @@
                   </td>
                   <td class="text-start">
                     <span title="<%= strip_tags(workshop_variation.workshop&.name) %>">
-                      <%= truncate(strip_tags(workshop_variation.workshop.name), length: 50) if workshop_variation.workshop %>
+                      <% if workshop_variation.workshop %>
+                        <% workshop_name = truncate(strip_tags(workshop_variation.workshop.name), length: 50) %>
+                        <%= link_to workshop_name,
+                                    workshop_path(workshop_variation.workshop),
+                                    class: "btn btn-secondary-outline" %>
+                      <% end %>
                     </span>
-                    <%=  %>
                   </td>
-                  <td><%= workshop_variation.created_by&.full_name %></td>
+                  <td>
+                    <% if workshop_variation.created_by && workshop_variation.created_by.facilitator %>
+                      <%= link_to workshop_variation.created_by.full_name,
+                                  facilitator_path(workshop_variation.created_by.facilitator),
+                                  class: "btn btn-secondary-outline" %>
+                    <% elsif workshop_variation.created_by %>
+                      <%= workshop_variation.created_by.full_name %>
+                    <% end %>
+
+                  </td>
 
                   <td class="user-updated-at text-center"><%= workshop_variation.updated_at&.strftime('%m/%d/%y') %></td>
-                  <td class="text-center"><%= link_to "<span class='glyphicon glyphicon-pencil'></span>".html_safe, edit_workshop_variation_path(workshop_variation) %></td>
+                  <td class="text-center">
+                    <%= link_to "Edit",
+                                edit_workshop_variation_path(workshop_variation),
+                                class: "btn btn-secondary-outline" %>
+                  </td>
                 </tr>
               <% end %>
               </tbody>

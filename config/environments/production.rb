@@ -119,7 +119,7 @@ Rails.application.configure do
   }
 
   config.after_initialize do
-    if ENV["MANDRILL_USERNAME"].blank? || ENV["MANDRILL_APIKEY"].blank?
+    if ENV.fetch("SMTP_PASSWORD", "").blank? # ENV["MANDRILL_APIKEY"].blank?
       raise "Missing Mandrill SMTP credentials"
     end
   end
