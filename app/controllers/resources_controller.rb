@@ -52,6 +52,7 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(resource_id_param).decorate
+    authorize! @resource
     @resource.increment_view_count!(session: session, request: request)
     load_forms
   end
