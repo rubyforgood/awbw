@@ -49,6 +49,13 @@ RSpec.describe "events/show", type: :view do
              description: "Event with minimal data",
              registration_close_date: nil)
     end
+    let(:formatted_event_start_time) do
+      if event.start_date.min.zero?
+        event.start_date.strftime("%-l %P")     # "1 am"
+      else
+        event.start_date.strftime("%-l:%M %P")  # "5:43 pm"
+      end
+    end
 
     it "handles minimal data gracefully" do
       render
@@ -56,7 +63,7 @@ RSpec.describe "events/show", type: :view do
       expect(rendered).to have_content("Minimal Event")
       expect(rendered).to have_content("Event with minimal data")
       expect(rendered).to include(event.start_date.strftime("%b %-d")) # "Oct 2"
-      expect(rendered).to include(event.start_date.strftime("%-l:%M %P")) # "5:43 pm"
+      expect(rendered).to include(formatted_event_start_time)
     end
   end
 
