@@ -74,3 +74,5 @@ group :development, :test do
 end
 
 gem "positioning", "~> 0.4.7"
+
+gem "action_policy", "~> 0.7.5"
