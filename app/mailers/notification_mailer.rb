@@ -2,7 +2,7 @@ class NotificationMailer < ApplicationMailer
   def reset_password_notification(resource)
     @resource = resource
     message = mail(
-      to: "programs@awbw.org",
+      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "Reset Password Request"
     )
     persist_email(notification, message)
@@ -29,7 +29,7 @@ class NotificationMailer < ApplicationMailer
     @answers     = @noticeable.report_form_field_answers if @noticeable.respond_to?(:report_form_field_answers)
 
     mail(
-      to: ENV.fetch("REPLY_EMAIL", "programs@awbw.org"),
+      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "New #{@noticeable_klass} Submission by #{@user.name}"
     )
   end
@@ -53,7 +53,7 @@ class NotificationMailer < ApplicationMailer
     end
 
     mail(
-      to: ENV.fetch("REPLY_EMAIL", "programs@awbw.org"),
+      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "New #{@type} Submission by #{@user.name}"
     )
   end

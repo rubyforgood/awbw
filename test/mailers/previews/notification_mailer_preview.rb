@@ -6,7 +6,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: "created_record",
         kind: "record_created",
         recipient_role: "admin",
-        recipient_email: "programs@awbw.org"
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )
     NotificationMailer.created_notification(notification)
   end
@@ -18,7 +18,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: "created_record",
         kind: "record_created",
         recipient_role: "admin",
-        recipient_email: "programs@awbw.org"
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )
 
     NotificationMailer.report_notification(notification)
