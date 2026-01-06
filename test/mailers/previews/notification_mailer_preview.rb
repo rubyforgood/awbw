@@ -12,7 +12,7 @@ class NotificationMailerPreview < ActionMailer::Preview
   end
 
   def report_notification
-    notification = Notification.last ||
+    notification =
       Notification.create!(
         noticeable: WorkshopLog.first || Report.first,
         notification_type: "created_record",
