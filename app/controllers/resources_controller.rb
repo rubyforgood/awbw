@@ -1,21 +1,29 @@
 class ResourcesController < ApplicationController
   include ExternallyRedirectable
+
   def index
+    authorize!
+
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      unfiltered = Resource.where(kind: Resource::PUBLISHED_KINDS) # TODO - #FIXME brittle
-        .includes(:primary_asset, :gallery_assets, :attachments)
-      filtered = unfiltered.search_by_params(params)
-        .by_created
-      @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
-      total_count = unfiltered.count
+      base_scope =
+        authorized_scope(Resource.where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
+          .includes(:primary_asset, :gallery_assets, :attachments)
+
+      filtered =
+        base_scope
+          .search_by_params(params)
+          .by_created
+
+      @resources =
+        filtered.paginate(page: params[:page], per_page: per_page)
+
+      total_count    = base_scope.count
       filtered_count = filtered.count
-      @count_display = if filtered_count == total_count
-                         total_count
-      else
-                         "#{filtered_count}/#{total_count}"
-      end
+
+      @count_display =
+        filtered_count == total_count ? total_count : "#{filtered_count}/#{total_count}"
 
       render :resource_results
     else

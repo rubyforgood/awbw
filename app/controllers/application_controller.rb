@@ -4,6 +4,12 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
   before_action :authenticate_user!  # ensures only logged-in users can access pages
 
+  # TODO add this after_action callback to verify
+  # that `authorize!` has been called in all controllers
+  # once all policies are added
+  #
+  # verify_authorized
+
   private
 
   def after_sign_in_path_for(resource)
