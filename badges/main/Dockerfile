@@ -48,8 +48,7 @@ RUN bundle install --without development test
 
 # Precompile assets (if applicable)
 RUN SECRET_KEY_BASE=1 \
-    MANDRILL_USERNAME=dummy \
-    MANDRILL_APIKEY=dummy \
+    SMTP_PASSWORD=dummy \
     bundle exec rake assets:precompile
 
 FROM base AS server
