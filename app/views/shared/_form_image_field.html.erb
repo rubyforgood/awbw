@@ -44,7 +44,7 @@
     <% if show_existing %>
 
       <%# ---------- IMAGE ---------- %>
-      <% if is_image %>
+      <% if is_image && action_name != "create" %>
         <%= image_tag file,
                       alt: "#{label}",
                       data: { file_preview_target: "preview" },
@@ -73,7 +73,8 @@
 
       <div data-file-preview-target="filename"
            class="text-center text-sm text-gray-500 break-all max-w-[8rem]">
-        <%= blob ? link_to(blob.filename.to_s, url_for(file), class: "underline") : "No file selected" %>
+        <%= blob && action_name != "create" ? link_to(blob.filename.to_s, url_for(file),
+                                                   class: "underline") : "No file selected" %>
       </div>
 
     <% end %>
