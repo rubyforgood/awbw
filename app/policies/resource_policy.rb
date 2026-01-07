@@ -1,6 +1,8 @@
 class ResourcePolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
+  alias_rule :edit?, :destroy?, to: :update?
+  alias_rule :rhino_text?, to: :show?
 
   def index?
     true
@@ -10,15 +12,17 @@ class ResourcePolicy < ApplicationPolicy
     admin? || record.published?
   end
 
+  def new?
+    admin?
+  end
+
+  def update?
+    admin? || owner?
+  end
+
   def filter_published?
     admin?
   end
-  #
-  # def update?
-  #   # here we can access our context and record
-  #   user.admin? || (user.id == record.user_id)
-  # end
-  #
 
   relation_scope do |relation|
     if admin?
