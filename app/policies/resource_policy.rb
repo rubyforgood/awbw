@@ -8,6 +8,10 @@ class ResourcePolicy < ApplicationPolicy
     true
   end
 
+  def download?
+    true
+  end
+
   def show?
     admin? || record.published?
   end
