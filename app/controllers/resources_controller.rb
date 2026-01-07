@@ -12,9 +12,9 @@ class ResourcesController < ApplicationController
       total_count = unfiltered.count
       filtered_count = filtered.count
       @count_display = if filtered_count == total_count
-                         total_count
+        total_count
       else
-                         "#{filtered_count}/#{total_count}"
+        "#{filtered_count}/#{total_count}"
       end
 
       render :resource_results
@@ -41,12 +41,6 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(resource_id_param).decorate
     @resource.increment_view_count!(session: session, request: request)
     load_forms
-  end
-
-  def rhino_text
-    @resource = Resource.find(resource_id_param).decorate
-    load_forms
-    render :show_test
   end
 
   def create

@@ -13,9 +13,9 @@ class CategoriesController < ApplicationController
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
 
     @count_display = if filtered.count == unfiltered.count
-                       unfiltered.count
+      unfiltered.count
     else
-                       "#{filtered.count}/#{unfiltered.count}"
+      "#{filtered.count}/#{unfiltered.count}"
     end
   end
 

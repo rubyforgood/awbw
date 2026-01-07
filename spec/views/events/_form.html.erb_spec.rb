@@ -24,6 +24,7 @@ RSpec.describe "events/_form", type: :view do
     render
 
     expect(rendered).to have_selector("label", text: "Event title")
+    expect(rendered).to have_selector("label", text: "Event Cost")
     expect(rendered).to have_selector("label", text: "Description")
     expect(rendered).to have_selector("label", text: "Start time")
     expect(rendered).to have_selector("label", text: "End time")

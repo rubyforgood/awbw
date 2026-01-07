@@ -25,7 +25,6 @@
 
       <!-- Resource Card -->
       <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
-
         <!-- Title -->
         <div class="font-semibold text-gray-900 mb-2">
           <%= title_with_badges(@resource, font_size: "text-3xl") %>
@@ -37,6 +36,7 @@
           <% unless @resource.toolkit_and_form? %>
             <div class="flex items-center text-gray-600 text-sm gap-2">
               <span><%= @resource.author %></span>
+
               <% unless @resource.story? %>
                 <span class="<%= "border-l border-gray-400 pl-2" if @resource.author.present? %>">
                   <%= @resource.display_date %>
@@ -50,9 +50,7 @@
         <%= render "assets/display_assets", resource: @resource %>
 
         <!-- Main Text -->
-        <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
-          <%= @resource.display_text %>
-        </div>
+        <%= @resource.rhino_text %>
       </div>
     </div>
   </div>

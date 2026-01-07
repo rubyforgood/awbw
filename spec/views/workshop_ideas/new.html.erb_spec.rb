@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "workshop_ideas/new", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
   before(:each) do

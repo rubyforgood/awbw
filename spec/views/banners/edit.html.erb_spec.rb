@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "banners/edit", type: :view do
-    let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin) }
 
   let(:banner) {
     Banner.create!(

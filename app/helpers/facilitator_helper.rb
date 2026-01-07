@@ -9,14 +9,14 @@ module FacilitatorHelper
 
       # --- Avatar ---
       avatar = if facilitator.avatar.present?
-                 image_tag url_for(facilitator.avatar),
-                           class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
+        image_tag url_for(facilitator.avatar),
+                  class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
       elsif facilitator.user&.avatar.present?
-                 image_tag url_for(facilitator.user.avatar),
-                           class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
+        image_tag url_for(facilitator.user.avatar),
+                  class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
       else
-                 image_tag "missing.png",
-                           class: "w-10 h-10 rounded-full object-cover border border-dashed border-gray-300 flex-shrink-0"
+        image_tag "missing.png",
+                  class: "w-10 h-10 rounded-full object-cover border border-dashed border-gray-300 flex-shrink-0"
       end
 
       # --- Name: stays one line & turns white on hover ---
@@ -29,11 +29,11 @@ module FacilitatorHelper
 
       # --- Pronouns ---
       pronouns = if facilitator.pronouns_display.present?
-                   content_tag(
-                     :span,
-                     facilitator.pronouns_display,
-                     class: "text-xs text-gray-500 italic group-hover:text-white"
-                   )
+        content_tag(
+          :span,
+          facilitator.pronouns_display,
+          class: "text-xs text-gray-500 italic group-hover:text-white"
+        )
       end
 
       text_block = content_tag(

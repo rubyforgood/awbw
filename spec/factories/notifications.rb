@@ -5,7 +5,7 @@ FactoryBot.define do
     notification_type { :created }
 
     after(:build) do |notification|
-       allow(notification).to receive(:send_notice).and_return(true)
+      allow(notification).to receive(:send_notice).and_return(true)
     end
   end
 end
