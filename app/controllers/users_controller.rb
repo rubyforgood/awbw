@@ -112,9 +112,9 @@ class UsersController < ApplicationController
     set_facilitator
     @user.project_users.first || @user.project_users.build
     projects = if current_user.super_user?
-                 Project.active
+      Project.active
     else
-                 current_user.projects
+      current_user.projects
     end
     @projects_array = projects.order(:name).pluck(:name, :id)
   end

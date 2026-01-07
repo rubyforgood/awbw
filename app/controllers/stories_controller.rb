@@ -11,9 +11,9 @@ class StoriesController < ApplicationController
     @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
     @count_display = if filtered.count == unpaginated.count
-                       unpaginated.count
+      unpaginated.count
     else
-                       "#{filtered.count}/#{unpaginated.count}"
+      "#{filtered.count}/#{unpaginated.count}"
     end
   end
 

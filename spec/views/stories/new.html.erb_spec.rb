@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "stories/new", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
 
   before(:each) do
     assign(:story, Story.new)

@@ -9,9 +9,9 @@ class CommunityNewsController < ApplicationController
     @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
     @count_display = if filtered.count == unfiltered.count
-                       unfiltered.count
+      unfiltered.count
     else
-                       "#{filtered.count}/#{unfiltered.count}"
+      "#{filtered.count}/#{unfiltered.count}"
     end
   end
 

@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "stories/edit", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:story) { create(:story, created_by: user, updated_by: user, body: "MyBody", youtube_url: "Youtube_url") }
 
   before(:each) do

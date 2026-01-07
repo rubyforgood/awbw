@@ -5,5 +5,5 @@ Rails.application.load_tasks
 
 desc "Build local docker image"
 task "build:docker" do |t, args|
-    sh "docker build --no-cache -t awbw-portal ."
+  sh "docker build --no-cache -t awbw-portal ."
 end

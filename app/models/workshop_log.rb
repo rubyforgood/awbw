@@ -126,7 +126,7 @@ class WorkshopLog < Report
   end
 
   def date_label
-   date ? date.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
+    date ? date.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
   end
 
   def workshop_quotes

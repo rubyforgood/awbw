@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "banners/index", type: :view do
-    let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin) }
   let(:banner1) { create(:banner) }
   let(:banner2) { create(:banner) }
 

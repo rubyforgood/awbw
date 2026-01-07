@@ -15,29 +15,27 @@ class TaggingsController < ApplicationController
       quotes: params[:quotes_page]
     }
 
-    @grouped_tagged_items = TaggingSearchService.call(sector_names: @sector_names,
-                                                      category_names: @category_names,
-                                                      pages: pages,
-                                                      number_of_items_per_page: number_of_items_per_page)
+    @grouped_tagged_items = TaggingSearchService.call(
+      sector_names: @sector_names,
+      category_names: @category_names,
+      pages: pages,
+      number_of_items_per_page: number_of_items_per_page
+    )
   end
 
   def matrix
-    @sectors =
-      Sector
-        .joins(:sectorable_items)
-        .published
-        .distinct
-        .order(:name)
+    @sectors = Sector
+      .joins(:sectorable_items)
+      .published
+      .distinct
+      .order(:name)
 
-    @categories =
-      Category
-        .joins(:category_type, :categorizable_items)
-        .published
-        .select("categories.*, metadata.name AS category_type_name")
-        .distinct
-        .order("category_type_name ASC, categories.name ASC")
-
-
+    @categories = Category
+      .joins(:category_type, :categorizable_items)
+      .published
+      .select("categories.*, metadata.name AS category_type_name")
+      .distinct
+      .order("category_type_name ASC, categories.name ASC")
 
     # ------------------------------------------------------------------
     # 1. Build raw counts (SOURCE OF TRUTH)
@@ -54,8 +52,8 @@ class TaggingsController < ApplicationController
         .group("sectors.id")
         .count
         .each do |sector_id, count|
-        @model_heatmap_stats[key][:sector][sector_id] = count
-      end
+          @model_heatmap_stats[key][:sector][sector_id] = count
+        end
 
       klass
         .published
@@ -63,8 +61,8 @@ class TaggingsController < ApplicationController
         .group("categories.id")
         .count
         .each do |category_id, count|
-        @model_heatmap_stats[key][:category][category_id] = count
-      end
+          @model_heatmap_stats[key][:category][category_id] = count
+        end
     end
 
     # ------------------------------------------------------------------

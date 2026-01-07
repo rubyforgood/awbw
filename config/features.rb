@@ -10,7 +10,7 @@ FeatureFlipper.features do
     end
   end
 
-  FeatureFlipper.states do
-    state :development, [ "development", "test" ].include?(Rails.env)
-    state :live, true
-  end
+FeatureFlipper.states do
+  state :development, [ "development", "test" ].include?(Rails.env)
+  state :live, true
+end
