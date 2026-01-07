@@ -3,3 +3,12 @@ inherit_gem:
   rubocop-rails-omakase: rubocop.yml
 
 # Your own specialized rules go here
+  #
+  #
+  #
+Layout/IndentationConsistency:
+  Enabled: true
+  EnforcedStyle: normal
+
+Layout/IndentationWidth:
+  Enabled: true

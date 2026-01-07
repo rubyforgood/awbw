@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "banners/new", type: :view do
-    let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin) }
 
   before(:each) do
     assign(:banner, Banner.new(

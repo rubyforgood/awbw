@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "workshop_ideas/show", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:workshop_idea) { create(:workshop_idea, created_by: user, updated_by: user,
                                title: "MyTitle", description: "MyDescription") }
 

@@ -13,6 +13,6 @@ RSpec.describe ProjectObligation do
   end
 
   it 'is valid with valid attributes' do
-   expect(build(:project_obligation)).to be_valid
+    expect(build(:project_obligation)).to be_valid
   end
 end

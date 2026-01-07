@@ -12,9 +12,9 @@ class ResourcesController < ApplicationController
       total_count = unfiltered.count
       filtered_count = filtered.count
       @count_display = if filtered_count == total_count
-                         total_count
+        total_count
       else
-                         "#{filtered_count}/#{total_count}"
+        "#{filtered_count}/#{total_count}"
       end
 
       render :resource_results

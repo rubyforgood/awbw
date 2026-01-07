@@ -13,10 +13,10 @@ require 'rails_helper'
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
 RSpec.describe "/community_news", type: :request do
-    # This should return the minimal set of attributes required to create a valid
-    # CommunityNews. As you add validations to CommunityNews, be sure to
-    # adjust the attributes here as well.
-    let(:admin) { create(:user, super_user: true) }
+  # This should return the minimal set of attributes required to create a valid
+  # CommunityNews. As you add validations to CommunityNews, be sure to
+  # adjust the attributes here as well.
+  let(:admin) { create(:user, super_user: true) }
 
   let(:valid_attributes) {
     {

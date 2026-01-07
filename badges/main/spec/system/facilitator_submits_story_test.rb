@@ -21,14 +21,14 @@ RSpec.describe "Facilitators can submit a story", type: :system do
         expect(page).to have_field("Body")
       end
 
-          it "can fill out and submit a story with workshop context" do
-        fill_in 'Title', with: 'Healing Through Art: My Journey with AWBW'
+      it "can fill out and submit a story with workshop context" do
+  fill_in 'Title', with: 'Healing Through Art: My Journey with AWBW'
 
-        check 'Published' if page.has_field?('Published')
-        check 'Featured' if page.has_field?('Featured')
-        select 'ADULT', from: 'story_windows_type_id'
+  check 'Published' if page.has_field?('Published')
+  check 'Featured' if page.has_field?('Featured')
+  select 'ADULT', from: 'story_windows_type_id'
 
-        fill_in 'Body *', with: <<~STORY
+  fill_in 'Body *', with: <<~STORY
 
           Through AWBW's workshops, I learned to process my grief and anxiety.#{' '}
           The art therapy sessions helped me express the fear I felt when#{' '}
@@ -37,30 +37,30 @@ RSpec.describe "Facilitators can submit a story", type: :system do
           of Coral, rather than just the trauma of her loss.
         STORY
 
-        fill_in 'Youtube url', with: 'https://youtube.com/watch?v=2zLkasScy7A'
-        fill_in 'Website url', with: 'https://awbw.org/success-stories'
+  fill_in 'Youtube url', with: 'https://youtube.com/watch?v=2zLkasScy7A'
+  fill_in 'Website url', with: 'https://awbw.org/success-stories'
 
-        # File uploads
-        if page.has_field?('Primary media')
-          attach_file 'Primary media', Rails.root.join('spec/fixtures/some_image.jpg')
-        end
+  # File uploads
+  if page.has_field?('Primary media')
+    attach_file 'Primary media', Rails.root.join('spec/fixtures/some_image.jpg')
+  end
 
-        if page.has_field?('Secondary media 1')
-          attach_file 'Secondary media 1', Rails.root.join('spec/fixtures/some_image.jpg')
-        end
-        select @user.name, from: 'story_created_by_id'
-        # Submit
-        click_button 'Create Story'
+  if page.has_field?('Secondary media 1')
+    attach_file 'Secondary media 1', Rails.root.join('spec/fixtures/some_image.jpg')
+  end
+  select @user.name, from: 'story_created_by_id'
+  # Submit
+  click_button 'Create Story'
 
-        expect(page).to have_content("Story was successfully created.")
-        expect(page).to have_content('Healing Through Art')
-        expect(page).to have_current_path(stories_path)
-    end
-     it "can cancel the form" do
-        click_link 'Cancel'
-        expect(page).not_to have_content('stories')
-        expect(page).to have_current_path(stories_path)
-      end
+  expect(page).to have_content("Story was successfully created.")
+  expect(page).to have_content('Healing Through Art')
+  expect(page).to have_current_path(stories_path)
+end
+      it "can cancel the form" do
+         click_link 'Cancel'
+         expect(page).not_to have_content('stories')
+         expect(page).to have_current_path(stories_path)
+       end
     end
   end
 end

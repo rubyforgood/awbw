@@ -31,10 +31,10 @@ RSpec.describe "Facilitators can register for an event" do
 
       # dashboard registration
       it "Register for events from dashboard" do
-         within("#card_event_#{@event.id}") do
-          expect(page).to have_button("Register")
-          click_button 'Register'
-        end
+        within("#card_event_#{@event.id}") do
+         expect(page).to have_button("Register")
+         click_button 'Register'
+       end
 
         within("#card_event_#{@event.id}") do
           expect(page).to have_css("span.text-xs.bg-green-100.text-green-700.px-2.py-0\\.5.rounded-full",
@@ -48,7 +48,7 @@ RSpec.describe "Facilitators can register for an event" do
           expect(page).to have_link("Yahoo")
 
           accept_confirm do
-           click_button "De-register"
+            click_button "De-register"
           end
           expect(page).to have_button("Register")
           expect(page).to have_no_content("Registered")
@@ -56,12 +56,12 @@ RSpec.describe "Facilitators can register for an event" do
       end
 
       it "navigates to events via community" do
-      expect(page).to have_button("Community")
-      click_button 'Community'
-      within('#community_menu') do
-      click_link 'Events'
-      end
-      expect(page).to have_current_path(events_path)
+       expect(page).to have_button("Community")
+       click_button 'Community'
+       within('#community_menu') do
+         click_link 'Events'
+       end
+       expect(page).to have_current_path(events_path)
      end
 
       it "navigate to events page" do
@@ -97,7 +97,7 @@ RSpec.describe "Facilitators can register for an event" do
 
           # de-register
           accept_confirm do
-           click_button "De-register"
+            click_button "De-register"
           end
           expect(page).to have_button("Register")
           expect(page).to have_no_content("Registered")

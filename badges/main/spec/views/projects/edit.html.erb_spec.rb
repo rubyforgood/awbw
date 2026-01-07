@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "projects/edit", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
   let(:project_status) { create(:project_status) }
