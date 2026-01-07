@@ -10,10 +10,13 @@
                   wrapper: false,
                   label_html: { class: 'block font-medium mb-1' } %>
     </div>
+
     <div class="flex-1 min-w-[200px]">
       <label class="block font-medium mb-1">Flags</label>
+
       <div class="flex items-center gap-6">
         <div><%= f.input :featured, as: :boolean, wrapper: false, label_html: { class: "inline" } %></div>
+
         <div>
           <%= f.input :inactive, as: :boolean,
                       label: "Hidden?",
@@ -25,13 +28,17 @@
     <% if f.object.url.present? %>
       <div class="flex-[0_0_50%] min-w-[150px] bg-red-200 p-3">
         <label class="block text-md font-medium text-gray-700 mb-1">Attachment URL</label>
+
         <span class="text-gray-900 font-medium">
           <%= link_to f.object.url, f.object.url, target: "_blank", class: "underline" %>
         </span>
+
         <br>
+
         <div class="text-red-500">
           Download this file and reupload below.
         </div>
+
         <% if params[:admin].present? %>
           <%= f.input :url, # TODO - remove this value after reattaching
                       label: "Where the attachment is stored -- NEEDS TO BE REATTACHED",
@@ -77,14 +84,6 @@
   </div>
 
   <!-- Second Row -->
-  <div class="text-row flex flex-wrap gap-4 mb-4">
-    <div class="flex-1 min-w-[200px]">
-      <%= f.input :text,
-                  as: :text,
-                  input_html: { rows: 5, class: "w-full rounded border-gray-300" } %>
-    </div>
-  </div>
-
   <%= rhino_editor(f, :text) %>
 
   <!-- Second Row -->
@@ -106,6 +105,7 @@
   <div class="flex gap-2 mt-4">
     <%= link_to "Delete", @resource, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
     <%= link_to 'Cancel', resources_path, class: "btn btn-secondary-outline" %>
+
     <%= f.submit 'Submit',
                  class: "px-4 py-2 border border-blue-600 hover:text-gray-600 hover:bg-white
                  rounded-lg bg-blue-600 text-white text-sm font-medium" %>
