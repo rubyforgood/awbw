@@ -31,6 +31,7 @@ class ResourcesController < ApplicationController
   end
 
   def stories
+    authorize!
     @stories = Resource.story.paginate(page: params[:page], per_page: 6).decorate
   end
 
@@ -41,6 +42,7 @@ class ResourcesController < ApplicationController
 
   def edit
     @resource = Resource.find(resource_id_param).decorate
+    authorize! @resource
     set_form_variables
 
     if turbo_frame_request?
@@ -58,6 +60,7 @@ class ResourcesController < ApplicationController
   end
 
   def create
+    authorize!
     @resource = current_user.resources.build(resource_params)
     if @resource.save
       redirect_to resources_path
@@ -71,6 +74,7 @@ class ResourcesController < ApplicationController
 
   def update
     @resource = Resource.find(params[:id])
+    authorize! @resource
     @resource.user ||= current_user
     if @resource.update(resource_params)
       flash[:notice] = "Resource updated."
@@ -84,6 +88,7 @@ class ResourcesController < ApplicationController
 
   def destroy
     @resource = Resource.find(params[:id])
+    authorize! @resource
     @resource.destroy!
     redirect_to resources_path, notice: "Resource was successfully destroyed."
   end
@@ -96,6 +101,7 @@ class ResourcesController < ApplicationController
 
   def download
     @resource = Resource.find(params[:resource_id])
+    authorize! @resource
     @resource.increment!(:download_count)
 
     attachment = if params[:attachment_id].to_i > 0
@@ -121,48 +127,48 @@ class ResourcesController < ApplicationController
 
   private
 
-  def set_form_variables
-    @resource.build_primary_asset if @resource.primary_asset.blank?
-    @resource.gallery_assets.build
+    def set_form_variables
+      @resource.build_primary_asset if @resource.primary_asset.blank?
+      @resource.gallery_assets.build
 
-    @windows_types = WindowsType.all
-    @authors = User.active.or(User.where(id: @resource.user_id))
-      .order(:first_name, :last_name)
-      .map { |u| [ u.full_name, u.id ] }
-  end
+      @windows_types = WindowsType.all
+      @authors = User.active.or(User.where(id: @resource.user_id))
+        .order(:first_name, :last_name)
+        .map { |u| [ u.full_name, u.id ] }
+    end
 
-  def process_search
-    @params = search_params
-    @query = search_params[:query]
-    @resources = Search.new.search(search_params, current_user).paginate(page: params[:search][:page])
-  end
+    def process_search
+      @params = search_params
+      @query = search_params[:query]
+      @resources = Search.new.search(search_params, current_user).paginate(page: params[:search][:page])
+    end
 
-  def resource_id_param
-    params[:id]
-  end
+    def resource_id_param
+      params[:id]
+    end
 
-  def resource_params
-    params.require(:resource).permit(
-      :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
-      :agency, :author, :filemaker_code, :windows_type_id, :position,
-      primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ],
-      categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
-      sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
-    )
-  end
+    def resource_params
+      params.require(:resource).permit(
+        :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
+        :agency, :author, :filemaker_code, :windows_type_id, :position,
+        primary_asset_attributes: [ :id, :file, :_destroy ],
+        gallery_assets_attributes: [ :id, :file, :_destroy ],
+        categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
+        sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
+      )
+    end
 
-  def load_forms
-    form = @resource.form
-    if form
-      @user_form = Report.new(user: current_user, owner: @resource)
-      form.form_fields.where(status: 1).each do |field|
-        @user_form.report_form_field_answers.build(form_field: field)
+    def load_forms
+      form = @resource.form
+      if form
+        @user_form = Report.new(user: current_user, owner: @resource)
+        form.form_fields.where(status: 1).each do |field|
+          @user_form.report_form_field_answers.build(form_field: field)
+        end
       end
     end
-  end
 
-  def search_params
-    params[:search]
-  end
+    def search_params
+      params[:search]
+    end
 end
