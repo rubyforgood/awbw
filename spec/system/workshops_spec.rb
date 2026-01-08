@@ -64,7 +64,7 @@ RSpec.describe "Workshops", type: :system do
 
   describe 'create workshop' do
     context "When super user is logged in" do
-      it "Super user can create a new workshop" do
+      it "Super user can create a new workshop", js: true do
         user = create(:user, super_user: true)
         sign_in(user)
         adult_window = create(:windows_type, :adult)
@@ -75,13 +75,8 @@ RSpec.describe "Workshops", type: :system do
 
         fill_in "workshop_title", with: 'My New Workshop'
         select adult_window.short_name, from: 'workshop_windows_type_id'
+        find('#body-button').click
         fill_in 'workshop_full_name', with: 'Jane Doe'
-        fill_in 'workshop_objective', with: 'Learn something new'
-        fill_in 'workshop_materials', with: 'Paper, Markers'
-        fill_in 'workshop_setup', with: 'Arrange tables'
-        fill_in 'workshop_demonstration', with: 'Show example'
-        fill_in 'workshop_warm_up', with: 'Stretching'
-        fill_in 'workshop_creation', with: 'Step 1, Step 2'
 
         click_on 'Submit'
 
