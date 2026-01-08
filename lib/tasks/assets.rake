@@ -229,6 +229,36 @@ namespace :assets do
     puts "Done."
   end
 
+  desc "Delete duplicate GalleryAsset if blob matches PrimaryAsset"
+  task delete_duplicate_gallery_assets: :environment do
+    puts "Starting duplicate GalleryAsset deletion…"
+
+    deleted_ids = []
+    duplicates = Asset
+                   .includes(:owner, file_attachment: :blob)
+                   .select { |a| a.file.attached? }
+                   .group_by { |a| [a.owner_type, a.owner_id, a.file.blob_id] }
+                   .select do |_key, assets|
+      assets.any? { |a| a.is_a?(PrimaryAsset) } &&
+        assets.any? { |a| a.is_a?(GalleryAsset) }
+    end
+
+    Asset.transaction do
+      duplicates.each do |_key, assets|
+        primary = assets.find { |a| a.is_a?(PrimaryAsset) }
+        next unless primary # paranoia guard
+
+        assets
+          .select { |a| a.is_a?(GalleryAsset) }
+          .each do |gallery|
+          gallery.destroy!
+          deleted_ids << gallery.id
+        end
+      end
+    end
+    deleted_ids.size
+  end
+
   private
 
   def say(message)
