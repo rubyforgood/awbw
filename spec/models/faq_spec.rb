@@ -24,13 +24,13 @@ RSpec.describe Faq do
       end
     end
 
-    describe ".by_order" do
-      let!(:second_faq) { create(:faq, ordering: 1) }
-      let!(:third_faq) { create(:faq, ordering: 2) }
-      let!(:first_faq) { create(:faq, ordering: 0) }
+    describe ".by_position" do
+      let!(:second_faq) { create(:faq, position: 1) }
+      let!(:third_faq) { create(:faq, position: 2) }
+      let!(:first_faq) { create(:faq, position: 0) }
 
-      it "returns FAQs ordered by ordering ascending" do
-        expect(Faq.reorder(nil).by_order).to eq([ first_faq, second_faq, third_faq ])
+      it "returns FAQs ordered by position ascending" do
+        expect(Faq.reorder(nil).by_position).to eq([ first_faq, second_faq, third_faq ])
       end
     end
   end

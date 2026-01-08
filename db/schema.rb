@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_07_190151) do
   create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
@@ -278,7 +278,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
     t.string "last_name", null: false
     t.string "linked_in_url"
     t.date "member_since"
-    t.text "notes"
+    t.text "notes", size: :medium
     t.boolean "profile_is_searchable", default: true, null: false
     t.boolean "profile_show_affiliations", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
@@ -310,7 +310,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
     t.text "answer", size: :long
     t.datetime "created_at", precision: nil, null: false
     t.boolean "inactive"
-    t.integer "ordering"
+    t.integer "position", null: false
     t.string "question"
     t.datetime "updated_at", precision: nil, null: false
   end
@@ -433,9 +433,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.datetime "delivered_at"
-    t.text "email_body_html"
-    t.text "email_body_text"
-    t.text "email_subject"
+    t.text "email_body_html", size: :medium
+    t.text "email_body_text", size: :medium
+    t.text "email_subject", size: :medium
     t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"
@@ -445,6 +445,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
+  end
+
+  create_table "payments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "usd", null: false
+    t.string "failure_code"
+    t.string "failure_message"
+    t.bigint "payable_id", null: false
+    t.string "payable_type", null: false
+    t.bigint "payer_id", null: false
+    t.string "payer_type", null: false
+    t.string "status", null: false
+    t.string "stripe_charge_id"
+    t.json "stripe_metadata"
+    t.string "stripe_payment_intent_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["payable_type", "payable_id", "status"], name: "index_payments_on_payable_type_and_payable_id_and_status"
+    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable"
+    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable_type_and_payable_id"
+    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer"
+    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer_type_and_payer_id"
+    t.index ["stripe_charge_id"], name: "index_payments_on_stripe_charge_id"
+    t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id", unique: true
   end
 
   create_table "permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -678,7 +702,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
   end
 
   create_table "tutorials", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body"
+    t.text "body", size: :medium
     t.datetime "created_at", null: false
     t.boolean "featured", default: false, null: false
     t.integer "position", default: 10, null: false
@@ -1006,6 +1030,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "banners", "users", column: "created_by_id"
