@@ -9,7 +9,7 @@ namespace :story_data do
     Resource.where(kind: "Story").find_each do |resource|
       Story.where(title:                 resource.title,)
            .first_or_create!(
-        body:                  resource.text,
+        body:                  resource.text.presence || "test",
         created_by_id:         resource.user_id || default_user_id,
         updated_by_id:         resource.user_id || default_user_id,
         featured:              resource.featured,
