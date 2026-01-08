@@ -6,7 +6,7 @@ RSpec.describe "faqs/edit", type: :view do
       question: "MyString",
       answer: "MyText",
       inactive: false,
-      ordering: 1
+      position: 1
     )
   }
 
@@ -25,7 +25,7 @@ RSpec.describe "faqs/edit", type: :view do
 
       assert_select "input[name=?]", "faq[inactive]"
 
-      assert_select "input[name=?]", "faq[ordering]"
+      assert_select "input[name=?]", "faq[position]"
     end
   end
 end

@@ -3,6 +3,6 @@ FactoryBot.define do
     question { Faker::Lorem.question }
     answer { Faker::Lorem.paragraph }
     inactive { false }
-    sequence(:ordering) { |n| n }
+    sequence(:position) { |n| n }
   end
 end
