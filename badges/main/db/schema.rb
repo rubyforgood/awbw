@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_06_225822) do
   create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
@@ -445,6 +445,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_03_133222) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
+  end
+
+  create_table "payments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "usd", null: false
+    t.string "failure_code"
+    t.string "failure_message"
+    t.bigint "payable_id", null: false
+    t.string "payable_type", null: false
+    t.bigint "payer_id", null: false
+    t.string "payer_type", null: false
+    t.string "status", null: false
+    t.string "stripe_charge_id"
+    t.json "stripe_metadata"
+    t.string "stripe_payment_intent_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["payable_type", "payable_id", "status"], name: "index_payments_on_payable_type_and_payable_id_and_status"
+    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable"
+    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable_type_and_payable_id"
+    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer"
+    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer_type_and_payer_id"
+    t.index ["stripe_charge_id"], name: "index_payments_on_stripe_charge_id"
+    t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id", unique: true
   end
 
   create_table "permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
