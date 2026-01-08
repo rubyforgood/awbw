@@ -1,0 +1,17 @@
+<div data-controller="dropdown" class="inline-block w-full" data-dropdown-target="content">
+  <button
+    id="<%= dom_id_prefix %>-button"
+    type="button"
+    data-action="dropdown#toggle"
+    data-dropdown-payload-param='[{"<%= dom_id_prefix %>-dropdown":"hidden"},{"<%= dom_id_prefix %>-arrow":"rotate-180"},{"<%= dom_id_prefix %>-button":"rounded-md rounded-t-md"}]'
+    class="
+      flex items-center justify-between cursor-pointer w-full
+      bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+    "
+  >
+    <label class="mb-0 font-medium"><%= label_text %></label>
+    <i id="<%= dom_id_prefix %>-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+  </button>
+
+  <div id="<%= dom_id_prefix %>-dropdown" class="hidden"><%= yield %></div>
+</div>
