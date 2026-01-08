@@ -141,6 +141,8 @@ class CustomEditor extends TipTapEditor {
         </role-toolbar>
 
         ${this.renderTableMenu()} ${renderGridMenu(this.editor)}
+        ${this.renderBubbleMenuToolbar()}
+        ${this.renderLinkDialogAnchoredRegion()}
       </slot>
     `;
   }
