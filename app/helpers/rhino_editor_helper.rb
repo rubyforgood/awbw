@@ -41,7 +41,7 @@ module RhinoEditorHelper
             :textarea,
             nil,
             data: { rhino_source_target: "textarea" },
-            class: "w-full h-64 p-2 border rounded prose"
+            class: "w-full h-64 p-2 border rounded"
           ),
           content_tag(:div, class: "mt-2 text-right") do
             safe_join([
