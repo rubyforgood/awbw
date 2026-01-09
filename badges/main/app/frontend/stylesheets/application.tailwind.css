@@ -78,10 +78,6 @@
   @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300;
 }
 
-.rotate-180 {
-  transform: rotate(180deg);
-}
-
 .is-active {
   @apply text-primary border-b-2 border-primary font-bold bg-gray-100;
 }

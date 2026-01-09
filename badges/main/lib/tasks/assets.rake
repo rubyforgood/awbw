@@ -237,10 +237,10 @@ namespace :assets do
     duplicates = Asset
                    .includes(:owner, file_attachment: :blob)
                    .select { |a| a.file.attached? }
-                   .group_by { |a| [a.owner_type, a.owner_id, a.file.blob_id] }
+                   .group_by { |a| [ a.owner_type, a.owner_id, a.file.blob_id ] }
                    .select do |_key, assets|
-      assets.any? { |a| a.is_a?(PrimaryAsset) } &&
-        assets.any? { |a| a.is_a?(GalleryAsset) }
+                     assets.any? { |a| a.is_a?(PrimaryAsset) } &&
+                       assets.any? { |a| a.is_a?(GalleryAsset) }
     end
 
     Asset.transaction do
@@ -251,8 +251,8 @@ namespace :assets do
         assets
           .select { |a| a.is_a?(GalleryAsset) }
           .each do |gallery|
-          gallery.destroy!
-          deleted_ids << gallery.id
+            gallery.destroy!
+            deleted_ids << gallery.id
         end
       end
     end
