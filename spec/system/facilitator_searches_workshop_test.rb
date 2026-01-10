@@ -55,6 +55,24 @@ RSpec.describe 'Facilitators can search for a workshop' do
         expect(page).to have_no_content("The best workshop in the world")
         expect(page).to have_no_content("The best workshop on mars")
       end
+
+      it "searches for workshop with 'the best' keyword for multiple results" do
+       visit workshops_path
+       fill_in 'title', with: "the best"
+       expect(page).to have_content("The best workshop in the world")
+       expect(page).to have_content("The best workshop on mars")
+       expect(page).to have_no_content('oh hello!')
+     end
+
+      it "shows no results for non-matching search" do
+       visit workshops_path
+       fill_in 'title', with: "nonexistent"
+       expect(page).to have_no_content('The best workshop in the world')
+       expect(page).to have_no_content('The best workshop on mars')
+       expect(page).to have_no_content('oh hello!')
+       expect(page).to have_content('Your search returned no results. Please try again.')
+     end
+
       it "shows all workshops when search is cleared" do
         visit workshops_path
         fill_in 'title', with: ""
