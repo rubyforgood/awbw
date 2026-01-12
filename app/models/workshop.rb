@@ -1,6 +1,7 @@
 class Workshop < ApplicationRecord
   include TagFilterable, PrintCountable, Trendable, ViewCountable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
+  include ActionText::Attachable
 
   belongs_to :windows_type
   belongs_to :user, optional: true
@@ -249,5 +250,18 @@ class Workshop < ApplicationRecord
 
   def set_time_frame
     self.timeframe = time_frame_total
+  end
+  ## ActionText:Attachable
+  def attachable_content_type
+    "application/vnd.active_record.workshop"
+  end
+  # Used when editing
+  def to_trix_content_attachment_partial_path
+    "workshop_mentions/trix_content_attachment"
+  end
+
+  # Used when displaying
+  def to_attachable_partial_path
+    "workshop_mentions/attachable"
   end
 end

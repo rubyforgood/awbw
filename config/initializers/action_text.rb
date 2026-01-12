@@ -3,3 +3,9 @@ ActionText::ContentHelper.allowed_tags = default_allowed_tags.merge(%w[iframe ta
 
 default_allowed_attributes = Class.new.include(ActionText::ContentHelper).new.sanitizer_allowed_attributes
 ActionText::ContentHelper.allowed_attributes = default_allowed_attributes.merge(%w[style colspan rowspan cellpadding cellspacing width height align valign])
+
+module ActionText
+  class TrixAttachment
+    TAG_NAME = "span"
+  end
+end

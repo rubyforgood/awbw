@@ -104,6 +104,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :workshop_mentions, only: [ :index ]
+
   namespace :api do
     namespace :v1 do
       resources :authentications, only: [ :create ]
