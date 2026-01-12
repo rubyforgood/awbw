@@ -42,7 +42,7 @@ function extendRhinoEditor(event) {
     }),
     ResourceMention.configure({
       suggestion: {
-        char: "!",
+        char: "#",
         items: async ({ query }) => {
           const response = await fetch(
             `/resource_mentions.json?query=${query}`,

@@ -187,7 +187,12 @@ const ActionTextAttachmentMention = Mention.extend({
       content: node.attrs.content,
       contentType: node.attrs.contentType,
     };
-    const label = ["span", { class: "mention" }, `@${node.attrs.content}`];
+    const char = this.options.suggestion?.char || "*";
+    const label = [
+      "span",
+      { class: "mention" },
+      `${char}${node.attrs.content}`,
+    ];
     return [
       "span",
       mergeAttributes(
