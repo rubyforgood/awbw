@@ -105,6 +105,7 @@ Rails.application.routes.draw do
   end
 
   resources :workshop_mentions, only: [ :index ]
+  resources :resource_mentions, only: [ :index ]
 
   namespace :api do
     namespace :v1 do

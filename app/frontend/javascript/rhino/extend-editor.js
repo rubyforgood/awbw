@@ -9,6 +9,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { Grid } from "./grid/grid";
 import { GridCell } from "./grid/gridCell";
 import WorkshopMention from "./mentions/WorkshopMention.js";
+import ResourceMention from "./mentions/ResourceMention.js";
 
 function extendRhinoEditor(event) {
   const rhinoEditor = event.target;
@@ -38,6 +39,20 @@ function extendRhinoEditor(event) {
       },
 
       attachmentContentType: "application/vnd.active_record.workshop",
+    }),
+    ResourceMention.configure({
+      suggestion: {
+        char: "!",
+        items: async ({ query }) => {
+          const response = await fetch(
+            `/resource_mentions.json?query=${query}`,
+          );
+          const data = await response.json();
+          return data;
+        },
+      },
+
+      attachmentContentType: "application/vnd.active_record.resource",
     }),
   );
 }
