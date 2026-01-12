@@ -8,7 +8,6 @@ import Youtube from "@tiptap/extension-youtube";
 import TextAlign from "@tiptap/extension-text-align";
 import { Grid } from "./grid/grid";
 import { GridCell } from "./grid/gridCell";
-import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import WorkshopMention from "./mentions/WorkshopMention.js";
 
 function extendRhinoEditor(event) {
@@ -26,7 +25,6 @@ function extendRhinoEditor(event) {
     }),
     Grid,
     GridCell,
-    HorizontalRule,
     WorkshopMention.configure({
       suggestion: {
         char: "@",
@@ -38,6 +36,7 @@ function extendRhinoEditor(event) {
           return data;
         },
       },
+
       attachmentContentType: "application/vnd.active_record.workshop",
     }),
   );

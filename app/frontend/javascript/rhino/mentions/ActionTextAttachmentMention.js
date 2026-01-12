@@ -29,6 +29,7 @@ const ActionTextAttachmentMention = Mention.extend({
         return `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`;
       },
       attachmentContentType: "application/octet-stream",
+      suggestions: [], // Empty array ensures it falls back to suggestion
       suggestion: {
         render: () => {
           let component;
