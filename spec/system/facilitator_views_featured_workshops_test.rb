@@ -19,6 +19,7 @@ RSpec.describe 'Facilitators can bookmark workshops' do
       def active_slide
         find('.swiper-slide-active')
      end
+
       it "verifies featured workshops existence" do
         expect(page).to have_content("Featured Workshops")
         expect(page).to have_content("The best workshop in the world")
@@ -33,12 +34,14 @@ RSpec.describe 'Facilitators can bookmark workshops' do
         expect(page).to have_css('.swiper-button-prev-custom')
       end
 
+      # next btn
       it "tests next button functionality" do
         expect(page).to have_css('.swiper-button-next-custom')
         find('.swiper-button-next-custom').click
         expect(page).to have_content("Advanced Leadership Skills")
       end
 
+      # prev btn
       it "tests previous button functionality" do
         expect(page).to have_css('.swiper-button-prev-custom')
         find('.swiper-button-next-custom').click
