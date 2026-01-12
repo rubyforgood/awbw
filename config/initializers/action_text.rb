@@ -6,6 +6,25 @@ ActionText::ContentHelper.allowed_attributes = default_allowed_attributes.merge(
 
 module ActionText
   class TrixAttachment
-    TAG_NAME = "span"
+    # Any @mention model should use this content type so it renders inline in the editor
+    INLINE_CONTENT_TYPE_PREFIX = "application/vnd.active_record.".freeze
+
+    alias_method :to_html_original, :to_html
+
+    def to_html
+      html = to_html_original
+      return html unless inline_attachment?
+
+      # Replace <figure> wrapper with <span>
+      html
+        .sub(/\A<figure/, "<span")
+        .sub(%r{</figure>\z}, "</span>")
+    end
+
+    private
+
+    def inline_attachment?
+      attributes["contentType"]&.start_with?(INLINE_CONTENT_TYPE_PREFIX)
+    end
   end
 end
