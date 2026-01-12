@@ -142,12 +142,31 @@ const ActionTextAttachmentMention = Mention.extend({
           return {};
         },
       },
+      // content: {
+      //   default: null,
+      //   parseHTML: (element) => {
+      //     return findAttribute(element, "content").trim();
+      //   },
+      //   renderHTML: (attributes) => {
+      //     return {};
+      //   },
+      // },
+
       content: {
         default: null,
         parseHTML: (element) => {
-          return findAttribute(element, "content").trim();
+          const raw = findAttribute(element, "content");
+          if (!raw) return null;
+
+          // remove erb comments
+          const withoutComments = raw.replace(/<!--[\s\S]*?-->/g, "");
+
+          const div = document.createElement("div");
+          div.innerHTML = withoutComments;
+
+          return div.textContent?.replace(/\s+/g, " ").trim() || null;
         },
-        renderHTML: (attributes) => {
+        renderHTML: () => {
           return {};
         },
       },
@@ -168,7 +187,7 @@ const ActionTextAttachmentMention = Mention.extend({
       content: node.attrs.content,
       contentType: node.attrs.contentType,
     };
-    const label = ["span", { class: "mention" }, `#${node.attrs.content}`];
+    const label = ["span", { class: "mention" }, `@${node.attrs.content}`];
     return [
       "span",
       mergeAttributes(
