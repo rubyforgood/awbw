@@ -47,6 +47,13 @@ class Workshop < ApplicationRecord
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
 
+  has_many :action_text_mentions,
+           as: :mentionable,
+           dependent: :destroy
+
+  has_many :action_text_rich_texts,
+           through: :action_text_mentions
+
   # Rhino Editor Fields
   has_rich_text :rhino_objective
   has_rich_text :rhino_materials
