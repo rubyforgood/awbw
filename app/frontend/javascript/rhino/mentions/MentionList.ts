@@ -1,4 +1,3 @@
-// app/javascript/rhino-editor/elements/MentionList.js
 // This mention list takes an array of suggested
 // items that represent action text attachments
 // with the properties of content/contentType/sgid
