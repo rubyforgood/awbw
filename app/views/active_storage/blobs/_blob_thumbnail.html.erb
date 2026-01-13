@@ -1,4 +1,5 @@
 <% blob ||= asset.file.blob %>
+<% title = asset.title.present? ? asset.title : asset.id %>
 
 <figure
   class="
@@ -11,10 +12,10 @@
 
   <% if blob.previewable? %>
     <%= image_tag blob.preview(resize_to_limit: [100, 100]).processed, class: "w-24 h-24 object-contain",
-      title:  asset.id %>
+      title:  title %>
   <% elsif blob.image? %>
     <%= image_tag blob.variant(resize_to_limit: [100, 100]).processed, class: "w-24 h-24 object-contain",
-      title: blob.filename.to_s %>
+      title: title %>
   <% else %>
     <div
       class="
@@ -34,6 +35,6 @@
     onclick="navigator.clipboard.writeText('<%= attachment_url %>').then(() => alert('Copied!'))"
     class="absolute top-1 right-1 bg-gray-700 text-white text-xs rounded px-1.5 py-0.5 hover:bg-gray-800"
   >
-    Copy Url
+    <%= asset.id %>
   </button>
 </figure>

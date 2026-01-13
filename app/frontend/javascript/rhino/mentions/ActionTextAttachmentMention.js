@@ -87,14 +87,16 @@ const ActionTextAttachmentMention = Mention.extend({
           if (overrideSpace) {
             range.to += 1;
           }
-
           editor
             .chain()
             .focus()
             .insertContentAt(range, [
               {
                 type: this.name,
-                attrs: props,
+                attrs: {
+                  ...props,
+                  content: props.title || String(props.content),
+                },
               },
               {
                 type: "text",
@@ -142,16 +144,6 @@ const ActionTextAttachmentMention = Mention.extend({
           return {};
         },
       },
-      // content: {
-      //   default: null,
-      //   parseHTML: (element) => {
-      //     return findAttribute(element, "content").trim();
-      //   },
-      //   renderHTML: (attributes) => {
-      //     return {};
-      //   },
-      // },
-
       content: {
         default: null,
         parseHTML: (element) => {

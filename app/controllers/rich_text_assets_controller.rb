@@ -11,7 +11,8 @@
 
    def create
      @owner = params[:owner_type].constantize.find(params[:owner_id])
-     @rich_text_asset = @owner.rich_text_assets.build
+
+     @rich_text_asset = @owner.rich_text_assets.build(title: params[:title])
      @rich_text_asset.file.attach(params[:file]) if params[:file].present?
 
      if @rich_text_asset.save
