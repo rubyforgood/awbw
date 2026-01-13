@@ -28,7 +28,7 @@ RSpec.describe "Facilitators can register for an event" do
         sign_in user
         visit events_path
 
-        # Register for the event 
+        # Register for the event
         within("#card_event_#{@event.id}") do
           click_button 'Register'
         end
