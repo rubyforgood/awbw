@@ -1,1 +1,1 @@
-json.array! @resources, partial: "resource_mentions/resource_mention", as: :resource
+json.array! @resources, partial: "shared/mentions/mention", as: :record

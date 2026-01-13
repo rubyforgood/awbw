@@ -1,1 +1,1 @@
-json.array! @workshops, partial: "workshop_mentions/workshop_mention", as: :workshop
+json.array! @workshops, partial: "shared/mentions/mention", as: :record
