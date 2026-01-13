@@ -16,6 +16,8 @@ function extendRhinoEditor(event) {
   const rhinoEditor = event.target;
   if (!rhinoEditor) return;
 
+  const modelSgid = rhinoEditor.dataset.modelSgid;
+
   rhinoEditor.addExtensions(
     Table,
     TableRow,
@@ -60,7 +62,7 @@ function extendRhinoEditor(event) {
         char: "!",
         items: async ({ query }) => {
           const response = await fetch(
-            `/rich_text_asset_mentions.json?query=${query}`,
+            `/rich_text_asset_mentions.json?query=${query}&sgid=${modelSgid}`,
           );
           const data = await response.json();
           return data;
