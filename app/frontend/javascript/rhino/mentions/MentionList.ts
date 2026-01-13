@@ -104,7 +104,6 @@ class MentionList extends LitElement {
         sgid: item.sgid,
         content: item.content,
         contentType: item.contentType,
-        title: item.title,
       });
     }
   }

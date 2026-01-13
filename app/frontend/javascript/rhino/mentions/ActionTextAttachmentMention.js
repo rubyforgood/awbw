@@ -1,3 +1,4 @@
+// app/javascript/rhino-editor/extensions/ActionTextAttachmentMention.js
 import Mention from "@tiptap/extension-mention";
 import { mergeAttributes } from "@tiptap/core";
 import tippy from "tippy.js";
@@ -92,10 +93,7 @@ const ActionTextAttachmentMention = Mention.extend({
             .insertContentAt(range, [
               {
                 type: this.name,
-                attrs: {
-                  ...props,
-                  content: props.title || String(props.content),
-                },
+                attrs: props,
               },
               {
                 type: "text",
