@@ -153,7 +153,7 @@ class Resource < ApplicationRecord
 
   # Used when displaying
   def to_attachable_partial_path
-    "resource_mentions/attachable"
+    "shared/mentions/attachable"
   end
 
   private

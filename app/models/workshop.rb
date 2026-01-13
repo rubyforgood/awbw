@@ -269,6 +269,6 @@ class Workshop < ApplicationRecord
 
   # Used when displaying
   def to_attachable_partial_path
-    "workshop_mentions/attachable"
+    "shared/mentions/attachable"
   end
 end

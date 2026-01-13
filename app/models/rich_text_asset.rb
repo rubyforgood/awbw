@@ -33,6 +33,7 @@ class RichTextAsset < Asset
 
   # Used when displaying
   def to_attachable_partial_path
-    "rich_text_asset_mentions/attachable"
+    @record = self
+    "shared/mentions/attachable"
   end
 end
