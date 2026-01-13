@@ -1,0 +1,3 @@
+json.content rich_text_asset.id
+json.sgid rich_text_asset.attachable_sgid
+json.contentType rich_text_asset.attachable_content_type

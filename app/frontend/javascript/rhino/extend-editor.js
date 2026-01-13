@@ -10,6 +10,7 @@ import { Grid } from "./grid/grid";
 import { GridCell } from "./grid/gridCell";
 import WorkshopMention from "./mentions/WorkshopMention.js";
 import ResourceMention from "./mentions/ResourceMention.js";
+import AssetMention from "./mentions/AssetMention.js";
 
 function extendRhinoEditor(event) {
   const rhinoEditor = event.target;
@@ -53,6 +54,20 @@ function extendRhinoEditor(event) {
       },
 
       attachmentContentType: "application/vnd.active_record.resource",
+    }),
+    AssetMention.configure({
+      suggestion: {
+        char: "!",
+        items: async ({ query }) => {
+          const response = await fetch(
+            `/rich_text_asset_mentions.json?query=${query}`,
+          );
+          const data = await response.json();
+          return data;
+        },
+      },
+
+      attachmentContentType: "application/vnd.active_record.asset",
     }),
   );
 }

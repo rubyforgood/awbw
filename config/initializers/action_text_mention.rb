@@ -12,6 +12,8 @@
 
 ActiveSupport.on_load(:action_text_rich_text) do
   ActionText::RichText.class_eval do
+    MENTIONABLE_MODELS = [ Workshop, Resource, RichTextAsset ] # directly the classes
+
     has_many :action_text_mentions,
              class_name: "ActionTextMention",
              foreign_key: :action_text_rich_text_id,
@@ -27,7 +29,6 @@ ActiveSupport.on_load(:action_text_rich_text) do
 
     def update_mentions_for(klass)
       return unless body.present?
-
       current_records = body.attachables.grep(klass).uniq
       existing_records = action_text_mentions
                            .where(mentionable_type: klass.name)
@@ -44,8 +45,13 @@ ActiveSupport.on_load(:action_text_rich_text) do
       end
     end
 
+    # before_save do
+    #   ActionText::MentionableRegistry.registered_models.each do |klass|
+    #     update_mentions_for(klass)
+    #   end
+    # end
     before_save do
-      ActionText::MentionableRegistry.registered_models.each do |klass|
+      MENTIONABLE_MODELS.each do |klass|
         update_mentions_for(klass)
       end
     end
