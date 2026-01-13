@@ -1,4 +1,3 @@
-<%# , src: rich_text_assets_path(owner_type: owner.object.class.name.to_s, owner_id: owner.id) %>
 <%= turbo_frame_tag "rich_text_assets"  do %>
   <div class="flex flex-wrap gap-2 p-3 bg-white my-5 rounded-md">
     <% owner.rich_text_assets.each do |asset| %>
@@ -7,7 +6,7 @@
   </div>
 
   <%= form_with url: rich_text_assets_path, class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4" do |f| %>
-    <%= hidden_field_tag :owner_sgid, owner.object.to_sgid.to_s, autocomplete: "off" %>
+    <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
 
     <div class="bg-gray-50 p-4 rounded-md shadow-md">
       <%= f.label :file, "File",
