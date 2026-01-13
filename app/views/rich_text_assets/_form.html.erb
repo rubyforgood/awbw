@@ -1,7 +1,7 @@
 <%= turbo_frame_tag "rich_text_assets" do %>
   <div class="flex flex-wrap gap-2 p-3">
     <% owner.rich_text_assets.each do |asset| %>
-      <%= render "active_storage/blobs/blob_thumbnail", blob: asset.file.blob %>
+      <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
     <% end %>
   </div>
 

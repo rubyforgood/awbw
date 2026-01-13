@@ -1,3 +1,5 @@
+<% blob ||= asset.file.blob %>
+
 <figure
   class="
     relative attachment
@@ -9,7 +11,7 @@
 
   <% if blob.previewable? %>
     <%= image_tag blob.preview(resize_to_limit: [100, 100]).processed, class: "w-24 h-24 object-contain",
-      title:  blob.id %>
+      title:  asset.id %>
   <% elsif blob.image? %>
     <%= image_tag blob.variant(resize_to_limit: [100, 100]).processed, class: "w-24 h-24 object-contain",
       title: blob.filename.to_s %>
@@ -26,6 +28,7 @@
   <% end %>
 
   <!-- Copy button -->
+
   <button
     type="button"
     onclick="navigator.clipboard.writeText('<%= attachment_url %>').then(() => alert('Copied!'))"
