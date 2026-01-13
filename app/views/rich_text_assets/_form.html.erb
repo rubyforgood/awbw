@@ -1,15 +1,15 @@
-<%= turbo_frame_tag "rich_text_assets" do %>
-  <div class="flex flex-wrap gap-2 p-3">
+<%# , src: rich_text_assets_path(owner_type: owner.object.class.name.to_s, owner_id: owner.id) %>
+<%= turbo_frame_tag "rich_text_assets"  do %>
+  <div class="flex flex-wrap gap-2 p-3 bg-white my-5 rounded-md">
     <% owner.rich_text_assets.each do |asset| %>
       <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
     <% end %>
   </div>
 
-  <%= form_with url: rich_text_assets_path, class: "max-w-md mx-auto bg-white shadow-md rounded-lg p-6 space-y-4" do |f| %>
-    <%= hidden_field_tag :owner_type, owner.object.class.name.to_s %>
-    <%= hidden_field_tag :owner_id, owner.object.id %>
+  <%= form_with url: rich_text_assets_path, class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4" do |f| %>
+    <%= hidden_field_tag :owner_sgid, owner.object.to_sgid.to_s, autocomplete: "off" %>
 
-    <div class="bg-gray-50 p-4 rounded-lg">
+    <div class="bg-gray-50 p-4 rounded-md shadow-md">
       <%= f.label :file, "File",
     class: "block text-sm font-medium text-gray-700 mb-1" %>
 
@@ -21,7 +21,7 @@
             focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
     </div>
 
-    <div class="bg-gray-50 p-4 rounded-lg">
+    <div class="bg-gray-50 p-4 rounded-md shadow-md">
       <%= f.label :title,
     class: "block text-sm font-medium text-gray-700 mb-1" %>
 

@@ -10,7 +10,7 @@
    end
 
    def create
-     @owner = params[:owner_type].constantize.find(params[:owner_id])
+     @owner = GlobalID::Locator.locate_signed(params[:owner_sgid])
 
      @rich_text_asset = @owner.rich_text_assets.build(title: params[:title])
      @rich_text_asset.file.attach(params[:file]) if params[:file].present?
@@ -20,8 +20,8 @@
      else
        render plain: @rich_text_asset.errors.full_messages.join(", "), status: :unprocessable_entity
      end
-   rescue NameError, ActiveRecord::RecordNotFound
-     render plain: "Invalid Record", status: :unprocessable_entity
+    rescue NameError, ActiveRecord::RecordNotFound
+      render plain: "Invalid Record", status: :unprocessable_entity
    end
 
    def destroy
