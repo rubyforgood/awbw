@@ -89,9 +89,7 @@
     <div class="mt-4 ml-2 default-link">
       <!-- English / Details -->
       <div id="english-content" data-tabs-target="tabContent">
-        <% if workshop.rhino_extra_field &&
-      (workshop.rhino_extra_field.body.to_plain_text.strip.present? ||
-       workshop.rhino_extra_field.body.attachments.any?) %>
+        <% if content_has_value?(workshop.rhino_extra_field) %>
           <div class="text-sm mb-4"><%= workshop.rhino_extra_field %></div>
         <% end %>
 
@@ -114,13 +112,7 @@
                                  "Miscellaneous 2" => workshop.rhino_misc2 } %>
 
         <% workshop_sections.each do |title, content| %>
-          <% next if content.nil? %>
-
-          <% if content.is_a?(ActionText::RichText) %>
-            <% next if content.body.attachments.none? && content.body.to_plain_text.strip.blank? %>
-          <% else %>
-            <% next if content.blank? || (title == "Suggested time frame" && content == "00:00") %>
-          <% end %>
+          <% next unless content_has_value?(content, title: title) %>
 
           <div class="workshop-<%= title %> single-workshop-detail mb-4">
             <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
