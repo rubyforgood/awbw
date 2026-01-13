@@ -10,7 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_07_190151) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_13_134716) do
+  create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "action_text_rich_text_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "mentionable_id", null: false
+    t.string "mentionable_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action_text_rich_text_id", "mentionable_type", "mentionable_id"], name: "index_at_mentions_on_rich_text_and_mentionable", unique: true
+    t.index ["action_text_rich_text_id"], name: "index_action_text_mentions_on_action_text_rich_text_id"
+    t.index ["mentionable_type", "mentionable_id"], name: "index_action_text_mentions_on_mentionable"
+  end
+
   create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "body", size: :long
     t.datetime "created_at", null: false
@@ -111,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_07_190151) do
     t.integer "owner_id"
     t.string "owner_type"
     t.integer "report_id"
+    t.string "title"
     t.string "type", default: "PrimaryAsset", null: false
     t.datetime "updated_at", null: false
     t.index ["owner_id"], name: "index_assets_on_owner_id"
@@ -1030,6 +1042,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_07_190151) do
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
+  add_foreign_key "action_text_mentions", "action_text_rich_texts"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "age_ranges", "windows_types"
