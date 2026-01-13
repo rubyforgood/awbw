@@ -70,7 +70,7 @@ module RhinoEditorHelper
       data: {
         blob_url_template: rails_service_blob_url(":signed_id", ":filename"),
         direct_upload_url: rails_direct_uploads_url,
-        model_sgid: form.object.to_sgid.to_s
+        model_sgid: form.object.persisted? ? form.object.to_sgid.to_s : nil
       }
     )
 
