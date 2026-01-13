@@ -1,1 +1,2 @@
-<%= link_to rich_text_asset.id, rich_text_asset_path(rich_text_asset), target: "_blank" %>
+<% title =  rich_text_asset.title.present? ? rich_text_asset.title : rich_text_asset.id %>
+<%= link_to title, rich_text_asset_path(rich_text_asset), target: "_blank" %>
