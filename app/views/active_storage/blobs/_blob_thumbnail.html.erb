@@ -1,0 +1,36 @@
+<figure
+  class="
+    relative attachment
+    attachment--<%= blob.previewable? || blob.image? ? "preview" : "file" %>
+    attachment--<%= blob.filename.extension %>
+  "
+>
+  <% attachment_url = rails_blob_url(blob, disposition: "attachment") %>
+
+  <% if blob.previewable? %>
+    <%= image_tag blob.preview(resize_to_limit: [100, 100]).processed, class: "w-24 h-24 object-contain",
+      title:  blob.filename.to_s %>
+  <% elsif blob.image? %>
+    <%= image_tag blob.variant(resize_to_limit: [100, 100]).processed, class: "w-24 h-24 object-contain",
+      title: blob.filename.to_s %>
+  <% else %>
+    <div
+      class="
+        w-24 h-24 flex items-center justify-center bg-gray-200 rounded text-center p-2 text-xs break-words
+        whitespace-normal overflow-hidden
+      "
+      title="<%= blob.filename.to_s %>"
+    >
+      <span class="line-clamp-3"><%= blob.filename.to_s %></span>
+    </div>
+  <% end %>
+
+  <!-- Copy button -->
+  <button
+    type="button"
+    onclick="navigator.clipboard.writeText('<%= attachment_url %>').then(() => alert('Copied!'))"
+    class="absolute top-1 right-1 bg-gray-700 text-white text-xs rounded px-1.5 py-0.5 hover:bg-gray-800"
+  >
+    Copy Url
+  </button>
+</figure>

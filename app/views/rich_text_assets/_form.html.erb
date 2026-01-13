@@ -1,0 +1,26 @@
+<%= turbo_frame_tag "rich_text_assets" do %>
+  <div class="flex flex-wrap gap-2 p-3">
+    <% owner.rich_text_assets.each do |asset| %>
+      <%= render "active_storage/blobs/blob_thumbnail", blob: asset.file.blob %>
+    <% end %>
+  </div>
+
+  <%= form_with url: rich_text_assets_path, class: "max-w-md mx-auto bg-white shadow-md rounded-lg p-6 space-y-4" do |f| %>
+    <%= hidden_field_tag :owner_type, owner.object.class.name.to_s %>
+    <%= hidden_field_tag :owner_id, owner.object.id %>
+
+    <div>
+      <label class="block text-gray-700 font-semibold mb-1" for="file">File</label>
+      <%= f.file_field :file, required: true, class: "block w-full text-gray-700 border border-gray-300 rounded-lg p-2 focus:ring focus:ring-indigo-200 focus:border-indigo-500" %>
+    </div>
+
+    <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-600">
+      <p><span class="font-semibold">Uploading to:</span> <%= owner.object.class.name %> #<%= owner.id %></p>
+      <p><span class="font-semibold">Asset type:</span> RichTextAsset</p>
+    </div>
+
+    <div>
+      <%= f.submit "Upload Asset", class: "w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" %>
+    </div>
+  <% end %>
+<% end %>
