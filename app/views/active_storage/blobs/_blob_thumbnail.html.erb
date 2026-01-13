@@ -9,7 +9,7 @@
 
   <% if blob.previewable? %>
     <%= image_tag blob.preview(resize_to_limit: [100, 100]).processed, class: "w-24 h-24 object-contain",
-      title:  blob.filename.to_s %>
+      title:  blob.id %>
   <% elsif blob.image? %>
     <%= image_tag blob.variant(resize_to_limit: [100, 100]).processed, class: "w-24 h-24 object-contain",
       title: blob.filename.to_s %>

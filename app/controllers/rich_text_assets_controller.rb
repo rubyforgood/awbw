@@ -1,5 +1,5 @@
  class RichTextAssetsController < ApplicationController
-   before_action :set_rich_text_asset, only: [ :show, :update, :destroy ]
+   before_action :set_rich_text_asset, only: [ :show, :destroy ]
 
    def show
      if @rich_text_asset.file.attached?
