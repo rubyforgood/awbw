@@ -192,7 +192,6 @@ RSpec.describe "Facilitators can search for resources" do
 
             expect(page).to have_content('Test Resource')
             expect(page).to have_link('2')
-
           end
         end
       end
