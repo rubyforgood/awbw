@@ -1,8 +1,16 @@
 <%= render "shared/form_dropdown", field: :rich_text_assets, label: "Editor Assets", padding: "mb-4 bg-slate-200 border border-gray-300 rounded-md" do %>
   <%= turbo_frame_tag "rich_text_assets"  do %>
     <div class="flex flex-wrap gap-2 p-3 m-2 bg-white my-5 rounded-md">
+      <% owner ||= @owner %>
+
       <% owner.rich_text_assets.each do |asset| %>
-        <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
+        <div class="flex flex-col items-center">
+          <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
+
+          <%= form_with model: asset, data: {turbo_frame: dom_id(asset, "title")} do %>
+            <%= render "rich_text_assets/title", asset: asset %>
+          <% end %>
+        </div>
       <% end %>
     </div>
 

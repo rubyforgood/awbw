@@ -7,7 +7,7 @@ Rails.application.routes.draw do
     resources :gallery_assets, only: [ :show ]
   end
 
-  resources :rich_text_assets, only: [ :show, :create, :update, :destroy ]
+  resources :rich_text_assets
   namespace :images do
     resources :primary_images, only: [ :show ]
     resources :gallery_images, only: [ :show ]
