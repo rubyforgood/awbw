@@ -11,7 +11,7 @@ class Sector < ApplicationRecord
   has_many :quotes, through: :workshops
 
   # Validations
-  validates_presence_of :name, uniqueness: true
+  validates :name, presence: true, uniqueness: { case_sensitive: false }
 
   # Scopes
   scope :published, ->(published = nil) {
