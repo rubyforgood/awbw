@@ -1,0 +1,34 @@
+<% padding ||= "p-3" %>
+<% form ||= "" %>
+
+<% label_tag =
+  if form.present?
+        form.label(
+        :"rhino_#{field}",
+          label,
+          class: "font-medium"
+        )
+  else
+    tag.label(
+      label,
+      class: "font-medium"
+    )
+  end %>
+
+<div data-controller="dropdown" class="<%= padding %>">
+  <button
+    id="<%= field %>-button"
+    type="button"
+    data-action="dropdown#toggle"
+    data-dropdown-payload-param='[{"<%= field %>-dropdown":"hidden"},{"<%= field %>-arrow":"rotate-180"},{"<%= field %>-button":"rounded-md rounded-t-md"}]'
+    class="
+      flex items-center justify-between cursor-pointer w-full
+      bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+    "
+  >
+    <%= label_tag %>
+    <i id="<%= field %>-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+  </button>
+
+  <div id="<%= field %>-dropdown" class="hidden"><%= yield %></div>
+</div>

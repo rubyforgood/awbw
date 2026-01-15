@@ -2,32 +2,37 @@
   <!-- Form Errors -->
   <%= f.error_notification %>
   <%= render "shared/errors", resource: @faq if @faq.errors.any? %>
+
   <!-- Form Fields -->
   <div class="flex flex-col">
     <%= render "inline_fields", form: f, attribute: :question  do %>
       <%= f.label :question unless turbo_frame_request? %>
+
       <%= f.input_field :question,
                     class:
                       "w-full grow rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
     <% end %>
   </div>
+
   <div class="flex flex-col">
     <%= render "inline_fields", form: f, attribute: :answer do %>
       <%= f.label :answer unless turbo_frame_request? %>
+
       <%= f.input_field :answer,
                     class:
                       "w-full grow rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
                     rows: "6" %>
     <% end %>
   </div>
+
   <div class="flex flex-col">
     <%= render "inline_fields", form: f, attribute: :inactive do %>
       <%= f.input :inactive, label: "Hidden?" %>
     <% end %>
   </div>
-  <div class="flex">
-    <%= f.input :ordering %>
-  </div>
+
+  <div class="flex"><%= f.input :position %></div>
+
   <!-- Form Actions -->
   <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
     <% if @faq.persisted? && current_user.super_user? %>
@@ -39,7 +44,9 @@
         confirm: "Are you sure?",
       } %>
     <% end %>
+
     <%= link_to "Cancel", faqs_path, class: "btn btn-secondary-outline" %>
+
     <%= f.button :submit,
              class:
                "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700

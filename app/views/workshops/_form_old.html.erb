@@ -32,7 +32,12 @@
         <label class="block text-md font-medium text-gray-700 mb-1">Timeframe / Duration</label>
 
         <div class="flex gap-x-2 font-bold text-xl items-center">
-          <span data-timeframe-target="output" class="text-gray-900 font-medium"><%= f.object.time_frame_total %></span>
+          <span
+            data-timeframe-target="output"
+            class="text-gray-900 font-medium"
+          >
+            <%= f.object.time_frame_total %>
+          </span>
         </div>
 
         <p class="text-sm text-gray-500 mt-1">
@@ -41,6 +46,14 @@
       </div>
     </div>
 
+    <div class="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
+      <%= f.input :objective, as: :text, label: "Workshop objective",
+                  hint: "Indicate goals of the workshop",
+                  input_html: { rows: 3, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+    </div>
+
+
+    <!-- Row 2 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <% if current_user.super_user %>
         <div class="admin-only bg-blue-100 p-3 flex gap-x-2 items-center">
@@ -51,7 +64,6 @@
                         rows: 1,
                         class: "block w-full rounded-md border-gray-300 shadow-sm
                         focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
           <%= f.input :user_id,
                       as: :select,
                       label: "Author",
@@ -74,154 +86,168 @@
         </div>
         <div class="admin-only bg-blue-100 p-3">
           <label class="block text-sm font-medium text-gray-700 mb-1">Flags</label>
-
           <div class="flex gap-x-6 items-center">
             <%= f.input :featured, as: :boolean, wrapper: false %>
             <%= f.input :inactive, as: :boolean, label: "Hidden?", wrapper: false %>
           </div>
         </div>
-      <% else %>
+    <% else %>
         <%= f.hidden_field :user_id, value: current_user&.id %>
       <% end %>
     </div>
 
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+    <!-- Row 3 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <%= f.input :materials, as: :text, label: "Materials needed",
+                  hint: "List all materials needed to create the workshop",
+                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
-    <%= render "dropdown", field: :body, label: "Body", padding: "mb-4 border border-gray-300 rounded-md" do %>
-      <%= render "dropdown", form: f, field: :extra_field, label: "Extra Field" do %>
-        <%= rhino_editor(f, :extra_field) %>
-      <% end %>
+      <%= f.input :optional_materials, as: :text, label: "Optional materials",
+                  # hint: "List other optional materials",
+                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
-      <%= render "dropdown", form: f, field: :objective, label: "Workshop objective" do %>
-        <%= rhino_editor(f, :objective,
-                  hint: "Indicate goals of the workshop") %>
-      <% end %>
+      <%= f.input :setup, as: :text, label: "Set Up Instructions",
+                  hint: "Include any tips needed to prep",
+                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+    </div>
 
-      <%= render "dropdown", form: f, field: :materials, label: "Materials needed" do %>
-        <%= rhino_editor(f, :materials,
-                  hint: "List all materials needed to create the workshop") %>
-      <% end %>
-
-      <%= render "dropdown", form: f, field: :optional_materials, label: "Optional materials" do %>
-        <%= rhino_editor(f, :optional_materials) %>
-      <% end %>
-
-      <%= render "dropdown", form: f, field: :setup, label: "Set Up Instructions" do %>
-        <%= rhino_editor(f, :setup,
-                  hint: "Include any tips needed to prep",) %>
-      <% end %>
-
-      <!-- Intro/opening -->
-
-      <%= render "dropdown", form: f, field: :introduction, label: "Introduction" do %>
-        <%= f.input :time_intro,
+    <!-- Intro/opening -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :introduction,
+                      as: :text,
+                      label: "Introduction",
+                      hint: "Include a description of the introduction",
+                      input_html: { rows: 2,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_intro,
                       label: "Minutes",
-                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
                       input_html: { min: 0,
                                     data: { timeframe_target: "input", action: "input->timeframe#update" },
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+      </div>
 
-        <%= rhino_editor(f, :introduction,
-                      hint: "Include a description of the introduction") %>
-      <% end %>
-
-      <%= render "dropdown", form: f, field: :opening_circle, label: "Opening circle" do %>
-        <%= f.input :time_opening_circle,
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :opening_circle,
+                      as: :text,
+                      label: "Opening circle",
+                      hint: "Include a description of the opening circle",
+                      input_html: { rows: 2,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_opening_circle,
                       label: "Minutes",
-                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
                       input_html: { min: 0,
                                     data: { timeframe_target: "input", action: "input->timeframe#update" },
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+      </div>
+    </div>
 
-        <%= rhino_editor(f, :opening_circle,
-                      hint: "Include a description of the opening circle") %>
-      <% end %>
-
+    <!-- Demonstration / Warm-up / Creation / Closing -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
       <!-- Demonstration -->
-
-      <%= render "dropdown", form: f, field: :demonstration, label: "Demonstration Instructions" do %>
-        <%= f.input :time_demonstration,
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :demonstration,
+                      as: :text,
+                      label: "Demonstration Instructions",
+                      hint: "Include a description of a demonstration of the activity",
+                      input_html: { rows: 2,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_demonstration,
                       label: "Minutes",
-                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
                       input_html: { min: 0,
                                     data: { timeframe_target: "input", action: "input->timeframe#update" },
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-
-        <%= rhino_editor(f, :demonstration,
-                      hint: "Include a description of a demonstration of the activity") %>
-      <% end %>
+        </div>
+      </div>
 
       <!-- Warm Up -->
-
-      <%= render "dropdown", form: f, field: :warm_up, label: "Warm-up / relaxation / meditation" do %>
-        <%= f.input :time_warm_up,
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :warm_up,
+                      as: :text,
+                      label: "Warm-up / relaxation / meditation",
+                      hint: "Include a warm-up or relaxation activity",
+                      input_html: { rows: 2,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_warm_up,
                       label: "Minutes",
-                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
                       input_html: { min: 0,
                                     data: { timeframe_target: "input", action: "input->timeframe#update" },
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-
-        <%= rhino_editor(f, :warm_up,
-                      hint: "Include a warm-up or relaxation activity") %>
-      <% end %>
-
-      <!-- visualization -->
-
-      <%= render "dropdown", form: f, field: :visualization, label: "Visualization" do %>
-        <%= rhino_editor(f, :visualization) %>
-      <% end %>
+        </div>
+      </div>
 
       <!-- Creation -->
-
-      <%= render "dropdown", form: f, field: :creation, label: "Creation" do %>
-        <%= f.input :time_creation,
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :creation,
+                      as: :text,
+                      label: "Creation",
+                      hint: "Step-by-step how to create the workshop",
+                      input_html: { rows: 3,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_creation,
                       label: "Minutes",
-                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
                       input_html: { min: 0,
                                     data: { timeframe_target: "input", action: "input->timeframe#update" },
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-
-        <%= rhino_editor(f, :creation,
-                      hint: "Step-by-step how to create the workshop") %>
-      <% end %>
+        </div>
+      </div>
 
       <!-- Closing -->
-
-      <%= render "dropdown", form: f, field: :closing, label: "Closing" do %>
-        <%= f.input :time_closing,
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <%= f.input :closing,
+                      as: :text,
+                      label: "Closing",
+                      hint: "Step-by-step how to close the workshop",
+                      input_html: { rows: 3,
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+        <div class="w-24">
+          <%= f.input :time_closing,
                       label: "Minutes",
-                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
                       input_html: { min: 0,
                                     data: { timeframe_target: "input", action: "input->timeframe#update" },
                                     class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+        </div>
+      </div>
+    </div>
 
-        <%= rhino_editor(f, :closing,
-                      hint: "Step-by-step how to close the workshop") %>
-      <% end %>
+    <!-- Notes / Tips / Date -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <%= f.input :notes, as: :text,
+                  hint: "Anything else you'd like us to know",
+                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
-      <!-- Notes / Tips / Date -->
-
-      <%= render "dropdown", form: f, field: :notes, label: "Notes" do %>
-        <%= rhino_editor(f, :notes,
-                  hint: "Anything else you'd like us to know") %>
-      <% end %>
-
-      <%= render "dropdown", form: f, field: :tips, label: "Tips" do %>
-        <%= rhino_editor(f, :tips, label: "Tips",
-                  hint: "Any tips on how to make this workshop a success") %>
-      <% end %>
+      <%= f.input :tips, as: :text,
+                  hint: "Any tips on how to make this workshop a success",
+                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
       <% if current_user.super_user %>
-        <div class="admin-only bg-blue-100 m-4 p-2 rounded-md">
+        <div class="admin-only bg-blue-100">
           <label class="block text-sm font-medium text-gray-700 mb-1">Date created</label>
-
           <div class="flex gap-x-2">
             <%= f.input :month, as: :select,
                         collection: Date::MONTHNAMES.compact.each_with_index.map { |m, i| [m, i + 1] },
                         selected: f.object.month || Date.today.month,
                         wrapper: false, label: false,
                         input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
             <%= f.input :year,
                         as: :integer,
                         wrapper: false,
@@ -233,7 +259,10 @@
           </div>
         </div>
       <% end %>
-    <% end %>
+    </div>
+
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+
 
     <!-- Accordions -->
     <div class="space-y-4">
@@ -265,7 +294,9 @@
         </button>
 
         <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
+
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+
             <!-- Header -->
             <h3 class="text-base font-semibold text-gray-800 mb-3">
               Service Populations
@@ -275,57 +306,53 @@
             <div class="flex flex-wrap gap-3">
               <% @sectors.each do |sector| %>
                 <% id = "workshop_sector_ids_#{sector.id}" %>
-
-                <label
-                  for="<%= id %>"
-                  class="
-                    flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                    rounded-lg shadow-sm hover:bg-gray-100 transition
-                  "
-                >
+                <label for="<%= id %>" class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
                   <%= check_box_tag "workshop[sector_ids][]",
                                     sector.id,
                                     @workshop.sector_ids.include?(sector.id),
                                     id: id,
                                     class: "h-4 w-4 text-blue-600 rounded" %>
 
-                  <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+                  <span class="text-sm text-gray-700 whitespace-nowrap">
+                    <%= sector.name %>
+                  </span>
                 </label>
               <% end %>
             </div>
+
           </div>
 
           <div class="form-group space-y-6">
             <% @categories_grouped.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+
                 <!-- Header -->
-                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.titleize %></h3>
+                <h3 class="text-base font-semibold text-gray-800 mb-3">
+                  <%= type.name.titleize %>
+                </h3>
 
                 <!-- Checkbox List -->
                 <div class="flex flex-wrap gap-3">
                   <% cats.sort_by { |c| c.name.to_s }.each do |category| %>
                     <% id = "workshop_category_ids_#{category.id}" %>
-
-                    <label
-                      for="<%= id %>"
-                      class="
-                        flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition
-                      "
-                    >
+                    <label for="<%= id %>" class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
                       <%= check_box_tag "workshop[category_ids][]",
                                         category.id,
                                         @workshop.category_ids.include?(category.id),
                                         id: id,
                                         class: "h-4 w-4 text-blue-600 rounded" %>
 
-                      <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+                      <span class="text-sm text-gray-700 whitespace-nowrap">
+                        <%= category.name %>
+                      </span>
                     </label>
                   <% end %>
                 </div>
               </div>
             <% end %>
+
           </div>
+
         </div>
       </div>
 
@@ -356,10 +383,14 @@
           </svg>
         </button>
 
-        <div id="translations" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <div
+          id="translations"
+          class="hidden border border-gray-300 p-4 rounded-b-md"
+        >
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <% workshop.decorate.display_spanish_fields.each do |field| %>
-              <%= rhino_editor(f, field, label: field.to_s.humanize) %>
+              <%= f.input field, as: :text,
+                          input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
             <% end %>
           </div>
         </div>
@@ -392,15 +423,16 @@
               ></path>
             </svg>
           </button>
-
           <div
             id="series"
             class="<%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md"
           >
             <p class="mb-2 text-sm text-gray-600">
-              If this Workshop is a series, add the other "series workshops" below. You can also add a series-specific
-              description for each workshop in the series, and the order in which they should appear. (The main workshop
-              description will appear if you don't add a "series description".)
+              If this Workshop is a series, add the other "series workshops"
+              below. You can also add a series-specific description for each
+              workshop in the series, and the order in which they should appear.
+              (The main workshop description will appear if you don't add a
+              "series description".)
             </p>
 
             <%= f.fields_for :workshop_series_children do |child_workshop_membership| %>
@@ -425,8 +457,8 @@
       <%= link_to "Cancel",
                   (current_user.super_user? ? workshops_path : authenticated_root_path),
                   class: "btn btn-secondary-outline" %>
-
       <%= f.submit "Submit", class: "btn btn-primary" %>
     </div>
   <% end %>
 </div>
+
