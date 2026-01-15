@@ -1,5 +1,0 @@
-<% attachment = local_assigns.values.find { |v| v.respond_to?(:attachable) } %>
-<% record = attachment&.attachable %>
-<% title =  record.title.present? ? record.title : record.id %>
-
-<%= link_to title, polymorphic_path(record), target: "_blank" %>
