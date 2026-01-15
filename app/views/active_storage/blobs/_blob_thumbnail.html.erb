@@ -1,0 +1,44 @@
+<% blob ||= asset.file.blob %>
+
+<figure
+  class="
+    relative attachment
+    attachment--<%= blob.previewable? || blob.image? ? "preview" : "file" %>
+    attachment--<%= blob.filename.extension %>
+    w-fit
+    rounded-md p-2 bg-gray-50 shadow-md
+  "
+>
+  <% if blob.previewable? %>
+    <%= image_tag(
+      blob.preview(resize_to_limit: [100, 100]).processed,
+      class: "w-24 h-24 object-contain"
+    ) %>
+  <% elsif blob.image? %>
+    <%= image_tag(
+      blob.variant(resize_to_limit: [100, 100]).processed,
+      class: "w-24 h-24 object-contain"
+    ) %>
+  <% else %>
+    <div
+      class="
+        w-24 h-24 flex items-center justify-center bg-gray-200 rounded text-center p-2 text-xs
+        break-words whitespace-normal overflow-hidden
+      "
+      title="<%= blob.filename.to_s %>"
+    >
+      <span class="line-clamp-3"><%= blob.filename.to_s %></span>
+    </div>
+  <% end %>
+
+  <!-- Asset ID badge (top-right) -->
+  <span
+    class="
+      absolute top-1 right-1
+      bg-gray-700 text-white text-xs rounded px-1.5 py-0.5
+      pointer-events-none
+    "
+  >
+    <%= asset.id %>
+  </span>
+</figure>

@@ -8,11 +8,15 @@ import Youtube from "@tiptap/extension-youtube";
 import TextAlign from "@tiptap/extension-text-align";
 import { Grid } from "./grid/grid";
 import { GridCell } from "./grid/gridCell";
-import HorizontalRule from "@tiptap/extension-horizontal-rule";
+import WorkshopMention from "./mentions/WorkshopMention.js";
+import ResourceMention from "./mentions/ResourceMention.js";
+import AssetMention from "./mentions/AssetMention.js";
 
 function extendRhinoEditor(event) {
   const rhinoEditor = event.target;
   if (!rhinoEditor) return;
+
+  const modelSgid = rhinoEditor.dataset.modelSgid;
 
   rhinoEditor.addExtensions(
     Table,
@@ -25,7 +29,48 @@ function extendRhinoEditor(event) {
     }),
     Grid,
     GridCell,
-    HorizontalRule,
+    WorkshopMention.configure({
+      suggestion: {
+        char: "@",
+        items: async ({ query }) => {
+          const response = await fetch(
+            `/workshop_mentions.json?query=${query}`,
+          );
+          const data = await response.json();
+          return data;
+        },
+      },
+
+      attachmentContentType: "application/vnd.active_record.workshop",
+    }),
+    ResourceMention.configure({
+      suggestion: {
+        char: "#",
+        items: async ({ query }) => {
+          const response = await fetch(
+            `/resource_mentions.json?query=${query}`,
+          );
+          const data = await response.json();
+          return data;
+        },
+      },
+
+      attachmentContentType: "application/vnd.active_record.resource",
+    }),
+    AssetMention.configure({
+      suggestion: {
+        char: "!",
+        items: async ({ query }) => {
+          const response = await fetch(
+            `/rich_text_asset_mentions.json?query=${query}&sgid=${modelSgid}`,
+          );
+          const data = await response.json();
+          return data;
+        },
+      },
+
+      attachmentContentType: "application/vnd.active_record.asset",
+    }),
   );
 }
 

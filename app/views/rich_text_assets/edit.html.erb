@@ -1,0 +1,10 @@
+<div class="flex flex-col">
+  <%= form_with model: @rich_text_asset do |form| %>
+    <%= turbo_frame_tag dom_id(form.object, "title")do %>
+      <%= form.text_field :title,
+        class: "border border-gray-200 mt-1 p-1 rounded-md w-28",
+        onblur:"this.form.requestSubmit()",
+        autofocus: true %>
+    <% end %>
+  <% end %>
+</div>

@@ -87,33 +87,33 @@
 
     <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
-    <%= render "dropdown", field: :body, label: "Body", padding: "mb-4 border border-gray-300 rounded-md" do %>
-      <%= render "dropdown", form: f, field: :extra_field, label: "Extra Field" do %>
+    <%= render "shared/form_dropdown", field: :body, label: "Body", padding: "mb-4 border border-gray-300 rounded-md" do %>
+      <%= render "shared/form_dropdown", form: f, field: :extra_field, label: "Extra Field" do %>
         <%= rhino_editor(f, :extra_field) %>
       <% end %>
 
-      <%= render "dropdown", form: f, field: :objective, label: "Workshop objective" do %>
+      <%= render "shared/form_dropdown", form: f, field: :objective, label: "Workshop objective" do %>
         <%= rhino_editor(f, :objective,
                   hint: "Indicate goals of the workshop") %>
       <% end %>
 
-      <%= render "dropdown", form: f, field: :materials, label: "Materials needed" do %>
+      <%= render "shared/form_dropdown", form: f, field: :materials, label: "Materials needed" do %>
         <%= rhino_editor(f, :materials,
                   hint: "List all materials needed to create the workshop") %>
       <% end %>
 
-      <%= render "dropdown", form: f, field: :optional_materials, label: "Optional materials" do %>
+      <%= render "shared/form_dropdown", form: f, field: :optional_materials, label: "Optional materials" do %>
         <%= rhino_editor(f, :optional_materials) %>
       <% end %>
 
-      <%= render "dropdown", form: f, field: :setup, label: "Set Up Instructions" do %>
+      <%= render "shared/form_dropdown", form: f, field: :setup, label: "Set Up Instructions" do %>
         <%= rhino_editor(f, :setup,
                   hint: "Include any tips needed to prep",) %>
       <% end %>
 
       <!-- Intro/opening -->
 
-      <%= render "dropdown", form: f, field: :introduction, label: "Introduction" do %>
+      <%= render "shared/form_dropdown", form: f, field: :introduction, label: "Introduction" do %>
         <%= f.input :time_intro,
                       label: "Minutes",
                       wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
@@ -125,7 +125,7 @@
                       hint: "Include a description of the introduction") %>
       <% end %>
 
-      <%= render "dropdown", form: f, field: :opening_circle, label: "Opening circle" do %>
+      <%= render "shared/form_dropdown", form: f, field: :opening_circle, label: "Opening circle" do %>
         <%= f.input :time_opening_circle,
                       label: "Minutes",
                       wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
@@ -139,7 +139,7 @@
 
       <!-- Demonstration -->
 
-      <%= render "dropdown", form: f, field: :demonstration, label: "Demonstration Instructions" do %>
+      <%= render "shared/form_dropdown", form: f, field: :demonstration, label: "Demonstration Instructions" do %>
         <%= f.input :time_demonstration,
                       label: "Minutes",
                       wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
@@ -153,7 +153,7 @@
 
       <!-- Warm Up -->
 
-      <%= render "dropdown", form: f, field: :warm_up, label: "Warm-up / relaxation / meditation" do %>
+      <%= render "shared/form_dropdown", form: f, field: :warm_up, label: "Warm-up / relaxation / meditation" do %>
         <%= f.input :time_warm_up,
                       label: "Minutes",
                       wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
@@ -167,13 +167,13 @@
 
       <!-- visualization -->
 
-      <%= render "dropdown", form: f, field: :visualization, label: "Visualization" do %>
+      <%= render "shared/form_dropdown", form: f, field: :visualization, label: "Visualization" do %>
         <%= rhino_editor(f, :visualization) %>
       <% end %>
 
       <!-- Creation -->
 
-      <%= render "dropdown", form: f, field: :creation, label: "Creation" do %>
+      <%= render "shared/form_dropdown", form: f, field: :creation, label: "Creation" do %>
         <%= f.input :time_creation,
                       label: "Minutes",
                       wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
@@ -187,7 +187,7 @@
 
       <!-- Closing -->
 
-      <%= render "dropdown", form: f, field: :closing, label: "Closing" do %>
+      <%= render "shared/form_dropdown", form: f, field: :closing, label: "Closing" do %>
         <%= f.input :time_closing,
                       label: "Minutes",
                       wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
@@ -201,12 +201,12 @@
 
       <!-- Notes / Tips / Date -->
 
-      <%= render "dropdown", form: f, field: :notes, label: "Notes" do %>
+      <%= render "shared/form_dropdown", form: f, field: :notes, label: "Notes" do %>
         <%= rhino_editor(f, :notes,
                   hint: "Anything else you'd like us to know") %>
       <% end %>
 
-      <%= render "dropdown", form: f, field: :tips, label: "Tips" do %>
+      <%= render "shared/form_dropdown", form: f, field: :tips, label: "Tips" do %>
         <%= rhino_editor(f, :tips, label: "Tips",
                   hint: "Any tips on how to make this workshop a success") %>
       <% end %>
