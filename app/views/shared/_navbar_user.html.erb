@@ -30,16 +30,18 @@
     <% end %>
   <% end %>
 
-  <%= link_to (current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user)),
-              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
-    <i class="fas fa-user"></i>
-    <span>My profile</span>
+  <% if current_user.super_user %>
+    <%= link_to (current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user)),
+                class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+      <i class="fas fa-user"></i>
+      <span>My profile</span>
+    <% end %>
   <% end %>
 
-  <% if current_user.project_users.any? %>
+  <% if current_user.super_user && current_user.project_users.any? %>
     <% current_user.project_users.each do |project_user| %>
       <%= link_to project_path(project_user.project),
-                  class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+                  class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
         <i class="fas fa-users"></i>
         <span>
           My team<%= " (" + project_user.project.name.truncate(12) + ")" if current_user.project_users.many? %>
