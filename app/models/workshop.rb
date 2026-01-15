@@ -262,13 +262,4 @@ class Workshop < ApplicationRecord
   def attachable_content_type
     "application/vnd.active_record.workshop"
   end
-  # Used when editing
-  def to_trix_content_attachment_partial_path
-    "workshop_mentions/trix_content_attachment"
-  end
-
-  # Used when displaying
-  def to_attachable_partial_path
-    "shared/mentions/attachable"
-  end
 end

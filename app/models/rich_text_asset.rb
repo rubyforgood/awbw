@@ -26,14 +26,4 @@ class RichTextAsset < Asset
   def attachable_content_type
     "application/vnd.active_record.asset"
   end
-  # Used when editing
-  def to_trix_content_attachment_partial_path
-    "rich_text_asset_mentions/trix_content_attachment"
-  end
-
-  # Used when displaying
-  def to_attachable_partial_path
-    @record = self
-    "shared/mentions/attachable"
-  end
 end

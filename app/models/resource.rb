@@ -146,15 +146,6 @@ class Resource < ApplicationRecord
   def attachable_content_type
     "application/vnd.active_record.resource"
   end
-  # Used when editing
-  def to_trix_content_attachment_partial_path
-    "resource_mentions/trix_content_attachment"
-  end
-
-  # Used when displaying
-  def to_attachable_partial_path
-    "shared/mentions/attachable"
-  end
 
   private
   def self.reject?(resource)

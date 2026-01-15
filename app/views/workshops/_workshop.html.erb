@@ -1,0 +1,4 @@
+<%# Implicit file path for ActionText:Attachable %>
+<% title =  workshop.title.present? ? workshop.title : workshop.id %>
+
+<%= link_to title, polymorphic_path(workshop) %>
