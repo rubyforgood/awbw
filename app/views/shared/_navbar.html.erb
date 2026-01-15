@@ -2,51 +2,53 @@
   <div class="px-2 sm:px-6 lg:px-8">
     <div class="relative flex items-center justify-between py-2.5">
       <div class="absolute inset-y-0 left-0 flex items-center md:hidden">
-        <!-- Mobile menu button-->
-        <button
-          type="button"
-          class="
-            relative inline-flex items-center justify-center rounded-md p-2 text-gray-400
-            hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1
-            focus:outline-indigo-500
-          "
-          data-action="dropdown#toggle"
-          data-dropdown-payload-param='[{"mobile-menu":"hidden block"}]'
-        >
-          <span class="absolute -inset-0.5"></span>
-          <span class="sr-only">Open main menu</span>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            data-slot="icon"
-            aria-hidden="true"
-            class="size-6 in-aria-expanded:hidden"
+        <!-- Mobile menu button -->
+        <% if user_signed_in? %>
+          <button
+            type="button"
+            class="
+              relative inline-flex items-center justify-center rounded-md p-2 text-gray-400
+              hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1
+              focus:outline-indigo-500
+            "
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"mobile-menu":"hidden block"}]'
           >
-            <path
-              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              />
-          </svg>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            data-slot="icon"
-            aria-hidden="true"
-            class="size-6 not-in-aria-expanded:hidden"
-          >
-            <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
+            <span class="absolute -inset-0.5"></span>
+            <span class="sr-only">Open main menu</span>
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              data-slot="icon"
+              aria-hidden="true"
+              class="size-6 in-aria-expanded:hidden"
+            >
+              <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              data-slot="icon"
+              aria-hidden="true"
+              class="size-6 not-in-aria-expanded:hidden"
+            >
+              <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        <% end %>
       </div>
+
       <div class="flex flex-1 items-center justify-center md:items-stretch md:justify-start">
         <div class="flex shrink-0 items-center">
           <%= link_to root_link_path, class: "relative group" do %>
             <%= image_tag("logo.png", class: "h-8 sm:h-10 w-auto block") %>
+
             <%= image_tag(
                   "logo-color.png",
                   class:
@@ -64,6 +66,7 @@
           </div>
         <% end %>
       </div>
+
       <div
         class="
           absolute inset-y-0 right-0 flex items-center pr-2 md:static md:inset-auto
@@ -78,5 +81,7 @@
     </div>
   </div>
 
-  <%= render "shared/navbar_menu_mobile" %>
+  <% if user_signed_in? %>
+    <%= render "shared/navbar_menu_mobile" %>
+  <% end %>
 </nav>
