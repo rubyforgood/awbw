@@ -1,0 +1,4 @@
+<%# Implicit file path for ActionText:Attachable %>
+<% title =  rich_text_asset.title.present? ? rich_text_asset.title : rich_text_asset.id %>
+
+<%= link_to title, polymorphic_path(rich_text_asset), target: "_blank" %>

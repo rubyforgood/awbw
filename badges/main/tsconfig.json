@@ -1,3 +1,4 @@
+// required for Mentions.ts
 {
   "compilerOptions": {
     "target": "ESNext",
