@@ -4,5 +4,5 @@ class Asset < ApplicationRecord
   belongs_to :owner, polymorphic: true
   belongs_to :report, optional: true
   # Images
-  has_one_attached :file
+  has_one_attached :file, dependent: :purge
 end
