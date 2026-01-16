@@ -90,13 +90,11 @@ class WorkshopsController < ApplicationController
 
   def show
     if turbo_frame_request?
-
       @workshop = Workshop.with_all_rich_text.find(params[:id]).decorate
       set_show
       render partial: "show_lazy", locals: { workshop: @workshop }
     else
       @workshop = Workshop.find(params[:id]).decorate
-      # set_show
       @workshop.increment_view_count!(session: session, request: request)
       render :show
     end
