@@ -11,7 +11,6 @@ RSpec.describe "shared/_navbar", type: :view do
   context "when not logged in" do
     before do
       allow(view).to receive(:current_user).and_return(nil)
-      allow(view).to receive(:user_signed_in?).and_return(true)
       render_nav
     end
 
