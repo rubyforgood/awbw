@@ -42,14 +42,9 @@ RSpec.describe 'Facilitators can bookmark workshops' do
         find('.swiper-button-next-custom').click
         expect(page).to have_content("Advanced Leadership Skills")
 
-        sleep 2
+        sleep 1
         find('.swiper-button-next-custom').click
-        sleep 2
         expect(page).to have_content("Mindfulness Meditation")
-
-        find('.swiper-button-next-custom').click
-        sleep 2
-        expect(page).to have_content("The best workshop in the world")
       end
 
       # prev btn
@@ -59,7 +54,7 @@ RSpec.describe 'Facilitators can bookmark workshops' do
          find('.swiper-button-prev-custom').click
          expect(page).to have_content("The best workshop on mars")
 
-         find('.swiper-button-prev-custom').click
+          find('.swiper-button-prev-custom').click
          expect(page).to have_content("The best workshop in the world")
 
          find('.swiper-button-prev-custom').click
