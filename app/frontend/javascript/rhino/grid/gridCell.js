@@ -19,7 +19,7 @@ export const GridCell = Node.create({
         default: 1,
       },
       hasBorder: {
-        default: true,
+        default: false,
       },
     };
   },
