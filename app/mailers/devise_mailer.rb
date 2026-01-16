@@ -1,5 +1,6 @@
 class DeviseMailer < Devise::Mailer
   helper ApplicationHelper
+<<<<<<< HEAD
   include Rails.application.routes.url_helpers
   before_action :set_branding
 
@@ -9,6 +10,20 @@ class DeviseMailer < Devise::Mailer
   def default_url_options
     Rails.application.config.action_mailer.default_url_options
   end
+=======
+
+  before_action :set_branding
+
+  default from: ENV.fetch(
+    "REPLY_TO_EMAIL",
+    "no-reply@awbw.org"
+  )
+
+  default reply_to: ENV.fetch(
+    "REPLY_TO_EMAIL",
+    "programs@awbw.org"
+  )
+>>>>>>> 5dfd1ed1 (Add local DeviseMailer class to override defaults and add explicit from and reply_to, and pass @organization_name to views)
 
   protected
 
