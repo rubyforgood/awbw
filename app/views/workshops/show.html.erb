@@ -1,1 +1,14 @@
-<%= render "show" %>
+<div class="workshop-show max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:workshops) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-col gap-6">
+    <!-- Main Workshop Show -->
+    <div id="show" class="flex-1">
+      <!-- Tabs -->
+      <%= render "show_header", workshop: @workshop %>
+      <%= render "show_actions_row", workshop: @workshop %>
+
+      <%= turbo_frame_tag "show_lazy", src: workshop_path(@workshop), data: {turbo: false} do %>
+        <%= render 'show_skeleton' %>
+      <% end %>
+    </div>
+  </div>
+</div>
