@@ -11,6 +11,7 @@ RSpec.describe 'Facilitators can bookmark workshops' do
         create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, featured: true)
         create(:workshop, title: 'oh hello!', windows_type: adult_window, featured: true)
         create(:workshop, title: 'Advanced Leadership Skills', windows_type: adult_window, featured: true)
+        create(:workshop, title: 'Mindfulness Meditation', windows_type: adult_window, featured: true)
 
 
         sign_in user
@@ -37,16 +38,33 @@ RSpec.describe 'Facilitators can bookmark workshops' do
       # next btn
       it "tests next button functionality" do
         expect(page).to have_css('.swiper-button-next-custom')
+
         find('.swiper-button-next-custom').click
         expect(page).to have_content("Advanced Leadership Skills")
+
+        sleep 2
+        find('.swiper-button-next-custom').click
+        sleep 2
+        expect(page).to have_content("Mindfulness Meditation")
+
+        find('.swiper-button-next-custom').click
+        sleep 2
+        expect(page).to have_content("The best workshop in the world")
       end
 
       # prev btn
       it "tests previous button functionality" do
-        expect(page).to have_css('.swiper-button-prev-custom')
-        find('.swiper-button-next-custom').click
-        expect(page).to have_content("The best workshop in the world")
-      end
+         expect(page).to have_css('.swiper-button-prev-custom')
+
+         find('.swiper-button-prev-custom').click
+         expect(page).to have_content("The best workshop on mars")
+
+         find('.swiper-button-prev-custom').click
+         expect(page).to have_content("The best workshop in the world")
+
+         find('.swiper-button-prev-custom').click
+         expect(page).to have_content("Mindfulness Meditation")
+       end
     end
   end
 end
