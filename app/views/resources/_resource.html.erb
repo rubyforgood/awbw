@@ -1,0 +1,4 @@
+<%# Implicit file path for ActionText:Attachable %>
+<% title =  resource.title.present? ? resource.title : resource.id %>
+
+<%= link_to title, polymorphic_path(resource) %>

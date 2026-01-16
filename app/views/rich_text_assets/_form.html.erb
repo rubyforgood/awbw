@@ -1,0 +1,48 @@
+<%= render "shared/form_dropdown", field: :rich_text_assets, label: "Editor Assets", padding: "mb-4 bg-slate-200 border border-gray-300 rounded-md" do %>
+  <%= turbo_frame_tag "rich_text_assets"  do %>
+    <div class="flex flex-wrap gap-2 p-3 m-2 bg-white my-5 rounded-md">
+      <% owner ||= @owner %>
+
+      <% owner.rich_text_assets.each do |asset| %>
+        <div class="flex flex-col items-center">
+          <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
+
+          <%= form_with model: asset, data: {turbo_frame: dom_id(asset, "title")} do %>
+            <%= render "rich_text_assets/title", asset: asset %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%= form_with url: rich_text_assets_path, class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4 mb-2" do |f| %>
+      <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
+
+      <div class="bg-gray-50 p-4 rounded-md shadow-md">
+        <%= f.label :file, "File",
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+
+        <%= f.file_field :file,
+            required: true,
+            class: "block w-full rounded-md border border-gray-300
+                    px-3 py-2 text-sm text-gray-700
+                    shadow-sm
+                    focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
+      </div>
+
+      <div class="bg-gray-50 p-4 rounded-md shadow-md">
+        <%= f.label :title,
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+
+        <%= f.text_field :title,
+            class: "block w-full rounded-md border border-gray-300
+                    px-3 py-2 text-sm text-gray-700
+                    shadow-sm
+                    focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
+      </div>
+
+      <div>
+        <%= f.submit "Upload Asset", class: "w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

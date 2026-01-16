@@ -1,6 +1,7 @@
 class Workshop < ApplicationRecord
   include TagFilterable, PrintCountable, Trendable, ViewCountable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
+  include ActionText::Attachable
 
   belongs_to :windows_type
   belongs_to :user, optional: true
@@ -45,6 +46,13 @@ class Workshop < ApplicationRecord
   has_many :rich_text_assets, -> { where(type: "RichTextAsset") },
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
+
+  has_many :action_text_mentions,
+           as: :mentionable,
+           dependent: :destroy
+
+  has_many :action_text_rich_texts,
+           through: :action_text_mentions
 
   # Rhino Editor Fields
   has_rich_text :rhino_objective
@@ -249,5 +257,9 @@ class Workshop < ApplicationRecord
 
   def set_time_frame
     self.timeframe = time_frame_total
+  end
+  ## ActionText:Attachable
+  def attachable_content_type
+    "application/vnd.active_record.workshop"
   end
 end

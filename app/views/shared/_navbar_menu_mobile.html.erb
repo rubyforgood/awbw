@@ -61,15 +61,18 @@
           <i class="fas fa-calendar"></i>
           <span>Events</span>
         <% end %>
-        <%= link_to facilitators_path, class: "flex items-center px-4 py-2 text-sm text-white
-                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
-          <i class="fas fa-user-friends"></i>
-          <span>Facilitators</span>
-        <% end %>
-        <%= link_to projects_path, class: "flex items-center px-4 py-2 text-sm text-white
-                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
-          <i class="fas fa-building"></i>
-          <span>Organizations</span>
+
+        <% if current_user.super_user %>
+          <%= link_to facilitators_path, class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-white
+                      hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+            <i class="fas fa-user-friends"></i>
+            <span>Facilitators</span>
+          <% end %>
+          <%= link_to projects_path, class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-white
+                      hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+            <i class="fas fa-building"></i>
+            <span>Organizations</span>
+          <% end %>
         <% end %>
       </div>
     </div>

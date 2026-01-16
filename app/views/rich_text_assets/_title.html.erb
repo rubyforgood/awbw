@@ -1,0 +1,11 @@
+<%= turbo_frame_tag  dom_id(asset, "title") do %>
+  <% title = asset.title.present? ? asset.title : "Add title" %>
+  <% classes = asset.title.present? ? "text-white bg-gray-700" : "text-gray-100 bg-gray-500" %>
+
+  <%= link_to title, edit_rich_text_asset_path(asset),
+    class:" #{classes}
+        mt-1 block w-24
+         text-xs rounded px-1.5 py-0.5
+        text-center truncate
+      " %>
+<% end %>

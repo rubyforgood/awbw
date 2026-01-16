@@ -89,7 +89,7 @@
     <div class="mt-4 ml-2 default-link">
       <!-- English / Details -->
       <div id="english-content" data-tabs-target="tabContent">
-        <% unless workshop.rhino_extra_field.blank? %>
+        <% if content_has_value?(workshop.rhino_extra_field) %>
           <div class="text-sm mb-4"><%= workshop.rhino_extra_field %></div>
         <% end %>
 
@@ -112,8 +112,7 @@
                                  "Miscellaneous 2" => workshop.rhino_misc2 } %>
 
         <% workshop_sections.each do |title, content| %>
-          <% next if content.blank? ||
-              (title == "Suggested time frame" && content == "00:00") %>
+          <% next unless content_has_value?(content, title: title) %>
 
           <div class="workshop-<%= title %> single-workshop-detail mb-4">
             <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
@@ -161,7 +160,7 @@
                                            "Materiales" => workshop.rhino_materials_spanish,
                                            "Materiales opcionales" => workshop.rhino_optional_materials_spanish,
                                            "Setup" => workshop.rhino_setup_spanish,
-                                           "Tiempo sugerido" => workshop.rhino_time_frame_total,
+                                           "Tiempo sugerido" => workshop.time_frame_total,
                                            "Introducción" => workshop.rhino_introduction_spanish,
                                            "Demostración" => workshop.rhino_demonstration_spanish,
                                            "Apertura" => workshop.rhino_opening_circle_spanish,

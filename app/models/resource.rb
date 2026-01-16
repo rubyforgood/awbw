@@ -1,6 +1,7 @@
 class Resource < ApplicationRecord
   include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
+  include ActionText::Attachable
 
   PUBLISHED_KINDS = [ "Handout", "Scholarship", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme" ]
@@ -32,6 +33,13 @@ class Resource < ApplicationRecord
   has_many :rich_text_assets, -> { where(type: "RichTextAsset") },
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
+
+  has_many :action_text_mentions,
+           as: :mentionable,
+           dependent: :destroy
+
+  has_many :action_text_rich_texts,
+           through: :action_text_mentions
 
   # Default values
   attribute :inactive, :boolean, default: false
@@ -132,6 +140,11 @@ class Resource < ApplicationRecord
 
   def month
     created_at.month
+  end
+
+  ## ActionText:Attachable
+  def attachable_content_type
+    "application/vnd.active_record.resource"
   end
 
   private
