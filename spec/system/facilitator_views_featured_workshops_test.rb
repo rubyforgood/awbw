@@ -54,7 +54,7 @@ RSpec.describe 'Facilitators can bookmark workshops' do
          find('.swiper-button-prev-custom').click
          expect(page).to have_content("The best workshop on mars")
 
-          find('.swiper-button-prev-custom').click
+         find('.swiper-button-prev-custom').click
          expect(page).to have_content("The best workshop in the world")
 
          find('.swiper-button-prev-custom').click
