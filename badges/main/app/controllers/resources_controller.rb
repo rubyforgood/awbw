@@ -35,6 +35,12 @@ class ResourcesController < ApplicationController
   def edit
     @resource = Resource.find(resource_id_param).decorate
     set_form_variables
+
+    if turbo_frame_request?
+      render :rich_text_assets
+    else
+      render :edit
+    end
   end
 
   def show
