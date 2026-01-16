@@ -1,7 +1,4 @@
-<div
-  id="flash_now"
-  class="fixed top-4 right-0 left-0 flex justify-center z-50 print:hidden"
->
+<div id="flash_now" class="fixed top-4 right-0 left-0 flex justify-center z-50 print:hidden">
   <%# === Collect manual messages from params === %>
   <% manual_messages = [] %>
   <% { notice: params[:notice], alert: params[:alert], info: params[:info], warning: params[:warning], error: params[:error] }.each do |type, msg| %>
@@ -10,9 +7,9 @@
 
   <%# === Collect flash messages === %>
   <% flash_notices =
-    flash.to_a.reject do |_, msg|
-      msg.blank? || msg.is_a?(Array) || msg.is_a?(ActiveRecord::Relation)
-    end %>
+       flash.to_a.reject do |_, msg|
+         msg.blank? || msg.is_a?(Array) || msg.is_a?(ActiveRecord::Relation)
+       end %>
 
   <%# === Discard flash so it doesn’t persist on next request === %>
   <% flash.discard %>
@@ -23,21 +20,28 @@
   <%# === Render each message === %>
   <% notices_and_alerts.each do |type, msg| %>
     <% bg_class, text_class =
-      case type.to_s
-      when "notice", "info"
-        %w[bg-blue-50 text-blue-800]
-      when "warning"
-        %w[bg-yellow-50 text-yellow-800]
-      when "alert", "error"
-        %w[bg-red-50 text-red-800]
-      else
-        %w[bg-gray-50 text-gray-800]
-      end %>
+         case type.to_s
+         when "notice", "info"
+           %w[bg-blue-50 text-blue-800]
+         when "warning"
+           %w[bg-yellow-50 text-yellow-800]
+         when "alert", "error"
+           %w[bg-red-50 text-red-800]
+         else
+           %w[bg-gray-50 text-gray-800]
+         end %>
+
+    <%# === Detect reset-password–style messages === %>
+    <% persistent =
+         msg.to_s.match?(/reset your password|password instructions|set your password/i) %>
+
+    <% timeout =
+         persistent ? 12000 : 4000 %>
 
     <div
       class="max-w-3xl my-2"
       data-controller="dismiss"
-      data-dismiss-timeout-value="4000"
+      data-dismiss-timeout-value="<%= timeout %>"
     >
       <div
         class="
