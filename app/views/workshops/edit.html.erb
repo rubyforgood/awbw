@@ -12,6 +12,8 @@
     <div class="mt-4"><%= render "form", workshop: @workshop %></div>
     <div class="mt-4"><%# render "form_old", workshop: @workshop %></div>
 
-    <%= render 'rich_text_assets/form', owner: @workshop %>
+    <%= turbo_frame_tag "editor_assets_lazy", src: edit_workshop_path(@workshop) do %>
+      <span>Loading..</span>
+    <% end %>
   </div>
 </div>
