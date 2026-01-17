@@ -9,7 +9,7 @@ FactoryBot.define do
     end
 
     factory :age_range, parent: :category_type do
-      # name { "AgeRange" } 
+      # name { "AgeRange" }
       sequence(:name) { |n| "AgeRange #{n}" }
     end
   end
