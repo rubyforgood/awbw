@@ -19,13 +19,13 @@
 
 <body>
 <h1>
-  <%= @notification_type %>
+  New <%= @notification_type %> submitted
 </h1>
 
 <p>Hello,</p>
 
 <p><%= link_to @user.full_name, portal_url %>
-  registered for <%= @event.title %> on <%= Time.current.strftime("%A, %B %-d, %Y at %-l:%M %p %Z") %>.</p>
+  registered for <%= link_to @event.title, event_url(@event) %> on <%= Time.current.strftime("%A, %B %-d, %Y at %-l:%M %p %Z") %>.</p>
 
 
 <div class="footer">

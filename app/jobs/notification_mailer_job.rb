@@ -7,7 +7,8 @@ class NotificationMailerJob < ApplicationJob
     mailer_map = {
       "idea_submitted_fyi"   => ->(n) { NotificationMailer.idea_submitted_fyi(n) },
       "report_submitted_fyi" => ->(n) { NotificationMailer.report_submitted_fyi(n) },
-      "reset_password_fyi"   => ->(n) { NotificationMailer.reset_password_fyi(n.noticeable) }
+      "reset_password_fyi"   => ->(n) { NotificationMailer.reset_password_fyi(n.noticeable) },
+      "event_registration_confirmation_fyi"   => ->(n) { NotificationMailer.event_registration_confirmation_fyi(n.noticeable) }
     }
 
     mailer = mailer_map[notification.kind]&.call(notification)

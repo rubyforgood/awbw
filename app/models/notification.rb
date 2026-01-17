@@ -4,6 +4,8 @@ class Notification < ApplicationRecord
   # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols
 
   KINDS = %w[
+    event_registration_confirmation
+    event_registration_confirmation_fyi
     idea_submitted_fyi
     report_submitted_fyi
     reset_password

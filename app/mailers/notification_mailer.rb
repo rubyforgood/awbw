@@ -1,21 +1,23 @@
 class NotificationMailer < ApplicationMailer
   helper Rails.application.routes.url_helpers
 
-  def reset_password_fyi(notification)
-    @user = notification.noticeable
+  def event_registration_confirmation_fyi(notification)
+    @event_registration = notification.noticeable
+    @event = @event_registration.event.decorate
+    @user = @event_registration.registrant
     @facilitator = @user.facilitator
-    @notification_type = "Password reset"
+    @notification_type = "Event registration"
 
     # Send email to the admin
     mail(
       to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW portal: user password reset for #{@user.email}"
+      subject: "AWBW portal: new event registration by #{@user.full_name} to #{@event.title}"
     )
   end
 
+
   def idea_submitted_fyi(notification)
     @notification = notification
-    @notification_type = notification.notification_type == 0 ? "created" : "updated"
 
     @noticeable   = notification.noticeable.decorate
     @noticeable_klass = @noticeable.object.class
@@ -32,7 +34,7 @@ class NotificationMailer < ApplicationMailer
 
     mail(
       to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "New #{@noticeable_klass} Submission by #{@user.name}"
+      subject: "AWBW portal: new #{@noticeable_klass} submission by #{@user.full_name}"
     )
   end
 
@@ -53,7 +55,19 @@ class NotificationMailer < ApplicationMailer
 
     mail(
       to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "New #{@type} Submission by #{@user.name}"
+      subject: "AWBW portal: new #{@type} submission by #{@user.full_name}"
+    )
+  end
+
+  def reset_password_fyi(notification)
+    @user = notification.noticeable
+    @facilitator = @user.facilitator
+    @notification_type = "Password reset"
+
+    # Send email to the admin
+    mail(
+      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      subject: "AWBW portal: user password reset by #{@user.full_name}"
     )
   end
 

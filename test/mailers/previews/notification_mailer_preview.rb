@@ -1,14 +1,23 @@
 class NotificationMailerPreview < ActionMailer::Preview
-  def reset_password_fyi
+
+  def event_registration_confirmation_fyi
+    event_registration =
+      EventRegistration.first ||
+        EventRegistration.create!(
+          event: Event.first || raise("Need an Event"),
+          registrant: User.first || raise("Need a User")
+        )
+
     notification =
       Notification.create!(
-        noticeable: User.first,
+        noticeable: event_registration,
         notification_type: 1,
-        kind: "reset_password_fyi",
+        kind: "event_registration_confirmation_fyi",
         recipient_role: "admin",
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )
-    NotificationMailer.reset_password_fyi(notification)
+
+    NotificationMailer.event_registration_confirmation_fyi(notification)
   end
 
   def idea_submitted_fyi
@@ -35,5 +44,17 @@ class NotificationMailerPreview < ActionMailer::Preview
       )
 
     NotificationMailer.report_submitted_fyi(notification)
+  end
+
+  def reset_password_fyi
+    notification =
+      Notification.create!(
+        noticeable: User.first,
+        notification_type: 1,
+        kind: "reset_password_fyi",
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+      )
+    NotificationMailer.reset_password_fyi(notification)
   end
 end
