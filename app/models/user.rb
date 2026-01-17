@@ -78,10 +78,14 @@ class User < ApplicationRecord
   end
 
   def full_name
-    if !first_name || first_name.empty?
-      email
+    if facilitator
+      facilitator.full_name
     else
-      "#{first_name} #{last_name}"
+      if !first_name || first_name.empty?
+        email
+      else
+        "#{first_name} #{last_name}"
+      end
     end
   end
 
