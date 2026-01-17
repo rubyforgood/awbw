@@ -1,6 +1,13 @@
 class Asset < ApplicationRecord
   self.inheritance_column = :type
 
+  # Form selection
+  TYPES = %w[
+    PrimaryAsset
+    ThumbnailAsset
+    GalleryAsset
+  ].freeze
+
   belongs_to :owner, polymorphic: true, optional: true
   belongs_to :report, optional: true
 

@@ -1,3 +1,5 @@
+<%= render "assets/form", owner: @resource %>
+
 <%= simple_form_for @resource, wrapper: :tailwind_form do |f| %>
   <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
 
