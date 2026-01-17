@@ -5,8 +5,9 @@ module NotificationServices
       recipient_role:,
       recipient_email:,
       kind:,
-      notification_type: :created_record,
-      deliver: true
+      notification_type:,
+      deliver: true,
+      record_email_delivery: true
     )
       notification = Notification.create!(
         noticeable: noticeable,
@@ -16,7 +17,7 @@ module NotificationServices
         recipient_email: recipient_email
       )
 
-      NotificationMailerJob.perform_later(notification.id) if deliver
+      NotificationMailerJob.perform_later(notification.id, record_email_delivery: record_email_delivery) if deliver
 
       notification
     end
