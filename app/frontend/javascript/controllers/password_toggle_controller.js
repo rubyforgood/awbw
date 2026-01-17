@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["input", "icon"]
+    static targets = ["input", "icon"];
 
     toggle() {
         const isPassword = this.inputTarget.type === "password"

@@ -6,8 +6,12 @@ class Notification < ApplicationRecord
   KINDS = %w[
     event_registration_confirmation
     event_registration_confirmation_fyi
+    idea_submitted
     idea_submitted_fyi
+    report_submitted
     report_submitted_fyi
+    workshop_log_submitted
+    workshop_log_submitted_fyi
     reset_password
     reset_password_fyi
     account_confirmation_fyi

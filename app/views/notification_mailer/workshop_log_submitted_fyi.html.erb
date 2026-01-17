@@ -48,6 +48,84 @@
     <% end %>
   </table>
 
+  <h2 style="margin-bottom: 8px; text-align:left;">
+    Participants
+  </h2>
+
+  <% breakdown = @noticeable.attendance_breakdown %>
+  <% totals = @noticeable.totals %>
+
+  <table width="100%" cellpadding="0" cellspacing="0"
+         style="border-collapse:collapse;margin-top:12px;">
+
+    <!-- Header -->
+    <tr style="background:#f5f5f5;font-weight:bold;">
+      <td style="border:1px solid #ddd;padding:6px;">Participants</td>
+      <td style="border:1px solid #ddd;padding:6px;">Children</td>
+      <td style="border:1px solid #ddd;padding:6px;">Teens</td>
+      <td style="border:1px solid #ddd;padding:6px;">Adults</td>
+      <td style="border:1px solid #ddd;padding:6px;">Total</td>
+    </tr>
+
+    <!-- First-time row -->
+    <tr>
+      <td style="border:1px solid #ddd;padding:6px;font-weight:bold;">
+        First-time
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:children][:first] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:teens][:first] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:adults][:first] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= totals[:first_time] %>
+      </td>
+    </tr>
+
+    <!-- Ongoing row -->
+    <tr>
+      <td style="border:1px solid #ddd;padding:6px;font-weight:bold;">
+        Ongoing
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:children][:ongoing] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:teens][:ongoing] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:adults][:ongoing] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= totals[:ongoing] %>
+      </td>
+    </tr>
+
+    <!-- Overall total -->
+    <tr style="font-weight:bold;background:#fafafa;">
+      <td style="border:1px solid #ddd;padding:6px;">
+        Total
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:children][:first] + breakdown[:children][:ongoing] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:teens][:first] + breakdown[:teens][:ongoing] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= breakdown[:adults][:first] + breakdown[:adults][:ongoing] %>
+      </td>
+      <td style="border:1px solid #ddd;padding:6px;">
+        <%= totals[:overall] %>
+      </td>
+    </tr>
+
+  </table>
+
   <!-- Form answers -->
   <% if @answers.present? %>
     <h2 style="margin-bottom: 8px; text-align: left;">
@@ -70,7 +148,9 @@
 
   <!-- Attachments -->
   <% if @attachments.present? %>
-    <h2 style="margin-bottom: 8px;">Attachments</h2>
+    <h2 style="margin-bottom: 8px; text-align: left;">
+      Attachments
+    </h2>
     <ul style="margin-top: 0;">
       <% @attachments.each do |asset| %>
         <li>
@@ -82,12 +162,13 @@
 
   <!-- Quotes -->
   <% if @quotes.present? %>
-    <h2 style="margin-bottom: 8px;">Quotes</h2>
-    <% @quotes.each do |quote| %>
+    <h2 style="margin-bottom: 8px; text-align: left;">
+      Quotes
+    </h2>
+    <% @quotes.decorate.each do |quote| %>
       <p style="margin-bottom: 12px;">
-        “<%= quote.decorate.detail %>”
+        “<%= quote.detail %>”
         <% if quote.attribution.present? %>
-          <br>
           <span style="color:#6b7280; font-style: italic;">
             — <%= quote.attribution %>
           </span>

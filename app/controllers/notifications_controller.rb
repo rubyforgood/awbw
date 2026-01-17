@@ -17,6 +17,7 @@ class NotificationsController < ApplicationController
   end
 
   def show
+    response.set_header("Turbo-Cache-Control", "no-cache") # This prevents Turbo from snapshotting the iframe forever.
   end
 
   private

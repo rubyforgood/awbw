@@ -9,9 +9,9 @@
 <p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
   <span style="color:#6b7280; font-size: 0.9em;">
     Submitted on
-  <%= @noticeable.created_at
-                 .in_time_zone("Pacific Time (US & Canada)")
-                 .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+    <%= @noticeable.created_at
+                   .in_time_zone("Pacific Time (US & Canada)")
+                   .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
   </span>
 </p>
 
@@ -70,7 +70,7 @@
 
   <!-- Attachments -->
   <% if @attachments.present? %>
-    <h2 style="margin-bottom: 8px;">Attachments</h2>
+    <h2 style="margin-top: 12px;margin-bottom: 8px;">Attachments</h2>
     <ul style="margin-top: 0;">
       <% @attachments.each do |asset| %>
         <li>
@@ -82,12 +82,11 @@
 
   <!-- Quotes -->
   <% if @quotes.present? %>
-    <h2 style="margin-bottom: 8px;">Quotes</h2>
-    <% @quotes.each do |quote| %>
+    <h2 style="margin-top: 12px;margin-bottom: 8px;">Quotes</h2>
+    <% @quotes.decorate.each do |quote| %>
       <p style="margin-bottom: 12px;">
-        “<%= quote.decorate.detail %>”
+        “<%= quote.detail %>”
         <% if quote.attribution.present? %>
-          <br>
           <span style="color:#6b7280; font-style: italic;">
             — <%= quote.attribution %>
           </span>

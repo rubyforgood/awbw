@@ -71,6 +71,27 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def workshop_log_submitted_fyi(notification)
+    @notification = notification
+    @noticeable   = notification.noticeable
+    @type = "Report"
+
+    if @noticeable.class == User
+      @user        = @noticeable
+    else
+      @report      = @noticeable
+      @attachments = extract_attachments(@noticeable)
+      @quotes      = @report.quotes if @report.respond_to?(:quotes)
+      @user        = @noticeable.respond_to?(:user) ? @noticeable.user : @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
+      @answers     = @report.report_form_field_answers if @report.respond_to?(:report_form_field_answers)
+    end
+
+    mail(
+      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      subject: "AWBW portal: new WorkshopLog submission by #{@user.full_name}"
+    )
+  end
+
   private
 
   def extract_attachments(noticeable)

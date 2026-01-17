@@ -8,7 +8,7 @@ class NotificationMailerPreview < ActionMailer::Preview
           registrant: User.first || raise("Need a User")
         )
 
-    notification =
+    notification = Notification.where(kind: "event_registration_confirmation_fyi").last ||
       Notification.create!(
         noticeable: event_registration,
         notification_type: 1,
@@ -22,7 +22,7 @@ class NotificationMailerPreview < ActionMailer::Preview
 
   def idea_submitted_fyi
     noticeable = StoryIdea.first || WorkshopIdea.first
-    notification =
+    notification = Notification.where(kind: "idea_submitted_fyi").last ||
       Notification.create!(
         noticeable: noticeable,
         notification_type: 0,
@@ -34,7 +34,7 @@ class NotificationMailerPreview < ActionMailer::Preview
   end
 
   def report_submitted_fyi
-    notification =
+    notification = Notification.where(kind: "report_submitted_fyi").last ||
       Notification.create!(
         noticeable: WorkshopLog.first || Report.first,
         notification_type: 0,
@@ -47,7 +47,7 @@ class NotificationMailerPreview < ActionMailer::Preview
   end
 
   def reset_password_fyi
-    notification =
+    notification = Notification.where(kind: "reset_password_fyi").last ||
       Notification.create!(
         noticeable: User.first,
         notification_type: 1,
@@ -56,5 +56,19 @@ class NotificationMailerPreview < ActionMailer::Preview
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )
     NotificationMailer.reset_password_fyi(notification)
+  end
+
+
+  def workshop_log_submitted_fyi
+    notification = Notification.where(kind: "workshop_log_submitted_fyi").last ||
+      Notification.create!(
+        noticeable: WorkshopLog.first || Report.first,
+        notification_type: 0,
+        kind: "workshop_log_submitted_fyi",
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+      )
+
+    NotificationMailer.report_submitted_fyi(notification)
   end
 end

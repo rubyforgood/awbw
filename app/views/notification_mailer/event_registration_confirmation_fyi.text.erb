@@ -1,0 +1,27 @@
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+
+New event registration
+==========================
+
+<%= @user.full_name %> (<%= @user.email %>)
+Registered <%= @event_registration.created_at.strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+---
+
+EVENT
+Title: <%= @event.title %>
+When: <%= @event.times(display_day: true, display_date: true) %>
+<% if @event.labelled_cost.present? %>
+  Cost: <%= @event.labelled_cost %>
+<% end %>
+
+---
+
+View registration:
+<%= event_registration_url(@event_registration) %>
+
+View event:
+<%= event_url(@event) %>
+
+View profile:
+<%= profile_url %>

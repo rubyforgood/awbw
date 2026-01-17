@@ -1,0 +1,70 @@
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+
+New <%= @noticeable_klass %>
+==========================
+
+<% if @user.present? %>
+  <%= @user.name %>
+<% end %>
+Submitted on <%= @noticeable.created_at
+                            .in_time_zone("Pacific Time (US & Canada)")
+                            .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+
+<%= @noticeable.title %>
+<% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
+  (<%= @noticeable.windows_type.short_name %>)
+<% end %>
+
+
+<% if @noticeable.respond_to?(:detail) && @noticeable.detail.present? %>
+  Details
+  -------
+
+  <%= @noticeable.detail %>
+<% end %>
+
+
+<% if @noticeable.primary_asset&.file&.attached? %>
+  Primary asset
+  -------------
+
+  <%= url_for(@noticeable.primary_asset.file) %>
+<% end %>
+
+
+<% if @noticeable.gallery_assets.any? %>
+  Additional assets
+  -----------------
+
+  <% @noticeable.gallery_assets.each do |asset| %>
+    - <%= asset.file.image? ? url_for(asset.file) : asset.file.filename.to_s %>
+  <% end %>
+<% end %>
+
+
+<% if @noticeable.respond_to?(:quotes) && @noticeable.quotes.any? %>
+  Quotes
+  ------
+
+  <% @noticeable.quotes.each do |quote| %>
+    - <%= quote.detail %><% if quote.attribution.present? %> — <%= quote.attribution %><% end %>
+  <% end %>
+<% end %>
+
+
+<% if @noticeable.respond_to?(:report_form_field_answers) && @noticeable.report_form_field_answers.any? %>
+  Form answers
+  ------------
+
+  <% @noticeable.report_form_field_answers.each do |answer| %>
+    - <%= answer.name %>: <%= answer.answer %>
+  <% end %>
+<% end %>
+
+
+View submission:
+<%= polymorphic_url(@noticeable) %>
+
+View profile:
+<%= profile_url %>
