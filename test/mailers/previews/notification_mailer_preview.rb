@@ -1,5 +1,5 @@
 class NotificationMailerPreview < ActionMailer::Preview
-  def created_notification
+  def idea_submitted_fyi
     notification = Notification.last ||
       Notification.create!(
         noticeable: StoryIdea.first || WorkshopLog.first || Report.first,
@@ -8,10 +8,10 @@ class NotificationMailerPreview < ActionMailer::Preview
         recipient_role: "admin",
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )
-    NotificationMailer.created_notification(notification)
+    NotificationMailer.idea_submitted_fyi(notification)
   end
 
-  def report_notification
+  def report_submitted_fyi
     notification =
       Notification.create!(
         noticeable: WorkshopLog.first || Report.first,
@@ -21,6 +21,6 @@ class NotificationMailerPreview < ActionMailer::Preview
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )
 
-    NotificationMailer.report_notification(notification)
+    NotificationMailer.report_submitted_fyi(notification)
   end
 end
