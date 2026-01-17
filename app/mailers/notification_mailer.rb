@@ -22,9 +22,7 @@ class NotificationMailer < ApplicationMailer
       @user        = @noticeable.try(:user) || @noticeable.try(:created_by)
     end
 
-    primary_asset = @noticeable.primary_asset
-    gallery_assets = @noticeable.gallery_assets
-    @attachments = Asset.where(id: [ primary_asset&.id ] + gallery_assets.pluck(:id))
+    @attachments = extract_attachments(@noticeable)
     @quotes      = @noticeable.quotes if @noticeable.respond_to?(:quotes)
     @answers     = @noticeable.report_form_field_answers if @noticeable.respond_to?(:report_form_field_answers)
 
@@ -43,7 +41,7 @@ class NotificationMailer < ApplicationMailer
       @user        = @noticeable
     else
       @report      = @noticeable
-      @attachments = @report.assets
+      @attachments = extract_attachments(@noticeable)
       @quotes      = @report.quotes if @report.respond_to?(:quotes)
       @user        = @noticeable.respond_to?(:user) ? @noticeable.user : @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
       @answers     = @report.report_form_field_answers if @report.respond_to?(:report_form_field_answers)
@@ -55,11 +53,14 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
-  def update_notification(notification, message)
-    notification.update_columns(
-      email_subject: message.subject,
-      email_body_html: message.html_part&.body&.decoded,
-      email_body_text: message.text_part&.body&.decoded
-    )
+  private
+
+  def extract_attachments(noticeable)
+    return [] unless noticeable.respond_to?(:primary_asset)
+
+    assets = []
+    assets << noticeable.primary_asset if noticeable.primary_asset
+    assets.concat(noticeable.gallery_assets) if noticeable.respond_to?(:gallery_assets)
+    assets
   end
 end
