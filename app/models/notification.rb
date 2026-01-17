@@ -1,7 +1,6 @@
 class Notification < ApplicationRecord
   belongs_to :noticeable, polymorphic: true
 
-  after_commit :send_notice
   # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols
 
   KINDS = %w[
@@ -28,9 +27,5 @@ class Notification < ApplicationRecord
 
   def delivered?
     delivered_at.present?
-  end
-
-  def send_notice
-    NotificationMailerJob.perform_later(self.id)
   end
 end
