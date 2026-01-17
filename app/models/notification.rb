@@ -5,10 +5,12 @@ class Notification < ApplicationRecord
 
   # enum notification_type: { created_record: 0, updated_record: 1 }
   KINDS = %w[
-    record_created
-    record_updated
-    record_submitted
-    record_approved
+    idea_submitted_fyi
+    report_submitted_fyi
+    password_reset
+    password_reset_fyi
+    account_confirmation_fyi
+    account_unlock_fyi
   ].freeze
 
   RECIPIENT_ROLES = %w[
