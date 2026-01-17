@@ -89,8 +89,15 @@ class WorkshopsController < ApplicationController
   end
 
   def show
-    set_show
-    @workshop.increment_view_count!(session: session, request: request)
+    if turbo_frame_request?
+      @workshop = Workshop.with_all_rich_text.find(params[:id]).decorate
+      set_show
+      render partial: "show_lazy", locals: { workshop: @workshop }
+    else
+      @workshop = Workshop.find(params[:id]).decorate
+      @workshop.increment_view_count!(session: session, request: request)
+      render :show
+    end
   end
 
   def update
@@ -155,12 +162,12 @@ class WorkshopsController < ApplicationController
   private
 
   def set_show
-    @workshop = Workshop.find(params[:id]).decorate
     @quotes = Quote.where(workshop_id: @workshop.id).active
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(inactive: false)
     @workshop_variations = @workshop.workshop_variations.active
     @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
   end
+
 
   def set_form_variables
     @workshop.build_primary_asset if @workshop.primary_asset.blank?
