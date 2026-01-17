@@ -1,11 +1,15 @@
 class NotificationMailer < ApplicationMailer
-  def password_reset_fyi(resource)
-    @resource = resource
+  helper Rails.application.routes.url_helpers
+
+  def reset_password_fyi(notification)
+    @user = notification.noticeable
+    @facilitator = @user.facilitator
+    @notification_type = "Password reset"
 
     # Send email to the admin
     mail(
       to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW portal: user password reset for #{@resource.email}"
+      subject: "AWBW portal: user password reset for #{@user.email}"
     )
   end
 

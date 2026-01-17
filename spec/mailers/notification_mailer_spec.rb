@@ -10,9 +10,9 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
-  describe '#password_reset_fyi' do
+  describe '#reset_password_fyi' do
     let(:user) { create(:user, email: 'user@example.com') }
-    let(:mail) { described_class.password_reset_fyi(user) }
+    let(:mail) { described_class.reset_password_fyi(user) }
 
     it 'renders the headers' do
       expect(mail.subject).to eq('Reset Password Request')

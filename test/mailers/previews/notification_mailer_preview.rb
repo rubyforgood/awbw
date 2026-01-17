@@ -1,10 +1,11 @@
 class NotificationMailerPreview < ActionMailer::Preview
   def idea_submitted_fyi
-    notification = Notification.last ||
+    noticeable = StoryIdea.first || WorkshopIdea.first
+    notification =
       Notification.create!(
-        noticeable: StoryIdea.first || WorkshopLog.first || Report.first,
-        notification_type: "created_record",
-        kind: "record_created",
+        noticeable: noticeable,
+        notification_type: 0,
+        kind: "idea_submitted_fyi",
         recipient_role: "admin",
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )
@@ -15,8 +16,8 @@ class NotificationMailerPreview < ActionMailer::Preview
     notification =
       Notification.create!(
         noticeable: WorkshopLog.first || Report.first,
-        notification_type: "created_record",
-        kind: "record_created",
+        notification_type: 0,
+        kind: "report_submitted_fyi",
         recipient_role: "admin",
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
       )

@@ -6,8 +6,8 @@ class Notification < ApplicationRecord
   KINDS = %w[
     idea_submitted_fyi
     report_submitted_fyi
-    password_reset
-    password_reset_fyi
+    reset_password
+    reset_password_fyi
     account_confirmation_fyi
     account_unlock_fyi
   ].freeze

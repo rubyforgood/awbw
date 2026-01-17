@@ -48,7 +48,7 @@ class DeviseMailer < Devise::Mailer
 
   def notification_kind_for_devise_action
     {
-      "reset_password_instructions" => "password_reset",
+      "reset_password_instructions" => "reset_password",
       "confirmation_instructions"   => "account_confirmation",
       "unlock_instructions"         => "account_unlock"
     }
@@ -79,15 +79,15 @@ class DeviseMailer < Devise::Mailer
 
 
   def notify_admin_if_needed(kind)
-    return unless kind == "password_reset"
-
-    NotificationServices::CreateNotification.call(
-      noticeable: @record,
-      recipient_role: "admin",
-      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      kind: "password_reset_fyi",
-      notification_type: 1,
-      deliver: true
-    )
+    if kind == "reset_password"
+      NotificationServices::CreateNotification.call(
+        noticeable: @record,
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        kind: "reset_password_fyi",
+        notification_type: 1,
+        deliver: true
+      )
+    end
   end
 end
