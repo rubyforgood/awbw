@@ -2,8 +2,8 @@ class Notification < ApplicationRecord
   belongs_to :noticeable, polymorphic: true
 
   after_commit :send_notice
+  # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols
 
-  # enum notification_type: { created_record: 0, updated_record: 1 }
   KINDS = %w[
     idea_submitted_fyi
     report_submitted_fyi
