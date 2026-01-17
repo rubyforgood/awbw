@@ -7,9 +7,7 @@
         <div class="flex flex-col items-center">
           <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
 
-          <%= tag.div data: {turbo_frame: dom_id(asset, "title")} do %>
-            <% render "assets/title", asset: asset %>
-          <% end %>
+          <%= render "assets/title", asset: asset %>
         </div>
       <% end %>
     </div>

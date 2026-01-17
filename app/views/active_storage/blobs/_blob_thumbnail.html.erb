@@ -28,13 +28,15 @@
   <% end %>
 
   <!-- Asset ID badge (top-right) -->
-  <span
-    class="
-      absolute top-1 right-1
-      bg-gray-700 text-white text-xs rounded px-1.5 py-0.5
-      pointer-events-none
-    "
-  >
-    <%= asset.id %>
-  </span>
+  <% if asset.type == "RichTextAsset" %>
+    <span
+      class="
+        absolute top-1 right-1
+        bg-gray-700 text-white text-xs rounded px-1.5 py-0.5
+        pointer-events-none
+      "
+    >
+      <%= asset.id %>
+    </span>
+  <% end %>
 </figure>
