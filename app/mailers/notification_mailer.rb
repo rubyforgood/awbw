@@ -1,15 +1,15 @@
 class NotificationMailer < ApplicationMailer
-  def reset_password_notification(resource)
+  def password_reset_fyi(resource)
     @resource = resource
-    message = mail(
+
+    # Send email to the admin
+    mail(
       to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "Reset Password Request"
+      subject: "AWBW portal: user password reset for #{@resource.email}"
     )
-    persist_email(notification, message)
-    message
   end
 
-  def created_notification(notification)
+  def idea_submitted_fyi(notification)
     @notification = notification
     @notification_type = notification.notification_type == 0 ? "created" : "updated"
 
@@ -34,10 +34,7 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
-  def submitted_notification(notification)
-  end
-
-  def report_notification(notification)
+  def report_submitted_fyi(notification)
     @notification = notification
     @noticeable   = notification.noticeable
     @type = "Report"
