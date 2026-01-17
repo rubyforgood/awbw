@@ -1,4 +1,6 @@
  class LibraryAssetsController < ApplicationController
+   include ActionView::RecordIdentifier
+
    before_action :set_asset, only: [ :show, :edit, :update, :destroy ]
 
    def show
@@ -33,7 +35,16 @@
    def update
      if @asset.update(asset_params)
        flash.now[:notice] = "Asset updated."
-       render partial: "assets/title", locals: { asset: @asset }
+       case turbo_frame_request_id
+       when "title_asset_#{ @asset.id }"
+         render partial: "assets/title", locals: { asset: @asset }
+       when "type_selector_asset_#{ @asset.id }"
+         flash.now[:notice] = "Asset type updated!"
+         render partial: "assets/type_selector", locals: { asset: @asset }
+       else
+         flash[:alert] = "Failed to update asset."
+         redirect_back_or_to root_path
+       end
      else
        flash[:alert] = "Failed to update asset."
        render :edit, status: :unprocessable_content

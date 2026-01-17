@@ -1,0 +1,23 @@
+<%= turbo_frame_tag  "type_selector_asset_#{ asset.id }" do %>
+  <%= turbo_flash %>
+
+  <%= form_with scope: :library_asset, url: library_asset_path(asset), method: :patch do |f| %>
+    <div class="relative m-2">
+      <%= f.select :type,
+              Asset::TYPES.map { |t| [t.underscore.humanize, t] },
+              { required: true, selected: asset.type },
+              onchange: "this.form.requestSubmit();",
+              class: "block w-full appearance-none rounded-md border border-gray-300
+                      bg-white
+                      px-3 py-2 pr-8
+                      text-sm text-gray-700
+                      shadow-sm
+                      focus:border-indigo-500 focus:outline-none
+                      focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
+
+      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+        <i class="fa-solid fa-chevron-down text-sm"></i>
+      </div>
+    </div>
+  <% end %>
+<% end %>

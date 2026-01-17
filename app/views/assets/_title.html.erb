@@ -1,4 +1,4 @@
-<%= turbo_frame_tag  dom_id(asset, "title") do %>
+<%= turbo_frame_tag  "title_asset_#{ asset.id }" do %>
   <% title = asset.title.present? ? asset.title : "Add title" %>
   <% classes = asset.title.present? ? "text-white bg-gray-700" : "text-gray-100 bg-gray-500" %>
 
