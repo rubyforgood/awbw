@@ -34,7 +34,7 @@
 
       <p class="text-sm text-gray-500">
         <%= @notification.kind.to_s.humanize %>
-        • Created <%= time_ago_in_words(@notification.created_at) %> ago
+        • Created <%= time_ago_in_words(@notification.created_at.in_time_zone("Pacific Time (US & Canada)")) %> ago
       </p>
     </div>
 
@@ -74,7 +74,9 @@
       <div class="flex items-start gap-4">
         <dt class="w-28 text-gray-500">Sent at</dt>
         <dd class="text-gray-900">
-          <%= @notification.delivered_at&.strftime("%B %d, %Y %l:%M %p") || "Not sent" %>
+          <%= @notification.delivered_at
+              &.in_time_zone("Pacific Time (US & Canada)")
+              &.strftime("%B %d, %Y %l:%M %p") || "Not sent" %>
         </dd>
       </div>
 

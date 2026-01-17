@@ -24,7 +24,7 @@
           <!-- Sent -->
           <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
             <% if notification.delivered_at.present? %>
-              <%= time_ago_in_words(notification.delivered_at) %> ago
+              <%= time_ago_in_words(notification.delivered_at.in_time_zone("Pacific Time (US & Canada)")) %> ago
             <% else %>
               <span class="text-red-600 font-medium">Not sent</span>
             <% end %>
