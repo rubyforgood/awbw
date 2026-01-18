@@ -17,86 +17,88 @@
 
 <hr style="margin: 24px 0;">
 
-<% if @report.present? %>
+<div style="text-align: left;">
+  <% if @report.present? %>
 
-  <!-- Report details -->
-  <h2 style="margin-bottom: 8px; text-align: left;">
-    Report details
-  </h2>
-
-  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
-    <% if @report.respond_to?(:type) && @report.type.present? %>
-      <tr>
-        <td style="padding: 4px 0; color:#6b7280; width: 140px;">
-          Report type
-        </td>
-        <td style="padding: 4px 0;">
-          <strong><%= @report.type %></strong>
-        </td>
-      </tr>
-    <% end %>
-
-    <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
-      <tr>
-        <td style="padding: 4px 0; color:#6b7280;">
-          Service population
-        </td>
-        <td style="padding: 4px 0;">
-          <strong><%= @noticeable.windows_type.short_name %></strong>
-        </td>
-      </tr>
-    <% end %>
-  </table>
-
-  <!-- Form answers -->
-  <% if @answers.present? %>
+    <!-- Report details -->
     <h2 style="margin-bottom: 8px; text-align: left;">
-      Form answers
+      Report details
     </h2>
 
-    <% @answers.each do |answer| %>
-      <div style="margin-bottom: 18px; text-align: left;">
-        <p style="margin: 0 0 4px 0; font-weight: bold;">
-          <%= answer.name %>
-        </p>
-        <p style="margin: 0; color:#374151;">
-          <%= answer.answer.presence || "—" %>
-        </p>
-      </div>
-    <% end %>
-
-    <hr style="margin: 24px 0;">
-  <% end %>
-
-  <!-- Attachments -->
-  <% if @attachments.present? %>
-    <h2 style="margin-bottom: 8px;">Attachments</h2>
-    <ul style="margin-top: 0;">
-      <% @attachments.each do |asset| %>
-        <li>
-          <%= asset.file.filename.to_s %>
-        </li>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+      <% if @report.respond_to?(:type) && @report.type.present? %>
+        <tr>
+          <td style="padding: 4px 0; color:#6b7280; width: 140px;">
+            Report type
+          </td>
+          <td style="padding: 4px 0;">
+            <strong><%= @report.type %></strong>
+          </td>
+        </tr>
       <% end %>
-    </ul>
-  <% end %>
 
-  <!-- Quotes -->
-  <% if @quotes.present? %>
-    <h2 style="margin-bottom: 8px;">Quotes</h2>
-    <% @quotes.decorate.each do |quote| %>
-      <p style="margin-bottom: 12px;">
-        “<%= quote.detail %>”
-        <% if quote.attribution.present? %>
-          <br>
-          <span style="color:#6b7280; font-style: italic;">
-            — <%= quote.attribution %>
-          </span>
-        <% end %>
-      </p>
+      <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
+        <tr>
+          <td style="padding: 4px 0; color:#6b7280;">
+            Service population
+          </td>
+          <td style="padding: 4px 0;">
+            <strong><%= @noticeable.windows_type.short_name %></strong>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+
+    <!-- Form answers -->
+    <% if @answers.present? %>
+      <h2 style="margin-bottom: 8px; text-align: left;">
+        Form answers
+      </h2>
+
+      <% @answers.each do |answer| %>
+        <div style="margin-bottom: 18px; text-align: left;">
+          <p style="margin: 0 0 4px 0; font-weight: bold;">
+            <%= answer.name %>
+          </p>
+          <p style="margin: 0; color:#374151;">
+            <%= answer.answer.presence || "—" %>
+          </p>
+        </div>
+      <% end %>
+
+      <hr style="margin: 24px 0;">
     <% end %>
-  <% end %>
 
-<% end %>
+    <!-- Attachments -->
+    <% if @attachments.present? %>
+      <h2 style="margin-bottom: 8px;">Attachments</h2>
+      <ul style="margin-top: 0;">
+        <% @attachments.each do |asset| %>
+          <li>
+            <%= asset.file.filename.to_s %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <!-- Quotes -->
+    <% if @quotes.present? %>
+      <h2 style="margin-bottom: 8px;">Quotes</h2>
+      <% @quotes.decorate.each do |quote| %>
+        <p style="margin-bottom: 12px;">
+          “<%= quote.detail %>”
+          <% if quote.attribution.present? %>
+            <br>
+            <span style="color:#6b7280; font-style: italic;">
+              — <%= quote.attribution %>
+            </span>
+          <% end %>
+        </p>
+      <% end %>
+    <% end %>
+
+  <% end %>
+</div>
 
 <hr style="margin: 24px 0;">
 

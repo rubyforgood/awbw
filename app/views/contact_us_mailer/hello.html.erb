@@ -1,30 +1,44 @@
-<p style="margin-bottom: 6px;">
-  New contact us page message
+<!-- Title -->
+<p style="margin-bottom: 6px; text-align: center;">
+  New Contact Us Message
 </p>
 
-<p style="margin: 0;">
+<!-- Name -->
+<h1 style="margin: 0; text-align: center;">
   <% if @user.present? %>
-    Name: <strong><%= @user.full_name %><br></strong>
-    Organization: <strong><%= @contact_us[:agency] %></strong>
+    <strong><%= @user.full_name %></strong>
   <% else %>
-    <strong>Name:</strong> <%= "#{@contact_us[:first_name]} #{@contact_us[:last_name]}" %><br>
-    <strong>Org:</strong> <%= @contact_us[:agency] %>
+    <strong><%= "#{@contact_us[:first_name]} #{@contact_us[:last_name]}" %></strong>
+  <% end %>
+</h1>
+
+<!-- Organization -->
+<p style="margin: 4px 0 8px; text-align: center;">
+  <% if @contact_us[:agency].present? %>
+    <span style="color:#374151; font-size:14px;">
+      <%= @contact_us[:agency] %>
+    </span>
   <% end %>
 </p>
 
-<p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
-  Submitted on <%= Time.now.in_time_zone("Pacific Time (US & Canada)")
-                           .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+<!-- Timestamp -->
+<p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280; text-align: center;">
+  Submitted on
+  <%= Time.current
+          .in_time_zone("Pacific Time (US & Canada)")
+          .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
 </p>
 
-<hr>
+<hr style="margin: 24px 0;">
 
-<h2>
-  Message
-</h2>
+<div style="text-align: left;">
+  <h2>
+    Message
+  </h2>
 
-<p>
-  <span style="font-weight: normal; color:#6b7280;">
-    <%= @contact_us[:message] %>
-  </span>
-</p>
+  <p>
+    <span style="font-weight: normal; color:#6b7280;">
+      <%= @contact_us[:message] %>
+    </span>
+  </p>
+</div>

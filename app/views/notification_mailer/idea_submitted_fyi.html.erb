@@ -16,78 +16,126 @@
                               .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
 </p>
 
-<hr>
+<hr style="margin: 24px 0;">
 
-<h2>
-  <%= @noticeable.title %>
-  <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
-    <span style="font-weight: normal; color:#6b7280;">
-      (<%= @noticeable.windows_type.short_name %>)
-    </span>
+<div style="text-align: left;">
+
+  <h2>
+    <%= @noticeable.title %>
+    <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
+      <span style="font-weight: normal; color:#6b7280;">
+        (<%= @noticeable.windows_type.short_name %>)
+      </span>
+    <% end %>
+  </h2>
+
+  <% if @noticeable.respond_to?(:detail) && @noticeable.detail.present? %>
+    <div>
+      <%= simple_format(@noticeable.detail) %>
+    </div>
   <% end %>
-</h2>
 
-<% if @noticeable.respond_to?(:detail) && @noticeable.detail.present? %>
-  <div>
-    <%= simple_format(@noticeable.detail) %>
-  </div>
-<% end %>
+  <% if @noticeable.primary_asset&.file&.attached? %>
+    <h3 style="margin-top: 36px; margin-bottom: 12px;">
+      Primary asset
+    </h3>
+    <p>
+      <% blob = @noticeable.primary_asset.file.blob %>
+      <span style="margin-bottom: 6px;">
+        <a
+          href="<%= rails_blob_url(blob, disposition: "inline") %>"
+          target="_blank"
+          style="color:#2563eb; text-decoration: underline;">
+          <% if blob.image? %>
+            <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
+              <img
+                src="<%= rails_blob_url(blob, disposition: "inline") %>"
+                alt="<%= blob.filename %>"
+                width="180"
+                style="display:block;margin:6px 0;border-radius:4px;"
+                />
+              <%= blob.filename.to_s %>
+            </a>
+          <% else %>
+            <%= blob.filename.to_s %>
+          <% end %>
+        </a>
+      </span>
+    </p>
+  <% end %>
 
-<% if @noticeable.primary_asset&.file&.attached? %>
-  <h2>Primary asset</h2>
-  <p>
-    <%= image_tag url_for(@noticeable.primary_asset.file) %>
-  </p>
-<% end %>
 
-<% if @noticeable.gallery_assets.any? %>
-  <h2>Additional assets</h2>
-  <ul>
+  <!-- Attachments -->
+  <% if @noticeable.gallery_assets.any? %>
+    <h3 style="margin-top: 36px; margin-bottom: 12px;">
+      Gallery assets
+    </h3>
+
     <% @noticeable.gallery_assets.each do |asset| %>
-      <li>
-        <% if asset.file.image? %>
-          <%= image_tag url_for(asset.file), width: 120 %>
-        <% else %>
-          <%= asset.file.filename.to_s %>
-        <% end %>
-      </li>
-    <% end %>
-  </ul>
-<% end %>
+      <% blob = asset.file.blob %>
 
-<% if @noticeable.respond_to?(:quotes) && @noticeable.quotes.any? %>
-  <h2>Quotes</h2>
-  <ul>
-    <% @noticeable.quotes.each do |quote| %>
-      <li>
-        <%= quote.detail %>
-        <% if quote.attribution.present? %>
-          — <em><%= quote.attribution %></em>
-        <% end %>
-      </li>
+      <span style="margin-bottom: 6px;">
+          <a
+            href="<%= rails_blob_url(blob, disposition: "inline") %>"
+            target="_blank"
+            style="color:#2563eb; text-decoration: underline;">
+            <% if blob.image? %>
+              <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
+                <img
+                  src="<%= rails_blob_url(blob, disposition: "inline") %>"
+                  alt="<%= blob.filename %>"
+                  width="180"
+                  style="display:block;margin:6px 0;border-radius:4px;"
+                  />
+                <%= blob.filename.to_s %>
+              </a>
+            <% else %>
+              <%= blob.filename.to_s %>
+            <% end %>
+          </a>
+        </span>
     <% end %>
-  </ul>
-<% end %>
+  <% end %>
 
-<% if @noticeable.respond_to?(:report_form_field_answers) && @noticeable.report_form_field_answers.any? %>
-  <h2>Form answers</h2>
-  <ul>
-    <% @noticeable.report_form_field_answers.each do |answer| %>
-      <li>
-        <strong><%= answer.name %>:</strong>
-        <%= answer.answer %>
-      </li>
-    <% end %>
-  </ul>
-<% end %>
+  <% if @noticeable.respond_to?(:quotes) && @noticeable.quotes.any? %>
+    <h2>Quotes</h2>
+    <ul>
+      <% @noticeable.quotes.each do |quote| %>
+        <li>
+          <%= quote.detail %>
+          <% if quote.attribution.present? %>
+            — <em><%= quote.attribution %></em>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <% if @noticeable.respond_to?(:report_form_field_answers) && @noticeable.report_form_field_answers.any? %>
+    <h2>Form answers</h2>
+    <ul>
+      <% @noticeable.report_form_field_answers.each do |answer| %>
+        <li>
+          <strong><%= answer.name %>:</strong>
+          <%= answer.answer %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>
+
+<hr style="margin: 24px 0;">
 
 <p>
-  <a href="<%= polymorphic_url(@noticeable) %>"
-     style="display:inline-block;background:#e5e7eb;color:#111827;
-       text-decoration:none;padding:10px 16px;border-radius:6px;
-       font-weight:bold;margin-right:8px;">
-    View submission
-  </a>
+  <%= link_to "View submission",
+              polymorphic_url(@noticeable),
+              style: "display:inline-block;
+                      padding:10px 16px;
+                      background:#2563eb;
+                      color:#ffffff;
+                      text-decoration:none;
+                      border-radius:6px;
+                      font-weight:bold;" if @noticeable.present? %>
 
   <a href="<%= profile_url %>"
      style="display:inline-block;background:#e5e7eb;color:#111827;

@@ -21,32 +21,12 @@
 
   <!-- Report details -->
   <h2 style="margin-bottom: 8px; text-align: left;">
-    Report details
+    WorkshopLog details
   </h2>
 
-  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
-    <% if @report.respond_to?(:type) && @report.type.present? %>
-      <tr>
-        <td style="padding: 4px 0; color:#6b7280; width: 140px;">
-          Report type
-        </td>
-        <td style="padding: 4px 0;">
-          <strong><%= @report.type %></strong>
-        </td>
-      </tr>
-    <% end %>
-
-    <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
-      <tr>
-        <td style="padding: 4px 0; color:#6b7280;">
-          Service population
-        </td>
-        <td style="padding: 4px 0;">
-          <strong><%= @noticeable.windows_type.short_name %></strong>
-        </td>
-      </tr>
-    <% end %>
-  </table>
+  <p>
+    <strong>Service population:</strong> <%= @noticeable.windows_type.short_name %>
+  </p>
 
   <!-- Form answers -->
   <% if @answers.present? %>
@@ -70,7 +50,8 @@
 
   <!-- Attachments -->
   <% if @attachments.present? %>
-    <h2 style="margin-top: 12px;margin-bottom: 8px;">Attachments</h2>
+    <h2 style="margin-top: 12px; margin-bottom: 8px; text-align: left;">
+      Attachments</h2>
     <ul style="margin-top: 0;">
       <% @attachments.each do |asset| %>
         <li>
