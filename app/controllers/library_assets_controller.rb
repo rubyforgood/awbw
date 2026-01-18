@@ -21,7 +21,8 @@
      if @asset.save
        render partial: "assets/form", locals: { owner: @owner }
      else
-       render plain: @asset.errors.full_messages.join(", "), status: :unprocessable_entity
+       flash.now[:alert] = @asset.errors.full_messages.join(", ")
+       render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
      end
    end
 
@@ -57,7 +58,6 @@
            render partial: "assets/type_selector", locals: { asset: @asset }
          end
        else
-
          render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
        end
      end
