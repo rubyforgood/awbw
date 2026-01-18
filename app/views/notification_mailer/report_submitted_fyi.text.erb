@@ -83,9 +83,9 @@
   <!-- Quotes -->
   <% if @quotes.present? %>
     <h2 style="margin-bottom: 8px;">Quotes</h2>
-    <% @quotes.each do |quote| %>
+    <% @quotes.decorate.each do |quote| %>
       <p style="margin-bottom: 12px;">
-        “<%= quote.decorate.detail %>”
+        “<%= quote.detail %>”
         <% if quote.attribution.present? %>
           <br>
           <span style="color:#6b7280; font-style: italic;">
