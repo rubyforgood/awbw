@@ -7,15 +7,13 @@ RSpec.describe 'Passwords', type: :request do
 
     it 'sets the correct flash message' do
       post user_password_path, params: { user: { email: user.email } }
-      follow_redirect!
-
       if response.status == 500
         Rails.logger.error(response.body)
         puts response.body
       end
-
       expect(response).not_to have_http_status(500)
 
+      follow_redirect!
       expect(flash[:notice]).to eq(
        "You will receive an email with instructions on how to reset your password in a few minutes. Contact us if you don't receive an email.")
     end
