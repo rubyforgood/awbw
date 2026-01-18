@@ -53,7 +53,6 @@ RSpec.describe "Password field toggle", type: :system do
         expect { input[:type] }.to eventually(eq("text"))
         expect(input.value).to eq("my_secure_password")
       end
-
     end
   end
 end
