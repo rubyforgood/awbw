@@ -78,6 +78,25 @@ RSpec.describe "/workshop_ideas", type: :request do
 
         expect(response).to have_http_status(:redirect)
       end
+
+      xit "creates an FYI notification when a workshop idea is submitted" do
+        expect {
+          post workshop_ideas_path, params: {
+            workshop_idea: valid_attributes
+          }
+        }.to change(StoryIdea, :count).by(1)
+                                      .and change(Notification, :count).by(1)
+
+        notification = Notification.last
+        workshop_idea = WorkshopIdea.last
+
+        expect(notification.kind).to eq("idea_submitted_fyi")
+        expect(notification.noticeable).to eq(workshop_idea)
+        expect(notification.recipient_role).to eq("admin")
+
+        expect(enqueued_jobs.map { |j| j[:job] })
+          .to include(NotificationMailerJob)
+      end
     end
 
     context "with invalid parameters" do

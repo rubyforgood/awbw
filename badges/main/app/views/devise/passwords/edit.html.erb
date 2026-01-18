@@ -8,7 +8,7 @@
                         method: :put,
                         html: { class: "space-y-4" }) do |f| %>
 
-      <%= devise_error_messages! %>
+      <%= render "devise/shared/error_messages", resource: f.object %>
       <%= f.hidden_field :reset_password_token %>
 
       <!-- NEW PASSWORD -->

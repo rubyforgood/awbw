@@ -3,7 +3,7 @@ class CategoryDecorator < ApplicationDecorator
     name
   end
 
-  def detail
+  def detail(length: nil)
     "#{category_type.name}: #{name}"
   end
 end

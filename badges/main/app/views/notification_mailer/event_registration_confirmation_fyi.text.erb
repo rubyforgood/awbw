@@ -1,0 +1,41 @@
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+
+New Event Registration
+==========================
+
+<%= @user.full_name %> (<%= @user.email %>)
+
+Registered on
+<%= @event_registration.created_at
+                       .in_time_zone("Pacific Time (US & Canada)")
+                       .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+------------------------------------------------------------
+
+Event
+<%= @event.title %>
+
+Event date
+<%= @event.times(display_day: true, display_date: true) %>
+
+<% if @event.location.present? %>
+  Location
+  <%= @event.location %>
+<% end %>
+
+<% if @event.labelled_cost.present? %>
+  Cost
+  <%= @event.labelled_cost %>
+<% end %>
+
+------------------------------------------------------------
+
+View registration:
+<%= event_registration_url(@event_registration) if @event_registration.present? %>
+
+View profile:
+<%= profile_url %>
+
+View event:
+<%= event_url(@event) %>
+

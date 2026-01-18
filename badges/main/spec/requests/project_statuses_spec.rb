@@ -71,7 +71,7 @@ RSpec.describe "/project_statuses", type: :request do
 
         it "returns 422" do
           post project_statuses_url, params: { project_status: invalid_attributes }
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
     end

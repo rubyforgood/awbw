@@ -11,30 +11,29 @@
                   autofocus: true,
                   required: true,
                   input_html: { class: "w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" } %>
-      <div class="flex flex-col my-3 py-6">
-        <div class="relative" data-controller="password-toggle">
-          <%= f.input :password,
-                      as: :password,
-                      label: "New password",
-                      required: true,
-                      autocomplete: "new-password",
-                      autocorrect: "off",
-                      autocapitalize: "off",
-                      spellcheck: "false",
-                      input_html: {
-                        class: "rounded-md border-gray-300 shadow-sm
-                          focus:ring-blue-500 focus:border-blue-500
-                          p-2 pr-10 w-full",
-                        data: { password_toggle_target: "input" }
-                      } %>
-          <button
-            type="button"
-            class="toggle-password absolute right-3 top-9 text-gray-500 hover:text-gray-700"
-            data-action="password-toggle#toggle"
-            aria-label="Toggle password visibility">
-            <i class="fa fa-eye" data-password-toggle-target="icon"></i>
-          </button>
-        </div>
+      <div
+        class="flex flex-col relative"
+        data-controller="password-toggle">
+        <%= f.input :password,
+                    as: :password,
+                    required: true,
+                    autocomplete: "current-password",
+                    autocorrect: "off",
+                    autocapitalize: "off",
+                    spellcheck: "false",
+                    input_html: {
+                      class: "form-control password-field rounded-md border-gray-300 shadow-sm
+                      focus:ring-blue-500 focus:border-blue-500 p-2 pr-10",
+                      data: { password_toggle_target: "input" }
+                    } %>
+
+        <button
+          type="button"
+          class="toggle-password"
+          data-action="password-toggle#toggle"
+          aria-label="Toggle password visibility">
+          <i class="fa fa-eye" data-password-toggle-target="icon"></i>
+        </button>
       </div>
 
       <% if devise_mapping.rememberable? %>

@@ -123,6 +123,13 @@ class ReportsController < ApplicationController
     report_type = "story"
     report_type = "monthly report" unless @report.owner_id == 7
 
+    NotificationServices::CreateNotification.call(
+      noticeable: @report,
+      kind: :report_submitted_fyi,
+      recipient_role: :admin,
+      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      notification_type: 0)
+
     if params[:sectorable_items] or params[:form_builder_id] == "7"
       if @report.save
         flash[:notice] = "Your #{report_type} has been successfully submitted."

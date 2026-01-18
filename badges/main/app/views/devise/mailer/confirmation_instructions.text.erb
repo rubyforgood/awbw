@@ -1,0 +1,13 @@
+Confirm your email address
+==========================
+
+Hello <%= @email %>,
+
+Welcome! Please confirm your account email by visiting the link below:
+
+<%= confirmation_url(@resource, confirmation_token: @token) %>
+
+If you did not create this account, you can safely ignore this email.
+
+If you have any concerns regarding this email, please visit our contact page to connect with staff:
+<%= contact_us_url %>

@@ -1,4 +1,13 @@
 class QuoteDecorator < ApplicationDecorator
+  def title
+    "#{attribution} re #{workshop&.title}"
+  end
+
+  def detail(length: nil)
+    text = object.quote
+    length ? text&.truncate(length) : text
+  end
+
   def created_by # TODO - add to model and quote creation
     object.quotable_item_quotes.last&.quotable&.decorate&.created_by
   end
@@ -19,14 +28,5 @@ class QuoteDecorator < ApplicationDecorator
     else
       name
     end
-  end
-
-  def title
-    "#{attribution} re #{workshop&.title}"
-  end
-
-  def detail(length: nil)
-    text = object.quote
-    length ? text&.truncate(length) : text
   end
 end

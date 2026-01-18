@@ -3,7 +3,7 @@ class AddressDecorator < ApplicationDecorator
     name
   end
 
-  def detail
+  def detail(length: nil)
     "Address for #{addressable&.name}"
   end
 

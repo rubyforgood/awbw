@@ -1,7 +1,7 @@
 <div class="max-w-7xl mx-auto px-4 py-6">
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-semibold text-gray-900">
-      Notifications
+      System notifications
     </h1>
   </div>
 
@@ -24,7 +24,7 @@
           <!-- Sent -->
           <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
             <% if notification.delivered_at.present? %>
-              <%= time_ago_in_words(notification.delivered_at) %> ago
+              <%= time_ago_in_words(notification.delivered_at.in_time_zone("Pacific Time (US & Canada)")) %> ago
             <% else %>
               <span class="text-red-600 font-medium">Not sent</span>
             <% end %>

@@ -3,6 +3,6 @@ class CategoryTypeDecorator < ApplicationDecorator
     name.titleize
   end
 
-  def detail
+  def detail(length: nil)
   end
 end

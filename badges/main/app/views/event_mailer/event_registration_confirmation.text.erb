@@ -1,0 +1,29 @@
+Event registration confirmed
+
+Hello <%= @user.full_name %>,
+
+This message confirms your registration for the following event:
+
+<%= @event.title %>
+<%= @event.times(display_day: true, display_date: true) %>
+
+<% if @event.labelled_cost.present? %>
+  <%= @event.labelled_cost %>
+<% end %>
+
+<% if @event.detail.present? %>
+  Event details:
+  <%= @event.detail %>
+<% end %>
+
+View the event page:
+<%= @event_url %>
+
+<% if @event.registration_close_date %>
+  Registration closes on
+  <%= @event.registration_close_date.strftime("%A, %B %-d, %Y at %-l:%M %p %Z") %>
+<% end %>
+
+--
+This is an automated confirmation from <%= @organization_name %>.
+If you did not expect this message, you may ignore it.

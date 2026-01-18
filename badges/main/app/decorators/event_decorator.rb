@@ -9,6 +9,9 @@ class EventDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
+  def location # TODO - add location to events
+  end
+
   def calendar_links
     start_time   = object.start_date.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.strftime("%Y%m%dT%H%M%SZ")

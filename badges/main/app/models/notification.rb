@@ -1,14 +1,21 @@
 class Notification < ApplicationRecord
   belongs_to :noticeable, polymorphic: true
 
-  after_commit :send_notice
+  # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols
 
-  # enum notification_type: { created_record: 0, updated_record: 1 }
   KINDS = %w[
-    record_created
-    record_updated
-    record_submitted
-    record_approved
+    event_registration_confirmation
+    event_registration_confirmation_fyi
+    idea_submitted
+    idea_submitted_fyi
+    report_submitted
+    report_submitted_fyi
+    workshop_log_submitted
+    workshop_log_submitted_fyi
+    reset_password
+    reset_password_fyi
+    account_confirmation_fyi
+    account_unlock_fyi
   ].freeze
 
   RECIPIENT_ROLES = %w[
@@ -26,9 +33,5 @@ class Notification < ApplicationRecord
 
   def delivered?
     delivered_at.present?
-  end
-
-  def send_notice
-    NotificationMailerJob.perform_later(self.id)
   end
 end

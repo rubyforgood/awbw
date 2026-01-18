@@ -133,6 +133,33 @@ class WorkshopLog < Report
     workshop&.quotes || Quote.none
   end
 
+  def attendance_breakdown
+    {
+      children: {
+        first: children_first_time,
+        ongoing: children_ongoing
+      },
+      teens: {
+        first: teens_first_time,
+        ongoing: teens_ongoing
+      },
+      adults: {
+        first: adults_first_time,
+        ongoing: adults_ongoing
+      }
+    }
+  end
+
+  def totals
+    attendance_breakdown.transform_values do |v|
+      v[:first] + v[:ongoing]
+    end.merge(
+      first_time: children_first_time + teens_first_time + adults_first_time,
+      ongoing: children_ongoing + teens_ongoing + adults_ongoing,
+      overall: total_attendance
+    )
+  end
+
   private
 
   def update_workshop_log_count
@@ -148,6 +175,4 @@ class WorkshopLog < Report
     changes[:owner_type] = "Workshop" if workshop_id
     update_columns(changes) if changes.any?
   end
-
-  protected
 end

@@ -5,9 +5,11 @@ module NotificationServices
       recipient_role:,
       recipient_email:,
       kind:,
-      notification_type: :created_record,
-      deliver: true
+      notification_type:,
+      deliver: true,
+      persist_delivered_email: true
     )
+      # create the notification record
       notification = Notification.create!(
         noticeable: noticeable,
         kind: kind.to_s,
@@ -16,7 +18,8 @@ module NotificationServices
         recipient_email: recipient_email
       )
 
-      NotificationMailerJob.perform_later(notification.id) if deliver
+      # send an email, and then persist it to the notification
+      NotificationMailerJob.perform_later(notification.id, persist_delivered_email: persist_delivered_email) if deliver
 
       notification
     end

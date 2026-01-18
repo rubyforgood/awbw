@@ -3,7 +3,7 @@ class EventRegistrationDecorator < ApplicationDecorator
     name
   end
 
-  def detail
+  def detail(length: nil)
   end
 
   def default_display_image

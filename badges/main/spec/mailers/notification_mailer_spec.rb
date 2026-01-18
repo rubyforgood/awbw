@@ -1,36 +1,44 @@
-require 'rails_helper'
+require "rails_helper"
 
-RSpec.describe NotificationMailer do
-  describe '#report_notification' do
-    it 'renders successfully' do
-      # Not sure if this mailer is actually never used, causing a bunch of errors, or the inky
-      # extension is somehow working.
-      pending 'The template for this mailer has an extension of inky'
-      fail
+RSpec.describe NotificationMailer, type: :mailer do
+  describe "#report_submitted_fyi" do
+    let(:notification) { create(:notification, kind: :report_submitted_fyi) }
+
+    it "renders without raising" do
+      expect {
+        NotificationMailer.report_submitted_fyi(notification).deliver_now
+      }.not_to raise_error
     end
   end
 
-  describe '#reset_password_notification' do
-    xit 'renders the subject and sends to the correct email' do
-      user = double('User', email: 'user@example.com')
-      mail = described_class.reset_password_notification(user)
+  describe "#reset_password_fyi" do
+    let(:user) { create(:user, email: "user@example.com") }
+    let(:notification) { create(:notification, kind: "reset_password_fyi", noticeable: user) }
+    let(:mail) { described_class.reset_password_fyi(notification) }
 
-      expect(mail.subject).to eq('Reset Password Request')
+    subject(:mail) { described_class.reset_password_fyi(notification) }
+
+    it "renders the headers" do
+      expect(mail.subject).to include("AWBW portal:")
+      expect(mail.subject).to include("password reset")
+      expect(mail.subject).to include(notification.noticeable.name)
       expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
       expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
     end
 
-    xit 'includes the user email in the email body' do
-      user = double('User', email: 'user@example.com')
-      mail = described_class.reset_password_notification(user)
-
-      expect(mail.body.encoded).to include('user@example.com')
+    it "renders the body" do
+      # user.send_reset_password_instructions
+      # user.reload
+      expect(mail.body.encoded).to match("requested a password reset")
+      # expect(mail.body.encoded).to match(user.reset_password_token)
     end
 
-    xit 'delivers the email' do
-      user = double('User', email: 'user@example.com')
-      mail = described_class.reset_password_notification(user)
+    it "includes the user email in the email body" do
+      expect(mail.body.encoded).to include("user@example.com")
+    end
 
+    it "delivers the email" do
       expect {
         mail.deliver_now
       }.to change { ActionMailer::Base.deliveries.count }.by(1)

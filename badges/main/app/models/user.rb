@@ -78,10 +78,14 @@ class User < ApplicationRecord
   end
 
   def full_name
-    if !first_name || first_name.empty?
-      email
+    if facilitator
+      facilitator.full_name
     else
-      "#{first_name} #{last_name}"
+      if !first_name || first_name.empty?
+        email
+      else
+        "#{first_name} #{last_name}"
+      end
     end
   end
 
@@ -152,6 +156,13 @@ class User < ApplicationRecord
   def bookmarkable_ids(bookmarkable_type:)
     public_send("bookmarked_#{bookmarkable_type.downcase.pluralize}")
       .pluck(:id)
+  end
+
+  def primary_asset # method needed for idea_submission_fyi mailer
+  end
+
+  def gallery_assets # method needed for idea_submission_fyi mailer
+    []
   end
 
   private
