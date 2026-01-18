@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_13_134716) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_18_213056) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -770,7 +770,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_134716) do
     t.string "city"
     t.string "city2"
     t.text "comment", size: :long
+    t.datetime "confirmation_sent_at"
+    t.string "confirmation_token"
     t.boolean "confirmed", default: true
+    t.datetime "confirmed_at"
     t.datetime "created_at", precision: nil
     t.datetime "current_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
@@ -778,6 +781,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_134716) do
     t.string "email_type", default: "work", null: false
     t.string "encrypted_password", default: "", null: false
     t.integer "facilitator_id"
+    t.integer "failed_attempts", default: 0, null: false
     t.string "first_name", default: ""
     t.boolean "inactive", default: false
     t.string "last_name", default: ""
@@ -785,6 +789,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_134716) do
     t.string "last_sign_in_ip"
     t.boolean "legacy", default: false
     t.integer "legacy_id"
+    t.datetime "locked_at"
     t.text "notes", size: :long
     t.string "phone"
     t.string "phone2"
@@ -798,13 +803,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_134716) do
     t.string "state2"
     t.string "subscribecode"
     t.boolean "super_user", default: false
+    t.string "unconfirmed_email"
+    t.string "unlock_token"
     t.datetime "updated_at", precision: nil
     t.string "zip"
     t.string "zip2"
     t.index ["agency_id"], name: "index_users_on_agency_id"
+    t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["facilitator_id"], name: "index_users_on_facilitator_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
   create_table "windows_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
