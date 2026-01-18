@@ -9,7 +9,7 @@ class Category < ApplicationRecord
   scope :published, -> { where(published: true) }
 
   # Validations
-  validates_presence_of :name, uniqueness: true
+  validates :name, presence: true, uniqueness: { case_sensitive: false }
 
   # Scopes
   scope :category_type_id, ->(category_type_id) {

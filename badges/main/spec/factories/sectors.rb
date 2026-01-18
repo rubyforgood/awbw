@@ -8,7 +8,8 @@ FactoryBot.define do
     end
 
     trait :other do
-      name { 'Other' }
+      # name { 'Other' }
+      sequence(:name) { |n| "Other #{n}" }
     end
   end
 end
