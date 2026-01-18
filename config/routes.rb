@@ -117,13 +117,11 @@ Rails.application.routes.draw do
     end
   end
 
-
-  # Calling root_url is safe for mailers and background jobs
-  # Devise handles redirect based on authentication state
+  # Root paths
+  root to: "home#index"
   authenticated :user do
     root to: "dashboard#index", as: :authenticated_root
   end
-
   # Wrap Devise routes in a scope for unauthenticated users
   devise_scope :user do
     unauthenticated do
