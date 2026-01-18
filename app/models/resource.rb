@@ -3,8 +3,8 @@ class Resource < ApplicationRecord
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
-  PUBLISHED_KINDS = [ "Handout", "Scholarship", "Template", "Toolkit", "Form" ]
-  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme" ]
+  PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
+  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
 
   has_rich_text :rhino_text
 
@@ -32,6 +32,8 @@ class Resource < ApplicationRecord
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :rich_text_assets, -> { where(type: "RichTextAsset") },
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
+  has_one :thumbnail_asset, -> { where(type: "ThumbnailAsset") },
+         as: :owner, class_name: "ThumbnailAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
 
   has_many :action_text_mentions,

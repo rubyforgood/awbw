@@ -61,7 +61,7 @@
           <%= link_to(
                 content_tag(:span, "", class: "fa fa-download"),
                 resource_download_path(resource.object),
-                data: { turbo_frame: "_top", turbo_prefetch: false },
+                data: { turbo: false, turbo_prefetch: false },
                 class: "btn btn-utility"
               ) %>
         <% end %>

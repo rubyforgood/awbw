@@ -17,10 +17,11 @@
                       class: "btn btn-secondary-outline" %>
         <% end %>
 
-        <%= link_to ("<span title='Download #{@resource.kind} image'>" +
+        <%= link_to ("<span title='Download #{@resource.kind}'>" +
           " Download <span class='fa fa-download'></span></span>").html_safe,
                     resource_download_path(@resource),
-                    class: "btn btn-utility" if @resource.download_attachment&.file&.attached? %>
+                    class: "btn btn-utility",
+                    data: {turbo: false} if @resource.download_attachment&.file&.attached? %>
       </div>
 
       <!-- Resource Card -->
@@ -47,7 +48,7 @@
         </div>
 
         <!-- Assets -->
-        <%= render "assets/display_assets", resource: @resource %>
+        <%= render "assets/display_assets", resource: @resource, file: @resource.display_image, variant: :hero %>
 
         <!-- Main Text -->
         <%= @resource.rhino_text %>
