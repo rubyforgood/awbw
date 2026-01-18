@@ -52,7 +52,6 @@ Rails.application.configure do
   end
   config.action_mailer.perform_deliveries = true
   config.action_mailer.show_previews = true
-  config.action_mailer.preview_paths = [ "#{Rails.root}/lib/mailer_previews" ]
 
   config.action_mailer.file_settings = {
     location: Rails.root.join("tmp/mail")
