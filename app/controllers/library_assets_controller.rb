@@ -2,6 +2,7 @@
    include ActionView::RecordIdentifier
 
    before_action :set_asset, only: [ :show, :edit, :update, :destroy ]
+   before_action :set_owner, only: [ :create, :update ]
 
    def show
      if @asset.file.attached?
@@ -12,20 +13,16 @@
    end
 
    def create
-     @owner = GlobalID::Locator.locate_signed(params[:owner_sgid])
-
      @asset = @owner.assets.build(asset_params.except(:file))
      if asset_params[:file].present?
        @asset.file.attach(asset_params[:file])
      end
 
      if @asset.save
-       render partial: "assets/form"
+       render partial: "assets/form", locals: { owner: @owner }
      else
        render plain: @asset.errors.full_messages.join(", "), status: :unprocessable_entity
      end
-    rescue NameError, ActiveRecord::RecordNotFound
-      render plain: "Invalid Record", status: :unprocessable_entity
    end
 
    def edit
@@ -39,15 +36,30 @@
        when "title_asset_#{ @asset.id }"
          render partial: "assets/title", locals: { asset: @asset }
        when "type_selector_asset_#{ @asset.id }"
-         flash.now[:notice] = "Asset type updated!"
-         render partial: "assets/type_selector", locals: { asset: @asset }
+         if @owner
+           flash.now[:notice] = "Asset type updated!"
+           render partial: "assets/form", locals: { asset: @asset, owner: @owner }
+         else
+
+           flash.now[:notice] = "Asset type updated!"
+           render partial: "assets/type_selector", locals: { asset: @asset }
+         end
        else
-         flash[:alert] = "Failed to update asset."
          redirect_back_or_to root_path
        end
      else
-       flash[:alert] = "Failed to update asset."
-       render :edit, status: :unprocessable_content
+       flash.now[:alert] = @asset.errors.full_messages.join(", ")
+       case turbo_frame_request_id
+       when "type_selector_asset_#{ @asset.id }"
+         if @owner
+           render partial: "assets/form", locals: { asset: @asset, owner: @owner }
+         else
+           render partial: "assets/type_selector", locals: { asset: @asset }
+         end
+       else
+
+         render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
+       end
      end
    end
 
@@ -60,8 +72,10 @@
 
    def set_asset
      @asset = Asset.find(params[:id])
-   rescue ActiveRecord::RecordNotFound
-     render plain: "Asset not found", status: :not_found
+   end
+
+   def set_owner
+     @owner = GlobalID::Locator.locate_signed(params[:owner_sgid]) if params[:owner_sgid]
    end
 
    def asset_params

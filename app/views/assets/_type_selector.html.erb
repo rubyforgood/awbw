@@ -1,11 +1,17 @@
-<%= turbo_frame_tag  "type_selector_asset_#{ asset.id }" do %>
+<% frame_target = owner.persisted? ? "assets" :  "type_selector_asset_#{ asset.id }" %>
+
+<%= turbo_frame_tag  "type_selector_asset_#{ asset.id }", target: frame_target do %>
   <%= turbo_flash %>
 
   <%= form_with scope: :library_asset, url: library_asset_path(asset), method: :patch do |f| %>
+    <% if owner %>
+      <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
+    <% end %>
+
     <div class="relative m-2">
       <%= f.select :type,
               Asset::TYPES.map { |t| [t.underscore.humanize, t] },
-              { required: true, selected: asset.type },
+              { required: true, selected: asset.type, autocomplete: "off" },
               onchange: "this.form.requestSubmit();",
               class: "block w-full appearance-none rounded-md border border-gray-300
                       bg-white
