@@ -1,5 +1,5 @@
  class LibraryAssetsController < ApplicationController
-   include ActionView::RecordIdentifier
+   include ActionView::RecordIdentifier, AssetUpdatable
 
    before_action :set_asset, only: [ :show, :edit, :update, :destroy ]
    before_action :set_owner, only: [ :create, :update ]
@@ -12,25 +12,62 @@
      end
    end
 
+   # def create
+   #   @asset = @owner ? @owner.assets.build(asset_params.except(:file)) : Asset.new(asset_params.except(:file))
+   #   @unpersisted_owner = Data.define(:assets).new([])
+   #   if params[:library_asset][:new_assets].present?
+   #     params[:library_asset][:new_assets].each do |asset|
+   #       @unpersisted_owner.assets << Asset.find_by(id: asset[:id])
+   #     end
+   #   end
+   #   @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
+   #   if @asset.save
+   #     if @owner
+   #       render partial: "assets/form", locals: { asset: @asset, owner: @owner }
+   #     else
+   #       @unpersisted_owner.assets << @asset
+   #       render template: "assets/create", formats: [ :turbo_stream ]
+   #     end
+   #   else
+   #     flash.now[:alert] = @asset.errors.full_messages.join(", ")
+   #     render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
+   #   end
+   # end
+
    def create
      @asset = @owner ? @owner.assets.build(asset_params.except(:file)) : Asset.new(asset_params.except(:file))
-     @unpersisted_owner = Data.define(:assets).new([])
-     if params[:library_asset][:new_assets].present?
-       params[:library_asset][:new_assets].each do |asset|
-         @unpersisted_owner.assets << Asset.find_by(id: asset[:id])
-       end
-     end
      @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
-     if @asset.save
-       if @owner
+
+     if @owner
+       # Persisted owner: save and render form partial
+       if @asset.save
          render partial: "assets/form", locals: { asset: @asset, owner: @owner }
        else
-         @unpersisted_owner.assets << @asset
-         render template: "assets/create", formats: [ :turbo_stream ]
+         flash.now[:alert] = @asset.errors.full_messages.join(", ")
+         render turbo_stream: turbo_stream.replace(
+           "flash_now",
+           partial: "shared/flash_messages",
+           status: :unprocessable_entity
+         )
        end
      else
-       flash.now[:alert] = @asset.errors.full_messages.join(", ")
-       render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
+       @unpersisted_owner = Data.define(:assets).new([])
+
+       if params[:library_asset][:new_assets].present?
+         params[:library_asset][:new_assets].each do |asset|
+           @unpersisted_owner.assets << Asset.find_by(id: asset[:id])
+         end
+       end
+       valid_asset = validate_asset_type_constraint(@asset, @unpersisted_owner.assets)
+
+       if valid_asset && @asset.save
+         @unpersisted_owner.assets << @asset
+         render template: "assets/create", formats: [ :turbo_stream ]
+       else
+         flash.now[:alert] = "Only one Primary or Thumbnail asset allowed."
+         @unpersisted_owner
+         render template: "assets/create", formats: [ :turbo_stream ]
+       end
      end
    end
 

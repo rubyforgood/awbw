@@ -1,7 +1,17 @@
-module AssetOwnerUpdatable
+module AssetUpdatable
   extend ActiveSupport::Concern
 
   included do
+    def validate_asset_type_constraint(asset, assets_collection)
+      case asset
+      when PrimaryAsset
+        return false if assets_collection.any? { |a| a.is_a?(PrimaryAsset) }
+      when ThumbnailAsset
+        return false if assets_collection.any? { |a| a.is_a?(ThumbnailAsset) }
+      end
+      true
+    end
+
     private
 
     def new_assets_params

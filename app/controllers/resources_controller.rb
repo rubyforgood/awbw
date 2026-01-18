@@ -1,5 +1,5 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable, AssetOwnerUpdatable
+  include ExternallyRedirectable, AssetUpdatable
 
   def index
     if turbo_frame_request?
