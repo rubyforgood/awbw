@@ -158,6 +158,13 @@ class User < ApplicationRecord
       .pluck(:id)
   end
 
+  def primary_asset # method needed for idea_submission_fyi mailer
+  end
+
+  def gallery_assets # method needed for idea_submission_fyi mailer
+    []
+  end
+
   private
 
   def set_default_values

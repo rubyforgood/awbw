@@ -29,11 +29,4 @@ class UserDecorator < ApplicationDecorator
   def display_primary_address
     primary_address == 1 ? "work" : "home"
   end
-
-  def primary_asset # method needed for idea_submission_fyi mailer
-  end
-
-  def gallery_assets # method needed for idea_submission_fyi mailer
-    []
-  end
 end
