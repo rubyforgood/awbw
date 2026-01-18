@@ -20,7 +20,7 @@
        if @owner
          render partial: "assets/form", locals: { asset: @asset, owner: @owner }
        else
-         render turbo_stream: turbo_stream.append("asset_collection", partial: "assets/card", locals: { asset: @asset })
+         render template: "assets/create", formats: [ :turbo_stream ]
        end
      else
        flash.now[:alert] = @asset.errors.full_messages.join(", ")

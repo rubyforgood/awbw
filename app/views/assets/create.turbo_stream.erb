@@ -1,0 +1,2 @@
+<%= turbo_stream.append("asset_collection", partial: "assets/card", locals: { asset: @asset }) %>
+<%= turbo_stream.replace("asset_upload", partial: "assets/upload") %>

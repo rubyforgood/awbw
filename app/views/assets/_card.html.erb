@@ -1,7 +1,7 @@
-<div id="asset_card" class="flex flex-col items-center border border-gray-300 rounded-md shadow-sm p-2">
+<%= tag.div id: dom_id(asset), class: "flex flex-col items-center border border-gray-300 rounded-md shadow-sm p-2" do %>
   <%= render "assets/type_selector", asset: asset, owner: (defined?(owner) ? owner : nil) %>
 
   <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
 
   <%= render "assets/title", asset: asset %>
-</div>
+<% end %>
