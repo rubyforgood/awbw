@@ -105,8 +105,9 @@
               }
           </style>
           <%#
-            email_body_html is generated server-side from trusted mailer templates.
-            It is intentionally rendered as HTML for preview purposes.
+            brakeman:ignore CrossSiteScripting
+            Reason: email_body_html is generated server-side from trusted mailer templates
+            and rendered intentionally for admin-only email preview.
           %>
           <%= @notification.email_body_html.html_safe %>
         </div>
