@@ -37,7 +37,7 @@ gem "image_processing"
 
 
 # Stylesheet inlining for email
-gem "premailer-rails" # TODO - remove once email templates are converted
+gem "premailer-rails" # applies any style tag classes to html elements for better email client compatibility
 
 gem "bcrypt", "3.1.16"
 gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
