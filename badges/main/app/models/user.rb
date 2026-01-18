@@ -85,6 +85,10 @@ class User < ApplicationRecord
     end
   end
 
+  def devise_email_name
+    facilitator&.first_name.presence || first_name.presence || email
+  end
+
   def submitted_monthly_report(submitted_date = Date.today, windows_type, project_id)
     Report.where(project_id: project_id, type: "MonthlyReport", date: submitted_date,
       windows_type: windows_type).last

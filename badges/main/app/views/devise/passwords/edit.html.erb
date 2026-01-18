@@ -1,33 +1,70 @@
-<div class="printable-area">
-  <div class="row" style="min-height:460px;">
-    <div class="col-sm-12 col-md-12">
+<div class="flex items-center justify-center">
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-lg mt-8 p-8">
+    <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Set your password</h2>
 
-      <h2>Reset your password</h2>
-      <div class="row">
-        <div class="col-sm-12 col-md-12">
+    <%= simple_form_for(resource,
+                        as: resource_name,
+                        url: password_path(resource_name),
+                        method: :put,
+                        html: { class: "space-y-4" }) do |f| %>
 
-          <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
-            <%= devise_error_messages! %>
-            <%= f.hidden_field :reset_password_token %>
+      <%= devise_error_messages! %>
+      <%= f.hidden_field :reset_password_token %>
 
-            <div class="form-group password-container">
-              <%= f.label :password, "New password" %>
-              <%= f.password_field :password, autofocus: true, autocomplete: "off", class:"form-control form-input password-field"  %>
-              <span id="new-password-container" class="toggle-password"><i class='fa fa-eye-slash'></i></span>
-            </div>
-
-            <div class="form-group password-container">
-              <%= f.label :password_confirmation, "Confirm new password" %>
-              <%= f.password_field :password_confirmation, autocomplete: "off", class:"form-control password-field" %>
-              <span id="password-confirmation-container" class="toggle-password"><i class='fa fa-eye-slash'></i></span>
-            </div>
-
-            <div class="actions" style="margin-bottom: 20px">
-              <%= f.submit "Reset my password", class: "btn btn-primary btn-blue" %>
-            </div>
-          <% end %>
-        </div>
+      <!-- NEW PASSWORD -->
+      <div class="form-group password-container" data-controller="password-toggle">
+        <%= f.input :password,
+                    as: :password,
+                    label: "New password",
+                    required: true,
+                    autofocus: true,
+                    autocomplete: "new-password",
+                    autocorrect: "off",
+                    autocapitalize: "off",
+                    spellcheck: "false",
+                    input_html: {
+                      class: "form-control form-input password-field",
+                      data: { password_toggle_target: "input" }
+                    } %>
+        <button
+          type="button"
+          class="toggle-password"
+          data-action="password-toggle#toggle"
+          aria-label="Toggle password visibility">
+          <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
+        </button>
       </div>
+
+      <!-- CONFIRM PASSWORD -->
+      <div class="form-group password-container" data-controller="password-toggle">
+        <%= f.input :password_confirmation,
+                    as: :password,
+                    label: "Confirm new password",
+                    required: true,
+                    autocomplete: "new-password",
+                    autocorrect: "off",
+                    autocapitalize: "off",
+                    spellcheck: "false",
+                    input_html: {
+                      class: "form-control form-input password-field",
+                      data: { password_toggle_target: "input" }
+                    } %>
+        <button
+          type="button"
+          class="toggle-password"
+          data-action="password-toggle#toggle"
+          aria-label="Toggle password visibility">
+          <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 text-center">
+        <%= f.submit "Set password", class: "btn btn-primary" %>
+      </div>
+
+    <% end %>
+
+    <div class="mt-6 text-center text-sm">
       <%= render "devise/shared/links" %>
     </div>
   </div>

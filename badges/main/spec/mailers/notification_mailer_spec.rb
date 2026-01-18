@@ -17,7 +17,7 @@ RSpec.describe NotificationMailer do
 
       expect(mail.subject).to eq('Reset Password Request')
       expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
-      expect(mail.from).to eq([ 'noreply@awbw.org' ])
+      expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
     end
 
     xit 'includes the user email in the email body' do
