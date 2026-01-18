@@ -37,10 +37,7 @@ gem "image_processing"
 
 
 # Stylesheet inlining for email
-gem "premailer-rails" # TODO - remove once email templates are converted
-gem "inky-rb", require: "inky" # TODO - remove once email templates are converted
-# gem "foundation-emails" # TODO - remove from gemfile.lock and css etc once email templates are converted away from this
-
+gem "premailer-rails" # applies any style tag classes to html elements for better email client compatibility
 
 gem "bcrypt", "3.1.16"
 gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
