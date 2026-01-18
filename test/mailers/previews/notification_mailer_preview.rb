@@ -35,7 +35,7 @@ class NotificationMailerPreview < ActionMailer::Preview
   def report_submitted_fyi
     notification = Notification.where(kind: "report_submitted_fyi").last ||
       Notification.create!(
-        noticeable: WorkshopLog.first || Report.first,
+        noticeable: Report.where.not(type: "WorkshopLog").first || WorkshopLog.first,
         notification_type: 0,
         kind: "report_submitted_fyi",
         recipient_role: "admin",
