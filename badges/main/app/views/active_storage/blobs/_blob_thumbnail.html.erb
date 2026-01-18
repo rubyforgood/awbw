@@ -1,4 +1,6 @@
-<% blob ||= asset.file.blob %>
+<% attachment = asset.file %>
+<% blob = attachment&.blob %>
+<% return unless blob %>
 
 <figure
   class="
@@ -10,15 +12,9 @@
   "
 >
   <% if blob.previewable? %>
-    <%= image_tag(
-      blob.preview(resize_to_limit: [100, 100]).processed,
-      class: "w-24 h-24 object-contain"
-    ) %>
+    <%= image_tag attachment.preview(resize_to_limit: [256, 256]), class: "w-24 h-24 object-contain" %>
   <% elsif blob.image? %>
-    <%= image_tag(
-      blob.variant(resize_to_limit: [100, 100]).processed,
-      class: "w-24 h-24 object-contain"
-    ) %>
+    <%= image_tag attachment.variant(:thumbnail), class: "w-24 h-24 object-contain" %>
   <% else %>
     <div
       class="
