@@ -3,7 +3,7 @@
     <%= render "assets/collection", owner: owner %>
 
     <%= form_with model: LibraryAsset.new, class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4 mb-2" do |f| %>
-      <% if owner.object.persisted? %>
+      <% if owner.persisted? %>
         <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
       <% end %>
 
@@ -35,6 +35,7 @@
 
         <%= f.file_field :file, direct_upload: true,
             required: true,
+            id: "asset_file_input",
             class: "block w-full rounded-md border border-gray-300
                     px-3 py-2 text-sm text-gray-700
                     shadow-sm

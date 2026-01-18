@@ -2,6 +2,6 @@
   <% owner.assets.each do |asset| %>
     <% next if asset.type == "RichTextAsset" %>
 
-    <%= render "card", asset: asset, owner: owner %>
+    <%= render "assets/card", asset: asset, owner: owner %>
   <% end %>
 </div>
