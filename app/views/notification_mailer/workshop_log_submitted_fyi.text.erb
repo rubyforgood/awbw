@@ -1,93 +1,75 @@
-<p style="margin-bottom: 6px;">
-  New <%= @noticeable.class.model_name.human.titleize %> <%= @type %>
-</p>
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
 
-<h1 style="margin: 0;">
-  <strong><%= @user.name %></strong><br>
-</h1>
+New <%= @type %>
+==========================
 
-<p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
-  <span style="color:#6b7280; font-size: 0.9em;">
-    Submitted on
-    <%= @noticeable.created_at
-                   .in_time_zone("Pacific Time (US & Canada)")
-                   .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
-  </span>
-</p>
+<%= @user.name %>
 
-<hr style="margin: 24px 0;">
+Submitted on
+<%= @noticeable.created_at
+               .in_time_zone("Pacific Time (US & Canada)")
+               .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+--------------------------------------------------
 
 <% if @report.present? %>
+  WORKSHOP LOG DETAILS
 
-  <!-- Report details -->
-  <h2 style="margin-bottom: 8px; text-align: left;">
-    WorkshopLog details
-  </h2>
+  Workshop:
+  <%= @noticeable.workshop.title %>
 
-  <p>
-    <strong>Service population:</strong> <%= @noticeable.windows_type.short_name %>
-  </p>
+  Service population:
+  <%= @noticeable.windows_type.short_name %>
 
-  <!-- Form answers -->
+
+  PARTICIPANTS
+
+  Participants | Children | Teens | Adults | Total
+  --------------------------------------------------
+  First-time   | <%= breakdown[:children][:first] %> | <%= breakdown[:teens][:first] %> | <%= breakdown[:adults][:first] %> | <%= totals[:first_time] %>
+  Ongoing      | <%= breakdown[:children][:ongoing] %> | <%= breakdown[:teens][:ongoing] %> | <%= breakdown[:adults][:ongoing] %> | <%= totals[:ongoing] %>
+  Total        | <%= breakdown[:children][:first] + breakdown[:children][:ongoing] %> | <%= breakdown[:teens][:first] + breakdown[:teens][:ongoing] %> | <%= breakdown[:adults][:first] + breakdown[:adults][:ongoing] %> | <%= totals[:overall] %>
+
+
   <% if @answers.present? %>
-    <h2 style="margin-bottom: 8px; text-align: left;">
-      Form answers
-    </h2>
+    FORM ANSWERS
 
     <% @answers.each do |answer| %>
-      <div style="margin-bottom: 18px; text-align: left;">
-        <p style="margin: 0 0 4px 0; font-weight: bold;">
-          <%= answer.name %>
-        </p>
-        <p style="margin: 0; color:#374151;">
-          <%= answer.answer.presence || "—" %>
-        </p>
-      </div>
+      - <%= answer.name %>
+      <%= answer.answer.presence || "—" %>
+
     <% end %>
-
-    <hr style="margin: 24px 0;">
+    --------------------------------------------------
   <% end %>
 
-  <!-- Attachments -->
-  <% if @attachments.present? %>
-    <h2 style="margin-top: 12px; margin-bottom: 8px; text-align: left;">
-      Attachments</h2>
-    <ul style="margin-top: 0;">
-      <% @attachments.each do |asset| %>
-        <li>
-          <%= asset.file.filename.to_s %>
-        </li>
-      <% end %>
-    </ul>
-  <% end %>
 
-  <!-- Quotes -->
   <% if @quotes.present? %>
-    <h2 style="margin-top: 12px;margin-bottom: 8px;">Quotes</h2>
+    QUOTES
+
     <% @quotes.decorate.each do |quote| %>
-      <p style="margin-bottom: 12px;">
-        “<%= quote.detail %>”
-        <% if quote.attribution.present? %>
-          <span style="color:#6b7280; font-style: italic;">
-            — <%= quote.attribution %>
-          </span>
-        <% end %>
-      </p>
+      “<%= quote.detail %>”
+      <% if quote.attribution.present? %>
+        — <%= quote.attribution %>
+      <% end %>
+
     <% end %>
   <% end %>
 
+
+  <% if @attachments.present? %>
+    ATTACHMENTS
+
+    <% @attachments.each do |asset| %>
+      - <%= asset.file.blob.filename.to_s %>
+      <%= rails_blob_url(asset.file.blob, disposition: "inline") %>
+
+    <% end %>
+  <% end %>
+  --------------------------------------------------
+
+  View workshop log:
+  <%= workshop_log_url(@report) if @report.present? %>
+
+  View profile:
+  <%= profile_url %>
 <% end %>
-
-<hr style="margin: 24px 0;">
-
-<p>
-  <%= link_to "View submission",
-              workshop_log_url(@report),
-              style: "display:inline-block;
-                      padding:10px 16px;
-                      background:#2563eb;
-                      color:#ffffff;
-                      text-decoration:none;
-                      border-radius:6px;
-                      font-weight:bold;" if @report.present? %>
-</p>

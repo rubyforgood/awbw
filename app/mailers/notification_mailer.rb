@@ -70,7 +70,7 @@ class NotificationMailer < ApplicationMailer
   def workshop_log_submitted_fyi(notification)
     @notification = notification
     @noticeable   = notification.noticeable
-    @type = "Report"
+    @type = "WorkshopLog"
 
     if @noticeable.class == User
       @user        = @noticeable

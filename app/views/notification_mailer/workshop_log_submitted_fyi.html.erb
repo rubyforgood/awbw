@@ -1,3 +1,5 @@
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+
 <div>
   <p style="margin-bottom: 6px;">
     New <%= @type %>
@@ -202,5 +204,11 @@
                         text-decoration:none;
                         border-radius:6px;
                         font-weight:bold;" if @report.present? %>
+    <a href="<%= profile_url %>"
+       style="display:inline-block;background:#e5e7eb;color:#111827;
+         text-decoration:none;padding:10px 16px;border-radius:6px;
+         font-weight:bold;">
+      View profile
+    </a>
   </p>
 </div>
