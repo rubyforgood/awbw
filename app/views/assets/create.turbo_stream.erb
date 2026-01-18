@@ -1,8 +1,8 @@
 <%= turbo_stream.replace("asset_upload", partial: "assets/upload") %>
-<%= turbo_stream.replace("asset_collection", partial: "assets/collection", locals: {owner: @unpersisted_owner_assets}) %>
+<%= turbo_stream.replace("asset_collection", partial: "assets/collection", locals: {owner: @unpersisted_owner}) %>
 
 <%= turbo_stream.append "unpersisted_resource_asset_params" do  %>
-  <% @unpersisted_owner_assets.assets.each do |asset|  %>
+  <% @unpersisted_owner.assets.each do |asset|  %>
   <%= hidden_field_tag "library_asset[new_assets][][id]", asset.id %>
   <%= hidden_field_tag "library_asset[new_assets][][type]", asset.type %>
   <% end %>
