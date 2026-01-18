@@ -1,6 +1,9 @@
 class DeviseMailer < Devise::Mailer
+  layout "mailer"
+
   helper ApplicationHelper
   include Rails.application.routes.url_helpers
+
   before_action :set_branding
   after_action :create_notification_record
 
