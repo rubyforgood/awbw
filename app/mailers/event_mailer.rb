@@ -1,9 +1,4 @@
 class EventMailer < ApplicationMailer
-  helper ApplicationHelper
-
-  default from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org")
-  default reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
-
   def event_registration_confirmation(event_registration)
     @event_registration = event_registration
     @event = event_registration.event.decorate

@@ -1,9 +1,5 @@
 class NotificationMailer < ApplicationMailer
-  helper Rails.application.routes.url_helpers
-
-  default from: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
   default to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
-  default reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
 
   def event_registration_confirmation_fyi(notification)
     @event_registration = notification.noticeable
