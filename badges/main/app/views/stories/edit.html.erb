@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @story.class.model_name.human %></h1>
         <div class="text-right text-end space-x-2">
           <%= link_to "Website", safe_url(@story.external_url), target: "_blank", rel: "noopener noreferrer",
-                      class: "btn btn-secondary-outline" if @story.external_url %>
+                      class: "btn btn-secondary-outline" if @story.external_url.present? %>
           <%= link_to "View",
                       story_path(@story),
                       class: "btn btn-secondary-outline" %>

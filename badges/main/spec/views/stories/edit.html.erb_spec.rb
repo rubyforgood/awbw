@@ -32,4 +32,31 @@ RSpec.describe "stories/edit", type: :view do
       assert_select "select[name=?]", "story[created_by_id]"
     end
   end
+
+  it "does not render the Website button when website_url is nil" do
+    story.update(website_url: nil)
+    assign(:story, story.decorate)
+
+    render
+
+    assert_select "a", text: "Website", count: 0
+  end
+
+  it "does not render the Website button when website_url is blank" do
+    story.update(website_url: "")
+    assign(:story, story.decorate)
+
+    render
+
+    assert_select "a", text: "Website", count: 0
+  end
+
+  it "renders the Website button when website_url is present" do
+    story.update(website_url: "https://example.com")
+    assign(:story, story.decorate)
+
+    render
+
+    assert_select "a", text: "Website"
+  end
 end
