@@ -33,7 +33,7 @@ module AdminDashboardCardsHelper
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
       model_card(:workshop_logs, icon: "📝", intensity: 100),
       model_card(:quotes, icon: "💬", intensity: 100),
-      custom_card("System notifications", notifications_path, icon: "🔔"),
+      custom_card("System notifications", notifications_path, icon: "🔔")
     ]
   end
 

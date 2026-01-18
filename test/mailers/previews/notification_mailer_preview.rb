@@ -1,5 +1,4 @@
 class NotificationMailerPreview < ActionMailer::Preview
-
   def event_registration_confirmation_fyi
     event_registration =
       EventRegistration.first ||
