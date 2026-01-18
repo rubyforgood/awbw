@@ -4,12 +4,10 @@ FactoryBot.define do
     published { true }
 
     trait :age_range do
-      # name { "AgeRange" }
       sequence(:name) { |n| "AgeRange #{n}" }
     end
 
     factory :age_range, parent: :category_type do
-      # name { "AgeRange" }
       sequence(:name) { |n| "AgeRange #{n}" }
     end
   end
