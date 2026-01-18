@@ -58,14 +58,13 @@
            @unpersisted_owner.assets << Asset.find_by(id: asset[:id])
          end
        end
-       valid_asset = validate_asset_type_constraint(@asset, @unpersisted_owner.assets)
+       valid_asset = validate_asset_type_constraint(@asset.type, @unpersisted_owner.assets)
 
        if valid_asset && @asset.save
          @unpersisted_owner.assets << @asset
          render template: "assets/create", formats: [ :turbo_stream ]
        else
          flash.now[:alert] = "Only one Primary or Thumbnail asset allowed."
-         @unpersisted_owner
          render template: "assets/create", formats: [ :turbo_stream ]
        end
      end
@@ -75,35 +74,69 @@
      render template: "assets/edit"
    end
 
+   # def update
+   #   if @asset.update(asset_params)
+   #     flash.now[:notice] = "Asset updated."
+   #     case turbo_frame_request_id
+   #     when "title_asset_#{ @asset.id }"
+   #       render partial: "assets/title", locals: { asset: @asset }
+   #     when "type_selector_asset_#{ @asset.id }"
+   #       if @owner
+   #         flash.now[:notice] = "Asset type updated!"
+   #         render partial: "assets/form", locals: { asset: @asset, owner: @owner }
+   #       else
+   #
+   #         flash.now[:notice] = "Asset type updated!"
+   #         render partial: "assets/type_selector", locals: { asset: @asset }
+   #       end
+   #     else
+   #       redirect_back_or_to root_path
+   #     end
+   #   else
+   #     flash.now[:alert] = @asset.errors.full_messages.join(", ")
+   #     case turbo_frame_request_id
+   #     when "type_selector_asset_#{ @asset.id }"
+   #       if @owner
+   #         render partial: "assets/form", locals: { asset: @asset, owner: @owner }
+   #       else
+   #         render partial: "assets/type_selector", locals: { asset: @asset }
+   #       end
+   #     else
+   #       render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
+   #     end
+   #   end
+   # end
    def update
-     if @asset.update(asset_params)
+     valid_asset = @owner.present? ? validate_asset_type_constraint(asset_params[:type], @owner.assets) : true
+
+     if  valid_asset && @asset.update(asset_params)
        flash.now[:notice] = "Asset updated."
        case turbo_frame_request_id
-       when "title_asset_#{ @asset.id }"
+       when "title_asset_#{@asset.id}"
          render partial: "assets/title", locals: { asset: @asset }
-       when "type_selector_asset_#{ @asset.id }"
-         if @owner
-           flash.now[:notice] = "Asset type updated!"
-           render partial: "assets/form", locals: { asset: @asset, owner: @owner }
-         else
-
-           flash.now[:notice] = "Asset type updated!"
-           render partial: "assets/type_selector", locals: { asset: @asset }
-         end
+       when "type_selector_asset_#{@asset.id}"
+         render partial: "assets/form", locals: { asset: @asset, owner: @owner.reload }
        else
          redirect_back_or_to root_path
        end
      else
-       flash.now[:alert] = @asset.errors.full_messages.join(", ")
+
+       messages = @asset.errors.full_messages
+
+       unless valid_asset
+         messages << "Only one primary asset and one thumbnail asset are allowed."
+       end
+
+       flash.now[:alert] = messages.join(", ")
        case turbo_frame_request_id
-       when "type_selector_asset_#{ @asset.id }"
-         if @owner
-           render partial: "assets/form", locals: { asset: @asset, owner: @owner }
-         else
-           render partial: "assets/type_selector", locals: { asset: @asset }
-         end
+       when "type_selector_asset_#{@asset.id}"
+         render partial: "assets/form", locals: { asset: @asset, owner: @owner }
        else
-         render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
+         render turbo_stream: turbo_stream.replace(
+           "flash_now",
+           partial: "shared/flash_messages",
+           status: :unprocessable_entity
+         )
        end
      end
    end
@@ -125,5 +158,12 @@
 
    def asset_params
      params.expect(library_asset: [ :type, :title, :file ])
+   end
+
+   def render_type_selector_partial
+     if @owner
+     else
+       render partial: "assets/type_selector", locals: { asset: @asset }
+     end
    end
  end
