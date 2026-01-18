@@ -1,6 +1,10 @@
 class NotificationMailer < ApplicationMailer
   helper Rails.application.routes.url_helpers
 
+  default from: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+  default to: ENV.fetch("REPLY_TO_EMAIL", "programsy@awbw.org")
+  default reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+
   def event_registration_confirmation_fyi(notification)
     @event_registration = notification.noticeable
     @event = @event_registration.event.decorate
@@ -10,7 +14,6 @@ class NotificationMailer < ApplicationMailer
 
     # Send email to the admin
     mail(
-      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW portal: new event registration by #{@user.full_name} to #{@event.title}"
     )
   end
@@ -33,7 +36,6 @@ class NotificationMailer < ApplicationMailer
     @answers     = @noticeable.report_form_field_answers if @noticeable.respond_to?(:report_form_field_answers)
 
     mail(
-      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW portal: new #{@noticeable_klass} submission by #{@user.full_name}"
     )
   end
@@ -54,7 +56,6 @@ class NotificationMailer < ApplicationMailer
     end
 
     mail(
-      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW portal: new #{@type} submission by #{@user.full_name}"
     )
   end
@@ -66,7 +67,6 @@ class NotificationMailer < ApplicationMailer
 
     # Send email to the admin
     mail(
-      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW portal: user password reset by #{@user.full_name}"
     )
   end
@@ -87,7 +87,6 @@ class NotificationMailer < ApplicationMailer
     end
 
     mail(
-      to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW portal: new WorkshopLog submission by #{@user.full_name}"
     )
   end
