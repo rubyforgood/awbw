@@ -6,7 +6,7 @@ class BookmarkDecorator < ApplicationDecorator
     "Bookmark of #{bookmarkable_class_name} ##{bookmarkable.id}"
   end
 
-  def detail
+  def detail(length: nil)
     "Bookmarkable: #{bookmarkable_class_name} ##{bookmarkable.id} (#{bookmarkable.title})"
   end
 
