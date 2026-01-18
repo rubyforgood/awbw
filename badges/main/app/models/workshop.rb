@@ -15,7 +15,7 @@ class Workshop < ApplicationRecord
   has_many :workshop_logs, dependent: :destroy, as: :owner
   has_many :workshop_resources, dependent: :destroy
   has_many :workshop_series_children, # When this workshop is the parent in a series
-           -> { order(:series_order) },
+           -> { order(:position) },
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_parent_id",
            dependent: :destroy
@@ -182,8 +182,8 @@ class Workshop < ApplicationRecord
 
   def workshop_log_fields
     if form_builder
-      form_builder.forms[0].form_fields.where("ordering is not null and status = 1")
-        .order(ordering: :desc).all
+      form_builder.forms[0].form_fields.where("position is not null and status = 1")
+        .order(position: :desc).all
     else
       []
     end

@@ -269,7 +269,7 @@ class WorkshopsController < ApplicationController
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
-                                            :series_order, :_destroy ],
+                                            :position, :_destroy ],
     )
   end
 

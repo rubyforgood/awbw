@@ -136,7 +136,7 @@ class ResourcesController < ApplicationController
   def resource_params
     params.require(:resource).permit(
       :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
-      :agency, :author, :filemaker_code, :windows_type_id, :ordering,
+      :agency, :author, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],

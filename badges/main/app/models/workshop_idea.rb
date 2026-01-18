@@ -6,7 +6,7 @@ class WorkshopIdea < ApplicationRecord
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :workshops
   has_many :workshop_series_children, # When this workshop is the parent in a series
-           -> { order(:series_order) },
+           -> { order(:position) },
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_parent_id",
            dependent: :destroy

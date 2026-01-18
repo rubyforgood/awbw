@@ -175,7 +175,7 @@ class WorkshopLogsController < ApplicationController
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder
     if form
-      @report_field_answers = form.form_fields.active.order(:ordering).map do |field|
+      @report_field_answers = form.form_fields.active.order(:position).map do |field|
         @workshop_log.report_form_field_answers.find_or_initialize_by(form_field: field)
       end
     end

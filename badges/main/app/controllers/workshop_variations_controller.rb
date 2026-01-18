@@ -88,7 +88,7 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [ :name, :code, :inactive, :ordering,
+      [ :name, :code, :inactive, :position,
        :youtube_url, :created_by_id, :workshop_id,
        primary_asset_attributes: [ :id, :file, :_destroy ],
        gallery_assets_attributes: [ :id, :file, :_destroy ]
