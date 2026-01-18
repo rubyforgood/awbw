@@ -104,8 +104,11 @@
                   position: static !important;
               }
           </style>
-
-          <%= raw @notification.email_body_html %>
+          <%#
+            email_body_html is generated server-side from trusted mailer templates.
+            It is intentionally rendered as HTML for preview purposes.
+          %>
+          <%= @notification.email_body_html.html_safe %>
         </div>
       </div>
     <% elsif @notification.email_body_text.present? %>
