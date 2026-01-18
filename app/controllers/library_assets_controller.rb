@@ -14,12 +14,18 @@
 
    def create
      @asset = @owner ? @owner.assets.build(asset_params.except(:file)) : Asset.new(asset_params.except(:file))
-
+     @unpersisted_owner_assets = Data.define(:assets).new([])
+     if params[:library_asset][:new_assets].present?
+       params[:library_asset][:new_assets].each do |asset|
+         @unpersisted_owner_assets.assets << Asset.find_by(id: asset[:id])
+       end
+     end
      @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
      if @asset.save
        if @owner
          render partial: "assets/form", locals: { asset: @asset, owner: @owner }
        else
+         @unpersisted_owner_assets.assets << @asset
          render template: "assets/create", formats: [ :turbo_stream ]
        end
      else

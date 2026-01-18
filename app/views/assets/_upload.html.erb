@@ -4,6 +4,8 @@
   <%= form_with model: LibraryAsset.new, class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4 mb-2" do |f| %>
     <% if owner&.persisted? %>
       <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
+    <% else %>
+      <%= tag.div id: "unpersisted_resource_asset_params" %>
     <% end %>
 
     <div class="bg-gray-50 p-4 rounded-md shadow-md">
