@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator ]
+  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :send_reset_password_instructions ]
 
   def index
     return redirect_to authenticated_root_path unless current_user.super_user?
@@ -95,6 +95,11 @@ class UsersController < ApplicationController
         redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}" and return
       end
     end
+  end
+
+  def send_reset_password_instructions
+    @user.send_reset_password_instructions
+    redirect_to edit_user_path(@user), notice: "Reset password instructions sent to #{@user.email}."
   end
 
   private

@@ -1,5 +1,5 @@
 [tools]
-node = "22"
+node = "latest"
 ruby = "3.3.8"
 
 [tasks.setup]
