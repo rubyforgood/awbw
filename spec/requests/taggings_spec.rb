@@ -64,7 +64,7 @@ RSpec.describe "Taggings index", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Explore all tags")
-      expect(response.body).to include("No tagged items found for")
+      expect(response.body).to include("No items have this tag combination")
     end
   end
 end

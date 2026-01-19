@@ -49,10 +49,10 @@
 
     <% elsif @grouped_tagged_items.values.all?(&:empty?) %>
       <div class="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-500">
-        No tagged items found for
-        <span class="font-semibold text-gray-700">
+        No items have this tag combination:
+        <div class="font-semibold text-gray-700">
           <%= [sector_names.presence, category_full_names.presence].compact.join(", ") %>
-        </span>
+        </div>
       </div>
     <% end %>
 
