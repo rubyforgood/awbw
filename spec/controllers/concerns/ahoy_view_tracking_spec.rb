@@ -2,6 +2,8 @@
 require "rails_helper"
 
 RSpec.describe AhoyViewTracking, type: :controller do
+  include Devise::Test::ControllerHelpers
+
   controller(ApplicationController) do
     include AhoyViewTracking
 

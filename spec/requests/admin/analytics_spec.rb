@@ -255,8 +255,8 @@ RSpec.describe "/admin/analytics", type: :request do
   end
 
   describe "POST /admin/analytics/print" do
-    it "tracks print event and increments counter" do
-      workshop = create(:workshop, :published, print_count: 0)
+    it "tracks print event with Ahoy" do
+      workshop = create(:workshop, :published)
 
       expect {
         post "/admin/analytics/print", params: {
@@ -265,8 +265,9 @@ RSpec.describe "/admin/analytics", type: :request do
         }
       }.to change(Ahoy::Event, :count).by(1)
 
-      expect(workshop.reload.print_count).to eq(1)
       expect(Ahoy::Event.last.name).to eq("print.workshop")
+      expect(Ahoy::Event.last.properties["resource_type"]).to eq("Workshop")
+      expect(Ahoy::Event.last.properties["resource_id"]).to eq(workshop.id)
     end
 
     it "returns bad request for invalid printable type" do
