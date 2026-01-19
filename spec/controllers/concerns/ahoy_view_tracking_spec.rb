@@ -38,10 +38,13 @@ RSpec.describe AhoyViewTracking, type: :controller do
       post "download" => "anonymous#download"
     end
     
-    # Initialize Ahoy visit for the current controller request
-    allow_any_instance_of(ApplicationController).to receive(:current_visit).and_return(
-      create(:ahoy_visit)
-    )
+    # Mock the ahoy tracker to properly create events
+    visit = create(:ahoy_visit)
+    tracker = instance_double("Ahoy::Tracker")
+    allow(controller).to receive(:ahoy).and_return(tracker)
+    allow(tracker).to receive(:track) do |event_name, properties|
+      create(:ahoy_event, visit: visit, name: event_name, properties: properties)
+    end
   end
 
   describe "#track_view" do
