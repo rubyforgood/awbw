@@ -63,7 +63,7 @@
           <select id="category-filter" 
                   class="block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
             <option value="">Select a category...</option>
-            <% Category.published.includes(:category_type).order("metadata.name ASC, categories.name ASC").each do |category| %>
+            <% Category.published.joins(:category_type).select("categories.*, metadata.name AS category_type_name").distinct.order("category_type_name ASC, categories.name ASC").each do |category| %>
               <option value="<%= category.name %>" <%= 'selected' if category.name == @category_names %>>
                 <%= "#{category.category_type&.name}: " if category.category_type %><%= category.name %>
               </option>
