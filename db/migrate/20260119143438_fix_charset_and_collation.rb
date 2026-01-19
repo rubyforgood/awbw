@@ -17,6 +17,6 @@ class FixCharsetAndCollation < ActiveRecord::Migration[8.1]
   private
 
   def tables
-    ActiveRecord::Base.connection.tables - ["schema_migrations", "ar_internal_metadata"]
+    ActiveRecord::Base.connection.tables - [ "schema_migrations", "ar_internal_metadata" ]
   end
 end
