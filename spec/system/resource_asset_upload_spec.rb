@@ -335,5 +335,24 @@ RSpec.describe "Resource asset upload", type: :system do
 
       expect(resource.assets.count).to eq(0)
     end
+
+    it "shows an error when changing an uploaded asset to a duplicate type on edit" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+      find("#assets-button").click
+
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      expect(page).to have_selector("div[id^='primary_asset_']")
+
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      expect(page).to have_selector("div[id^='thumbnail_asset_']")
+
+      within("div[id^='primary_asset_']") do
+        select "Thumbnail asset", from: "library_asset_type"
+      end
+
+      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+    end
   end
 end
