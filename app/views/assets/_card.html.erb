@@ -7,16 +7,17 @@
     <%= button_to library_asset_path(asset),
         method: :delete,
         data: { turbo_confirm: "Delete this asset?" },
+        form: { autocomplete: "off" },
         class: "
-          absolute top-1 right-1
-          opacity-0 group-hover:opacity-100
-          flex items-center justify-center
-          w-7 h-7
-          rounded-full
-          bg-black/60 text-white
-          hover:bg-red-600
-          transition-opacity
-          z-10
+            absolute top-1 right-1
+            opacity-100 md:opacity-0 md:group-hover:opacity-100
+            flex items-center justify-center
+            w-7 h-7
+            rounded-full
+            bg-black/60 text-white
+            hover:bg-red-600
+            transition-opacity
+            z-10
         " do %>
       ✕
     <% end %>
