@@ -44,6 +44,8 @@ module Admin
 
     def apply_time_filter(time_period)
       time_ago = case time_period
+      when "past_day"
+        1.day.ago
       when "past_week"
         1.week.ago
       when "past_month"

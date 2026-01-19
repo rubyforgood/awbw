@@ -30,6 +30,29 @@ RSpec.describe "/admin/analytics", type: :request do
       end
     end
 
+    context "with past_day filter" do
+      it "only counts events from the past day" do
+        workshop = create(:workshop, :published)
+        
+        # Event within the past day
+        create(:ahoy_event, name: "view.workshop", properties: {
+          resource_type: "Workshop",
+          resource_id: workshop.id
+        }, time: 12.hours.ago)
+        
+        # Event outside the past day
+        create(:ahoy_event, name: "view.workshop", properties: {
+          resource_type: "Workshop",
+          resource_id: workshop.id
+        }, time: 3.days.ago)
+
+        get "/admin/analytics", params: { time_period: "past_day" }
+        
+        expect(response).to have_http_status(:success)
+        expect(assigns(:summary)[:workshops]).to eq(1)
+      end
+    end
+
     context "with past_week filter" do
       it "only counts events from the past week" do
         workshop = create(:workshop, :published)
