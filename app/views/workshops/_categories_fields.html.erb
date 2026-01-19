@@ -29,7 +29,7 @@
       >
 
         <%# Class "category-checkbox" is used to submit on change %>
-        <% category_type.categories.each do |category| %>
+        <% category_type.categories.order(:name).each do |category| %>
           <div class="flex items-center gap-2 mb-1 px-4">
             <%= check_box_tag "categories[#{category.id}]",
                               category.id,
