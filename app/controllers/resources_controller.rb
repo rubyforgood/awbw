@@ -37,6 +37,7 @@ class ResourcesController < ApplicationController
 
   def new
     @resource = Resource.new.decorate
+    authorize! @resource
     set_form_variables
   end
 
@@ -94,6 +95,7 @@ class ResourcesController < ApplicationController
   end
 
   def search
+    authorize!
     process_search
     @sortable_fields = Resource::PUBLISHED_KINDS
     render :index

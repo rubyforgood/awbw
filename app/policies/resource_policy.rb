@@ -3,6 +3,8 @@ class ResourcePolicy < ApplicationPolicy
   #
   alias_rule :edit?, :destroy?, to: :update?
   alias_rule :rhino_text?, to: :show?
+  alias_rule :create?, :search?, to: :new?
+  alias_rule :stories?, to: :index?
 
   def index?
     true
