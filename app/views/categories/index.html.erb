@@ -58,8 +58,7 @@
                   >
                   <% @categories.each do |category| %>
                     <tr 
-                      class=" <%= "bg-gray-200" unless category.published %>
-                  <%= category.published ? "hover:bg-gray-50" : "hover:bg-gray-100" %> transition-colors duration-150"
+                      class="<%= "bg-gray-200" unless category.published %> <%= category.published ? "hover:bg-gray-50" : "hover:bg-gray-100" %> transition-colors duration-150"
                       data-sortable-id="<%= category.id %>"
                     >
 

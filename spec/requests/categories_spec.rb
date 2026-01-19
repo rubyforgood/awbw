@@ -131,8 +131,9 @@ RSpec.describe "/categories", type: :request do
         category_type = create(:category_type)
         category = create(:category, name: "Test", category_type: category_type, position: 1)
         
-        # Mock update failure
-        allow_any_instance_of(Category).to receive(:update).and_return(false)
+        # Mock update failure by finding and stubbing the specific instance
+        allow(Category).to receive(:find).with(category.id.to_s).and_return(category)
+        allow(category).to receive(:update).and_return(false)
         
         patch category_url(category), params: { ordering: 2 }
         

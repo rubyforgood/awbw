@@ -45,8 +45,9 @@ class CategoriesController < ApplicationController
   def update
     # Handle position updates from drag-and-drop
     if params[:ordering].present?
-      ordering = params[:ordering].to_i
-      if ordering > 0
+      ordering = params[:ordering]
+      # Validate ordering is a valid positive integer
+      if ordering.to_s.match?(/^\d+$/) && (ordering = ordering.to_i) > 0
         if @category.update(position: ordering)
           head :ok
         else
