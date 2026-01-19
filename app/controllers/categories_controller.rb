@@ -9,7 +9,7 @@ class CategoriesController < ApplicationController
     filtered = unfiltered.category_type_id(params[:category_type_id])
                           .category_name(params[:category_name])
                           .published_search(params[:published_search])
-                          .order(Arel.sql("metadata.name ASC, COALESCE(categories.position, #{Category::NULL_POSITION_VALUE}) ASC, categories.name ASC"))
+                          .order(Arel.sql("metadata.name, categories.position, categories.name"))
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
 
     @count_display = if filtered.count == unfiltered.count

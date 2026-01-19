@@ -55,7 +55,8 @@ RSpec.describe Category do
       cat_d_no_pos = create(:category, name: "D Category", position: nil, category_type: category_type)
 
       # Using COALESCE to place NULL values last
-      categories = Category.where(category_type: category_type).order(Arel.sql("COALESCE(position, #{Category::NULL_POSITION_VALUE}) ASC, name ASC"))
+      categories = Category.where(category_type: category_type)
+                           .order(Arel.sql("categories.position, categories.name"))
 
       # The order should be: position 1 in name order (A, B), then position 2 (C), then nil (D)
       expect(categories.to_a).to eq([cat_a_pos_1, cat_b_pos_1, cat_c_pos_2, cat_d_no_pos])
