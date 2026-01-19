@@ -1,0 +1,350 @@
+# spec/system/resource_asset_upload_spec.rb
+require "rails_helper"
+
+RSpec.describe "Resource asset upload", type: :system do
+  let(:super_user) { create(:user, super_user: true) }
+
+  before do
+    sign_in super_user
+  end
+
+  # Helper to upload any type of asset
+  def upload_asset(type:, file:)
+    # Open the upload dropdown
+
+    # Select asset type
+
+    within("#asset_upload") do
+      select type, from: "library_asset_type"
+    end
+
+    # Attach the file
+    attach_file(
+      "asset_file_input",
+      Rails.root.join(file)
+    )
+
+    # Submit the asset form
+    click_button "Upload Asset"
+
+    # Expect the type to appear in the UI
+  end
+
+
+  def delete_asset(asset_type:)
+    # Map asset_type to the div id prefix
+    div_prefix = case asset_type
+    when "PrimaryAsset", "Primary asset"
+      "primary_asset_"
+    when "ThumbnailAsset", "Thumbnail asset"
+      "thumbnail_asset_"
+    when "GalleryAsset", "Gallery asset"
+      "gallery_asset_"
+    else
+      raise "Unknown asset type: #{asset_type}"
+    end
+
+    # Find the first matching asset container
+    asset_container = find("div[id^='#{div_prefix}']")
+    # Click the delete button inside the container and accept the Turbo confirm
+    accept_confirm("Delete this asset?") do
+      asset_container.find("form.button_to button[type='submit']", visible: :all).click
+    end
+
+    # Ensure the asset container is no longer present
+    expect(page).not_to have_selector("div[id^='#{div_prefix}']")
+  end
+  context "new" do
+    it "uploads a primary asset" do
+      visit new_resource_path
+
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      expect(page).to have_content("Primary asset")
+      expect(page).not_to have_content("error")
+    end
+
+    it "uploads a thumbnail asset" do
+      visit new_resource_path
+      find("#assets-button").click
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      expect(page).to have_content("Thumbnail asset")
+      expect(page).not_to have_content("error")
+    end
+
+    it "uploads a gallery asset" do
+      visit new_resource_path
+      find("#assets-button").click
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.pdf")
+      expect(page).to have_content("Gallery asset")
+      expect(page).not_to have_content("error")
+    end
+
+    it "allows deleting a primary asset and re-uploading a new one" do
+      visit new_resource_path
+
+      # Upload the first Primary asset
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+
+      # Delete the Primary asset
+      delete_asset(asset_type: "Primary asset")
+
+      expect(page).not_to have_selector("div[id^='primary_asset_']")
+      # Re-upload a new Primary asset
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.pdf")
+
+      expect(page).to have_selector("div[id^='gallery_asset_']")
+      expect(page).not_to have_content("error")
+    end
+
+    it "shows an error when trying to upload a second primary asset" do
+      visit new_resource_path
+
+      # Upload the first Primary asset
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+
+      # Try to upload a second Primary asset
+      expect(page).to have_selector("div[id^='primary_asset_']")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      # Expect an error message (adjust text to match your app)
+      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+    end
+
+    it "shows an error when trying to upload a second thumbnail asset" do
+      visit new_resource_path
+
+      # Upload the first Thumbnail asset
+      find("#assets-button").click
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+
+      expect(page).to have_selector("div[id^='thumbnail_asset_']")
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+
+      # Expect an error message
+      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+    end
+
+    it "allows uploading one Primary, one Thumbnail and multiple Gallery assets" do
+      visit new_resource_path
+
+      # Upload the first Thumbnail asset
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+
+
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+
+
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+
+
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+
+      expect(page).not_to have_content("error")
+    end
+
+    it "associates uploaded assets with the resource on submit" do
+      visit new_resource_path
+
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+
+      title = SecureRandom.uuid
+
+      # Submit the Resource form
+      within("#new_resource") do
+        fill_in "Title", with: title
+        select "Handout", from: "Kind"
+        click_button "Submit"
+      end
+
+      sleep 1
+      resource = Resource.find_by!(title: title)
+
+      # Assert the asset association
+      expect(resource.assets.count).to eq(1)
+      expect(resource.assets.first.type).to eq("PrimaryAsset")
+    end
+
+    it "does not associate deleted assets with the resource on submit" do
+      visit new_resource_path
+
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+
+
+      delete_asset(asset_type: "Primary asset")
+
+      title = SecureRandom.uuid
+
+      within("#new_resource") do
+        fill_in "Title", with: title
+        select "Handout", from: "Kind"
+        click_button "Submit"
+      end
+
+      sleep 1
+      resource = Resource.find_by!(title: title)
+
+      expect(resource.assets.count).to eq(0)
+    end
+  end
+
+  context "edit" do
+    it "uploads a primary asset" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      expect(page).to have_content("Primary asset")
+      expect(page).not_to have_content("error")
+    end
+
+    it "uploads a thumbnail asset" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+
+      find("#assets-button").click
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      expect(page).to have_content("Thumbnail asset")
+      expect(page).not_to have_content("error")
+    end
+
+    it "uploads a gallery asset" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+
+      find("#assets-button").click
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.pdf")
+      expect(page).to have_content("Gallery asset")
+      expect(page).not_to have_content("error")
+    end
+
+    it "allows deleting a primary asset and re-uploading a new one" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+
+      # Upload the first Primary asset
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+
+      # Delete the Primary asset
+      delete_asset(asset_type: "Primary asset")
+
+      expect(page).not_to have_selector("div[id^='primary_asset_']")
+      # Re-upload a new Primary asset
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.pdf")
+
+      expect(page).to have_selector("div[id^='gallery_asset_']")
+      expect(page).not_to have_content("error")
+    end
+
+    it "shows an error when trying to upload a second primary asset" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+
+      # Upload the first Primary asset
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+
+      expect(page).to have_selector("div[id^='primary_asset_']")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      # Expect an error message (adjust text to match your app)
+      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+    end
+
+    it "shows an error when trying to upload a second thumbnail asset" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+
+      # Upload the first Thumbnail asset
+      find("#assets-button").click
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+
+      expect(page).to have_selector("div[id^='thumbnail_asset_']")
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+
+      # Expect an error message
+      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+    end
+
+    it "allows uploading one Primary, one Thumbnail and multiple Gallery assets" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+
+      # Upload the first Thumbnail asset
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+
+
+      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+
+
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+
+
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+
+      expect(page).not_to have_content("error")
+    end
+
+    it "associates uploaded assets with the resource on submit" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+
+      title = SecureRandom.uuid
+
+      # Submit the Resource form
+      within("form[id^='edit_resource_']") do
+              fill_in "Title", with: title
+              select "Handout", from: "Kind"
+              click_button "Submit"
+            end
+
+      sleep 1
+      resource = Resource.find_by!(title: title)
+
+      # Assert the asset association
+      expect(resource.assets.count).to eq(1)
+      expect(resource.assets.first.type).to eq("PrimaryAsset")
+    end
+
+    it "does not associate deleted assets with the resource on submit" do
+      resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
+
+      visit edit_resource_path(resource)
+
+      find("#assets-button").click
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+
+
+      delete_asset(asset_type: "Primary asset")
+
+      title = SecureRandom.uuid
+
+      within("form[id^='edit_resource_']") do
+        fill_in "Title", with: title
+        select "Handout", from: "Kind"
+        click_button "Submit"
+      end
+
+      sleep 1
+      resource = Resource.find_by!(title: title)
+
+      expect(resource.assets.count).to eq(0)
+    end
+  end
+end

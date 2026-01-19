@@ -76,7 +76,7 @@
        messages = @asset.errors.full_messages
 
        unless valid_asset
-         messages << "Only one primary asset and one thumbnail asset are allowed."
+         messages << "Only one Primary or Thumbnail asset allowed."
        end
 
        flash.now[:alert] = messages.join(", ")
