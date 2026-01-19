@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-# ruby "3.3.8"  # Temporarily commented for Ruby 3.2.3 compatibility
+ruby "3.3.8"
 
 gem "rails", "~> 8.1.0"
 gem "bootsnap", require: false

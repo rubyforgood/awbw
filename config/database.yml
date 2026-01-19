@@ -2,9 +2,7 @@ base: &base
   adapter: trilogy
   encoding: utf8mb4
   collation: utf8mb4_unicode_ci
-  host: localhost
-  port: <%= ENV["DATABASE_PORT"] || 3306 %>
-  username: root
+  url: <%= ENV.fetch("DATABASE_URL", "trilogy://root@localhost") %>
 
 development:
   <<: *base
