@@ -1,5 +1,6 @@
 class ResourcesController < ApplicationController
   include ExternallyRedirectable
+  include AhoyViewTracking
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
@@ -46,6 +47,7 @@ class ResourcesController < ApplicationController
   def show
     @resource = Resource.find(resource_id_param).decorate
     @resource.increment_view_count!(session: session, request: request)
+    track_view(@resource)
     load_forms
   end
 
