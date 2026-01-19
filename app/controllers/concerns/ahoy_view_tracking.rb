@@ -7,7 +7,7 @@ module AhoyViewTracking
     ahoy.track "view.#{resource.class.table_name.singularize}", {
       resource_type: resource.class.name,
       resource_id: resource.id,
-      resource_title: resource_title_for(resource)
+      resource_title: resource.decorate.title
     }
     
     mark_as_tracked(:view, resource)
@@ -19,7 +19,7 @@ module AhoyViewTracking
     ahoy.track "print.#{resource.class.table_name.singularize}", {
       resource_type: resource.class.name,
       resource_id: resource.id,
-      resource_title: resource_title_for(resource)
+      resource_title: resource.decorate.title
     }
     
     mark_as_tracked(:print, resource)
@@ -31,26 +31,13 @@ module AhoyViewTracking
     ahoy.track "download.#{resource.class.table_name.singularize}", {
       resource_type: resource.class.name,
       resource_id: resource.id,
-      resource_title: resource_title_for(resource)
+      resource_title: resource.decorate.title
     }
     
     mark_as_tracked(:download, resource)
   end
 
   private
-
-  def resource_title_for(resource)
-    case
-    when resource.respond_to?(:title)
-      resource.title
-    when resource.respond_to?(:name)
-      resource.name
-    when resource.respond_to?(:full_name)
-      resource.full_name
-    else
-      nil
-    end
-  end
 
   def already_tracked?(action, resource)
     session_key = :"ahoy_tracked_#{action}_#{resource.class.name}_ids"
