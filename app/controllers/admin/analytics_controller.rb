@@ -6,16 +6,16 @@ module Admin
       time_scope = apply_time_filter(params[:time_period])
 
       # Query Ahoy events for view counts within the time period
-      @most_viewed_workshops = most_viewed_for_model(Workshop, time_scope).limit(10).decorate
-      @most_viewed_workshop_variations = most_viewed_for_model(WorkshopVariation, time_scope).limit(10).decorate
-      @most_viewed_resources = most_viewed_for_model(Resource, time_scope).limit(10).decorate
-      @most_viewed_community_news = most_viewed_for_model(CommunityNews, time_scope).limit(10).decorate
-      @most_viewed_stories = most_viewed_for_model(Story, time_scope).limit(10).decorate
-      @most_viewed_quotes = most_viewed_for_model(Quote, time_scope).limit(10).decorate
-      @most_viewed_tutorials = most_viewed_for_model(Tutorial, time_scope).limit(10).decorate
-      @most_viewed_projects = most_viewed_for_model(Project, time_scope).limit(10).decorate
-      @most_viewed_events = most_viewed_for_model(Event, time_scope).limit(10).decorate
-      @most_viewed_facilitators = most_viewed_for_model(Facilitator, time_scope).limit(10).decorate
+      @most_viewed_workshops = most_viewed_for_model(Workshop, time_scope).map(&:decorate)
+      @most_viewed_workshop_variations = most_viewed_for_model(WorkshopVariation, time_scope).map(&:decorate)
+      @most_viewed_resources = most_viewed_for_model(Resource, time_scope).map(&:decorate)
+      @most_viewed_community_news = most_viewed_for_model(CommunityNews, time_scope).map(&:decorate)
+      @most_viewed_stories = most_viewed_for_model(Story, time_scope).map(&:decorate)
+      @most_viewed_quotes = most_viewed_for_model(Quote, time_scope).map(&:decorate)
+      @most_viewed_tutorials = most_viewed_for_model(Tutorial, time_scope).map(&:decorate)
+      @most_viewed_projects = most_viewed_for_model(Project, time_scope).map(&:decorate)
+      @most_viewed_events = most_viewed_for_model(Event, time_scope).map(&:decorate)
+      @most_viewed_facilitators = most_viewed_for_model(Facilitator, time_scope).map(&:decorate)
 
       @most_printed_workshops = time_scope.call(Workshop.published).order(print_count: :desc, created_at: :desc).limit(10).decorate
       @most_downloaded_resources = time_scope.call(Resource.published).order(download_count: :desc, created_at: :desc).limit(10).decorate
@@ -67,11 +67,11 @@ module Admin
       event_name = "#{model_name} View"
       
       # Get resource IDs with their view counts from Ahoy events
-      # Using JSON_EXTRACT for MySQL compatibility
+      # Using JSON_EXTRACT for MySQL - escape the $ in the path
       resource_ids_with_counts = Ahoy::Event
         .where(name: event_name)
         .then { |query| time_scope.call(query) }
-        .group("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")
+        .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
         .count
         .sort_by { |_id, count| -count }
         .first(10)
@@ -94,7 +94,7 @@ module Admin
         .where(name: event_name)
         .then { |query| time_scope.call(query) }
         .distinct
-        .pluck("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")
+        .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
         .map(&:to_i)
 
       # Get resources created in time period that haven't been viewed
