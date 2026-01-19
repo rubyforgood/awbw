@@ -35,7 +35,7 @@ class TaggingsController < ApplicationController
       .published
       .select("categories.*, metadata.name AS category_type_name")
       .distinct
-      .order("category_type_name ASC, categories.position ASC, categories.name ASC")
+      .order("category_type_name ASC, COALESCE(categories.position, 999999) ASC, categories.name ASC")
 
     # ------------------------------------------------------------------
     # 1. Build raw counts (SOURCE OF TRUTH)

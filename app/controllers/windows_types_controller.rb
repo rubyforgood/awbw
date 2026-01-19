@@ -55,7 +55,7 @@ class WindowsTypesController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @categories = Category.age_ranges.published.order(:position, :name)
+    @categories = Category.age_ranges.published.order(Arel.sql("COALESCE(position, 999999) ASC, name ASC"))
     @windows_type.categorizable_items.build
   end
 
