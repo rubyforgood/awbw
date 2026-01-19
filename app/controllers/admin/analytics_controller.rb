@@ -85,6 +85,44 @@ module Admin
       records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
     end
 
+    def most_printed_for_model(model_class, time_scope)
+      table_name_singular = model_class.table_name.singularize
+      event_name = "print.#{table_name_singular}"
+      # Get resource IDs with their print counts from Ahoy events
+      resource_ids_with_counts = Ahoy::Event
+                                   .where(name: event_name)
+                                   .then { |query| time_scope.call(query) }
+                                   .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
+                                   .count
+                                   .sort_by { |_id, count| -count }
+                                   .first(10)
+                                   .map { |id, _count| id.to_i }
+      # Fetch the actual records in the same order
+      records = model_class.published.where(id: resource_ids_with_counts)
+      # Sort records to match the order from the print counts
+      id_positions = resource_ids_with_counts.each_with_index.to_h
+      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
+    end
+
+    def most_downloaded_for_model(model_class, time_scope)
+      table_name_singular = model_class.table_name.singularize
+      event_name = "download.#{table_name_singular}"
+      # Get resource IDs with their download counts from Ahoy events
+      resource_ids_with_counts = Ahoy::Event
+                                   .where(name: event_name)
+                                   .then { |query| time_scope.call(query) }
+                                   .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
+                                   .count
+                                   .sort_by { |_id, count| -count }
+                                   .first(10)
+                                   .map { |id, _count| id.to_i }
+      # Fetch the actual records in the same order
+      records = model_class.published.where(id: resource_ids_with_counts)
+      # Sort records to match the order from the download counts
+      id_positions = resource_ids_with_counts.each_with_index.to_h
+      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
+    end
+
     def zero_engagement_for_model(model_class, time_scope)
       table_name_singular = model_class.table_name.singularize
       event_name = "view.#{table_name_singular}"
@@ -106,44 +144,6 @@ module Admin
       table_name_singular = model_class.table_name.singularize
       event_name = "view.#{table_name_singular}"
       time_scope.call(Ahoy::Event.where(name: event_name)).count
-    end
-
-    def most_printed_for_model(model_class, time_scope)
-      table_name_singular = model_class.table_name.singularize
-      event_name = "print.#{table_name_singular}"
-      # Get resource IDs with their print counts from Ahoy events
-      resource_ids_with_counts = Ahoy::Event
-        .where(name: event_name)
-        .then { |query| time_scope.call(query) }
-        .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
-        .count
-        .sort_by { |_id, count| -count }
-        .first(10)
-        .map { |id, _count| id.to_i }
-      # Fetch the actual records in the same order
-      records = model_class.published.where(id: resource_ids_with_counts)
-      # Sort records to match the order from the print counts
-      id_positions = resource_ids_with_counts.each_with_index.to_h
-      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
-    end
-
-    def most_downloaded_for_model(model_class, time_scope)
-      table_name_singular = model_class.table_name.singularize
-      event_name = "download.#{table_name_singular}"
-      # Get resource IDs with their download counts from Ahoy events
-      resource_ids_with_counts = Ahoy::Event
-        .where(name: event_name)
-        .then { |query| time_scope.call(query) }
-        .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
-        .count
-        .sort_by { |_id, count| -count }
-        .first(10)
-        .map { |id, _count| id.to_i }
-      # Fetch the actual records in the same order
-      records = model_class.published.where(id: resource_ids_with_counts)
-      # Sort records to match the order from the download counts
-      id_positions = resource_ids_with_counts.each_with_index.to_h
-      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
     end
 
     def print_count_for_model(model_class, time_scope)
