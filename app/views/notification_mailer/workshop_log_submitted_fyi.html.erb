@@ -1,4 +1,6 @@
 <% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+<% breakdown = @noticeable.attendance_breakdown %>
+<% totals = @noticeable.totals %>
 
 <div>
   <p style="margin-bottom: 6px;">
@@ -43,9 +45,6 @@
       <h3 style="margin-top: 36px; margin-bottom: 8px; text-align:left;">
         Participants
       </h3>
-
-      <% breakdown = @noticeable.attendance_breakdown %>
-      <% totals = @noticeable.totals %>
 
       <table width="100%" cellpadding="0" cellspacing="0"
              style="border-collapse:collapse;margin-top:12px;">
