@@ -33,6 +33,9 @@ application.register("sortable", SortableController)
 import TabsController from "./tabs_controller"
 application.register("tabs", TabsController)
 
+import TagsSyncListHeightsController from "./tags_sync_list_heights_controller"
+application.register("tags-sync-list-heights", TagsSyncListHeightsController)
+
 import TimeframeController from "./timeframe_controller"
 application.register("timeframe", TimeframeController)
 
