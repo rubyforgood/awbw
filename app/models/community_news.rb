@@ -37,7 +37,9 @@ class CommunityNews < ApplicationRecord
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :featured, -> { where(featured: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :category_names_all, ->(names) { tag_names_all(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :sector_names_all, ->(names) { tag_names_all(:sectors, names) }
   scope :community_news_name, ->(community_news_name) {
     community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
   scope :published, ->(published = nil) {

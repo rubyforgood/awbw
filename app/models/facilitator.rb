@@ -64,7 +64,9 @@ class Facilitator < ApplicationRecord
       .where("projects.name LIKE ?", "%#{sanitize_sql_like(project_name)}%")
       .distinct }
   scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :category_names_all, ->(names) { tag_names_all(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :sector_names_all, ->(names) { tag_names_all(:sectors, names) }
 
   def self.search_by_params(params)
     results = self.all

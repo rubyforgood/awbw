@@ -64,7 +64,9 @@ class Project < ApplicationRecord
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
   scope :published, ->(published = nil) { published ? active(published) : active }
   scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :category_names_all, ->(names) { tag_names_all(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :sector_names_all, ->(names) { tag_names_all(:sectors, names) }
 
   def self.search_by_params(params)
     projects = self.all

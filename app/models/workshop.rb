@@ -116,7 +116,9 @@ class Workshop < ApplicationRecord
   # Scopes
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :category_names_all, ->(names) { tag_names_all(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :sector_names_all, ->(names) { tag_names_all(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :featured, -> { where(featured: true) }
   scope :legacy, -> { where(legacy: true) }

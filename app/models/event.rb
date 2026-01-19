@@ -38,7 +38,9 @@ class Event < ApplicationRecord
   scope :published, ->(published = nil) { publicly_visible(published) }
   scope :publicly_visible, ->(publicly_visible = nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :category_names_all, ->(names) { tag_names_all(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :sector_names_all, ->(names) { tag_names_all(:sectors, names) }
 
   def self.search_by_params(params)
     stories = self.all

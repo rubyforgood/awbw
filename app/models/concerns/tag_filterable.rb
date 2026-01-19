@@ -3,6 +3,7 @@ module TagFilterable
   extend ActiveSupport::Concern
 
   class_methods do
+    # OR logic - matches items that have ANY of the specified tags
     def tag_names(association, names)
       return all if names.blank?
 
@@ -21,6 +22,34 @@ module TagFilterable
       joins(association)
         .where("LOWER(#{table_name}.name) IN (?)", parsed_names)
         .distinct
+    end
+
+    # AND logic - matches items that have ALL of the specified tags
+    def tag_names_all(association, names)
+      return all if names.blank?
+
+      parsed_names =
+        Array(names)
+          .flat_map { |n| n.to_s.split("--") }
+          .map(&:strip)
+          .reject(&:blank?)
+          .map(&:downcase)
+
+      return all if parsed_names.empty?
+
+      reflection = reflect_on_association(association)
+      table_name = reflection.klass.table_name
+      join_table_name = reflection.source_reflection.table_name
+
+      # For each tag name, ensure the item has it
+      relation = self
+      parsed_names.each do |name|
+        relation = relation
+          .joins(association)
+          .where("LOWER(#{table_name}.name) = ?", name)
+      end
+
+      relation.distinct
     end
   end
 end

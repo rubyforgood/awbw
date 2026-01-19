@@ -71,7 +71,9 @@ class Resource < ApplicationRecord
   scope :by_created, -> { order(created_at: :desc) }
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
+  scope :category_names_all, ->(names) { tag_names_all(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  scope :sector_names_all, ->(names) { tag_names_all(:sectors, names) }
   scope :featured, ->(featured = nil) { featured.present? ? where(featured: featured) : where(featured: true) }
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
