@@ -105,6 +105,40 @@ RSpec.describe "/categories", type: :request do
       end
     end
 
+    context "with ordering parameter (drag-and-drop)" do
+      it "updates the position of the category" do
+        category_type = create(:category_type)
+        category1 = Category.create!(name: "First", metadatum_id: category_type.id, published: true, position: 1)
+        category2 = Category.create!(name: "Second", metadatum_id: category_type.id, published: true, position: 2)
+        
+        patch category_url(category2), params: { ordering: 1 }
+        category2.reload
+        
+        expect(response).to have_http_status(:ok)
+        expect(category2.position).to eq(1)
+      end
+
+      it "scopes position updates by metadatum_id" do
+        category_type1 = create(:category_type, name: "Type 1")
+        category_type2 = create(:category_type, name: "Type 2")
+        
+        cat1_type1 = Category.create!(name: "Cat1 Type1", metadatum_id: category_type1.id, published: true, position: 1)
+        cat2_type1 = Category.create!(name: "Cat2 Type1", metadatum_id: category_type1.id, published: true, position: 2)
+        cat1_type2 = Category.create!(name: "Cat1 Type2", metadatum_id: category_type2.id, published: true, position: 1)
+        
+        # Update position of cat2_type1
+        patch category_url(cat2_type1), params: { ordering: 1 }
+        cat2_type1.reload
+        cat1_type1.reload
+        cat1_type2.reload
+        
+        # cat2_type1 should be moved to position 1
+        expect(cat2_type1.position).to eq(1)
+        # cat1_type2 should remain at position 1 since it's in a different scope
+        expect(cat1_type2.position).to eq(1)
+      end
+    end
+
     context "with invalid parameters" do
       it "renders a response with 422 status (i.e. to display the 'edit' template)" do
         category = Category.create! valid_attributes

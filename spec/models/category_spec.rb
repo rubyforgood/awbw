@@ -62,4 +62,38 @@ RSpec.describe Category do
       expect(categories.to_a).to eq([ cat_a_pos_1, cat_b_pos_1, cat_d_pos_20, cat_c_pos_30 ])
     end
   end
+
+  describe "positioning" do
+    let!(:category_type1) { create(:category_type, name: "Type 1") }
+    let!(:category_type2) { create(:category_type, name: "Type 2") }
+
+    it "maintains separate position sequences for different category types" do
+      cat1_type1 = create(:category, name: "Cat1 Type1", category_type: category_type1, position: 1)
+      cat2_type1 = create(:category, name: "Cat2 Type1", category_type: category_type1, position: 2)
+      cat1_type2 = create(:category, name: "Cat1 Type2", category_type: category_type2, position: 1)
+      cat2_type2 = create(:category, name: "Cat2 Type2", category_type: category_type2, position: 2)
+
+      expect(cat1_type1.position).to eq(1)
+      expect(cat2_type1.position).to eq(2)
+      expect(cat1_type2.position).to eq(1)
+      expect(cat2_type2.position).to eq(2)
+    end
+
+    it "allows updating position within the same category type scope" do
+      cat1 = create(:category, name: "First", category_type: category_type1, position: 1)
+      cat2 = create(:category, name: "Second", category_type: category_type1, position: 2)
+      cat3 = create(:category, name: "Third", category_type: category_type1, position: 3)
+
+      # Update cat3 to position 1 - the positioning gem should handle reordering
+      cat3.update(position: 1)
+      
+      # Reload to get updated positions from the database
+      cat1.reload
+      cat2.reload
+      cat3.reload
+
+      # cat3 should now be at position 1
+      expect(cat3.position).to eq(1)
+    end
+  end
 end
