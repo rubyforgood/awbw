@@ -45,12 +45,21 @@ class CommunityNews < ApplicationRecord
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
 
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
+  scope :community_news_name, ->(community_news_name) {
+    community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
+
   def self.search_by_params(params)
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
-    conditions[:published] = params[:published] if params[:published].present?
+    community_news = self.search(conditions)
 
-    self.search(conditions)
+    community_news = community_news.sector_names(params[:sector_names]) if params[:sector_names].present?
+    community_news = community_news.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    community_news = community_news.category_names(params[:category_names]) if params[:category_names].present?
+    community_news = community_news.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    # community_news = community_news.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    community_news
   end
 end
