@@ -42,35 +42,24 @@ module Admin
     private
 
     def apply_time_filter(time_period)
-      case time_period
+      time_ago = case time_period
       when 'past_week'
-        ->(scope) { 
-          # For Ahoy::Event, filter by time column; for other models, use created_at
-          if scope.respond_to?(:klass) && scope.klass == Ahoy::Event
-            scope.where('time >= ?', 1.week.ago)
-          else
-            scope.where('created_at >= ?', 1.week.ago)
-          end
-        }
+        1.week.ago
       when 'past_month'
-        ->(scope) { 
-          if scope.respond_to?(:klass) && scope.klass == Ahoy::Event
-            scope.where('time >= ?', 1.month.ago)
-          else
-            scope.where('created_at >= ?', 1.month.ago)
-          end
-        }
+        1.month.ago
       when 'past_year'
-        ->(scope) { 
-          if scope.respond_to?(:klass) && scope.klass == Ahoy::Event
-            scope.where('time >= ?', 1.year.ago)
-          else
-            scope.where('created_at >= ?', 1.year.ago)
-          end
-        }
-      else # 'all_time' or nil
-        ->(scope) { scope }
+        1.year.ago
+      else
+        nil
       end
+
+      return ->(scope) { scope } if time_ago.nil?
+
+      ->(scope) { 
+        # For Ahoy::Event, filter by time column; for other models, use created_at
+        time_column = (scope.respond_to?(:klass) && scope.klass == Ahoy::Event) ? 'time' : 'created_at'
+        scope.where("#{time_column} >= ?", time_ago)
+      }
     end
 
     def most_viewed_for_model(model_class, time_scope)
@@ -78,10 +67,11 @@ module Admin
       event_name = "#{model_name} View"
       
       # Get resource IDs with their view counts from Ahoy events
+      # Using JSON_EXTRACT for MySQL compatibility
       resource_ids_with_counts = Ahoy::Event
         .where(name: event_name)
         .then { |query| time_scope.call(query) }
-        .group("properties->>'$.resource_id'")
+        .group("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")
         .count
         .sort_by { |_id, count| -count }
         .first(10)
@@ -103,7 +93,7 @@ module Admin
         .where(name: event_name)
         .then { |query| time_scope.call(query) }
         .distinct
-        .pluck("properties->>'$.resource_id'")
+        .pluck("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")
         .map(&:to_i)
 
       # Get resources created in time period that haven't been viewed
