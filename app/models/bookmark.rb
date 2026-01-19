@@ -184,4 +184,8 @@ class Bookmark < ApplicationRecord
       name: "%#{user_name_sanitized}%"
     )
   end
+
+  def primary_asset
+    bookmarkable.respond_to?(:primary_asset) ? bookmarkable.primary_asset : nil
+  end
 end
