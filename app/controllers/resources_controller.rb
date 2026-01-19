@@ -46,7 +46,6 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(resource_id_param).decorate
-    @resource.increment_view_count!(session: session, request: request)
     track_view(@resource)
     load_forms
   end
@@ -90,7 +89,6 @@ class ResourcesController < ApplicationController
 
   def download
     @resource = Resource.find(params[:resource_id])
-    @resource.increment!(:download_count)
     track_download(@resource)
 
     attachment = if params[:attachment_id].to_i > 0

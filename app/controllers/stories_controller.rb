@@ -20,7 +20,6 @@ class StoriesController < ApplicationController
 
   def show
     @story = @story.decorate
-    @story.increment_view_count!(session: session, request: request)
     track_view(@story)
 
     if @story.external_url.present? && !params[:no_redirect].present?

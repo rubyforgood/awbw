@@ -18,7 +18,6 @@ class CommunityNewsController < ApplicationController
 
   def show
     @community_news = @community_news.decorate
-    @community_news.increment_view_count!(session: session, request: request)
     track_view(@community_news)
 
     if @community_news.external_url.present?

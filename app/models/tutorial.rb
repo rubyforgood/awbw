@@ -1,5 +1,5 @@
 class Tutorial < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable
+  include TagFilterable, Trendable
 
   has_rich_text :rhino_body
 
@@ -24,7 +24,6 @@ class Tutorial < ApplicationRecord
   end
 
   scope :body, ->(body) { where("body like ?", "%#{ body }%") }
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :published, ->(published = nil) {
     if [ "true", "false" ].include?(published)
       where(published: published)

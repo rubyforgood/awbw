@@ -11,7 +11,6 @@ class EventsController < ApplicationController
 
   def show
     @event = @event.decorate
-    @event.increment_view_count!(session: session, request: request)
     track_view(@event)
   end
 

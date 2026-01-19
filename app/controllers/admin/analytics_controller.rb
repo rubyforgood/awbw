@@ -172,7 +172,6 @@ module Admin
       record = klass.find_by(id: params[:printable_id])
       return head :not_found unless record
 
-      record.increment_print_count!
       track_print(record)
 
       head :ok

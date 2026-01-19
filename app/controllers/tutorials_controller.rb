@@ -12,7 +12,6 @@ class TutorialsController < ApplicationController
 
   def show
     @tutorial = @tutorial.decorate
-    @tutorial.increment_view_count!(session: session, request: request)
     track_view(@tutorial)
   end
 

@@ -51,7 +51,6 @@ class WorkshopVariationsController < ApplicationController
 
   def show
     @workshop_variation = WorkshopVariation.find(params[:id]).decorate
-    @workshop_variation.increment_view_count!(session: session, request: request)
     track_view(@workshop_variation)
 
     @workshop = @workshop_variation.workshop.decorate
