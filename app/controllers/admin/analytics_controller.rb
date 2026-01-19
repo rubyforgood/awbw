@@ -7,19 +7,19 @@ module Admin
       time_scope = apply_time_filter(params[:time_period])
 
       # Query Ahoy events for view counts within the time period
-      @most_viewed_workshops = most_viewed_for_model(Workshop, time_scope).map(&:decorate)
-      @most_viewed_workshop_variations = most_viewed_for_model(WorkshopVariation, time_scope).map(&:decorate)
-      @most_viewed_resources = most_viewed_for_model(Resource, time_scope).map(&:decorate)
-      @most_viewed_community_news = most_viewed_for_model(CommunityNews, time_scope).map(&:decorate)
-      @most_viewed_stories = most_viewed_for_model(Story, time_scope).map(&:decorate)
-      @most_viewed_quotes = most_viewed_for_model(Quote, time_scope).map(&:decorate)
-      @most_viewed_tutorials = most_viewed_for_model(Tutorial, time_scope).map(&:decorate)
-      @most_viewed_projects = most_viewed_for_model(Project, time_scope).map(&:decorate)
-      @most_viewed_events = most_viewed_for_model(Event, time_scope).map(&:decorate)
-      @most_viewed_facilitators = most_viewed_for_model(Facilitator, time_scope).map(&:decorate)
+      @most_viewed_workshops = decorate_with_counts(most_viewed_for_model(Workshop, time_scope), :view_count)
+      @most_viewed_workshop_variations = decorate_with_counts(most_viewed_for_model(WorkshopVariation, time_scope), :view_count)
+      @most_viewed_resources = decorate_with_counts(most_viewed_for_model(Resource, time_scope), :view_count)
+      @most_viewed_community_news = decorate_with_counts(most_viewed_for_model(CommunityNews, time_scope), :view_count)
+      @most_viewed_stories = decorate_with_counts(most_viewed_for_model(Story, time_scope), :view_count)
+      @most_viewed_quotes = decorate_with_counts(most_viewed_for_model(Quote, time_scope), :view_count)
+      @most_viewed_tutorials = decorate_with_counts(most_viewed_for_model(Tutorial, time_scope), :view_count)
+      @most_viewed_projects = decorate_with_counts(most_viewed_for_model(Project, time_scope), :view_count)
+      @most_viewed_events = decorate_with_counts(most_viewed_for_model(Event, time_scope), :view_count)
+      @most_viewed_facilitators = decorate_with_counts(most_viewed_for_model(Facilitator, time_scope), :view_count)
 
-      @most_printed_workshops = most_printed_for_model(Workshop, time_scope).map(&:decorate)
-      @most_downloaded_resources = most_downloaded_for_model(Resource, time_scope).map(&:decorate)
+      @most_printed_workshops = decorate_with_counts(most_printed_for_model(Workshop, time_scope), :print_count)
+      @most_downloaded_resources = decorate_with_counts(most_downloaded_for_model(Resource, time_scope), :download_count)
 
       @zero_engagement_workshops = zero_engagement_for_model(Workshop, time_scope).limit(10).decorate
       @zero_engagement_resources = zero_engagement_for_model(Resource, time_scope).limit(10).decorate
@@ -87,7 +87,10 @@ module Admin
       # Sort records to match the order from the view counts and attach view_count
       id_positions = record_ids.each_with_index.to_h
       records.sort_by { |record| id_positions[record.id] || Float::INFINITY }.map do |record|
-        record.define_singleton_method(:view_count) { counts_by_id[id] }
+        # Store the count before decoration
+        count = counts_by_id[record.id]
+        record.instance_variable_set(:@view_count, count)
+        record.define_singleton_method(:view_count) { @view_count }
         record
       end
     end
@@ -114,7 +117,10 @@ module Admin
       # Sort records to match the order from the print counts and attach print_count
       id_positions = record_ids.each_with_index.to_h
       records.sort_by { |record| id_positions[record.id] || Float::INFINITY }.map do |record|
-        record.define_singleton_method(:print_count) { counts_by_id[id] }
+        # Store the count before decoration
+        count = counts_by_id[record.id]
+        record.instance_variable_set(:@print_count, count)
+        record.define_singleton_method(:print_count) { @print_count }
         record
       end
     end
@@ -141,7 +147,10 @@ module Admin
       # Sort records to match the order from the download counts and attach download_count
       id_positions = record_ids.each_with_index.to_h
       records.sort_by { |record| id_positions[record.id] || Float::INFINITY }.map do |record|
-        record.define_singleton_method(:download_count) { counts_by_id[id] }
+        # Store the count before decoration
+        count = counts_by_id[record.id]
+        record.instance_variable_set(:@download_count, count)
+        record.define_singleton_method(:download_count) { @download_count }
         record
       end
     end
@@ -179,6 +188,19 @@ module Admin
       table_name_singular = model_class.table_name.singularize
       event_name = "download.#{table_name_singular}"
       time_scope.call(Ahoy::Event.where(name: event_name)).count
+    end
+
+    # Helper to decorate records while preserving count methods
+    def decorate_with_counts(records_with_counts, count_method)
+      records_with_counts.map do |record|
+        # Get the count from the instance variable
+        count = record.instance_variable_get("@#{count_method}")
+        # Decorate the record
+        decorated = record.decorate
+        # Add the count method to the decorator
+        decorated.define_singleton_method(count_method) { count }
+        decorated
+      end
     end
 
     def print
