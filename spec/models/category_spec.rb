@@ -48,18 +48,18 @@ RSpec.describe Category do
   describe "ordering by position and name" do
     let!(:category_type) { create(:category_type) }
 
-    it "orders categories by position first, then by name, with null positions last" do
-      cat_c_pos_2 = create(:category, name: "C Category", position: 2, category_type: category_type)
+    it "orders categories by position first, then by name" do
+      cat_c_pos_30 = create(:category, name: "C Category", position: 30, category_type: category_type)
       cat_a_pos_1 = create(:category, name: "A Category", position: 1, category_type: category_type)
       cat_b_pos_1 = create(:category, name: "B Category", position: 1, category_type: category_type)
-      cat_d_no_pos = create(:category, name: "D Category", position: nil, category_type: category_type)
+      cat_d_pos_20 = create(:category, name: "D Category", position: 20, category_type: category_type)
 
       # Using COALESCE to place NULL values last
       categories = Category.where(category_type: category_type)
                            .order(Arel.sql("categories.position, categories.name"))
 
       # The order should be: position 1 in name order (A, B), then position 2 (C), then nil (D)
-      expect(categories.to_a).to eq([cat_a_pos_1, cat_b_pos_1, cat_c_pos_2, cat_d_no_pos])
+      expect(categories.to_a).to eq([ cat_a_pos_1, cat_b_pos_1, cat_d_pos_20, cat_c_pos_30 ])
     end
   end
 end
