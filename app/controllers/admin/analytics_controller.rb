@@ -55,9 +55,9 @@ module Admin
 
       return ->(scope) { scope } if time_ago.nil?
 
+      # Return appropriate lambda based on whether we're filtering events or records
       ->(scope) { 
-        # For Ahoy::Event, filter by time column; for other models, use created_at
-        time_column = (scope.respond_to?(:klass) && scope.klass == Ahoy::Event) ? 'time' : 'created_at'
+        time_column = scope.respond_to?(:klass) && scope.klass == Ahoy::Event ? 'time' : 'created_at'
         scope.where("#{time_column} >= ?", time_ago)
       }
     end
@@ -80,8 +80,9 @@ module Admin
       # Fetch the actual records in the same order
       records = model_class.published.where(id: resource_ids_with_counts)
       
-      # Sort records to match the order from the view counts
-      records.sort_by { |record| resource_ids_with_counts.index(record.id) || Float::INFINITY }
+      # Sort records to match the order from the view counts (O(n) complexity)
+      id_positions = resource_ids_with_counts.each_with_index.to_h
+      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
     end
 
     def zero_engagement_for_model(model_class, time_scope)
