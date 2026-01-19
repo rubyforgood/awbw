@@ -61,8 +61,6 @@
          render partial: "assets/title", locals: { asset: @asset }
        when "type_selector_asset_#{@asset.id}"
          render partial: "assets/form", locals: { asset: @asset, owner: @owner.reload }
-       else
-         redirect_back_or_to root_path
        end
      else
 
@@ -88,7 +86,7 @@
 
    def destroy
      @asset.destroy
-     redirect_to root_path, notice: "Asset deleted"
+     render turbo_stream: turbo_stream.remove(@asset)
    end
 
     private
