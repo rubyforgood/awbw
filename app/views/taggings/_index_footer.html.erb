@@ -32,6 +32,92 @@
       <% end %>
     </div>
 
+    <!-- Filter Dropdowns -->
+    <div class="mt-8 pt-6 border-t border-gray-100">
+      <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 text-center">
+        Filter by combination
+      </h3>
+      
+      <div class="flex flex-wrap justify-center gap-4">
+        <!-- Sector Dropdown -->
+        <div>
+          <label for="sector-filter" class="block text-xs font-medium text-gray-600 mb-1">
+            Service Population
+          </label>
+          <select id="sector-filter" 
+                  class="block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+            <option value="">Select a sector...</option>
+            <% Sector.published.order(:name).each do |sector| %>
+              <option value="<%= sector.name %>" <%= 'selected' if sector.name == @sector_names %>>
+                <%= sector.name %>
+              </option>
+            <% end %>
+          </select>
+        </div>
+
+        <!-- Category Dropdown -->
+        <div>
+          <label for="category-filter" class="block text-xs font-medium text-gray-600 mb-1">
+            Category
+          </label>
+          <select id="category-filter" 
+                  class="block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+            <option value="">Select a category...</option>
+            <% Category.published.includes(:category_type).order("metadata.name ASC, categories.name ASC").each do |category| %>
+              <option value="<%= category.name %>" <%= 'selected' if category.name == @category_names %>>
+                <%= "#{category.category_type&.name}: " if category.category_type %><%= category.name %>
+              </option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+
+      <!-- Apply Filters Button -->
+      <div class="text-center mt-4">
+        <button id="apply-filters"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+          Apply Filters
+        </button>
+      </div>
+    </div>
+
   </div>
 </section>
-update to append sectors and tags to the taggings index
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const sectorSelect = document.getElementById('sector-filter');
+    const categorySelect = document.getElementById('category-filter');
+    const applyButton = document.getElementById('apply-filters');
+
+    function applyFilters() {
+      const sectorValue = sectorSelect.value;
+      const categoryValue = categorySelect.value;
+      
+      const params = new URLSearchParams();
+      if (sectorValue) {
+        params.append('sector_names', sectorValue);
+      }
+      if (categoryValue) {
+        params.append('category_names', categoryValue);
+      }
+      
+      window.location.href = '<%= taggings_path %>' + (params.toString() ? '?' + params.toString() : '');
+    }
+
+    applyButton.addEventListener('click', applyFilters);
+    
+    // Allow Enter key in dropdowns to apply filters
+    sectorSelect.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        applyFilters();
+      }
+    });
+    
+    categorySelect.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        applyFilters();
+      }
+    });
+  });
+</script>
