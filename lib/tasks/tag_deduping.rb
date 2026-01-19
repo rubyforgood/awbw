@@ -53,12 +53,27 @@ namespace :tags do
         next if dry_run
 
         ActiveRecord::Base.transaction do
-          moved =
-            SectorableItem
-              .where(sector_id: dupe.id)
-              .update_all(sector_id: primary.id)
-
-          logger.info "  moved #{moved} sectorable_items"
+          # First, identify and delete duplicate taggings that would conflict
+          items_to_move = SectorableItem.where(sector_id: dupe.id)
+          
+          items_to_move.each do |item|
+            # Check if primary already has this exact tagging
+            existing = SectorableItem.find_by(
+              sector_id: primary.id,
+              sectorable_type: item.sectorable_type,
+              sectorable_id: item.sectorable_id
+            )
+            
+            if existing
+              # Primary already has this tagging, delete the duplicate
+              item.destroy!
+              logger.info "  deleted duplicate tagging #{item.id} (primary already has it)"
+            else
+              # Safe to move this tagging to primary
+              item.update!(sector_id: primary.id)
+              logger.info "  moved tagging #{item.id} to primary"
+            end
+          end
 
           remaining =
             SectorableItem
@@ -130,12 +145,27 @@ namespace :tags do
         next if dry_run
 
         ActiveRecord::Base.transaction do
-          moved =
-            CategorizableItem
-              .where(category_id: dupe.id)
-              .update_all(category_id: primary.id)
-
-          logger.info "  moved #{moved} categorizable_items"
+          # First, identify and delete duplicate taggings that would conflict
+          items_to_move = CategorizableItem.where(category_id: dupe.id)
+          
+          items_to_move.each do |item|
+            # Check if primary already has this exact tagging
+            existing = CategorizableItem.find_by(
+              category_id: primary.id,
+              categorizable_type: item.categorizable_type,
+              categorizable_id: item.categorizable_id
+            )
+            
+            if existing
+              # Primary already has this tagging, delete the duplicate
+              item.destroy!
+              logger.info "  deleted duplicate tagging #{item.id} (primary already has it)"
+            else
+              # Safe to move this tagging to primary
+              item.update!(category_id: primary.id)
+              logger.info "  moved tagging #{item.id} to primary"
+            end
+          end
 
           remaining =
             CategorizableItem
@@ -198,8 +228,11 @@ namespace :tags do
 
       next if dry_run
 
-      delete.each do |row|
-        row.destroy!
+      ActiveRecord::Base.transaction do
+        delete.each do |row|
+          row.destroy!
+        end
+        logger.info "  deleted #{delete.size} duplicate sectorable_items"
       end
     end
 
@@ -236,8 +269,11 @@ namespace :tags do
 
       next if dry_run
 
-      delete.each do |row|
-        row.destroy!
+      ActiveRecord::Base.transaction do
+        delete.each do |row|
+          row.destroy!
+        end
+        logger.info "  deleted #{delete.size} duplicate categorizable_items"
       end
     end
 
