@@ -35,6 +35,8 @@ gem "rack-cors", require: "rack/cors"
 gem "binding_of_caller"
 gem "image_processing"
 
+# Visit and event tracking
+gem "ahoy_matey"
 
 # Stylesheet inlining for email
 gem "premailer-rails" # applies any style tag classes to html elements for better email client compatibility
