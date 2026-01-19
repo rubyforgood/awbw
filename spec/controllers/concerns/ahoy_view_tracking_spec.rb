@@ -118,7 +118,7 @@ RSpec.describe AhoyViewTracking, type: :controller do
 
     it "maintains session state across requests" do
       get :index, params: { id: workshop.id }
-      
+
       session_key = :"ahoy_tracked_view_Workshop_ids"
       expect(controller.session[session_key]).to include(workshop.id)
     end
