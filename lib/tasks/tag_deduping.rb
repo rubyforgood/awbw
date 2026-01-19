@@ -59,13 +59,10 @@ namespace :tags do
             .pluck(:sectorable_type, :sectorable_id)
             .map { |type, id| "#{type}_#{id}" }
             .to_set
-          
           items_to_move = SectorableItem.where(sector_id: dupe.id)
-          
           items_to_move.find_each do |item|
             # Check if primary already has this exact tagging
             tagging_key = "#{item.sectorable_type}_#{item.sectorable_id}"
-            
             if existing_taggings.include?(tagging_key)
               # Primary already has this tagging, delete the duplicate
               item.destroy!
@@ -141,11 +138,8 @@ namespace :tags do
 
       duplicates.each do |dupe|
         dupe_usage = usage_by_category_id[dupe.id] || 0
-
         logger.info "MERGE #{dupe.id} | #{dupe.name} | usage=#{dupe_usage}"
-
         next if dry_run
-
         ActiveRecord::Base.transaction do
           # First, load all existing taggings for the primary to avoid N+1 queries
           existing_taggings = CategorizableItem
@@ -153,13 +147,10 @@ namespace :tags do
             .pluck(:categorizable_type, :categorizable_id)
             .map { |type, id| "#{type}_#{id}" }
             .to_set
-          
           items_to_move = CategorizableItem.where(category_id: dupe.id)
-          
           items_to_move.find_each do |item|
             # Check if primary already has this exact tagging
             tagging_key = "#{item.categorizable_type}_#{item.categorizable_id}"
-            
             if existing_taggings.include?(tagging_key)
               # Primary already has this tagging, delete the duplicate
               item.destroy!
@@ -170,46 +161,37 @@ namespace :tags do
               logger.info "  moved tagging #{item.id} to primary"
             end
           end
-
           remaining =
             CategorizableItem
               .where(category_id: dupe.id)
               .count
-
           if remaining > 0
             raise "ABORT: #{remaining} items still reference category #{dupe.id}"
           end
-
           dupe.destroy!
           logger.info "  deleted category #{dupe.id}"
         end
       end
     end
-
     logger.info "Category dedupe complete"
   end
 
   desc "Delete duplicate sectorable_items and categorizable_items"
   task dedupe_assignments: :environment do
     dry_run = ENV.fetch("DRY_RUN", "true") != "false"
-
     logger = Logger.new($stdout)
     logger.level = Logger::INFO
-
     logger.info "Starting duplicate assignment cleanup"
     logger.info "DRY_RUN=#{dry_run}"
-
     # ------------------------------------------------------------
     # SectorableItem duplicates
     # ------------------------------------------------------------
     logger.info "Checking SectorableItem duplicates"
-
     sector_dupes =
       SectorableItem
         .group(:sector_id, :sectorable_type, :sectorable_id)
         .having("COUNT(*) > 1")
         .pluck(:sector_id, :sectorable_type, :sectorable_id)
-
     sector_dupes.each do |sector_id, type, owner_id|
       rows =
         SectorableItem
@@ -219,7 +201,6 @@ namespace :tags do
             sectorable_id: owner_id
           )
           .order(:id)
-
       keep = rows.first
       delete = rows.drop(1)
 
@@ -229,9 +210,7 @@ namespace :tags do
           "#{type}(#{owner_id}) " \
           "KEEP=#{keep.id} DELETE=#{delete.map(&:id)}"
       )
-
       next if dry_run
-
       ActiveRecord::Base.transaction do
         delete.each do |row|
           row.destroy!
@@ -244,13 +223,11 @@ namespace :tags do
     # CategorizableItem duplicates
     # ------------------------------------------------------------
     logger.info "Checking CategorizableItem duplicates"
-
     category_dupes =
       CategorizableItem
         .group(:category_id, :categorizable_type, :categorizable_id)
         .having("COUNT(*) > 1")
         .pluck(:category_id, :categorizable_type, :categorizable_id)
-
     category_dupes.each do |category_id, type, owner_id|
       rows =
         CategorizableItem
@@ -260,7 +237,6 @@ namespace :tags do
             categorizable_id: owner_id
           )
           .order(:id)
-
       keep = rows.first
       delete = rows.drop(1)
 
@@ -270,9 +246,7 @@ namespace :tags do
           "#{type}(#{owner_id}) " \
           "KEEP=#{keep.id} DELETE=#{delete.map(&:id)}"
       )
-
       next if dry_run
-
       ActiveRecord::Base.transaction do
         delete.each do |row|
           row.destroy!
@@ -280,7 +254,6 @@ namespace :tags do
         logger.info "  deleted #{delete.size} duplicate categorizable_items"
       end
     end
-
     logger.info "Duplicate assignment cleanup complete"
   end
 end

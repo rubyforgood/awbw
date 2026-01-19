@@ -15,7 +15,7 @@ RSpec.describe SectorableItem do
     it { should validate_presence_of(:sectorable_id) }
     it { should validate_presence_of(:sectorable_type) }
     # Uniqueness requires create and proper scoping:
-    it { should validate_uniqueness_of(:sector_id).scoped_to([:sectorable_type, :sectorable_id]) }
+    it { should validate_uniqueness_of(:sector_id).scoped_to([ :sectorable_type, :sectorable_id ]) }
   end
 
   # it 'is valid with valid attributes' do

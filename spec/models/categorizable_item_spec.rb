@@ -15,7 +15,7 @@ RSpec.describe CategorizableItem do
     it { should validate_presence_of(:categorizable_id) }
     it { should validate_presence_of(:categorizable_type) }
     # Uniqueness requires create and proper scoping:
-    it { should validate_uniqueness_of(:category_id).scoped_to([:categorizable_type, :categorizable_id]) }
+    it { should validate_uniqueness_of(:category_id).scoped_to([ :categorizable_type, :categorizable_id ]) }
   end
 
   # it 'is valid with valid attributes' do
