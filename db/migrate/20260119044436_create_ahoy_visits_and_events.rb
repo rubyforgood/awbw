@@ -56,6 +56,6 @@ class CreateAhoyVisitsAndEvents < ActiveRecord::Migration[8.1]
       t.datetime :time
     end
 
-    add_index :ahoy_events, [:name, :time]
+    add_index :ahoy_events, [ :name, :time ]
   end
 end
