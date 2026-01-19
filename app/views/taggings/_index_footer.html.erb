@@ -39,32 +39,40 @@
       </h3>
       
       <div class="flex flex-wrap justify-center gap-4">
-        <!-- Sector Dropdown -->
+        <!-- Sector Multi-Select -->
         <div>
           <label for="sector-filter" class="block text-xs font-medium text-gray-600 mb-1">
-            Service Population
+            Service Population (hold Ctrl/Cmd for multiple)
           </label>
           <select id="sector-filter" 
+                  multiple
+                  size="8"
                   class="block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-            <option value="">Select a sector...</option>
-            <% Sector.published.order(:name).each do |sector| %>
-              <option value="<%= sector.name %>" <%= 'selected' if sector.name == @sector_names %>>
+            <% 
+              selected_sectors = @sector_names.to_s.split("--").map(&:strip).reject(&:blank?)
+              Sector.published.order(:name).each do |sector| 
+            %>
+              <option value="<%= sector.name %>" <%= 'selected' if selected_sectors.include?(sector.name) %>>
                 <%= sector.name %>
               </option>
             <% end %>
           </select>
         </div>
 
-        <!-- Category Dropdown -->
+        <!-- Category Multi-Select -->
         <div>
           <label for="category-filter" class="block text-xs font-medium text-gray-600 mb-1">
-            Category
+            Category (hold Ctrl/Cmd for multiple)
           </label>
           <select id="category-filter" 
+                  multiple
+                  size="8"
                   class="block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-            <option value="">Select a category...</option>
-            <% Category.published.joins(:category_type).select("categories.*, metadata.name AS category_type_name").distinct.order("category_type_name ASC, categories.name ASC").each do |category| %>
-              <option value="<%= category.name %>" <%= 'selected' if category.name == @category_names %>>
+            <% 
+              selected_categories = @category_names.to_s.split("--").map(&:strip).reject(&:blank?).map(&:downcase)
+              Category.published.joins(:category_type).select("categories.*, metadata.name AS category_type_name").distinct.order("category_type_name ASC, categories.name ASC").each do |category| 
+            %>
+              <option value="<%= category.name %>" <%= 'selected' if selected_categories.include?(category.name.downcase) %>>
                 <%= "#{category.category_type&.name}: " if category.category_type %><%= category.name %>
               </option>
             <% end %>
@@ -91,8 +99,9 @@
     const applyButton = document.getElementById('apply-filters');
 
     function applyFilters() {
-      const sectorValue = sectorSelect.value;
-      const categoryValue = categorySelect.value;
+      // Get all selected values from multi-select
+      const selectedSectors = Array.from(sectorSelect.selectedOptions).map(opt => opt.value);
+      const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
       
       const params = new URLSearchParams(window.location.search);
       
@@ -100,12 +109,12 @@
       params.delete('sector_names');
       params.delete('category_names');
       
-      // Add new filters
-      if (sectorValue) {
-        params.set('sector_names', sectorValue);
+      // Add new filters joined with "--"
+      if (selectedSectors.length > 0) {
+        params.set('sector_names', selectedSectors.join('--'));
       }
-      if (categoryValue) {
-        params.set('category_names', categoryValue);
+      if (selectedCategories.length > 0) {
+        params.set('category_names', selectedCategories.join('--'));
       }
       
       // Use window.location.search to update only the query parameters
