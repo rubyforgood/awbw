@@ -82,7 +82,7 @@ module Admin
       records = model_class.published.where(id: record_ids)
 
       # Create a hash for O(1) lookup of counts
-      counts_by_id = resource_ids_with_counts.to_h { |id, count| [id.to_i, count] }
+      counts_by_id = resource_ids_with_counts.to_h { |id, count| [ id.to_i, count ] }
 
       # Sort records to match the order from the view counts and attach view_count
       id_positions = record_ids.each_with_index.to_h
@@ -112,7 +112,7 @@ module Admin
       records = model_class.published.where(id: record_ids)
 
       # Create a hash for O(1) lookup of counts
-      counts_by_id = resource_ids_with_counts.to_h { |id, count| [id.to_i, count] }
+      counts_by_id = resource_ids_with_counts.to_h { |id, count| [ id.to_i, count ] }
 
       # Sort records to match the order from the print counts and attach print_count
       id_positions = record_ids.each_with_index.to_h
@@ -142,7 +142,7 @@ module Admin
       records = model_class.published.where(id: record_ids)
 
       # Create a hash for O(1) lookup of counts
-      counts_by_id = resource_ids_with_counts.to_h { |id, count| [id.to_i, count] }
+      counts_by_id = resource_ids_with_counts.to_h { |id, count| [ id.to_i, count ] }
 
       # Sort records to match the order from the download counts and attach download_count
       id_positions = record_ids.each_with_index.to_h

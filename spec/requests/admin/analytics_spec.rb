@@ -120,7 +120,7 @@ RSpec.describe "/admin/analytics", type: :request do
       get "/admin/analytics"
 
       expect(assigns(:most_viewed_workshops).first.id).to eq(workshop1.id)
-      expect(assigns(:most_viewed_workshops).map(&:id)).to eq([workshop1.id, workshop2.id])
+      expect(assigns(:most_viewed_workshops).map(&:id)).to eq([ workshop1.id, workshop2.id ])
     end
 
     it "limits results to top 10" do
