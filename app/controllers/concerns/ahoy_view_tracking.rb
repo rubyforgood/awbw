@@ -3,37 +3,31 @@ module AhoyViewTracking
 
   def track_view(resource)
     return if already_tracked?(:view, resource)
-    
     ahoy.track "view.#{resource.class.table_name.singularize}", {
       resource_type: resource.class.name,
       resource_id: resource.id,
       resource_title: resource.decorate.title
     }
-    
     mark_as_tracked(:view, resource)
   end
 
   def track_print(resource)
     return if already_tracked?(:print, resource)
-    
     ahoy.track "print.#{resource.class.table_name.singularize}", {
       resource_type: resource.class.name,
       resource_id: resource.id,
       resource_title: resource.decorate.title
     }
-    
     mark_as_tracked(:print, resource)
   end
 
   def track_download(resource)
     return if already_tracked?(:download, resource)
-    
     ahoy.track "download.#{resource.class.table_name.singularize}", {
       resource_type: resource.class.name,
       resource_id: resource.id,
       resource_title: resource.decorate.title
     }
-    
     mark_as_tracked(:download, resource)
   end
 
