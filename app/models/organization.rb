@@ -63,7 +63,8 @@ class Organization < ApplicationRecord
   end
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
-  scope :published, ->(published = nil) { active(published) }
+  scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
+  scope :published, ->(published = nil) { published ? active(published) : active }
 
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all

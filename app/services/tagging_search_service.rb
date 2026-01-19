@@ -9,8 +9,8 @@ class TaggingSearchService
       workshops: Workshop
                    .includes(:sectors, :categories, :windows_type, :primary_asset, :gallery_assets, :bookmarks)
                    .published
-                   .sector_names(sector_names)
-                   .category_names(category_names)
+                   .sector_names_all(sector_names)
+                   .category_names_all(category_names)
                    .order_by_date("desc")
                    .paginate(page: pages[:workshops] || 1, per_page: number_of_items_per_page)
                    .decorate,
@@ -18,8 +18,8 @@ class TaggingSearchService
       resources: Resource
                    .includes(:windows_type, :primary_asset, :gallery_assets)
                    .published
-                   .sector_names(sector_names)
-                   .category_names(category_names)
+                   .sector_names_all(sector_names)
+                   .category_names_all(category_names)
                    .order(:title)
                    .paginate(page: pages[:resources] || 1, per_page: number_of_items_per_page)
                    .decorate,
@@ -27,8 +27,8 @@ class TaggingSearchService
       community_news: CommunityNews
                         .includes(:windows_type, :primary_asset, :gallery_assets)
                         .published
-                        .sector_names(sector_names)
-                        .category_names(category_names)
+                        .sector_names_all(sector_names)
+                        .category_names_all(category_names)
                         .order(updated_at: :desc)
                         .paginate(page: pages[:community_news] || 1, per_page: number_of_items_per_page)
                         .decorate,
@@ -36,8 +36,8 @@ class TaggingSearchService
       events: Event
                 .includes(:event_registrations, :primary_asset, :gallery_assets)
                 .published
-                .sector_names(sector_names)
-                .category_names(category_names)
+                .sector_names_all(sector_names)
+                .category_names_all(category_names)
                 .order(:start_date)
                 .paginate(page: pages[:events] || 1, per_page: number_of_items_per_page)
                 .decorate,
@@ -45,8 +45,8 @@ class TaggingSearchService
       stories: Story
                  .includes(:windows_type, :primary_asset, :gallery_assets)
                  .published
-                 .sector_names(sector_names)
-                 .category_names(category_names)
+                 .sector_names_all(sector_names)
+                 .category_names_all(category_names)
                  .order(updated_at: :desc)
                  .paginate(page: pages[:stories] || 1, per_page: number_of_items_per_page)
                  .decorate,
@@ -55,8 +55,8 @@ class TaggingSearchService
                       .includes(:sectors)
                       .published
                       .searchable
-                      .sector_names(sector_names)
-                      .category_names(category_names)
+                      .sector_names_all(sector_names)
+                      .category_names_all(category_names)
                       .order(:first_name, :last_name)
                       .paginate(page: pages[:facilitators] || 1, per_page: number_of_items_per_page)
                       .decorate,
@@ -64,8 +64,8 @@ class TaggingSearchService
       organizations: Organization
                   .includes(:sectors)
                   .published
-                  .sector_names(sector_names)
-                  .category_names(category_names)
+                  .sector_names_all(sector_names)
+                  .category_names_all(category_names)
                   .order(:name)
                   .paginate(page: pages[:organizations] || 1, per_page: number_of_items_per_page)
                   .decorate,
@@ -73,8 +73,8 @@ class TaggingSearchService
       quotes: Quote
                 .includes(:sectors, :primary_asset, :gallery_assets)
                 .published
-                .sector_names(sector_names)
-                .category_names(category_names)
+                .sector_names_all(sector_names)
+                .category_names_all(category_names)
                 .order(:quote)
                 .paginate(page: pages[:quotes] || 1, per_page: number_of_items_per_page)
                 .decorate

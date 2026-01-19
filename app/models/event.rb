@@ -37,15 +37,16 @@ class Event < ApplicationRecord
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
-  scope :featured, -> { registerable.where(published: true, featured: true) }
-  scope :publicly_featured, -> { registerable.where(published: true, publicly_visible: true, publicly_featured: true) }
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
 
   def self.search_by_params(params)
     stories = is_a?(ActiveRecord::Relation) ? self : all
     stories = stories.search(params[:query]) if params[:query].present?
     stories = stories.sector_names(params[:sector_names]) if params[:sector_names].present?
+    stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names(params[:category_names]) if params[:category_names].present?
+    stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     stories
   end

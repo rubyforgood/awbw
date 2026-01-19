@@ -50,14 +50,22 @@ class Story < ApplicationRecord
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
+  scope :story_name, ->(story_name) {
+    story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
 
   def self.search_by_params(params)
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
     conditions[:published] = params[:published] if params[:published].present?
+    stories = self.search(conditions)
 
-    self.search(conditions)
+    stories = stories.sector_names(params[:sector_names]) if params[:sector_names].present?
+    stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    stories = stories.category_names(params[:category_names]) if params[:category_names].present?
+    stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    stories
   end
 
   def name
