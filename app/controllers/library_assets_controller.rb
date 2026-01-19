@@ -12,34 +12,11 @@
      end
    end
 
-   # def create
-   #   @asset = @owner ? @owner.assets.build(asset_params.except(:file)) : Asset.new(asset_params.except(:file))
-   #   @unpersisted_owner = Data.define(:assets).new([])
-   #   if params[:library_asset][:new_assets].present?
-   #     params[:library_asset][:new_assets].each do |asset|
-   #       @unpersisted_owner.assets << Asset.find_by(id: asset[:id])
-   #     end
-   #   end
-   #   @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
-   #   if @asset.save
-   #     if @owner
-   #       render partial: "assets/form", locals: { asset: @asset, owner: @owner }
-   #     else
-   #       @unpersisted_owner.assets << @asset
-   #       render template: "assets/create", formats: [ :turbo_stream ]
-   #     end
-   #   else
-   #     flash.now[:alert] = @asset.errors.full_messages.join(", ")
-   #     render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
-   #   end
-   # end
-
    def create
      @asset = @owner ? @owner.assets.build(asset_params.except(:file)) : Asset.new(asset_params.except(:file))
      @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
 
      if @owner
-       # Persisted owner: save and render form partial
        if @asset.save
          render partial: "assets/form", locals: { asset: @asset, owner: @owner }
        else
@@ -74,38 +51,6 @@
      render template: "assets/edit"
    end
 
-   # def update
-   #   if @asset.update(asset_params)
-   #     flash.now[:notice] = "Asset updated."
-   #     case turbo_frame_request_id
-   #     when "title_asset_#{ @asset.id }"
-   #       render partial: "assets/title", locals: { asset: @asset }
-   #     when "type_selector_asset_#{ @asset.id }"
-   #       if @owner
-   #         flash.now[:notice] = "Asset type updated!"
-   #         render partial: "assets/form", locals: { asset: @asset, owner: @owner }
-   #       else
-   #
-   #         flash.now[:notice] = "Asset type updated!"
-   #         render partial: "assets/type_selector", locals: { asset: @asset }
-   #       end
-   #     else
-   #       redirect_back_or_to root_path
-   #     end
-   #   else
-   #     flash.now[:alert] = @asset.errors.full_messages.join(", ")
-   #     case turbo_frame_request_id
-   #     when "type_selector_asset_#{ @asset.id }"
-   #       if @owner
-   #         render partial: "assets/form", locals: { asset: @asset, owner: @owner }
-   #       else
-   #         render partial: "assets/type_selector", locals: { asset: @asset }
-   #       end
-   #     else
-   #       render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages", status: :unprocessable_entity)
-   #     end
-   #   end
-   # end
    def update
      valid_asset = @owner.present? ? validate_asset_type_constraint(asset_params[:type], @owner.assets) : true
 
