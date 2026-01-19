@@ -1,0 +1,62 @@
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+
+New <%= @noticeable_klass %>
+==========================
+
+<% if @user.present? %>
+  <%= @user.full_name %>
+<% end %>
+
+Submitted on
+<%= @noticeable.created_at
+               .in_time_zone("Pacific Time (US & Canada)")
+               .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+------------------------------------------------------------
+
+<%= @noticeable.title %>
+<% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
+  (<%= @noticeable.windows_type.short_name %>)
+<% end %>
+
+<% if @noticeable.respond_to?(:detail) && @noticeable.detail.present? %>
+  <%= @noticeable.detail %>
+<% end %>
+
+<% if @noticeable.primary_asset&.file&.attached? %>
+  Primary asset:
+  <% blob = @noticeable.primary_asset.file.blob %>
+  <%= blob.filename.to_s %>
+  <%= rails_blob_url(blob, disposition: "inline") %>
+<% end %>
+
+<% if @noticeable.gallery_assets.any? %>
+  Gallery assets:
+  <% @noticeable.gallery_assets.each do |asset| %>
+    <% blob = asset.file.blob %>
+    - <%= blob.filename.to_s %>
+    <%= rails_blob_url(blob, disposition: "inline") %>
+  <% end %>
+<% end %>
+
+<% if @noticeable.respond_to?(:quotes) && @noticeable.quotes.any? %>
+  Quotes:
+  <% @noticeable.quotes.each do |quote| %>
+    - "<%= quote.detail %>"<% if quote.attribution.present? %> — <%= quote.attribution %><% end %>
+  <% end %>
+<% end %>
+
+<% if @noticeable.respond_to?(:report_form_field_answers) && @noticeable.report_form_field_answers.any? %>
+  Form answers:
+  <% @noticeable.report_form_field_answers.each do |answer| %>
+    - <%= answer.name %>: <%= answer.answer.presence || "—" %>
+  <% end %>
+<% end %>
+
+------------------------------------------------------------
+
+View submission:
+<%= polymorphic_url(@noticeable) if @noticeable.present? %>
+
+View profile:
+<%= profile_url %>

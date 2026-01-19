@@ -3,6 +3,6 @@ class NotificationDecorator < ApplicationDecorator
     "Re #{noticeable_type} ##{noticeable_id}"
   end
 
-  def detail
+  def detail(length: nil)
   end
 end

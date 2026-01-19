@@ -89,7 +89,7 @@ Rails.application.routes.draw do
   resources :story_ideas
   resources :stories
   resources :tutorials
-  resources :users do
+  resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
     member do
       get :generate_facilitator
     end
@@ -118,10 +118,11 @@ Rails.application.routes.draw do
     end
   end
 
+  # Root paths
+  root to: "dashboard#index"
   authenticated :user do
     root to: "dashboard#index", as: :authenticated_root
   end
-
   # Wrap Devise routes in a scope for unauthenticated users
   devise_scope :user do
     unauthenticated do

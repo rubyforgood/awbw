@@ -3,7 +3,7 @@ class FaqDecorator < ApplicationDecorator
     question
   end
 
-  def detail
+  def detail(length: nil)
     answer
   end
 end

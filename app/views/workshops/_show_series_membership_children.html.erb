@@ -2,7 +2,7 @@
 <% grouped_series_memberships = workshop.workshop_series_children
   .includes(:workshop_child)
   .sort_by { |m| [m.theme_name.to_s.downcase,
-                  m.series_order,
+                  m.position,
                   m.workshop_child.title.to_s.downcase] }
   .group_by(&:theme_name) %>
 

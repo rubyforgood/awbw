@@ -28,18 +28,20 @@
       </div>
     </div>
 
-    <!-- PUBLISHED -->
-    <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
-      <label for="published" class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">
-        Published
-      </label>
-      <%= select_tag :published_search,
-                     options_for_select(
-                       [["All", ""], ["Published", "true"], ["Hidden", "false"]],
-                       params[:published_search]
-                     ),
-                     class: "border border-gray-300 rounded-lg px-3 py-2 text-gray-700 w-full" %>
-    </div>
+    <% if current_user.super_user? %>
+      <!-- PUBLISHED -->
+      <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
+        <label for="published" class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">
+          Published
+        </label>
+        <%= select_tag :published_search,
+                       options_for_select(
+                         [["All", ""], ["Published", "true"], ["Hidden", "false"]],
+                         params[:published_search]
+                       ),
+                       class: "border border-gray-300 rounded-lg px-3 py-2 text-gray-700 w-full" %>
+      </div>
+    <% end %>
 
     <!-- KINDS -->
     <div class="min-w-[150px]"><%= render "search_boxes_kinds", default_btn: default_btn %></div>

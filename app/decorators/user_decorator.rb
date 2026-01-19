@@ -3,7 +3,7 @@ class UserDecorator < ApplicationDecorator
     name
   end
 
-  def detail
+  def detail(length: nil) # arg needed for idea_submission_fyi mailer
     email
   end
 

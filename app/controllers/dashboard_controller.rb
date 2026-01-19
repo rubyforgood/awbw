@@ -12,7 +12,7 @@ class DashboardController < ApplicationController
                          .featured
                          .published
                          .by_most_viewed(6)
-                         .order(ordering: :asc, created_at: :desc)
+                         .order(position: :asc, created_at: :desc)
                          .decorate
     @stories = Story.includes(:windows_type, :primary_asset, :gallery_assets)
                     .featured

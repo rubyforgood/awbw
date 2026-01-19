@@ -1,0 +1,146 @@
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+
+<p style="margin-bottom: 6px;">
+  New <%= @noticeable_klass %>
+</p>
+
+<h1 style="margin: 0;">
+  <% if @user.present? %>
+    <strong><%= @user.full_name %></strong><br>
+  <% end %>
+</h1>
+
+<p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
+  Submitted on <%= @noticeable.created_at
+                              .in_time_zone("Pacific Time (US & Canada)")
+                              .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+</p>
+
+<hr style="margin: 24px 0;">
+
+<div style="text-align: left;">
+
+  <h2>
+    <%= @noticeable.title %>
+    <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
+      <span style="font-weight: normal; color:#6b7280;">
+        (<%= @noticeable.windows_type.short_name %>)
+      </span>
+    <% end %>
+  </h2>
+
+  <% if @noticeable.respond_to?(:detail) && @noticeable.detail.present? %>
+    <div>
+      <%= simple_format(@noticeable.detail) %>
+    </div>
+  <% end %>
+
+  <% if @noticeable.primary_asset&.file&.attached? %>
+    <h3 style="margin-top: 36px; margin-bottom: 12px;">
+      Primary asset
+    </h3>
+    <p>
+      <% blob = @noticeable.primary_asset.file.blob %>
+      <span style="margin-bottom: 6px;">
+        <a
+          href="<%= rails_blob_url(blob, disposition: "inline") %>"
+          target="_blank"
+          style="color:#2563eb; text-decoration: underline;">
+          <% if blob.image? %>
+            <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
+              <img
+                src="<%= rails_blob_url(blob, disposition: "inline") %>"
+                alt="<%= blob.filename %>"
+                width="180"
+                style="display:block;margin:6px 0;border-radius:4px;"
+                />
+              <%= blob.filename.to_s %>
+            </a>
+          <% else %>
+            <%= blob.filename.to_s %>
+          <% end %>
+        </a>
+      </span>
+    </p>
+  <% end %>
+
+
+  <!-- Attachments -->
+  <% if @noticeable.gallery_assets.any? %>
+    <h3 style="margin-top: 36px; margin-bottom: 12px;">
+      Gallery assets
+    </h3>
+
+    <% @noticeable.gallery_assets.each do |asset| %>
+      <% blob = asset.file.blob %>
+
+      <span style="margin-bottom: 6px;">
+          <a
+            href="<%= rails_blob_url(blob, disposition: "inline") %>"
+            target="_blank"
+            style="color:#2563eb; text-decoration: underline;">
+            <% if blob.image? %>
+              <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
+                <img
+                  src="<%= rails_blob_url(blob, disposition: "inline") %>"
+                  alt="<%= blob.filename %>"
+                  width="180"
+                  style="display:block;margin:6px 0;border-radius:4px;"
+                  />
+                <%= blob.filename.to_s %>
+              </a>
+            <% else %>
+              <%= blob.filename.to_s %>
+            <% end %>
+          </a>
+        </span>
+    <% end %>
+  <% end %>
+
+  <% if @noticeable.respond_to?(:quotes) && @noticeable.quotes.any? %>
+    <h2>Quotes</h2>
+    <ul>
+      <% @noticeable.quotes.each do |quote| %>
+        <li>
+          <%= quote.detail %>
+          <% if quote.attribution.present? %>
+            — <em><%= quote.attribution %></em>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <% if @noticeable.respond_to?(:report_form_field_answers) && @noticeable.report_form_field_answers.any? %>
+    <h2>Form answers</h2>
+    <ul>
+      <% @noticeable.report_form_field_answers.each do |answer| %>
+        <li>
+          <strong><%= answer.name %>:</strong>
+          <%= answer.answer %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>
+
+<hr style="margin: 24px 0;">
+
+<p>
+  <%= link_to "View submission",
+              polymorphic_url(@noticeable),
+              style: "display:inline-block;
+                      padding:10px 16px;
+                      background:#2563eb;
+                      color:#ffffff;
+                      text-decoration:none;
+                      border-radius:6px;
+                      font-weight:bold;" if @noticeable.present? %>
+
+  <a href="<%= profile_url %>"
+     style="display:inline-block;background:#e5e7eb;color:#111827;
+       text-decoration:none;padding:10px 16px;border-radius:6px;
+       font-weight:bold;">
+    View profile
+  </a>
+</p>

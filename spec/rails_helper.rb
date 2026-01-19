@@ -83,10 +83,14 @@ RSpec.configure do |config|
   config.before(:suite) { Warden.test_mode! }
   config.after { Warden.test_reset! }
 
+  config.include ActiveJob::TestHelper
+
   # ==> Mailer Prevention (add this block)
   config.before(:each) do
     ActionMailer::Base.delivery_method = :test
     ActionMailer::Base.deliveries.clear
+    clear_enqueued_jobs
+    clear_performed_jobs
   end
   # <== End Mailer Prevention
 end

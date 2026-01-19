@@ -17,10 +17,10 @@
      if @rich_text_asset.save
        render partial: "rich_text_assets/form"
      else
-       render plain: @rich_text_asset.errors.full_messages.join(", "), status: :unprocessable_entity
+       render plain: @rich_text_asset.errors.full_messages.join(", "), status: :unprocessable_content
      end
     rescue NameError, ActiveRecord::RecordNotFound
-      render plain: "Invalid Record", status: :unprocessable_entity
+      render plain: "Invalid Record", status: :unprocessable_content
    end
    def edit
      @rich_text_asset

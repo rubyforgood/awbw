@@ -107,8 +107,8 @@ class Report < ApplicationRecord
 
   def log_fields
     if form_builder
-      form_builder.forms[0].form_fields.where("ordering is not null and status = 1")
-        .order(ordering: :desc).all
+      form_builder.forms[0].form_fields.where("position is not null and status = 1")
+        .order(position: :desc).all
     else
       []
     end

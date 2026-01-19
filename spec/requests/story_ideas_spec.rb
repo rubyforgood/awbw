@@ -17,6 +17,8 @@ RSpec.describe "/story_ideas", type: :request do
   # StoryIdea. As you add validations to StoryIdea, be sure to
   # adjust the attributes here as well.
   let(:user) { create(:user) }
+  let(:admin_email) { "admin@example.com" }
+
   let(:windows_type) { create(:windows_type) }
   let(:workshop) { create(:workshop) }
   let(:project) { create(:project) }
@@ -90,6 +92,25 @@ RSpec.describe "/story_ideas", type: :request do
       it "redirects to the story_ideas index" do
         post story_ideas_url, params: { story_idea: valid_attributes }
         expect(response).to redirect_to(story_ideas_url)
+      end
+
+      it "creates an FYI notification when a story idea is submitted" do
+        expect {
+          post story_ideas_path, params: {
+            story_idea: valid_attributes
+          }
+        }.to change(StoryIdea, :count).by(1)
+                                      .and change(Notification, :count).by(1)
+
+        notification = Notification.last
+        story_idea   = StoryIdea.last
+
+        expect(notification.kind).to eq("idea_submitted_fyi")
+        expect(notification.noticeable).to eq(story_idea)
+        expect(notification.recipient_role).to eq("admin")
+
+        expect(enqueued_jobs.map { |j| j[:job] })
+          .to include(NotificationMailerJob)
       end
     end
 

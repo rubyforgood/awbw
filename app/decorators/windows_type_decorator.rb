@@ -3,7 +3,7 @@ class WindowsTypeDecorator < ApplicationDecorator
     name
   end
 
-  def detail
+  def detail(length: nil)
     short_name
   end
 end

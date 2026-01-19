@@ -63,9 +63,9 @@ class WorkshopLogsController < ApplicationController
     if @workshop_log.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_log,
-        kind: :record_created,
-        recipient_role: (current_user.super_user? ? :admin : :facilitator),
-        recipient_email: current_user.email,
+        kind: :workshop_log_submitted_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
 
       flash[:notice] = "Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile."
@@ -175,7 +175,7 @@ class WorkshopLogsController < ApplicationController
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder
     if form
-      @report_field_answers = form.form_fields.active.order(:ordering).map do |field|
+      @report_field_answers = form.form_fields.active.order(:position).map do |field|
         @workshop_log.report_form_field_answers.find_or_initialize_by(form_field: field)
       end
     end

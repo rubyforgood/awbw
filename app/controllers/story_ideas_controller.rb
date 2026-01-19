@@ -30,9 +30,9 @@ class StoryIdeasController < ApplicationController
     if @story_idea.save
       NotificationServices::CreateNotification.call(
         noticeable: @story_idea,
-        kind: :record_created,
-        recipient_role: (current_user.super_user? ? :admin : :facilitator),
-        recipient_email: current_user.email,
+        kind: :idea_submitted_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
       redirect_to story_ideas_path, notice: "StoryIdea was successfully created."
     else

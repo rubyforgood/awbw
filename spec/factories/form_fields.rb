@@ -7,7 +7,7 @@ FactoryBot.define do
     status { :active } # Default to active
     answer_type { :free_form_input_one_line } # Default type
     answer_datatype { :text_alphanumeric } # Default datatype
-    sequence(:ordering) { |n| n }
+    sequence(:position) { |n| n }
     parent_id { nil }
 
     # Add other attributes based on schema if needed

@@ -29,9 +29,9 @@ class WorkshopVariationsController < ApplicationController
     if @workshop_variation.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_variation,
-        kind: :record_created,
-        recipient_role: (current_user.super_user? ? :admin : :facilitator),
-        recipient_email: current_user.email,
+        kind: :idea_submitted_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
 
       flash[:notice] = "Workshop Variation has been created."
@@ -88,7 +88,7 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [ :name, :code, :inactive, :ordering,
+      [ :name, :code, :inactive, :position,
        :youtube_url, :created_by_id, :workshop_id,
        primary_asset_attributes: [ :id, :file, :_destroy ],
        gallery_assets_attributes: [ :id, :file, :_destroy ]

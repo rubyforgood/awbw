@@ -1,0 +1,63 @@
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+
+New <%= @noticeable.class.model_name.human.titleize %> <%= @type %>
+==========================
+
+<%= @user.name %>
+
+Submitted on
+<%= @noticeable.created_at
+               .in_time_zone("Pacific Time (US & Canada)")
+               .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+------------------------------------------------------------
+
+<% if @report.present? %>
+  Report details
+
+  <% if @report.respond_to?(:type) && @report.type.present? %>
+    Report type: <%= @report.type %>
+  <% end %>
+
+  <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
+    Service population: <%= @noticeable.windows_type.short_name %>
+  <% end %>
+
+  <% if @answers.present? %>
+
+    Form answers:
+    <% @answers.each do |answer| %>
+      - <%= answer.name %>: <%= answer.answer.presence || "—" %>
+    <% end %>
+
+  <% end %>
+
+  <% if @quotes.present? %>
+
+    Quotes:
+    <% @quotes.decorate.each do |quote| %>
+      - "<%= quote.detail %>"<% if quote.attribution.present? %>
+        — <%= quote.attribution %><% end %>
+    <% end %>
+
+  <% end %>
+
+  <% if @attachments.present? %>
+
+    Attachments:
+    <% @attachments.each do |asset| %>
+      <% blob = asset.file.blob %>
+      - <%= blob.filename.to_s %>
+      <%= rails_blob_url(blob, disposition: "inline") %>
+    <% end %>
+
+  <% end %>
+<% end %>
+
+------------------------------------------------------------
+
+View report:
+<%= workshop_log_url(@report) if @report.present? %>
+
+View profile:
+<%= profile_url %>

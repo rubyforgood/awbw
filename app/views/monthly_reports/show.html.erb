@@ -1,0 +1,142 @@
+<% children_total = @monthly_report.children_ongoing.to_i + @monthly_report.children_first_time.to_i %>
+<% teens_total    = @monthly_report.teens_ongoing.to_i + @monthly_report.teens_first_time.to_i %>
+<% adults_total   = @monthly_report.adults_ongoing.to_i + @monthly_report.adults_first_time.to_i %>
+
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 space-y-6">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-900">
+          <%= @monthly_report.title %>
+        </h1>
+
+        <div class="flex gap-2">
+          <%= link_to "Back to Monthly Reports", monthly_reports_path, class: "btn btn-secondary-outline" %>
+          <% if current_user.super_user? || @monthly_report.user == current_user %>
+            <%= link_to "Edit Log", edit_monthly_report_path(@monthly_report), class: "btn btn-primary-outline" %>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Workshop Info -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800">
+        <div>
+          <p><span class="font-semibold text-gray-700">Facilitator:</span> <%= @monthly_report.user&.name || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Organization:</span> <%= @monthly_report.project&.name || "—" %></p>
+        </div>
+        <div>
+          <p><span class="font-semibold text-gray-700">Report date:</span> <%= @monthly_report.date&.strftime("%B %d, %Y") || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Log created:</span> <%= @monthly_report.created_at.strftime("%b %d, %Y") %></p>
+          <p><span class="font-semibold text-gray-700">Log updated:</span> <%= @monthly_report.updated_at.strftime("%b %d, %Y") %></p>
+        </div>
+      </div>
+
+      <!-- Assets -->
+      <%= render "assets/display_gallery_media", resource: @monthly_report %>
+
+      <!-- Participant Counts -->
+      <% if children_total > 0 || teens_total > 0 || adults_total > 0 %>
+        <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Participant Counts</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+            <thead>
+            <tr class="bg-gray-100">
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Category</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Children</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Teens</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Adults</th>
+              <th class="px-4 py-2 text-center text-sm font-bold text-gray-800 bg-gray-300 uppercase">Total</th>
+            </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-200">
+            <!-- Ongoing -->
+            <tr>
+              <td class="px-4 py-2 font-medium text-gray-700">Ongoing Participants</td>
+              <td class="text-center bg-blue-100"><%= display_count(@monthly_report.children_ongoing) %></td>
+              <td class="text-center bg-blue-100"><%= display_count(@monthly_report.teens_ongoing) %></td>
+              <td class="text-center bg-blue-100"><%= display_count(@monthly_report.adults_ongoing) %></td>
+              <td class="text-center font-semibold bg-blue-200">
+                <%= display_count(@monthly_report.children_ongoing.to_i +
+                                    @monthly_report.teens_ongoing.to_i +
+                                    @monthly_report.adults_ongoing.to_i) %>
+              </td>
+            </tr>
+
+            <!-- First-time -->
+            <tr>
+              <td class="px-4 py-2 font-medium text-gray-700">First-Time Participants</td>
+              <td class="text-center bg-green-100"><%= display_count(@monthly_report.children_first_time) %></td>
+              <td class="text-center bg-green-100"><%= display_count(@monthly_report.teens_first_time) %></td>
+              <td class="text-center bg-green-100"><%= display_count(@monthly_report.adults_first_time) %></td>
+              <td class="text-center font-semibold bg-green-200">
+                <%= display_count(@monthly_report.children_first_time.to_i +
+                                    @monthly_report.teens_first_time.to_i +
+                                    @monthly_report.adults_first_time.to_i) %>
+              </td>
+            </tr>
+
+            <!-- Subtotals -->
+            <tr class="font-semibold">
+              <td class="px-4 py-2 text-right text-sm font-bold text-gray-800 uppercase">Subtotal</td>
+              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(children_total) %></td>
+              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(teens_total) %></td>
+              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(adults_total) %></td>
+              <td class="text-center text-lg font-bold bg-purple-200">
+                <%= display_count(children_total + teens_total + adults_total) %>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <% end %>
+
+      <!-- Responses -->
+      <% if @answers.any? %>
+        <div class="mt-8 space-y-3">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Responses</h2>
+          <% @answers.each do |answer| %>
+            <div class="border-b border-gray-200 pb-2">
+              <p class="text-sm font-semibold text-gray-700"><%= answer.form_field.question %></p>
+              <p class="text-gray-800"><%= answer.response.presence || "—" %></p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Quotes -->
+      <% if @monthly_report.quotes.any? %>
+        <div class="mt-8 space-y-3">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Quotes</h2>
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-6 mb-6">
+            <% @monthly_report.quotes.decorate.each do |quote| %>
+              <div>
+                <div class="relative bg-gray-100 italic leading-relaxed p-6 rounded-2xl">
+                  <div class="font-semibold text-gray-700 italic text-lg">
+                    <%= link_to quote.detail, quote_path(quote.object), class: "hover:underline" %>
+                    <span class="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded-full">
+                      <span class="fa fa-eye-slash"></span>
+                      Hidden
+                    </span>
+                  </div>
+                  <div class="text-gray-700 mt-3">
+                    -- <%= quote.attribution %>
+                    <%= "@ " + quote.created_at.strftime("%m-%d-%-Y") %>
+                    <%= ("re " + link_to(quote.workshop.title, workshop_path(quote.workshop),
+                                         class: "hover:underline") if quote.workshop).to_s.html_safe %>
+                  </div>
+                  <div class="absolute -bottom-3 left-8 w-0 h-0 border-t-8 border-t-gray-100 border-x-8 border-x-transparent"></div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+    </div>
+  </div>
+</div>

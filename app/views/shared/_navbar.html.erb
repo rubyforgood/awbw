@@ -9,11 +9,9 @@
             class="
               relative inline-flex items-center justify-center rounded-md p-2 text-gray-400
               hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1
-              focus:outline-indigo-500
-            "
+              focus:outline-indigo-500"
             data-action="dropdown#toggle"
-            data-dropdown-payload-param='[{"mobile-menu":"hidden block"}]'
-          >
+            data-dropdown-payload-param='[{"mobile-menu":"hidden block"}]'>
             <span class="absolute -inset-0.5"></span>
             <span class="sr-only">Open main menu</span>
 
@@ -24,8 +22,7 @@
               stroke-width="1.5"
               data-slot="icon"
               aria-hidden="true"
-              class="size-6 in-aria-expanded:hidden"
-            >
+              class="size-6 in-aria-expanded:hidden">
               <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
 
@@ -36,8 +33,7 @@
               stroke-width="1.5"
               data-slot="icon"
               aria-hidden="true"
-              class="size-6 not-in-aria-expanded:hidden"
-            >
+              class="size-6 not-in-aria-expanded:hidden">
               <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </button>
@@ -47,13 +43,11 @@
       <div class="flex flex-1 items-center justify-center md:items-stretch md:justify-start">
         <div class="flex shrink-0 items-center">
           <%= link_to root_link_path, class: "relative group" do %>
-            <%= image_tag("logo.png", class: "h-8 sm:h-10 w-auto block") %>
-
-            <%= image_tag(
-                  "logo-color.png",
-                  class:
-                    "h-8 sm:h-10 absolute inset-0 w-auto opacity-0 transition-opacity duration-400 ease-out group-hover:opacity-100",
-                  ) %>
+            <%= image_tag("logo.png",
+                          class: "h-8 sm:h-10 w-auto block") %>
+            <%= image_tag("logo-color.png",
+                          class: "h-8 sm:h-10 absolute inset-0 w-auto opacity-0 transition-opacity
+                            duration-400 ease-out group-hover:opacity-100") %>
           <% end %>
         </div>
 
@@ -67,12 +61,7 @@
         <% end %>
       </div>
 
-      <div
-        class="
-          absolute inset-y-0 right-0 flex items-center pr-2 md:static md:inset-auto
-          md:ml-6 md:pr-0
-        "
-      >
+      <div class="absolute inset-y-0 right-0 flex items-center pr-2 md:static md:inset-auto md:ml-6 md:pr-0">
         <!-- Profile dropdown -->
         <% if current_user %>
           <%= render "shared/navbar_user" %>

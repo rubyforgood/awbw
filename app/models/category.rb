@@ -10,6 +10,7 @@ class Category < ApplicationRecord
 
   # Validations
   validates :name, presence: true, uniqueness: { case_sensitive: false }
+  validates :position, numericality: { only_integer: true, allow_nil: true }
 
   # Scopes
   scope :category_type_id, ->(category_type_id) {

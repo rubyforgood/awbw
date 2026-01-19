@@ -44,9 +44,9 @@
 
           <% if current_user.super_user? %>
             <div class="flex-shrink-0">
-              <%= link_to "Manage sectors",
-                            authenticated_root_path,
-                            class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
+              <%= link_to "Manage service populations",
+                          sectors_path,
+                          class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
             </div>
           <% end %>
         </div>
@@ -71,8 +71,8 @@
           <% if current_user.super_user? %>
             <div class="flex-shrink-0">
               <%= link_to "Manage categories",
-                            authenticated_root_path,
-                            class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
+                          categories_path,
+                          class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
             </div>
           <% end %>
         </div>

@@ -26,9 +26,15 @@ class EventRegistrationsController < ApplicationController
     if @event_registration.save
       NotificationServices::CreateNotification.call(
         noticeable: @event_registration,
-        kind: :record_created,
-        recipient_role: (current_user.super_user? ? :admin : :facilitator),
+        kind: "event_registration_confirmation",
+        recipient_role: :facilitator,
         recipient_email: current_user.email,
+        notification_type: 0)
+      NotificationServices::CreateNotification.call(
+        noticeable: @event_registration,
+        kind: "event_registration_confirmation_fyi",
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
 
       respond_to do |format|

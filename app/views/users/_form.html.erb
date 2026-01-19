@@ -56,7 +56,7 @@
 
           <div class="md:flex-grow md:basis-1/3">
             <% if current_user.super_user? %>
-              <div class="admin-only bg-blue-100 w-full">
+              <div class="w-full">
                 <%= f.input :email,
                             hint: "Only editable by admins",
                             input_html: { value: f.object.email.presence || @facilitator&.email,
@@ -81,7 +81,7 @@
           </div>
           <div>
             <% if current_user.super_user? %>
-              <div class="admin-only bg-blue-100 w-full p-3">
+              <div class="w-full p-3">
                 <div class="flex flex-col md:flex-row gap-4">
                   <%= f.input :inactive, label: "No access?" %>
                   <%= f.input :super_user %>
@@ -96,7 +96,7 @@
 
   <!-- Notes -->
   <% if current_user.super_user? %>
-    <div class="admin-only bg-blue-100 p-3">
+    <div class="p-3">
       <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
     </div>
   <% end %>

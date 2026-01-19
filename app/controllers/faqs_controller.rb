@@ -59,6 +59,6 @@ class FaqsController < ApplicationController
 
   # Strong parameters
   def faq_params
-    params.require(:faq).permit(:question, :answer, :inactive, :ordering)
+    params.require(:faq).permit(:question, :answer, :inactive, :position)
   end
 end
