@@ -26,6 +26,14 @@
                     input_html: { class: "form-control" } %>
       </div>
 
+      <!-- Position -->
+      <div class="flex-1 min-w-[150px]">
+        <%= f.input :position,
+                    label: "Position",
+                    as: :integer,
+                    input_html: { class: "form-control", type: "number" } %>
+      </div>
+
       <!-- Published -->
       <div class="flex items-center min-w-[150px] pt-6">
         <%= f.input :published,
