@@ -43,6 +43,13 @@ class CategoriesController < ApplicationController
   end
 
   def update
+    # Handle position updates from drag-and-drop
+    if params[:ordering].present?
+      @category.update(position: params[:ordering])
+      head :ok
+      return
+    end
+
     if @category.update(category_params)
       redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other
     else

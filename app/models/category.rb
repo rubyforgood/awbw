@@ -1,6 +1,8 @@
 class Category < ApplicationRecord
   include NameFilterable
 
+  positioned scope: :metadatum_id
+
   belongs_to :category_type, class_name: "CategoryType", foreign_key: :metadatum_id
   has_many :categorizable_items, dependent: :destroy
   has_many :workshops, through: :categorizable_items, source: :categorizable, source_type: "Workshop"
