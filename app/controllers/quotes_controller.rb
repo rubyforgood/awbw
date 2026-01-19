@@ -1,4 +1,5 @@
 class QuotesController < ApplicationController
+  include AhoyViewTracking
   before_action :set_quote, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -12,6 +13,7 @@ class QuotesController < ApplicationController
 
   def show
     @quote.increment_view_count!(session: session, request: request)
+    track_view(@quote)
   end
 
   def new

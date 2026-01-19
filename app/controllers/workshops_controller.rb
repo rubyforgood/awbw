@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class WorkshopsController < ApplicationController
+  include AhoyViewTracking
   def index
     @category_types = CategoryType.includes(:categories).published.order(:name).decorate
     @sectors = Sector.published
@@ -96,6 +97,7 @@ class WorkshopsController < ApplicationController
     else
       @workshop = Workshop.find(params[:id]).decorate
       @workshop.increment_view_count!(session: session, request: request)
+      track_view(@workshop)
       render :show
     end
   end

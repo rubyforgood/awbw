@@ -5,36 +5,37 @@ module Admin
     def index
       time_scope = apply_time_filter(params[:time_period])
 
-      @most_viewed_workshops    = time_scope.call(Workshop.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_workshop_variations = time_scope.call(WorkshopVariation.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_resources    = time_scope.call(Resource.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_community_news = time_scope.call(CommunityNews.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_stories      = time_scope.call(Story.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_quotes       = time_scope.call(Quote.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_tutorials    = time_scope.call(Tutorial.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_projects     = time_scope.call(Project.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_events       = time_scope.call(Event.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
-      @most_viewed_facilitators = time_scope.call(Facilitator.published).order(view_count: :desc, created_at: :desc).limit(10).decorate
+      # Query Ahoy events for view counts within the time period
+      @most_viewed_workshops = most_viewed_for_model(Workshop, time_scope).limit(10).decorate
+      @most_viewed_workshop_variations = most_viewed_for_model(WorkshopVariation, time_scope).limit(10).decorate
+      @most_viewed_resources = most_viewed_for_model(Resource, time_scope).limit(10).decorate
+      @most_viewed_community_news = most_viewed_for_model(CommunityNews, time_scope).limit(10).decorate
+      @most_viewed_stories = most_viewed_for_model(Story, time_scope).limit(10).decorate
+      @most_viewed_quotes = most_viewed_for_model(Quote, time_scope).limit(10).decorate
+      @most_viewed_tutorials = most_viewed_for_model(Tutorial, time_scope).limit(10).decorate
+      @most_viewed_projects = most_viewed_for_model(Project, time_scope).limit(10).decorate
+      @most_viewed_events = most_viewed_for_model(Event, time_scope).limit(10).decorate
+      @most_viewed_facilitators = most_viewed_for_model(Facilitator, time_scope).limit(10).decorate
 
       @most_printed_workshops = time_scope.call(Workshop.published).order(print_count: :desc, created_at: :desc).limit(10).decorate
       @most_downloaded_resources = time_scope.call(Resource.published).order(download_count: :desc, created_at: :desc).limit(10).decorate
 
-      @zero_engagement_workshops = time_scope.call(Workshop.published).where(view_count: 0).order(created_at: :desc).limit(10).decorate
-      @zero_engagement_resources = time_scope.call(Resource.published).where(view_count: 0).order(created_at: :desc).limit(10).decorate
+      @zero_engagement_workshops = zero_engagement_for_model(Workshop, time_scope).limit(10).decorate
+      @zero_engagement_resources = zero_engagement_for_model(Resource, time_scope).limit(10).decorate
 
       @summary = {
-        workshops: time_scope.call(Workshop).sum(:view_count),
+        workshops: view_count_for_model(Workshop, time_scope),
         workshop_prints: time_scope.call(Workshop).sum(:print_count),
-        resources: time_scope.call(Resource).sum(:view_count),
+        resources: view_count_for_model(Resource, time_scope),
         resource_downloads: time_scope.call(Resource).sum(:download_count),
-        community_news: time_scope.call(CommunityNews).sum(:view_count),
-        stories: time_scope.call(Story).sum(:view_count),
-        events: time_scope.call(Event).sum(:view_count),
-        workshop_variations: time_scope.call(WorkshopVariation).sum(:view_count),
-        quotes: time_scope.call(Quote).sum(:view_count),
-        tutorials: time_scope.call(Tutorial).sum(:view_count),
-        projects: time_scope.call(Project).sum(:view_count),
-        facilitators: time_scope.call(Facilitator).sum(:view_count)
+        community_news: view_count_for_model(CommunityNews, time_scope),
+        stories: view_count_for_model(Story, time_scope),
+        events: view_count_for_model(Event, time_scope),
+        workshop_variations: view_count_for_model(WorkshopVariation, time_scope),
+        quotes: view_count_for_model(Quote, time_scope),
+        tutorials: view_count_for_model(Tutorial, time_scope),
+        projects: view_count_for_model(Project, time_scope),
+        facilitators: view_count_for_model(Facilitator, time_scope)
       }
     end
 
@@ -43,14 +44,79 @@ module Admin
     def apply_time_filter(time_period)
       case time_period
       when 'past_week'
-        ->(scope) { scope.where('created_at >= ?', 1.week.ago) }
+        ->(scope) { 
+          # For Ahoy::Event, filter by time column; for other models, use created_at
+          if scope.respond_to?(:klass) && scope.klass == Ahoy::Event
+            scope.where('time >= ?', 1.week.ago)
+          else
+            scope.where('created_at >= ?', 1.week.ago)
+          end
+        }
       when 'past_month'
-        ->(scope) { scope.where('created_at >= ?', 1.month.ago) }
+        ->(scope) { 
+          if scope.respond_to?(:klass) && scope.klass == Ahoy::Event
+            scope.where('time >= ?', 1.month.ago)
+          else
+            scope.where('created_at >= ?', 1.month.ago)
+          end
+        }
       when 'past_year'
-        ->(scope) { scope.where('created_at >= ?', 1.year.ago) }
+        ->(scope) { 
+          if scope.respond_to?(:klass) && scope.klass == Ahoy::Event
+            scope.where('time >= ?', 1.year.ago)
+          else
+            scope.where('created_at >= ?', 1.year.ago)
+          end
+        }
       else # 'all_time' or nil
         ->(scope) { scope }
       end
+    end
+
+    def most_viewed_for_model(model_class, time_scope)
+      model_name = model_class.name
+      event_name = "#{model_name} View"
+      
+      # Get resource IDs with their view counts from Ahoy events
+      resource_ids_with_counts = Ahoy::Event
+        .where(name: event_name)
+        .then { |query| time_scope.call(query) }
+        .group("properties->>'$.resource_id'")
+        .count
+        .sort_by { |_id, count| -count }
+        .first(10)
+        .map { |id, _count| id.to_i }
+
+      # Fetch the actual records in the same order
+      records = model_class.published.where(id: resource_ids_with_counts)
+      
+      # Sort records to match the order from the view counts
+      records.sort_by { |record| resource_ids_with_counts.index(record.id) || Float::INFINITY }
+    end
+
+    def zero_engagement_for_model(model_class, time_scope)
+      model_name = model_class.name
+      event_name = "#{model_name} View"
+      
+      # Get IDs of resources that have been viewed in the time period
+      viewed_ids = Ahoy::Event
+        .where(name: event_name)
+        .then { |query| time_scope.call(query) }
+        .distinct
+        .pluck("properties->>'$.resource_id'")
+        .map(&:to_i)
+
+      # Get resources created in time period that haven't been viewed
+      time_scope.call(model_class.published)
+        .where.not(id: viewed_ids)
+        .order(created_at: :desc)
+    end
+
+    def view_count_for_model(model_class, time_scope)
+      model_name = model_class.name
+      event_name = "#{model_name} View"
+      
+      time_scope.call(Ahoy::Event.where(name: event_name)).count
     end
 
     def print
