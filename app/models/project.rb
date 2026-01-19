@@ -1,5 +1,5 @@
 class Project < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :project_status
   belongs_to :project_obligation, optional: true
@@ -60,7 +60,6 @@ class Project < ApplicationRecord
       wildcard: wildcard, exact: exact)
   end
   scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
   scope :published, ->(published = nil) { published ? active(published) : active }
   scope :category_names, ->(names) { tag_names(:categories, names) }

@@ -1,5 +1,5 @@
 class Event < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User", optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -33,7 +33,6 @@ class Event < ApplicationRecord
     attributes :title, :description
   end
 
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :featured, -> { where(featured: true) }
   scope :published, ->(published = nil) { publicly_visible(published) }
   scope :publicly_visible, ->(publicly_visible = nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }

@@ -96,7 +96,6 @@ class WorkshopsController < ApplicationController
       render partial: "show_lazy", locals: { workshop: @workshop }
     else
       @workshop = Workshop.find(params[:id]).decorate
-      @workshop.increment_view_count!(session: session, request: request)
       track_view(@workshop)
       render :show
     end

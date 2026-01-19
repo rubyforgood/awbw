@@ -11,7 +11,6 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @project.increment_view_count!(session: session, request: request)
     track_view(@project)
 
     # Reuse WorkshopLogsController#index logic programmatically

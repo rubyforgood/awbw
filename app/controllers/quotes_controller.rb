@@ -12,7 +12,6 @@ class QuotesController < ApplicationController
   end
 
   def show
-    @quote.increment_view_count!(session: session, request: request)
     track_view(@quote)
   end
 

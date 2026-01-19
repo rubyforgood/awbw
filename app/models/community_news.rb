@@ -1,5 +1,5 @@
 class CommunityNews < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :project, optional: true
   belongs_to :windows_type, optional: true
@@ -34,7 +34,6 @@ class CommunityNews < ApplicationRecord
     attributes :title, :body
   end
 
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :featured, -> { where(featured: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
