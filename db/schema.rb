@@ -216,7 +216,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.integer "legacy_id"
     t.integer "metadatum_id"
     t.string "name"
-    t.integer "position"
+    t.integer "position", default: 10, null: false
     t.boolean "published", default: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["metadatum_id"], name: "index_categories_on_metadatum_id"
