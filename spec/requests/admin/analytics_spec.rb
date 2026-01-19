@@ -277,18 +277,18 @@ RSpec.describe "/admin/analytics", type: :request do
   end
 
   describe "POST /admin/analytics/print" do
-    before do
-      # Create visit and stub ahoy to create events
-      visit = create(:ahoy_visit)
-      tracker = instance_double("Ahoy::Tracker")
-      allow_any_instance_of(Admin::AnalyticsController).to receive(:ahoy).and_return(tracker)
-      allow(tracker).to receive(:track) do |event_name, properties|
-        create(:ahoy_event, visit: visit, name: event_name, properties: properties)
-      end
-    end
-    
     it "tracks print event with Ahoy" do
       workshop = create(:workshop, :published)
+      visit = create(:ahoy_visit)
+
+      # Stub ahoy.track in the controller to create actual events
+      allow_any_instance_of(Admin::AnalyticsController).to receive(:ahoy) do
+        double("Ahoy::Tracker").tap do |tracker|
+          allow(tracker).to receive(:track) do |event_name, properties|
+            create(:ahoy_event, visit: visit, name: event_name, properties: properties, time: Time.current)
+          end
+        end
+      end
 
       expect {
         post "/admin/analytics/print", params: {
