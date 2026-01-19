@@ -43,11 +43,11 @@ module Admin
 
     def apply_time_filter(time_period)
       time_ago = case time_period
-      when 'past_week'
+      when "past_week"
         1.week.ago
-      when 'past_month'
+      when "past_month"
         1.month.ago
-      when 'past_year'
+      when "past_year"
         1.year.ago
       else
         nil
@@ -56,16 +56,16 @@ module Admin
       return ->(scope) { scope } if time_ago.nil?
 
       # Return appropriate lambda based on whether we're filtering events or records
-      ->(scope) { 
-        time_column = scope.respond_to?(:klass) && scope.klass == Ahoy::Event ? 'time' : 'created_at'
+      ->(scope) do
+        time_column = scope.respond_to?(:klass) &&
+        scope.klass == Ahoy::Event ? "time" : "created_at"
         scope.where("#{time_column} >= ?", time_ago)
-      }
+      end
     end
 
     def most_viewed_for_model(model_class, time_scope)
       model_name = model_class.name
       event_name = "#{model_name} View"
-      
       # Get resource IDs with their view counts from Ahoy events
       # Using JSON_EXTRACT for MySQL - escape the $ in the path
       resource_ids_with_counts = Ahoy::Event
@@ -79,7 +79,6 @@ module Admin
 
       # Fetch the actual records in the same order
       records = model_class.published.where(id: resource_ids_with_counts)
-      
       # Sort records to match the order from the view counts (O(n) complexity)
       id_positions = resource_ids_with_counts.each_with_index.to_h
       records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
@@ -88,7 +87,6 @@ module Admin
     def zero_engagement_for_model(model_class, time_scope)
       model_name = model_class.name
       event_name = "#{model_name} View"
-      
       # Get IDs of resources that have been viewed in the time period
       viewed_ids = Ahoy::Event
         .where(name: event_name)
@@ -106,7 +104,6 @@ module Admin
     def view_count_for_model(model_class, time_scope)
       model_name = model_class.name
       event_name = "#{model_name} View"
-      
       time_scope.call(Ahoy::Event.where(name: event_name)).count
     end
 
