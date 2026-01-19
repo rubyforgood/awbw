@@ -40,10 +40,7 @@ export default class extends Controller {
             .filter(el => el.checked)
             .map(el => el.value)
 
-        const params = new URLSearchParams(window.location.search)
-
-        params.delete("sector_names")
-        params.delete("category_names")
+        const params = new URLSearchParams()
 
         if (selectedSectors.length > 0) {
             params.set("sector_names", selectedSectors.join("--"))
@@ -53,6 +50,8 @@ export default class extends Controller {
             params.set("category_names", selectedCategories.join("--"))
         }
 
-        window.location.search = params.toString()
+        // Always redirect to /taggings with the selected filters
+        const taggingsPath = "/taggings"
+        window.location.href = taggingsPath + (params.toString() ? "?" + params.toString() : "")
     }
 }
