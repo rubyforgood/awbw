@@ -56,7 +56,7 @@ namespace :tags do
           # First, identify and delete duplicate taggings that would conflict
           items_to_move = SectorableItem.where(sector_id: dupe.id)
           
-          items_to_move.each do |item|
+          items_to_move.find_each do |item|
             # Check if primary already has this exact tagging
             existing = SectorableItem.find_by(
               sector_id: primary.id,
@@ -148,7 +148,7 @@ namespace :tags do
           # First, identify and delete duplicate taggings that would conflict
           items_to_move = CategorizableItem.where(category_id: dupe.id)
           
-          items_to_move.each do |item|
+          items_to_move.find_each do |item|
             # Check if primary already has this exact tagging
             existing = CategorizableItem.find_by(
               category_id: primary.id,
