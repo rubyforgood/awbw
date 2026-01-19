@@ -53,11 +53,15 @@ module TagFilterable
       reflection = reflect_on_association(association)
       table_name = reflection.klass.table_name
 
-      # Use GROUP BY and HAVING to ensure the item has all specified tags
-      joins(association)
+      # Use a subquery to find IDs that have all the specified tags
+      # This avoids GROUP BY issues with eager loading
+      subquery = joins(association)
         .where("LOWER(#{table_name}.name) IN (?)", parsed_names)
         .group("#{self.table_name}.id")
         .having("COUNT(DISTINCT LOWER(#{table_name}.name)) = ?", parsed_names.size)
+        .select("#{self.table_name}.id")
+
+      where(id: subquery)
     end
   end
 end
