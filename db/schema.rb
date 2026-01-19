@@ -10,7 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
+  create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "action_text_rich_text_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "mentionable_id", null: false
+    t.string "mentionable_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action_text_rich_text_id", "mentionable_type", "mentionable_id"], name: "index_at_mentions_on_rich_text_and_mentionable", unique: true
+    t.index ["action_text_rich_text_id"], name: "index_action_text_mentions_on_action_text_rich_text_id"
+    t.index ["mentionable_type", "mentionable_id"], name: "index_action_text_mentions_on_mentionable"
+  end
+
+  create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body", size: :long
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["record_type", "record_id", "name"], name: "index_action_text_rich_texts_uniqueness", unique: true
+  end
+
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -89,11 +110,66 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.index ["windows_type_id"], name: "index_age_ranges_on_windows_type_id"
   end
 
+  create_table "ahoy_events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "name"
+    t.json "properties"
+    t.datetime "time"
+    t.bigint "user_id"
+    t.bigint "visit_id"
+    t.index ["name", "time"], name: "index_ahoy_events_on_name_and_time"
+    t.index ["user_id"], name: "index_ahoy_events_on_user_id"
+    t.index ["visit_id"], name: "index_ahoy_events_on_visit_id"
+  end
+
+  create_table "ahoy_visits", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "app_version"
+    t.string "browser"
+    t.string "city"
+    t.string "country"
+    t.string "device_type"
+    t.string "ip"
+    t.text "landing_page"
+    t.float "latitude"
+    t.float "longitude"
+    t.string "os"
+    t.string "os_version"
+    t.string "platform"
+    t.text "referrer"
+    t.string "referring_domain"
+    t.string "region"
+    t.datetime "started_at"
+    t.text "user_agent"
+    t.bigint "user_id"
+    t.string "utm_campaign"
+    t.string "utm_content"
+    t.string "utm_medium"
+    t.string "utm_source"
+    t.string "utm_term"
+    t.string "visit_token"
+    t.string "visitor_token"
+    t.index ["user_id"], name: "index_ahoy_visits_on_user_id"
+    t.index ["visit_token"], name: "index_ahoy_visits_on_visit_token", unique: true
+    t.index ["visitor_token", "started_at"], name: "index_ahoy_visits_on_visitor_token_and_started_at"
+  end
+
   create_table "answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.string "name"
-    t.integer "order"
+    t.integer "position"
     t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "assets", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "owner_id"
+    t.string "owner_type"
+    t.integer "report_id"
+    t.string "title"
+    t.string "type", default: "PrimaryAsset", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_assets_on_owner_id"
+    t.index ["owner_type"], name: "index_assets_on_owner_type"
+    t.index ["type"], name: "index_assets_on_type"
   end
 
   create_table "attachments", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -140,6 +216,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.integer "legacy_id"
     t.integer "metadatum_id"
     t.string "name"
+    t.integer "position", default: 10, null: false
     t.boolean "published", default: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["metadatum_id"], name: "index_categories_on_metadatum_id"
@@ -185,13 +262,31 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
+    t.integer "view_count", default: 0, null: false
     t.integer "windows_type_id"
     t.string "youtube_url"
     t.index ["author_id"], name: "index_community_news_on_author_id"
+    t.index ["body"], name: "index_community_news_on_body", type: :fulltext
     t.index ["created_by_id"], name: "index_community_news_on_created_by_id"
     t.index ["project_id"], name: "index_community_news_on_project_id"
     t.index ["updated_by_id"], name: "index_community_news_on_updated_by_id"
+    t.index ["view_count"], name: "index_community_news_on_view_count"
     t.index ["windows_type_id"], name: "index_community_news_on_windows_type_id"
+  end
+
+  create_table "contact_methods", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "address_id"
+    t.string "contact_type"
+    t.bigint "contactable_id", null: false
+    t.string "contactable_type", null: false
+    t.datetime "created_at", null: false
+    t.boolean "inactive", default: false, null: false
+    t.boolean "is_primary", default: false, null: false
+    t.string "kind", null: false
+    t.datetime "updated_at", null: false
+    t.string "value", null: false
+    t.index ["address_id"], name: "index_contact_methods_on_address_id"
+    t.index ["contactable_type", "contactable_id"], name: "index_contact_methods_on_contactable"
   end
 
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -205,6 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
   end
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.text "description", size: :medium
@@ -215,27 +311,29 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
+    t.integer "view_count", default: 0, null: false
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
+    t.index ["view_count"], name: "index_events_on_view_count"
   end
 
   create_table "facilitators", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "best_time_to_call"
     t.text "bio", size: :medium
-    t.string "city"
-    t.string "country"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
+    t.date "date_of_birth"
     t.string "display_name_preference"
+    t.string "email"
+    t.string "email_2"
+    t.string "email_2_type", default: "personal", null: false
+    t.string "email_type"
     t.string "facebook_url"
     t.string "first_name", null: false
     t.string "instagram_url"
     t.string "last_name", null: false
     t.string "linked_in_url"
-    t.string "mailing_address_type"
     t.date "member_since"
-    t.string "phone_number"
-    t.string "phone_number_type"
-    t.string "primary_email_address"
-    t.string "primary_email_address_type"
+    t.text "notes"
     t.boolean "profile_is_searchable", default: true, null: false
     t.boolean "profile_show_affiliations", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
@@ -253,22 +351,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.boolean "profile_show_workshop_variations", default: true, null: false
     t.boolean "profile_show_workshops", default: true, null: false
     t.string "pronouns"
-    t.string "state"
-    t.string "street_address"
     t.string "twitter_url"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
+    t.integer "view_count", default: 0, null: false
     t.string "youtube_url"
-    t.string "zip"
     t.index ["created_by_id"], name: "index_facilitators_on_created_by_id"
     t.index ["updated_by_id"], name: "index_facilitators_on_updated_by_id"
+    t.index ["view_count"], name: "index_facilitators_on_view_count"
   end
 
   create_table "faqs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "answer", size: :long
     t.datetime "created_at", precision: nil, null: false
     t.boolean "inactive"
-    t.integer "ordering"
+    t.integer "position", null: false
     t.string "question"
     t.datetime "updated_at", precision: nil, null: false
   end
@@ -308,8 +405,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.integer "form_id"
     t.string "instructional_hint"
     t.boolean "is_required", default: true
-    t.integer "ordering"
     t.integer "parent_id"
+    t.integer "position"
     t.string "question"
     t.integer "status", default: 1
     t.datetime "updated_at", precision: nil, null: false
@@ -390,10 +487,43 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
 
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
+    t.datetime "delivered_at"
+    t.text "email_body_html"
+    t.text "email_body_text"
+    t.text "email_subject"
+    t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"
     t.integer "notification_type"
+    t.string "recipient_email", null: false
+    t.string "recipient_role", null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["kind"], name: "index_notifications_on_kind"
+    t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
+  end
+
+  create_table "payments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "usd", null: false
+    t.string "failure_code"
+    t.string "failure_message"
+    t.bigint "payable_id", null: false
+    t.string "payable_type", null: false
+    t.bigint "payer_id", null: false
+    t.string "payer_type", null: false
+    t.string "status", null: false
+    t.string "stripe_charge_id"
+    t.json "stripe_metadata"
+    t.string "stripe_payment_intent_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["payable_type", "payable_id", "status"], name: "index_payments_on_payable_type_and_payable_id_and_status"
+    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable"
+    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable_type_and_payable_id"
+    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer"
+    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer_type_and_payer_id"
+    t.index ["stripe_charge_id"], name: "index_payments_on_stripe_charge_id"
+    t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id", unique: true
   end
 
   create_table "permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -448,10 +578,12 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.integer "project_status_id"
     t.date "start_date"
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "view_count", default: 0, null: false
     t.string "website_url"
     t.integer "windows_type_id"
     t.index ["location_id"], name: "index_projects_on_location_id"
     t.index ["project_status_id"], name: "index_projects_on_project_status_id"
+    t.index ["view_count"], name: "index_projects_on_view_count"
     t.index ["windows_type_id"], name: "index_projects_on_windows_type_id"
   end
 
@@ -475,7 +607,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.text "quote", size: :long
     t.string "speaker_name"
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "view_count", default: 0, null: false
     t.integer "workshop_id"
+    t.index ["view_count"], name: "index_quotes_on_view_count"
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
   end
 
@@ -525,6 +659,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.string "agency"
     t.string "author"
     t.datetime "created_at", precision: nil, null: false
+    t.integer "download_count", default: 0, null: false
     t.boolean "featured", default: false
     t.boolean "female", default: false
     t.string "filemaker_code"
@@ -533,15 +668,20 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.boolean "legacy"
     t.integer "legacy_id"
     t.boolean "male", default: false
-    t.integer "ordering"
+    t.integer "position"
+    t.integer "print_count", default: 0, null: false
     t.text "text", size: :long
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.string "url"
     t.integer "user_id"
+    t.integer "view_count", default: 0, null: false
     t.integer "windows_type_id"
     t.integer "workshop_id"
+    t.index ["download_count"], name: "index_resources_on_download_count"
+    t.index ["print_count"], name: "index_resources_on_print_count"
     t.index ["user_id"], name: "index_resources_on_user_id"
+    t.index ["view_count"], name: "index_resources_on_view_count"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
   end
@@ -579,6 +719,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
+    t.integer "view_count", default: 0, null: false
     t.string "website_url"
     t.integer "windows_type_id", null: false
     t.integer "workshop_id"
@@ -589,6 +730,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.index ["spotlighted_facilitator_id"], name: "index_stories_on_spotlighted_facilitator_id"
     t.index ["story_idea_id"], name: "index_stories_on_story_idea_id"
     t.index ["updated_by_id"], name: "index_stories_on_updated_by_id"
+    t.index ["view_count"], name: "index_stories_on_view_count"
     t.index ["windows_type_id"], name: "index_stories_on_windows_type_id"
     t.index ["workshop_id"], name: "index_stories_on_workshop_id"
   end
@@ -612,6 +754,22 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_story_ideas_on_windows_type_id"
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
+  end
+
+  create_table "tutorials", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.boolean "featured", default: false, null: false
+    t.integer "position", default: 10, null: false
+    t.boolean "published", default: false, null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "view_count", default: 0, null: false
+    t.string "youtube_url"
+    t.index ["featured"], name: "index_tutorials_on_featured"
+    t.index ["published"], name: "index_tutorials_on_published"
+    t.index ["title"], name: "index_tutorials_on_title"
+    t.index ["view_count"], name: "index_tutorials_on_view_count"
   end
 
   create_table "user_form_form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -655,13 +813,18 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.string "city"
     t.string "city2"
     t.text "comment", size: :long
+    t.datetime "confirmation_sent_at"
+    t.string "confirmation_token"
     t.boolean "confirmed", default: true
+    t.datetime "confirmed_at"
     t.datetime "created_at", precision: nil
     t.datetime "current_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
     t.string "email", default: "", null: false
+    t.string "email_type", default: "work", null: false
     t.string "encrypted_password", default: "", null: false
     t.integer "facilitator_id"
+    t.integer "failed_attempts", default: 0, null: false
     t.string "first_name", default: ""
     t.boolean "inactive", default: false
     t.string "last_name", default: ""
@@ -669,6 +832,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.string "last_sign_in_ip"
     t.boolean "legacy", default: false
     t.integer "legacy_id"
+    t.datetime "locked_at"
     t.text "notes", size: :long
     t.string "phone"
     t.string "phone2"
@@ -682,13 +846,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.string "state2"
     t.string "subscribecode"
     t.boolean "super_user", default: false
+    t.string "unconfirmed_email"
+    t.string "unlock_token"
     t.datetime "updated_at", precision: nil
     t.string "zip"
     t.string "zip2"
     t.index ["agency_id"], name: "index_users_on_agency_id"
+    t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["facilitator_id"], name: "index_users_on_facilitator_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
   create_table "windows_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -801,9 +969,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
 
   create_table "workshop_series_memberships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "position", default: 1, null: false
     t.string "series_description"
     t.string "series_description_spanish"
-    t.integer "series_order", default: 1, null: false
     t.string "theme_name"
     t.datetime "updated_at", null: false
     t.integer "workshop_child_id", null: false
@@ -819,12 +987,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.boolean "inactive", default: true
     t.boolean "legacy", default: false
     t.string "name"
-    t.integer "ordering"
+    t.integer "position"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "variation_id"
+    t.integer "view_count", default: 0, null: false
     t.integer "workshop_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
+    t.index ["view_count"], name: "index_workshop_variations_on_view_count"
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
   end
 
@@ -876,6 +1046,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.text "optional_materials", size: :long
     t.text "optional_materials_spanish", size: :long
     t.string "photo_caption"
+    t.integer "print_count", default: 0, null: false
     t.text "project", size: :long
     t.text "project_spanish", size: :long
     t.string "pub_issue"
@@ -901,6 +1072,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.integer "view_count", default: 0, null: false
     t.text "visualization", size: :long
     t.text "visualization_spanish", size: :long
     t.text "warm_up", size: :long
@@ -911,15 +1083,18 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
     t.index ["created_at"], name: "index_workshops_on_created_at"
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
     t.index ["led_count"], name: "index_workshops_on_led_count"
+    t.index ["print_count"], name: "index_workshops_on_print_count"
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
     t.index ["title"], name: "index_workshops_on_title", type: :fulltext
     t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext
     t.index ["user_id"], name: "index_workshops_on_user_id"
+    t.index ["view_count"], name: "index_workshops_on_view_count"
     t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
     t.index ["workshop_idea_id"], name: "index_workshops_on_workshop_idea_id"
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
+  add_foreign_key "action_text_mentions", "action_text_rich_texts"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "banners", "users", column: "created_by_id"
@@ -932,6 +1107,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_143038) do
   add_foreign_key "community_news", "users", column: "created_by_id"
   add_foreign_key "community_news", "users", column: "updated_by_id"
   add_foreign_key "community_news", "windows_types"
+  add_foreign_key "contact_methods", "addresses"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "users", column: "registrant_id"
   add_foreign_key "events", "users", column: "created_by_id"
