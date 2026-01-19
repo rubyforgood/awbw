@@ -53,18 +53,20 @@ namespace :tags do
         next if dry_run
 
         ActiveRecord::Base.transaction do
-          # First, identify and delete duplicate taggings that would conflict
+          # First, load all existing taggings for the primary to avoid N+1 queries
+          existing_taggings = SectorableItem
+            .where(sector_id: primary.id)
+            .pluck(:sectorable_type, :sectorable_id)
+            .map { |type, id| "#{type}_#{id}" }
+            .to_set
+          
           items_to_move = SectorableItem.where(sector_id: dupe.id)
           
           items_to_move.find_each do |item|
             # Check if primary already has this exact tagging
-            existing = SectorableItem.find_by(
-              sector_id: primary.id,
-              sectorable_type: item.sectorable_type,
-              sectorable_id: item.sectorable_id
-            )
+            tagging_key = "#{item.sectorable_type}_#{item.sectorable_id}"
             
-            if existing
+            if existing_taggings.include?(tagging_key)
               # Primary already has this tagging, delete the duplicate
               item.destroy!
               logger.info "  deleted duplicate tagging #{item.id} (primary already has it)"
@@ -145,18 +147,20 @@ namespace :tags do
         next if dry_run
 
         ActiveRecord::Base.transaction do
-          # First, identify and delete duplicate taggings that would conflict
+          # First, load all existing taggings for the primary to avoid N+1 queries
+          existing_taggings = CategorizableItem
+            .where(category_id: primary.id)
+            .pluck(:categorizable_type, :categorizable_id)
+            .map { |type, id| "#{type}_#{id}" }
+            .to_set
+          
           items_to_move = CategorizableItem.where(category_id: dupe.id)
           
           items_to_move.find_each do |item|
             # Check if primary already has this exact tagging
-            existing = CategorizableItem.find_by(
-              category_id: primary.id,
-              categorizable_type: item.categorizable_type,
-              categorizable_id: item.categorizable_id
-            )
+            tagging_key = "#{item.categorizable_type}_#{item.categorizable_id}"
             
-            if existing
+            if existing_taggings.include?(tagging_key)
               # Primary already has this tagging, delete the duplicate
               item.destroy!
               logger.info "  deleted duplicate tagging #{item.id} (primary already has it)"
