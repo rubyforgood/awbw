@@ -6,10 +6,8 @@ class SectorableItem < ApplicationRecord
   has_many :facilitators, through: :sectorable_items, source: :sectorable, source_type: "Facilitator"
 
   # Validations
-  # validates_presence_of :sectorable_type, :sectorable_id, :sector_id
-  # validates :sectorable, uniqueness: { scope: :sector }
-  # validates_uniqueness_of [:sector, :sectorable]
-  # validates :sector_id, uniqueness: { scope: [ :sectorable_type, :sectorable_id ] }
+  validates_presence_of :sectorable_type, :sectorable_id, :sector_id
+  validates :sector_id, uniqueness: { scope: [:sectorable_type, :sectorable_id] }
 
   scope :published, -> { where(inactive: false) }
 

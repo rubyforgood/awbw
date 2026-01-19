@@ -53,12 +53,29 @@ namespace :tags do
         next if dry_run
 
         ActiveRecord::Base.transaction do
-          moved =
-            SectorableItem
-              .where(sector_id: dupe.id)
-              .update_all(sector_id: primary.id)
-
-          logger.info "  moved #{moved} sectorable_items"
+          # First, load all existing taggings for the primary to avoid N+1 queries
+          existing_taggings = SectorableItem
+            .where(sector_id: primary.id)
+            .pluck(:sectorable_type, :sectorable_id)
+            .map { |type, id| "#{type}_#{id}" }
+            .to_set
+          
+          items_to_move = SectorableItem.where(sector_id: dupe.id)
+          
+          items_to_move.find_each do |item|
+            # Check if primary already has this exact tagging
+            tagging_key = "#{item.sectorable_type}_#{item.sectorable_id}"
+            
+            if existing_taggings.include?(tagging_key)
+              # Primary already has this tagging, delete the duplicate
+              item.destroy!
+              logger.info "  deleted duplicate tagging #{item.id} (primary already has it)"
+            else
+              # Safe to move this tagging to primary
+              item.update!(sector_id: primary.id)
+              logger.info "  moved tagging #{item.id} to primary"
+            end
+          end
 
           remaining =
             SectorableItem
@@ -130,12 +147,29 @@ namespace :tags do
         next if dry_run
 
         ActiveRecord::Base.transaction do
-          moved =
-            CategorizableItem
-              .where(category_id: dupe.id)
-              .update_all(category_id: primary.id)
-
-          logger.info "  moved #{moved} categorizable_items"
+          # First, load all existing taggings for the primary to avoid N+1 queries
+          existing_taggings = CategorizableItem
+            .where(category_id: primary.id)
+            .pluck(:categorizable_type, :categorizable_id)
+            .map { |type, id| "#{type}_#{id}" }
+            .to_set
+          
+          items_to_move = CategorizableItem.where(category_id: dupe.id)
+          
+          items_to_move.find_each do |item|
+            # Check if primary already has this exact tagging
+            tagging_key = "#{item.categorizable_type}_#{item.categorizable_id}"
+            
+            if existing_taggings.include?(tagging_key)
+              # Primary already has this tagging, delete the duplicate
+              item.destroy!
+              logger.info "  deleted duplicate tagging #{item.id} (primary already has it)"
+            else
+              # Safe to move this tagging to primary
+              item.update!(category_id: primary.id)
+              logger.info "  moved tagging #{item.id} to primary"
+            end
+          end
 
           remaining =
             CategorizableItem
@@ -198,8 +232,11 @@ namespace :tags do
 
       next if dry_run
 
-      delete.each do |row|
-        row.destroy!
+      ActiveRecord::Base.transaction do
+        delete.each do |row|
+          row.destroy!
+        end
+        logger.info "  deleted #{delete.size} duplicate sectorable_items"
       end
     end
 
@@ -236,8 +273,11 @@ namespace :tags do
 
       next if dry_run
 
-      delete.each do |row|
-        row.destroy!
+      ActiveRecord::Base.transaction do
+        delete.each do |row|
+          row.destroy!
+        end
+        logger.info "  deleted #{delete.size} duplicate categorizable_items"
       end
     end
 
