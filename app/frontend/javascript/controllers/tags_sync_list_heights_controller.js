@@ -40,6 +40,7 @@ export default class extends Controller {
             .filter(el => el.checked)
             .map(el => el.value)
 
+        // Start fresh with only filter parameters (intentional - clears pagination, etc.)
         const params = new URLSearchParams()
 
         if (selectedSectors.length > 0) {
