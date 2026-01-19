@@ -45,7 +45,7 @@ RSpec.describe "Tags index", type: :request do
     it "renders sectors frame with admin controls" do
       get tags_path
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Manage sectors")
+      expect(response.body).to include("Manage service populations")
     end
 
     it "renders categories frame with admin controls" do
