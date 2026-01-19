@@ -13,14 +13,21 @@
    end
 
    def create
-     @asset = @owner ? @owner.assets.build(asset_params.except(:file)) : Asset.new(asset_params.except(:file))
-     @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
-
      if @owner
+       valid_asset = validate_asset_type_constraint(asset_params[:type], @owner.assets)
+
+       unless valid_asset
+         flash.now[:alert] = "Only one Primary or Thumbnail asset allowed."
+         return render partial: "assets/form", locals: { owner: @owner }
+       end
+
+       @asset = @owner.assets.build(asset_params.except(:file))
+       @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
        if @asset.save
          render partial: "assets/form", locals: { asset: @asset, owner: @owner }
        else
          flash.now[:alert] = @asset.errors.full_messages.join(", ")
+
          render turbo_stream: turbo_stream.replace(
            "flash_now",
            partial: "shared/flash_messages",
@@ -28,7 +35,10 @@
          )
        end
      else
+
        @unpersisted_owner = Data.define(:assets).new([])
+       @asset =  Asset.new(asset_params.except(:file))
+       @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
 
        if params[:library_asset][:new_assets].present?
          params[:library_asset][:new_assets].each do |asset|
@@ -39,6 +49,7 @@
 
        if valid_asset && @asset.save
          @unpersisted_owner.assets << @asset
+         @unpersisted_owner.assets.compact!
          render template: "assets/create", formats: [ :turbo_stream ]
        else
          flash.now[:alert] = "Only one Primary or Thumbnail asset allowed."
@@ -53,7 +64,6 @@
 
    def update
      valid_asset = @owner.present? ? validate_asset_type_constraint(asset_params[:type], @owner.assets) : true
-
      if  valid_asset && @asset.update(asset_params)
        flash.now[:notice] = "Asset updated."
        case turbo_frame_request_id

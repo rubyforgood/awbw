@@ -1,3 +1,4 @@
+<%# Handling form and collection for unpersisted_owner %>
 <%= turbo_stream.replace("asset_upload", partial: "assets/upload") %>
 <%= turbo_stream.replace("asset_collection", partial: "assets/collection", locals: {owner: @unpersisted_owner}) %>
 
