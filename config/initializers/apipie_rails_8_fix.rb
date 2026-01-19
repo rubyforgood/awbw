@@ -1,6 +1,24 @@
-# Monkey patch to fix Rails 8.2 deprecation warnings in apipie-rails
-# This overrides the routing method to use keyword arguments instead of hash arguments
-# Can be removed once apipie-rails is updated to support Rails 8.2
+# Monkey patch to fix Rails 8.2 deprecation warnings in apipie-rails 1.5.0
+# 
+# ISSUE: The apipie-rails gem uses the old hash argument syntax for routing,
+# which is deprecated in Rails 8.1 and will be removed in Rails 8.2:
+#   DEPRECATION WARNING: get received a hash argument as. Please use a keyword 
+#   instead. Support to hash argument will be removed in Rails 8.2.
+#
+# SOLUTION: This initializer overrides the apipie routing method to use the new
+# keyword argument syntax for Rails route definitions.
+#
+# OLD SYNTAX (deprecated):
+#   get 'path', :to => "controller#action", :format => "json"
+#   get(hash_with_path => "controller#action", :as => :name)
+#
+# NEW SYNTAX (Rails 8+ compatible):
+#   get 'path', to: "controller#action", format: "json"
+#   get "path", to: "controller#action", as: :name
+#
+# This patch can be removed once apipie-rails is updated to support Rails 8.2+
+# See: https://github.com/Apipie/apipie-rails/issues (check for related issues)
+#
 
 module Apipie
   module Routing
