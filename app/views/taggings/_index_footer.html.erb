@@ -94,15 +94,22 @@
       const sectorValue = sectorSelect.value;
       const categoryValue = categorySelect.value;
       
-      const params = new URLSearchParams();
+      const params = new URLSearchParams(window.location.search);
+      
+      // Clear existing filters
+      params.delete('sector_names');
+      params.delete('category_names');
+      
+      // Add new filters
       if (sectorValue) {
-        params.append('sector_names', sectorValue);
+        params.set('sector_names', sectorValue);
       }
       if (categoryValue) {
-        params.append('category_names', categoryValue);
+        params.set('category_names', categoryValue);
       }
       
-      window.location.href = '<%= taggings_path %>' + (params.toString() ? '?' + params.toString() : '');
+      // Use window.location.search to update only the query parameters
+      window.location.search = params.toString();
     }
 
     applyButton.addEventListener('click', applyFilters);
