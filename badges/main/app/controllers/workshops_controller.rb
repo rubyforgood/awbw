@@ -2,7 +2,7 @@
 
 class WorkshopsController < ApplicationController
   def index
-    @category_types = CategoryType.includes(:categories).published.decorate
+    @category_types = CategoryType.includes(:categories).published.order(:name).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
     if turbo_frame_request?
