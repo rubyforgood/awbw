@@ -7,7 +7,6 @@ module Admin
       time_scope = apply_time_filter(params[:time_period])
 
       # Query Ahoy events for view counts within the time period
-<<<<<<< HEAD
       @most_viewed_workshops = decorate_with_counts(most_viewed_for_model(Workshop, time_scope), :view_count)
       @most_viewed_workshop_variations = decorate_with_counts(most_viewed_for_model(WorkshopVariation, time_scope), :view_count)
       @most_viewed_resources = decorate_with_counts(most_viewed_for_model(Resource, time_scope), :view_count)
@@ -18,18 +17,6 @@ module Admin
       @most_viewed_projects = decorate_with_counts(most_viewed_for_model(Project, time_scope), :view_count)
       @most_viewed_events = decorate_with_counts(most_viewed_for_model(Event, time_scope), :view_count)
       @most_viewed_facilitators = decorate_with_counts(most_viewed_for_model(Facilitator, time_scope), :view_count)
-=======
-      @most_viewed_workshops = most_viewed_for_model(Workshop, time_scope).map(&:decorate)
-      @most_viewed_workshop_variations = most_viewed_for_model(WorkshopVariation, time_scope).map(&:decorate)
-      @most_viewed_resources = most_viewed_for_model(Resource, time_scope).map(&:decorate)
-      @most_viewed_community_news = most_viewed_for_model(CommunityNews, time_scope).map(&:decorate)
-      @most_viewed_stories = most_viewed_for_model(Story, time_scope).map(&:decorate)
-      @most_viewed_quotes = most_viewed_for_model(Quote, time_scope).map(&:decorate)
-      @most_viewed_tutorials = most_viewed_for_model(Tutorial, time_scope).map(&:decorate)
-      @most_viewed_projects = most_viewed_for_model(Project, time_scope).map(&:decorate)
-      @most_viewed_events = most_viewed_for_model(Event, time_scope).map(&:decorate)
-      @most_viewed_facilitators = most_viewed_for_model(Facilitator, time_scope).map(&:decorate)
->>>>>>> efd21770 (Fix JSON path extraction and array decoration issues)
 
       @most_printed_workshops = decorate_with_counts(most_printed_for_model(Workshop, time_scope), :print_count)
       @most_downloaded_resources = decorate_with_counts(most_downloaded_for_model(Resource, time_scope), :download_count)
