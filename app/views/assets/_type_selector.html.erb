@@ -3,7 +3,7 @@
 <%= turbo_frame_tag "type_selector_asset_#{ asset.id }" do %>
   <%= turbo_flash %>
 
-  <%= form_with scope: :library_asset, url: library_asset_path(asset), method: :patch do |f| %>
+  <%= form_with scope: :library_asset, url: library_asset_path(asset), method: :patch, html: { autocomplete: "off" } do |f| %>
     <% if owner&.respond_to?(:to_sgid) %>
       <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
     <% end %>
