@@ -2,7 +2,23 @@ module AhoyViewTracking
   extend ActiveSupport::Concern
 
   def track_view(resource)
-    ahoy.track "#{resource.class.name} View", {
+    ahoy.track "view.#{resource.class.table_name.singularize}", {
+      resource_type: resource.class.name,
+      resource_id: resource.id,
+      resource_title: resource_title_for(resource)
+    }
+  end
+
+  def track_print(resource)
+    ahoy.track "print.#{resource.class.table_name.singularize}", {
+      resource_type: resource.class.name,
+      resource_id: resource.id,
+      resource_title: resource_title_for(resource)
+    }
+  end
+
+  def track_download(resource)
+    ahoy.track "download.#{resource.class.table_name.singularize}", {
       resource_type: resource.class.name,
       resource_id: resource.id,
       resource_title: resource_title_for(resource)

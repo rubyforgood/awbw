@@ -1,5 +1,6 @@
 module Admin
   class AnalyticsController < Admin::BaseController
+    include AhoyViewTracking
     protect_from_forgery with: :null_session
 
     def index
@@ -17,17 +18,17 @@ module Admin
       @most_viewed_events = most_viewed_for_model(Event, time_scope).map(&:decorate)
       @most_viewed_facilitators = most_viewed_for_model(Facilitator, time_scope).map(&:decorate)
 
-      @most_printed_workshops = time_scope.call(Workshop.published).order(print_count: :desc, created_at: :desc).limit(10).decorate
-      @most_downloaded_resources = time_scope.call(Resource.published).order(download_count: :desc, created_at: :desc).limit(10).decorate
+      @most_printed_workshops = most_printed_for_model(Workshop, time_scope).map(&:decorate)
+      @most_downloaded_resources = most_downloaded_for_model(Resource, time_scope).map(&:decorate)
 
       @zero_engagement_workshops = zero_engagement_for_model(Workshop, time_scope).limit(10).decorate
       @zero_engagement_resources = zero_engagement_for_model(Resource, time_scope).limit(10).decorate
 
       @summary = {
         workshops: view_count_for_model(Workshop, time_scope),
-        workshop_prints: time_scope.call(Workshop).sum(:print_count),
+        workshop_prints: print_count_for_model(Workshop, time_scope),
         resources: view_count_for_model(Resource, time_scope),
-        resource_downloads: time_scope.call(Resource).sum(:download_count),
+        resource_downloads: download_count_for_model(Resource, time_scope),
         community_news: view_count_for_model(CommunityNews, time_scope),
         stories: view_count_for_model(Story, time_scope),
         events: view_count_for_model(Event, time_scope),
@@ -64,8 +65,8 @@ module Admin
     end
 
     def most_viewed_for_model(model_class, time_scope)
-      model_name = model_class.name
-      event_name = "#{model_name} View"
+      table_name_singular = model_class.table_name.singularize
+      event_name = "view.#{table_name_singular}"
       # Get resource IDs with their view counts from Ahoy events
       # Using JSON_EXTRACT for MySQL - escape the $ in the path
       resource_ids_with_counts = Ahoy::Event
@@ -85,8 +86,8 @@ module Admin
     end
 
     def zero_engagement_for_model(model_class, time_scope)
-      model_name = model_class.name
-      event_name = "#{model_name} View"
+      table_name_singular = model_class.table_name.singularize
+      event_name = "view.#{table_name_singular}"
       # Get IDs of resources that have been viewed in the time period
       viewed_ids = Ahoy::Event
         .where(name: event_name)
@@ -102,8 +103,64 @@ module Admin
     end
 
     def view_count_for_model(model_class, time_scope)
-      model_name = model_class.name
-      event_name = "#{model_name} View"
+      table_name_singular = model_class.table_name.singularize
+      event_name = "view.#{table_name_singular}"
+      time_scope.call(Ahoy::Event.where(name: event_name)).count
+    end
+
+    def most_printed_for_model(model_class, time_scope)
+      table_name_singular = model_class.table_name.singularize
+      event_name = "print.#{table_name_singular}"
+      
+      # Get resource IDs with their print counts from Ahoy events
+      resource_ids_with_counts = Ahoy::Event
+        .where(name: event_name)
+        .then { |query| time_scope.call(query) }
+        .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
+        .count
+        .sort_by { |_id, count| -count }
+        .first(10)
+        .map { |id, _count| id.to_i }
+
+      # Fetch the actual records in the same order
+      records = model_class.published.where(id: resource_ids_with_counts)
+      
+      # Sort records to match the order from the print counts
+      id_positions = resource_ids_with_counts.each_with_index.to_h
+      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
+    end
+
+    def most_downloaded_for_model(model_class, time_scope)
+      table_name_singular = model_class.table_name.singularize
+      event_name = "download.#{table_name_singular}"
+      
+      # Get resource IDs with their download counts from Ahoy events
+      resource_ids_with_counts = Ahoy::Event
+        .where(name: event_name)
+        .then { |query| time_scope.call(query) }
+        .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
+        .count
+        .sort_by { |_id, count| -count }
+        .first(10)
+        .map { |id, _count| id.to_i }
+
+      # Fetch the actual records in the same order
+      records = model_class.published.where(id: resource_ids_with_counts)
+      
+      # Sort records to match the order from the download counts
+      id_positions = resource_ids_with_counts.each_with_index.to_h
+      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }
+    end
+
+    def print_count_for_model(model_class, time_scope)
+      table_name_singular = model_class.table_name.singularize
+      event_name = "print.#{table_name_singular}"
+      time_scope.call(Ahoy::Event.where(name: event_name)).count
+    end
+
+    def download_count_for_model(model_class, time_scope)
+      table_name_singular = model_class.table_name.singularize
+      event_name = "download.#{table_name_singular}"
       time_scope.call(Ahoy::Event.where(name: event_name)).count
     end
 
@@ -122,6 +179,7 @@ module Admin
       return head :not_found unless record
 
       record.increment_print_count!
+      track_print(record)
 
       head :ok
     end

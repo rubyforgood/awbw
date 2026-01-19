@@ -91,6 +91,7 @@ class ResourcesController < ApplicationController
   def download
     @resource = Resource.find(params[:resource_id])
     @resource.increment!(:download_count)
+    track_download(@resource)
 
     attachment = if params[:attachment_id].to_i > 0
       Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
