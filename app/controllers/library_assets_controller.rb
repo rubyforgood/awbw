@@ -5,7 +5,7 @@
    before_action :set_owner, only: [ :create, :update ]
 
    def show
-     if @asset.file.attached?
+     if @asset&.file.attached?
        redirect_to rails_blob_url(@asset.file, disposition: "inline")
      else
        render plain: "File not attached", status: :not_found
@@ -58,12 +58,17 @@
    end
 
    def edit
-     render template: "assets/edit"
+     if @asset
+       render template: "assets/edit"
+     else
+       flash.now[:alert] = "Error"
+       redirect_back_or_to authenticated_root_path
+     end
    end
 
    def update
      valid_asset = @owner.present? ? validate_asset_type_constraint(asset_params[:type], @owner.assets) : true
-     if  valid_asset && @asset.update(asset_params)
+     if  valid_asset && @asset&.update(asset_params)
        flash.now[:notice] = "Asset updated."
        case turbo_frame_request_id
        when "title_asset_#{@asset.id}"
@@ -94,14 +99,19 @@
    end
 
    def destroy
-     @asset.destroy
-     render turbo_stream: turbo_stream.remove(@asset)
+     if @asset
+       @asset.destroy
+       render turbo_stream: turbo_stream.remove(@asset)
+     else
+       flash.now[:alert] = "Error"
+       redirect_back_or_to authenticated_root_path
+     end
    end
 
     private
 
    def set_asset
-     @asset = Asset.find(params[:id])
+     @asset = Asset.find_by(id: params[:id])
    end
 
    def set_owner
