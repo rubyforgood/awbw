@@ -128,8 +128,8 @@ RSpec.describe "/admin/analytics", type: :request do
       workshop1 = create(:workshop, :published, title: "Popular Workshop")
       workshop2 = create(:workshop, :published, title: "Less Popular")
       
-      # Create 5 views for workshop1
-      5.times do
+      # Create 3 views for workshop1
+      3.times do
         create(:ahoy_event, name: "view.workshop", properties: {
           resource_type: "Workshop",
           resource_id: workshop1.id
@@ -147,7 +147,7 @@ RSpec.describe "/admin/analytics", type: :request do
       get "/admin/analytics"
       
       # Query the database to verify correct ordering
-      view_events = Ahoy::Event.where(name: "view.workshop").group("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))").count
+      view_events = Ahoy::Event.where(name: "view.workshop").group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).count
       expect(view_events[workshop1.id.to_s]).to eq(3)
       expect(view_events[workshop2.id.to_s]).to eq(2)
     end
@@ -167,7 +167,7 @@ RSpec.describe "/admin/analytics", type: :request do
       
       # Verify top 10 is enforced
       expect(response).to have_http_status(:success)
-      expect(Ahoy::Event.where(name: "view.workshop").distinct.pluck("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))").count).to eq(15)
+      expect(Ahoy::Event.where(name: "view.workshop").distinct.pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).count).to eq(15)
     end
   end
 
@@ -183,15 +183,17 @@ RSpec.describe "/admin/analytics", type: :request do
         })
       end
       
-      create(:ahoy_event, name: "print.workshop", properties: {
-        resource_type: "Workshop",
-        resource_id: workshop2.id
-      })
+      2.times do
+        create(:ahoy_event, name: "print.workshop", properties: {
+          resource_type: "Workshop",
+          resource_id: workshop2.id
+        })
+      end
 
       get "/admin/analytics"
       
       # Query the database to verify correct ordering
-      print_events = Ahoy::Event.where(name: "print.workshop").group("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))").count
+      print_events = Ahoy::Event.where(name: "print.workshop").group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).count
       expect(print_events[workshop1.id.to_s]).to eq(3)
       expect(print_events[workshop2.id.to_s]).to eq(2)
     end
@@ -202,22 +204,24 @@ RSpec.describe "/admin/analytics", type: :request do
       resource1 = create(:resource)
       resource2 = create(:resource)
       
-      4.times do
+      3.times do
         create(:ahoy_event, name: "download.resource", properties: {
           resource_type: "Resource",
           resource_id: resource1.id
         })
       end
       
-      create(:ahoy_event, name: "download.resource", properties: {
-        resource_type: "Resource",
-        resource_id: resource2.id
-      })
+      2.times do
+        create(:ahoy_event, name: "download.resource", properties: {
+          resource_type: "Resource",
+          resource_id: resource2.id
+        })
+      end
 
       get "/admin/analytics"
       
       # Query the database to verify correct ordering  
-      download_events = Ahoy::Event.where(name: "download.resource").group("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))").count
+      download_events = Ahoy::Event.where(name: "download.resource").group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).count
       expect(download_events[resource1.id.to_s]).to eq(3)
       expect(download_events[resource2.id.to_s]).to eq(2)
     end
@@ -236,7 +240,7 @@ RSpec.describe "/admin/analytics", type: :request do
       get "/admin/analytics"
       
       # Verify zero engagement detection
-      viewed_ids = Ahoy::Event.where(name: "view.workshop").pluck("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))").map(&:to_i)
+      viewed_ids = Ahoy::Event.where(name: "view.workshop").pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).map(&:to_i)
       expect(viewed_ids).to include(viewed_workshop.id)
       expect(viewed_ids).not_to include(unviewed_workshop.id)
     end
@@ -274,10 +278,13 @@ RSpec.describe "/admin/analytics", type: :request do
 
   describe "POST /admin/analytics/print" do
     before do
-      # Stub Ahoy visit for request specs
-      allow_any_instance_of(Admin::AnalyticsController).to receive(:current_visit).and_return(
-        create(:ahoy_visit)
-      )
+      # Create visit and stub ahoy to create events
+      visit = create(:ahoy_visit)
+      tracker = instance_double("Ahoy::Tracker")
+      allow_any_instance_of(Admin::AnalyticsController).to receive(:ahoy).and_return(tracker)
+      allow(tracker).to receive(:track) do |event_name, properties|
+        create(:ahoy_event, visit: visit, name: event_name, properties: properties)
+      end
     end
     
     it "tracks print event with Ahoy" do
@@ -298,7 +305,7 @@ RSpec.describe "/admin/analytics", type: :request do
     it "returns bad request for invalid printable type" do
       post "/admin/analytics/print", params: {
         printable_type: "InvalidType",
-        printable_id: 1
+        printable_id: 99999
       }
 
       expect(response).to have_http_status(:bad_request)

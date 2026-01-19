@@ -42,6 +42,7 @@ RSpec.describe AhoyViewTracking, type: :controller do
     visit = create(:ahoy_visit)
     tracker = instance_double("Ahoy::Tracker")
     allow(controller).to receive(:ahoy).and_return(tracker)
+    allow(tracker).to receive(:new_visit?).and_return(false)
     allow(tracker).to receive(:track) do |event_name, properties|
       create(:ahoy_event, visit: visit, name: event_name, properties: properties)
     end
