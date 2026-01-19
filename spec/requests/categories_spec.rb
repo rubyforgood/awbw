@@ -108,8 +108,8 @@ RSpec.describe "/categories", type: :request do
     context "with ordering parameter (drag-and-drop)" do
       it "updates the position of the category" do
         category_type = create(:category_type)
-        category1 = Category.create!(name: "First", metadatum_id: category_type.id, published: true, position: 1)
-        category2 = Category.create!(name: "Second", metadatum_id: category_type.id, published: true, position: 2)
+        category1 = create(:category, name: "First", category_type: category_type, position: 1)
+        category2 = create(:category, name: "Second", category_type: category_type, position: 2)
         
         patch category_url(category2), params: { ordering: 1 }
         category2.reload
@@ -118,13 +118,34 @@ RSpec.describe "/categories", type: :request do
         expect(category2.position).to eq(1)
       end
 
+      it "rejects invalid ordering values" do
+        category_type = create(:category_type)
+        category = create(:category, name: "Test", category_type: category_type, position: 1)
+        
+        patch category_url(category), params: { ordering: 0 }
+        
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "handles update failures gracefully" do
+        category_type = create(:category_type)
+        category = create(:category, name: "Test", category_type: category_type, position: 1)
+        
+        # Mock update failure
+        allow_any_instance_of(Category).to receive(:update).and_return(false)
+        
+        patch category_url(category), params: { ordering: 2 }
+        
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
       it "scopes position updates by metadatum_id" do
         category_type1 = create(:category_type, name: "Type 1")
         category_type2 = create(:category_type, name: "Type 2")
         
-        cat1_type1 = Category.create!(name: "Cat1 Type1", metadatum_id: category_type1.id, published: true, position: 1)
-        cat2_type1 = Category.create!(name: "Cat2 Type1", metadatum_id: category_type1.id, published: true, position: 2)
-        cat1_type2 = Category.create!(name: "Cat1 Type2", metadatum_id: category_type2.id, published: true, position: 1)
+        cat1_type1 = create(:category, name: "Cat1 Type1", category_type: category_type1, position: 1)
+        cat2_type1 = create(:category, name: "Cat2 Type1", category_type: category_type1, position: 2)
+        cat1_type2 = create(:category, name: "Cat1 Type2", category_type: category_type2, position: 1)
         
         # Update position of cat2_type1
         patch category_url(cat2_type1), params: { ordering: 1 }

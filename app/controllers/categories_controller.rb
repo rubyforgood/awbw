@@ -45,8 +45,16 @@ class CategoriesController < ApplicationController
   def update
     # Handle position updates from drag-and-drop
     if params[:ordering].present?
-      @category.update(position: params[:ordering])
-      head :ok
+      ordering = params[:ordering].to_i
+      if ordering > 0
+        if @category.update(position: ordering)
+          head :ok
+        else
+          head :unprocessable_entity
+        end
+      else
+        head :bad_request
+      end
       return
     end
 
