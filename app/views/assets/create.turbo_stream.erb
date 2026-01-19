@@ -5,7 +5,7 @@
 <%= turbo_stream.replace_all ".unpersisted_resource_asset_params" do %>
 
   <%= tag.div class: "unpersisted_resource_asset_params" do %>
-    <% @unpersisted_owner.assets.each do |asset| %>
+    <% @unpersisted_owner.assets.compact.each do |asset| %>
       <%= hidden_field_tag "library_asset[new_assets][][id]", asset.id %>
       <%= hidden_field_tag "library_asset[new_assets][][type]", asset.type %>
     <% end %>

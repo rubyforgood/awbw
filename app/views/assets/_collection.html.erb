@@ -1,5 +1,5 @@
 <div id="asset_collection" class="flex flex-wrap gap-2 p-3 m-2 bg-white my-5 rounded-md">
-  <% owner.assets
+  <% owner.assets.compact
       .reject { |a| a.type == "RichTextAsset" }
       .sort_by do |asset|
         case asset.type
