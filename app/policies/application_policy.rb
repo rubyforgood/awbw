@@ -17,7 +17,7 @@ class ApplicationPolicy < ActionPolicy::Base
   end
 
   def owner?
-     record.user_id == user.id
+    record.user_id == user.id
   end
 
   def authenticated? = user.present?
