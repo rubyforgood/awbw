@@ -294,6 +294,8 @@ class Workshop < ApplicationRecord
     end
   end
 
+  public
+
   ## ActionText:Attachable
   def attachable_content_type
     "application/vnd.active_record.workshop"
