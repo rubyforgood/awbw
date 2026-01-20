@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_20_212705) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -26,6 +26,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
     t.text "body", size: :long
     t.datetime "created_at", null: false
     t.string "name", null: false
+    t.text "plain_text_body"
     t.bigint "record_id", null: false
     t.string "record_type", null: false
     t.datetime "updated_at", null: false
@@ -128,17 +129,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
     t.string "country"
     t.string "device_type"
     t.string "ip"
-    t.text "landing_page"
+    t.text "landing_page", size: :medium
     t.float "latitude"
     t.float "longitude"
     t.string "os"
     t.string "os_version"
     t.string "platform"
-    t.text "referrer"
+    t.text "referrer", size: :medium
     t.string "referring_domain"
     t.string "region"
     t.datetime "started_at"
-    t.text "user_agent"
+    t.text "user_agent", size: :medium
     t.bigint "user_id"
     t.string "utm_campaign"
     t.string "utm_content"
@@ -330,7 +331,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
     t.string "last_name", null: false
     t.string "linked_in_url"
     t.date "member_since"
-    t.text "notes"
+    t.text "notes", size: :medium
     t.boolean "profile_is_searchable", default: true, null: false
     t.boolean "profile_show_affiliations", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
@@ -483,9 +484,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.datetime "delivered_at"
-    t.text "email_body_html"
-    t.text "email_body_text"
-    t.text "email_subject"
+    t.text "email_body_html", size: :medium
+    t.text "email_body_text", size: :medium
+    t.text "email_subject", size: :medium
     t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"
@@ -741,7 +742,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
   end
 
   create_table "tutorials", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body"
+    t.text "body", size: :medium
     t.datetime "created_at", null: false
     t.boolean "featured", default: false, null: false
     t.integer "position", default: 10, null: false
@@ -1071,6 +1072,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
   end
 
   add_foreign_key "action_text_mentions", "action_text_rich_texts"
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "banners", "users", column: "created_by_id"
