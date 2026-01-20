@@ -73,9 +73,9 @@ class Workshop < ApplicationRecord
   has_rich_text :rhino_extra_field
 
   has_rich_text :rhino_objective_spanish
-  has_rich_text :rhino_age_range_spanish
   has_rich_text :rhino_materials_spanish
   has_rich_text :rhino_optional_materials_spanish
+  has_rich_text :rhino_age_range_spanish
   has_rich_text :rhino_setup_spanish
   has_rich_text :rhino_introduction_spanish
   has_rich_text :rhino_opening_circle_spanish
@@ -142,16 +142,6 @@ class Workshop < ApplicationRecord
   }
 
   # Search Cop
-  scope :with_rich_text_body_like, ->(query) {
-    rich_texts = Arel::Table.new(:action_text_rich_texts)
-    workshops = self.arel_table
-
-    join_condition = rich_texts[:record_id].eq(workshops[:id])
-                     .and(rich_texts[:record_type].eq("Workshop"))
-
-    joins(workshops.join(rich_texts, Arel::Nodes::InnerJoin).on(join_condition).join_sources)
-      .where(rich_texts[:body].matches("%#{query}%"))
-  }
   include SearchCop
   search_scope :search do
     attributes all: [ :title, :full_name ] # no spanish alternatives
