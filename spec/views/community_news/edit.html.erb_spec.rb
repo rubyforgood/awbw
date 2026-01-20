@@ -12,7 +12,7 @@ RSpec.describe "community_news/edit", type: :view do
       featured: false,
       author: create(:user),
       reference_url: "MyString",
-      project: nil,
+      organization: nil,
       windows_type: nil,
       created_by: create(:user),
       updated_by: create(:user),
@@ -43,7 +43,9 @@ RSpec.describe "community_news/edit", type: :view do
 
       assert_select "textarea[name=?]", "community_news[reference_url]"
 
-      assert_select "select[name=?]", "community_news[project_id]"
+      assert_select "select[name=?]", "community_news[organization_id]"
+
+      assert_select "select[name=?]", "community_news[windows_type_id]"
     end
   end
 end

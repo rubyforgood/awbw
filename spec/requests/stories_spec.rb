@@ -6,7 +6,7 @@ RSpec.describe "/stories", type: :request do
 
   let(:windows_type) { create(:windows_type) }
   let(:workshop)     { create(:workshop) }
-  let(:project)      { create(:project) }
+  let(:organization) { create(:organization) }
 
   let(:base_attributes) do
     {
@@ -14,7 +14,7 @@ RSpec.describe "/stories", type: :request do
       body: "Once upon a time...",
       windows_type_id: windows_type.id,
       workshop_id: workshop.id,
-      project_id: project.id,
+      organization_id: organization.id,
       created_by_id: admin.id,
       updated_by_id: admin.id
     }
