@@ -40,6 +40,25 @@ module Admin
       }
     end
 
+    def print
+      printable_models = {
+        "Resource" => Resource,
+        "Story" => Story,
+        "Workshop" => Workshop,
+        "CommunityNews" => CommunityNews
+      }.freeze
+
+      klass = printable_models[params[:printable_type]]
+      return head :bad_request unless klass
+
+      record = klass.find_by(id: params[:printable_id])
+      return head :not_found unless record
+
+      track_print(record)
+
+      head :ok
+    end
+
     private
 
     def apply_time_filter(time_period)
@@ -197,25 +216,6 @@ module Admin
         decorated.define_singleton_method(count_method) { count }
         decorated
       end
-    end
-
-    def print
-      printable_models = {
-        "Resource" => Resource,
-        "Story" => Story,
-        "Workshop" => Workshop,
-        "CommunityNews" => CommunityNews
-      }.freeze
-
-      klass = printable_models[params[:printable_type]]
-      return head :bad_request unless klass
-
-      record = klass.find_by(id: params[:printable_id])
-      return head :not_found unless record
-
-      track_print(record)
-
-      head :ok
     end
   end
 end
