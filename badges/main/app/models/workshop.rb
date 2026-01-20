@@ -3,7 +3,7 @@ class Workshop < ApplicationRecord
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
-  belongs_to :windows_type
+  belongs_to :windows_type, optional: true
   belongs_to :user, optional: true
   belongs_to :workshop_idea, optional: true
 
@@ -224,7 +224,7 @@ class Workshop < ApplicationRecord
   end
 
   def type_name
-    "#{id} #{title} #{ " (#{windows_type.short_name})" if windows_type}"
+    "#{title} #{"(#{windows_type.short_name}) " if windows_type}##{id}"
   end
 
   def communal_label(report)
