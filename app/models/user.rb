@@ -14,7 +14,7 @@ class User < ApplicationRecord
   has_many :bookmarks, dependent: :destroy
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :notifications, as: :noticeable
-  has_many :project_users, dependent: :destroy
+  has_many :organization_users, dependent: :destroy
   has_many :reports
   has_many :resources
   has_many :user_forms, dependent: :destroy
@@ -32,20 +32,20 @@ class User < ApplicationRecord
   has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: "Workshop"
   has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: "Resource"
   has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: "Event"
-  has_many :colleagues, -> { select(:user_id, :position, :project_id).distinct },
-           through: :projects, source: :project_users
-  has_many :communal_reports, through: :projects, source: :reports
+  has_many :colleagues, -> { select(:user_id, :position, :organization_id).distinct },
+           through: :organizations, source: :organization_users
+  has_many :communal_reports, through: :organizations, source: :reports
   has_many :events, through: :event_registrations
-  has_many :projects, through: :project_users
+  has_many :organizations, through: :organization_users
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
-  has_many :windows_types, through: :projects
+  has_many :windows_types, through: :organizations
   # Images
   has_one_attached :avatar
 
   # Nested attributes
   accepts_nested_attributes_for :user_forms
-  accepts_nested_attributes_for :project_users, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["project_id"].blank? && attrs["title"].blank? }
+  accepts_nested_attributes_for :organization_users, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["organization_id"].blank? || attrs["title"].blank? }
 
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }
@@ -55,7 +55,7 @@ class User < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes [ :email, :first_name, :last_name, :phone ]
-    attributes user: "projects.name"
+    attributes user: "organizations.name"
   end
 
   scope :active, -> { where(inactive: false) }
@@ -72,8 +72,8 @@ class User < ApplicationRecord
     super_user
   end
 
-  def has_liasion_position_for?(project_id)
-    !project_users.where(project_id: project_id, position: 1).first.nil?
+  def has_liasion_position_for?(organization_id)
+    !organization_users.where(organization_id: organization_id, position: 1).first.nil?
   end
 
   def active_for_authentication?

@@ -14,7 +14,7 @@ class WorkshopLog < Report
 
   # Scopes
   scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
-  scope :project_id, ->(project_id) { where(project_id: project_id) if project_id.present? }
+  scope :organization_id, ->(organization_id) { where(organization_id: organization_id) if organization_id.present? }
   scope :user_id, ->(user_id) { where(user_id: user_id.to_i) if user_id.present? }
   scope :month_and_year, ->(month_and_year) {
     if month_and_year.present?
@@ -34,7 +34,7 @@ class WorkshopLog < Report
     logs = logs.month_and_year(params[:month_and_year]) if params[:month_and_year].present?
     logs = logs.year(params[:year]) if params[:year].present?
     logs = logs.workshop_id(params[:workshop_id]) if params[:workshop_id].present?
-    logs = logs.project_id(params[:project_id]) if params[:project_id].present?
+    logs = logs.organization_id(params[:organization_id]) if params[:organization_id].present?
     logs.ordered_by_date
   end
 

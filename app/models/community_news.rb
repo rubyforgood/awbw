@@ -1,7 +1,7 @@
 class CommunityNews < ApplicationRecord
   include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
-  belongs_to :project, optional: true
+  belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :author, class_name: "User", optional: true
   belongs_to :created_by, class_name: "User"

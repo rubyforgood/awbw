@@ -1,7 +1,7 @@
 class Report < ApplicationRecord
   belongs_to :owner, polymorphic: true, optional: true
   belongs_to :user
-  belongs_to :project
+  belongs_to :organization
   belongs_to :windows_type
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
