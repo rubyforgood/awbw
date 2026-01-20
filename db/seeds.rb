@@ -155,5 +155,5 @@ category_type_categories.each do |category_type_name, category_name, legacy_id|
   end
 end
 
-puts "Creating Annual Evaluation Form…"
+puts "Creating Annual Evaluation Form..."
 load Rails.root.join("db", "seeds", "annual_evaluation_form.rb")
