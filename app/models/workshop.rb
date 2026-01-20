@@ -1,5 +1,5 @@
 class Workshop < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
@@ -73,9 +73,9 @@ class Workshop < ApplicationRecord
   has_rich_text :rhino_extra_field
 
   has_rich_text :rhino_objective_spanish
+  has_rich_text :rhino_age_range_spanish
   has_rich_text :rhino_materials_spanish
   has_rich_text :rhino_optional_materials_spanish
-  has_rich_text :rhino_age_range_spanish
   has_rich_text :rhino_setup_spanish
   has_rich_text :rhino_introduction_spanish
   has_rich_text :rhino_opening_circle_spanish
@@ -142,20 +142,22 @@ class Workshop < ApplicationRecord
   }
 
   # Search Cop
+  scope :with_rich_text_body_like, ->(query) {
+    rich_texts = Arel::Table.new(:action_text_rich_texts)
+    workshops = self.arel_table
+
+    join_condition = rich_texts[:record_id].eq(workshops[:id])
+                     .and(rich_texts[:record_type].eq("Workshop"))
+
+    joins(workshops.join(rich_texts, Arel::Nodes::InnerJoin).on(join_condition).join_sources)
+      .where(rich_texts[:body].matches("%#{query}%"))
+  }
   include SearchCop
   search_scope :search do
-    attributes all: [ :title, :full_name, # no spanish alternatives
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.body"
 
-                     :objective, :materials, :setup, :introduction,
-                     :demonstration, :opening_circle, :warm_up, :opening_circle,
-                     :creation, :closing, :notes, :tips, :misc1, :misc2,
-
-                     :objective_spanish, :materials_spanish, :setup_spanish, :introduction_spanish,
-                     :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish, :opening_circle_spanish,
-                     :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish, :misc2_spanish ]
-    # attributes category: ["categories.name"]
-    # attributes sector: ["sectors.name"]
-    # attributes user: ["first_name", "last_name"]
+    attributes all: [ :title, :full_name ] # no spanish alternatives
     options :all, type: :text, default: true# , default_operator: :or
   end
 
