@@ -67,6 +67,19 @@ For Docker-based development (recommended):
 3. Visit <http://localhost:3000/> to see the AWBW portal page
 4. Log in as a sample user with the default [credentials](#credentials)
 
+### Database encoding
+Different schema encodings on Mac vs Linux (utf8mb4 vs utf8) were causing merge challenges in schema.rb. 
+To ensure consistent encoding across environments, we have configured utf8mb4 encoding in multiple places:
+- `config/database.yml` - Sets encoding and collation at the Rails level
+- `docker-compose.yml` - Overrides DATABASE_URL with explicit encoding parameters for Docker development
+- `docker/mysql/charset.cnf` - Configures MySQL server defaults
+
+You can override database settings by setting the `DATABASE_URL` environment variable in your `.env` file:
+```
+DATABASE_URL=trilogy://user:password@host:port/database?encoding=utf8mb4&collation=utf8mb4_unicode_ci
+```
+
+
 ## Dev seeds
 
 - Running mise should have run `rake db:seed`

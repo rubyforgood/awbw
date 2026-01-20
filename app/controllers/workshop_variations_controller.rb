@@ -1,4 +1,5 @@
 class WorkshopVariationsController < ApplicationController
+  include AhoyViewTracking
   def index
     unless current_user.super_user?
       redirect_to authenticated_root_path
@@ -50,7 +51,7 @@ class WorkshopVariationsController < ApplicationController
 
   def show
     @workshop_variation = WorkshopVariation.find(params[:id]).decorate
-    @workshop_variation.increment_view_count!(session: session, request: request)
+    track_view(@workshop_variation)
 
     @workshop = @workshop_variation.workshop.decorate
     @bookmark = current_user.bookmarks.find_by(bookmarkable: @workshop)

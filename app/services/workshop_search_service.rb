@@ -215,7 +215,7 @@ class WorkshopSearchService
       @workshops = @workshops.order(led_count: :desc, title: :asc)
     when "popularity"
       @workshops = @workshops.order(
-        Arel.sql("bookmarks_count DESC, title ASC")
+        Arel.sql("COUNT(bookmarks.id) DESC, workshops.title ASC")
       )
     when "title"
       @workshops = @workshops.order(title: :asc)
@@ -229,7 +229,7 @@ class WorkshopSearchService
 
   # --- Handle distinct + order by FIELD(id, ...) for complex joins ---
   def resolve_ids_order
-    return if sort == "keywords"
+    return if sort.in?(%w[keywords popularity])
 
     sort_columns =
       case sort

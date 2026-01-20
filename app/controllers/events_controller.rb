@@ -1,4 +1,5 @@
 class EventsController < ApplicationController
+  include AhoyViewTracking
   before_action :set_event, only: %i[ show edit update destroy ]
   before_action :authorize_admin!, only: %i[ edit update destroy ]
 
@@ -10,7 +11,7 @@ class EventsController < ApplicationController
 
   def show
     @event = @event.decorate
-    @event.increment_view_count!(session: session, request: request)
+    track_view(@event)
   end
 
   def new # all logged in users can create events

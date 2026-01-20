@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class WorkshopsController < ApplicationController
+  include AhoyViewTracking
   def index
-    @category_types = CategoryType.includes(:categories).published.decorate
+    @category_types = CategoryType.includes(:categories).published.order(:name).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
     if turbo_frame_request?
@@ -95,7 +96,7 @@ class WorkshopsController < ApplicationController
       render partial: "show_lazy", locals: { workshop: @workshop }
     else
       @workshop = Workshop.find(params[:id]).decorate
-      @workshop.increment_view_count!(session: session, request: request)
+      track_view(@workshop)
       render :show
     end
   end

@@ -18,9 +18,6 @@ application.register("file-preview", FilePreviewController)
 import PasswordToggleController from "./password_toggle_controller"
 application.register("password-toggle", PasswordToggleController)
 
-import PrintController from "./print_controller"
-application.register("print", PrintController)
-
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)
 

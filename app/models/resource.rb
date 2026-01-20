@@ -1,5 +1,5 @@
 class Resource < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
@@ -69,7 +69,6 @@ class Resource < ApplicationRecord
 
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :featured, ->(featured = nil) { featured.present? ? where(featured: featured) : where(featured: true) }
@@ -122,7 +121,7 @@ class Resource < ApplicationRecord
   end
 
   def download_attachment
-    primary_asset || gallery_assets.first || attachments.first
+    primary_asset || gallery_assets.first
   end
 
   def type_enum

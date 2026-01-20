@@ -8,15 +8,40 @@ RSpec.describe "Facilitators can view Popular Resources on the dashboard" do
         create(:facilitator, user: @user)
         @popular_resource = create(:resource,
           title: "Most Popular Resource",
-          view_count: 1000,
           featured: true,
           kind: "Scholarship"
         )
 
         @unpopular_resource = create(:resource,
           title: "Unpopular Resource",
-          view_count: 1,
           kind: "Template"
+        )
+
+        # Create Ahoy events to make the popular resource actually popular
+        visit = create(:ahoy_visit)
+        1000.times do
+          create(:ahoy_event,
+            visit: visit,
+            name: "view.resource",
+            properties: {
+              resource_type: "Resource",
+              resource_id: @popular_resource.id,
+              resource_title: @popular_resource.title
+            },
+            time: rand(1..30).days.ago
+          )
+        end
+
+        # Create just one event for the unpopular resource
+        create(:ahoy_event,
+          visit: visit,
+          name: "view.resource",
+          properties: {
+            resource_type: "Resource",
+            resource_id: @unpopular_resource.id,
+            resource_title: @unpopular_resource.title
+          },
+          time: 1.day.ago
         )
 
         sign_in @user

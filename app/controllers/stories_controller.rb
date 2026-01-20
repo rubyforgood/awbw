@@ -1,5 +1,6 @@
 class StoriesController < ApplicationController
   include ExternallyRedirectable
+  include AhoyViewTracking
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -19,7 +20,7 @@ class StoriesController < ApplicationController
 
   def show
     @story = @story.decorate
-    @story.increment_view_count!(session: session, request: request)
+    track_view(@story)
 
     if @story.external_url.present? && !params[:no_redirect].present?
       redirect_to_external @story.link_target
