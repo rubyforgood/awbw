@@ -39,6 +39,6 @@
   </div>
 <% else %>
   <div class="ps-6 mb-4">
-    <li><%= f.object.project&.name %> (<%= f.object.title || f.object.position %>)</li>
+    <li><%= f.object.organization&.name %> (<%= f.object.title || f.object.position %>)</li>
   </div>
 <% end %>

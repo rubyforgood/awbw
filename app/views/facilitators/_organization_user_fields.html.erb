@@ -2,11 +2,11 @@
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start mb-4">
 
     <div>
-      <%= f.input :project_id,
+      <%= f.input :organization_id,
                   as: :select,
                   label: "Organization",
-                  collection: @projects_array,
-                  selected: f.object.project_id,
+                  collection: @organizations_array,
+                  selected: f.object.organization_id,
                   input_html: {
                     class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   },
@@ -40,6 +40,6 @@
   </div>
 <% else %>
   <div class="ps-6 mb-4">
-    <li><%= f.object.project&.name %> (<%= f.object.title || f.object.position %>)</li>
+    <li><%= f.object.organization&.name %> (<%= f.object.title || f.object.position %>)</li>
   </div>
 <% end %>

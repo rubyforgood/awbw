@@ -1,17 +1,17 @@
 <div class="min-h-screen py-8">
   <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
     <div class="admin-only bg-blue-100 rounded p-6">
-      <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:project_statuses, intensity: 100) %>
+      <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:organization_statuses, intensity: 100) %>
         border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
           <h1 class="text-2xl font-semibold text-gray-900">
-            <%= ProjectStatus.model_name.human.pluralize %> (<%= @count_display %>)
+            <%= OrganizationStatus.model_name.human.pluralize %> (<%= @count_display %>)
           </h1>
           <div class="flex gap-2">
-            <%= link_to("New #{ ProjectStatus.model_name.human.downcase }",
-                        new_project_status_path,
+            <%= link_to("New #{ OrganizationStatus.model_name.human.downcase }",
+                        new_organization_status_path,
                         class: "btn btn-primary-outline") %>
           </div>
         </div>
@@ -27,24 +27,24 @@
             </thead>
 
             <tbody class="divide-y divide-gray-200">
-              <% @project_statuses.each do |project_status| %>
+              <% @organization_statuses.each do |organization_status| %>
               <tr>
 
                 <td class="px-4 py-2 text-gray-700">
-                  <%= project_status.name %>
+                  <%= organization_status.name %>
                 </td>
 
                 <td class="px-4 py-2 text-gray-700">
-                  <%= link_to project_status.projects.count,
-                              projects_path(project_status_id: project_status.id,
-                                            project_ids: project_status.projects.pluck(:id).join("-")),
+                  <%= link_to organization_status.organizations.count,
+                              organizations_path(organization_status_id: organization_status.id,
+                                            organization_ids: organization_status.organizations.pluck(:id).join("-")),
                               class: "btn btn-secondary-default" %>
                 </td>
 
                 <td class="px-4 py-2">
                   <div class="flex items-center gap-3">
                     <%= link_to "Edit",
-                                edit_project_status_path(project_status),
+                                edit_organization_status_path(organization_status),
                                 class: "btn btn-secondary-outline" %>
                   </div>
                 </td>
@@ -55,15 +55,15 @@
         </div>
 
         <!-- Empty state -->
-        <% unless @project_statuses.any? %>
+        <% unless @organization_statuses.any? %>
           <p class="text-gray-500 text-center py-6">
-            No <%= ProjectStatus.model_name.human.pluralize.downcase %> found.
+            No <%= OrganizationStatus.model_name.human.pluralize.downcase %> found.
           </p>
         <% end %>
 
         <!-- Pagination -->
         <div class="pagination flex justify-center mt-12">
-          <%= tailwind_paginate @project_statuses %>
+          <%= tailwind_paginate @organization_statuses %>
         </div>
       </div>
     </div>
