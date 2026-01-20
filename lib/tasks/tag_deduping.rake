@@ -1,4 +1,6 @@
 # lib/tasks/sector_dedupe.rake
+require "set"
+
 namespace :tags do
   desc "Deduplicate sectors by normalized name and reassign sectorable_items"
   task dedupe_sectors: :environment do
