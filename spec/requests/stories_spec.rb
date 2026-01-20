@@ -19,7 +19,7 @@ RSpec.describe "/stories", type: :request do
   let(:user) { create(:user) }
   let(:windows_type) { create(:windows_type) }
   let(:workshop) { create(:workshop) }
-  let(:project) { create(:project) }
+  let(:organization) { create(:organization) }
 
   let(:valid_attributes) do
     {
@@ -30,7 +30,7 @@ RSpec.describe "/stories", type: :request do
       published: true,
       windows_type_id: windows_type.id,
       workshop_id: workshop.id,
-      project_id: project.id,
+      organization_id: organization.id,
       created_by_id: user.id,
       updated_by_id: user.id
     }

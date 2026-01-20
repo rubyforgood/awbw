@@ -1,31 +1,25 @@
 class OrganizationsController < ApplicationController
+  include AhoyTracking
   before_action :set_organization, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Organization.search_by_params(params).order(:name)
+    unpaginated = Organization.includes(:logo_attachment, :windows_type, :project_status)
+                              .search_by_params(params).order(:name)
     @organizations_count = unpaginated.count
     @organizations = unpaginated.paginate(page: params[:page], per_page: per_page)
     set_index_variables
   end
 
   def show
-    @organization.increment_view_count!(session: session, request: request)
-
-    # Reuse WorkshopLogsController#index logic programmatically
-    workshop_logs_controller = WorkshopLogsController.new
-    workshop_logs_controller.request = request
-    workshop_logs_controller.response = response
-    params[:organization_id] = @organization.id  # Inject context so the WorkshopLogsController#index scopes properly
-    workshop_logs_controller.params = params
-    workshop_logs_controller.index
+    track_view(@organization)
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
     @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
-                                     .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
-           MAX(COALESCE(date, created_at)) AS max_dt")
-                                     .order("max_dt DESC")
-                                     .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
+                                       .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
+       MAX(COALESCE(date, created_at)) AS max_dt")
+                                       .order("max_dt DESC")
+                                       .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
 
     @year_options = workshop_logs.pluck(
       Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
@@ -35,8 +29,13 @@ class OrganizationsController < ApplicationController
     @workshop_logs_unpaginated = workshop_logs
     @workshop_logs_count = @workshop_logs_unpaginated.size
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
-    @facilitators = User.active.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
-                        .joins(:workshop_logs)
+    @workshops = Workshop.includes(:windows_type)
+                         .published
+                         .references(:windows_type)
+                         .order("workshops.title ASC, windows_types.name ASC")
+    user_ids = @workshop_logs_unpaginated.select(:user_id)
+    @facilitators = User.active
+                        .or(User.where(id: user_ids))
                         .distinct
                         .order(:last_name, :first_name)
   end

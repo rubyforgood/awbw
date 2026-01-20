@@ -3,8 +3,8 @@ FactoryBot.define do
     title { "MyString" }
     published { true }
     featured { false }
-    reference_url { "" }
-    youtube_url { "" }
+    # reference_url { nil }
+    # youtube_url { nil }
     association :author, factory: :user
     association :created_by, factory: :user
     association :updated_by, factory: :user
@@ -17,8 +17,8 @@ FactoryBot.define do
       featured { true }
     end
 
-    trait :with_project do
-      association :project
+    trait :with_organization do
+      association :organization
     end
 
     trait :with_windows_type do

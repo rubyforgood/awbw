@@ -1,16 +1,16 @@
 require 'rails_helper'
 
-RSpec.describe ProjectUser do
+RSpec.describe OrganizationUser do
   describe 'associations' do
-    it { should belong_to(:project) }
+    it { should belong_to(:organization) }
     it { should belong_to(:user) }
   end
 
   describe 'validations' do
     subject do
-      build(:project_user, project: create(:project), user: create(:user))
+      build(:organization_user, organization: create(:organization), user: create(:user))
     end
-    it { should validate_presence_of(:project_id) }
+    it { should validate_presence_of(:organization_id) }
   end
 
   describe 'enums' do
@@ -19,7 +19,7 @@ RSpec.describe ProjectUser do
 
   it 'is valid with valid attributes' do
     # Note: Factory needs associations uncommented for create
-    # expect(build(:project_user)).to be_valid
-    # pending("Requires functional project/user factories and associations uncommented")
+    # expect(build(:organization_user)).to be_valid
+    # pending("Requires functional organization/user factories and associations uncommented")
   end
 end

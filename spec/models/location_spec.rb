@@ -4,7 +4,7 @@ RSpec.describe Location do
   # let(:location) { build(:location) } # Keep if needed
 
   describe 'associations' do
-    # it { should have_many(:projects) } # Model missing has_many
+    # it { should have_many(:organizations) } # Model missing has_many
   end
 
   describe 'validations' do

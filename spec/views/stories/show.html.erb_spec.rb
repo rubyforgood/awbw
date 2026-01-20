@@ -13,7 +13,7 @@ RSpec.describe "stories/show", type: :view do
 
   it "renders attributes in <p>" do
     render
-    expect(rendered).to match(story.project.name)
+    expect(rendered).to match(story.organization.name)
     expect(rendered).to match(story.workshop.name)
     expect(rendered).to match(/MyBody/)
     expect(rendered).to match(user.full_name)

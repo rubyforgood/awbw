@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :story do
     association :windows_type
-    association :project
+    association :organization
     association :workshop
     title { Faker::Lorem.sentence }
     rhino_body { "<p>My Body</p>" }

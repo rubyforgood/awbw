@@ -1,6 +1,6 @@
 FactoryBot.define do
-  factory :project_user do
-    association :project
+  factory :organization_user do
+    association :organization
     association :user
 
     position { :default }

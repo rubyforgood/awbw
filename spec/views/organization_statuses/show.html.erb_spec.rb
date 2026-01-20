@@ -1,11 +1,11 @@
 require 'rails_helper'
 
-RSpec.describe "project_statuses/show", type: :view do
+RSpec.describe "organization_statuses/show", type: :view do
   let(:admin) { create(:user, :admin) }
-  let(:project_status) { create(:project_status, name: "Name") }
+  let(:organization_status) { create(:organization_status, name: "Name") }
 
   before(:each) do
-    assign(:project_status, project_status)
+    assign(:organization_status, organization_status)
     allow(view).to receive(:current_user).and_return(admin)
   end
 
