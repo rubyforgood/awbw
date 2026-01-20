@@ -1,0 +1,41 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h1>Organizations</h1>
+      <p>Organizations in the AWBW network.</p>
+      
+      <% if user_signed_in? && current_user.super_user? %>
+        <%= link_to "New Organization", new_organization_path, class: "btn btn-primary mb-3" %>
+      <% end %>
+
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Start Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @organizations.each do |organization| %>
+              <tr>
+                <td><%= link_to organization.name, organization %></td>
+                <td><%= organization.project_status&.name %></td>
+                <td><%= organization.start_date&.strftime("%m/%d/%Y") %></td>
+                <td>
+                  <%= link_to "View", organization, class: "btn btn-sm btn-secondary" %>
+                  <%= link_to "Annual Evaluations", annual_evaluations_organization_path(organization), class: "btn btn-sm btn-info" %>
+                  <% if user_signed_in? && current_user.super_user? %>
+                    <%= link_to "Edit", edit_organization_path(organization), class: "btn btn-sm btn-warning" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

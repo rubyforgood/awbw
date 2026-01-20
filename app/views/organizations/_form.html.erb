@@ -1,0 +1,66 @@
+<%= form_with(model: organization, local: true) do |form| %>
+  <% if organization.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(organization.errors.count, "error") %> prohibited this organization from being saved:</h4>
+      <ul>
+        <% organization.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group mb-3">
+    <%= form.label :name, class: "form-label" %>
+    <%= form.text_field :name, class: "form-control", required: true %>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :description, class: "form-label" %>
+    <%= form.text_area :description, class: "form-control", rows: 5 %>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :website_url, "Website", class: "form-label" %>
+    <%= form.url_field :website_url, class: "form-control" %>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group mb-3">
+        <%= form.label :start_date, class: "form-label" %>
+        <%= form.date_field :start_date, class: "form-control" %>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="form-group mb-3">
+        <%= form.label :end_date, class: "form-label" %>
+        <%= form.date_field :end_date, class: "form-control" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :project_status_id, "Status", class: "form-label" %>
+    <%= form.collection_select :project_status_id, ProjectStatus.all, :id, :name, { prompt: "Select Status" }, { class: "form-control", required: true } %>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :agency_type, class: "form-label" %>
+    <%= form.text_field :agency_type, class: "form-control" %>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :notes, class: "form-label" %>
+    <%= form.text_area :notes, class: "form-control", rows: 3 %>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.check_box :inactive, class: "form-check-input" %>
+    <%= form.label :inactive, class: "form-check-label ms-2" %>
+  </div>
+
+  <div class="actions mt-4">
+    <%= form.submit "Save Organization", class: "btn btn-primary" %>
+  </div>
+<% end %>

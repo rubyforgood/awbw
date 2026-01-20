@@ -1,0 +1,12 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h1>Edit Organization</h1>
+      
+      <%= render "form", organization: @organization %>
+      
+      <%= link_to "Show", @organization, class: "btn btn-secondary mt-3" %>
+      <%= link_to "Back to Organizations", organizations_path, class: "btn btn-secondary mt-3" %>
+    </div>
+  </div>
+</div>

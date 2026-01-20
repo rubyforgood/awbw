@@ -1,0 +1,36 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h1><%= @organization.name %></h1>
+      
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Organization Details</h5>
+          
+          <% if @organization.description.present? %>
+            <p><strong>Description:</strong> <%= simple_format(@organization.description) %></p>
+          <% end %>
+          
+          <% if @organization.website_url.present? %>
+            <p><strong>Website:</strong> <%= link_to @organization.website_url, @organization.website_url, target: "_blank" %></p>
+          <% end %>
+          
+          <% if @organization.start_date.present? %>
+            <p><strong>Start Date:</strong> <%= @organization.start_date.strftime("%m/%d/%Y") %></p>
+          <% end %>
+          
+          <p><strong>Status:</strong> <%= @organization.project_status&.name %></p>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <%= link_to "Annual Evaluations", annual_evaluations_organization_path(@organization), class: "btn btn-primary" %>
+        <% if user_signed_in? && current_user.super_user? %>
+          <%= link_to "Edit", edit_organization_path(@organization), class: "btn btn-warning" %>
+          <%= link_to "Delete", @organization, method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger" %>
+        <% end %>
+        <%= link_to "Back to Organizations", organizations_path, class: "btn btn-secondary" %>
+      </div>
+    </div>
+  </div>
+</div>
