@@ -103,9 +103,6 @@ class Workshop < ApplicationRecord
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :quotes, reject_if: proc { |object| object["quote"].nil? }
-  accepts_nested_attributes_for :sectors,
-                                reject_if: proc { |object| object["_create"] == "0" || !object["_create"] },
-                                allow_destroy: true
   accepts_nested_attributes_for :workshop_logs, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
