@@ -1,5 +1,3 @@
-<%# frame_target = owner&.persisted? ? "assets" :  "type_selector_asset_#{ asset.id }" %>
-
 <%= turbo_frame_tag "type_selector_asset_#{ asset.id }" do %>
   <%= turbo_flash %>
 
