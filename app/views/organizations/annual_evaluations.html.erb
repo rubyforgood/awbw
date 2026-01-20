@@ -6,13 +6,9 @@
       <% if @available_years.any? %>
         <div class="mb-4">
           <label for="year-select" class="form-label">Select Year:</label>
-          <select id="year-select" class="form-select" style="max-width: 200px;" onchange="window.location.href='<%= annual_evaluations_organization_path(@organization) %>?year=' + this.value">
-            <% @available_years.each do |year| %>
-              <option value="<%= year %>" <%= 'selected' if year == @year %>>
-                <%= year %>
-              </option>
-            <% end %>
-          </select>
+          <%= form_with url: annual_evaluations_organization_path(@organization), method: :get, local: true, class: "d-inline-block" do |form| %>
+            <%= form.select :year, @available_years.map { |y| [y, y] }, { selected: @year }, { class: "form-select", style: "max-width: 200px;", onchange: "this.form.submit();" } %>
+          <% end %>
         </div>
       <% end %>
 

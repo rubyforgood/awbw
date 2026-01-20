@@ -27,7 +27,7 @@
         <%= link_to "Annual Evaluations", annual_evaluations_organization_path(@organization), class: "btn btn-primary" %>
         <% if user_signed_in? && current_user.super_user? %>
           <%= link_to "Edit", edit_organization_path(@organization), class: "btn btn-warning" %>
-          <%= link_to "Delete", @organization, method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger" %>
+          <%= button_to "Delete", @organization, method: :delete, data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger" %>
         <% end %>
         <%= link_to "Back to Organizations", organizations_path, class: "btn btn-secondary" %>
       </div>
