@@ -5,8 +5,8 @@
       
       <% if @available_years.any? %>
         <div class="mb-4">
-          <label for="year-select" class="form-label">Select Year:</label>
-          <%= form_with url: annual_evaluations_organization_path(@organization), method: :get, local: true, class: "d-inline-block" do |form| %>
+          <%= form_with url: annual_evaluations_organization_path(@organization), method: :get, local: true do |form| %>
+            <%= form.label :year, "Select Year:", class: "form-label" %>
             <%= form.select :year, @available_years.map { |y| [y, y] }, { selected: @year }, { class: "form-select", style: "max-width: 200px;", onchange: "this.form.submit();" } %>
           <% end %>
         </div>
