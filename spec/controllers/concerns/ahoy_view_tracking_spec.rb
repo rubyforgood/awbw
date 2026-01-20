@@ -26,6 +26,7 @@ RSpec.describe AhoyViewTracking, type: :controller do
   let(:workshop) { create(:workshop, :published) }
   let(:resource) { create(:resource) }
   let(:visit)    { create(:ahoy_visit) }
+  let(:session_hash) { {} }
 
   before do
     routes.draw do
@@ -34,8 +35,8 @@ RSpec.describe AhoyViewTracking, type: :controller do
       post "download" => "anonymous#download"
     end
 
-    # Give the controller a real session
-    allow(controller).to receive(:session).and_return({})
+    # Give the controller a persistent session hash
+    allow(controller).to receive(:session).and_return(session_hash)
 
     tracker = instance_double(Ahoy::Tracker)
     allow(controller).to receive(:ahoy).and_return(tracker)
