@@ -16,7 +16,12 @@ class WorkshopVariationsController < ApplicationController
   end
 
   def new
-    @workshop_variation = WorkshopVariation.new
+    if params[:workshop_variation_idea_id].present?
+      @workshop_variation_idea = WorkshopVariationIdea.find(params[:workshop_variation_idea_id])
+      @workshop_variation = WorkshopVariationFromIdeaService.new(@workshop_variation_idea, user: current_user).call
+    else
+      @workshop_variation = WorkshopVariation.new
+    end
     workshops = current_user.super_user? ? Workshop.all : Workshop.published
     @workshops = workshops.order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&

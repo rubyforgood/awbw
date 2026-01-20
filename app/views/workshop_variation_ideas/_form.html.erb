@@ -1,0 +1,92 @@
+<div class="rounded-xl bg-white p-6">
+  <%= simple_form_for(workshop_variation_idea, html: { multipart: true }) do |f| %>
+    <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
+    <%= f.hidden_field :updated_by_id, value: current_user&.id %>
+
+    <% promoted_to_variation = f.object.workshop_variations.any? %>
+    <% if promoted_to_variation %>
+      <div class="admin-only bg-yellow-100 m-3 p-3">
+        This workshop variation idea has been promoted to a
+        <% f.object.workshop_variations.each do |workshop_variation| %>
+          <%= link_to "Workshop Variation ##{workshop_variation.id}",
+                      workshop_variation_path(workshop_variation), class: "btn btn-secondary-outline" %>
+        <% end %>
+        and should not be edited here.
+      </div>
+    <% end %>
+
+    <%= render 'shared/errors', resource: workshop_variation_idea if workshop_variation_idea.errors.any? %>
+
+    <!-- Row 1 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <%= f.input :name,
+                    label: "Variation name",
+                    required: true,
+                    disabled: promoted_to_variation,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 #{('readonly' if promoted_to_variation)}" } %>
+      </div>
+
+      <div>
+        <%= f.input :workshop_id,
+                    label: "Workshop",
+                    required: true,
+                    collection: @workshops, 
+                    label_method: :title, 
+                    value_method: :id,
+                    disabled: promoted_to_variation,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm #{('readonly' if promoted_to_variation)}" } %>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="mb-6">
+      <%= f.input :description,
+                  as: :text,
+                  label: "Description",
+                  hint: "Describe how this variation differs from the base workshop",
+                  disabled: promoted_to_variation,
+                  input_html: { rows: 5, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm #{('readonly' if promoted_to_variation)}" } %>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div>
+        <%= f.input :youtube_url,
+                    label: "YouTube URL",
+                    disabled: promoted_to_variation,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 #{('readonly' if promoted_to_variation)}" } %>
+      </div>
+
+      <div>
+        <%= f.input :position,
+                    label: "Position (order)",
+                    disabled: promoted_to_variation,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 #{('readonly' if promoted_to_variation)}" } %>
+      </div>
+
+      <% if current_user.super_user? %>
+        <div class="admin-only bg-blue-100 p-3">
+          <%= f.input :inactive,
+                      as: :boolean,
+                      disabled: promoted_to_variation,
+                      wrapper_html: { class: "flex items-center" } %>
+        </div>
+      <% end %>
+    </div>
+
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: true unless promoted_to_variation %>
+
+    <!-- Actions -->
+    <div class="flex gap-x-3 mt-6">
+      <% if current_user.super_user? && f.object.persisted? && !promoted_to_variation %>
+        <%= link_to "Promote to Workshop Variation",
+                    new_workshop_variation_path(workshop_variation_idea_id: f.object.id),
+                    class: "btn btn-secondary-outline" %>
+        <%= link_to "Delete", @workshop_variation_idea, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
+      <% end %>
+      <%= link_to "Cancel", workshop_variation_ideas_path, class: "btn btn-secondary-outline" %>
+      <%= f.submit "Submit", class: "btn btn-primary", disabled: promoted_to_variation %>
+    </div>
+  <% end %>
+</div>

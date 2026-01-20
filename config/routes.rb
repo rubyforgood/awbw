@@ -98,6 +98,7 @@ Rails.application.routes.draw do
   resources :workshop_ideas
   resources :workshop_logs
   resources :workshop_log_creation_wizard
+  resources :workshop_variation_ideas
   resources :workshop_variations
   resources :workshops do
     collection do

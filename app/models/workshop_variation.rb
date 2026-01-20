@@ -3,6 +3,7 @@ class WorkshopVariation < ApplicationRecord
 
   belongs_to :workshop
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :workshop_variation_idea, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   # Asset associations
