@@ -27,7 +27,7 @@ class ReportsController < ApplicationController
 
     @report.owner_type = "FormBuilder"
     @report.owner_id   = 7
-    @agencies = current_user.projects
+    @agencies = current_user.organizations
   end
 
   def render_form
@@ -46,7 +46,7 @@ class ReportsController < ApplicationController
     build_month_and_year
     find_form_builder
     @report    = current_user.submitted_monthly_report(@date, @form_builder.windows_type)
-    @agencies  = current_user.projects.
+    @agencies  = current_user.organizations.
                  where(windows_type_id: @report.windows_type_id)
     @month = @report.date.month
     @year  =  @report.date.year
@@ -60,7 +60,7 @@ class ReportsController < ApplicationController
                              .order(title: :asc)
 
     @report    = Report.find(params[:id])
-    @agencies  = current_user.projects.
+    @agencies  = current_user.organizations.
                  where(windows_type_id: @report.windows_type_id)
   end
 
@@ -159,7 +159,7 @@ class ReportsController < ApplicationController
       @report.windows_type_id = Workshop.find(@report.workshop_id).windows_type_id
     else
       @report.workshop_id = nil
-      @report.windows_type_id = @report.project.windows_type_id
+      @report.windows_type_id = @report.organization.windows_type_id
     end
 
     if @report.save
@@ -233,7 +233,7 @@ class ReportsController < ApplicationController
   end
 
   def find_workshop_logs
-    @workshop_logs = current_user.project_monthly_workshop_logs(
+    @workshop_logs = current_user.organization_monthly_workshop_logs(
       @report.date, @report.windows_type
     )
 
@@ -256,7 +256,7 @@ class ReportsController < ApplicationController
     end
 
     params.require(:report).permit(
-      :image, :form_file, :type, :project_id, :date, :workshop_name, :owner_id, :workshop_id,
+      :image, :form_file, :type, :organization_id, :date, :workshop_name, :owner_id, :workshop_id,
       :owner_type, :windows_type_id, report_form_field_answers_attributes:
       [ :form_field_id, :answer_option_id, :answer, :_create ],
       media_files_attributes: [ :file ],

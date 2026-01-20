@@ -9,7 +9,7 @@ class WorkshopLogsController < ApplicationController
         WorkshopLog.all
       else
         WorkshopLog.where(created_by_id: current_user.id)
-                   .or(WorkshopLog.project_id(current_user.project_ids))
+                   .or(WorkshopLog.organization_id(current_user.organization_ids))
       end
     @workshop_logs_unpaginated = permitted_logs.includes(:workshop, :user, :windows_type)
                                                .search(params)
@@ -83,7 +83,7 @@ class WorkshopLogsController < ApplicationController
     @answers      = @workshop_log.report_form_field_answers
 
     if @workshop_log
-      if current_user.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
+      if current_user.super_user? || (@workshop_log.organization && current_user.organization_ids.include?(@workshop_log.organization.id))
         render :show
       else
         redirect_to root_path, error: "You do not have permission to view this page."
@@ -104,7 +104,7 @@ class WorkshopLogsController < ApplicationController
   def validate_new
     @date         = Date.new(params[:year].to_i, params[:month].to_i)
     @windows_type = WindowsType.find(params[:windows_type])
-    @report       = current_user.submitted_monthly_report(@date, @windows_type, params[:project_id])
+    @report       = current_user.submitted_monthly_report(@date, @windows_type, params[:organization_id])
 
     render json: { validate: @report.nil? }.to_json
   end
@@ -125,10 +125,10 @@ class WorkshopLogsController < ApplicationController
                         .distinct
                         .order(:last_name, :first_name)
     @projects = if current_user.super_user?
-      # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
-      Project.active.order(:name)
+      # Organization.where(id: @workshop_logs_unpaginated.pluck(:organization_id)).order(:name)
+      Organization.active.order(:name)
     else
-      current_user.projects.order(:name)
+      current_user.organizations.order(:name)
     end
     @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
                          .order(:title)
@@ -182,11 +182,11 @@ class WorkshopLogsController < ApplicationController
     end
 
     @agencies =
-      Project.where(id: current_user.projects.select(:id))
-             .or(Project.where(id: @workshop_log.project_id))
-             .distinct
-             .order(:name)
-    agency = params[:agency_id].present? ? Project.where(id: params[:agency_id]).last : @agencies.first
+      Organization.where(id: current_user.organizations.select(:id))
+                   .or(Organization.where(id: @workshop_log.organization_id))
+                   .distinct
+                   .order(:name)
+    agency = params[:agency_id].present? ? Organization.where(id: params[:agency_id]).last : @agencies.first
     @agency_id = agency.id if agency
   end
 
@@ -210,7 +210,7 @@ class WorkshopLogsController < ApplicationController
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :user_id, :project_id, :date,
+      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :user_id, :organization_id, :date,
       :workshop_name, :workshop_id, :windows_type_id, :other_description, # :user,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
