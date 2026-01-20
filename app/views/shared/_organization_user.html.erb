@@ -1,4 +1,4 @@
-<% user = project_user.user.decorate %>
+<% user = organization_user.user.decorate %>
 <% unless user == current_user %>
   <%= link_to user_path(user) do %>
     <li class="nav-item sub-nav-item" id="js-user-<%= user.id %>">
@@ -11,7 +11,7 @@
         <div class="col-md-8 white text-left users-group">
           <%= user.name %>
           <div class="smaller white text-left">
-            <%= project_user.position %>
+            <%= organization_user.position %>
             <p>
               <%= "Last logged in #{user.last_logged_in}" %>
             </p>

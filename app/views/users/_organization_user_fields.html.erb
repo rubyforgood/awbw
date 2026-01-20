@@ -1,11 +1,11 @@
 <div class="nested-fields rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <div>
-      <%= f.input :project_id,
+      <%= f.input :organization_id,
                   as: :select,
                   label: "Organization",
-                  collection: @projects_array,
-                  selected: f.object.project_id,
+                  collection: @organizations_array,
+                  selected: f.object.organization_id,
                   input_html: {
                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   },
