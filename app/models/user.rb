@@ -128,11 +128,11 @@ class User < ApplicationRecord
     recent.sort_by { |item| item.try(:updated_at) || item.created_at }.reverse.first(activity_limit * 8)
   end
 
-  def project_monthly_workshop_logs(date, *windows_type)
+  def organization_monthly_workshop_logs(date, *windows_type)
     where = windows_type.map { |wt| "windows_type_id = ?" }
 
-    logs = projects.map do |project|
-      project.workshop_logs.where(where.join(" OR "), *windows_type)
+    logs = organizations.map do |organization|
+      organization.workshop_logs.where(where.join(" OR "), *windows_type)
     end.flatten
     logs = logs.select do |log|
       log.date && log.date.month == date.month.to_i &&
@@ -141,9 +141,9 @@ class User < ApplicationRecord
     logs.uniq.group_by { |log| log.date }
   end
 
-  def project_workshop_logs(date, windows_type, project_id)
-    if project_id
-      logs = workshop_logs.where(project_id: project_id, windows_type_id: windows_type.id)
+  def organization_workshop_logs(date, windows_type, organization_id)
+    if organization_id
+      logs = workshop_logs.where(organization_id: organization_id, windows_type_id: windows_type.id)
       logs = logs.select do |log|
         log.date && log.date.month == date.month.to_i &&
           log.date.year == date.year.to_i

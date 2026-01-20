@@ -5,9 +5,12 @@ class WorkshopLogsController < ApplicationController
     authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    base_scope = authorized_scope(Report, type: :active_record_relation).where(type: "WorkshopLog")
-    @workshop_logs_unpaginated = base_scope.includes(:workshop, :user, :windows_type).search(params)
-    @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
+    base_scope = authorized_scope(Report.includes(:workshop, :user, :windows_type,
+                                                  type: :active_record_relation)
+                                        .where(type: "WorkshopLog"))
+    filtered = base_scope.search(params)
+    @workshop_logs_unpaginated  = filtered
+    @workshop_logs = filtered.paginate(page: params[:page], per_page: @per_page)
     @workshop_logs_count = @workshop_logs&.total_entries
 
     set_index_variables
@@ -80,16 +83,6 @@ class WorkshopLogsController < ApplicationController
     authorize! @workshop_log
     @workshop     = @workshop_log.workshop&.decorate
     @answers      = @workshop_log.report_form_field_answers
-
-    if @workshop_log
-      if current_user&.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
-        render :show
-      else
-        redirect_to root_path, error: "You do not have permission to view this page."
-      end
-    else
-      redirect_to root_path, error: "Unable to find that Workshop Log."
-    end
   end
 
   def edit
@@ -104,7 +97,7 @@ class WorkshopLogsController < ApplicationController
   def validate_new
     @date         = Date.new(params[:year].to_i, params[:month].to_i)
     @windows_type = WindowsType.find(params[:windows_type])
-    @report       = current_user.submitted_monthly_report(@date, @windows_type, params[:project_id])
+    @report       = current_user.submitted_monthly_report(@date, @windows_type, params[:organization_id])
 
     render json: { validate: @report.nil? }.to_json
   end
@@ -124,12 +117,12 @@ class WorkshopLogsController < ApplicationController
                         .joins(:workshop_logs)
                         .distinct
                         .order("facilitators.first_name, facilitators.last_name")
-    @projects = if current_user&.super_user?
-      # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
-      Project.published.order(:name)
-    else
-      current_user.projects.order(:name)
-    end
+    @organizations = if current_user&.super_user?
+                       # Organization.where(id: @workshop_logs_unpaginated.pluck(:organization_id)).order(:name)
+                       Organization.active.order(:name)
+                     else
+                       current_user.organizations.order(:name)
+                     end
     @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
                          .order(:title)
   end
@@ -182,11 +175,11 @@ class WorkshopLogsController < ApplicationController
     end
 
     @agencies =
-      Project.where(id: current_user.projects.select(:id))
-             .or(Project.where(id: @workshop_log.project_id))
-             .distinct
-             .order(:name)
-    agency = params[:agency_id].present? ? Project.where(id: params[:agency_id]).last : @agencies.first
+      Organization.where(id: current_user.organizations.select(:id))
+                   .or(Organization.where(id: @workshop_log.organization_id))
+                   .distinct
+                   .order(:name)
+    agency = params[:agency_id].present? ? Organization.where(id: params[:agency_id]).last : @agencies.first
     @agency_id = agency.id if agency
   end
 
@@ -210,7 +203,7 @@ class WorkshopLogsController < ApplicationController
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :user_id, :project_id, :date,
+      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :user_id, :organization_id, :date,
       :workshop_name, :workshop_id, :windows_type_id, :other_description, # :user,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
