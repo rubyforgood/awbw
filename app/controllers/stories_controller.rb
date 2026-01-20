@@ -28,7 +28,12 @@ class StoriesController < ApplicationController
   end
 
   def new
-    @story = Story.new.decorate
+    if params[:story_idea_id].present?
+      @story_idea = StoryIdea.find(params[:story_idea_id])
+      @story = StoryFromIdeaService.new(@story_idea, user: current_user).call
+    else
+      @story = Story.new
+    end
     @story = @story.decorate
     set_form_variables
   end

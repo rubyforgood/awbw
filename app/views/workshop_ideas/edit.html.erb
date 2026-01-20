@@ -3,8 +3,21 @@
     <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @workshop_idea.class.model_name.human %></h1>
-        <%= link_to 'View', workshop_idea_path(@workshop_idea),
-                            class: "btn btn-secondary-outline" %>
+        <div class="text-end text-right items-end items-right">
+          <% if @workshop_idea.workshops.any? %>
+            <% @workshop_idea.workshops.each do |workshop| %>
+              <%= link_to "View Workshop", workshop_path(workshop),
+                          class: "btn btn-secondary-outline" %>
+            <% end %>
+          <% else %>
+            <% if current_user.super_user && @workshop_idea.persisted? %>
+              <%= link_to "Promote to Workshop", new_workshop_path(workshop_idea_id: @workshop_idea.id),
+                          class: "admin-only bg-blue-100 btn btn-secondary-outline ms-2" %>
+            <% end %>
+          <% end %>
+          <%= link_to "View", workshop_idea_path(@workshop_idea),
+                      class: "btn btn-secondary-outline" %>
+        </div>
       </div>
 
       <div class="space-y-6">

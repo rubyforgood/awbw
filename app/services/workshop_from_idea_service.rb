@@ -63,8 +63,16 @@ class WorkshopFromIdeaService
   end
 
   def duplicate_assets(workshop)
-    workshop_idea.assets.each do |image|
-      workshop.assets.build(file: image.file.blob)
+    # Duplicate primary asset with correct type
+    if workshop_idea.primary_asset&.file&.attached?
+      workshop.build_primary_asset(file: workshop_idea.primary_asset.file.blob)
+    end
+
+    # Duplicate gallery assets with correct type
+    workshop_idea.gallery_assets.each do |gallery_asset|
+      next unless gallery_asset.file&.attached?
+
+      workshop.gallery_assets.build(file: gallery_asset.file.blob)
     end
   end
 end
