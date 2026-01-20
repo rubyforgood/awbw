@@ -104,13 +104,7 @@ class WorkshopsController < ApplicationController
   def update
     @workshop = Workshop.find(params[:id])
 
-    # Convert checkbox values into categorizable_items updates
-    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.categories = Category.where(id: selected_category_ids)
-
-    # Convert checkbox values into sectorable_items updates
-    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.sectors = Sector.where(id: selected_sector_ids)
+    assign_associations(@workshop)
 
     if @workshop.update(workshop_params)
       flash[:notice] = "Workshop updated successfully."
@@ -128,13 +122,7 @@ class WorkshopsController < ApplicationController
 
     Workshop.transaction do
       if @workshop.save
-        # Assign associations after workshop is saved and has an ID
-        selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
-        @workshop.categories = Category.where(id: selected_category_ids)
-
-        selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
-        @workshop.sectors = Sector.where(id: selected_sector_ids)
-
+        assign_associations(@workshop)
         success = true
       end
     end
@@ -148,8 +136,9 @@ class WorkshopsController < ApplicationController
       render :new
     end
   rescue StandardError => e
+    Rails.logger.error "Workshop creation failed: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}"
     set_form_variables
-    flash.now[:alert] = "Unable to save the workshop: #{e.message}"
+    flash.now[:alert] = "Unable to save the workshop."
     render :new
   end
 
@@ -201,6 +190,16 @@ class WorkshopsController < ApplicationController
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)
+  end
+
+  def assign_associations(workshop)
+    # Convert checkbox values into categorizable_items updates
+    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
+    workshop.categories = Category.where(id: selected_category_ids)
+
+    # Convert checkbox values into sectorable_items updates
+    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
+    workshop.sectors = Sector.where(id: selected_sector_ids)
   end
 
   def workshops_per_page
