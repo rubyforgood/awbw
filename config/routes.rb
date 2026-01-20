@@ -59,7 +59,11 @@ Rails.application.routes.draw do
   resources :facilitators
   resources :faqs
   resources :notifications, only: [ :index, :show ]
-  resources :organizations
+  resources :organizations do
+    member do
+      get :annual_evaluations
+    end
+  end
   resources :projects
   resources :project_statuses
   resources :project_users

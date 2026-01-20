@@ -154,3 +154,6 @@ category_type_categories.each do |category_type_name, category_name, legacy_id|
     metadata.categories.find_or_create_by!(name: category_name)
   end
 end
+
+puts "Creating Annual Evaluation Form…"
+load Rails.root.join("db", "seeds", "annual_evaluation_form.rb")

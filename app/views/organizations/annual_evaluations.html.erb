@@ -1,0 +1,112 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="mb-4">Annual Evaluations - <%= @organization.name %></h1>
+      
+      <% if @available_years.any? %>
+        <div class="mb-4">
+          <label for="year-select" class="form-label">Select Year:</label>
+          <select id="year-select" class="form-select" style="max-width: 200px;" onchange="window.location.href='<%= annual_evaluations_organization_path(@organization) %>?year=' + this.value">
+            <% @available_years.each do |year| %>
+              <option value="<%= year %>" <%= 'selected' if year == @year %>>
+                <%= year %>
+              </option>
+            <% end %>
+          </select>
+        </div>
+      <% end %>
+
+      <% if @aggregated_responses.present? %>
+        <div class="card mb-4">
+          <div class="card-body">
+            <h2 class="card-title">Responses for <%= @year %></h2>
+            <p class="text-muted">
+              Total Evaluations: <%= @organization.annual_evaluations_for_year(@year).count %>
+            </p>
+          </div>
+        </div>
+
+        <% @aggregated_responses.each do |data| %>
+          <% field = data[:form_field] %>
+          <% responses = data[:responses] %>
+          
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h3 class="h5 mb-0">
+                <%= field.question %>
+                <% if field.is_required %>
+                  <span class="text-danger">*</span>
+                <% end %>
+              </h3>
+              <% if field.instructional_hint.present? %>
+                <small class="text-muted"><%= field.instructional_hint %></small>
+              <% end %>
+            </div>
+            
+            <div class="card-body">
+              <% if responses.any? %>
+                <% if field.multiple_choice? %>
+                  <%# Multiple choice - show aggregated counts %>
+                  <div class="mb-3">
+                    <strong>Response Summary:</strong>
+                    <ul class="list-group mt-2">
+                      <% response_counts = responses.group_by { |r| r.answer_option&.name || r.response }.transform_values(&:count) %>
+                      <% response_counts.each do |answer, count| %>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                          <%= answer %>
+                          <span class="badge bg-primary rounded-pill"><%= count %></span>
+                        </li>
+                      <% end %>
+                    </ul>
+                  </div>
+                <% else %>
+                  <%# Free form responses - show all responses %>
+                  <div class="table-responsive">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Respondent</th>
+                          <th>Response</th>
+                          <th>Submitted</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% responses.each do |response| %>
+                          <tr>
+                            <td>
+                              <%= response.report.user.full_name %>
+                            </td>
+                            <td>
+                              <%= simple_format(response.response) %>
+                            </td>
+                            <td>
+                              <%= response.report.created_at.strftime("%m/%d/%Y") %>
+                            </td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% end %>
+              <% else %>
+                <p class="text-muted">No responses for this question.</p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="alert alert-info">
+          <h4>No Annual Evaluations Found</h4>
+          <p>There are no annual evaluation responses for <%= @year %> yet.</p>
+          <% if @available_years.empty? %>
+            <p>No evaluations have been submitted for this organization.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="mt-4">
+        <%= link_to "Back to Organization", @organization, class: "btn btn-secondary" %>
+      </div>
+    </div>
+  </div>
+</div>
