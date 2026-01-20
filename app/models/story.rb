@@ -4,7 +4,7 @@ class Story < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
-  belongs_to :project, optional: true
+  belongs_to :organization, optional: true
   belongs_to :spotlighted_facilitator, class_name: "Facilitator",
              foreign_key: "spotlighted_facilitator_id", optional: true
   belongs_to :story_idea, optional: true

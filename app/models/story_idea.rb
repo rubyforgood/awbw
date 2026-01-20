@@ -7,7 +7,7 @@ class StoryIdea < ApplicationRecord
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
-  belongs_to :project
+  belongs_to :organization
   belongs_to :windows_type
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -23,7 +23,7 @@ class StoryIdea < ApplicationRecord
   # Validations
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
-  validates :project_id, presence: true
+  validates :organization_id, presence: true
   validates :windows_type_id, presence: true
   validates :body, presence: true
   validates :permission_given, presence: true
@@ -57,14 +57,14 @@ class StoryIdea < ApplicationRecord
   end
 
   def organization_name
-    project.name
+    organization.name
   end
 
   def organization_locality
-    project&.organization_locality
+    organization&.organization_locality
   end
 
   def organization_description
-    project&.organization_description
+    organization&.organization_description
   end
 end
