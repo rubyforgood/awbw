@@ -121,7 +121,7 @@ class Resource < ApplicationRecord
   end
 
   def download_attachment
-    primary_asset || gallery_assets.first || attachments.first
+    primary_asset || gallery_assets.first
   end
 
   def type_enum
