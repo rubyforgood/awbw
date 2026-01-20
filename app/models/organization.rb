@@ -3,11 +3,6 @@ class Organization < Project
   # This provides a semantic interface for organization-specific functionality
   self.table_name = "projects"
 
-  # Associations specific to organizations
-  has_many :annual_evaluation_responses, -> { joins(form: :form_builder).where(form_builders: { name: "Annual Evaluation" }) },
-           class_name: "Report",
-           through: :users
-
   # Get all annual evaluation responses for a specific year
   def annual_evaluations_for_year(year)
     return Report.none unless year.present?
