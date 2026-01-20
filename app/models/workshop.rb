@@ -90,8 +90,12 @@ class Workshop < ApplicationRecord
   has_rich_text :rhino_misc2_spanish
   has_rich_text :rhino_extra_field_spanish
 
+  # Temporary storage for association IDs during creation
+  attr_accessor :pending_sector_ids, :pending_category_ids
+
   # Callbacks
   before_save :set_time_frame
+  after_save :assign_pending_associations
 
   # Validations
   validates_presence_of :title
@@ -254,6 +258,42 @@ class Workshop < ApplicationRecord
   def set_time_frame
     self.timeframe = time_frame_total
   end
+
+  # Override sector_ids= to defer association assignment until after save
+  def sector_ids=(ids)
+    if new_record?
+      @pending_sector_ids = ids
+    else
+      super
+    end
+  end
+
+  # Override category_ids= to defer association assignment until after save
+  def category_ids=(ids)
+    if new_record?
+      @pending_category_ids = ids
+    else
+      super
+    end
+  end
+
+  private
+
+  def assign_pending_associations
+    # Only run this on initial save, not on subsequent updates
+    return unless @pending_sector_ids || @pending_category_ids
+
+    if @pending_sector_ids
+      self.sectors = Sector.where(id: @pending_sector_ids)
+      @pending_sector_ids = nil
+    end
+
+    if @pending_category_ids
+      self.categories = Category.where(id: @pending_category_ids)
+      @pending_category_ids = nil
+    end
+  end
+
   ## ActionText:Attachable
   def attachable_content_type
     "application/vnd.active_record.workshop"
