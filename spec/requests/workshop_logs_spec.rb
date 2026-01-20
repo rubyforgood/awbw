@@ -37,6 +37,34 @@ RSpec.describe "/workshop_logs", type: :request do
     clear_enqueued_jobs
   end
 
+  describe "GET /index" do
+    it "loads the index page successfully" do
+      get workshop_logs_path
+      expect(response).to have_http_status(:success)
+    end
+
+    it "filters workshop logs by workshop_id" do
+      workshop_log = create(:workshop_log, valid_attributes)
+      other_workshop = create(:workshop)
+      other_log = create(:workshop_log, valid_attributes.merge(workshop_id: other_workshop.id))
+
+      get workshop_logs_path, params: { workshop_id: workshop.id }
+
+      expect(response).to have_http_status(:success)
+      expect(assigns(:workshop_logs_unpaginated)).to include(workshop_log)
+      expect(assigns(:workshop_logs_unpaginated)).not_to include(other_log)
+    end
+
+    it "populates workshops dropdown with only workshops from visible logs" do
+      workshop_log = create(:workshop_log, valid_attributes)
+      
+      get workshop_logs_path
+
+      expect(response).to have_http_status(:success)
+      expect(assigns(:workshops)).to include(workshop)
+    end
+  end
+
   describe "POST /create" do
     context "with valid parameters" do
       it "creates a WorkshopLog" do
