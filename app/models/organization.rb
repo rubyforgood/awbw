@@ -1,7 +1,6 @@
 class Organization < Project
   # Organization is an alias for Project
   # This provides a semantic interface for organization-specific functionality
-  self.table_name = "projects"
 
   # Get all annual evaluation responses for a specific year
   def annual_evaluations_for_year(year)
@@ -10,13 +9,11 @@ class Organization < Project
     start_date = Date.new(year.to_i, 1, 1)
     end_date = Date.new(year.to_i, 12, 31).end_of_day
 
-    Report.joins(form: :form_builder)
-          .joins(:user)
-          .joins("INNER JOIN project_users ON project_users.user_id = reports.user_id")
-          .where(project_users: { project_id: id })
-          .where(form_builders: { name: "Annual Evaluation" })
-          .where(created_at: start_date..end_date)
-          .distinct
+    reports
+      .joins(form: :form_builder)
+      .where(form_builders: { name: "Annual Evaluation" })
+      .where(created_at: start_date..end_date)
+      .distinct
   end
 
   # Get aggregated responses by form field for a year

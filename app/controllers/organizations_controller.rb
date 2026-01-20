@@ -44,12 +44,10 @@ class OrganizationsController < ApplicationController
     @aggregated_responses = @organization.aggregated_annual_evaluation_responses(@year)
 
     # Get available years that have evaluations
-    all_evaluations = Report.joins(form: :form_builder)
-                            .joins(:user)
-                            .joins("INNER JOIN project_users ON project_users.user_id = reports.user_id")
-                            .where(project_users: { project_id: @organization.id })
-                            .where(form_builders: { name: "Annual Evaluation" })
-                            .distinct
+    all_evaluations = @organization.reports
+                                   .joins(form: :form_builder)
+                                   .where(form_builders: { name: "Annual Evaluation" })
+                                   .distinct
 
     @available_years = all_evaluations.pluck(:created_at).map(&:year).uniq.sort.reverse
   end
