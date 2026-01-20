@@ -32,6 +32,7 @@ class Story < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :categorizable_items, allow_destroy: true, reject_if: :all_blank
 
   # SearchCop
   include SearchCop
