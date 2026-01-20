@@ -73,6 +73,7 @@ class Resource < ApplicationRecord
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :featured, ->(featured = nil) { featured.present? ? where(featured: featured) : where(featured: true) }
+  scope :visitor_featured, -> { where(visitor_featured: true) }
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds)

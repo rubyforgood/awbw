@@ -16,6 +16,7 @@
 
       <div class="flex items-center gap-6">
         <div><%= f.input :featured, as: :boolean, wrapper: false, label_html: { class: "inline" } %></div>
+        <div><%= f.input :visitor_featured, as: :boolean, wrapper: false, label: "Visitor Featured?", label_html: { class: "inline" } %></div>
 
         <div>
           <%= f.input :inactive, as: :boolean,

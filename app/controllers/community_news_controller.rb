@@ -83,7 +83,7 @@ class CommunityNewsController < ApplicationController
   # Strong parameters
   def community_news_params
     params.require(:community_news).permit(
-      :title, :body, :published, :featured,
+      :title, :body, :published, :featured, :visitor_featured,
       :reference_url, :youtube_url,
       :project_id, :windows_type_id,
       :author_id, :created_by_id, :updated_by_id,

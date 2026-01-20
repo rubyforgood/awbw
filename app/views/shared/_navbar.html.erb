@@ -65,6 +65,8 @@
         <!-- Profile dropdown -->
         <% if current_user %>
           <%= render "shared/navbar_user" %>
+        <% else %>
+          <%= link_to "Log in", new_user_session_path, class: "text-white bg-primary hover:bg-white/10 px-4 py-2 rounded-md text-sm font-medium transition-colors" %>
         <% end %>
       </div>
     </div>

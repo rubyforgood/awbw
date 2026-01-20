@@ -125,7 +125,7 @@ Rails.application.routes.draw do
   # Wrap Devise routes in a scope for unauthenticated users
   devise_scope :user do
     unauthenticated do
-      root to: "devise/sessions#new", as: :unauthenticated_root
+      root to: "dashboard#index", as: :unauthenticated_root
     end
   end
 end

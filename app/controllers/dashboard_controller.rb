@@ -2,30 +2,33 @@ class DashboardController < ApplicationController
   include AdminDashboardCardsHelper
 
   def index
+    # Use visitor_featured scope for non-authenticated users, featured for authenticated users
+    featured_scope = user_signed_in? ? :featured : :visitor_featured
+
     workshops = Workshop.includes(:sectors, :categories, :windows_type, :primary_asset, :gallery_assets)
-                        .featured
+                        .send(featured_scope)
                         .published
                         .decorate
     @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
 
     @resources = Resource.includes(:windows_type, :primary_asset, :gallery_assets)
-                         .featured
+                         .send(featured_scope)
                          .published
                          .by_most_viewed(6)
                          .order(position: :asc, created_at: :desc)
                          .decorate
     @stories = Story.includes(:windows_type, :primary_asset, :gallery_assets)
-                    .featured
+                    .send(featured_scope)
                     .published
                     .order(:title)
                     .decorate
     @community_news = CommunityNews.includes(:windows_type, :primary_asset, :gallery_assets)
-                                   .featured
+                                   .send(featured_scope)
                                    .published
                                    .order(updated_at: :desc)
                                    .decorate
     @events = Event.includes(:event_registrations, :primary_asset, :gallery_assets)
-                   .featured
+                   .send(featured_scope)
                    .published
                    .order(:start_date)
                    .decorate

@@ -81,6 +81,7 @@ class EventsController < ApplicationController
                                   :title,
                                   :description,
                                   :featured,
+                                  :visitor_featured,
                                   :start_date, :end_date,
                                   :registration_close_date,
                                   :publicly_visible,
