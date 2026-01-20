@@ -103,16 +103,19 @@ class WorkshopsController < ApplicationController
 
   def update
     @workshop = Workshop.find(params[:id])
+    success = false
 
-    # Convert checkbox values into categorizable_items updates
-    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.categories = Category.where(id: selected_category_ids)
+    Workshop.transaction do
+      if @workshop.update(workshop_params)
+        assign_associations(@workshop)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("update", e)
+      raise ActiveRecord::Rollback
+    end
 
-    # Convert checkbox values into sectorable_items updates
-    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.sectors = Sector.where(id: selected_sector_ids)
-
-    if @workshop.update(workshop_params)
+    if success
       flash[:notice] = "Workshop updated successfully."
       redirect_to workshops_path
     else
@@ -124,16 +127,19 @@ class WorkshopsController < ApplicationController
 
   def create
     @workshop = current_user.workshops.build(workshop_params)
+    success = false
 
-    # Convert checkbox values into categorizable_items updates
-    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.categories = Category.where(id: selected_category_ids)
+    Workshop.transaction do
+      if @workshop.save
+        assign_associations(@workshop)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("creation", e)
+      raise ActiveRecord::Rollback
+    end
 
-    # Convert checkbox values into sectorable_items updates
-    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.sectors = Sector.where(id: selected_sector_ids)
-
-    if @workshop.save
+    if success
       flash[:notice] = "Workshop created successfully."
       redirect_to workshops_path(sort: "created")
     else
@@ -191,6 +197,20 @@ class WorkshopsController < ApplicationController
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)
+  end
+
+  def assign_associations(workshop)
+    # Convert checkbox values into categorizable_items updates
+    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
+    workshop.categories = Category.where(id: selected_category_ids)
+
+    # Convert checkbox values into sectorable_items updates
+    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
+    workshop.sectors = Sector.where(id: selected_sector_ids)
+  end
+
+  def log_workshop_error(action, error)
+    Rails.logger.error "Workshop #{action} failed: #{error.class} - #{error.message}\n#{error.backtrace.join("\n")}"
   end
 
   def workshops_per_page

@@ -1,5 +1,4 @@
 class Sector < ApplicationRecord
-  attr_accessor :_create
   include NameFilterable
   SECTOR_TYPES = [ "Veterans & Military", "Sexual Assault", "Substance Abuse", "LGBTQIA",
                   "Child Abuse", "Education/Schools", "Domestic Violence", "Other" ]

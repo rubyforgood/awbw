@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_19_143438) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -231,6 +231,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143438) do
     t.integer "legacy_id"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["categorizable_type", "categorizable_id"], name: "idx_on_categorizable_type_categorizable_id_ccce65d80c"
+    t.index ["category_id", "categorizable_type", "categorizable_id"], name: "index_categorizable_items_uniqueness", unique: true
     t.index ["category_id"], name: "index_categorizable_items_on_category_id"
   end
 
@@ -678,6 +679,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143438) do
     t.integer "sectorable_id"
     t.string "sectorable_type"
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["sector_id", "sectorable_type", "sectorable_id"], name: "index_sectorable_items_uniqueness", unique: true
     t.index ["sector_id"], name: "index_sectorable_items_on_sector_id"
     t.index ["sectorable_type", "sectorable_id"], name: "index_sectorable_items_on_sectorable_type_and_sectorable_id"
   end
