@@ -1,6 +1,4 @@
 class SectorableItem < ApplicationRecord
-  attr_accessor :_create
-
   belongs_to :sector
   belongs_to :sectorable, polymorphic: true
   has_many :facilitators, through: :sectorable_items, source: :sectorable, source_type: "Facilitator"
