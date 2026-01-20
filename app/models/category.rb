@@ -10,6 +10,7 @@ class Category < ApplicationRecord
   # Scopes
   # See NameFilterable, Publishable
   scope :age_ranges, -> { joins(:category_type).where(category_types: { name: "AgeRange" }) }
+  scope :story_categories, -> { joins(:category_type).where(category_types: { name: "StoryCategory" }) }
   scope :ordered_by_position_and_name, -> { reorder(position: :asc, name: :asc) }
 
   # Validations
