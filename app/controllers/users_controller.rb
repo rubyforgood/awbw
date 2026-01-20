@@ -153,13 +153,13 @@ class UsersController < ApplicationController
 
   def set_form_variables
     set_facilitator
-    @user.project_users.first || @user.project_users.build
-    projects = if current_user.super_user?
-      Project.active
+    @user.organization_users.first || @user.organization_users.build
+    organizations = if current_user.super_user?
+      Organization.active
     else
-      current_user.projects
+      current_user.organizations
     end
-    @projects_array = projects.order(:name).pluck(:name, :id)
+    @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
 
   def password_param
@@ -178,7 +178,7 @@ class UsersController < ApplicationController
       :notes, :primary_address, :avatar, :subscribecode,
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
       :confirmed, :inactive, :super_user, :legacy, :legacy_id,
-      project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
+      organization_users_attributes: [ :id, :organization_id, :position, :title, :inactive, :_destroy ]
     )
   end
 end

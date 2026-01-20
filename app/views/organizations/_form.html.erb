@@ -1,15 +1,15 @@
-<%= simple_form_for(@project) do |f| %>
-  <%= render 'shared/errors', resource: @project if @project.errors.any? %>
+<%= simple_form_for(@organization) do |f| %>
+  <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
 
   <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 p-3 mb-6 items-start">
 
     <!-- LEFT SIDE (3/4) -->
     <div>
-      <!-- Project Name + Hidden -->
+      <!-- Organization Name + Hidden -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="md:col-span-2">
           <%= f.input :name,
-                      label: "Project Name",
+                      label: "Organization Name",
                       as: :text,
                       required: true,
                       input_html: {
@@ -21,12 +21,12 @@
         </div>
 
         <div class="md:col-span-1">
-          <%= f.input :project_status_id,
-                      label: "Project status",
+          <%= f.input :organization_status_id,
+                      label: "Organization status",
                       as: :select,
                       required: true,
-                      collection: @project_statuses,
-                      selected: f.object.project_status_id,
+                      collection: @organization_statuses,
+                      selected: f.object.organization_status_id,
                       input_html: {
                         class: "w-full rounded-md border-gray-300 shadow-sm
                           focus:ring-blue-500 focus:border-blue-500"
@@ -113,9 +113,9 @@
 
     <% if current_user.super_user? %>
       <div class="admin-only bg-blue-100">
-        <%= f.input :project_status_id,
+        <%= f.input :organization_status_id,
                     as: :select,
-                    collection: @project_statuses,
+                    collection: @organization_statuses,
                     include_blank: true,
                     label: "Status",
                     required: true,
@@ -125,9 +125,9 @@
       </div>
     <% else %>
       <div class="text-md font-semibold">
-        Project status:
+        Organization status:
       </div>
-      <%= f.object.project_status&.name %>
+      <%= f.object.organization_status&.name %>
     <% end %>
   </div>
 
@@ -179,7 +179,7 @@
     <% if current_user.super_user? %>
       <div class="admin-only bg-blue-100">
         <%= f.input :internal_id,
-                    label: "Internal Project ID",
+                    label: "Internal Organization ID",
                     input_html: {
                       class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
@@ -247,20 +247,20 @@
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
       <% if current_user.super_user? %>
         <div class="admin-only bg-blue-100 p-3">
-          <%= f.fields_for :project_users do |project_user_form| %>
-            <%= render "project_user_fields",
-                       f: project_user_form %>
+          <%= f.fields_for :organization_users do |organization_user_form| %>
+            <%= render "organization_user_fields",
+                       f: organization_user_form %>
           <% end %>
 
           <div class="admin-only bg-blue-100 p-3 mt-6">
             <%= link_to_add_association "➕ Add Role",
                                         f,
-                                        :project_users,
+                                        :organization_users,
                                         class: "btn btn-secondary-outline" %>
           </div>
         </div>
       <% else %>
-        <% f.object.user && f.object.user.project_users.each do |pu| %>
+        <% f.object.user && f.object.user.organization_users.each do |pu| %>
           <div class="ps-6 mb-2">
             <li><%= pu.title || pu.position %> -
               <%= facilitator_profile_button(pu.user.facilitator) if pu.persisted? && pu.user.facilitator %>
@@ -273,11 +273,11 @@
 
   <!-- ACTIONS -->
   <div class="flex justify-end gap-3">
-    <% if  @project.persisted? && current_user.super_user? %>
-      <%= link_to "Delete", @project, class: "btn btn-danger-outline",
+    <% if  @organization.persisted? && current_user.super_user? %>
+      <%= link_to "Delete", @organization, class: "btn btn-danger-outline",
                   method: :delete, data: { confirm: "Are you sure?" } %>
     <% end %>
-    <%= link_to "Cancel", projects_path, class: "btn btn-utility-outline" %>
+    <%= link_to "Cancel", organizations_path, class: "btn btn-utility-outline" %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 <% end %>

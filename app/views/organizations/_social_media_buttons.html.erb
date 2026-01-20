@@ -1,8 +1,8 @@
-<% return if project.blank? %>
+<% return if organization.blank? %>
 
 <div class="flex flex-wrap items-center gap-1">
-  <% if project.linked_in_url.present? %>
-    <%= link_to project.linked_in_url, target: "_blank", rel: "noopener noreferrer",
+  <% if organization.linked_in_url.present? %>
+    <%= link_to organization.linked_in_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-[#0A66C2]
                          transition-colors duration-200" do %>
@@ -10,8 +10,8 @@
     <% end %>
   <% end %>
 
-  <% if project.instagram_url.present? %>
-    <%= link_to project.instagram_url, target: "_blank", rel: "noopener noreferrer",
+  <% if organization.instagram_url.present? %>
+    <%= link_to organization.instagram_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-gradient-to-tr
                          hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF]
@@ -20,8 +20,8 @@
     <% end %>
   <% end %>
 
-  <% if project.facebook_url.present? %>
-    <%= link_to project.facebook_url, target: "_blank", rel: "noopener noreferrer",
+  <% if organization.facebook_url.present? %>
+    <%= link_to organization.facebook_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-[#1877F2]
                          transition-colors duration-200" do %>
@@ -29,8 +29,8 @@
     <% end %>
   <% end %>
 
-  <% if project.twitter_url.present? %>
-    <%= link_to project.twitter_url, target: "_blank", rel: "noopener noreferrer",
+  <% if organization.twitter_url.present? %>
+    <%= link_to organization.twitter_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-[#1DA1F2]
                          transition-colors duration-200" do %>
@@ -38,8 +38,8 @@
     <% end %>
   <% end %>
 
-  <% if project.youtube_url.present? %>
-    <%= link_to project.youtube_url, target: "_blank", rel: "noopener noreferrer",
+  <% if organization.youtube_url.present? %>
+    <%= link_to organization.youtube_url, target: "_blank", rel: "noopener noreferrer",
                 class: "group inline-flex items-center justify-center w-6 h-6
                          rounded-md bg-gray-100 hover:bg-[#FF0000]
                          text-gray-600 hover:text-white

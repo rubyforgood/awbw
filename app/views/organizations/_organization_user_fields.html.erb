@@ -2,16 +2,15 @@
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start mb-4">
 
     <div>
-      <%= f.input :project_id,
+      <%= f.input :user_id,
                   as: :select,
-                  label: "Organization",
-                  collection: @projects_array,
-                  selected: f.object.project_id,
+                  label: "Facilitator",
+                  collection: @facilitators_array,
+                  include_blank: true,
+                  selected: f.object&.user_id,
                   input_html: {
                     class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  },
-                  required: true,
-                  error: "Organization can't be blank" %>
+                  } %>
     </div>
 
     <div>
@@ -19,7 +18,7 @@
                   as: :text,
                   input_html: {
                     rows: 1,
-                    value: f.object.title || f.object.position,
+                    value: f.object&.title || f.object&.position,
                   } %>
     </div>
 
@@ -35,11 +34,11 @@
 
       <%= link_to_remove_association "✖ Remove",
                                      f,
-                                     class: "btn btn-danger-outline whitespace-nowrap" %>
+                                     class: "btn btn-danger-outline whitespace-nowrap" if f.object&.persisted? %>
     </div>
   </div>
 <% else %>
   <div class="ps-6 mb-4">
-    <li><%= f.object.project&.name %> (<%= f.object.title || f.object.position %>)</li>
+    <li><%= f.object.organization&.name %> (<%= f.object.title || f.object.position %>)</li>
   </div>
 <% end %>
