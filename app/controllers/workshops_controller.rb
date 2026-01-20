@@ -125,15 +125,14 @@ class WorkshopsController < ApplicationController
   def create
     @workshop = current_user.workshops.build(workshop_params)
 
-    # Convert checkbox values into categorizable_items updates
-    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.categories = Category.where(id: selected_category_ids)
-
-    # Convert checkbox values into sectorable_items updates
-    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.sectors = Sector.where(id: selected_sector_ids)
-
     if @workshop.save
+      # Assign associations after workshop is saved and has an ID
+      selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
+      @workshop.categories = Category.where(id: selected_category_ids)
+
+      selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
+      @workshop.sectors = Sector.where(id: selected_sector_ids)
+
       flash[:notice] = "Workshop created successfully."
       redirect_to workshops_path(sort: "created")
     else
