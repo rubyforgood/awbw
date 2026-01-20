@@ -21,6 +21,8 @@
           <%= link_to "Website", safe_url(@community_news.external_url), target: "_blank", rel: "noopener noreferrer",
                       class: "btn btn-secondary-outline" %>
         <% end %>
+
+        <%= print_button(@community_news, printable_type: "CommunityNews", button_text: "Print page") %>
       </div>
 
       <!-- Header Row -->

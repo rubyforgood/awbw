@@ -22,6 +22,8 @@
           <%= link_to "Edit", edit_story_path(@story),
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>
+
+        <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
       </div>
 
       <!-- Header Row -->
