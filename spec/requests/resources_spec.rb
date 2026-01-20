@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "/resources", type: :request do
   let(:user)         { create(:user, super_user: true) }
   let(:windows_type) { create(:windows_type) }
-  let(:project)      { create(:project) }
+  let(:organization) { create(:organization) }
 
   let(:valid_attributes) do
     {

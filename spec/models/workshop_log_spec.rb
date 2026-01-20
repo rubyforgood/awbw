@@ -11,7 +11,7 @@ RSpec.describe WorkshopLog do
     # Explicitly defined here
     it { should belong_to(:workshop) }
     it { should belong_to(:user) } # Inherited via Report but also explicit?
-    it { should belong_to(:project) } # Inherited via Report but also explicit?
+    it { should belong_to(:organization) } # Inherited via Report but also explicit?
     it { should have_many(:media_files) }
 
     # Inherited from Report

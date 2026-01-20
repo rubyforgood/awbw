@@ -6,13 +6,13 @@ RSpec.describe "/workshop_logs", type: :request do
   let(:user)         { create(:user) }
   let(:windows_type) { create(:windows_type) }
   let(:workshop)     { create(:workshop) }
-  let(:project)      { create(:project) }
+  let(:organization) { create(:organization) }
 
   let(:valid_attributes) do
     {
       date: Date.current,
       workshop_id: workshop.id,
-      project_id: project.id,
+      organization_id: organization.id,
       windows_type_id: windows_type.id,
       user_id: user.id,
 
