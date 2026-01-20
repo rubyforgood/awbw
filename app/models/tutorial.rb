@@ -1,5 +1,5 @@
 class Tutorial < ApplicationRecord
-  include TagFilterable, Trendable
+  include TagFilterable, Trendable, RichTextSearchable
 
   has_rich_text :rhino_body
 
@@ -21,6 +21,10 @@ class Tutorial < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes :title, :body
+
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   scope :body, ->(body) { where("body like ?", "%#{ body }%") }

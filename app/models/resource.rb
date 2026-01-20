@@ -1,5 +1,5 @@
 class Resource < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
@@ -65,6 +65,10 @@ class Resource < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes :title, :author, :text
+
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   # Scopes

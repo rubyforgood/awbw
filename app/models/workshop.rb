@@ -154,11 +154,12 @@ class Workshop < ApplicationRecord
   }
   include SearchCop
   search_scope :search do
+    attributes all: [ :title, :full_name ] # no spanish alternatives
+    options :all, type: :text, default: true, default_operator: :or
+
     scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
-
-    attributes all: [ :title, :full_name ] # no spanish alternatives
-    options :all, type: :text, default: true# , default_operator: :or
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   def self.grouped_by_sector
