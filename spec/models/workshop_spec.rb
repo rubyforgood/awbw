@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'securerandom'
 
 RSpec.describe Workshop do
   # pending "add some examples to (or delete) #{__FILE__}"
@@ -71,6 +72,22 @@ RSpec.describe Workshop do
       record = create(:workshop, title: 'The best workshop in the world', windows_type: nil)
 
       expect(record.type_name).to eq "The best workshop in the world ##{record.id}"
+    end
+  end
+
+  # SearchCop
+  describe 'search' do
+    it 'returns correct workshops when searching for the same random string' do
+      random_string = Array.new(3) { SecureRandom.alphanumeric(6) }.join(' ')
+
+      workshop1 = Workshop.create!(title: "Workshop One", rhino_objective: random_string)
+      workshop2 = Workshop.create!(title: "Workshop Two", rhino_setup: random_string)
+      workshop3 = Workshop.create!(title: "Workshop Three", rhino_warm_up: random_string)
+      workshop4 = Workshop.create!(title: "Workshop Four", rhino_objective: "Other")
+
+      results = Workshop.search(random_string)
+
+      expect(results).to contain_exactly(workshop1, workshop2, workshop3)
     end
   end
 
