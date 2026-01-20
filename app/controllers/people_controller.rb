@@ -391,7 +391,6 @@ class PeopleController < ApplicationController
       affiliations_attributes: [
         :id,
         :organization_id,
-        :position,
         :title,
         :inactive,
         :primary_contact,

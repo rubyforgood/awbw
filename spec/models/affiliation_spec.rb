@@ -14,10 +14,6 @@ RSpec.describe Affiliation do
     # it { should validate_presence_of(:person_id) } # we needed to not have this to support nested attrs
   end
 
-  describe 'enums' do
-    it { should define_enum_for(:position).with_values(default: 0, liaison: 1, leader: 2, assistant: 3) }
-  end
-
   describe '.active' do
     let!(:active_op) { create(:affiliation, inactive: false, end_date: nil) }
     let!(:active_with_future_end) { create(:affiliation, inactive: false, end_date: 1.month.from_now) }
