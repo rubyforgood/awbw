@@ -106,8 +106,10 @@ class WorkshopsController < ApplicationController
     success = false
 
     Workshop.transaction do
-      assign_associations(@workshop)
-      success = @workshop.update(workshop_params)
+      if @workshop.update(workshop_params)
+        assign_associations(@workshop)
+        success = true
+      end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
       log_workshop_error("update", e)
       raise ActiveRecord::Rollback
