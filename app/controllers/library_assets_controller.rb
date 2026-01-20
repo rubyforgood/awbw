@@ -39,11 +39,12 @@
        @asset =  Asset.new(asset_params.except(:file))
        @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
 
-       if params[:library_asset][:new_assets].present?
+       if params.dig(:library_asset, :new_assets).present?
          params[:library_asset][:new_assets].each do |asset|
            @unpersisted_owner.assets << Asset.find_by(id: asset[:id])
          end
        end
+
        valid_asset = validate_asset_type_constraint(@asset.type, @unpersisted_owner.assets)
 
        if valid_asset && @asset.save
@@ -120,12 +121,5 @@
 
    def asset_params
      params.expect(library_asset: [ :type, :title, :file ])
-   end
-
-   def render_type_selector_partial
-     if @owner
-     else
-       render partial: "assets/type_selector", locals: { asset: @asset }
-     end
    end
  end
