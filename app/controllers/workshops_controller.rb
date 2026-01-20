@@ -108,6 +108,9 @@ class WorkshopsController < ApplicationController
     Workshop.transaction do
       assign_associations(@workshop)
       success = @workshop.update(workshop_params)
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("update", e)
+      raise ActiveRecord::Rollback
     end
 
     if success
@@ -118,11 +121,6 @@ class WorkshopsController < ApplicationController
       flash[:alert] = "Unable to update the workshop."
       render :edit
     end
-  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
-    Rails.logger.error "Workshop update failed: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}"
-    set_form_variables
-    flash[:alert] = "Unable to update the workshop."
-    render :edit
   end
 
   def create
@@ -131,14 +129,12 @@ class WorkshopsController < ApplicationController
 
     Workshop.transaction do
       if @workshop.save
-        begin
-          assign_associations(@workshop)
-          success = true
-        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
-          Rails.logger.error "Association assignment failed: #{e.class} - #{e.message}"
-          raise ActiveRecord::Rollback
-        end
+        assign_associations(@workshop)
+        success = true
       end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("creation", e)
+      raise ActiveRecord::Rollback
     end
 
     if success
@@ -149,11 +145,6 @@ class WorkshopsController < ApplicationController
       flash.now[:alert] = "Unable to save the workshop."
       render :new
     end
-  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
-    Rails.logger.error "Workshop creation failed: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}"
-    set_form_variables
-    flash.now[:alert] = "Unable to save the workshop."
-    render :new
   end
 
   def search
@@ -214,6 +205,10 @@ class WorkshopsController < ApplicationController
     # Convert checkbox values into sectorable_items updates
     selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
     workshop.sectors = Sector.where(id: selected_sector_ids)
+  end
+
+  def log_workshop_error(action, error)
+    Rails.logger.error "Workshop #{action} failed: #{error.class} - #{error.message}\n#{error.backtrace.join("\n")}"
   end
 
   def workshops_per_page
