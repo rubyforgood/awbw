@@ -124,6 +124,7 @@ class WorkshopsController < ApplicationController
 
   def create
     @workshop = current_user.workshops.build(workshop_params)
+    success = false
 
     Workshop.transaction do
       if @workshop.save
@@ -134,15 +135,19 @@ class WorkshopsController < ApplicationController
         selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
         @workshop.sectors = Sector.where(id: selected_sector_ids)
 
-        flash[:notice] = "Workshop created successfully."
-        redirect_to workshops_path(sort: "created")
-      else
-        set_form_variables
-        flash.now[:alert] = "Unable to save the workshop."
-        render :new
+        success = true
       end
     end
-  rescue ActiveRecord::RecordInvalid => e
+
+    if success
+      flash[:notice] = "Workshop created successfully."
+      redirect_to workshops_path(sort: "created")
+    else
+      set_form_variables
+      flash.now[:alert] = "Unable to save the workshop."
+      render :new
+    end
+  rescue StandardError => e
     set_form_variables
     flash.now[:alert] = "Unable to save the workshop: #{e.message}"
     render :new
