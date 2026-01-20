@@ -6,6 +6,7 @@ class Category < ApplicationRecord
   has_many :workshops, through: :categorizable_items, source: :categorizable, source_type: "Workshop"
 
   scope :age_ranges, -> { joins(:category_type).where("metadata.name = 'AgeRange'") }
+  scope :story_categories, -> { joins(:category_type).where("metadata.name = 'StoryCategory'") }
   scope :published, -> { where(published: true) }
 
   # Validations

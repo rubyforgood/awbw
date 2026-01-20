@@ -66,7 +66,7 @@ class StoryIdeasController < ApplicationController
     @workshops = Workshop.all.order(:title)
     @users = User.active.or(User.where(id: @story_idea.created_by_id))
                  .order(:first_name, :last_name)
-    @categories = Category.published.order(:position, :name)
+    @categories = Category.story_categories.published.order(:position, :name)
   end
 
   # def remove_image
