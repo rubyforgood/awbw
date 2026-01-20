@@ -103,10 +103,14 @@ class WorkshopsController < ApplicationController
 
   def update
     @workshop = Workshop.find(params[:id])
+    success = false
 
-    assign_associations(@workshop)
+    Workshop.transaction do
+      assign_associations(@workshop)
+      success = @workshop.update(workshop_params)
+    end
 
-    if @workshop.update(workshop_params)
+    if success
       flash[:notice] = "Workshop updated successfully."
       redirect_to workshops_path
     else
@@ -114,6 +118,11 @@ class WorkshopsController < ApplicationController
       flash[:alert] = "Unable to update the workshop."
       render :edit
     end
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    Rails.logger.error "Workshop update failed: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}"
+    set_form_variables
+    flash[:alert] = "Unable to update the workshop."
+    render :edit
   end
 
   def create
@@ -122,8 +131,13 @@ class WorkshopsController < ApplicationController
 
     Workshop.transaction do
       if @workshop.save
-        assign_associations(@workshop)
-        success = true
+        begin
+          assign_associations(@workshop)
+          success = true
+        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+          Rails.logger.error "Association assignment failed: #{e.class} - #{e.message}"
+          raise ActiveRecord::Rollback
+        end
       end
     end
 
@@ -135,7 +149,7 @@ class WorkshopsController < ApplicationController
       flash.now[:alert] = "Unable to save the workshop."
       render :new
     end
-  rescue StandardError => e
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
     Rails.logger.error "Workshop creation failed: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}"
     set_form_variables
     flash.now[:alert] = "Unable to save the workshop."
