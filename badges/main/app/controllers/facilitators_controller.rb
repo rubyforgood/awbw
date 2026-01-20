@@ -1,4 +1,5 @@
 class FacilitatorsController < ApplicationController
+  include AhoyViewTracking
   before_action :set_facilitator, only: %i[ show edit update destroy ]
 
   def index
@@ -14,7 +15,7 @@ class FacilitatorsController < ApplicationController
 
   def show
     @facilitator = Facilitator.find(params[:id]).decorate
-    @facilitator.increment_view_count!(session: session, request: request)
+    track_view(@facilitator)
   end
 
   def new

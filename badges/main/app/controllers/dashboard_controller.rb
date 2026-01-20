@@ -11,8 +11,8 @@ class DashboardController < ApplicationController
     @resources = Resource.includes(:windows_type, :primary_asset, :gallery_assets)
                          .featured
                          .published
-                         .by_most_viewed(6)
                          .order(position: :asc, created_at: :desc)
+                         .limit(6)
                          .decorate
     @stories = Story.includes(:windows_type, :primary_asset, :gallery_assets)
                     .featured

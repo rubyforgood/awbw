@@ -1,5 +1,6 @@
 class CommunityNewsController < ApplicationController
   include ExternallyRedirectable
+  include AhoyViewTracking
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -17,7 +18,7 @@ class CommunityNewsController < ApplicationController
 
   def show
     @community_news = @community_news.decorate
-    @community_news.increment_view_count!(session: session, request: request)
+    track_view(@community_news)
 
     if @community_news.external_url.present?
       redirect_to_external @community_news.link_target

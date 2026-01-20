@@ -6,7 +6,6 @@
         <span class="inline-block text-md">
           <%= render "bookmarks/editable_bookmark_button", resource: @resource.object %>
         </span>
-
         <% if current_user.super_user? %>
           <%= link_to("Edit", edit_resource_path(@resource),
                       class: "admin-only bg-blue-100 btn btn-primary-outline") %>
@@ -17,6 +16,9 @@
                       class: "btn btn-secondary-outline" %>
         <% end %>
 
+        <span class="inline-block text-md">
+          <%= print_button(@resource, printable_type: "Resource", button_text: "Print page") %>
+        </span>
         <%= link_to ("<span title='Download #{@resource.kind}'>" +
           " Download <span class='fa fa-download'></span></span>").html_safe,
                     resource_download_path(@resource),

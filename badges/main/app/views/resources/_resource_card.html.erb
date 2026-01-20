@@ -56,7 +56,6 @@
 
       <!-- ACTION BUTTONS -->
       <div class="absolute bottom-3 right-3 flex items-center space-x-2 z-30">
-
         <% if resource.download_attachment&.file&.attached? %>
           <%= link_to(
                 content_tag(:span, "", class: "fa fa-download"),

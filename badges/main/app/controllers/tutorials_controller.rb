@@ -1,4 +1,5 @@
 class TutorialsController < ApplicationController
+  include AhoyViewTracking
   before_action :set_tutorial, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -11,7 +12,7 @@ class TutorialsController < ApplicationController
 
   def show
     @tutorial = @tutorial.decorate
-    @tutorial.increment_view_count!(session: session, request: request)
+    track_view(@tutorial)
   end
 
   def new
