@@ -15,7 +15,13 @@ class WorkshopVariationsController < ApplicationController
   end
 
   def create
-    @workshop_variation = WorkshopVariation.new(workshop_variation_params)
+    if params[:workshop_variation_idea_id].present?
+      @workshop_variation_idea = WorkshopVariationIdea.find(params[:workshop_variation_idea_id])
+      @workshop_variation = WorkshopVariationFromIdeaService.new(@workshop_variation_idea, user: current_user).call
+    else
+      @workshop_variation = WorkshopVariation.new(workshop_variation_params)
+    end
+
     authorize! @workshop_variation
 
     if @workshop_variation.save
@@ -81,7 +87,7 @@ class WorkshopVariationsController < ApplicationController
   private
 
   def set_form_variables
-    workshops = current_user&.super_user? ? Workshop.all : Workshop.published
+    workshops = authorized_scope(Workshop.all)
     @workshops = workshops.order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
