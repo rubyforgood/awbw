@@ -134,6 +134,9 @@ GEM
     brakeman (7.1.2)
       racc
     builder (3.3.0)
+    bullet (8.1.0)
+      activesupport (>= 3.0.0)
+      uniform_notifier (~> 1.11)
     bundler-audit (0.9.3)
       bundler (>= 1.2.0)
       thor (~> 1.0)
@@ -475,6 +478,7 @@ GEM
     unicode-display_width (3.2.0)
       unicode-emoji (~> 4.1)
     unicode-emoji (4.2.0)
+    uniform_notifier (1.18.0)
     uri (1.1.1)
     useragent (0.16.11)
     vite_rails (3.0.19)
@@ -515,6 +519,7 @@ DEPENDENCIES
   binding_of_caller!
   bootsnap
   brakeman (~> 7.1.2)
+  bullet
   bundler-audit
   capybara (~> 3.36)
   cocoon (~> 1.2.6)
