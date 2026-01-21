@@ -35,7 +35,7 @@ class CommunityNewsController < ApplicationController
     @community_news = @community_news.decorate
     set_form_variables
     if turbo_frame_request?
-      render :rich_text_assets, locals: { owner: @community_news }
+      render :editor_lazy
     else
       render :edit
     end

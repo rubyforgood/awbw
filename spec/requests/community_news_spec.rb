@@ -21,7 +21,7 @@ RSpec.describe "/community_news", type: :request do
   let(:valid_attributes) {
     {
       title: "Title2",
-      body: "MyText",
+      rhino_body: "MyText",
       published: false,
       featured: false,
       author_id: admin.id,
@@ -36,11 +36,11 @@ RSpec.describe "/community_news", type: :request do
   let(:invalid_attributes) {
     {
       title: nil,
-      body: nil,
       author_id: nil,
-      reference_url: "reference url",
-      created_by_id: nil,
-      updated_by_id: nil
+      project: nil,
+      windows_type: nil,
+      created_by_id: admin.id,
+      updated_by_id: admin.id
     }
   }
 

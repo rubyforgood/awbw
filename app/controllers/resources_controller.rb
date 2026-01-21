@@ -38,7 +38,7 @@ class ResourcesController < ApplicationController
     set_form_variables
 
     if turbo_frame_request?
-      render :rich_text_assets
+      render :editor_lazy
     else
       render :edit
     end

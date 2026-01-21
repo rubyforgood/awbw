@@ -38,7 +38,7 @@ class StoriesController < ApplicationController
     @story = @story.decorate
     set_form_variables
     if turbo_frame_request?
-      render :rich_text_assets, locals: { owner: @story }
+      render :editor_lazy
     else
       render :edit
     end

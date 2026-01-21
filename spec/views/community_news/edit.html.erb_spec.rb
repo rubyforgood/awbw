@@ -6,7 +6,7 @@ RSpec.describe "community_news/edit", type: :view do
   let(:community_news) {
     CommunityNews.create!(
       title: "MyString",
-      body: "MyText",
+      rhino_body: "<p>MyText</p>",
       youtube_url: "MyString",
       published: false,
       featured: false,
