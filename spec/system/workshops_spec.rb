@@ -33,7 +33,7 @@ RSpec.describe "Workshops", type: :system do
 
         visit workshops_path
 
-        fill_in 'query', with: 'best workshop'
+        fill_in 'title', with: 'best workshop'
 
         # Open the dropdown
         click_on "Windows Type"  # this clicks the <button> text/label
@@ -42,7 +42,7 @@ RSpec.describe "Workshops", type: :system do
         within('#workshops-list') do
           expect(page).to have_content(workshop_world.title)
           expect(page).to have_content(workshop_mars.title)
-          # expect(page).not_to have_content(workshop_hello.title) # TODO - get this working again once the page autosubmits
+          expect(page).not_to have_content(workshop_hello.title)
         end
       end
     end
