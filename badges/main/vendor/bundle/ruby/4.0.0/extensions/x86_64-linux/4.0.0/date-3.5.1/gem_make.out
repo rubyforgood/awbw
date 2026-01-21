@@ -6,10 +6,10 @@ checking for altzone in time.h with -Werror... no
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/date-3.5.1/ext/date
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-3wg7ae sitelibdir\=./.gem.20260121-2725-3wg7ae clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-kltyz sitelibdir\=./.gem.20260121-2179-kltyz clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/date-3.5.1/ext/date
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-3wg7ae sitelibdir\=./.gem.20260121-2725-3wg7ae
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-kltyz sitelibdir\=./.gem.20260121-2179-kltyz
 compiling date_core.c
 compiling date_parse.c
 compiling date_strftime.c
@@ -17,8 +17,8 @@ compiling date_strptime.c
 linking shared-object date_core.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/date-3.5.1/ext/date
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-3wg7ae sitelibdir\=./.gem.20260121-2725-3wg7ae install
-/usr/bin/install -c -m 0755 date_core.so ./.gem.20260121-2725-3wg7ae
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-kltyz sitelibdir\=./.gem.20260121-2179-kltyz install
+/usr/bin/install -c -m 0755 date_core.so ./.gem.20260121-2179-kltyz
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/date-3.5.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20260121-2725-3wg7ae sitelibdir\=./.gem.20260121-2725-3wg7ae clean
+make DESTDIR\= sitearchdir\=./.gem.20260121-2179-kltyz sitelibdir\=./.gem.20260121-2179-kltyz clean

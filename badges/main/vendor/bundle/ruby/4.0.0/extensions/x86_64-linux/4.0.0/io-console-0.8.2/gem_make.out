@@ -16,16 +16,16 @@ checking for ttyname_r()... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-dntysk sitelibdir\=./.gem.20260121-2725-dntysk clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-xd8vdf sitelibdir\=./.gem.20260121-2179-xd8vdf clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-dntysk sitelibdir\=./.gem.20260121-2725-dntysk
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-xd8vdf sitelibdir\=./.gem.20260121-2179-xd8vdf
 compiling console.c
 linking shared-object io/console.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-dntysk sitelibdir\=./.gem.20260121-2725-dntysk install
-/usr/bin/install -c -m 0755 console.so ./.gem.20260121-2725-dntysk/io
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-xd8vdf sitelibdir\=./.gem.20260121-2179-xd8vdf install
+/usr/bin/install -c -m 0755 console.so ./.gem.20260121-2179-xd8vdf/io
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make DESTDIR\= sitearchdir\=./.gem.20260121-2725-dntysk sitelibdir\=./.gem.20260121-2725-dntysk clean
+make DESTDIR\= sitearchdir\=./.gem.20260121-2179-xd8vdf sitelibdir\=./.gem.20260121-2179-xd8vdf clean

@@ -4,16 +4,16 @@ checking for rb_io_mode_t in ruby/io.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/stringio-3.2.0/ext/stringio
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-p1oywc sitelibdir\=./.gem.20260121-2725-p1oywc clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-9ujgka sitelibdir\=./.gem.20260121-2179-9ujgka clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/stringio-3.2.0/ext/stringio
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-p1oywc sitelibdir\=./.gem.20260121-2725-p1oywc
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-9ujgka sitelibdir\=./.gem.20260121-2179-9ujgka
 compiling stringio.c
 linking shared-object stringio.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/stringio-3.2.0/ext/stringio
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-p1oywc sitelibdir\=./.gem.20260121-2725-p1oywc install
-/usr/bin/install -c -m 0755 stringio.so ./.gem.20260121-2725-p1oywc
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-9ujgka sitelibdir\=./.gem.20260121-2179-9ujgka install
+/usr/bin/install -c -m 0755 stringio.so ./.gem.20260121-2179-9ujgka
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/stringio-3.2.0/ext/stringio
-make DESTDIR\= sitearchdir\=./.gem.20260121-2725-p1oywc sitelibdir\=./.gem.20260121-2725-p1oywc clean
+make DESTDIR\= sitearchdir\=./.gem.20260121-2179-9ujgka sitelibdir\=./.gem.20260121-2179-9ujgka clean

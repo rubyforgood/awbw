@@ -6,10 +6,10 @@ checking for rb_interned_str() in ruby.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/trilogy-2.9.0/ext/trilogy-ruby
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-ep7m1g sitelibdir\=./.gem.20260121-2725-ep7m1g clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-u805zl sitelibdir\=./.gem.20260121-2179-u805zl clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/trilogy-2.9.0/ext/trilogy-ruby
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-ep7m1g sitelibdir\=./.gem.20260121-2725-ep7m1g
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-u805zl sitelibdir\=./.gem.20260121-2179-u805zl
 compiling trilogy.c
 compiling cast.c
 compiling cext.c
@@ -24,8 +24,8 @@ cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ 
 linking shared-object trilogy/cext.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/trilogy-2.9.0/ext/trilogy-ruby
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-ep7m1g sitelibdir\=./.gem.20260121-2725-ep7m1g install
-/usr/bin/install -c -m 0755 cext.so ./.gem.20260121-2725-ep7m1g/trilogy
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-u805zl sitelibdir\=./.gem.20260121-2179-u805zl install
+/usr/bin/install -c -m 0755 cext.so ./.gem.20260121-2179-u805zl/trilogy
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/trilogy-2.9.0/ext/trilogy-ruby
-make DESTDIR\= sitearchdir\=./.gem.20260121-2725-ep7m1g sitelibdir\=./.gem.20260121-2725-ep7m1g clean
+make DESTDIR\= sitearchdir\=./.gem.20260121-2179-u805zl sitelibdir\=./.gem.20260121-2179-u805zl clean

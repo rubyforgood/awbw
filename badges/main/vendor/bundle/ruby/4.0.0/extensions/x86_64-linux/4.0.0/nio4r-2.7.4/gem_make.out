@@ -13,13 +13,13 @@ checking for sys/resource.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.4/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-5t57ch sitelibdir\=./.gem.20260121-2725-5t57ch clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-4sw596 sitelibdir\=./.gem.20260121-2179-4sw596 clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.4/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-5t57ch sitelibdir\=./.gem.20260121-2725-5t57ch
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-4sw596 sitelibdir\=./.gem.20260121-2179-4sw596
 compiling bytebuffer.c
-compiling nio4r_ext.c
 compiling monitor.c
+compiling nio4r_ext.c
 compiling selector.c
 In file included from nio4r_ext.c:6:
 ../libev/ev.c:234:5: warning: "EV_NO_THREADS" is not defined, evaluates to 0 [-Wundef]
@@ -28,6 +28,14 @@ In file included from nio4r_ext.c:6:
 ../libev/ev.c:240:5: warning: "EV_NO_SMP" is not defined, evaluates to 0 [-Wundef]
   240 | #if EV_NO_SMP
       |     ^~~~~~~~~
+monitor.c: In function ‘Init_NIO_Monitor’:
+monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
+   50 | void Init_NIO_Monitor()
+      |      ^~~~~~~~~~~~~~~~
+bytebuffer.c: In function ‘Init_NIO_ByteBuffer’:
+bytebuffer.c:59:6: warning: old-style function definition [-Wold-style-definition]
+   59 | void Init_NIO_ByteBuffer()
+      |      ^~~~~~~~~~~~~~~~~~~
 ../libev/ev.c:573:48: warning: "/*" within comment [-Wcomment]
   573 | /*#define MIN_INTERVAL  0.00000095367431640625 /* 1/2**20, good till 2200 */
       |                                                 
@@ -129,10 +137,6 @@ In file included from nio4r_ext.c:6:
 ../libev/ev.c:1746:5: warning: "ECB_MEMORY_FENCE_NEEDS_PTHREADS" is not defined, evaluates to 0 [-Wundef]
  1746 | #if ECB_MEMORY_FENCE_NEEDS_PTHREADS
       |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bytebuffer.c: In function ‘Init_NIO_ByteBuffer’:
-bytebuffer.c:59:6: warning: old-style function definition [-Wold-style-definition]
-   59 | void Init_NIO_ByteBuffer()
-      |      ^~~~~~~~~~~~~~~~~~~
 ../libev/ev.c:1976:5: warning: "EV_AVOID_STDIO" is not defined, evaluates to 0 [-Wundef]
  1976 | #if EV_AVOID_STDIO
       |     ^~~~~~~~~~~~~~
@@ -161,6 +165,10 @@ In file included from ../libev/ev.c:2130:
 ../libev/ev_vars.h:150:22: warning: "EV_GENWRAP" is not defined, evaluates to 0 [-Wundef]
   150 | #if EV_USE_KQUEUE || EV_GENWRAP
       |                      ^~~~~~~~~~
+selector.c: In function ‘NIO_Selector_wakeup’:
+selector.c:525:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  525 |     write(selector->wakeup_writer, "\0", 1);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ../libev/ev_vars.h:159:20: warning: "EV_GENWRAP" is not defined, evaluates to 0 [-Wundef]
   159 | #if EV_USE_PORT || EV_GENWRAP
       |                    ^~~~~~~~~~
@@ -188,19 +196,11 @@ In file included from ../libev/ev.c:2130:
 ../libev/ev.c:3073:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  3073 | #if EV_USE_IOCP
       |     ^~~~~~~~~~~
-monitor.c: In function ‘Init_NIO_Monitor’:
-monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
-   50 | void Init_NIO_Monitor()
-      |      ^~~~~~~~~~~~~~~~
-selector.c: In function ‘NIO_Selector_wakeup’:
 In file included from ../libev/ev.c:3086:
 ../libev/ev_linuxaio.c: In function ‘linuxaio_poll’:
 ../libev/ev_linuxaio.c:467:10: warning: suggest explicit braces to avoid ambiguous ‘else’ [-Wdangling-else]
   467 |       if (ecb_expect_false (res < 0))
       |          ^
-selector.c:525:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
-  525 |     write(selector->wakeup_writer, "\0", 1);
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 In file included from ../libev/ev.c:3089:
 ../libev/ev_iouring.c: In function ‘iouring_sqe_submit’:
 ../libev/ev_iouring.c:298:31: warning: "/*" within comment [-Wcomment]
@@ -275,8 +275,8 @@ cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ 
 linking shared-object nio4r_ext.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.4/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-5t57ch sitelibdir\=./.gem.20260121-2725-5t57ch install
-/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20260121-2725-5t57ch
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-4sw596 sitelibdir\=./.gem.20260121-2179-4sw596 install
+/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20260121-2179-4sw596
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.4/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20260121-2725-5t57ch sitelibdir\=./.gem.20260121-2725-5t57ch clean
+make DESTDIR\= sitearchdir\=./.gem.20260121-2179-4sw596 sitelibdir\=./.gem.20260121-2179-4sw596 clean

@@ -3,16 +3,16 @@ current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/deb
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-g5ynmq sitelibdir\=./.gem.20260121-2725-g5ynmq clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-vlvhio sitelibdir\=./.gem.20260121-2179-vlvhio clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-g5ynmq sitelibdir\=./.gem.20260121-2725-g5ynmq
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-vlvhio sitelibdir\=./.gem.20260121-2179-vlvhio
 compiling debug_inspector.c
 linking shared-object debug_inspector.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-g5ynmq sitelibdir\=./.gem.20260121-2725-g5ynmq install
-/usr/bin/install -c -m 0755 debug_inspector.so ./.gem.20260121-2725-g5ynmq
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-vlvhio sitelibdir\=./.gem.20260121-2179-vlvhio install
+/usr/bin/install -c -m 0755 debug_inspector.so ./.gem.20260121-2179-vlvhio
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make DESTDIR\= sitearchdir\=./.gem.20260121-2725-g5ynmq sitelibdir\=./.gem.20260121-2725-g5ynmq clean
+make DESTDIR\= sitearchdir\=./.gem.20260121-2179-vlvhio sitelibdir\=./.gem.20260121-2179-vlvhio clean
