@@ -42,10 +42,7 @@
 
     <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
-    <div class="mb-3">
-      <%= f.input :body, as: :text,
-                  input_html: { rows: 10, value: f.object.body || @story_idea&.body } %>
-    </div>
+    <%= rhino_editor(f, :body) %>
 
     <div class="flex gap-4 mb-6">
       <div class="flex-1">

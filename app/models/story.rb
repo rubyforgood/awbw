@@ -33,7 +33,6 @@ class Story < ApplicationRecord
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
   validates :title, presence: true, uniqueness: true
-  validates :body, presence: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -42,7 +41,7 @@ class Story < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :body
+    attributes :title, :rhino_body
   end
 
   # Scopes
