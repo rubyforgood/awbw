@@ -39,7 +39,7 @@ RUN apt-get update -qq && apt-get install -y \
 COPY . .
 
 RUN npm ci
-RUN bundle install --without development test
+RUN bundle config set without 'development test' && bundle install
 
 # These envs are used in the rails application. While they are entirely 
 # unrelated to the docker build process, they are required for the app to run.
