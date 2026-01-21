@@ -42,6 +42,7 @@ class Story < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes :title
+    # TODO add in rich text search once PR is merges with that feature
   end
 
   # Scopes

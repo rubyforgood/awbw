@@ -36,7 +36,8 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :rhino_body
+    attributes :title
+    # TODO add in rich text search once PR is merges with that feature
   end
 
   scope :featured, -> { where(featured: true) }

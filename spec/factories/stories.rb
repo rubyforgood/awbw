@@ -4,7 +4,7 @@ FactoryBot.define do
     association :project
     association :workshop
     title { Faker::Lorem.sentence }
-    body { "My Body" }
+    rhino_body { "<p>My Body</p>" }
     association :created_by, factory: :user
     association :updated_by, factory: :user
   end

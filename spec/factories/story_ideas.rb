@@ -14,7 +14,7 @@ FactoryBot.define do
       after(:create) do |story_idea|
         create(:story,
                title: story_idea.title,
-               rhino_body: "<p>#{story_idea.body}</p>",
+               body: story_idea.body,
                workshop: story_idea.workshop,
                windows_type: story_idea.windows_type,
                project: story_idea.project,
