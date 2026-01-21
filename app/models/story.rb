@@ -13,8 +13,6 @@ class Story < ApplicationRecord
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
 
-  # Rhino Editor Fields
-  has_rich_text :rhino_body
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
@@ -27,6 +25,8 @@ class Story < ApplicationRecord
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
+
+  has_rich_text :rhino_body
 
   # Validations
   validates :windows_type_id, presence: true
@@ -41,7 +41,7 @@ class Story < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :rhino_body
+    attributes :title
   end
 
   # Scopes

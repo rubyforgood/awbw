@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe "stories/show", type: :view do
   let(:user) { create(:user) }
   let(:story) { create(:story, created_by: user, updated_by: user,
-                       body: "MyBody", youtube_url: "Youtube_url") }
+                       rhino_body: "<p>MyBody</p>", youtube_url: "Youtube_url") }
 
   before(:each) do
     sign_in user

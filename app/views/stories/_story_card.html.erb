@@ -18,7 +18,7 @@
       </h3>
 
       <p class="text-gray-600 text-sm mt-1 line-clamp-3">
-        <%= strip_tags(story.body).truncate(250) %>
+        <%= strip_tags(story.rhino_body.to_s).truncate(250) %>
       </p>
     </div>
 
