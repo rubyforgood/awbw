@@ -279,6 +279,7 @@ GEM
     nokogiri (1.19.0-x86_64-linux-gnu)
       racc (~> 1.4)
     orm_adapter (0.5.0)
+    ostruct (0.6.3)
     parallel (1.27.0)
     parser (3.3.10.0)
       ast (~> 2.4.1)
@@ -533,6 +534,7 @@ DEPENDENCIES
   jwt (~> 1.2.1)
   kt-paperclip (~> 7.1.1)
   listen
+  ostruct
   positioning (~> 0.4.7)
   premailer-rails
   pry-rails

@@ -42,6 +42,7 @@ gem "premailer-rails" # applies any style tag classes to html elements for bette
 
 gem "bcrypt", "3.1.16"
 gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
+gem "ostruct"
 gem "simple_form"
 gem "country_select"
 
