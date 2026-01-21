@@ -21,7 +21,6 @@ FROM base AS assets
 RUN apt-get update -qq && apt-get install -y \
   build-essential \
   nodejs \
-  yarn \
   imagemagick \
   libvips \
   poppler-utils \
