@@ -1,0 +1,17 @@
+
+sqlite:
+  adapter: sqlite3
+  database: ":memory:"
+
+mysql:
+  adapter: mysql2
+  database: search_cop
+  username: root
+  encoding: utf8
+
+postgres:
+  adapter: postgresql
+  database: search_cop
+  username: postgres
+  encoding: utf8
+

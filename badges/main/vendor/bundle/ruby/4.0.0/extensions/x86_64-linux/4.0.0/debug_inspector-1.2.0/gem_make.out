@@ -1,0 +1,18 @@
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
+/opt/hostedtoolcache/Ruby/4.0.1/x64/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-g5ynmq sitelibdir\=./.gem.20260121-2725-g5ynmq clean
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-g5ynmq sitelibdir\=./.gem.20260121-2725-g5ynmq
+compiling debug_inspector.c
+linking shared-object debug_inspector.so
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2725-g5ynmq sitelibdir\=./.gem.20260121-2725-g5ynmq install
+/usr/bin/install -c -m 0755 debug_inspector.so ./.gem.20260121-2725-g5ynmq
+
+current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
+make DESTDIR\= sitearchdir\=./.gem.20260121-2725-g5ynmq sitelibdir\=./.gem.20260121-2725-g5ynmq clean
