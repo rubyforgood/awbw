@@ -1,6 +1,6 @@
 [tools]
 node = "22"
-ruby = "3.3.8"
+ruby = "4.0.1"
 
 [tasks.setup]
 description = "Set up the project for local non-docker developement."
