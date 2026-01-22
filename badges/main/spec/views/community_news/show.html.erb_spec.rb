@@ -10,7 +10,7 @@ RSpec.describe "community_news/show", type: :view do
 
     assign(:community_news, CommunityNews.create!(
       title: "Title",
-      body: "MyText",
+      rhino_body: "<p>MyText</p>",
       youtube_url: "Youtube Url",
       published: false,
       featured: false,

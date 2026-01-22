@@ -23,7 +23,7 @@ RSpec.describe "stories/edit", type: :view do
 
       assert_select "select[name=?]", "story[workshop_id]"
 
-      assert_select "textarea[name=?]", "story[body]"
+      assert_select "input[name=?][type=?]", "story[rhino_body]", "hidden"
 
       assert_select "textarea[name=?]", "story[youtube_url]"
 

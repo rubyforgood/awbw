@@ -3,9 +3,11 @@
     <div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @story.class.model_name.human %></h1>
+
         <div class="text-right text-end space-x-2">
           <%= link_to "Website", safe_url(@story.external_url), target: "_blank", rel: "noopener noreferrer",
                       class: "btn btn-secondary-outline" if @story.external_url.present? %>
+
           <%= link_to "View",
                       story_path(@story),
                       class: "btn btn-secondary-outline" %>
@@ -13,9 +15,11 @@
       </div>
 
       <div class="space-y-6">
-        <div class="mt-4">
-          <%= render "form", story: @story %>
-        </div>
+        <div class="mt-4"><%= render "form", story: @story %></div>
+
+        <%= turbo_frame_tag "editor_assets_lazy", src: edit_story_path(@story) do %>
+          <%= render "shared/loading" %>
+        <% end %>
       </div>
     </div>
   </div>
