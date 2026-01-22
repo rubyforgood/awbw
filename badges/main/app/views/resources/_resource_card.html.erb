@@ -1,28 +1,31 @@
 <div class="relative">
-
   <!-- BOOKMARK ICON -->
   <div class="absolute top-3 right-3 z-30">
     <%= render "bookmarks/editable_bookmark_icon", resource: resource.object %>
   </div>
 
   <!-- CARD -->
-  <div class="
-    flex flex-row flex-wrap
-    bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md
-    transition-all overflow-hidden">
-
+  <div
+    class="
+      flex flex-row flex-wrap
+      bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md
+      transition-all overflow-hidden
+    "
+  >
     <!-- LEFT SIDE -->
-    <div class="
-      flex-shrink-0
-      w-40 md:w-40
-      flex flex-col items-center text-center justify-center py-4 pb-3 px-3
-      border-b md:border-b-0 md:border-r border-gray-200">
+    <div
+      class="
+        flex-shrink-0
+        w-40 md:w-40
+        flex flex-col items-center text-center justify-center py-4 pb-3 px-3
+        border-b md:border-b-0 md:border-r border-gray-200
+      "
+    >
       <!-- IMAGE -->
       <div class="relative w-32 h-32">
         <%= link_to resource_path(resource),
                     data: { turbo_frame: "_top", turbo_prefetch: false },
                     class: "block w-full h-full" do %>
-
           <!-- fallback icon -->
           <div class="absolute inset-0 flex items-center justify-center text-gray-700 resource-icon">
             <%= render "resources/resource_icon", kind: resource.kind %>
@@ -38,9 +41,7 @@
       </div>
 
       <!-- TYPE -->
-      <span class="mt-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
-        <%= resource.kind_display %>
-      </span>
+      <span class="mt-2 text-xs font-medium text-gray-500 uppercase tracking-wide"><%= resource.kind_display %></span>
     </div>
 
     <!-- RIGHT SIDE -->
@@ -56,7 +57,7 @@
 
       <!-- ACTION BUTTONS -->
       <div class="absolute bottom-3 right-3 flex items-center space-x-2 z-30">
-        <% if resource.download_attachment&.file&.attached? %>
+        <% if resource.downloadable_asset&.file&.attached? %>
           <%= link_to(
                 content_tag(:span, "", class: "fa fa-download"),
                 resource_download_path(resource.object),
@@ -73,9 +74,7 @@
                 data: {turbo_frame: "_top", turbo_prefetch: false }
               ) %>
         <% end %>
-
       </div>
-
     </div>
   </div>
 </div>

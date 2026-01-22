@@ -27,8 +27,8 @@ RSpec.describe "Resource asset upload", type: :system do
     div_prefix = case asset_type
     when "PrimaryAsset", "Primary asset"
       "primary_asset_"
-    when "ThumbnailAsset", "Thumbnail asset"
-      "thumbnail_asset_"
+    when "DownloadableAsset", "Downloadable asset"
+      "Downloadable_asset_"
     when "GalleryAsset", "Gallery asset"
       "gallery_asset_"
     else
@@ -49,19 +49,19 @@ RSpec.describe "Resource asset upload", type: :system do
       visit new_resource_path
 
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_content("Primary asset")
       expect(page).not_to have_content("error")
     end
 
-    it "uploads a thumbnail asset" do
+    it "uploads a downloadable asset" do
       visit new_resource_path
 
       find("#assets-button").click
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_content("Thumbnail asset")
+      expect(page).to have_content("Downloadable asset")
       expect(page).not_to have_content("error")
     end
 
@@ -69,7 +69,7 @@ RSpec.describe "Resource asset upload", type: :system do
       visit new_resource_path
 
       find("#assets-button").click
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_content("Gallery asset")
       expect(page).not_to have_content("error")
@@ -79,7 +79,7 @@ RSpec.describe "Resource asset upload", type: :system do
       visit new_resource_path
 
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
 
@@ -87,7 +87,7 @@ RSpec.describe "Resource asset upload", type: :system do
 
       expect(page).not_to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
       expect(page).not_to have_content("error")
@@ -98,37 +98,37 @@ RSpec.describe "Resource asset upload", type: :system do
 
       # Upload the first Primary asset
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+      expect(page).to have_content("Only one Primary or Downloadable asset allowed.")
     end
 
-    it "shows an error when trying to upload a second thumbnail asset" do
+    it "shows an error when trying to upload a second downloadable asset" do
       visit new_resource_path
 
       find("#assets-button").click
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_selector("div[id^='thumbnail_asset_']")
+      expect(page).to have_selector("div[id^='downloadable_asset_']")
 
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+      expect(page).to have_content("Only one Primary or Downloadable asset allowed.")
     end
 
-    it "allows uploading Primary, Thumbnail and Gallery assets" do
+    it "allows uploading Primary, Downloadable and Gallery assets" do
       visit new_resource_path
 
       find("#assets-button").click
       upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
-      expect(page).to have_selector("div[id^='thumbnail_asset_']")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
+      expect(page).to have_selector("div[id^='downloadable_asset_']")
 
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='gallery_asset_']")
@@ -140,7 +140,7 @@ RSpec.describe "Resource asset upload", type: :system do
       visit new_resource_path
 
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
 
@@ -163,7 +163,7 @@ RSpec.describe "Resource asset upload", type: :system do
       visit new_resource_path
 
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
 
@@ -191,21 +191,21 @@ RSpec.describe "Resource asset upload", type: :system do
       visit edit_resource_path(resource)
 
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
       expect(page).not_to have_content("error")
     end
 
-    it "uploads a thumbnail asset" do
+    it "uploads a downloadable asset" do
       resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
 
       visit edit_resource_path(resource)
 
       find("#assets-button").click
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_selector("div[id^='thumbnail_asset_']")
+      expect(page).to have_selector("div[id^='downloadable_asset_']")
       expect(page).not_to have_content("error")
     end
 
@@ -215,7 +215,7 @@ RSpec.describe "Resource asset upload", type: :system do
       visit edit_resource_path(resource)
 
       find("#assets-button").click
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
       expect(page).not_to have_content("error")
@@ -227,7 +227,7 @@ RSpec.describe "Resource asset upload", type: :system do
       visit edit_resource_path(resource)
 
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
 
@@ -235,7 +235,7 @@ RSpec.describe "Resource asset upload", type: :system do
 
       expect(page).not_to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
       expect(page).not_to have_content("error")
@@ -248,41 +248,41 @@ RSpec.describe "Resource asset upload", type: :system do
 
       # Upload the first Primary asset
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+      expect(page).to have_content("Only one Primary or Downloadable asset allowed.")
     end
 
-    it "shows an error when trying to upload a second thumbnail asset" do
+    it "shows an error when trying to upload a second downloadable asset" do
       resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
 
       visit edit_resource_path(resource)
 
       find("#assets-button").click
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_selector("div[id^='thumbnail_asset_']")
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
+      expect(page).to have_selector("div[id^='downloadable_asset_']")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
 
 
-      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+      expect(page).to have_content("Only one Primary or Downloadable asset allowed.")
     end
 
-    it "allows uploading Primary, Thumbnail and Gallery assets" do
+    it "allows uploading Primary, Downloadable and Gallery assets" do
       resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
 
       visit edit_resource_path(resource)
 
-      # Upload the first Thumbnail asset
+      # Upload the first Downloadable asset
       find("#assets-button").click
       upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
-      expect(page).to have_selector("div[id^='thumbnail_asset_']")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
+      expect(page).to have_selector("div[id^='downloadable_asset_']")
 
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='gallery_asset_']")
@@ -296,7 +296,7 @@ RSpec.describe "Resource asset upload", type: :system do
       visit edit_resource_path(resource)
 
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       title = SecureRandom.uuid
 
@@ -321,7 +321,7 @@ RSpec.describe "Resource asset upload", type: :system do
       visit edit_resource_path(resource)
 
       find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
 
       delete_asset(asset_type: "Primary asset")
@@ -347,7 +347,7 @@ RSpec.describe "Resource asset upload", type: :system do
       find("#assets-button").click
 
       # Upload a Primary asset
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='primary_asset_']")
 
       within("div[id^='primary_asset_']") do
@@ -365,15 +365,15 @@ RSpec.describe "Resource asset upload", type: :system do
       visit edit_resource_path(resource)
       find("#assets-button").click
 
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
-      expect(page).to have_selector("div[id^='primary_asset_']")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.pdf")
+      expect(page).to have_selector("div[id^='downloadable_asset_']")
 
 
-      within("div[id^='primary_asset_']") do
-        select "Thumbnail asset", from: "library_asset_type"
+      within("div[id^='downloadable_asset_']") do
+        select "Primary asset", from: "library_asset_type"
       end
 
-      expect(page).to have_content("File type is not allowed for Thumbnail asset")
+      expect(page).to have_content("File type is not allowed for Primary asset")
     end
 
     it "shows an error when changing an uploaded asset to a duplicate type on edit" do
@@ -382,17 +382,17 @@ RSpec.describe "Resource asset upload", type: :system do
       visit edit_resource_path(resource)
       find("#assets-button").click
 
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.pdf")
+      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Thumbnail asset", file: "spec/fixtures/files/sample.png")
-      expect(page).to have_selector("div[id^='thumbnail_asset_']")
+      upload_asset(type: "Downloadable asset", file: "spec/fixtures/files/sample.png")
+      expect(page).to have_selector("div[id^='downloadable_asset_']")
 
       within("div[id^='primary_asset_']") do
-        select "Thumbnail asset", from: "library_asset_type"
+        select "Downloadable asset", from: "library_asset_type"
       end
 
-      expect(page).to have_content("Only one Primary or Thumbnail asset allowed.")
+      expect(page).to have_content("Only one Primary or Downloadable asset allowed.")
     end
   end
 end

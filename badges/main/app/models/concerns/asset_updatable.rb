@@ -6,8 +6,8 @@ module AssetUpdatable
       case asset_type
       when "PrimaryAsset"
         return false if assets_collection.any? { |a| a.is_a?(PrimaryAsset) }
-      when "ThumbnailAsset"
-        return false if assets_collection.any? { |a| a.is_a?(ThumbnailAsset) }
+      when "DownloadableAsset"
+        return false if assets_collection.any? { |a| a.is_a?(DownloadableAsset) }
       end
       true
     end

@@ -17,7 +17,7 @@ class Asset < ApplicationRecord
   # Form selection
   TYPES = %w[
     PrimaryAsset
-    ThumbnailAsset
+    DownloadableAsset
     GalleryAsset
   ].freeze
 
@@ -41,8 +41,8 @@ class Asset < ApplicationRecord
       case type
       when "PrimaryAsset"
         PrimaryAsset::ACCEPTED_CONTENT_TYPES
-      when "ThumbnailAsset"
-        ThumbnailAsset::ACCEPTED_CONTENT_TYPES
+      when "GalleryAsset"
+        GalleryAsset::ACCEPTED_CONTENT_TYPES
       else
         ACCEPTED_CONTENT_TYPES
       end

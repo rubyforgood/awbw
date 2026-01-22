@@ -34,7 +34,7 @@ class ResourcesController < ApplicationController
   end
 
   def edit
-    @resource = Resource.find(resource_id_param).decorate
+    @resource = Resource.includes(user: :facilitator).find(resource_id_param).decorate
     set_form_variables
 
     if turbo_frame_request?
@@ -94,16 +94,11 @@ class ResourcesController < ApplicationController
 
   def download
     @resource = Resource.find(params[:resource_id])
-    track_download(@resource)
 
-    attachment = if params[:attachment_id].to_i > 0
-      Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
-    else
-      Resource.find(params[:resource_id]).download_attachment
-    end
-
-    if attachment&.file&.blob.present?
-      redirect_to rails_blob_url(attachment.file, disposition: "attachment")
+    attachment = @resource&.downloadable_asset&.file
+    if attachment.attached?
+      track_download(@resource)
+      redirect_to rails_blob_url(attachment, disposition: "attachment")
     else
       if params[:from] == "resources_index"
         path = resources_path

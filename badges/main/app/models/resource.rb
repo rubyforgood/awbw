@@ -32,8 +32,8 @@ class Resource < ApplicationRecord
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :rich_text_assets, -> { where(type: "RichTextAsset") },
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
-  has_one :thumbnail_asset, -> { where(type: "ThumbnailAsset") },
-         as: :owner, class_name: "ThumbnailAsset", dependent: :destroy
+  has_one :downloadable_asset, -> { where(type: "DownloadableAsset") },
+         as: :owner, class_name: "DownloadableAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
 
   has_many :action_text_mentions,
@@ -122,10 +122,6 @@ class Resource < ApplicationRecord
 
   def name
     title || id
-  end
-
-  def download_attachment
-    primary_asset || gallery_assets.first
   end
 
   def type_enum

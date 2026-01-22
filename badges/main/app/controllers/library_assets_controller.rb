@@ -17,7 +17,7 @@
        valid_asset = validate_asset_type_constraint(asset_params[:type], @owner.assets)
 
        unless valid_asset
-         flash.now[:alert] = "Only one Primary or Thumbnail asset allowed."
+         flash.now[:alert] = "Only one Primary or Downloadable asset allowed."
          return render partial: "assets/form", locals: { owner: @owner }
        end
 
@@ -52,7 +52,7 @@
          @unpersisted_owner.assets.compact!
          render template: "assets/create", formats: [ :turbo_stream ]
        else
-         flash.now[:alert] = "Only one Primary or Thumbnail asset allowed."
+         flash.now[:alert] = "Only one Primary or Downloadable asset allowed."
          render template: "assets/create", formats: [ :turbo_stream ]
        end
      end
@@ -82,7 +82,7 @@
        messages = @asset.errors.full_messages
 
        unless valid_asset
-         messages << "Only one Primary or Thumbnail asset allowed."
+         messages << "Only one Primary or Downloadable asset allowed."
        end
 
        flash.now[:alert] = messages.join(", ")
@@ -112,7 +112,7 @@
     private
 
    def set_asset
-     @asset = Asset.find_by(id: params[:id])
+     @asset = Asset.includes(:file_attachment).find_by(id: params[:id])
    end
 
    def set_owner
