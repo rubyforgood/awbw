@@ -1,0 +1,8 @@
+<%= turbo_frame_tag "title_asset_#{ @asset.id }" do %>
+  <%= form_with scope: :library_asset, url: library_asset_path(@asset),  method: :patch do |form| %>
+    <%= form.text_field :title,
+        class: "border border-gray-200 mt-1 p-1 rounded-md w-28",
+        onblur:"this.form.requestSubmit()",
+        autofocus: true %>
+  <% end %>
+<% end %>
