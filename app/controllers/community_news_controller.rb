@@ -34,6 +34,11 @@ class CommunityNewsController < ApplicationController
   def edit
     @community_news = @community_news.decorate
     set_form_variables
+    if turbo_frame_request?
+      render :editor_lazy
+    else
+      render :edit
+    end
   end
 
   def create
@@ -84,7 +89,7 @@ class CommunityNewsController < ApplicationController
   # Strong parameters
   def community_news_params
     params.require(:community_news).permit(
-      :title, :body, :published, :featured,
+      :title, :rhino_body, :published, :featured,
       :reference_url, :youtube_url,
       :project_id, :windows_type_id,
       :author_id, :created_by_id, :updated_by_id,

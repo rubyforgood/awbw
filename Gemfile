@@ -80,4 +80,5 @@ group :development, :test do
   gem "selenium-webdriver"
   gem "shoulda-matchers", require: false
   gem "debug", "~> 1.11"
+  gem "bullet"
 end

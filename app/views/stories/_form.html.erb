@@ -5,11 +5,10 @@
 
   <div class="admin-only bg-blue-100 p-3">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <%= f.input :title, as: :text,
+      <div><%= f.input :title, as: :text,
                     input_html: { rows: 2,
-                                  value: f.object.title || @story_idea&.title } %>
-      </div>
+                                  value: f.object.title || @story_idea&.title } %></div>
+
       <div class="flex gap-4">
         <%= f.input :published, as: :boolean, wrapper_html: { class: "flex items-center" } %>
         <%= f.input :featured, as: :boolean, wrapper_html: { class: "flex items-center" } %>
@@ -40,12 +39,9 @@
       </div>
     </div>
 
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+    <%= rhino_editor(f, :body) %>
 
-    <div class="mb-3">
-      <%= f.input :body, as: :text,
-                  input_html: { rows: 10, value: f.object.body || @story_idea&.body } %>
-    </div>
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
     <div class="flex gap-4 mb-6">
       <div class="flex-1">
@@ -73,6 +69,7 @@
                       story_idea_path(story_idea), class: "hover:underline") : "Story idea").html_safe,
                     prompt: "Select idea" %>
       </div>
+
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :created_by_id,
                     collection: @users, label_method: :full_name,
@@ -83,18 +80,21 @@
                               generate_facilitator_user_path(f.object.created_by),
                               class: "hover:underline") : "Story author").html_safe,
                     prompt: "Select User" %>
+
         <% if story_idea %>
           <div class="flex-1 mb-4 md:mb-0">
-            Story idea author credit:<br>
+            Story idea author credit:
+            <br>
             <%= story_idea.author_credit %>
-            <br><br>
-            Story idea "publish preferences":<br>
-            <div class="italic">
-              <%= story_idea.publish_preferences %>
-            </div>
+            <br>
+            <br>
+            Story idea "publish preferences":
+            <br>
+            <div class="italic"><%= story_idea.publish_preferences %></div>
           </div>
         <% end %>
       </div>
+
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :spotlighted_facilitator_id,
                     collection: Facilitator.joins(:user).order("users.first_name, users.last_name"),
@@ -106,11 +106,13 @@
                                                                            facilitator_path(f.object.spotlighted_facilitator_id),
                                                                            class: "hover:underline") : "Story spotlighted facilitator").html_safe %>
       </div>
+
       <%= f.hidden_field :updated_by_id, value: current_user.id %>
 
       <% if f.object.persisted? %>
         <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-          Last updated by: <br>
+          Last updated by:
+          <br>
           <%= f.object.updated_by&.full_name %>
           <br>
           <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
