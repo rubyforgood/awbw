@@ -1,72 +1,67 @@
 <!DOCTYPE html>
+
 <html>
-<head>
-  <title>AWBW</title>
-  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
-  <%= csrf_meta_tags %>
+  <head>
+    <title>AWBW</title>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+    <%= javascript_include_tag "activestorage" %>
+    <%= csrf_meta_tags %>
 
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link
-    rel="shortcut icon"
-    type="image/png"
-    href="<%= asset_path("favicon.png") %>"
-  >
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <%= vite_stylesheet_tag "application.css" %>
-  <%= vite_client_tag %>
-  <%= vite_javascript_tag "application" %>
-  <!--
-     If using a TypeScript entrypoint file:
-       vite_typescript_tag 'application'
+    <link rel="shortcut icon" type="image/png" href="<%= asset_path("favicon.png") %>">
 
-     If using a .jsx or .tsx entrypoint, add the extension:
-       vite_javascript_tag 'application.jsx'
+    <%= vite_stylesheet_tag "application.css" %>
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag "application" %>
 
-     Visit the guide for more information: https://vite-ruby.netlify.app/guide/rails
+    <!--
+  If using a TypeScript entrypoint file:
+    vite_typescript_tag 'application'
+
+  If using a .jsx or .tsx entrypoint, add the extension:
+    vite_javascript_tag 'application.jsx'
+
+  Visit the guide for more information: https://vite-ruby.netlify.app/guide/rails
    -->
-</head>
-<body
-  class="
+  </head>
+
+  <body
+    class="
       <%= controller.controller_name %> <%= controller.action_name %>
       flex flex-col min-h-screen bg-white
     "
->
+  >
+    <div class="flex-grow" id="main">
+      <div class="sticky top-0 left-0 w-full z-50 print:hidden">
+        <!-- Navbar -->
+        <nav class="bg-primary text-white"><%= render "shared/navbar" %></nav>
 
-<div class="flex-grow" id="main">
-  <div class="sticky top-0 left-0 w-full z-50 print:hidden">
-    <!-- Navbar -->
-    <nav class="bg-primary text-white">
-      <%= render "shared/navbar" %>
-    </nav>
-    <!-- Banner -->
-    <%= render "shared/banner" %>
-  </div>
-
-  <div class="printed-logo hidden print:block">
-    <%= image_tag("awbw-print-logo.png", class: "print:w-36 m-3") %>
-    <hr>
-  </div>
-
-  <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-    <%# TODO handle printable area %>
-    <% if user_signed_in? %>
-      <div class="signed-in-user my-3">
-        <%= render "shared/flash_messages" %>
-        <%= yield %>
+        <!-- Banner -->
+        <%= render "shared/banner" %>
       </div>
-    <% else %>
-      <div class="not-signed-in-user min-h-screen flex flex-col">
-        <%= render "shared/flash_messages" %>
-        <%= yield %>
-      </div>
-    <% end %>
-  </div>
-</div>
-<div class="site-footer print:hidden">
-  <%= render "shared/footer" %>
-</div>
 
-<%= render "shared/footer_nav" %>
-</body>
+      <div class="printed-logo hidden print:block">
+        <%= image_tag("awbw-print-logo.png", class: "print:w-36 m-3") %>
+        <hr>
+      </div>
+
+      <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+        <%# TODO handle printable area %>
+        <% if user_signed_in? %>
+          <div class="signed-in-user my-3"><%= render "shared/flash_messages" %><%= yield %></div>
+        <% else %>
+          <div class="not-signed-in-user min-h-screen flex flex-col">
+            <%= render "shared/flash_messages" %>
+            <%= yield %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="site-footer print:hidden"><%= render "shared/footer" %></div>
+
+    <%= render "shared/footer_nav" %>
+  </body>
 </html>

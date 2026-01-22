@@ -1,5 +1,10 @@
+<%= render "assets/form", owner: @resource %>
+
 <%= simple_form_for @resource, wrapper: :tailwind_form do |f| %>
   <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
+
+  <%= hidden_field_tag :asset_ids, nil, id: "asset_ids", autocomplete: "off" %>
+  <%= tag.div class: "unpersisted_resource_asset_params" %>
 
   <!-- First Row -->
   <div class="title-row flex flex-wrap gap-4 my-6 py-6">
@@ -99,7 +104,7 @@
   </div>
 
   <!-- Third Row -->
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+  <%# render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
   <!-- Form Actions -->
   <div class="flex gap-2 mt-4">

@@ -13,8 +13,6 @@ class RichTextAsset < Asset
     "text/html"
   ].freeze
 
-  validates :file, content_type: ACCEPTED_CONTENT_TYPES
-
   has_many :action_text_mentions,
            as: :mentionable,
            dependent: :destroy

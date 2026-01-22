@@ -1,0 +1,7 @@
+<%= render "shared/form_dropdown", field: :assets, label: "Media", padding: "mb-4 bg-slate-200 border border-gray-300 rounded-md" do %>
+  <%= turbo_frame_tag "assets" do %>
+    <%= render "assets/collection", owner: owner %>
+
+    <%= render "assets/upload", owner: owner %>
+  <% end %>
+<% end %>

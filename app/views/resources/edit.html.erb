@@ -13,7 +13,7 @@
         <div class="mt-4 bg-white rounded p-3"><%= render "form" %></div>
 
         <%= turbo_frame_tag "editor_assets_lazy", src: edit_resource_path(@resource) do %>
-          <span>Loading..</span>
+          <%= render "shared/loading" %>
         <% end %>
       </div>
     </div>

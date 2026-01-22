@@ -30,7 +30,7 @@ RSpec.describe "community_news/new", type: :view do
     assert_select "form[action=?][method=?]", community_news_index_path, "post" do
       assert_select "textarea[name=?]", "community_news[title]"
 
-      assert_select "textarea[name=?]", "community_news[body]"
+      assert_select "input[name=?][type=?]", "community_news[rhino_body]", "hidden"
 
       assert_select "textarea[name=?]", "community_news[youtube_url]"
 

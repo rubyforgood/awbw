@@ -1,0 +1,27 @@
+<%= tag.div id: dom_id(asset), class: "flex flex-col items-center border border-gray-300 rounded-md shadow-sm p-2" do %>
+  <%= render "assets/type_selector", asset: asset, owner: (defined?(owner) ? owner : nil) %>
+
+  <div class="relative group w-fit">
+    <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
+
+    <%= button_to library_asset_path(asset),
+        method: :delete,
+        data: { turbo_confirm: "Delete this asset?" },
+        form: { autocomplete: "off" },
+        class: "
+            absolute top-1 right-1
+            opacity-100 md:opacity-0 md:group-hover:opacity-100
+            flex items-center justify-center
+            w-7 h-7
+            rounded-full
+            bg-black/60 text-white
+            hover:bg-red-600
+            transition-opacity
+            z-10
+        " do %>
+      ✕
+    <% end %>
+  </div>
+
+  <%= render "assets/title", asset: asset %>
+<% end %>

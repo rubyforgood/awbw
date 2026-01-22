@@ -1,6 +1,6 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable
-  include AhoyViewTracking
+  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
+
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
@@ -38,7 +38,7 @@ class ResourcesController < ApplicationController
     set_form_variables
 
     if turbo_frame_request?
-      render :rich_text_assets
+      render :editor_lazy
     else
       render :edit
     end
@@ -52,13 +52,18 @@ class ResourcesController < ApplicationController
 
   def create
     @resource = current_user.resources.build(resource_params)
+
     if @resource.save
+      if params.dig(:library_asset, :new_assets).present?
+        update_asset_owner(@resource)
+      end
+
       redirect_to resources_path
     else
       @resource = @resource.decorate
       set_form_variables
       flash[:alert] = "Unable to save #{@resource.title.presence || 'resource'}"
-      render :new, status: :unprocessable_content
+      render :new, status: :unprocessable_entity
     end
   end
 
@@ -136,10 +141,11 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
+      :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
+      new_assets: [ :id, :type ],
       categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
     )
