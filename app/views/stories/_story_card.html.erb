@@ -14,7 +14,7 @@
       <!-- <-- This prevents text going under bookmark -->
       <h3 class="text-lg font-semibold text-gray-900 leading-tight"><%= story.title %></h3>
 
-      <p class="text-gray-600 text-sm mt-1 line-clamp-3"><%= strip_tags(story.rhino_body)&.truncate(250) %></p>
+      <p class="text-gray-600 text-sm mt-1 line-clamp-3"><%= story.rhino_body&.plain_text_body&.truncate(250) %></p>
     </div>
 
     <!-- RIGHT: IMAGE -->
