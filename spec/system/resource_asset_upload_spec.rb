@@ -27,7 +27,7 @@ RSpec.describe "Resource asset upload", type: :system do
     div_prefix = case asset_type
     when "PrimaryAsset", "Primary asset"
       "primary_asset_"
-    when "ThumbnailAsset", "Thumbnail asset"
+    when "DownloadableAsset", "Downloadable asset"
       "thumbnail_asset_"
     when "GalleryAsset", "Gallery asset"
       "gallery_asset_"

@@ -4,7 +4,7 @@
       .sort_by do |asset|
         case asset.type
         when "PrimaryAsset" then 0
-        when "ThumbnailAsset" then 1
+        when "DownloadableAsset" then 1
         else 2
         end
       end
