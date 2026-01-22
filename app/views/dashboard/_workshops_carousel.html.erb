@@ -1,47 +1,59 @@
 <div data-controller="carousel" class="swiper">
   <!-- Slides -->
-  <div class="swiper-wrapper">
+  <div class="swiper-wrapper flex items-stretch">
     <% @workshops.each do |workshop| %>
       <%= render "workshops/workshop_card", workshop: workshop %>
     <% end %>
   </div>
 
-
-  <button class="
-  swiper-button-next-custom
-  absolute top-36 sm:top-36 right-2
-  w-12 h-12 rounded-full
-  bg-white border border-indigo-200
-  text-indigo-700
-  shadow-md hover:shadow-lg
-  flex items-center justify-center
-  transition hover:<%= DomainTheme.bg_class_for(:workshops) %>
-  z-40
-">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2"
-         class="w-7 h-7">
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M5 12h14M13 6l6 6-6 6" />
+  <button
+    class="
+      swiper-button-next-custom
+      absolute top-36 sm:top-36 right-2
+      w-12 h-12 rounded-full
+      bg-white border border-indigo-200
+      text-indigo-700
+      shadow-md hover:shadow-lg
+      flex items-center justify-center
+      transition hover:<%= DomainTheme.bg_class_for(:workshops) %>
+      z-40
+    "
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="w-7 h-7"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   </button>
 
-  <button class="
-  swiper-button-prev-custom
-  absolute top-36 sm:top-36 left-2
-  w-12 h-12 rounded-full
-  bg-white border border-indigo-200
-  text-indigo-700
-  shadow-md hover:shadow-lg
-  flex items-center justify-center
-  transition hover:<%= DomainTheme.bg_class_for(:workshops) %>
-  z-40
-">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2"
-         class="w-7 h-7">
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M19 12H5m6 6l-6 -6 6 -6" />
+  <button
+    class="
+      swiper-button-prev-custom
+      absolute top-36 sm:top-36 left-2
+      w-12 h-12 rounded-full
+      bg-white border border-indigo-200
+      text-indigo-700
+      shadow-md hover:shadow-lg
+      flex items-center justify-center
+      transition hover:<%= DomainTheme.bg_class_for(:workshops) %>
+      z-40
+    "
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="w-7 h-7"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m6 6l-6 -6 6 -6" />
     </svg>
   </button>
 </div>
+

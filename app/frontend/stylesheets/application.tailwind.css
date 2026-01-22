@@ -140,3 +140,10 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   visibility: hidden;
   pointer-events: none;
 }
+
+/* Swiper equal height slides */
+.swiper-wrapper.flex.items-stretch .swiper-slide {
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
