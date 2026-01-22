@@ -36,7 +36,7 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :body
+    attributes :title
 
     scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
