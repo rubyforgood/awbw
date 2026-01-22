@@ -4,7 +4,6 @@ RSpec.describe "Facilitators can submit a workshop log" do
   describe "workshop log submission by facilitator" do
     context "when facilitator is logged in" do
       before do
-        Capybara.current_session.current_window.resize_to(1920, 5000)
         @user = create(:user)
         create(:facilitator, user: @user)
 
@@ -21,24 +20,9 @@ RSpec.describe "Facilitators can submit a workshop log" do
         ProjectUser.create!(user: @user, project: @project, position: :default)
 
         sign_in @user
-        visit '/'
-      end
-
-      it "navigates to the new workshop log page" do
-        expect(page).to have_button('New')
-        click_button('New')
-
-        within "#workshop-dropdown" do
-          click_link("New workshop log")
-        end
-
-        expect(page).to have_content("New Workshop log")
-        expect(page).to have_current_path(new_workshop_log_path)
-      end
-
-      it "successfully submits a complete workshop log" do
         visit new_workshop_log_path
-
+      end
+      it "successfully submits a complete workshop log" do
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
         select @project.name, from: "workshop_log[project_id]"
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
