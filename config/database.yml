@@ -1,12 +1,26 @@
+# Database configuration
+# To override any settings, set the DATABASE_URL environment variable.
+# Example: DATABASE_URL=trilogy://user:password@host:port/database?encoding=utf8mb4&collation=utf8mb4_unicode_ci
+#
+# The encoding and collation settings ensure consistent UTF-8 handling across
+# Mac and Linux environments, preventing schema.rb merge conflicts.
+
 base: &base
   adapter: trilogy
-  encoding: utf8mb4
-  collation: utf8mb4_unicode_ci
+  encoding: utf8mb4              # <-- forces UTF-8 everywhere
+  collation: utf8mb4_unicode_ci  # <-- portable across MySQL 5.7/8.0 and MariaDB
+  pool: 5
+  user: root
+  password:
+  host: 127.0.0.1
+  variables:
+    # Make sure the session uses utf8mb4 too:
+    collation_connection: utf8mb4_unicode_ci
+    sql_mode: STRICT_ALL_TABLES
   url: <%= ENV.fetch("DATABASE_URL", "trilogy://root@localhost") %>
 
 development:
   <<: *base
-  pool: 5
   database: awbw_development
 
 # Warning: The database defined as "test" will be erased and
@@ -14,7 +28,6 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *base
-  pool: 5
   database: awbw_test
 
 production:

@@ -1,5 +1,5 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable
+  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
 
   def index
     if turbo_frame_request?
@@ -38,7 +38,7 @@ class ResourcesController < ApplicationController
     set_form_variables
 
     if turbo_frame_request?
-      render :rich_text_assets
+      render :editor_lazy
     else
       render :edit
     end
@@ -46,7 +46,7 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(resource_id_param).decorate
-    @resource.increment_view_count!(session: session, request: request)
+    track_view(@resource)
     load_forms
   end
 
@@ -94,7 +94,7 @@ class ResourcesController < ApplicationController
 
   def download
     @resource = Resource.find(params[:resource_id])
-    @resource.increment!(:download_count)
+    track_download(@resource)
 
     attachment = if params[:attachment_id].to_i > 0
       Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
@@ -141,7 +141,7 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
+      :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],

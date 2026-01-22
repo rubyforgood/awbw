@@ -1,5 +1,4 @@
 <div class="relative bg-white rounded-xl shadow-sm hover:shadow-md transition p-4">
-
   <!-- BOOKMARK COLUMN (not inside link) -->
   <div class="absolute top-4 right-4 z-20 pointer-events-auto">
     <%= render "bookmarks/editable_bookmark_icon", resource: story.object %>
@@ -10,16 +9,12 @@
               data: { turbo_prefetch: false },
               target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer",
               class: "card-link flex flex-col md:flex-row md:items-center gap-4 cursor-pointer block" do %>
-
     <!-- LEFT: TEXT (leave right padding equal to bookmark width) -->
-    <div class="flex-1 pr-12"> <!-- <-- This prevents text going under bookmark -->
-      <h3 class="text-lg font-semibold text-gray-900 leading-tight">
-        <%= story.title %>
-      </h3>
+    <div class="flex-1 pr-12">
+      <!-- <-- This prevents text going under bookmark -->
+      <h3 class="text-lg font-semibold text-gray-900 leading-tight"><%= story.title %></h3>
 
-      <p class="text-gray-600 text-sm mt-1 line-clamp-3">
-        <%= strip_tags(story.body).truncate(250) %>
-      </p>
+      <p class="text-gray-600 text-sm mt-1 line-clamp-3"><%= strip_tags(story.rhino_body)&.truncate(250) %></p>
     </div>
 
     <!-- RIGHT: IMAGE -->

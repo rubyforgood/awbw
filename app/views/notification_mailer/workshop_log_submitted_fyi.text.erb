@@ -1,4 +1,6 @@
 <% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+<% breakdown = @noticeable.attendance_breakdown %>
+<% totals = @noticeable.totals %>
 
 New <%= @type %>
 ==========================

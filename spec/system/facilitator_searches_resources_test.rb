@@ -6,12 +6,12 @@ RSpec.describe "Facilitators can search for resources" do
       before do
         user = create(:user)
         create(:facilitator, user: user)
-        create(:resource, title: "Scholarship Application Guide", view_count: 1000, featured: true, kind: "Scholarship")
-        create(:resource, title: "Workshop Session Template", view_count: 500, kind: "Template")
-        create(:resource, title: "Participant Handout Package", view_count: 750, kind: "Handout")
-        create(:resource, title: "Facilitator Toolkit Complete Set", view_count: 300, kind: "Toolkit")
-        create(:resource, title: "Registration and Consent Forms", view_count: 900, kind: "Form")
-        create(:resource, title: "Facilitator Resource Guide", view_count: 300, kind: "Toolkit")
+        create(:resource, title: "Scholarship Application Guide", featured: true, kind: "Scholarship")
+        create(:resource, title: "Workshop Session Template", kind: "Template")
+        create(:resource, title: "Participant Handout Package", kind: "Handout")
+        create(:resource, title: "Facilitator Toolkit Complete Set", kind: "Toolkit")
+        create(:resource, title: "Registration and Consent Forms", kind: "Form")
+        create(:resource, title: "Facilitator Resource Guide", kind: "Toolkit")
         sign_in user
         visit '/'
       end
@@ -175,7 +175,6 @@ RSpec.describe "Facilitators can search for resources" do
             30.times do |i|
               create(:resource,
                 title: "Test Resource #{i+1}",
-                view_count: rand(100..1000),
                 kind: [ "Toolkit", "Handout", "Template", "Form", "Scholarship" ].sample
               )
             end

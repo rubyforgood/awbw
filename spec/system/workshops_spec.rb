@@ -57,7 +57,7 @@ RSpec.describe "Workshops", type: :system do
 
         visit workshop_path(workshop)
 
-        expect(page).to have_css(".inner-hero", text: 'The best workshop in the world. This is a tribute.')
+        expect(page).to have_content(workshop.title)
       end
     end
   end

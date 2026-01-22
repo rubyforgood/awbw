@@ -74,7 +74,7 @@ module RhinoEditorHelper
       }
     )
 
-    content_tag(:div, data: { controller: "rhino-source" }, class: "mb-4 prose max-w-none") do
+    content_tag(:div, data: { controller: "rhino-source" }, class: "mb-4 prose max-w-none bg-white") do
       safe_join([
         label_tag,
         editor,

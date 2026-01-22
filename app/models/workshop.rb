@@ -1,14 +1,14 @@
 class Workshop < ApplicationRecord
-  include TagFilterable, PrintCountable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
-  belongs_to :windows_type
+  belongs_to :windows_type, optional: true
   belongs_to :user, optional: true
   belongs_to :workshop_idea, optional: true
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :categorizable_items, dependent: :destroy, as: :categorizable
+  has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
@@ -90,8 +90,12 @@ class Workshop < ApplicationRecord
   has_rich_text :rhino_misc2_spanish
   has_rich_text :rhino_extra_field_spanish
 
+  # Temporary storage for association IDs during creation
+  attr_accessor :pending_sector_ids, :pending_category_ids
+
   # Callbacks
   before_save :set_time_frame
+  after_save :assign_pending_associations
 
   # Validations
   validates_presence_of :title
@@ -103,9 +107,6 @@ class Workshop < ApplicationRecord
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :quotes, reject_if: proc { |object| object["quote"].nil? }
-  accepts_nested_attributes_for :sectors,
-                                reject_if: proc { |object| object["_create"] == "0" || !object["_create"] },
-                                allow_destroy: true
   accepts_nested_attributes_for :workshop_logs, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
@@ -114,7 +115,6 @@ class Workshop < ApplicationRecord
 
 
   # Scopes
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
@@ -225,7 +225,7 @@ class Workshop < ApplicationRecord
   end
 
   def type_name
-    "#{id} #{title} #{ " (#{windows_type.short_name})" if windows_type}"
+    "#{title} #{"(#{windows_type.short_name}) " if windows_type}##{id}"
   end
 
   def communal_label(report)
@@ -258,6 +258,42 @@ class Workshop < ApplicationRecord
   def set_time_frame
     self.timeframe = time_frame_total
   end
+
+  # Override sector_ids= to defer association assignment until after save
+  def sector_ids=(ids)
+    if new_record?
+      @pending_sector_ids = ids
+    else
+      super
+    end
+  end
+
+  # Override category_ids= to defer association assignment until after save
+  def category_ids=(ids)
+    if new_record?
+      @pending_category_ids = ids
+    else
+      super
+    end
+  end
+
+  private
+
+  def assign_pending_associations
+    # Only run this on initial save, not on subsequent updates
+    return unless @pending_sector_ids || @pending_category_ids
+
+    if @pending_sector_ids
+      self.sectors = Sector.where(id: @pending_sector_ids)
+      @pending_sector_ids = nil
+    end
+
+    if @pending_category_ids
+      self.categories = Category.where(id: @pending_category_ids)
+      @pending_category_ids = nil
+    end
+  end
+
   ## ActionText:Attachable
   def attachable_content_type
     "application/vnd.active_record.workshop"

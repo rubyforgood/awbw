@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_19_163954) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -231,6 +231,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.integer "legacy_id"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["categorizable_type", "categorizable_id"], name: "idx_on_categorizable_type_categorizable_id_ccce65d80c"
+    t.index ["category_id", "categorizable_type", "categorizable_id"], name: "index_categorizable_items_uniqueness", unique: true
     t.index ["category_id"], name: "index_categorizable_items_on_category_id"
   end
 
@@ -262,7 +263,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
-    t.integer "view_count", default: 0, null: false
     t.integer "windows_type_id"
     t.string "youtube_url"
     t.index ["author_id"], name: "index_community_news_on_author_id"
@@ -270,7 +270,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.index ["created_by_id"], name: "index_community_news_on_created_by_id"
     t.index ["project_id"], name: "index_community_news_on_project_id"
     t.index ["updated_by_id"], name: "index_community_news_on_updated_by_id"
-    t.index ["view_count"], name: "index_community_news_on_view_count"
     t.index ["windows_type_id"], name: "index_community_news_on_windows_type_id"
   end
 
@@ -311,9 +310,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
-    t.integer "view_count", default: 0, null: false
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
-    t.index ["view_count"], name: "index_events_on_view_count"
   end
 
   create_table "facilitators", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -354,11 +351,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.string "twitter_url"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
-    t.integer "view_count", default: 0, null: false
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_facilitators_on_created_by_id"
     t.index ["updated_by_id"], name: "index_facilitators_on_updated_by_id"
-    t.index ["view_count"], name: "index_facilitators_on_view_count"
   end
 
   create_table "faqs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -578,12 +573,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.integer "project_status_id"
     t.date "start_date"
     t.datetime "updated_at", precision: nil, null: false
-    t.integer "view_count", default: 0, null: false
     t.string "website_url"
     t.integer "windows_type_id"
     t.index ["location_id"], name: "index_projects_on_location_id"
     t.index ["project_status_id"], name: "index_projects_on_project_status_id"
-    t.index ["view_count"], name: "index_projects_on_view_count"
     t.index ["windows_type_id"], name: "index_projects_on_windows_type_id"
   end
 
@@ -607,9 +600,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.text "quote", size: :long
     t.string "speaker_name"
     t.datetime "updated_at", precision: nil, null: false
-    t.integer "view_count", default: 0, null: false
     t.integer "workshop_id"
-    t.index ["view_count"], name: "index_quotes_on_view_count"
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
   end
 
@@ -659,7 +650,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.string "agency"
     t.string "author"
     t.datetime "created_at", precision: nil, null: false
-    t.integer "download_count", default: 0, null: false
     t.boolean "featured", default: false
     t.boolean "female", default: false
     t.string "filemaker_code"
@@ -669,19 +659,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.integer "legacy_id"
     t.boolean "male", default: false
     t.integer "position"
-    t.integer "print_count", default: 0, null: false
     t.text "text", size: :long
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.string "url"
     t.integer "user_id"
-    t.integer "view_count", default: 0, null: false
     t.integer "windows_type_id"
     t.integer "workshop_id"
-    t.index ["download_count"], name: "index_resources_on_download_count"
-    t.index ["print_count"], name: "index_resources_on_print_count"
     t.index ["user_id"], name: "index_resources_on_user_id"
-    t.index ["view_count"], name: "index_resources_on_view_count"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
   end
@@ -694,6 +679,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.integer "sectorable_id"
     t.string "sectorable_type"
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["sector_id", "sectorable_type", "sectorable_id"], name: "index_sectorable_items_uniqueness", unique: true
     t.index ["sector_id"], name: "index_sectorable_items_on_sector_id"
     t.index ["sectorable_type", "sectorable_id"], name: "index_sectorable_items_on_sectorable_type_and_sectorable_id"
   end
@@ -719,7 +705,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
-    t.integer "view_count", default: 0, null: false
     t.string "website_url"
     t.integer "windows_type_id", null: false
     t.integer "workshop_id"
@@ -730,7 +715,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.index ["spotlighted_facilitator_id"], name: "index_stories_on_spotlighted_facilitator_id"
     t.index ["story_idea_id"], name: "index_stories_on_story_idea_id"
     t.index ["updated_by_id"], name: "index_stories_on_updated_by_id"
-    t.index ["view_count"], name: "index_stories_on_view_count"
     t.index ["windows_type_id"], name: "index_stories_on_windows_type_id"
     t.index ["workshop_id"], name: "index_stories_on_workshop_id"
   end
@@ -764,12 +748,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.boolean "published", default: false, null: false
     t.string "title"
     t.datetime "updated_at", null: false
-    t.integer "view_count", default: 0, null: false
     t.string "youtube_url"
     t.index ["featured"], name: "index_tutorials_on_featured"
     t.index ["published"], name: "index_tutorials_on_published"
     t.index ["title"], name: "index_tutorials_on_title"
-    t.index ["view_count"], name: "index_tutorials_on_view_count"
   end
 
   create_table "user_form_form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -990,11 +972,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.integer "position"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "variation_id"
-    t.integer "view_count", default: 0, null: false
     t.integer "workshop_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
-    t.index ["view_count"], name: "index_workshop_variations_on_view_count"
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
   end
 
@@ -1046,7 +1026,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.text "optional_materials", size: :long
     t.text "optional_materials_spanish", size: :long
     t.string "photo_caption"
-    t.integer "print_count", default: 0, null: false
     t.text "project", size: :long
     t.text "project_spanish", size: :long
     t.string "pub_issue"
@@ -1072,7 +1051,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
-    t.integer "view_count", default: 0, null: false
     t.text "visualization", size: :long
     t.text "visualization_spanish", size: :long
     t.text "warm_up", size: :long
@@ -1083,12 +1061,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_143337) do
     t.index ["created_at"], name: "index_workshops_on_created_at"
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
     t.index ["led_count"], name: "index_workshops_on_led_count"
-    t.index ["print_count"], name: "index_workshops_on_print_count"
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
     t.index ["title"], name: "index_workshops_on_title", type: :fulltext
     t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext
     t.index ["user_id"], name: "index_workshops_on_user_id"
-    t.index ["view_count"], name: "index_workshops_on_view_count"
     t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
     t.index ["workshop_idea_id"], name: "index_workshops_on_workshop_idea_id"
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
