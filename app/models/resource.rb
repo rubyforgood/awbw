@@ -124,10 +124,6 @@ class Resource < ApplicationRecord
     title || id
   end
 
-  def download_attachment
-    primary_asset || gallery_assets.first
-  end
-
   def type_enum
     types.map { |title| [ title.titleize, title ] }
   end
