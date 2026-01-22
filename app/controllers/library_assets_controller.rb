@@ -112,7 +112,7 @@
     private
 
    def set_asset
-     @asset = Asset.find_by(id: params[:id])
+     @asset = Asset.includes(:file_attachment).find_by(id: params[:id])
    end
 
    def set_owner
