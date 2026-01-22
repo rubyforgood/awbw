@@ -433,7 +433,7 @@ GEM
     ruby2_keywords (0.0.5)
     rubyzip (3.1.0)
     safely_block (0.5.0)
-    search_cop (1.0.9)
+    search_cop (1.4.1)
       treetop
     securerandom (0.4.1)
     selenium-webdriver (4.35.0)
@@ -468,7 +468,7 @@ GEM
       climate_control (>= 0.0.3, < 1.0)
     thor (1.5.0)
     timeout (0.4.3)
-    treetop (1.6.14)
+    treetop (1.6.18)
       polyglot (~> 0.3)
     trilogy (2.9.0)
     tsort (0.2.0)
@@ -555,7 +555,7 @@ DEPENDENCIES
   rails (~> 8.1.0)
   rspec-rails
   rubocop-rails-omakase
-  search_cop (~> 1.0.6)
+  search_cop
   selenium-webdriver
   shoulda-matchers
   simple_form

@@ -27,9 +27,9 @@ RSpec.describe "Workshops", type: :system do
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
-        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window)
-        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: adult_window)
-        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: adult_window)
+        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, rhino_objective: "test")
+        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, rhino_objective: "test")
+        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: adult_window, rhino_objective: "test")
 
         visit workshops_path
 
@@ -39,11 +39,9 @@ RSpec.describe "Workshops", type: :system do
         click_on "Windows Type"  # this clicks the <button> text/label
         check("windows_types_#{adult_window.id}")
 
-        within('#workshops-list') do
-          expect(page).to have_content(workshop_world.title)
-          expect(page).to have_content(workshop_mars.title)
-          # expect(page).not_to have_content(workshop_hello.title) # TODO - get this working again once the page autosubmits
-        end
+        expect(page).to have_content(workshop_world.title)
+        expect(page).to have_content(workshop_mars.title)
+        expect(page).not_to have_content(workshop_hello.title)
       end
     end
   end

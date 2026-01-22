@@ -1,5 +1,5 @@
 class Story < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -42,7 +42,10 @@ class Story < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes :title
-    # TODO add in rich text search once PR is merges with that feature
+
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   # Scopes
