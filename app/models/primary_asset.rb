@@ -1,3 +1,3 @@
 class PrimaryAsset < Asset
-  ACCEPTED_CONTENT_TYPES = [ "image/jpeg", "image/png", "image/gif", "application/pdf" ].freeze
+  ACCEPTED_CONTENT_TYPES = [ "image/jpeg", "image/png" ].freeze
 end
