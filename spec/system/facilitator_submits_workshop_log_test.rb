@@ -23,10 +23,10 @@ RSpec.describe "Facilitators can submit a workshop log" do
         visit new_workshop_log_path
       end
       it "successfully submits a complete workshop log" do
+        expect(page).to have_content("New Workshop log")
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
         select @project.name, from: "workshop_log[project_id]"
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
-
 
         fill_in "workshop_log_children_ongoing", with: "5"
         fill_in "workshop_log_teens_ongoing", with: "3"
@@ -66,7 +66,6 @@ RSpec.describe "Facilitators can submit a workshop log" do
         file_inputs.last.set(Rails.root.join('spec/fixtures/some_file1.png'))
         # Submit
         click_button "Save Log"
-        save_screenshot
         expect(page).to have_content("Thank you for submitting a workshop log")
       end
 
