@@ -1,0 +1,9 @@
+Makefile
+*.so
+*.o
+*.def
+doc/
+pkg/
+.yardoc/
+*.gem
+Gemfile.lock

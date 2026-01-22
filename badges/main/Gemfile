@@ -72,6 +72,7 @@ group :development, :test do
   gem "faker"
   gem "factory_bot_rails"
   gem "listen"
+  gem "pry-coolline"
   gem "pry-rails"
   gem "rspec-rails"
   gem "simplecov", require: false
