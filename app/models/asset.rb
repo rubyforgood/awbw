@@ -21,6 +21,17 @@ class Asset < ApplicationRecord
     GalleryAsset
   ].freeze
 
+  def self.allowed_types_for_owner(owner)
+    return TYPES unless owner
+
+    case owner.class.name
+    when "Workshop"
+      TYPES - [ "DownloadableAsset" ]
+    else
+      TYPES
+    end
+  end
+
   belongs_to :owner, polymorphic: true, optional: true
   belongs_to :report, optional: true
 
