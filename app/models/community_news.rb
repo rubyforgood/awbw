@@ -40,10 +40,6 @@ class CommunityNews < ApplicationRecord
 
     scope { join_rich_texts.left_joins(author: :facilitator) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
-    options :title, default_operator: :or
-    options :facilitator_first, default_operator: :or
-    options :facilitator_last, default_operator: :or
-    options :action_text_body, default_operator: :or
   end
 
   scope :featured, -> { where(featured: true) }
