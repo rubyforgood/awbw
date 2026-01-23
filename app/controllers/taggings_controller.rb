@@ -31,6 +31,7 @@ class TaggingsController < ApplicationController
       .order(:name)
 
     @categories = Category
+      .includes(:category_type)
       .joins(:category_type, :categorizable_items)
       .published
       .select("categories.*, metadata.name AS category_type_name")
