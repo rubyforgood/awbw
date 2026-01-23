@@ -36,11 +36,10 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title
+    attributes :title, :published, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
 
-    scope { join_rich_texts }
+    scope { join_rich_texts.left_joins(author: :facilitator) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
-    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   scope :featured, -> { where(featured: true) }
@@ -53,12 +52,11 @@ class CommunityNews < ApplicationRecord
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)
-    community_news = self.all
-    community_news = community_news.search(params[:query]) if params[:query].present?
-    community_news = community_news.sector_names(params[:sector_names]) if params[:sector_names].present?
-    community_news = community_news.category_names(params[:category_names]) if params[:category_names].present?
-    community_news = community_news.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
-    community_news = community_news.published_search(params[:published_search]) if params[:published_search].present?
-    community_news
+    conditions = {}
+    conditions[:title] = params[:title] if params[:title].present?
+    conditions[:query] = params[:query] if params[:query].present?
+    conditions[:published] = params[:published_search] if params[:published_search].present?
+
+    self.search(conditions)
   end
 end
