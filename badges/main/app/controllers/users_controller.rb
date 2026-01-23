@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator ]
+  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status ]
 
   def index
     return redirect_to authenticated_root_path unless current_user.super_user?
@@ -94,6 +94,25 @@ class UsersController < ApplicationController
       else
         redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}" and return
       end
+    end
+  end
+
+  def toggle_lock_status
+    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+
+    if @user.locked_at.present?
+      # Unlock the user
+      @user.update(locked_at: nil, failed_attempts: 0)
+      message = "User has been unlocked."
+    else
+      # Lock the user
+      @user.update(locked_at: Time.current)
+      message = "User has been locked."
+    end
+
+    respond_to do |format|
+      format.turbo_stream { flash.now[:notice] = message }
+      format.html { redirect_to edit_user_path(@user), notice: message }
     end
   end
 
