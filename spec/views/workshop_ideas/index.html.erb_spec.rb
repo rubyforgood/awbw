@@ -10,7 +10,7 @@ RSpec.describe "workshop_ideas/index", type: :view do
     allow(view).to receive(:current_user).and_return(user)
   end
 
-  it "renders a list of story_ideas" do
+  it "renders a list of workshop_ideas" do
     render
     expect(rendered).to include(workshop_idea1.title, workshop_idea2.title)
   end

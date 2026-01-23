@@ -4,7 +4,7 @@ class FaqsController < ApplicationController
   def index
     faqs = current_user.super_user? ? Faq.all : Faq.active
     @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "inactive"))
-                .by_order
+                .by_position
                 .page(params[:page])
   end
 
@@ -59,6 +59,6 @@ class FaqsController < ApplicationController
 
   # Strong parameters
   def faq_params
-    params.require(:faq).permit(:question, :answer, :inactive, :ordering)
+    params.require(:faq).permit(:question, :answer, :inactive, :position)
   end
 end

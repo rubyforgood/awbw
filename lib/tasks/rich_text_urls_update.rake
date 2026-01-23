@@ -30,49 +30,49 @@ namespace :rich_text_urls_update do
 
   def run_update(dry_run:, html_attr:, start_id: nil, finish_id: nil)
     models = [
-      Address,
-      AnswerOption,
-      Attachment,
-      Banner,
-      Bookmark,
-      Category,
-      CategorizableItem,
-      CommunityNews,
-      EventRegistration,
-      Event,
-      Facilitator,
-      Faq,
-      FormBuilder,
-      FormFieldAnswerOption,
-      FormField,
-      Form,
-      Image,
-      Location,
-      MediaFile,
-      CategoryType,
-      MonthlyReport,
-      Notification,
-      ProjectObligation,
-      ProjectStatus,
-      ProjectUser,
-      Project,
-      QuotableItemQuote,
-      Quote,
-      ReportFormFieldAnswer,
-      Report,
-      Resource,
-      SectorableItem,
-      Sector,
-      Story,
-      StoryIdea,
-      UserFormFormField,
-      UserForm,
-      User,
-      WindowsType,
-      WorkshopIdea,
-      WorkshopLog,
-      WorkshopResource,
-      WorkshopSeriesMembership,
+      # Address,
+      # AnswerOption,
+      # Attachment,
+      # Banner,
+      # Bookmark,
+      # Category,
+      # CategorizableItem,
+      # CommunityNews,
+      # EventRegistration,
+      # Event,
+      # Facilitator,
+      # Faq,
+      # FormBuilder,
+      # FormFieldAnswerOption,
+      # FormField,
+      # Form,
+      # Image,
+      # Location,
+      # MediaFile,
+      # CategoryType,
+      # MonthlyReport,
+      # Notification,
+      # ProjectObligation,
+      # ProjectStatus,
+      # ProjectUser,
+      # Project,
+      # QuotableItemQuote,
+      # Quote,
+      # ReportFormFieldAnswer,
+      # Report,
+      # Resource,
+      # SectorableItem,
+      # Sector,
+      # Story,
+      # StoryIdea,
+      # UserFormFormField,
+      # UserForm,
+      # User,
+      # WindowsType,
+      # WorkshopIdea,
+      # WorkshopLog,
+      # WorkshopResource,
+      # WorkshopSeriesMembership,
       WorkshopVariation,
       Workshop
     ]
@@ -109,6 +109,7 @@ namespace :rich_text_urls_update do
       url = match[regex, 1] # extract the actual URL
       aws_prefix = "https://s3.amazonaws.com/awbwassets/"
       aws_prefix_2 = "http://s3.amazonaws.com/awbwassets/"
+      aws_prefix_3 = "//s3.amazonaws.com/awbwassets/"
       dashboard_url = nil
       key = nil
       puts url
@@ -128,10 +129,18 @@ namespace :rich_text_urls_update do
       when ->(u) { u.start_with?("http://legacy.awbw.org/awbw") }
         key = url.sub(%r{^http://legacy\.awbw\.org}, "")
         dashboard_url = "https://dashboard.awbw.org#{key}"
+      when ->(u) { u.start_with?("https://res.cloudinary.com/") }
+        key = url.sub(%r{^https://res\.cloudinary\.com/}, "")
+        dashboard_url = "https://res.cloudinary.com/"
+      when ->(u) { u.start_with?("http://res.cloudinary.com/") }
+        key = url.sub(%r{^http://res\.cloudinary\.com/}, "")
+        dashboard_url = "http://res.cloudinary.com/"
       when ->(u) { u.start_with?(aws_prefix) } # matches URLs starting with the AWS prefix
         key = url.sub(aws_prefix, "")
       when ->(u) { u.start_with?(aws_prefix_2) }
         key = url.sub(aws_prefix_2, "")
+      when ->(u) { u.start_with?(aws_prefix_3) }
+        key = url.sub(aws_prefix_3, "")
       else
         csv << [ model.name, record.id, column, url, nil, "skipped", "No Matching Url", nil ]
         next
@@ -151,7 +160,7 @@ namespace :rich_text_urls_update do
 
       begin
         blob = ActiveStorage::Blob.find_by(aws_key: key)
-        image = record.images.build(type: "RichTextAsset")
+        asset = record.rich_text_assets.build
         file_name = File.basename(key)
         temp = nil
 
@@ -180,14 +189,14 @@ namespace :rich_text_urls_update do
             )
             blob.update!(aws_key: key)
           end
-          image.file.attach(blob)
-          image.save!
+          asset.file.attach(blob)
+          asset.save!
 
-          new_url = url_for(image.file)
+          new_url = rails_blob_path(asset.file, only_path: true)
 
           # Verify attachment and association
-          record.images.reload
-          unless record.images.include?(image) && image.file.attached?
+          record.rich_text_assets.reload
+          unless record.rich_text_assets.include?(asset) && asset.file.attached?
             raise "Media not associated with record or file missing"
           end
           content = record.public_send(column)

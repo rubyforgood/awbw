@@ -88,7 +88,7 @@ class UsersController < ApplicationController
     if @user.facilitator.present?
       redirect_to @user.facilitator and return
     else
-      @facilitator = FacilitatorFromUserService(user: @user).call
+      @facilitator = FacilitatorFromUserService.new(user: @user).call
       if @facilitator.save
         redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
       else
@@ -112,9 +112,9 @@ class UsersController < ApplicationController
     set_facilitator
     @user.project_users.first || @user.project_users.build
     projects = if current_user.super_user?
-                 Project.active
+      Project.active
     else
-                 current_user.projects
+      current_user.projects
     end
     @projects_array = projects.order(:name).pluck(:name, :id)
   end

@@ -1,5 +1,6 @@
 class StoriesController < ApplicationController
   include ExternallyRedirectable
+  include AhoyViewTracking
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -11,15 +12,15 @@ class StoriesController < ApplicationController
     @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
     @count_display = if filtered.count == unpaginated.count
-                       unpaginated.count
+      unpaginated.count
     else
-                       "#{filtered.count}/#{unpaginated.count}"
+      "#{filtered.count}/#{unpaginated.count}"
     end
   end
 
   def show
     @story = @story.decorate
-    @story.increment_view_count!(session: session, request: request)
+    track_view(@story)
 
     if @story.external_url.present? && !params[:no_redirect].present?
       redirect_to_external @story.link_target
@@ -36,6 +37,11 @@ class StoriesController < ApplicationController
   def edit
     @story = @story.decorate
     set_form_variables
+    if turbo_frame_request?
+      render :editor_lazy
+    else
+      render :edit
+    end
   end
 
   def create
@@ -102,7 +108,7 @@ class StoriesController < ApplicationController
   # Strong parameters
   def story_params
     params.require(:story).permit(
-      :title, :body, :featured, :published, :youtube_url, :website_url,
+      :title, :rhino_body, :featured, :published, :youtube_url, :website_url,
       :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
       primary_asset_attributes: [ :id, :file, :_destroy ],

@@ -2,9 +2,16 @@ Rails.application.routes.draw do
   # temporary direct routes to images for migration audit
   resources :attachments, only: [ :show ]
   resources :media_files, only: [ :show ]
+  # namespace :assets do
+  #   resources :primary_assets, only: [ :show ]
+  #   resources :gallery_assets, only: [ :show ]
+  # end
+  resources :library_assets
+  resources :rich_text_assets
+
   namespace :images do
-    resources :primary_assets, only: [ :show ]
-    resources :gallery_assets, only: [ :show ]
+    resources :primary_images, only: [ :show ]
+    resources :gallery_images, only: [ :show ]
     resources :rich_texts, only: [ :show ]
   end
   resources :images, only: [ :show ]
@@ -52,9 +59,10 @@ Rails.application.routes.draw do
   end
   resources :facilitators
   resources :faqs
-  resources :notifications, only: [ :show ]
+  resources :notifications, only: [ :index, :show ]
   resources :organizations
   resources :projects
+  resources :project_statuses
   resources :project_users
   resources :quotes
 
@@ -73,9 +81,6 @@ Rails.application.routes.draw do
 
   resources :resources do
     get :download
-    member do
-      get :rhino_text
-    end
     collection do
       post :search
     end
@@ -84,7 +89,7 @@ Rails.application.routes.draw do
   resources :story_ideas
   resources :stories
   resources :tutorials
-  resources :users do
+  resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
     member do
       get :generate_facilitator
     end
@@ -101,6 +106,10 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :workshop_mentions, only: [ :index ]
+  resources :resource_mentions, only: [ :index ]
+  resources :rich_text_asset_mentions, only: [ :index ]
+
   namespace :api do
     namespace :v1 do
       resources :authentications, only: [ :create ]
@@ -109,10 +118,11 @@ Rails.application.routes.draw do
     end
   end
 
+  # Root paths
+  root to: "dashboard#index"
   authenticated :user do
     root to: "dashboard#index", as: :authenticated_root
   end
-
   # Wrap Devise routes in a scope for unauthenticated users
   devise_scope :user do
     unauthenticated do

@@ -21,6 +21,7 @@ class Report < ApplicationRecord
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
 
   # has_many through
   has_many :form_fields, through: :form
@@ -106,8 +107,8 @@ class Report < ApplicationRecord
 
   def log_fields
     if form_builder
-      form_builder.forms[0].form_fields.where("ordering is not null and status = 1")
-        .order(ordering: :desc).all
+      form_builder.forms[0].form_fields.where("position is not null and status = 1")
+        .order(position: :desc).all
     else
       []
     end

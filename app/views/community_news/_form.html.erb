@@ -7,22 +7,20 @@
   <!-- Content Section -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <%= f.input :title, as: :text, input_html: { rows: 1, class: "w-full" } %>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <%= f.input :published, as: :boolean, wrapper_html: { class: "flex items-center" } %>
       <%= f.input :featured, as: :boolean, wrapper_html: { class: "flex items-center" } %>
     </div>
   </div>
 
-  <div class="mt-4">
-    <%= f.input :body, as: :text,
-                input_html: { rows: 6, class: "w-full resize-y" },
-                label: "Body / Description" %>
-  </div>
+  <%= rhino_editor(f, :body, label: "Body / Description") %>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
     <%= f.input :youtube_url, as: :text,
                 label: "YouTube URL",
                 input_html: { rows: 1, class: "w-full" } %>
+
     <%= f.input :reference_url, as: :text,
                 label: "Reference URL",
                 input_html: { rows: 1, class: "w-full" } %>
@@ -72,3 +70,4 @@
     <%= f.button :submit, class: "inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition" %>
   </div>
 <% end %>
+

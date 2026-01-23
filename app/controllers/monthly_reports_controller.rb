@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
 class MonthlyReportsController < ApplicationController
-  def show
-    @report = Report.find(params[:id])
-  end
-
   def monthly_select_type
     check_feature_fag
   end
@@ -98,6 +94,21 @@ class MonthlyReportsController < ApplicationController
     else
       flash[:alert] = "Please select some populations that attended this report!!!"
       redirect_to edit_report_path(@report)
+    end
+  end
+
+  def show
+    @monthly_report = Report.find(params[:id]).decorate
+    @answers      = @monthly_report.report_form_field_answers
+
+    if @monthly_report
+      if current_user.super_user? || (@monthly_report.project && current_user.project_ids.include?(@monthly_report.project.id))
+        render :show
+      else
+        redirect_to authenticated_root_path, error: "You do not have permission to view this page."
+      end
+    else
+      redirect_to authenticated_root_path, error: "Unable to find that Workshop Log."
     end
   end
 

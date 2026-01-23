@@ -1,0 +1,10 @@
+// required for Mentions.ts
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
+  },
+  "include": ["."]
+}

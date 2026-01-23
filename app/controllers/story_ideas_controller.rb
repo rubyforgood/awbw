@@ -28,6 +28,12 @@ class StoryIdeasController < ApplicationController
     @story_idea = StoryIdea.new(story_idea_params)
 
     if @story_idea.save
+      NotificationServices::CreateNotification.call(
+        noticeable: @story_idea,
+        kind: :idea_submitted_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0)
       redirect_to story_ideas_path, notice: "StoryIdea was successfully created."
     else
       set_form_variables

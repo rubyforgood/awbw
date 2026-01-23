@@ -1,5 +1,5 @@
 class Event < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User", optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -12,6 +12,7 @@ class Event < ApplicationRecord
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
   # has_many through
   has_many :registrants, through: :event_registrations, class_name: "User"
   has_many :categories, through: :categorizable_items
@@ -20,6 +21,7 @@ class Event < ApplicationRecord
   # Validations
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :publicly_visible, in: [ true, false ]
+  validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -31,7 +33,6 @@ class Event < ApplicationRecord
     attributes :title, :description
   end
 
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :featured, -> { where(featured: true) }
   scope :published, ->(published = nil) { publicly_visible(published) }
   scope :publicly_visible, ->(publicly_visible = nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }
@@ -62,5 +63,20 @@ class Event < ApplicationRecord
 
   def name
     title
+  end
+
+  # Virtual attribute for cost in dollars (converts to/from cost_cents)
+  def cost
+    return nil if cost_cents.nil?
+    cost_cents / 100.0
+  end
+
+  def cost=(dollar_amount)
+    if dollar_amount.blank?
+      self.cost_cents = nil
+    else
+      dollar_amount = dollar_amount.to_s.gsub(/[^\d.]/, "").to_f
+      self.cost_cents = (dollar_amount.to_f * 100).round
+    end
   end
 end

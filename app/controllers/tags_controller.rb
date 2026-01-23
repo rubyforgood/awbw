@@ -20,7 +20,7 @@ class TagsController < ApplicationController
         .published
         .select("categories.*, metadata.name AS category_type_name")
         .distinct
-        .order("category_type_name ASC, categories.name ASC")
+        .order(Arel.sql("category_type_name, categories.position, categories.name"))
 
     @categories_by_type = categories.group_by(&:category_type_name)
   end

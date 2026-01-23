@@ -5,7 +5,7 @@ class CategoryType < ApplicationRecord
   has_many :categorizable_items, through: :categories, dependent: :destroy
 
   # Validations
-  validates_presence_of :name, uniqueness: true
+  validates :name, presence: true, uniqueness: { case_sensitive: false }
 
   scope :published, -> { where(published: true) }
 end

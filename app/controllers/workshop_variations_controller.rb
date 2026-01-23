@@ -1,4 +1,5 @@
 class WorkshopVariationsController < ApplicationController
+  include AhoyViewTracking
   def index
     unless current_user.super_user?
       redirect_to authenticated_root_path
@@ -10,7 +11,7 @@ class WorkshopVariationsController < ApplicationController
         .joins(:workshop)
         .includes(:workshop)
         .where(workshops: { inactive: false })
-        .order("workshops.title, workshop_variations.name")
+        .order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
         .paginate(page: params[:page], per_page: 25)
         .decorate
   end
@@ -27,6 +28,13 @@ class WorkshopVariationsController < ApplicationController
   def create
     @workshop_variation = WorkshopVariation.new(workshop_variation_params)
     if @workshop_variation.save
+      NotificationServices::CreateNotification.call(
+        noticeable: @workshop_variation,
+        kind: :idea_submitted_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0)
+
       flash[:notice] = "Workshop Variation has been created."
       if params[:from] == "workshop_show"
         redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
@@ -43,7 +51,7 @@ class WorkshopVariationsController < ApplicationController
 
   def show
     @workshop_variation = WorkshopVariation.find(params[:id]).decorate
-    @workshop_variation.increment_view_count!(session: session, request: request)
+    track_view(@workshop_variation)
 
     @workshop = @workshop_variation.workshop.decorate
     @bookmark = current_user.bookmarks.find_by(bookmarkable: @workshop)
@@ -81,7 +89,7 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [ :name, :code, :inactive, :ordering,
+      [ :name, :code, :inactive, :position,
        :youtube_url, :created_by_id, :workshop_id,
        primary_asset_attributes: [ :id, :file, :_destroy ],
        gallery_assets_attributes: [ :id, :file, :_destroy ]

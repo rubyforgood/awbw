@@ -1,5 +1,6 @@
 FeatureFlipper.features do
     in_state :development do
+      feature :stripe_payments, description: "If users can submit stripe payments for paid events and dues"
     end
 
     in_state :live do
@@ -9,7 +10,7 @@ FeatureFlipper.features do
     end
   end
 
-  FeatureFlipper.states do
-    state :development, [ "development", "test" ].include?(Rails.env)
-    state :live, true
-  end
+FeatureFlipper.states do
+  state :development, [ "development", "test" ].include?(Rails.env)
+  state :live, true
+end

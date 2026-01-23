@@ -43,13 +43,15 @@ Rails.application.configure do
   # Do not fallback to assets pipeline if a precompiled asset is missed.
   config.assets.compile = false
 
+  app_host = ENV.fetch("APP_HOST", "localhost")
+
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
+  config.action_mailer.asset_host = app_host
 
   # Store uploaded files on the digitalocean (see config/storage.yml for options).
   config.active_storage.service = :digitalocean
 
-  app_host = ENV.fetch("APP_HOST", "localhost")
 
   Rails.application.routes.default_url_options[:host] = app_host
 
@@ -90,10 +92,15 @@ Rails.application.configure do
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.raise_delivery_errors = true
+
+  config.action_mailer.logger = Rails.logger
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("APP_HOST", "localhost"),
+    protocol: Rails.env.production? ? "https" : "http"
+  }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
@@ -103,6 +110,21 @@ Rails.application.configure do
   #   port: 587,
   #   authentication: :plain
   # }
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address: ENV.fetch("SMTP_SERVER", "smtp.mandrillapp.com"),
+    port: ENV.fetch("SMTP_PORT", 587),
+    user_name: ENV.fetch("SMTP_USERNAME", ""), # ENV["MANDRILL_USERNAME"],
+    password: ENV.fetch("SMTP_PASSWORD", ""), # ENV["MANDRILL_APIKEY"],
+    authentication: "plain",
+    enable_starttls_auto: true
+  }
+
+  config.after_initialize do
+    if ENV.fetch("SMTP_PASSWORD", "").blank? # ENV["MANDRILL_APIKEY"].blank?
+      raise "Missing Mandrill SMTP credentials"
+    end
+  end
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

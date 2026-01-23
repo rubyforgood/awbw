@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class WorkshopsController < ApplicationController
+  include AhoyViewTracking
   def index
-    @category_types = CategoryType.includes(:categories).published.decorate
+    @category_types = CategoryType.includes(:categories).published.order(:name).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
     if turbo_frame_request?
@@ -80,25 +81,41 @@ class WorkshopsController < ApplicationController
   def edit
     @workshop = Workshop.find(params[:id])
     set_form_variables
+
+    if turbo_frame_request?
+      render :editor_lazy
+    else
+      render :edit
+    end
   end
 
   def show
-    set_show
-    @workshop.increment_view_count!(session: session, request: request)
+    if turbo_frame_request?
+      @workshop = Workshop.find(params[:id]).decorate
+      set_show
+      render partial: "show_lazy", locals: { workshop: @workshop }
+    else
+      @workshop = Workshop.find(params[:id]).decorate
+      track_view(@workshop)
+      render :show
+    end
   end
 
   def update
     @workshop = Workshop.find(params[:id])
+    success = false
 
-    # Convert checkbox values into categorizable_items updates
-    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.categories = Category.where(id: selected_category_ids)
+    Workshop.transaction do
+      if @workshop.update(workshop_params)
+        assign_associations(@workshop)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("update", e)
+      raise ActiveRecord::Rollback
+    end
 
-    # Convert checkbox values into sectorable_items updates
-    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.sectors = Sector.where(id: selected_sector_ids)
-
-    if @workshop.update(workshop_params)
+    if success
       flash[:notice] = "Workshop updated successfully."
       redirect_to workshops_path
     else
@@ -110,16 +127,19 @@ class WorkshopsController < ApplicationController
 
   def create
     @workshop = current_user.workshops.build(workshop_params)
+    success = false
 
-    # Convert checkbox values into categorizable_items updates
-    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.categories = Category.where(id: selected_category_ids)
+    Workshop.transaction do
+      if @workshop.save
+        assign_associations(@workshop)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("creation", e)
+      raise ActiveRecord::Rollback
+    end
 
-    # Convert checkbox values into sectorable_items updates
-    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
-    @workshop.sectors = Sector.where(id: selected_sector_ids)
-
-    if @workshop.save
+    if success
       flash[:notice] = "Workshop created successfully."
       redirect_to workshops_path(sort: "created")
     else
@@ -149,12 +169,12 @@ class WorkshopsController < ApplicationController
   private
 
   def set_show
-    @workshop = Workshop.find(params[:id]).decorate
     @quotes = Quote.where(workshop_id: @workshop.id).active
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(inactive: false)
     @workshop_variations = @workshop.workshop_variations.active
     @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
   end
+
 
   def set_form_variables
     @workshop.build_primary_asset if @workshop.primary_asset.blank?
@@ -177,6 +197,20 @@ class WorkshopsController < ApplicationController
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)
+  end
+
+  def assign_associations(workshop)
+    # Convert checkbox values into categorizable_items updates
+    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
+    workshop.categories = Category.where(id: selected_category_ids)
+
+    # Convert checkbox values into sectorable_items updates
+    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
+    workshop.sectors = Sector.where(id: selected_sector_ids)
+  end
+
+  def log_workshop_error(action, error)
+    Rails.logger.error "Workshop #{action} failed: #{error.class} - #{error.message}\n#{error.backtrace.join("\n")}"
   end
 
   def workshops_per_page
@@ -215,13 +249,48 @@ class WorkshopsController < ApplicationController
       :visualization, :visualization_spanish,
       :warm_up, :warm_up_spanish,
 
+      :rhino_objective,
+      :rhino_materials,
+      :rhino_optional_materials,
+      :rhino_setup,
+      :rhino_introduction,
+      :rhino_opening_circle,
+      :rhino_demonstration,
+      :rhino_warm_up,
+      :rhino_visualization,
+      :rhino_creation,
+      :rhino_closing,
+      :rhino_notes,
+      :rhino_tips,
+      :rhino_misc1,
+      :rhino_misc2,
+      :rhino_extra_field,
+
+      :rhino_objective_spanish,
+      :rhino_materials_spanish,
+      :rhino_optional_materials_spanish,
+      :rhino_age_range_spanish,
+      :rhino_setup_spanish,
+      :rhino_introduction_spanish,
+      :rhino_opening_circle_spanish,
+      :rhino_demonstration_spanish,
+      :rhino_warm_up_spanish,
+      :rhino_visualization_spanish,
+      :rhino_creation_spanish,
+      :rhino_closing_spanish,
+      :rhino_notes_spanish,
+      :rhino_tips_spanish,
+      :rhino_misc1_spanish,
+      :rhino_misc2_spanish,
+      :rhino_extra_field_spanish,
+
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
-                                            :series_order, :_destroy ],
+                                            :position, :_destroy ],
     )
   end
 

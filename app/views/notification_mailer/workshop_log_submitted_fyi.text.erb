@@ -1,0 +1,77 @@
+<% profile_url = @facilitator ? facilitator_url(@facilitator) : user_url(@user) %>
+<% breakdown = @noticeable.attendance_breakdown %>
+<% totals = @noticeable.totals %>
+
+New <%= @type %>
+==========================
+
+<%= @user.name %>
+
+Submitted on
+<%= @noticeable.created_at
+               .in_time_zone("Pacific Time (US & Canada)")
+               .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+--------------------------------------------------
+
+<% if @report.present? %>
+  WORKSHOP LOG DETAILS
+
+  Workshop:
+  <%= @noticeable.workshop.title %>
+
+  Service population:
+  <%= @noticeable.windows_type.short_name %>
+
+
+  PARTICIPANTS
+
+  Participants | Children | Teens | Adults | Total
+  --------------------------------------------------
+  First-time   | <%= breakdown[:children][:first] %> | <%= breakdown[:teens][:first] %> | <%= breakdown[:adults][:first] %> | <%= totals[:first_time] %>
+  Ongoing      | <%= breakdown[:children][:ongoing] %> | <%= breakdown[:teens][:ongoing] %> | <%= breakdown[:adults][:ongoing] %> | <%= totals[:ongoing] %>
+  Total        | <%= breakdown[:children][:first] + breakdown[:children][:ongoing] %> | <%= breakdown[:teens][:first] + breakdown[:teens][:ongoing] %> | <%= breakdown[:adults][:first] + breakdown[:adults][:ongoing] %> | <%= totals[:overall] %>
+
+
+  <% if @answers.present? %>
+    FORM ANSWERS
+
+    <% @answers.each do |answer| %>
+      - <%= answer.name %>
+      <%= answer.answer.presence || "—" %>
+
+    <% end %>
+    --------------------------------------------------
+  <% end %>
+
+
+  <% if @quotes.present? %>
+    QUOTES
+
+    <% @quotes.decorate.each do |quote| %>
+      “<%= quote.detail %>”
+      <% if quote.attribution.present? %>
+        — <%= quote.attribution %>
+      <% end %>
+
+    <% end %>
+  <% end %>
+
+
+  <% if @attachments.present? %>
+    ATTACHMENTS
+
+    <% @attachments.each do |asset| %>
+      - <%= asset.file.blob.filename.to_s %>
+      <%= rails_blob_url(asset.file.blob, disposition: "inline") %>
+
+    <% end %>
+  <% end %>
+  --------------------------------------------------
+
+  View workshop log:
+  <%= workshop_log_url(@report) if @report.present? %>
+
+  View profile:
+  <%= profile_url %>
+<% end %>

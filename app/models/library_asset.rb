@@ -1,0 +1,2 @@
+class LibraryAsset < Asset
+end

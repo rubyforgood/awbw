@@ -1,0 +1,195 @@
+<div class="bg-white border border-gray-200 rounded-xl shadow p-6">
+  <div id="workshop-top" class="mt-6"></div>
+
+  <!-- Tabs / Accordion -->
+
+  <div data-controller="tabs" class="my-4">
+    <!-- Tabs -->
+    <ul class="flex border-b border-gray-300 pb-4 print:hidden">
+      <li class="-mb-px mr-1">
+        <a
+          href="#"
+          class="tab-link px-4 py-2 font-medium text-gray-700
+             border-b-2 border-transparent
+             hover:text-gray-900 hover:border-gray-300
+             transition-colors duration-200
+             data-[active=true]:border-primary data-[active=true]:text-primary"
+          data-action="click->tabs#switch"
+          data-tabs-target="tabLink"
+          data-tab-content-id="english-content">
+          <%= workshop.has_spanish_fields? ? "English" : "Details" %>
+        </a>
+      </li>
+      <% if workshop.has_spanish_fields? %>
+        <li class="-mb-px mr-1">
+          <a
+            href="#"
+            class="tab-link px-4 py-2 font-medium text-gray-700
+             border-b-2 border-transparent
+             hover:text-gray-900 hover:border-gray-300
+             transition-colors duration-200
+             data-[active=true]:border-primary data-[active=true]:text-primary"
+            data-action="click->tabs#switch"
+            data-tabs-target="tabLink"
+            data-tab-content-id="spanish-content"
+          >
+            Español
+          </a>
+        </li>
+      <% end %>
+
+      <li class="-mb-px mr-1 ml-auto">
+        <a
+          href="#workshopVariations"
+          class="
+            px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
+            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
+          "
+        >
+          Workshop variations
+        </a>
+      </li>
+
+      <% if @quotes.any? %>
+        <li class="-mb-px mr-1">
+          <a
+            href="#workshopQuotes"
+            class="
+              px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
+              hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
+            "
+          >
+            Related quotes
+          </a>
+        </li>
+      <% end %>
+
+      <% if @leader_spotlights.any? %>
+        <li class="-mb-px mr-1">
+          <a
+            href="#workshopLeaderSpotlights"
+            class="
+              px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
+              hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
+            "
+          >
+            Related stories
+          </a>
+        </li>
+      <% end %>
+    </ul>
+
+    <!-- Tab contents -->
+    <div class="mt-4 ml-2 default-link prose">
+      <!-- English / Details -->
+      <div id="english-content" data-tabs-target="tabContent">
+        <% unless workshop.extra_field.blank? %>
+          <div class="prose text-sm mb-4"><%= workshop.extra_field.html_safe %></div>
+        <% end %>
+
+        <% workshop_sections = { "Objective" => workshop.objective,
+                                 "Age range" => workshop.age_range,
+                                 "Materials" => workshop.materials,
+                                 "Optional materials" => workshop.optional_materials,
+                                 "Suggested time frame" => workshop.time_frame_total,
+                                 "Setup" => workshop.setup,
+                                 "Introduction" => workshop.introduction,
+                                 "Demonstration" => workshop.demonstration,
+                                 "Opening" => workshop.opening_circle,
+                                 "Warm up" => workshop.warm_up,
+                                 "Visualization" => workshop.visualization,
+                                 "Creation" => workshop.creation,
+                                 "Closing" => workshop.closing,
+                                 "Notes" => workshop.notes,
+                                 "Tips" => workshop.tips,
+                                 "Miscellaneous" => workshop.misc1,
+                                 "Miscellaneous 2" => workshop.misc2 } %>
+        <% workshop_sections.each do |title, content| %>
+          <% next if content.blank? ||
+              (title == "Suggested time frame" && content == "00:00") %>
+          <div class="workshop-<%= title %> single-workshop-detail mb-4">
+            <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
+            <% if title == "Suggested time frame" %>
+              <%= render "show_time_frame", workshop: workshop,
+                           title: title, content: content, language: "english" %>
+            <% else %>
+              <hr class="border-gray-300 mb-2">
+              <div class="prose text-sm after:clear-both after:block after:content-['']"><%= content.html_safe %></div>
+            <% end %>
+          </div>
+        <% end %>
+        <% if workshop.primary_asset&.file&.attached? ||
+          workshop.gallery_assets.any? { |img| img.persisted? && img.file.attached? } %>
+          <div class="workshop-gallery single-workshop-detail mb-4">
+            <h3 class="text-lg font-semibold mb-1">Gallery</h3>
+            <hr class="border-gray-300 mb-2">
+
+            <div class="flex flex-wrap gap-4">
+              <div class="assets">
+                <%= render "assets/display_image", item: workshop.primary_asset, item_type: "Main" %>
+                <% workshop.gallery_assets.each_with_index do |gallery_assets, idx| %>
+                  <%= render "assets/display_image", item: gallery_assets, idx: idx %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <% if workshop.workshop_series_children.any? %>
+          <%= render "show_series_membership_children",
+                     workshop: workshop,
+                     spanish: false %>
+        <% end %>
+      </div>
+
+      <% if workshop.has_spanish_fields? %>
+        <!-- Spanish -->
+        <div id="spanish-content" data-tabs-target="tabContent" class="hidden">
+          <% workshop_sections_spanish = { "Objetivo" => workshop.objective_spanish,
+                                           "Rango de edad" => workshop.age_range_spanish,
+                                           "Materiales" => workshop.materials_spanish,
+                                           "Materiales opcionales" => workshop.optional_materials_spanish,
+                                           "Setup" => workshop.setup_spanish,
+                                           "Tiempo sugerido" => workshop.time_frame_total,
+                                           "Introducción" => workshop.introduction_spanish,
+                                           "Demostración" => workshop.demonstration_spanish,
+                                           "Apertura" => workshop.opening_circle_spanish,
+                                           "Comenzando" => workshop.warm_up_spanish,
+                                           "Visualización" => workshop.visualization_spanish,
+                                           "Creación" => workshop.creation_spanish,
+                                           "Clausura" => workshop.closing_spanish,
+                                           "Notas" => workshop.notes_spanish,
+                                           "Consejos" => workshop.tips_spanish,
+                                           "Misc 1" => workshop.misc1_spanish,
+                                           "Misc 2" => workshop.misc2_spanish } %>
+
+          <% workshop_sections_spanish.each do |title, content| %>
+            <% next if content.blank? ||
+              (title == "Tiempo sugerido" && content == "00:00") %>
+
+            <div class="workshop-<%= title %> single-workshop-detail mb-4">
+              <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
+              <% if title == "Tiempo sugerido" && content != "00:00" %>
+                <%= render "show_time_frame", workshop: workshop,
+                           title: title, content: content, language: "spanish" %>
+              <% else %>
+                <hr class="border-gray-300 mb-2">
+                <div class="prose text-sm after:clear-both after:block after:content-['']"><%= content.html_safe %></div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if workshop.workshop_series_children.any? %>
+            <%= render "show_series_membership_children",
+                       workshop: workshop,
+                       spanish: true %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <% if workshop.workshop_series_parents.any? %>
+    <%= render "show_series_membership_parents", workshop: workshop %>
+  <% end %>
+</div>

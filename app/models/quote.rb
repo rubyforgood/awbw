@@ -1,5 +1,5 @@
 class Quote < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -11,6 +11,7 @@ class Quote < ApplicationRecord
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
@@ -24,7 +25,6 @@ class Quote < ApplicationRecord
   end
 
   scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :published, ->(published = nil) { published ? active(published) : active }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }

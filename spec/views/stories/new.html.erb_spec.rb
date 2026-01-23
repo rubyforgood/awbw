@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "stories/new", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
 
   before(:each) do
     assign(:story, Story.new)
@@ -22,7 +22,7 @@ RSpec.describe "stories/new", type: :view do
 
       assert_select "select[name=?]", "story[workshop_id]"
 
-      assert_select "textarea[name=?]", "story[body]"
+      assert_select "input[name=?][type=?]", "story[rhino_body]", "hidden"
 
       assert_select "textarea[name=?]", "story[youtube_url]"
 

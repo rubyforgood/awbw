@@ -6,7 +6,7 @@ RSpec.describe "community_news/edit", type: :view do
   let(:community_news) {
     CommunityNews.create!(
       title: "MyString",
-      body: "MyText",
+      rhino_body: "<p>MyText</p>",
       youtube_url: "MyString",
       published: false,
       featured: false,
@@ -33,7 +33,7 @@ RSpec.describe "community_news/edit", type: :view do
     assert_select "form[action=?][method=?]", community_news_path(community_news), "post" do
       assert_select "textarea[name=?]", "community_news[title]"
 
-      assert_select "textarea[name=?]", "community_news[body]"
+      assert_select "input[name=?][type=?]", "community_news[rhino_body]", "hidden"
 
       assert_select "textarea[name=?]", "community_news[youtube_url]"
 

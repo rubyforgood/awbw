@@ -25,6 +25,9 @@ RSpec.describe "Event show page", type: :system do
       expect(page).to have_text(event.start_date.strftime("%b"))
       expect(page).to have_text(event.end_date.strftime("%b"))
 
+      # Cost displayed when event is paid
+      expect(page).to have_text("Cost: $10.99")
+
       # Description
       expect(page).to have_css("p.text-gray-900", text: event.description)
 

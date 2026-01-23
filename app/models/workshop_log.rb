@@ -1,5 +1,6 @@
 class WorkshopLog < Report
   belongs_to :workshop
+  has_many :notifications, as: :noticeable, dependent: :destroy
 
   # Validations
   validates :date, presence: true
@@ -113,8 +114,8 @@ class WorkshopLog < Report
 
   def log_fields
     if form_builder
-      form_builder.forms[0].form_fields.where("ordering is not null and status = 1").
-        order(ordering: :desc).all
+      form_builder.forms[0].form_fields.where("position is not null and status = 1").
+        order(position: :desc).all
     else
       []
     end
@@ -125,11 +126,38 @@ class WorkshopLog < Report
   end
 
   def date_label
-   date ? date.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
+    date ? date.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
   end
 
   def workshop_quotes
     workshop&.quotes || Quote.none
+  end
+
+  def attendance_breakdown
+    {
+      children: {
+        first: children_first_time,
+        ongoing: children_ongoing
+      },
+      teens: {
+        first: teens_first_time,
+        ongoing: teens_ongoing
+      },
+      adults: {
+        first: adults_first_time,
+        ongoing: adults_ongoing
+      }
+    }
+  end
+
+  def totals
+    attendance_breakdown.transform_values do |v|
+      v[:first] + v[:ongoing]
+    end.merge(
+      first_time: children_first_time + teens_first_time + adults_first_time,
+      ongoing: children_ongoing + teens_ongoing + adults_ongoing,
+      overall: total_attendance
+    )
   end
 
   private
@@ -147,6 +175,4 @@ class WorkshopLog < Report
     changes[:owner_type] = "Workshop" if workshop_id
     update_columns(changes) if changes.any?
   end
-
-  protected
 end

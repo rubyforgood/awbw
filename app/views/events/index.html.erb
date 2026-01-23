@@ -10,7 +10,7 @@
           designed to expand your knowledge, ignite your passion, and foster connections within our network of
           Windows Facilitators. Whether you’re a seasoned facilitator or just starting out,
           we think you’ll find something to inspire and empower you.
-          For questions, reach out to us at <%= mail_to "programs@awbw.org",
+          For questions, reach out to us at <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
                                                         class: "underline" %>
           <br><br>
           Note: Event dates/times are subject to change -- we will keep you informed by email.

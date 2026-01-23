@@ -7,6 +7,7 @@ services:
       - 3306
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./docker/mysql/charset.cnf:/etc/mysql/conf.d/charset.cnf:ro
       - ./db/init:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
@@ -32,7 +33,7 @@ services:
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "true"
       VITE_RUBY_HOST: vite
-      DATABASE_URL: trilogy://root@database:3306/
+      DATABASE_URL: trilogy://root@database:3306/?encoding=utf8mb4&collation=utf8mb4_unicode_ci
     ports:
       - 3000:3000
     volumes:

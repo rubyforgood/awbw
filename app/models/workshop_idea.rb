@@ -3,9 +3,10 @@ class WorkshopIdea < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :workshops
   has_many :workshop_series_children, # When this workshop is the parent in a series
-           -> { order(:series_order) },
+           -> { order(:position) },
            class_name: "WorkshopSeriesMembership",
            foreign_key: "workshop_parent_id",
            dependent: :destroy
@@ -20,6 +21,7 @@ class WorkshopIdea < ApplicationRecord
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
 
   before_save :set_time_frame
 

@@ -15,8 +15,8 @@ application.register("dropdown", DropdownController);
 import FilePreviewController from "./file_preview_controller"
 application.register("file-preview", FilePreviewController)
 
-import PrintController from "./print_controller"
-application.register("print", PrintController)
+import PasswordToggleController from "./password_toggle_controller"
+application.register("password-toggle", PasswordToggleController)
 
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)

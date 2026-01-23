@@ -24,7 +24,7 @@ module AdminDashboardCardsHelper
   def user_content_cards
     [
       custom_card("Activity logs", dashboard_recent_activities_path, icon: "🧭"),
-      custom_card("Analytics dashboard", admin_analytics_path, icon: "📊"),
+      custom_card("Activity counts", admin_analytics_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:event_registrations, icon: "🎟️", intensity: 100),
       model_card(:story_ideas, icon: "✍️", intensity: 100),
@@ -32,7 +32,8 @@ module AdminDashboardCardsHelper
       model_card(:workshop_variations, icon: "🔀", intensity: 100),
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
       model_card(:workshop_logs, icon: "📝", intensity: 100),
-      model_card(:quotes, icon: "💬", intensity: 100)
+      model_card(:quotes, icon: "💬", intensity: 100),
+      custom_card("System notifications", notifications_path, icon: "🔔")
     ]
   end
 
@@ -48,7 +49,7 @@ module AdminDashboardCardsHelper
                  intensity: 100,
                  title: "Service populations",
                  params: { published_search: true }),
-      custom_card("Project statuses", authenticated_root_path, icon: "🧮", color: :emerald, intensity: 100),
+      custom_card("Project statuses", project_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       custom_card("Windows types", windows_types_path, icon: "🪟")
     ]
   end

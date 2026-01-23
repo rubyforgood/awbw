@@ -24,6 +24,12 @@ class WorkshopIdeasController < ApplicationController
     @workshop_idea = WorkshopIdea.new(workshop_idea_params)
 
     if @workshop_idea.save
+      NotificationServices::CreateNotification.call(
+        noticeable: @workshop_idea,
+        kind: :idea_submitted_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0)
       redirect_to workshop_ideas_path, notice: "Workshop idea was successfully created."
     else
       set_form_variables
@@ -94,7 +100,7 @@ class WorkshopIdeasController < ApplicationController
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
-                                            :series_order, :_destroy ],
+                                            :position, :_destroy ],
     )
   end
 end

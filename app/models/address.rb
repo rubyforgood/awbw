@@ -1,6 +1,6 @@
 class Address < ApplicationRecord
   LOCALITIES = [ "LA City", "LA County", "Southern CA", "Northern CA",
-                "Central CA", "Orange County", "Outside CA", "Outside USA" ]
+                "Central CA", "Orange County", "Outside CA", "Outside USA", "Unknown" ]
   CONTACT_TYPES = [ nil, "work", "personal" ].freeze
 
   belongs_to :addressable, polymorphic: true

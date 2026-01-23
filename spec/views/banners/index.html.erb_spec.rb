@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "banners/index", type: :view do
-    let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin) }
   let(:banner1) { create(:banner) }
   let(:banner2) { create(:banner) }
 
@@ -10,7 +10,7 @@ RSpec.describe "banners/index", type: :view do
     allow(view).to receive(:current_user).and_return(admin)
   end
 
-  it "renders a list of story_ideas" do
+  it "renders a list of banners" do
     render
     expect(rendered).to include(banner1.content, banner2.content)
   end

@@ -27,9 +27,9 @@ RSpec.describe "Workshops", type: :system do
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
-        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window)
-        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: adult_window)
-        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: adult_window)
+        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, rhino_objective: "test")
+        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, rhino_objective: "test")
+        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: adult_window, rhino_objective: "test")
 
         visit workshops_path
 
@@ -39,11 +39,9 @@ RSpec.describe "Workshops", type: :system do
         click_on "Windows Type"  # this clicks the <button> text/label
         check("windows_types_#{adult_window.id}")
 
-        within('#workshops-list') do
-          expect(page).to have_content(workshop_world.title)
-          expect(page).to have_content(workshop_mars.title)
-          # expect(page).not_to have_content(workshop_hello.title) # TODO - get this working again once the page autosubmits
-        end
+        expect(page).to have_content(workshop_world.title)
+        expect(page).to have_content(workshop_mars.title)
+        expect(page).not_to have_content(workshop_hello.title)
       end
     end
   end
@@ -57,14 +55,14 @@ RSpec.describe "Workshops", type: :system do
 
         visit workshop_path(workshop)
 
-        expect(page).to have_css(".inner-hero", text: 'The best workshop in the world. This is a tribute.')
+        expect(page).to have_content(workshop.title)
       end
     end
   end
 
   describe 'create workshop' do
     context "When super user is logged in" do
-      it "Super user can create a new workshop" do
+      it "Super user can create a new workshop", js: true do
         user = create(:user, super_user: true)
         sign_in(user)
         adult_window = create(:windows_type, :adult)
@@ -75,13 +73,8 @@ RSpec.describe "Workshops", type: :system do
 
         fill_in "workshop_title", with: 'My New Workshop'
         select adult_window.short_name, from: 'workshop_windows_type_id'
+        find('#body-button').click
         fill_in 'workshop_full_name', with: 'Jane Doe'
-        fill_in 'workshop_objective', with: 'Learn something new'
-        fill_in 'workshop_materials', with: 'Paper, Markers'
-        fill_in 'workshop_setup', with: 'Arrange tables'
-        fill_in 'workshop_demonstration', with: 'Show example'
-        fill_in 'workshop_warm_up', with: 'Stretching'
-        fill_in 'workshop_creation', with: 'Step 1, Step 2'
 
         click_on 'Submit'
 

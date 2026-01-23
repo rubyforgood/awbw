@@ -9,7 +9,7 @@ class WorkshopFromIdeaService
   def call
     Workshop.new(attributes_from_idea).tap do |workshop|
       duplicate_series_children(workshop)
-      duplicate_images(workshop)
+      duplicate_assets(workshop)
     end
   end
 
@@ -62,9 +62,9 @@ class WorkshopFromIdeaService
     )
   end
 
-  def duplicate_images(workshop)
-    workshop_idea.images.each do |image|
-      workshop.images.build(file: image.file.blob)
+  def duplicate_assets(workshop)
+    workshop_idea.assets.each do |image|
+      workshop.assets.build(file: image.file.blob)
     end
   end
 end

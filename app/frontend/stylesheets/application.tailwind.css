@@ -78,66 +78,72 @@
   @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300;
 }
 
-.rotate-180 {
-  transform: rotate(180deg);
-}
-
 .is-active {
   @apply text-primary border-b-2 border-primary font-bold bg-gray-100;
 }
 
+/* Prevent pag breaks on images when printing  */
+@media print {
+  table {
+    page-break-inside: auto;
+  }
 
-custom-rhino-editor table {
-  border-collapse: collapse;
-  margin: 0;
-  overflow: hidden;
-  table-layout: fixed;
-  width: 100%;
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  td {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 }
-custom-rhino-editor table td, custom-rhino-editor table th {
-  border: 2px solid #ced4da;
-  box-sizing: border-box;
-  min-width: 1em;
-  padding: 3px 5px;
-  position: relative;
-  vertical-align: top;
-}
-custom-rhino-editor table td > *, custom-rhino-editor table th > * {
-  margin-bottom: 0;
-}
-custom-rhino-editor table th {
-  background-color: #f1f3f5;
-  font-weight: bold;
-  text-align: left;
-}
-custom-rhino-editor table .selectedCell:after {
-  background: rgba(200, 200, 255, 0.4);
-  content: "";
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  pointer-events: none;
-  position: absolute;
-  z-index: 2;
-}
-custom-rhino-editor table .column-resize-handle {
-  background-color: #adf;
-  bottom: -2px;
-  position: absolute;
-  right: -2px;
-  pointer-events: none;
-  top: 0;
-  width: 4px;
-}
-custom-rhino-editor table p {
-  margin: 0;
-}
-custom-rhino-editor a {
-  @apply underline text-blue-600 hover:text-blue-800;
-}
+
+/* Rich Text tables horizontal scroll */
 .tableWrapper {
   padding: 1rem 0;
   overflow-x: auto;
+}
 
+/* Password related fields */
+.password-container {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 36px; /* aligns with input vertically */
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #6b7280; /* gray-500 */
+}
+
+.toggle-password:hover {
+  color: #374151; /* gray-700 */
+}
+
+/* Hide Chrome / Edge / Safari (macOS + iOS) password reveal icon */
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Swiper equal height slides */
+.swiper-wrapper.flex.items-stretch .swiper-slide {
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
 }

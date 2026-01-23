@@ -1,0 +1,2 @@
+class ThumbnailAsset < Asset
+end

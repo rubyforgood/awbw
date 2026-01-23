@@ -53,7 +53,7 @@ module ApplicationHelper
 
     if obj.form_builder and obj.form_builder.name == "Share a Story"
       if action.empty?
-       return report_path(obj)
+        return report_path(obj)
       else
         return send("reports_#{action}story_path", obj)
       end

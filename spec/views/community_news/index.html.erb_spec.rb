@@ -5,7 +5,7 @@ RSpec.describe "community_news/index", type: :view do
 
   let(:community_news1) { CommunityNews.create!(
     title: "Title1",
-    body: "MyText",
+    rhino_body: "MyText",
     youtube_url: "Youtube Url",
     published: false,
     featured: false,
@@ -18,7 +18,7 @@ RSpec.describe "community_news/index", type: :view do
     ) }
   let(:community_news2) { CommunityNews.create!(
     title: "Title2",
-    body: "MyText",
+    rhino_body: "MyText",
     youtube_url: "Youtube Url",
     published: false,
     featured: false,
@@ -42,7 +42,7 @@ RSpec.describe "community_news/index", type: :view do
     expect(rendered).to include(community_news1.title, community_news2.title)
   end
 
-  it "renders a friendly message when no banners exist" do
+  it "renders a friendly message when no community_news exist" do
     assign(:community_news, paginated([]))
     render
     expect(rendered).to match(/No community news yet/)

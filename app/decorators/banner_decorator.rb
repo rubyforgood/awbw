@@ -3,7 +3,7 @@ class BannerDecorator < ApplicationDecorator
     content.truncate(50)
   end
 
-  def detail
+  def detail(length: nil)
     content
   end
 end

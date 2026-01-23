@@ -9,6 +9,9 @@ class EventDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
+  def location # TODO - add location to events
+  end
+
   def calendar_links
     start_time   = object.start_date.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.strftime("%Y%m%dT%H%M%SZ")
@@ -147,6 +150,12 @@ class EventDecorator < ApplicationDecorator
 
   def breadcrumbs
     "#{bookmarks_link} >> #{bookmarkable_link}".html_safe
+  end
+
+  def labelled_cost
+    return if cost_cents.blank? || cost_cents.zero?
+
+    "Cost: $#{cost}"
   end
 
   def content

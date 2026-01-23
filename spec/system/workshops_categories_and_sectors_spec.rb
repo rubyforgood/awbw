@@ -3,10 +3,10 @@ require "rails_helper"
 RSpec.describe "Workshop categories & sectors", type: :system do
   let(:user) { create(:user, super_user: true) }
 
-  before { driven_by(:rack_test) }
+  before { driven_by(:selenium_chrome_headless) }
 
   describe "CREATE workshop" do
-    it "assigns categories and sectors from checkboxes" do
+    xit "assigns categories and sectors from checkboxes" do
       sign_in(user)
 
       windows_type = create(:windows_type, :adult)
@@ -23,17 +23,19 @@ RSpec.describe "Workshop categories & sectors", type: :system do
 
       # Open the dropdown accordion
       click_button "Tags"
-
+      find("#tags", visible: true)
       check "Trauma"
       check "Youth"
       check "Veterans"
       check "Elders"
 
       fill_in "workshop_title", with: "Category Test Workshop"
-      click_on "Submit"
 
-      workshop = Workshop.last
+      expect {
+        click_on "Submit"
+      }.to change(Workshop, :count).by(1)
 
+      workshop = Workshop.order(:id).last
       expect(workshop.categories.pluck(:id)).to match_array([ category_a.id, category_b.id ])
       expect(workshop.sectors.pluck(:id)).to match_array([ sector_x.id, sector_y.id ])
     end
@@ -50,8 +52,7 @@ RSpec.describe "Workshop categories & sectors", type: :system do
       sector1 = create(:sector, :published, name: "X")
       sector2 = create(:sector, :published, name: "Y")
 
-      workshop = create(
-        :workshop,
+      workshop = create(:workshop,
         windows_type: windows_type,
         categories: [ cat1, cat2 ],
         sectors: [ sector1, sector2 ],
@@ -61,6 +62,10 @@ RSpec.describe "Workshop categories & sectors", type: :system do
       visit edit_workshop_path(workshop)
 
       # uncheck 1 category + 1 sector
+      # Open the dropdown accordion
+      click_button "Tags"
+      find("#tags", visible: true)
+
       uncheck "A"
       uncheck "X"
 

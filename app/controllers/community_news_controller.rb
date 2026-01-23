@@ -1,5 +1,6 @@
 class CommunityNewsController < ApplicationController
   include ExternallyRedirectable
+  include AhoyViewTracking
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -9,15 +10,15 @@ class CommunityNewsController < ApplicationController
     @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
     @count_display = if filtered.count == unfiltered.count
-                       unfiltered.count
+      unfiltered.count
     else
-                       "#{filtered.count}/#{unfiltered.count}"
+      "#{filtered.count}/#{unfiltered.count}"
     end
   end
 
   def show
     @community_news = @community_news.decorate
-    @community_news.increment_view_count!(session: session, request: request)
+    track_view(@community_news)
 
     if @community_news.external_url.present?
       redirect_to_external @community_news.link_target
@@ -33,6 +34,11 @@ class CommunityNewsController < ApplicationController
   def edit
     @community_news = @community_news.decorate
     set_form_variables
+    if turbo_frame_request?
+      render :editor_lazy
+    else
+      render :edit
+    end
   end
 
   def create
@@ -83,7 +89,7 @@ class CommunityNewsController < ApplicationController
   # Strong parameters
   def community_news_params
     params.require(:community_news).permit(
-      :title, :body, :published, :featured,
+      :title, :rhino_body, :published, :featured,
       :reference_url, :youtube_url,
       :project_id, :windows_type_id,
       :author_id, :created_by_id, :updated_by_id,

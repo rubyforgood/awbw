@@ -1,5 +1,5 @@
 class Tutorial < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable
+  include TagFilterable, Trendable, RichTextSearchable
 
   has_rich_text :rhino_body
 
@@ -9,6 +9,7 @@ class Tutorial < ApplicationRecord
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }
 
@@ -20,10 +21,13 @@ class Tutorial < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes :title, :body
+
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   scope :body, ->(body) { where("body like ?", "%#{ body }%") }
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :published, ->(published = nil) {
     if [ "true", "false" ].include?(published)
       where(published: published)

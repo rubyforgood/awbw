@@ -1,4 +1,5 @@
 class ProjectsController < ApplicationController
+  include AhoyViewTracking
   before_action :set_project, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -10,7 +11,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @project.increment_view_count!(session: session, request: request)
+    track_view(@project)
 
     # Reuse WorkshopLogsController#index logic programmatically
     workshop_logs_controller = WorkshopLogsController.new

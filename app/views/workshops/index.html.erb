@@ -46,7 +46,9 @@
     <% end %>
 
     <!-- Workshops List -->
-    <%= turbo_frame_tag "workshop_results", src: workshops_path  do %>
+    <% result_src = workshops_path + "?" + request.query_string %>
+
+    <%= turbo_frame_tag "workshop_results", src: result_src do %>
       <div class="mt-6">
         <div class="space-y-4 animate-pulse">
           <% 3.times do %>

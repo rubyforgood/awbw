@@ -178,9 +178,9 @@ class ImageMigrationAuditController < ApplicationController
     if attachment_or_item.respond_to?(:attached?)
       if attachment_or_item.attached?
         urls = if attachment_or_item.respond_to?(:each)
-                 attachment_or_item.map { |att| safe_url_for(att) }.compact
+          attachment_or_item.map { |att| safe_url_for(att) }.compact
         else
-                 Array.wrap(safe_url_for(attachment_or_item)).compact
+          Array.wrap(safe_url_for(attachment_or_item)).compact
         end
         return { attached: true, urls: urls }
       else

@@ -11,12 +11,14 @@ class StoryIdea < ApplicationRecord
   belongs_to :windows_type
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :stories
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
 
   # Validations
   validates :created_by_id, presence: true

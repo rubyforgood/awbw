@@ -61,6 +61,13 @@ class WorkshopLogsController < ApplicationController
     @workshop_log = WorkshopLog.new(workshop_log_params)
 
     if @workshop_log.save
+      NotificationServices::CreateNotification.call(
+        noticeable: @workshop_log,
+        kind: :workshop_log_submitted_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0)
+
       flash[:notice] = "Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile."
       redirect_to authenticated_root_path
     else
@@ -117,10 +124,10 @@ class WorkshopLogsController < ApplicationController
                         .distinct
                         .order(:last_name, :first_name)
     @projects = if current_user.super_user?
-                  # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
-                  Project.active.order(:name)
+      # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
+      Project.active.order(:name)
     else
-                  current_user.projects.order(:name)
+      current_user.projects.order(:name)
     end
     # @workshops = Workshop.joins(:workshop_logs)
     #                      .order(:title)
@@ -139,12 +146,11 @@ class WorkshopLogsController < ApplicationController
       @workshop = Workshop.new
     end
 
-    workshops = if current_user.super_user?
-                  Workshop.all
-    else
-                  Workshop.published
+    workshops = Workshop.includes(:windows_type)
+    unless current_user.super_user?
+      workshops = workshops.published
     end
-    @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id))
+    @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id).includes(:windows_type))
                           .distinct
                           .order(title: :asc)
 
@@ -165,11 +171,11 @@ class WorkshopLogsController < ApplicationController
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
 
     @windows_type_id = params[:windows_type_id].presence || @workshop.windows_type_id ||
-      WindowsType.where(short_name: "COMBINED")
+      WindowsType.where(short_name: "COMBINED").last.id
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder
     if form
-      @report_field_answers = form.form_fields.active.order(:ordering).map do |field|
+      @report_field_answers = form.form_fields.active.order(:position).map do |field|
         @workshop_log.report_form_field_answers.find_or_initialize_by(form_field: field)
       end
     end
