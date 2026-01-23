@@ -5,32 +5,26 @@
                 data: {controller: "share-url",
                       turbo_frame_disabled: "community_news_results" },
                       autocomplete: "off",
-                class: "grid grid-cols-1 md:grid-cols-5 gap-4 items-end" do |f| %>
+                class: "flex flex-wrap gap-4" do |f| %>
     <div>
       <%= f.label :community_news_name, "Title contains",
-                  class: "block text-sm font-medium text-gray-700" %>
+                  class: "text-sm font-medium text-gray-500 mb-1" %>
 
       <%= f.text_field :community_news_name,
                        value: params[:community_news_name],
                        placeholder: "e.g. Art, Music…",
-                       class: "mt-1 block w-full rounded-md border border-gray-300 p-2",
+                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                                 focus:ring-blue-500 focus:border-blue-500",
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
-    <div class="flex-1 min-w-[200px] pb-2">
-      <label for="query" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">
-        Keywords
-      </label>
+    <div class="flex-grow min-w-[200px]">
+      <%= f.label :query, "Keywords",
+                  class: "text-sm font-medium text-gray-500 mb-1" %>
 
-      <div class="relative">
-        <%= f.text_field :query,
-                           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-10
+      <%= f.text_field :query,
+                           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
                                  focus:ring-blue-500 focus:border-blue-500" %>
-
-        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-          <i class="fa fa-search"></i>
-        </button>
-      </div>
     </div>
 
     <% if current_user.super_user? %>
