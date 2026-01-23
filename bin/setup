@@ -7,27 +7,27 @@ def system!(*args)
   system(*args, exception: true)
 end
 
-def run_sql_file(path)
-  puts "== Running SQL file: #{path} =="
-
-  config = ActiveRecord::Base.connection_db_config.configuration_hash
-
-  command = [
-    db_client,
-    "-h", config[:host] || "127.0.0.1",
-    "-P", (config[:port] || 3306).to_s,
-    "-u", config[:username] || "root",
-    "-D", config[:database]
-  ].join(" ")
-
-  command << " -p#{config[:password]}" if config[:password]
-
-  # Use shell input redirection
-  system!("#{command} < #{path}")
-  puts "✓ Successfully executed #{path}"
-rescue => e
-  puts "Warning: failed to run #{path}: #{e.message}"
-end
+# def run_sql_file(path)
+#   puts "== Running SQL file: #{path} =="
+#
+#   config = ActiveRecord::Base.connection_db_config.configuration_hash
+#
+#   command = [
+#     db_client,
+#     "-h", config[:host] || "127.0.0.1",
+#     "-P", (config[:port] || 3306).to_s,
+#     "-u", config[:username] || "root",
+#     "-D", config[:database]
+#   ].join(" ")
+#
+#   command << " -p#{config[:password]}" if config[:password]
+#
+#   # Use shell input redirection
+#   system!("#{command} < #{path}")
+#   puts "✓ Successfully executed #{path}"
+# rescue => e
+#   puts "Warning: failed to run #{path}: #{e.message}"
+# end
 
 # Choose mariadb or mysql client
 def db_client
@@ -58,8 +58,8 @@ FileUtils.chdir APP_ROOT do
   system! "bin/rails db:drop"
   system! "bin/rails db:create"
 
-  puts "\n== Running SQL files in db/init =="
-  Dir["db/init/*.sql"].sort.each { |file| run_sql_file(file) }
+  # puts "\n== Running SQL files in db/init =="
+  # Dir["db/init/*.sql"].sort.each { |file| run_sql_file(file) }
 
   puts "\n== Running Rails migrations and seeds =="
   system! "bin/rails db:migrate"
