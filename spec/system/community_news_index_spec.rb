@@ -5,6 +5,8 @@ RSpec.describe "Community News Index", type: :system do
   let(:community_news) { create(:community_news, title: "Test Community News", published: true, rhino_body: "Test content") }
 
   scenario "Admin visits community news index and sees results load in turbo frame" do
+    community_news  # This ensures the record is created
+
     sign_in admin
 
     visit community_news_index_path
