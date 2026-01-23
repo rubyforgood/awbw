@@ -3,9 +3,9 @@ class ResourcesController < ApplicationController
 
   def index
     if turbo_frame_request?
-      per_page = params[:number_of_items_per_page].presence || 25
+      per_page = params[:number_of_items_per_page].presence || 18
       unfiltered = Resource.where(kind: Resource::PUBLISHED_KINDS) # TODO - #FIXME brittle
-        .includes(:primary_asset, :gallery_assets, :attachments)
+        .includes(:primary_asset, :gallery_assets, :attachments, :bookmarks, :downloadable_asset, primary_asset: [ :file_attachment ], downloadable_asset: [ :file_attachment ])
       filtered = unfiltered.search_by_params(params)
         .by_created
       @resources = filtered.paginate(page: params[:page], per_page: per_page)
