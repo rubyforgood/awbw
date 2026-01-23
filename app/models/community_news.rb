@@ -36,7 +36,7 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
+    attributes :title, :published, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
 
     scope { join_rich_texts.left_joins(author: :facilitator) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
@@ -55,6 +55,7 @@ class CommunityNews < ApplicationRecord
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
+    conditions[:published] = params[:published_search] if params[:published_search].present?
 
     self.search(conditions)
   end
