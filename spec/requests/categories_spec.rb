@@ -133,6 +133,7 @@ RSpec.describe "/categories", type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
+
       it "scopes position updates by metadatum_id" do
         category_type1 = create(:category_type, name: "Type 1")
         category_type2 = create(:category_type, name: "Type 2")
