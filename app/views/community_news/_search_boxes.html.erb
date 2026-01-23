@@ -2,7 +2,7 @@
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
   <%= form_with url: community_news_index_path,
                 method: :get,
-                data: {controller: "share-url",
+                data: {controller: "collection",
                       turbo_frame: "community_news_results" },
                       autocomplete: "off",
                 class: "flex flex-wrap gap-4" do |f| %>
