@@ -32,7 +32,7 @@
               <span class="inline-flex items-center gap-2">
                 <%= link_to title_with_badges(news, show_hidden_badge: current_user.super_user?).html_safe,
                               community_news_path(news),
-                              data: { turbo_prefetch: false },
+                              data: { turbo_prefetch: false, turbo_frame: "_top" },
                               target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                               class: "font-bold hover:text-indigo-800 hover:underline" %>
               </span>
@@ -49,6 +49,7 @@
                 <% if current_user.super_user? %>
                   <%= link_to "Edit",
                                 edit_community_news_path(news),
+                                data: {turbo_frame: "_top"},
                                 class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
                 <% end %>
 

@@ -16,7 +16,6 @@ class CommunityNewsController < ApplicationController
       else
         "#{filtered.count}/#{unfiltered.count}"
       end
-      debugger
       render :index_lazy
     else
       render :index
