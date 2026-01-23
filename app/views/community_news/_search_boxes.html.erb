@@ -2,9 +2,7 @@
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
   <%= form_with url: community_news_index_path,
                 method: :get,
-                data: {controller: "share-url",
-                      turbo_frame_disabled: "community_news_results" },
-                      autocomplete: "off",
+                autocomplete: "off",
                 class: "flex flex-wrap gap-4" do |f| %>
     <div>
       <%= f.label :community_news_name, "Title contains",
