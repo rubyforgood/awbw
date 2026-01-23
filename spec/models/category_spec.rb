@@ -86,7 +86,6 @@ RSpec.describe Category do
 
       # Update cat3 to position 1 - the positioning gem should handle reordering
       cat3.update(position: 1)
-      
       # Reload to get updated positions from the database
       cat1.reload
       cat2.reload
