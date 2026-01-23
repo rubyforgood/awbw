@@ -1,5 +1,9 @@
+<%= render "assets/form", owner: @story %>
+
 <%= simple_form_for(story, html: { multipart: true }) do |f| %>
   <%= render 'shared/errors', resource: story if story.errors.any? %>
+
+  <%= tag.div class: "unpersisted_resource_asset_params" %>
 
   <% story_idea = @story_idea || f.object.story_idea %>
 
