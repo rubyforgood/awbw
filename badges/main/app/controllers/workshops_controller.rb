@@ -3,7 +3,7 @@
 class WorkshopsController < ApplicationController
   include AhoyViewTracking
   def index
-    @category_types = CategoryType.includes(:categories).published.order(:name).decorate
+    @category_types = CategoryType.published.order(:name).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
     if turbo_frame_request?
@@ -12,8 +12,8 @@ class WorkshopsController < ApplicationController
       @sort = search_service.sort
 
       @workshops = search_service.workshops
-        .includes(:categories, :sectors, :windows_type, :user, :images, :bookmarks)
-        .paginate(page: params[:page], per_page: params[:per_page] || 50)
+        .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges, user: [ :facilitator ], primary_asset: [ :file_attachment ])
+        .paginate(page: params[:page], per_page: params[:per_page] || 20)
 
       @workshops_count = search_service.workshops.size
 

@@ -7,7 +7,7 @@ class TaggingSearchService
 
     {
       workshops: Workshop
-                   .includes(:sectors, :categories, :windows_type, :primary_asset, :gallery_assets)
+                   .includes(:sectors, :categories, :windows_type, :primary_asset, :gallery_assets, :bookmarks)
                    .published
                    .sector_names(sector_names)
                    .category_names(category_names)
