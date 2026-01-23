@@ -1,7 +1,5 @@
-# frozen_string_literal: true
-
 class WorkshopsController < ApplicationController
-  include AhoyViewTracking
+  include AssetUpdatable, AhoyViewTracking
   def index
     @category_types = CategoryType.published.order(:name).decorate
     @sectors = Sector.published
@@ -132,6 +130,9 @@ class WorkshopsController < ApplicationController
     Workshop.transaction do
       if @workshop.save
         assign_associations(@workshop)
+        if params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@workshop)
+        end
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
@@ -288,6 +289,7 @@ class WorkshopsController < ApplicationController
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
+      new_assets: [ :id, :type ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ],

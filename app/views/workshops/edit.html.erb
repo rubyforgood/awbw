@@ -10,10 +10,9 @@
 
     <!-- Form -->
     <div class="mt-4"><%= render "form", workshop: @workshop %></div>
-    <div class="mt-4"><%# render "form_old", workshop: @workshop %></div>
 
     <%= turbo_frame_tag "editor_assets_lazy", src: edit_workshop_path(@workshop) do %>
-      <span>Loading..</span>
+      <%= render "shared/loading" %>
     <% end %>
   </div>
 </div>

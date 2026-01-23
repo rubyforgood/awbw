@@ -1,3 +1,9 @@
+# When including this in a new model, be sure to add the following to the resource form
+# <%= tag.div class: "unpersisted_resource_asset_params" %>
+# The asset controller appends the correct id's to this div
+#
+# When the asset id's are submitted with the form, this concern updates the asset owner
+
 module AssetUpdatable
   extend ActiveSupport::Concern
 
