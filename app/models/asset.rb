@@ -52,8 +52,6 @@ class Asset < ApplicationRecord
       case type
       when "PrimaryAsset"
         PrimaryAsset::ACCEPTED_CONTENT_TYPES
-      when "GalleryAsset"
-        GalleryAsset::ACCEPTED_CONTENT_TYPES
       else
         ACCEPTED_CONTENT_TYPES
       end
