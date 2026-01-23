@@ -36,11 +36,14 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title
+    attributes :title, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
 
-    scope { join_rich_texts }
+    scope { join_rich_texts.left_joins(author: :facilitator) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
-    options :action_text_body, type: :text, default: true, default_operator: :or
+    options :title, default_operator: :or
+    options :facilitator_first, default_operator: :or
+    options :facilitator_last, default_operator: :or
+    options :action_text_body, default_operator: :or
   end
 
   scope :featured, -> { where(featured: true) }
