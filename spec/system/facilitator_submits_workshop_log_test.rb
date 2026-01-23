@@ -16,7 +16,7 @@ RSpec.describe "Facilitators can submit a workshop log" do
         create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, featured: true)
         create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, featured: true)
 
-        @project = Project.first || create(:project, name: "Test Project", windows_type_id: @windows_type.id)
+        @project = create(:project, name: "Test Project", windows_type_id: @windows_type.id)
         ProjectUser.create!(user: @user, project: @project, position: :default)
 
         sign_in @user
