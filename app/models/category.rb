@@ -9,6 +9,7 @@ class Category < ApplicationRecord
 
   scope :age_ranges, -> { joins(:category_type).where("metadata.name = 'AgeRange'") }
   scope :published, -> { where(published: true) }
+  scope :ordered_by_position_and_name, -> { reorder(position: :asc, name: :asc) }
 
   # Validations
   validates :name, presence: true, uniqueness: { case_sensitive: false }

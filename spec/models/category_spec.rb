@@ -21,9 +21,9 @@ RSpec.describe Category do
       expect(category.errors[:position]).to be_present
     end
 
-    it "allows nil position" do
+    it "does not allow nil position" do
       category = build(:category, position: nil)
-      expect(category).to be_valid
+      expect(category).to_not be_valid
     end
 
     it "allows integer position" do
@@ -49,14 +49,18 @@ RSpec.describe Category do
     let!(:category_type) { create(:category_type) }
 
     it "orders categories by position first, then by name" do
-      cat_c_pos_30 = create(:category, name: "C Category", position: 30, category_type: category_type)
       cat_a_pos_1 = create(:category, name: "A Category", position: 1, category_type: category_type)
       cat_b_pos_1 = create(:category, name: "B Category", position: 1, category_type: category_type)
       cat_d_pos_20 = create(:category, name: "D Category", position: 20, category_type: category_type)
+      cat_c_pos_30 = create(:category, name: "C Category", position: 30, category_type: category_type)
 
-      # Using COALESCE to place NULL values last
+      cat_a_pos_1.update_columns(position: 1)
+      cat_b_pos_1.update_columns(position: 1)
+      cat_d_pos_20.update_columns(position: 20)
+      cat_c_pos_30.update_columns(position: 30)
+
       categories = Category.where(category_type: category_type)
-                           .order(Arel.sql("categories.position, categories.name"))
+                           .ordered_by_position_and_name
 
       # The order should be: position 1 in name order (A, B), then position 2 (C), then nil (D)
       expect(categories.to_a).to eq([ cat_a_pos_1, cat_b_pos_1, cat_d_pos_20, cat_c_pos_30 ])
