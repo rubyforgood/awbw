@@ -12,6 +12,10 @@ class Category < ApplicationRecord
   validates :name, presence: true, uniqueness: { case_sensitive: false }
   validates :position, numericality: { only_integer: true, allow_nil: true }
 
+  # Cache expiration
+  after_save :expire_categories_cache
+  after_destroy :expire_categories_cache
+
   # Scopes
   scope :category_type_id, ->(category_type_id) {
     category_type_id.present? ? where(metadatum_id: category_type_id) : all }
@@ -20,4 +24,10 @@ class Category < ApplicationRecord
   scope :published, ->(published = nil) {
     [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
+
+  private
+
+  def expire_categories_cache
+    Rails.cache.delete("published_categories_by_type")
+  end
 end

@@ -12,6 +12,10 @@ class Sector < ApplicationRecord
   # Validations
   validates :name, presence: true, uniqueness: { case_sensitive: false }
 
+  # Cache expiration
+  after_save :expire_sectors_cache
+  after_destroy :expire_sectors_cache
+
   # Scopes
   scope :published, ->(published = nil) {
     [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
@@ -19,4 +23,10 @@ class Sector < ApplicationRecord
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
+
+  private
+
+  def expire_sectors_cache
+    Rails.cache.delete("published_sectors_with_sectorable_items")
+  end
 end
