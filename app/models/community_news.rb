@@ -52,12 +52,10 @@ class CommunityNews < ApplicationRecord
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)
-    community_news = self.all
-    community_news = community_news.search(params[:query]) if params[:query].present?
-    community_news = community_news.sector_names(params[:sector_names]) if params[:sector_names].present?
-    community_news = community_news.category_names(params[:category_names]) if params[:category_names].present?
-    community_news = community_news.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
-    community_news = community_news.published_search(params[:published_search]) if params[:published_search].present?
-    community_news
+    conditions = {}
+    conditions[:title] = params[:title] if params[:title].present?
+    conditions[:query] = params[:query] if params[:query].present?
+
+    self.search(conditions)
   end
 end

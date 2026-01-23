@@ -7,11 +7,10 @@
                       autocomplete: "off",
                 class: "flex flex-wrap gap-4" do |f| %>
     <div>
-      <%= f.label :community_news_name, "Title contains",
+      <%= f.label :title, "Title contains",
                   class: "text-sm font-medium text-gray-500 mb-1" %>
 
-      <%= f.text_field :community_news_name,
-                       value: params[:community_news_name],
+      <%= f.text_field :title,
                        placeholder: "e.g. Art, Music…",
                        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
                                  focus:ring-blue-500 focus:border-blue-500",
