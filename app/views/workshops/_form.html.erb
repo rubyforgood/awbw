@@ -89,8 +89,6 @@
       <% end %>
     </div>
 
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
-
     <%= render "shared/form_dropdown", field: :body, label: "Body", padding: "mb-4 border border-gray-300 rounded-md" do %>
       <%= render "shared/form_dropdown", form: f, field: :extra_field, label: "Extra Field" do %>
         <%= rhino_editor(f, :extra_field) %>
