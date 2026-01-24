@@ -25,7 +25,7 @@ class Asset < ApplicationRecord
     return TYPES unless owner
 
     case owner.class.name
-    when "Workshop"
+    when "Workshop", "Story"
       TYPES - [ "DownloadableAsset" ]
     else
       TYPES
