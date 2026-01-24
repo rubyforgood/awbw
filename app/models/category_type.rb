@@ -1,6 +1,4 @@
 class CategoryType < ApplicationRecord
-  self.table_name = "metadata"
-
   has_many :categories, class_name: "Category", foreign_key: :category_type_id, dependent: :destroy
   has_many :categorizable_items, through: :categories, dependent: :destroy
 
