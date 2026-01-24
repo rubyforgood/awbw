@@ -41,9 +41,9 @@ class Story < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title
+    attributes :title, :published, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
 
-    scope { join_rich_texts }
+    scope { join_rich_texts.left_joins(created_by: :facilitator) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
@@ -59,14 +59,12 @@ class Story < ApplicationRecord
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)
-    stories = self.all
-    stories = stories.search(params[:query]) if params[:query].present?
-    stories = stories.sector_names(params[:sector_names]) if params[:sector_names].present?
-    stories = stories.category_names(params[:category_names]) if params[:category_names].present?
-    stories = stories.story_name(params[:story_name]) if params[:story_name].present?
-    stories = stories.published_search(params[:published_search]) if params[:published_search].present?
-    stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
-    stories
+    conditions = {}
+    conditions[:title] = params[:title] if params[:title].present?
+    conditions[:query] = params[:query] if params[:query].present?
+    conditions[:published] = params[:published_search] if params[:published_search].present?
+
+    self.search(conditions)
   end
 
   def name
