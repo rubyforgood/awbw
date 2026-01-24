@@ -38,10 +38,13 @@
     <% timeout =
          persistent ? 12000 : 4000 %>
 
+    <% disable_outside_click = ["alert", "error"].include?(type.to_s) %>
+
     <div
       class="max-w-3xl my-2"
       data-controller="dismiss"
       data-dismiss-timeout-value="<%= timeout %>"
+      data-dismiss-disable-outside-click-value="<%= disable_outside_click %>"
     >
       <div
         class="

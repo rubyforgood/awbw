@@ -3,17 +3,25 @@ import { Controller } from "@hotwired/stimulus";
 /**
  * Dismissible UI elements (flash messages, alerts, banners).
  *
- * - Click -> instant remove
+ * - Click on close button -> instant remove
+ * - Click anywhere else on page -> instant remove (optional, enabled by default)
  * - Optional timeout -> fade out, then remove
- * - Supports both (click cancels timer)
+ * - Supports all (click cancels timer)
  *
- * <div data-controller="dismiss" data-dismiss-timeout-value="8000" data-action="click->dismiss#hide">Both behaviors</div>
+ * <div
+ *   data-controller="dismiss"
+ *   data-dismiss-timeout-value="8000"
+ *   data-action="click->dismiss#hide"
+ *   data-dismiss-disable-outside-click-value="false"
+ * >
+ *   All behaviors
+ * </div>
  */
 
 // Connects to data-controller="dismiss"
 
 export default class extends Controller {
-  static values = { timeout: Number };
+  static values = { timeout: Number, disableOutsideClick: Boolean };
 
   connect() {
     if (this.hasTimeoutValue) {
@@ -22,9 +30,25 @@ export default class extends Controller {
         this.timeoutValue,
       );
     }
+
+    // Set up outside click handler if enabled
+    if (!this.disableOutsideClickValue) {
+      this.outsideClickHandler = (event) => this.handleOutsideClick(event);
+      document.addEventListener("click", this.outsideClickHandler);
+    }
   }
+
+  handleOutsideClick(event) {
+    if (!this.element.contains(event.target)) {
+      this.hide();
+    }
+  }
+
   hide() {
     if (this.timeoutId) clearTimeout(this.timeoutId);
+    if (this.outsideClickHandler) {
+      document.removeEventListener("click", this.outsideClickHandler);
+    }
     this.element.remove();
   }
 
@@ -36,7 +60,11 @@ export default class extends Controller {
 
     setTimeout(() => this.element.classList.add("hidden"), fadeDuration);
   }
+
   disconnect() {
     if (this.timeoutId) clearTimeout(this.timeoutId);
+    if (this.outsideClickHandler) {
+      document.removeEventListener("click", this.outsideClickHandler);
+    }
   }
 }
