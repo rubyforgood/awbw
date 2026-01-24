@@ -58,6 +58,7 @@
 
               <% if current_user.super_user? %>
                 <%= link_to "Edit", edit_story_path(story),
+                                  data: {turbo_frame: "_top"},
                                   class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
               <% end %>
             </td>
@@ -78,6 +79,7 @@
       <div class="admin-only bg-blue-100 p-3">
         <%= link_to "Create a story",
                             new_story_path,
+                            data: {turbo_frame: "_top"},
                             class: "btn btn-primary" %>
       </div>
     <% end %>
