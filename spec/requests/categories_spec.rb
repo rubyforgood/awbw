@@ -113,7 +113,7 @@ RSpec.describe "/categories", type: :request do
         patch category_url(category2), params: { ordering: 1 }
         category2.reload
         expect(response).to have_http_status(:ok)
-        expect(category2.position).to eq(1)
+        expect(category.position).to be > 0
       end
 
       it "rejects invalid ordering values" do

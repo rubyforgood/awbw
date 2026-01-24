@@ -13,7 +13,10 @@ class Category < ApplicationRecord
 
   # Validations
   validates :name, presence: true, uniqueness: { case_sensitive: false }
-  validates :position, numericality: { only_integer: true, allow_nil: false }
+  validates :position, numericality: {
+    only_integer: true,
+    allow_nil: true # position gem handles assigning after validations so it needs to allow nil
+  }
 
   # Cache expiration
   after_save :expire_categories_cache
