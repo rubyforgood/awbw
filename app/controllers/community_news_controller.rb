@@ -51,7 +51,7 @@ class CommunityNewsController < ApplicationController
 
     if @community_news.save
       if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@story)
+        update_asset_owner(@community_news)
       end
       redirect_to community_news_index_path,
                   notice: "Community news was successfully created."
