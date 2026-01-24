@@ -4,42 +4,24 @@ RSpec.describe "Facilitators can download resources" do
   describe "create facilitator and resources" do
     context "When user is logged in" do
       before do
-        Capybara.current_session.current_window.resize_to(1920, 5000)
         user = create(:user)
         create(:facilitator, user: user)
-
-        file1 = Rack::Test::UploadedFile.new(
-          Rails.root.join('spec/fixtures/some_file.png'),
-          'image/png'
-        )
-
-        file2 = Rack::Test::UploadedFile.new(
-          Rails.root.join('spec/fixtures/some_file1.png'),
-          'image/png'
-        )
-
-        file3 = Rack::Test::UploadedFile.new(
-          Rails.root.join('spec/fixtures/some_file2.png'),
-          'image/png'
-        )
 
         @resource_with_both_assets = create(:resource,
           title: "Scholarship Application Guide!",
           featured: true,
           inactive: false,
-          kind: "Template",
-          primary_asset_attributes: { file: file1 },
-          gallery_assets_attributes: {
-            "0" => { file: file2 },
-            "1" => { file: file3 }
-          }
+          kind: "Template"
         )
+
+        create(:downloadable_asset, owner: @resource_with_both_assets)
+        create(:downloadable_asset, owner: @resource_with_both_assets)
 
         @resource_with_primary_only = create(:resource,
           title: "Workshop Session Template",
-          kind: "Template",
-          primary_asset_attributes: { file: file1 }
+          kind: "Template"
         )
+        create(:downloadable_asset, owner: @resource_with_primary_only)
 
         @resource_without_assets = create(:resource,
           title: "Participant Handout Package",
