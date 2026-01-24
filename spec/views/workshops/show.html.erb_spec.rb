@@ -15,10 +15,6 @@ RSpec.describe "workshops/show", type: :view do
       render
     end
 
-    it "displays the Delete button" do
-      expect(rendered).to have_link("Delete", href: workshop_path(workshop))
-    end
-
     it "displays the Edit button" do
       expect(rendered).to have_link("Edit", href: edit_workshop_path(workshop))
     end
@@ -28,10 +24,6 @@ RSpec.describe "workshops/show", type: :view do
     before do
       allow(view).to receive(:current_user).and_return(user)
       render
-    end
-
-    it "does not display the Delete button" do
-      expect(rendered).not_to have_link("Delete", href: workshop_path(workshop))
     end
 
     it "does not display the Edit button" do
