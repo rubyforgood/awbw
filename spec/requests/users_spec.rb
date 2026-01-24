@@ -147,4 +147,51 @@ RSpec.describe "/users", type: :request do
       expect(response).to redirect_to(users_url)
     end
   end
+
+  describe "POST /toggle_lock_status" do
+    context "when user is a super_user" do
+      it "locks an unlocked user" do
+        user = User.create! valid_attributes
+        expect(user.locked_at).to be_nil
+        post toggle_lock_status_user_url(user)
+        user.reload
+        expect(user.locked_at).not_to be_nil
+        expect(response).to redirect_to(edit_user_url(user))
+        expect(flash[:notice]).to eq("User has been locked.")
+      end
+
+      it "unlocks a locked user" do
+        user = create(:user, :locked)
+        expect(user.locked_at).not_to be_nil
+        post toggle_lock_status_user_url(user)
+        user.reload
+        expect(user.locked_at).to be_nil
+        expect(user.failed_attempts).to eq(0)
+        expect(response).to redirect_to(edit_user_url(user))
+        expect(flash[:notice]).to eq("User has been unlocked.")
+      end
+    end
+
+    context "when user is not a super_user" do
+      before do
+        non_admin_user = create(:user)
+        sign_in non_admin_user
+      end
+
+      it "redirects with an error message" do
+        user = User.create! valid_attributes
+        post toggle_lock_status_user_url(user)
+        expect(response).to redirect_to(users_url)
+        expect(flash[:alert]).to eq("You don't have permission to perform this action.")
+      end
+
+      it "does not change the user's lock status" do
+        user = User.create! valid_attributes
+        original_locked_at = user.locked_at
+        post toggle_lock_status_user_url(user)
+        user.reload
+        expect(user.locked_at).to eq(original_locked_at)
+      end
+    end
+  end
 end

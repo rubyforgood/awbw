@@ -1,5 +1,5 @@
 class Workshop < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
@@ -144,19 +144,12 @@ class Workshop < ApplicationRecord
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes all: [ :title, :full_name, # no spanish alternatives
+    attributes all: [ :title, :full_name ] # no spanish alternatives
+    options :all, type: :text, default: true, default_operator: :or
 
-                     :objective, :materials, :setup, :introduction,
-                     :demonstration, :opening_circle, :warm_up, :opening_circle,
-                     :creation, :closing, :notes, :tips, :misc1, :misc2,
-
-                     :objective_spanish, :materials_spanish, :setup_spanish, :introduction_spanish,
-                     :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish, :opening_circle_spanish,
-                     :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish, :misc2_spanish ]
-    # attributes category: ["categories.name"]
-    # attributes sector: ["sectors.name"]
-    # attributes user: ["first_name", "last_name"]
-    options :all, type: :text, default: true# , default_operator: :or
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   def self.grouped_by_sector

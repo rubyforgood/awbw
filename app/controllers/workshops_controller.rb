@@ -1,9 +1,7 @@
-# frozen_string_literal: true
-
 class WorkshopsController < ApplicationController
-  include AhoyViewTracking
+  include AssetUpdatable, AhoyViewTracking
   def index
-    @category_types = CategoryType.includes(:categories).published.order(:name).decorate
+    @category_types = CategoryType.published.order(:name).decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
     if turbo_frame_request?
@@ -12,8 +10,8 @@ class WorkshopsController < ApplicationController
       @sort = search_service.sort
 
       @workshops = search_service.workshops
-        .includes(:categories, :sectors, :windows_type, :user, :images, :bookmarks)
-        .paginate(page: params[:page], per_page: params[:per_page] || 50)
+        .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges, user: [ :facilitator ], primary_asset: [ :file_attachment ])
+        .paginate(page: params[:page], per_page: params[:per_page] || 20)
 
       @workshops_count = search_service.workshops.size
 
@@ -83,7 +81,7 @@ class WorkshopsController < ApplicationController
     set_form_variables
 
     if turbo_frame_request?
-      render :rich_text_assets
+      render :editor_lazy
     else
       render :edit
     end
@@ -91,7 +89,7 @@ class WorkshopsController < ApplicationController
 
   def show
     if turbo_frame_request?
-      @workshop = Workshop.with_all_rich_text.find(params[:id]).decorate
+      @workshop = Workshop.find(params[:id]).decorate
       set_show
       render partial: "show_lazy", locals: { workshop: @workshop }
     else
@@ -99,6 +97,17 @@ class WorkshopsController < ApplicationController
       track_view(@workshop)
       render :show
     end
+  end
+
+  def destroy
+    unless current_user.super_user?
+      flash[:alert] = "You do not have permission to delete a workshop"
+      return redirect_back_or_to(workshops_path)
+    end
+
+    @workshop = Workshop.find(params[:id])
+    @workshop.destroy!
+    redirect_to workshops_path, notice: "Workshop was successfully destroyed."
   end
 
   def update
@@ -132,6 +141,9 @@ class WorkshopsController < ApplicationController
     Workshop.transaction do
       if @workshop.save
         assign_associations(@workshop)
+        if params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@workshop)
+        end
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
@@ -288,6 +300,7 @@ class WorkshopsController < ApplicationController
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
+      new_assets: [ :id, :type ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ],

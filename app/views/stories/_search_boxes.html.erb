@@ -2,18 +2,30 @@
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
   <%= form_with url: stories_path,
                 method: :get,
-                local: true,
-                class: "grid grid-cols-1 md:grid-cols-5 gap-4 items-end" do |f| %>
-
+                data: {controller: "collection",
+                      turbo_frame: "story_results" },
+                      autocomplete: "off",
+                class: "flex flex-wrap gap-4" do |f| %>
     <div>
-      <%= f.label :story_name, "Title contains",
-                  class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :title, "Title contains",
+                  class: "text-sm font-medium text-gray-500 mb-1" %>
 
-      <%= f.text_field :story_name,
-                       value: params[:story_name],
+      <%= f.text_field :title,
+                       value: params[:title],
                        placeholder: "e.g. Art, Music…",
-                       class: "mt-1 block w-full rounded-md border border-gray-300 p-2",
+                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                                 focus:ring-blue-500 focus:border-blue-500",
                        oninput: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="flex-grow min-w-[200px]">
+      <%= f.label :query, "Keywords",
+                  class: "text-sm font-medium text-gray-500 mb-1" %>
+
+      <%= f.text_field :query,
+                       value: params[:query],
+                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                                 focus:ring-blue-500 focus:border-blue-500" %>
     </div>
 
     <% if current_user.super_user? %>
@@ -22,6 +34,7 @@
         <label for="published" class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">
           Published
         </label>
+
         <%= select_tag :published_search,
                        options_for_select(
                          [["All", ""], ["Published", "true"], ["Hidden", "false"]],
@@ -33,11 +46,8 @@
     <% end %>
 
     <!-- Clear -->
-    <div>
-      <%= link_to "Clear",
+    <div><%= link_to "Clear",
                   stories_path,
-                  class: "btn btn-utility-outline whitespace-nowrap" %>
-    </div>
-
+                  class: "btn btn-utility-outline whitespace-nowrap" %></div>
   <% end %>
 </div>

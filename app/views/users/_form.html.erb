@@ -104,6 +104,8 @@
   <!-- Actions -->
   <!-- Action buttons -->
   <div class="mt-6 flex flex-wrap gap-3">
+    <%= render "toggle_lock_button", user: @user %>
+
     <% if @user.persisted? %>
       <%= link_to "Delete", @user,
                   method: :delete,

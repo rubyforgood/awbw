@@ -1,0 +1,4 @@
+# Digitial Ocean App Platform Settings
+services:
+  - name: web
+    dockerfile_path: Dockerfile

@@ -35,21 +35,23 @@ Rails.application.configure do
   # URL helpers, *_url helpers, mailers
   Rails.application.routes.default_url_options[:host] ||= "localhost:3000"
 
-  # blob.url, disk service
   config.after_initialize do
+    Bullet.enable = true
+    Bullet.rails_logger = true
+
+    # blob.url, disk service
     ActiveStorage::Current.url_options = {
       protocol: "http",
       host: "localhost",
       port: 3000
     }
-  end
 
-  config.action_mailer.delivery_method = :file
-  config.after_initialize do
     if ActionMailer::Base.delivery_method == :smtp
       raise "SMTP must not be enabled in development"
     end
   end
+
+  config.action_mailer.delivery_method = :file
   config.action_mailer.perform_deliveries = true
   config.action_mailer.show_previews = true
 

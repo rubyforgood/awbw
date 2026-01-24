@@ -94,11 +94,11 @@ DATABASE_URL=trilogy://user:password@host:port/database?encoding=utf8mb4&collati
 
 These credentials also work for [staging](https://awbw-staging-xzek4.ondigitalocean.app/):
 
-- User
+- Admin
   - email: <umberto.user@example.com>
   - password: password
-- Admin
-  - email: <amy.admin@example.com>
+- User
+  - email: <amy.user@example.com>
   - password: password
 
 ## Codespaces and Dev Container - EXPERIMENTAL 🛠️

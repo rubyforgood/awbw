@@ -1,5 +1,5 @@
 class CommunityNews < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
   belongs_to :project, optional: true
   belongs_to :windows_type, optional: true
@@ -14,15 +14,20 @@ class CommunityNews < ApplicationRecord
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :rich_text_assets, -> { where(type: "RichTextAsset") },
+         as: :owner, class_name: "RichTextAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
+
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
+  has_rich_text :rhino_body
+
   # Validations
   validates :author_id, presence: true
   validates :title, presence: true, length: { maximum: 150 }
-  validates :body, presence: true
+  validates :rhino_body, presence: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -31,7 +36,10 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :body
+    attributes :title, :published, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
+
+    scope { join_rich_texts.left_joins(author: :facilitator) }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
 
   scope :featured, -> { where(featured: true) }
@@ -44,12 +52,11 @@ class CommunityNews < ApplicationRecord
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)
-    community_news = self.all
-    community_news = community_news.search(params[:query]) if params[:query].present?
-    community_news = community_news.sector_names(params[:sector_names]) if params[:sector_names].present?
-    community_news = community_news.category_names(params[:category_names]) if params[:category_names].present?
-    community_news = community_news.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
-    community_news = community_news.published_search(params[:published_search]) if params[:published_search].present?
-    community_news
+    conditions = {}
+    conditions[:title] = params[:title] if params[:title].present?
+    conditions[:query] = params[:query] if params[:query].present?
+    conditions[:published] = params[:published_search] if params[:published_search].present?
+
+    self.search(conditions)
   end
 end

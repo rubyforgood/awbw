@@ -17,7 +17,7 @@ RSpec.describe "stories/show", type: :view do
     render
     expect(rendered).to match(story_idea.project.name)
     expect(rendered).to match(story_idea.workshop.name)
-    expect(rendered).to match(/MyBody/)
+    expect(rendered).to match(/My Body/)
     expect(rendered).to match(story_idea.created_by.full_name)
   end
 end

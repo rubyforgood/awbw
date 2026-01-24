@@ -1,6 +1,6 @@
 <%= render "shared/form_dropdown", field: :rich_text_assets, label: "Editor Assets", padding: "mb-4 bg-slate-200 border border-gray-300 rounded-md" do %>
   <%= turbo_frame_tag "rich_text_assets"  do %>
-    <div class="flex flex-wrap gap-2 p-3 m-2 bg-white my-5 rounded-md">
+    <div class="flex flex-wrap justify-center gap-2 p-3 m-2 bg-white my-5 rounded-md">
       <% owner ||= @owner %>
 
       <% owner.rich_text_assets.each do |asset| %>

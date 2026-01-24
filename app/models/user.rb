@@ -43,10 +43,11 @@ class User < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :project_users, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["project_id"].blank? || attrs["title"].blank? }
+    reject_if: proc { |attrs| attrs["project_id"].blank? && attrs["title"].blank? }
 
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }
+  validates_associated :project_users
 
   # Search Cop
   include SearchCop

@@ -1,28 +1,30 @@
+<%= render "assets/form", owner: @community_news %>
+
 <%= simple_form_for(@community_news, html: { class: "space-y-8" }) do |f| %>
   <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
   <%= render 'shared/errors', resource: @community_news if @community_news.errors.any? %>
 
+  <%= tag.div class: "unpersisted_resource_asset_params" %>
+
   <!-- Content Section -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <%= f.input :title, as: :text, input_html: { rows: 1, class: "w-full" } %>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <%= f.input :published, as: :boolean, wrapper_html: { class: "flex items-center" } %>
       <%= f.input :featured, as: :boolean, wrapper_html: { class: "flex items-center" } %>
     </div>
   </div>
 
-  <div class="mt-4">
-    <%= f.input :body, as: :text,
-                input_html: { rows: 6, class: "w-full resize-y" },
-                label: "Body / Description" %>
-  </div>
+  <%= rhino_editor(f, :body, label: "Body / Description") %>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
     <%= f.input :youtube_url, as: :text,
                 label: "YouTube URL",
                 input_html: { rows: 1, class: "w-full" } %>
+
     <%= f.input :reference_url, as: :text,
                 label: "Reference URL",
                 input_html: { rows: 1, class: "w-full" } %>
@@ -55,8 +57,6 @@
                   User.where("first_name like 'awbw%' or last_name like 'awbw%'").last&.id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
   </div>
-
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
   <!-- Actions -->
   <div class="flex flex-wrap gap-3 mt-6 justify-end">

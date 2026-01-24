@@ -35,3 +35,6 @@ application.register("timeframe", TimeframeController)
 
 import RhinoSourceController from "./rhino_source_controller"
 application.register("rhino-source", RhinoSourceController)
+
+import ToggleLockController from "./toggle_lock_controller"
+application.register("toggle-lock", ToggleLockController)

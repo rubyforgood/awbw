@@ -20,7 +20,7 @@
         <%= link_to ("<span title='Download #{@resource.kind} image'>" +
           " Download <span class='fa fa-download'></span></span>").html_safe,
                     resource_download_path(@resource),
-                    class: "btn btn-utility" if @resource.download_attachment&.file&.attached? %>
+                    class: "btn btn-utility" if @resource.downloadable_asset&.file&.attached? %>
       </div>
 
       <!-- Resource Card -->
