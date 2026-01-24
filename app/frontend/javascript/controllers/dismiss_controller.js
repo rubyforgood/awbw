@@ -39,7 +39,6 @@ export default class extends Controller {
   }
 
   handleOutsideClick(event) {
-    // Don't dismiss if clicking on the message itself or the close button
     if (!this.element.contains(event.target)) {
       this.hide();
     }

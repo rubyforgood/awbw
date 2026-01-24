@@ -38,7 +38,6 @@
     <% timeout =
          persistent ? 12000 : 4000 %>
 
-    <%# Disable outside-click dismissal for alert and error messages %>
     <% disable_outside_click = ["alert", "error"].include?(type.to_s) %>
 
     <div
