@@ -3,14 +3,13 @@ class TagsController < ApplicationController
   end
 
   def sectors
-    @sectors = Rails.cache.fetch("published_sectors_with_sectorable_items", expires_in: 1.month) do
+    @sectors = Rails.cache.fetch("published_sectors", expires_in: 1.month) do
       Sector
-        .includes(:sectorable_items)
-        .references(:sectorable_items)
         .published
-        .distinct
+        .has_taggings
         .order(:name)
-        .to_a
+        .pluck(:id, :name)
+        .map { |id, name| OpenStruct.new(id: id, name: name) }
     end
   end
 
