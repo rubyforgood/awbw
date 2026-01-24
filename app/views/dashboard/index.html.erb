@@ -1,6 +1,5 @@
 <div class="bg-white">
-  <%= turbo_frame_tag "dashboard_workshops", src: authenticated_root_path do %>
-  <% end %>
+  <%= render "dashboard/workshops", title: "Featured Workshops" %>
 
   <%= turbo_frame_tag "dashboard_community_news", src: authenticated_root_path do %>
   <% end %>
