@@ -1,6 +1,5 @@
 class CommunityNewsController < ApplicationController
-  include ExternallyRedirectable
-  include AhoyViewTracking
+  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -51,6 +50,9 @@ class CommunityNewsController < ApplicationController
     @community_news = CommunityNews.new(community_news_params)
 
     if @community_news.save
+      if params.dig(:library_asset, :new_assets).present?
+        update_asset_owner(@community_news)
+      end
       redirect_to community_news_index_path,
                   notice: "Community news was successfully created."
     else
@@ -77,9 +79,6 @@ class CommunityNewsController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @community_news.build_primary_asset if @community_news.primary_asset.blank?
-    @community_news.gallery_assets.build
-
     @organizations = Project.pluck(:name, :id).sort_by(&:first)
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @community_news.author_id))
@@ -98,9 +97,7 @@ class CommunityNewsController < ApplicationController
       :title, :rhino_body, :published, :featured,
       :reference_url, :youtube_url,
       :project_id, :windows_type_id,
-      :author_id, :created_by_id, :updated_by_id,
-      primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ]
+      :author_id, :created_by_id, :updated_by_id
     )
   end
 end

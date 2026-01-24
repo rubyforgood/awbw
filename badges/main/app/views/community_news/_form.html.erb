@@ -1,8 +1,12 @@
+<%= render "assets/form", owner: @community_news %>
+
 <%= simple_form_for(@community_news, html: { class: "space-y-8" }) do |f| %>
   <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
   <%= render 'shared/errors', resource: @community_news if @community_news.errors.any? %>
+
+  <%= tag.div class: "unpersisted_resource_asset_params" %>
 
   <!-- Content Section -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -54,8 +58,6 @@
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
   </div>
 
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
-
   <!-- Actions -->
   <div class="flex flex-wrap gap-3 mt-6 justify-end">
     <% if @community_news.persisted? && current_user&.super_user? %>
@@ -70,4 +72,3 @@
     <%= f.button :submit, class: "inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition" %>
   </div>
 <% end %>
-

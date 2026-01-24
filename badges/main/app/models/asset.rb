@@ -32,7 +32,7 @@ class Asset < ApplicationRecord
       end
 
     case owner_name
-    when "Workshop", "Story"
+    when "Workshop", "Story", "CommunityNews"
       TYPES - [ "DownloadableAsset" ]
     else
       TYPES
