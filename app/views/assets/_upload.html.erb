@@ -6,6 +6,7 @@
       <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
     <% else %>
       <%= tag.div class: "unpersisted_resource_asset_params" %>
+      <%= hidden_field_tag :owner_class, owner.class.name , autocomplete: "off" %>
     <% end %>
 
     <div class="bg-gray-50 p-4 rounded-md shadow-md">

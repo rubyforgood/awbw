@@ -23,9 +23,15 @@ class Asset < ApplicationRecord
 
   def self.allowed_types_for_owner(owner)
     return TYPES unless owner
-    owner = owner&.decorated? ? owner.object : owner
 
-    case owner.class.name
+    owner_name =
+      if owner.respond_to?(:owner_class)
+        owner.owner_class
+      else
+        Draper.undecorate(owner).class.name
+      end
+
+    case owner_name
     when "Workshop", "Story"
       TYPES - [ "DownloadableAsset" ]
     else

@@ -35,7 +35,7 @@
          )
        end
      else
-       @unpersisted_owner = Data.define(:assets).new([])
+       @unpersisted_owner = Data.define(:assets, :owner_class).new([], params[:owner_class])
        @asset =  Asset.new(asset_params.except(:file))
        @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
 
@@ -44,7 +44,6 @@
            @unpersisted_owner.assets << Asset.find_by(id: asset[:id])
          end
        end
-
        valid_asset = validate_asset_type_constraint(@asset.type, @unpersisted_owner.assets)
 
        if valid_asset && @asset.save
