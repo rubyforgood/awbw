@@ -1,20 +1,24 @@
 class StoriesController < ApplicationController
-  include ExternallyRedirectable
-  include AhoyViewTracking
+  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = current_user.super_user? ? Story.all : Story.published
-    filtered = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset)
-                          .search_by_params(params)
-                          .order(created_at: :desc)
-    @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 12
+      unpaginated = current_user.super_user? ? Story.all : Story.published
+      filtered = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset)
+                            .search_by_params(params)
+                            .order(created_at: :desc)
+      @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
-    @count_display = if filtered.count == unpaginated.count
-      unpaginated.count
+      @count_display = if filtered.count == unpaginated.count
+        unpaginated.count
+      else
+        "#{filtered.count}/#{unpaginated.count}"
+      end
+      render :index_lazy
     else
-      "#{filtered.count}/#{unpaginated.count}"
+      render :index
     end
   end
 
@@ -48,6 +52,10 @@ class StoriesController < ApplicationController
     @story = Story.new(story_params)
 
     if @story.save
+      if params.dig(:library_asset, :new_assets).present?
+        update_asset_owner(@story)
+      end
+
       redirect_to stories_path, notice: "Story was successfully created."
     else
       @story = @story.decorate
@@ -88,16 +96,6 @@ class StoriesController < ApplicationController
                  .order(:first_name, :last_name)
   end
 
-  # def remove_image
-  #   @story = Story.find(params[:id])
-  #   @image = @story.images.find(params[:image_id])
-  #   @image.purge
-  #
-  #   respond_to do |format|
-  #     format.turbo_stream
-  #     format.html { redirect_to edit_story_path(@story), notice: "Asset removed." }
-  #   end
-  # end
 
   private
 
@@ -112,7 +110,8 @@ class StoriesController < ApplicationController
       :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
       primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ]
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
+      new_assets: [ :id, :type ]
     )
   end
 end

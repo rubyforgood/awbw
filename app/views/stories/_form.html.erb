@@ -1,5 +1,9 @@
+<%= render "assets/form", owner: @story %>
+
 <%= simple_form_for(story, html: { multipart: true }) do |f| %>
   <%= render 'shared/errors', resource: story if story.errors.any? %>
+
+  <%= tag.div class: "unpersisted_resource_asset_params" %>
 
   <% story_idea = @story_idea || f.object.story_idea %>
 
@@ -40,8 +44,6 @@
     </div>
 
     <%= rhino_editor(f, :body) %>
-
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
     <div class="flex gap-4 mb-6">
       <div class="flex-1">

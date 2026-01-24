@@ -1,0 +1,68 @@
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Title</th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Windows Type</th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Workshop</th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Author</th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Project</th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Updated At</th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-gray-100 animate-pulse">
+      <% 3.times do %>
+        <tr>
+          <!-- Title -->
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-5 h-5 bg-gray-200 rounded"></div>
+
+              <!-- bookmark -->
+              <div class="w-24 h-14 bg-gray-200 rounded"></div>
+
+              <!-- image (no border) -->
+              <div class="flex-1 space-y-2">
+                <div class="h-4 bg-gray-200 rounded w-24"></div>
+
+                <!-- badge -->
+                <div class="h-5 bg-gray-300 rounded w-48"></div>
+
+                <!-- title -->
+              </div>
+            </div>
+          </td>
+
+          <td class="px-4 py-3">
+            <div class="h-4 bg-gray-200 rounded w-24"></div>
+          </td>
+
+          <td class="px-4 py-3">
+            <div class="h-4 bg-gray-200 rounded w-32"></div>
+          </td>
+
+          <td class="px-4 py-3">
+            <div class="h-4 bg-gray-200 rounded w-36"></div>
+          </td>
+
+          <td class="px-4 py-3">
+            <div class="h-4 bg-gray-200 rounded w-28"></div>
+          </td>
+
+          <td class="px-4 py-3">
+            <div class="h-4 bg-gray-200 rounded w-24"></div>
+          </td>
+
+          <td class="px-4 py-3">
+            <div class="flex gap-2">
+              <div class="h-8 w-16 bg-gray-200 rounded"></div>
+              <div class="h-8 w-16 bg-gray-200 rounded"></div>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
