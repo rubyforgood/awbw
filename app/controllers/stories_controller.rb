@@ -4,7 +4,7 @@ class StoriesController < ApplicationController
 
   def index
     if turbo_frame_request?
-      per_page = params[:number_of_items_per_page].presence || 25
+      per_page = params[:number_of_items_per_page].presence || 12
       unpaginated = current_user.super_user? ? Story.all : Story.published
       filtered = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset)
                             .search_by_params(params)

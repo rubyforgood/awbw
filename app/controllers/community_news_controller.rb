@@ -5,7 +5,7 @@ class CommunityNewsController < ApplicationController
 
   def index
     if turbo_frame_request?
-      per_page = params[:number_of_items_per_page].presence || 25
+      per_page = params[:number_of_items_per_page].presence || 12
       unfiltered = current_user.super_user? ? CommunityNews.all : Community_news.published
       filtered = unfiltered.search_by_params(params)
       @community_news = filtered&.includes([ :bookmarks, :primary_asset, :author, :project, author: :facilitator ])
