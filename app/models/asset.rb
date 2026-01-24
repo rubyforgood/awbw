@@ -23,6 +23,7 @@ class Asset < ApplicationRecord
 
   def self.allowed_types_for_owner(owner)
     return TYPES unless owner
+    owner = owner&.decorated? ? owner.object : owner
 
     case owner.class.name
     when "Workshop", "Story"

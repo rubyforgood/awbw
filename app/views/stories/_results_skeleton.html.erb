@@ -1,14 +1,27 @@
-<div class="bg-white border border-gray-200 rounded-xl shadow-sm">
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
   <table class="min-w-full divide-y divide-gray-200">
-    <thead class="bg-gray-50">
+    <!-- Header skeleton -->
+    <thead class="bg-gray-50 animate-pulse">
       <tr>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Title</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Windows Type</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Workshop</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Author</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Project</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Updated At</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+        <th class="px-6 py-3 text-left">
+          <div class="h-4 w-24 rounded bg-gray-200"></div>
+        </th>
+
+        <th class="px-6 py-3 text-left">
+          <div class="h-4 w-20 rounded bg-gray-200"></div>
+        </th>
+
+        <th class="px-6 py-3 text-left">
+          <div class="h-4 w-32 rounded bg-gray-200"></div>
+        </th>
+
+        <th class="px-6 py-3 text-center">
+          <div class="h-4 w-16 mx-auto rounded bg-gray-200"></div>
+        </th>
+
+        <th class="px-6 py-3 text-right">
+          <div class="h-4 w-20 ml-auto rounded bg-gray-200"></div>
+        </th>
       </tr>
     </thead>
 
@@ -18,47 +31,40 @@
           <!-- Title -->
           <td class="px-4 py-3">
             <div class="flex items-center gap-3">
-              <div class="w-5 h-5 bg-gray-200 rounded"></div>
+              <!-- Bookmark -->
+              <div class="w-5 h-5 rounded bg-gray-200"></div>
 
-              <!-- bookmark -->
-              <div class="w-24 h-14 bg-gray-200 rounded"></div>
+              <!-- Image -->
+              <div class="w-24 h-14 rounded border border-gray-200 bg-gray-200"></div>
 
-              <!-- image (no border) -->
-              <div class="flex-1 space-y-2">
-                <div class="h-4 bg-gray-200 rounded w-24"></div>
-
-                <!-- badge -->
-                <div class="h-5 bg-gray-300 rounded w-48"></div>
-
-                <!-- title -->
+              <!-- Title + badge -->
+              <div class="flex flex-col gap-2 flex-1">
+                <div class="h-5 w-40 rounded bg-gray-200"></div>
+                <div class="h-4 w-24 rounded-full bg-gray-200"></div>
               </div>
             </div>
           </td>
 
-          <td class="px-4 py-3">
-            <div class="h-4 bg-gray-200 rounded w-24"></div>
+          <!-- Author -->
+          <td class="px-6 py-4">
+            <div class="h-4 w-32 rounded bg-gray-200"></div>
           </td>
 
-          <td class="px-4 py-3">
-            <div class="h-4 bg-gray-200 rounded w-32"></div>
+          <!-- Project -->
+          <td class="px-6 py-4">
+            <div class="h-4 w-52 rounded bg-gray-200"></div>
           </td>
 
-          <td class="px-4 py-3">
-            <div class="h-4 bg-gray-200 rounded w-36"></div>
+          <!-- Updated -->
+          <td class="px-6 py-4 text-center">
+            <div class="h-4 w-20 mx-auto rounded bg-gray-200"></div>
           </td>
 
-          <td class="px-4 py-3">
-            <div class="h-4 bg-gray-200 rounded w-28"></div>
-          </td>
-
-          <td class="px-4 py-3">
-            <div class="h-4 bg-gray-200 rounded w-24"></div>
-          </td>
-
-          <td class="px-4 py-3">
-            <div class="flex gap-2">
-              <div class="h-8 w-16 bg-gray-200 rounded"></div>
-              <div class="h-8 w-16 bg-gray-200 rounded"></div>
+          <!-- Actions -->
+          <td class="px-6 py-4 text-right">
+            <div class="inline-flex gap-2 justify-end">
+              <div class="h-8 w-14 rounded bg-gray-200"></div>
+              <div class="h-8 w-14 rounded bg-gray-200"></div>
             </div>
           </td>
         </tr>
