@@ -21,7 +21,7 @@ class TagsController < ApplicationController
           .includes(:category_type, :categorizable_items)
           .references(:category_type, :categorizable_items)
           .published
-          .select("categories.*, metadata.name AS category_type_name")
+          .select("categories.*, category_types.name AS category_type_name")
           .distinct
           .order(Arel.sql("category_type_name, categories.position, categories.name"))
 

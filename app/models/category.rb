@@ -9,7 +9,7 @@ class Category < ApplicationRecord
   has_many :categorizable_items, dependent: :destroy
   has_many :workshops, through: :categorizable_items, source: :categorizable, source_type: "Workshop"
 
-  scope :age_ranges, -> { joins(:category_type).where("metadata.name = 'AgeRange'") }
+  scope :age_ranges, -> { joins(:category_type).where("category_types.name = 'AgeRange'") }
   scope :published, -> { where(published: true) }
   scope :ordered_by_position_and_name, -> { reorder(position: :asc, name: :asc) }
 
