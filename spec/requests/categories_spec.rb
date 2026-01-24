@@ -4,7 +4,7 @@ RSpec.describe "/categories", type: :request do
   let(:valid_attributes) do
     {
       name: "Test Category",
-      metadatum_id: create(:category_type).id,
+      category_type_id: create(:category_type).id,
       published: true
     }
   end
@@ -12,7 +12,7 @@ RSpec.describe "/categories", type: :request do
   let(:invalid_attributes) do
     {
       name: "",                    # invalid: required
-      metadatum_id: nil,           # invalid: must exist
+      category_type_id: nil,       # invalid: must exist
       published: nil               # invalid: boolean required
     }
   end

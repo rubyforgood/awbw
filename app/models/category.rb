@@ -2,10 +2,9 @@ class Category < ApplicationRecord
   include NameFilterable
   include Positioning
 
-  positioned on: :metadatum_id
+  positioned on: :category_type_id
 
-  belongs_to :category_type, class_name: "CategoryType", foreign_key: :metadatum_id
-  # belongs_to :category_type, class_name: "Metadatum", foreign_key: :metadatum_id
+  belongs_to :category_type, class_name: "CategoryType", foreign_key: :category_type_id
   has_many :categorizable_items, dependent: :destroy
   has_many :workshops, through: :categorizable_items, source: :categorizable, source_type: "Workshop"
 
@@ -27,7 +26,7 @@ class Category < ApplicationRecord
 
   # Scopes
   scope :category_type_id, ->(category_type_id) {
-    category_type_id.present? ? where(metadatum_id: category_type_id) : all }
+    category_type_id.present? ? where(category_type_id: category_type_id) : all }
   scope :category_name, ->(category_name) {
     category_name.present? ? where("categories.name LIKE ?", "%#{category_name}%") : all }
   scope :published, ->(published = nil) {

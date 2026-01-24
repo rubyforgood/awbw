@@ -77,7 +77,7 @@ class CategoriesController < ApplicationController
   def category_params
     if params[:category]
       params.require(:category).permit(
-        :name, :category_type_id, :metadatum_id, :published, :position
+        :name, :category_type_id, :published, :position
       )
     else
       params.permit(:position)
