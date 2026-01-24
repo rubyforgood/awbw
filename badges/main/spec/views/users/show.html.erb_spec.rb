@@ -16,7 +16,7 @@ RSpec.describe "users/show", type: :view do
   let!(:workshop) { create(:workshop, title: "Mindful Art", user: user, windows_type: windows_type) }
 
   let!(:project) { create(:project, name: "Healing Arts") }
-  let!(:project_user) { create(:project_user, project: project, user: user, position: :leader) }
+  let!(:project_user) { create(:project_user, project: project, title: "Title", user: user, position: :leader) }
 
   before do
     assign(:user, user)
