@@ -1,0 +1,19 @@
+<%= turbo_frame_tag "dashboard_workshops" do %>
+  <%= render "dashboard/workshops", workshops: @workshops, title: "Featured Workshops" %>
+<% end %>
+
+<%= turbo_frame_tag "dashboard_community_news" do %>
+  <%= render "dashboard/community_news", community_news: @community_news %>
+<% end %>
+
+<%= turbo_frame_tag "dashboard_resources" do %>
+  <%= render "dashboard/resources", resources: @resources, title: "Popular Resources" %>
+<% end %>
+
+<%= turbo_frame_tag "dashboard_events" do %>
+  <%= render "dashboard/events", events: @events %>
+<% end %>
+
+<%= turbo_frame_tag "dashboard_stories" do %>
+  <%= render "dashboard/stories", stories: @stories %>
+<% end %>

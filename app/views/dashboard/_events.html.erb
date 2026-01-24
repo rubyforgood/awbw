@@ -6,13 +6,12 @@
                title: title,
                subtitle: "Workshops, trainings, and upcoming gatherings" %>
 
-    <% if events.any? %>
+    <% if events&.any? %>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <% events.first(4).each do |event| %>
           <%= render "events/card", event: event %>
         <% end %>
       </div>
-
       <div class="mt-6 text-right">
         <%= link_to "View all events",
                     events_path,

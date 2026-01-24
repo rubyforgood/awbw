@@ -6,9 +6,8 @@
                title: title,
                subtitle: "Spotlights from our curriculum" %>
 
-    <% if workshops.any? %>
+    <% if workshops&.any? %>
       <%= render "dashboard/workshops_carousel", workshops: workshops %>
-
       <div class="mt-6 text-right">
         <%= link_to "Search all workshops",
                     workshops_path,
