@@ -21,6 +21,11 @@
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
     <% if current_user.super_user? %>
+      <%= link_to "Delete",
+                  workshop,
+                  class: "btn btn-danger-outline",
+                  method: :delete,
+                  data: { confirm: "Are you sure you want to delete this workshop?" } %>
       <%= link_to "Edit",
                   edit_workshop_path(workshop),
                   class: "btn btn-secondary-outline admin-only bg-blue-100" %>

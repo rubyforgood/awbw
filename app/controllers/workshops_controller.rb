@@ -99,6 +99,17 @@ class WorkshopsController < ApplicationController
     end
   end
 
+  def destroy
+    unless current_user.super_user?
+      flash[:alert] = "You do not have permission to delete a workshop"
+      return redirect_back_or_to(workshops_path)
+    end
+
+    @workshop = Workshop.find(params[:id])
+    @workshop.destroy!
+    redirect_to workshops_path, notice: "Workshop was successfully destroyed."
+  end
+
   def update
     @workshop = Workshop.find(params[:id])
     success = false
