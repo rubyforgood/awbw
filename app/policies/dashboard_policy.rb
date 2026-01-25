@@ -17,7 +17,7 @@ class DashboardPolicy < ApplicationPolicy
   end
 
   # For viewing other users' recent activities
-  def view_all_activities?
+  def view_other_user_activities?
     admin?
   end
 end

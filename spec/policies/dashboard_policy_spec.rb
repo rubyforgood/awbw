@@ -25,15 +25,15 @@ RSpec.describe DashboardPolicy do
     end
   end
 
-  describe "#view_all_activities?" do
+  describe "#view_other_user_activities?" do
     it "allows admin users" do
       policy = described_class.new(:dashboard, user: admin_user)
-      expect(policy.view_all_activities?).to be true
+      expect(policy.view_other_user_activities?).to be true
     end
 
     it "denies regular users" do
       policy = described_class.new(:dashboard, user: regular_user)
-      expect(policy.view_all_activities?).to be false
+      expect(policy.view_other_user_activities?).to be false
     end
   end
 end

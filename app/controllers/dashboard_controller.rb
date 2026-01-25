@@ -51,7 +51,7 @@ class DashboardController < ApplicationController
   end
 
   def recent_activities
-    @user = (allowed_to?(:view_all_activities?, with: DashboardPolicy) && params[:user_id].present?) ? User.find(params[:user_id]) : current_user
+    @user = (allowed_to?(:view_other_user_activities?, with: DashboardPolicy) && params[:user_id].present?) ? User.find(params[:user_id]) : current_user
     if params[:user_id] && params[:user_id].empty?
       recent = []
       recent.concat(User.order(updated_at: :desc).limit(10))
