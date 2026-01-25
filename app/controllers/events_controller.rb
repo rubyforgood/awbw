@@ -3,7 +3,7 @@ class EventsController < ApplicationController
   before_action :set_event, only: %i[ show edit update destroy ]
 
   def index
-    unpaginated = authorized_scope(Event, with: EventPolicy).search_by_params(params)
+    unpaginated = authorized_scope(Event).search_by_params(params)
     @events = unpaginated.order(start_date: :desc)
   end
 

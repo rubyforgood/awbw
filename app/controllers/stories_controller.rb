@@ -5,7 +5,7 @@ class StoriesController < ApplicationController
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      unpaginated = authorized_scope(Story, with: StoryPolicy)
+      unpaginated = authorized_scope(Story)
       filtered = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset)
                             .search_by_params(params)
                             .order(created_at: :desc)
