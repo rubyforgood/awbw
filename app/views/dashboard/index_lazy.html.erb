@@ -11,7 +11,7 @@
 <% end %>
 
 <%= turbo_frame_tag "dashboard_events" do %>
-  <%= render "dashboard/events", events: @events %>
+  <%= render "events_cards", events: @events %>
 <% end %>
 
 <%= turbo_frame_tag "dashboard_stories" do %>
