@@ -138,9 +138,6 @@ class ResourcesController < ApplicationController
     params.require(:resource).permit(
       :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
-      primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ],
-      new_assets: [ :id, :type ],
       categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
     )

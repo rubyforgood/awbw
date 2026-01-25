@@ -1,9 +1,13 @@
+<%= render "assets/form", owner: @event %>
+
 <%= simple_form_for(@event) do |f| %>
   <% f.input :created_by_id, as: :hidden, value: current_user.id %>
 
   <% if @event.errors.any? %>
     <%= render 'shared/errors', resource: @event %>
   <% end %>
+
+    <%= tag.div class: "unpersisted_resource_asset_params" %>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div>
@@ -97,8 +101,6 @@
       <% end %>
     </div>
   <% end %>
-
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
   <div class="flex items-center justify-between gap-4">
     <div>

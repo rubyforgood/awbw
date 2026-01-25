@@ -1,5 +1,5 @@
 class EventsController < ApplicationController
-  include AhoyViewTracking
+  include AhoyViewTracking, AssetUpdatable
   before_action :set_event, only: %i[ show edit update destroy ]
   before_action :authorize_admin!, only: %i[ edit update destroy ]
 
@@ -32,6 +32,9 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if @event.save
+        if params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@event)
+        end
         format.html { redirect_to events_path, notice: "Event was successfully created." }
         format.json { render :show, status: :created, location: @event }
       else
@@ -84,9 +87,7 @@ class EventsController < ApplicationController
                                   :featured,
                                   :start_date, :end_date,
                                   :registration_close_date,
-                                  :publicly_visible,
-                                  primary_asset_attributes: [ :id, :file, :_destroy ],
-                                  gallery_assets_attributes: [ :id, :file, :_destroy ]
+                                  :publicly_visible
                                   )
   end
 
