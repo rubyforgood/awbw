@@ -20,9 +20,6 @@ RSpec.describe "categories/edit", type: :view do
     # Category Type select
     assert_select "select[name=?]", "category[metadatum_id]"
 
-    # Position field
-    assert_select "input[name=?][type=number]", "category[position]"
-
     # Published checkbox
     assert_select "input[name=?][type=checkbox]", "category[published]"
   end

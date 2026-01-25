@@ -26,12 +26,15 @@
                     input_html: { class: "form-control" } %>
       </div>
 
-      <!-- Position -->
       <div class="flex-1 min-w-[150px]">
-        <%= f.input :position,
-                    label: "Position",
-                    as: :integer,
-                    input_html: { class: "form-control", type: "number" } %>
+        <label class="block text-md font-medium text-gray-700 mb-3">
+          Position
+        </label>
+        <div class="flex gap-x-2 items-center">
+          <span class="text-gray-900 font-medium mb-2">
+            <%= f.object.position %>
+          </span>
+        </div>
       </div>
 
       <!-- Published -->

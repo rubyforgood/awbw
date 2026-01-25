@@ -22,9 +22,9 @@
               <% if @categories.any? %>
                 <table class="w-full table-fixed border-collapse border border-gray-200">
                   <thead class="bg-gray-100">
-                  <tr>
+                    <tr>
                     <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/3">
-                      Name
+                      Order&nbsp;&nbsp;&nbsp;&nbsp;Name
                     </th>
 
                     <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/4">
@@ -47,12 +47,19 @@
                   </tr>
                   </thead>
 
-                  <tbody class="divide-y divide-gray-200">
-                  <% @categories.each do |category| %>
-                    <tr class=" <%= "bg-gray-200" unless category.published %>
-                  <%= category.published ? "hover:bg-gray-50" : "hover:bg-gray-100" %> transition-colors duration-150">
-
+                  <tbody 
+                    class="divide-y divide-gray-200"
+                    data-controller="sortable"
+                    data-sortable-url-value="<%= category_path(id: ":id") %>">
+                    <% @categories.each do |category| %>
+                      <tr class="<%= "bg-gray-200" unless category.published %> <%= category.published ? "hover:bg-gray-50" : "hover:bg-gray-100" %>
+                        transition-colors duration-150"
+                      data-sortable-id="<%= category.id %>">
                       <td class="px-4 py-2 text-md text-gray-800 truncate font-bold">
+                        <span class="px-4">
+                          <i class="fa-solid fa-sort cursor-move text-gray-400 hover:text-gray-600"
+                             data-sortable-handle=""></i>
+                        </span>
                         <%= category.name %>
                       </td>
 
@@ -79,7 +86,7 @@
                       <% end %>
 
                       <!-- Actions -->
-                      <td class="px-4 py-2 text-center">
+                      <td class="px-4 py-2 text-center text-nowrap">
                         <%= link_to "Edit",
                                     edit_category_path(category),
                                     class: "btn btn-secondary-outline whitespace-nowrap" %>
@@ -89,7 +96,7 @@
                       </td>
 
                     </tr>
-                  <% end %>
+                    <% end %>
                   </tbody>
                 </table>
               <% else %>
