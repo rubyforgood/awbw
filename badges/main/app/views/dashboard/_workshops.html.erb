@@ -6,16 +6,8 @@
                title: title,
                subtitle: "Spotlights from our curriculum" %>
 
-    <% if workshops.any? %>
-      <%= render "dashboard/workshops_carousel", workshops: workshops %>
-
-      <div class="mt-6 text-right">
-        <%= link_to "Search all workshops",
-                    workshops_path,
-                    class: "text-primary font-medium hover:underline" %>
-      </div>
-    <% else %>
-      <p class="text-gray-500">No workshops available right now.</p>
+    <%= turbo_frame_tag "dashboard_workshops", src: unauthenticated_root_path do %>
+      <%= render "workshops_cards_skeleton" %>
     <% end %>
   </div>
 </section>

@@ -6,20 +6,8 @@
                title: title,
                subtitle: "Announcements and updates" %>
 
-    <% if community_news.any? %>
-      <div class="space-y-4">
-        <% community_news.first(3).each do |news| %>
-          <%= render "community_news/community_news_card", news: news %>
-        <% end %>
-      </div>
-
-      <div class="mt-6 text-right">
-        <%= link_to "Read all news",
-                    community_news_index_path,
-                    class: "text-primary font-medium hover:underline" %>
-      </div>
-    <% else %>
-      <p class="text-gray-500">No news available.</p>
+    <%= turbo_frame_tag "dashboard_community_news", src: authenticated_root_path do %>
+      <%= render "community_news_cards_skeleton" %>
     <% end %>
   </div>
 </section>

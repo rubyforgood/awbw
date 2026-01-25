@@ -1,0 +1,14 @@
+<% if @resources&.any? %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% @resources.each do |resource| %>
+      <%= render "resources/resource_card", resource: resource.decorate %>
+    <% end %>
+  </div>
+  <div class="mt-6 text-right">
+    <%= link_to "Browse all resources",
+                resources_path,
+                class: "text-primary font-medium hover:underline" %>
+  </div>
+<% else %>
+  <p class="text-gray-500 text-center py-10">No popular resources yet.</p>
+<% end %>

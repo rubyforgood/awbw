@@ -1,0 +1,51 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <% 3.times do %>
+    <div
+      class="
+        flex flex-row flex-wrap
+        bg-white border border-gray-200 rounded-xl shadow-sm
+        overflow-hidden animate-pulse
+      "
+    >
+      <!-- LEFT SIDE -->
+      <div
+        class="
+          flex-shrink-0
+          w-40 md:w-40
+          flex flex-col items-center text-center justify-center
+          py-4 pb-3 px-3
+          border-b md:border-b-0 md:border-r border-gray-200
+        "
+      >
+        <!-- IMAGE SKELETON -->
+        <div class="w-32 h-32 bg-gray-200 rounded border border-gray-300"></div>
+
+        <!-- TYPE -->
+        <div class="mt-2 h-3 w-16 bg-gray-200 rounded"></div>
+      </div>
+
+      <!-- RIGHT SIDE -->
+      <div class="flex-1 min-w-0 pl-4 pr-10 pb-12 mt-2 relative">
+        <!-- TITLE -->
+        <div class="mt-3 mb-2">
+          <div class="h-5 w-3/4 bg-gray-200 rounded"></div>
+        </div>
+
+        <!-- OPTIONAL SUB LINE -->
+        <div class="h-3 w-1/2 bg-gray-200 rounded mt-2"></div>
+
+        <!-- ACTION BUTTONS SKELETON -->
+        <div class="absolute bottom-3 right-3 flex items-center space-x-2">
+          <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+          <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<div class="mt-6 text-right">
+  <%= link_to "Browse all resources",
+                    resources_path,
+                    class: "text-primary font-medium hover:underline" %>
+</div>

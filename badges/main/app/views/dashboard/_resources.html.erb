@@ -1,26 +1,13 @@
 <% title ||= "Popular Resources" %>
 
-<section class="py-10 bg-violet-50">
+<section class="mt-6 py-10 bg-violet-50">
   <div class="max-w-6xl mx-auto px-4">
     <%= render "dashboard/dashboard_section_header",
                title: title,
                subtitle: "Tools and activities used across our network" %>
 
-    <% if @resources.any? %>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <% @resources.each do |resource| %>
-          <%= render "resources/resource_card", resource: resource.decorate %>
-        <% end %>
-      </div>
-
-      <div class="mt-6 text-right">
-        <%= link_to "Browse all resources",
-                    resources_path,
-                    class: "text-primary font-medium hover:underline" %>
-      </div>
-
-    <% else %>
-      <p class="text-gray-500 text-center py-10">No popular resources yet.</p>
+    <%= turbo_frame_tag "dashboard_resources", src: authenticated_root_path do %>
+      <%= render "resources_cards_skeleton" %>
     <% end %>
   </div>
 </section>
