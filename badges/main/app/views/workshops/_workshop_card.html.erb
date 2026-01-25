@@ -11,7 +11,7 @@
   </div>
 
   <!-- FULLY CLICKABLE CARD CONTENT -->
-  <%= link_to workshop_path(workshop), data: { turbo_prefetch: false }, class: "block h-full" do %>
+  <%= link_to workshop_path(workshop), data: { turbo_prefetch: false, turbo_frame: "_top" }, class: "block h-full" do %>
     <!-- Media -->
     <%= render "assets/display_image",
                resource: workshop,

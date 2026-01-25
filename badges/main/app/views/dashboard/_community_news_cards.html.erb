@@ -7,6 +7,7 @@
   <div class="mt-6 text-right">
     <%= link_to "Read all news",
                 community_news_index_path,
+                data: { turbo_frame: "_top"},
                 class: "text-primary font-medium hover:underline" %>
   </div>
 <% else %>

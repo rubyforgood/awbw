@@ -4,6 +4,7 @@
     <div class="mt-6 text-right">
       <%= link_to "Search all workshops",
               workshops_path,
+              data: { turbo_frame: "_top"},
               class: "text-primary font-medium hover:underline" %>
     </div>
   <% else %>
