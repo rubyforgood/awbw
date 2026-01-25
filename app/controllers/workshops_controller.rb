@@ -6,7 +6,7 @@ class WorkshopsController < ApplicationController
     @windows_types = WindowsType.all
     if turbo_frame_request?
       search_service = WorkshopSearchService.new(params,
-        super_user: current_user.super_user?).call
+        super_user: allowed_to?(:admin?, with: AdminPolicy)).call
       @sort = search_service.sort
 
       @workshops = search_service.workshops

@@ -1,7 +1,7 @@
 class WorkshopMentionsController < ApplicationController
   def index
-    # TODO add action_policy scope for super_user
-    @workshops = Workshop.where(id: params[:query])
+    base_scope = authorized_scope(Workshop, with: WorkshopMentionPolicy)
+    @workshops = base_scope.where(id: params[:query])
     respond_to do |format|
       format.json
     end

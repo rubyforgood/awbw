@@ -4,7 +4,7 @@ class ResourcesController < ApplicationController
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 18
-      unfiltered = Resource.where(kind: Resource::PUBLISHED_KINDS) # TODO - #FIXME brittle
+      unfiltered = authorized_scope(Resource)
         .includes(:primary_asset, :gallery_assets, :attachments, :bookmarks, :downloadable_asset, primary_asset: [ :file_attachment ], downloadable_asset: [ :file_attachment ])
       filtered = unfiltered.search_by_params(params)
         .by_created
