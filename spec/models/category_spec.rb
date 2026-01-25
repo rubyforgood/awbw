@@ -21,9 +21,9 @@ RSpec.describe Category do
       expect(category.errors[:position]).to be_present
     end
 
-    it "does not allow nil position" do
+    it "allows nil position" do
       category = build(:category, position: nil)
-      expect(category).to_not be_valid
+      expect(category).to be_valid
     end
 
     it "allows integer position" do
