@@ -141,7 +141,7 @@ RSpec.describe "/categories", type: :request do
         cat2_type1 = create(:category, name: "Cat2 Type1", category_type: category_type1, position: 2)
         cat1_type2 = create(:category, name: "Cat1 Type2", category_type: category_type2, position: 1)
         # Update position of cat2_type1
-        patch category_url(cat2_type1), params: { ordering: 1 }
+        patch category_url(cat2_type1), params: { position: 1 }
         cat2_type1.reload
         cat1_type1.reload
         cat1_type2.reload

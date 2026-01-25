@@ -43,11 +43,17 @@ class CategoriesController < ApplicationController
   end
 
   def update
-    if @category.update(category_params)
-      redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other
-    else
-      set_form_variables
-      render :edit, status: :unprocessable_content
+    respond_to do |format|
+      if @category.update(category_params)
+        format.html { redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other }
+        format.json { head :ok }
+      else
+        format.html do
+          set_form_variables
+          render :edit, status: :unprocessable_entity
+        end
+        format.json { render json: { errors: @category.errors }, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -69,8 +75,12 @@ class CategoriesController < ApplicationController
 
   # Strong parameters
   def category_params
-    params.require(:category).permit(
-      :name, :category_type_id, :metadatum_id, :published, :position
-    )
+    if params[:category]
+      params.require(:category).permit(
+        :name, :category_type_id, :metadatum_id, :published, :position
+      )
+    else
+      params.permit(:position)
+    end
   end
 end
