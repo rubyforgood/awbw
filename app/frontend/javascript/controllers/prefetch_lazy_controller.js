@@ -1,3 +1,4 @@
+// https://radanskoric.com/articles/load-lazy-loaded-frame-before-it-scrolls-in-view
 import { Controller } from "@hotwired/stimulus";
 
 // Connects to data-controller="prefetch-lazy"
