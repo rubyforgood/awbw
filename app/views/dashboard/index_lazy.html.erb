@@ -3,7 +3,7 @@
 <% end %>
 
 <%= turbo_frame_tag "dashboard_community_news" do %>
-  <%= render "dashboard/community_news", community_news: @community_news %>
+  <%= render "community_news_cards", community_news: @community_news %>
 <% end %>
 
 <%= turbo_frame_tag "dashboard_resources" do %>

@@ -10,8 +10,6 @@ class DashboardController < ApplicationController
                             .published
                             .decorate
         @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
-
-        render :index_lazy
       when "dashboard_resources"
         @resources = Resource.includes(:bookmarks, :downloadable_asset, :primary_asset, :gallery_assets)
                              .featured
@@ -19,7 +17,7 @@ class DashboardController < ApplicationController
                              .order(position: :asc, created_at: :desc)
                              .limit(6)
                              .decorate
-        render :index_lazy
+
       when "dashboard_stories"
         @stories = Story.featured
                         .published
@@ -30,15 +28,15 @@ class DashboardController < ApplicationController
                                        .published
                                        .order(updated_at: :desc)
                                        .decorate
-        render :index_lazy
+
       when "dashboard_events"
         @events = Event.includes(:event_registrations, :primary_asset, :gallery_assets)
                        .featured
                        .published
                        .order(:start_date)
                        .decorate
-        render :index_lazy
       end
+      render :index_lazy
     else
       render :index
     end

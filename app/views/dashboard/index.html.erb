@@ -1,7 +1,5 @@
 <%= render "dashboard/workshops", title: "Featured Workshops" %>
-
-<%= turbo_frame_tag "dashboard_community_news", src: authenticated_root_path do %>
-<% end %>
+<%= render "dashboard/community_news" %>
 
 <%= turbo_frame_tag "dashboard_resources", src: authenticated_root_path do %>
 <% end %>
