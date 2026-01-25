@@ -26,11 +26,44 @@ class WorkshopIdea < ApplicationRecord
   before_save :set_time_frame
 
   # Nested attributes
-  accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true
+
+  has_rich_text :rhino_objective
+  has_rich_text :rhino_materials
+  has_rich_text :rhino_optional_materials
+  has_rich_text :rhino_setup
+  has_rich_text :rhino_introduction
+  has_rich_text :rhino_opening_circle
+  has_rich_text :rhino_demonstration
+  has_rich_text :rhino_warm_up
+  has_rich_text :rhino_visualization
+  has_rich_text :rhino_creation
+  has_rich_text :rhino_closing
+  has_rich_text :rhino_notes
+  has_rich_text :rhino_tips
+  has_rich_text :rhino_misc1
+  has_rich_text :rhino_misc2
+  has_rich_text :rhino_extra_field
+
+  has_rich_text :rhino_objective_spanish
+  has_rich_text :rhino_materials_spanish
+  has_rich_text :rhino_optional_materials_spanish
+  has_rich_text :rhino_age_range_spanish
+  has_rich_text :rhino_setup_spanish
+  has_rich_text :rhino_introduction_spanish
+  has_rich_text :rhino_opening_circle_spanish
+  has_rich_text :rhino_demonstration_spanish
+  has_rich_text :rhino_warm_up_spanish
+  has_rich_text :rhino_visualization_spanish
+  has_rich_text :rhino_creation_spanish
+  has_rich_text :rhino_closing_spanish
+  has_rich_text :rhino_notes_spanish
+  has_rich_text :rhino_tips_spanish
+  has_rich_text :rhino_misc1_spanish
+  has_rich_text :rhino_misc2_spanish
+  has_rich_text :rhino_extra_field_spanish
 
   # Scopes
   scope :title, ->(title) { where("workshop_ideas.title like ?", "%#{ title }%") }

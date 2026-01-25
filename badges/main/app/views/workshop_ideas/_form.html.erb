@@ -1,10 +1,13 @@
-<div class="rounded-xl bg-white p-6">
-  <div class="w-full mx-auto" data-controller="timeframe">
-    <%= simple_form_for @workshop_idea do |f| %>
+<%= render "assets/form", owner: workshop_idea %>
+
+<div class="w-full mx-auto" data-controller="timeframe">
+  <%= simple_form_for workshop_idea do |f| %>
     <!-- Errors -->
     <% if workshop_idea.errors.any? %>
       <%= render 'shared/errors', resource: workshop_idea %>
     <% end %>
+
+    <%= tag.div class: "unpersisted_resource_asset_params" %>
 
     <% if current_user.super_user && f.object.workshops.any? %>
       <div class="admin-only bg-yellow-100 m-3 p-3">
@@ -30,7 +33,7 @@
                     input_html: { rows: 2,
                                   class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                     wrapper: false,
-                    label_html: { class: 'block text-sm font-medium text-gray-700 mb-1' } %>
+                    label_html: { class: "font-medium block text-gray-700 mb-1" } %>
       </div>
 
       <div>
@@ -44,44 +47,19 @@
       </div>
 
       <div>
-        <%= f.input :age_range,
-                    as: :select,
-                    required: true,
-                    collection: @age_ranges,
-                    selected: f.object.age_range,
-                    input_html: { value: f.object.age_range,
-                                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-      </div>
-    </div>
+        <label class="block text-md font-medium text-gray-700 mb-1">Timeframe / Duration</label>
 
-    <!-- Row 2 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <%= f.input :objective, as: :text, label: "Workshop objective",
-                  hint: "Indicate goals of the workshop",
-                  input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
-      <div>
-        <label class="block text-md font-medium text-gray-700 mb-1">
-          Timeframe / Duration
-        </label>
         <div class="flex gap-x-2 font-bold text-xl items-center">
-          <span data-timeframe-target="output"
-            class="text-gray-900 font-medium">
-            <%= f.object.time_frame_total %>
-          </span>
+          <span data-timeframe-target="output" class="text-gray-900 font-medium"><%= f.object.time_frame_total %></span>
         </div>
+
         <p class="text-sm text-gray-500 mt-1">
           Automatic total time, in 15min increments
         </p>
       </div>
+    </div>
 
-      <%= f.input :description, as: :text, label: "Workshop description",
-                  hint: "Describe the workshop",
-                  input_html: { rows: 1,
-                                class: "block w-full rounded-md border-gray-300 shadow-sm
-                                focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
-
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <% if current_user.super_user %>
         <div class="admin-only bg-blue-100 flex gap-x-2 items-center p-3">
           <%= f.input :created_by_id,
@@ -94,242 +72,344 @@
       <% end %>
     </div>
 
-    <!-- Row 3 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <%= f.input :materials, as: :text, label: "Materials needed",
-                  hint: "List all materials needed to create the workshop",
-                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
-      <%= f.input :optional_materials, as: :text, label: "Optional materials",
-                  hint: "List other optional materials",
-                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
-      <%= f.input :setup, as: :text, label: "Set Up Instructions",
-                  hint: "Include any tips needed to prep the workshop",
-                  input_html: { rows: 2, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-    </div>
-
-    <!-- Opening circle -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <%= f.input :introduction,
-                      as: :text,
-                      label: "Introduction",
-                      hint: "Include a description of the introduction",
-                      input_html: { rows: 2,
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-        <div class="w-24">
-          <%= f.input :time_intro,
-                      label: "Minutes",
-                      input_html: { min: 0,
-                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-      </div>
-
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <%= f.input :opening_circle,
-                      as: :text,
-                      label: "Opening circle",
-                      hint: "Include a description of the opening circle",
-                      input_html: { rows: 2,
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-        <div class="w-24">
-          <%= f.input :time_opening_circle,
-                      label: "Minutes",
-                      input_html: { min: 0,
-                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-      </div>
-    </div>
-
-    <!-- Demonstration / Warm-up / Creation / Closing -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-      <!-- Demonstration -->
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <%= f.input :demonstration,
-                      as: :text,
-                      label: "Demonstration Instructions",
-                      hint: "Include a description of a demonstration of the activity",
-                      input_html: { rows: 2,
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-        <div class="w-24">
-          <%= f.input :time_demonstration,
-                      label: "Minutes",
-                      input_html: { min: 0,
-                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-      </div>
-
-      <!-- Warm Up -->
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <%= f.input :warm_up,
-                      as: :text,
-                      label: "Warm-up / relaxation / meditation",
-                      hint: "Include a warm-up or relaxation activity",
-                      input_html: { rows: 2,
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-        <div class="w-24">
-          <%= f.input :time_warm_up,
-                      label: "Minutes",
-                      input_html: { min: 0,
-                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-      </div>
-
-      <!-- Creation -->
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <%= f.input :creation,
-                      as: :text,
-                      label: "Creation",
-                      hint: "Step by step how to create the workshop",
-                      input_html: { rows: 3,
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-        <div class="w-24">
-          <%= f.input :time_creation,
-                      label: "Minutes",
-                      input_html: { min: 0,
-                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-      </div>
-
-      <!-- Closing -->
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <%= f.input :closing,
-                      as: :text,
-                      label: "Closing",
-                      hint: "Step by step how to close the workshop",
-                      input_html: { rows: 3,
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-        <div class="w-24">
-          <%= f.input :time_closing,
-                      label: "Minutes",
-                      input_html: { min: 0,
-                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
-                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- Notes / Tips / Date -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <%= f.input :notes, as: :text,
-                  hint: "Anything else you'd like us to know",
-                  input_html: { rows: 2,
-                                class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
-                                focus:border-blue-500 sm:text-sm" } %>
-      <%= f.input :tips, as: :text,
-                  hint: "Any tips on how to make this workshop a success",
-                  input_html: { rows: 2,
-                                class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
-                                focus:border-blue-500 sm:text-sm" } %>
-      <% if current_user.super_user? %>
-        <div class="admin-only bg-blue-100 p-3">
-          <%= f.input :staff_notes, as: :text,
-                      input_html: { rows: 2,
-                                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
-                                    focus:border-blue-500 sm:text-sm" } %>
-        </div>
+    <%= render "shared/form_dropdown", field: :body, label: "Body", padding: "mb-4 border border-gray-300 rounded-md" do %>
+      <%= render "shared/form_dropdown", form: f, field: :extra_field, label: "Extra Field" do %>
+        <%= rhino_editor(f, :extra_field) %>
       <% end %>
 
-    </div>
+      <%= render "shared/form_dropdown", form: f, field: :objective, label: "Workshop objective" do %>
+        <%= rhino_editor(f, :objective,
+                  hint: "Indicate goals of the workshop") %>
+      <% end %>
 
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+      <%= render "shared/form_dropdown", form: f, field: :materials, label: "Materials needed" do %>
+        <%= rhino_editor(f, :materials,
+                  hint: "List all materials needed to create the workshop") %>
+      <% end %>
 
+      <%= render "shared/form_dropdown", form: f, field: :optional_materials, label: "Optional materials" do %>
+        <%= rhino_editor(f, :optional_materials) %>
+      <% end %>
+
+      <%= render "shared/form_dropdown", form: f, field: :setup, label: "Set Up Instructions" do %>
+        <%= rhino_editor(f, :setup,
+                  hint: "Include any tips needed to prep",) %>
+      <% end %>
+
+      <!-- Intro/opening -->
+
+      <%= render "shared/form_dropdown", form: f, field: :introduction, label: "Introduction" do %>
+        <%= f.input :time_intro,
+                      label: "Minutes",
+                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+
+        <%= rhino_editor(f, :introduction,
+                      hint: "Include a description of the introduction") %>
+      <% end %>
+
+      <%= render "shared/form_dropdown", form: f, field: :opening_circle, label: "Opening circle" do %>
+        <%= f.input :time_opening_circle,
+                      label: "Minutes",
+                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+
+        <%= rhino_editor(f, :opening_circle,
+                      hint: "Include a description of the opening circle") %>
+      <% end %>
+
+      <!-- Demonstration -->
+
+      <%= render "shared/form_dropdown", form: f, field: :demonstration, label: "Demonstration Instructions" do %>
+        <%= f.input :time_demonstration,
+                      label: "Minutes",
+                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+
+        <%= rhino_editor(f, :demonstration,
+                      hint: "Include a description of a demonstration of the activity") %>
+      <% end %>
+
+      <!-- Warm Up -->
+
+      <%= render "shared/form_dropdown", form: f, field: :warm_up, label: "Warm-up / relaxation / meditation" do %>
+        <%= f.input :time_warm_up,
+                      label: "Minutes",
+                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+
+        <%= rhino_editor(f, :warm_up,
+                      hint: "Include a warm-up or relaxation activity") %>
+      <% end %>
+
+      <!-- visualization -->
+
+      <%= render "shared/form_dropdown", form: f, field: :visualization, label: "Visualization" do %>
+        <%= rhino_editor(f, :visualization) %>
+      <% end %>
+
+      <!-- Creation -->
+
+      <%= render "shared/form_dropdown", form: f, field: :creation, label: "Creation" do %>
+        <%= f.input :time_creation,
+                      label: "Minutes",
+                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+
+        <%= rhino_editor(f, :creation,
+                      hint: "Step-by-step how to create the workshop") %>
+      <% end %>
+
+      <!-- Closing -->
+
+      <%= render "shared/form_dropdown", form: f, field: :closing, label: "Closing" do %>
+        <%= f.input :time_closing,
+                      label: "Minutes",
+                      wrapper_html: { class: "flex items-center gap-2 w-40 pl-2 pt-3 " },
+                      input_html: { min: 0,
+                                    data: { timeframe_target: "input", action: "input->timeframe#update" },
+                                    class: "w-full border rounded-md p-2 focus:ring focus:ring-blue-500" } %>
+
+        <%= rhino_editor(f, :closing,
+                      hint: "Step-by-step how to close the workshop") %>
+      <% end %>
+
+      <!-- Notes / Tips / Date -->
+
+      <%= render "shared/form_dropdown", form: f, field: :notes, label: "Notes" do %>
+        <%= rhino_editor(f, :notes,
+                  hint: "Anything else you'd like us to know") %>
+      <% end %>
+
+      <%= render "shared/form_dropdown", form: f, field: :tips, label: "Tips" do %>
+        <%= rhino_editor(f, :tips, label: "Tips",
+                  hint: "Any tips on how to make this workshop a success") %>
+      <% end %>
+    <% end %>
+
+<% 
+=begin %>
     <!-- Accordions -->
     <div class="space-y-4">
-      <div>
-        <button type="button" class="w-full bg-gray-600 text-white px-3 py-2 rounded-t-md accordion-toggle">Spanish Translations</button>
-        <div class="accordion-content hidden border border-gray-300 p-4 rounded-b-md">
+      <div class="tags-section" data-controller="dropdown">
+        <button
+          type="button"
+          id="tags_button"
+          class="
+            flex items-center justify-between cursor-pointer w-full
+            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+          "
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'
+        >
+          Tags
+          <svg
+            id="tags_arrow"
+            class="w-6 h-6 shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+        </button>
+
+        <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+            <!-- Header -->
+            <h3 class="text-base font-semibold text-gray-800 mb-3">
+              Service Populations
+            </h3>
+
+            <!-- Checkbox List -->
+
+            <div class="flex flex-wrap gap-3">
+              <% @sectors.each do |sector| %>
+                <% id = "workshop_sector_ids_#{sector.id}" %>
+
+                <label
+                  for="<%= id %>"
+                  class="
+                    flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
+                    rounded-lg shadow-sm hover:bg-gray-100 transition
+                  "
+                >
+                  <%= check_box_tag "workshop[sector_ids][]",
+                                    sector.id,
+                                    @workshop.sector_ids.include?(sector.id),
+                                    id: id,
+                                    class: "h-4 w-4 text-blue-600 rounded" %>
+
+                  <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+                </label>
+              <% end %>
+            </div>
+
+          </div>
+
+          <div class="form-group space-y-6">
+            <% @categories_grouped.each do |type, cats| %>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+                <!-- Header -->
+                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.titleize %></h3>
+
+                <!-- Checkbox List -->
+                <div class="flex flex-wrap gap-3">
+                  <% cats.sort_by { |c| c.name.to_s }.each do |category| %>
+                    <% id = "workshop_category_ids_#{category.id}" %>
+
+                    <label
+                      for="<%= id %>"
+                      class="
+                        flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
+                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition
+                      "
+                    >
+                      <%= check_box_tag "workshop[category_ids][]",
+                                        category.id,
+                                        @workshop.category_ids.include?(category.id),
+                                        id: id,
+                                        class: "h-4 w-4 text-blue-600 rounded" %>
+
+                      <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="spanish-translations-section" data-controller="dropdown">
+        <button
+          type="button"
+          id="translations_button"
+          class="
+            flex items-center justify-between cursor-pointer w-full
+            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+          "
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"translations":"hidden"}, {"translations_arrow":"rotate-180"}, {"translations_button":"rounded-md rounded-t-md"}]'
+        >
+          Spanish Translations
+          <svg
+            id="translations_arrow"
+            class="w-6 h-6 shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+        </button>
+
+        <div id="translations" class="hidden border border-gray-300 p-4 rounded-b-md">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <% workshop_idea.decorate.display_spanish_fields.each do |field| %>
-              <%= f.input field, as: :text,
-                          input_html: { rows: 1, class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+            <% workshop.decorate.display_spanish_fields.each do |field| %>
+              <%= rhino_editor(f, field, label: field.to_s.humanize) %>
             <% end %>
           </div>
         </div>
       </div>
 
-<!--      <div>-->
-<!--        <button type="button" class="w-full bg-gray-600 text-white px-3 py-2 rounded-t-md accordion-toggle">Series workshops</button>-->
-<!--        <div class="accordion-content <%##= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md">-->
-<!--          <p class="mb-2 text-sm text-gray-600">-->
-<!--            If this Workshop is a series, add the other "series workshops" below.-->
-<!--            You can also add a series-specific description for each workshop in the series, and the order in which they should appear.-->
-<!--            (The main workshop description will appear if you don't add a "series description".)-->
-<!--          </p>-->
-          <%#= f.fields_for :workshop_series_children do |child_workshop_membership| %>
-            <%#= render "workshop_series_child_fields", f: child_workshop_membership %>
-          <%# end %>
-<!--          <div class="mt-2">-->
-            <%#= link_to_add_association "Add another Workshop to this Series", f,
-                                        :workshop_series_children,
-                                        partial: "workshop_series_child_fields",
-                                        class: "text-blue-600 hover:underline" %>
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
+      <div class="series-section" data-controller="dropdown">
+        <div>
+          <button
+            type="button"
+            id="series_button"
+            class="
+              flex items-center justify-between cursor-pointer w-full
+              bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
+            "
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"series":"hidden"}, {"series_arrow":"rotate-180"}, {"series_button":"rounded-md rounded-t-md"}]'
+          >
+            Series workshops
+            <svg
+              id="series_arrow"
+              class="w-6 h-6 shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          </button>
+
+          <div
+            id="series"
+            class="<%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md"
+          >
+            <p class="mb-2 text-sm text-gray-600">
+              If this Workshop is a series, add the other "series workshops" below. You can also add a series-specific
+              description for each workshop in the series, and the order in which they should appear. (The main workshop
+              description will appear if you don't add a "series description".)
+            </p>
+
+            <%= f.fields_for :workshop_series_children do |child_workshop_membership| %>
+              <%= render "workshop_series_child_fields", f: child_workshop_membership %>
+            <% end %>
+
+            <div class="mt-2">
+              <%= link_to_add_association "Add another Workshop to this Series", f, :workshop_series_children, partial: "workshop_series_child_fields", class: "text-blue-600 hover:underline" %>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+<% 
+=end %>
+
+    <% if current_user.super_user? %>
+      <div class="admin-only bg-blue-100 p-3">
+        <%= f.input :staff_notes, as: :text,
+                          input_html: { rows: 2,
+                                        class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
+                                        focus:border-blue-500 sm:text-sm" } %>
+      </div>
+    <% end %>
 
     <!-- Actions -->
     <div class="flex gap-x-3 mt-6">
-      <% if current_user.super_user? && f.object.persisted? %>
-        <%= link_to "Promote to Workshop",
-                    new_workshop_path(workshop_idea_id: f.object.id),
-                    class: "btn btn-secondary-outline" %>
-        <%= link_to "Delete", @workshop_idea, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
+      <% if f.object.persisted? && current_user.super_user? %>
+        <%= link_to "Delete",
+                    workshop_idea,
+                    class: "btn btn-danger-outline",
+                    method: :delete,
+                    data: { confirm: "Are you sure you want to delete this workshop idea?" } %>
       <% end %>
-      <%= link_to "Cancel", authenticated_root_path, class: "btn btn-secondary-outline" %>
+
+      <%= link_to "Cancel",
+                  (current_user.super_user? ? workshops_path : authenticated_root_path),
+                  class: "btn btn-secondary-outline" %>
+
       <%= f.submit "Submit", class: "btn btn-primary" %>
     </div>
   <% end %>
-  </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll('.accordion-toggle').forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const content = toggle.nextElementSibling;
-                content.classList.toggle("hidden");
-            });
-        });
-    });
-</script>
-
-<style>
-    .accordion-toggle {
-        width: 100%;
-        background: #7C7C7C;
-        color: white;
-        padding: 8px 12px;
-        border: none;
-        text-align: left;
-        cursor: pointer;
-        border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
-        margin-bottom: 2px;
-        text-transform: none;
-    }
-
-    .accordion-toggle:hover {
-        background: #ccc;
-    }
-</style>
