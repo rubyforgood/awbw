@@ -398,10 +398,10 @@
     <div class="flex gap-x-3 mt-6">
       <% if f.object.persisted? && current_user.super_user? %>
         <%= link_to "Delete",
-                    @workshop,
+                    workshop_idea,
                     class: "btn btn-danger-outline",
                     method: :delete,
-                    data: { confirm: "Are you sure you want to delete this workshop?" } %>
+                    data: { confirm: "Are you sure you want to delete this workshop idea?" } %>
       <% end %>
 
       <%= link_to "Cancel",

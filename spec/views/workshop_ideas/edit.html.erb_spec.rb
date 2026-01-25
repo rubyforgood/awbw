@@ -18,37 +18,33 @@ RSpec.describe "workshop_ideas/edit", type: :view do
     assert_select "form[action=?][method=?]", workshop_idea_path(workshop_idea), "post" do
       assert_select "textarea[name=?]", "workshop_idea[title]"
 
-      assert_select "textarea[name=?]", "workshop_idea[description]"
-
       assert_select "select[name=?]", "workshop_idea[windows_type_id]"
 
-      assert_select "textarea[name=?]", "workshop_idea[tips]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_tips]"
 
-      assert_select "textarea[name=?]", "workshop_idea[objective]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_objective]"
 
-      assert_select "textarea[name=?]", "workshop_idea[materials]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_materials]"
 
-      assert_select "textarea[name=?]", "workshop_idea[introduction]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_introduction]"
 
-      assert_select "textarea[name=?]", "workshop_idea[creation]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_creation]"
 
-      assert_select "textarea[name=?]", "workshop_idea[closing]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_closing]"
 
-      # assert_select "textarea[name=?]", "workshop_idea[visualization]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_visualization]"
 
-      assert_select "textarea[name=?]", "workshop_idea[warm_up]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_warm_up]"
 
-      assert_select "textarea[name=?]", "workshop_idea[opening_circle]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_opening_circle]"
 
-      assert_select "textarea[name=?]", "workshop_idea[demonstration]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_demonstration]"
 
-      assert_select "textarea[name=?]", "workshop_idea[setup]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_setup]"
 
-      # assert_select "textarea[name=?]", "workshop_idea[instructions]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_optional_materials]"
 
-      assert_select "textarea[name=?]", "workshop_idea[optional_materials]"
-
-      assert_select "textarea[name=?]", "workshop_idea[notes]"
+      assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_notes]"
     end
   end
 
