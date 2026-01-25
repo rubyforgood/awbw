@@ -76,16 +76,11 @@ RSpec.configure do |config|
   # config.filter_gems_from_backtrace("gem name")
 
   # ensure that warden is configured for running in test mode.
-  config.include DownloadHelpers, type: :system
 
   config.before(:each, type: :system, js: true) do
-   clear_downloads
    driven_by :selenium_chrome_headless
  end
 
-  config.after(:each, type: :system, js: true) do
-    clear_downloads
-  end
 
   config.before(:suite) { Warden.test_mode! }
   config.after { Warden.test_reset! }
@@ -104,15 +99,4 @@ RSpec.configure do |config|
     clear_enqueued_jobs
     clear_performed_jobs
   end
-end
-
-Capybara.register_driver :selenium_chrome_headless do |app|
-  browser_options = ::Selenium::WebDriver::Chrome::Options.new.tap do |opts|
-    opts.args << '--headless'
-    opts.args << '--disable-site-isolation-trials'
-  end
-  browser_options.add_preference(:download, prompt_for_download: false, default_directory: DownloadHelpers::PATH.to_s)
-
-  browser_options.add_preference(:browser, set_download_behavior: { behavior: 'allow' })
-  Capybara::Selenium::Driver.new(app, browser: :chrome, options: browser_options)
 end
