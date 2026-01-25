@@ -17,6 +17,7 @@ class Category < ApplicationRecord
   validates :name, presence: true, uniqueness: { case_sensitive: false }
   validates :position, numericality: {
     only_integer: true,
+    greater_than: 0,
     allow_nil: true # position gem handles assigning after validations so it needs to allow nil
   }
 

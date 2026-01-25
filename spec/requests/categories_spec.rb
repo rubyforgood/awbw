@@ -110,17 +110,17 @@ RSpec.describe "/categories", type: :request do
         category_type = create(:category_type)
         category1 = create(:category, name: "First", category_type: category_type, position: 1)
         category2 = create(:category, name: "Second", category_type: category_type, position: 2)
-        patch category_url(category2), params: { ordering: 1 }
+        patch category_url(category2), params: { position: 1 }, as: :json
         category2.reload
         expect(response).to have_http_status(:ok)
-        expect(category.position).to be > 0
+        expect(category2.position).to be > 0
       end
 
       it "rejects invalid ordering values" do
         category_type = create(:category_type)
         category = create(:category, name: "Test", category_type: category_type, position: 1)
-        patch category_url(category), params: { ordering: 0 }
-        expect(response).to have_http_status(:bad_request)
+        patch category_url(category), params: { position: 0 }
+        expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it "handles update failures gracefully" do
@@ -129,7 +129,7 @@ RSpec.describe "/categories", type: :request do
         # Mock update failure by finding and stubbing the specific instance
         allow(Category).to receive(:find).with(category.id.to_s).and_return(category)
         allow(category).to receive(:update).and_return(false)
-        patch category_url(category), params: { ordering: 2 }
+        patch category_url(category), params: { position: 2 }
         expect(response).to have_http_status(:unprocessable_entity)
       end
 

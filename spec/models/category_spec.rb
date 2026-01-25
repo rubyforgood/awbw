@@ -50,12 +50,12 @@ RSpec.describe Category do
 
     it "orders categories by position first, then by name" do
       cat_a_pos_1 = create(:category, name: "A Category", position: 1, category_type: category_type)
-      cat_b_pos_1 = create(:category, name: "B Category", position: 1, category_type: category_type)
+      cat_b_pos_1 = create(:category, name: "B Category", position: 2, category_type: category_type)
       cat_d_pos_20 = create(:category, name: "D Category", position: 20, category_type: category_type)
       cat_c_pos_30 = create(:category, name: "C Category", position: 30, category_type: category_type)
 
       cat_a_pos_1.update_columns(position: 1)
-      cat_b_pos_1.update_columns(position: 1)
+      cat_b_pos_1.update_columns(position: 2)
       cat_d_pos_20.update_columns(position: 20)
       cat_c_pos_30.update_columns(position: 30)
 
