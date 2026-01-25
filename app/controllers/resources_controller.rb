@@ -63,7 +63,7 @@ class ResourcesController < ApplicationController
       @resource = @resource.decorate
       set_form_variables
       flash[:alert] = "Unable to save #{@resource.title.presence || 'resource'}"
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
