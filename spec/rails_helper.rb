@@ -1,5 +1,6 @@
 require 'shoulda/matchers'
 require 'spec_helper'
+require 'action_policy/rspec'
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../config/environment', __dir__)
 # Prevent database truncation if the environment is production

@@ -2,7 +2,7 @@ class FaqsController < ApplicationController
   before_action :set_faq, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    faqs = current_user.super_user? ? Faq.all : Faq.active
+    faqs = authorized_scope(Faq, with: FaqPolicy)
     @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "inactive"))
                 .by_position
                 .page(params[:page])

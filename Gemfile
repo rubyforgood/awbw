@@ -16,6 +16,7 @@ gem "jquery-rails"
 gem "jbuilder", "~> 2.0"
 
 gem "devise", "~> 4.9.4"
+gem "action_policy", "~> 0.7.5"
 gem "draper"
 gem "kt-paperclip", "~> 7.1.1"
 gem "aws-sdk-s3"

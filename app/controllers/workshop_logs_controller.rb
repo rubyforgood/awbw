@@ -4,13 +4,7 @@ class WorkshopLogsController < ApplicationController
   def index
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    permitted_logs =
-      if current_user.super_user?
-        WorkshopLog.all
-      else
-        WorkshopLog.where(created_by_id: current_user.id)
-                   .or(WorkshopLog.project_id(current_user.project_ids))
-      end
+    permitted_logs = authorized_scope(WorkshopLog, with: WorkshopLogPolicy)
     @workshop_logs_unpaginated = permitted_logs.includes(:workshop, :user, :windows_type)
                                                .search(params)
     @workshop_logs_count = @workshop_logs_unpaginated.size
@@ -83,11 +77,8 @@ class WorkshopLogsController < ApplicationController
     @answers      = @workshop_log.report_form_field_answers
 
     if @workshop_log
-      if current_user.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
-        render :show
-      else
-        redirect_to authenticated_root_path, error: "You do not have permission to view this page."
-      end
+      authorize! @workshop_log, to: :show?, with: WorkshopLogPolicy
+      render :show
     else
       redirect_to authenticated_root_path, error: "Unable to find that Workshop Log."
     end
@@ -123,12 +114,7 @@ class WorkshopLogsController < ApplicationController
                         .joins(:workshop_logs)
                         .distinct
                         .order(:last_name, :first_name)
-    @projects = if current_user.super_user?
-      # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
-      Project.active.order(:name)
-    else
-      current_user.projects.order(:name)
-    end
+    @projects = authorized_scope(Project, type: :projects, with: WorkshopLogPolicy).order(:name)
     # @workshops = Workshop.joins(:workshop_logs)
     #                      .order(:title)
   end
@@ -146,10 +132,7 @@ class WorkshopLogsController < ApplicationController
       @workshop = Workshop.new
     end
 
-    workshops = Workshop.includes(:windows_type)
-    unless current_user.super_user?
-      workshops = workshops.published
-    end
+    workshops = authorized_scope(Workshop, type: :workshops, with: WorkshopLogPolicy).includes(:windows_type)
     @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id).includes(:windows_type))
                           .distinct
                           .order(title: :asc)

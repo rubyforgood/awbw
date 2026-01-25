@@ -1,8 +1,15 @@
 class ApplicationController < ActionController::Base
+  include ActionPolicy::Controller
+
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
   before_action :authenticate_user!  # ensures only logged-in users can access pages
+
+  rescue_from ActionPolicy::Unauthorized do |exception|
+    flash[:alert] = exception.message.presence || "You are not authorized to perform this action."
+    redirect_back_or_to authenticated_root_path
+  end
 
   private
 

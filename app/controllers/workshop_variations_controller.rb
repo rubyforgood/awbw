@@ -1,10 +1,7 @@
 class WorkshopVariationsController < ApplicationController
   include AssetUpdatable, AhoyViewTracking
   def index
-    unless current_user.super_user?
-      redirect_to authenticated_root_path
-      return
-    end
+    authorize! :index, with: WorkshopVariationPolicy
 
     @workshop_variations =
       WorkshopVariation
@@ -18,8 +15,7 @@ class WorkshopVariationsController < ApplicationController
 
   def new
     @workshop_variation = WorkshopVariation.new
-    workshops = current_user.super_user? ? Workshop.all : Workshop.published
-    @workshops = workshops.order(:title)
+    @workshops = authorized_scope(Workshop, type: :workshops, with: WorkshopVariationPolicy).order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
   end

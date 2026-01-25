@@ -20,7 +20,7 @@
   <% end %>
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
-    <% if current_user.super_user? %>
+    <% if allowed_to?(:update?, workshop.object, with: WorkshopPolicy) %>
       <%= link_to "Edit",
                   edit_workshop_path(workshop),
                   class: "btn btn-secondary-outline admin-only bg-blue-100" %>

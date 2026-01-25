@@ -1,11 +1,11 @@
 module Admin
   class BaseController < ApplicationController
-    before_action :require_super_user
+    before_action :authorize_admin_access
 
     private
 
-    def require_super_user
-      redirect_to authenticated_root_path, alert: "Not authorized" unless current_user&.super_user?
+    def authorize_admin_access
+      authorize! :admin, with: AdminPolicy
     end
   end
 end

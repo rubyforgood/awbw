@@ -2,7 +2,7 @@ class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status ]
 
   def index
-    return redirect_to authenticated_root_path unless current_user.super_user?
+    authorize! :index, with: UserPolicy
 
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)
@@ -98,7 +98,7 @@ class UsersController < ApplicationController
   end
 
   def toggle_lock_status
-    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+    authorize! @user, to: :toggle_lock_status?, with: UserPolicy
 
     if @user.locked_at.present?
       # Unlock the user
@@ -130,11 +130,7 @@ class UsersController < ApplicationController
   def set_form_variables
     set_facilitator
     @user.project_users.first || @user.project_users.build
-    projects = if current_user.super_user?
-      Project.active
-    else
-      current_user.projects
-    end
+    projects = authorized_scope(Project, type: :projects, with: UserPolicy)
     @projects_array = projects.order(:name).pluck(:name, :id)
   end
 

@@ -4,7 +4,7 @@ class TutorialsController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unfiltered = current_user.super_user? ? Tutorial.all : Tutorial.published
+    unfiltered = authorized_scope(Tutorial, with: TutorialPolicy)
     filtered = unfiltered.search_by_params(params)
     @count_display = filtered.count == unfiltered.count ? unfiltered.count : "#{filtered.count}/#{unfiltered.count}"
     @tutorials = filtered.order(:position).paginate(page: params[:page], per_page: per_page).decorate

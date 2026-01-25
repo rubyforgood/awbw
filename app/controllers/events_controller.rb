@@ -1,11 +1,9 @@
 class EventsController < ApplicationController
   include AhoyViewTracking
   before_action :set_event, only: %i[ show edit update destroy ]
-  before_action :authorize_admin!, only: %i[ edit update destroy ]
 
   def index
-    unpaginated = current_user.super_user? ? Event.all : Event.published
-    unpaginated = unpaginated.search_by_params(params)
+    unpaginated = authorized_scope(Event, with: EventPolicy).search_by_params(params)
     @events = unpaginated.order(start_date: :desc)
   end
 
@@ -20,10 +18,8 @@ class EventsController < ApplicationController
   end
 
   def edit
+    authorize! @event, to: :update?
     set_form_variables
-    unless @event.created_by == current_user || current_user.super_user?
-      redirect_to events_path, alert: "You are not authorized to edit this event."
-    end
   end
 
   def create
@@ -43,6 +39,7 @@ class EventsController < ApplicationController
   end
 
   def update
+    authorize! @event, to: :update?
     respond_to do |format|
       if @event.update(event_params)
         format.html { redirect_to events_path, notice: "Event was successfully updated." }
@@ -56,6 +53,7 @@ class EventsController < ApplicationController
   end
 
   def destroy
+    authorize! @event, to: :destroy?
     @event.destroy
 
     respond_to do |format|
@@ -88,10 +86,5 @@ class EventsController < ApplicationController
                                   primary_asset_attributes: [ :id, :file, :_destroy ],
                                   gallery_assets_attributes: [ :id, :file, :_destroy ]
                                   )
-  end
-
-  def authorize_admin!
-    redirect_to events_path,
-                alert: "You are not authorized to perform this action." unless current_user.super_user?
   end
 end
