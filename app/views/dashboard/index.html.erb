@@ -1,15 +1,13 @@
-<div class="bg-white">
-  <%= render "dashboard/workshops", title: "Featured Workshops" %>
+<%= render "dashboard/workshops", title: "Featured Workshops" %>
 
-  <%= turbo_frame_tag "dashboard_community_news", src: authenticated_root_path do %>
-  <% end %>
+<%= turbo_frame_tag "dashboard_community_news", src: authenticated_root_path do %>
+<% end %>
 
-  <%= turbo_frame_tag "dashboard_resources", src: authenticated_root_path do %>
-  <% end %>
+<%= turbo_frame_tag "dashboard_resources", src: authenticated_root_path do %>
+<% end %>
 
-  <%= turbo_frame_tag "dashboard_events", src: authenticated_root_path do %>
-  <% end %>
+<%= turbo_frame_tag "dashboard_events", src: authenticated_root_path do %>
+<% end %>
 
-  <%= turbo_frame_tag "dashboard_stories", src: authenticated_root_path do %>
-  <% end %>
-</div>
+<%= turbo_frame_tag "dashboard_stories", src: authenticated_root_path do %>
+<% end %>
