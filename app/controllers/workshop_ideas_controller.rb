@@ -2,6 +2,7 @@ class WorkshopIdeasController < ApplicationController
   before_action :set_workshop_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize! :index, with: WorkshopIdeaPolicy
     per_page = params[:number_of_items_per_page].presence || 25
     workshop_ideas = WorkshopIdea.search(params.slice(:title, :author_name))
     @workshop_ideas_count = workshop_ideas.size
@@ -9,18 +10,22 @@ class WorkshopIdeasController < ApplicationController
   end
 
   def show
+    authorize! @workshop_idea
   end
 
   def new
+    authorize! :create, with: WorkshopIdeaPolicy
     @workshop_idea = WorkshopIdea.new
     set_form_variables
   end
 
   def edit
+    authorize! @workshop_idea, to: :update?
     set_form_variables
   end
 
   def create
+    authorize! :create, with: WorkshopIdeaPolicy
     @workshop_idea = WorkshopIdea.new(workshop_idea_params)
 
     if @workshop_idea.save
@@ -38,6 +43,7 @@ class WorkshopIdeasController < ApplicationController
   end
 
   def update
+    authorize! @workshop_idea
     if @workshop_idea.update(workshop_idea_params)
       redirect_to workshop_ideas_path, notice: "Workshop idea was successfully updated.", status: :see_other
     else
@@ -47,6 +53,7 @@ class WorkshopIdeasController < ApplicationController
   end
 
   def destroy
+    authorize! @workshop_idea
     @workshop_idea.destroy!
     redirect_to workshop_ideas_path, notice: "Workshop idea was successfully destroyed."
   end

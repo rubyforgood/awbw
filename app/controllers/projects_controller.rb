@@ -3,6 +3,7 @@ class ProjectsController < ApplicationController
   before_action :set_project, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize! :index, with: ProjectPolicy
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = Project.includes(:logo_attachment, :windows_type, :project_status).search_by_params(params).order(:name)
     @projects_count = unpaginated.count
@@ -11,6 +12,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
+    authorize! @project
     track_view(@project)
 
     # Reuse WorkshopLogsController#index logic programmatically
@@ -43,15 +45,18 @@ class ProjectsController < ApplicationController
   end
 
   def new
+    authorize! :create, with: ProjectPolicy
     @project = Project.new
     set_form_variables
   end
 
   def edit
+    authorize! @project, to: :update?
     set_form_variables
   end
 
   def create
+    authorize! :create, with: ProjectPolicy
     @project = Project.new(project_params)
 
     if @project.save
@@ -63,6 +68,7 @@ class ProjectsController < ApplicationController
   end
 
   def update
+    authorize! @project
     if @project.update(project_params)
       redirect_to projects_path, notice: "Organization was successfully updated.", status: :see_other
     else
@@ -72,6 +78,7 @@ class ProjectsController < ApplicationController
   end
 
   def destroy
+    authorize! @project
     @project.destroy!
     redirect_to projects_path, notice: "Organization was successfully destroyed."
   end

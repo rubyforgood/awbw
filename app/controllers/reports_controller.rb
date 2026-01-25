@@ -1,12 +1,15 @@
 class ReportsController < ApplicationController
   def show
     @report = Report.find(params[:id])
+    authorize! @report, with: ReportPolicy
   end
 
   def monthly_select_type
+    authorize! :monthly_select_type, with: ReportPolicy
   end
 
   def monthly
+    authorize! :monthly, with: ReportPolicy
     build_month_and_year
     find_form_builder
 
@@ -22,6 +25,7 @@ class ReportsController < ApplicationController
   end
 
   def share_story
+    authorize! :share_story, with: ReportPolicy
     params[:form_builder_id] = 7
     render_form
 
@@ -43,6 +47,7 @@ class ReportsController < ApplicationController
   end
 
   def edit
+    authorize! :edit, with: ReportPolicy
     build_month_and_year
     find_form_builder
     @report    = current_user.submitted_monthly_report(@date, @form_builder.windows_type)
@@ -55,6 +60,7 @@ class ReportsController < ApplicationController
   end
 
   def edit_story
+    authorize! :edit_story, with: ReportPolicy
     @workshop_list = Workshop.created_by_id(current_user.id)
                              .where(inactive: false, windows_type: 3)
                              .order(title: :asc)
@@ -65,6 +71,7 @@ class ReportsController < ApplicationController
   end
 
   def update_story
+    authorize! :update_story, with: ReportPolicy
     @report = Report.find params[:id]
 
     if params[:report]
@@ -92,6 +99,7 @@ class ReportsController < ApplicationController
   end
 
   def update
+    authorize! :update, with: ReportPolicy
     @report = MonthlyReport.find params[:id]
 
     if params[:report]
@@ -118,6 +126,7 @@ class ReportsController < ApplicationController
   end
 
   def create
+    authorize! :create, with: ReportPolicy
     build_new_report
 
     report_type = "story"
@@ -150,6 +159,7 @@ class ReportsController < ApplicationController
   end
 
   def create_story
+    authorize! :create_story, with: ReportPolicy
     build_new_report
     @report.type = "Story"
     @report.report_form_field_answers.build(log_fields)

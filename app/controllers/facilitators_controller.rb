@@ -3,6 +3,7 @@ class FacilitatorsController < ApplicationController
   before_action :set_facilitator, only: %i[ show edit update destroy ]
 
   def index
+    authorize! :index, with: FacilitatorPolicy
     per_page = params[:number_of_items_per_page].presence || 25
     facilitators = Facilitator
                      .searchable
@@ -15,20 +16,24 @@ class FacilitatorsController < ApplicationController
 
   def show
     @facilitator = Facilitator.find(params[:id]).decorate
+    authorize! @facilitator
     track_view(@facilitator)
   end
 
   def new
+    authorize! :create, with: FacilitatorPolicy
     set_user
     @facilitator = @user ? FacilitatorFromUserService.new(user: @user).call : Facilitator.new
     set_form_variables
   end
 
   def edit
+    authorize! @facilitator, to: :update?
     set_form_variables
   end
 
   def create
+    authorize! :create, with: FacilitatorPolicy
     @facilitator = Facilitator.new(facilitator_params.except(:user_attributes))
     @facilitator.user ||= (User.find(params[:facilitator][:user_attributes][:id]) if params[:facilitator][:user_attributes])
 
@@ -43,6 +48,7 @@ class FacilitatorsController < ApplicationController
   end
 
   def update
+    authorize! @facilitator
     respond_to do |format|
       if @facilitator.update(facilitator_params)
         format.html { redirect_to @facilitator, notice: "Facilitator was successfully updated." }
@@ -54,6 +60,7 @@ class FacilitatorsController < ApplicationController
   end
 
   def destroy
+    authorize! @facilitator
     @facilitator.destroy
 
     respond_to do |format|

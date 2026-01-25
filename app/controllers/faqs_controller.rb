@@ -9,18 +9,22 @@ class FaqsController < ApplicationController
   end
 
   def show
+    authorize! @faq
   end
 
   def new
+    authorize! :create, with: FaqPolicy
     @faq = Faq.new
     set_form_variables
   end
 
   def edit
+    authorize! @faq, to: :update?
     set_form_variables
   end
 
   def create
+    authorize! :create, with: FaqPolicy
     @faq = Faq.new(faq_params)
 
     if @faq.save
@@ -32,6 +36,7 @@ class FaqsController < ApplicationController
   end
 
   def update
+    authorize! @faq
     notice = "FAQ was successfully updated."
     flash.now[:notice] = notice
     if @faq.update(faq_params)
@@ -43,6 +48,7 @@ class FaqsController < ApplicationController
   end
 
   def destroy
+    authorize! @faq
     @faq.destroy!
     redirect_to faqs_path, notice: "FAQ was successfully destroyed."
   end

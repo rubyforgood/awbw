@@ -22,6 +22,7 @@ class CommunityNewsController < ApplicationController
   end
 
   def show
+    authorize! @community_news
     @community_news = @community_news.decorate
     track_view(@community_news)
 
@@ -32,11 +33,13 @@ class CommunityNewsController < ApplicationController
   end
 
   def new
+    authorize! :create, with: CommunityNewsPolicy
     @community_news = CommunityNews.new.decorate
     set_form_variables
   end
 
   def edit
+    authorize! @community_news, to: :update?
     @community_news = @community_news.decorate
     set_form_variables
     if turbo_frame_request?
@@ -47,6 +50,7 @@ class CommunityNewsController < ApplicationController
   end
 
   def create
+    authorize! :create, with: CommunityNewsPolicy
     @community_news = CommunityNews.new(community_news_params)
 
     if @community_news.save
@@ -63,6 +67,7 @@ class CommunityNewsController < ApplicationController
   end
 
   def update
+    authorize! @community_news
     if @community_news.update(community_news_params)
       redirect_to community_news_index_path,
                   notice: "Community news was successfully updated.", status: :see_other
@@ -73,6 +78,7 @@ class CommunityNewsController < ApplicationController
   end
 
   def destroy
+    authorize! @community_news
     @community_news.destroy!
     redirect_to community_news_index_path, notice: "Community news was successfully destroyed."
   end

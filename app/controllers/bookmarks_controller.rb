@@ -2,6 +2,7 @@ class BookmarksController < ApplicationController
   before_action :set_breadcrumb
 
   def index
+    authorize! :index, with: BookmarkPolicy
     per_page = params[:number_of_items_per_page] || 25
     unfiltered = Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ])
     filtered = unfiltered.search(params)
@@ -18,6 +19,7 @@ class BookmarksController < ApplicationController
   end
 
   def personal
+    authorize! :personal, with: BookmarkPolicy
     per_page = params[:number_of_items_per_page] || 25
     user = User.where(id: params[:user_id]).first if params[:user_id].present?
     user ||= current_user
@@ -40,6 +42,7 @@ class BookmarksController < ApplicationController
   end
 
   def create
+    authorize! :create, with: BookmarkPolicy
     @bookmark = current_user.bookmarks.find_or_create_by(bookmark_params)
     @bookmarkable = @bookmark.bookmarkable
     respond_to do |format|
@@ -55,12 +58,14 @@ class BookmarksController < ApplicationController
 
   def show
     @bookmark = Bookmark.find(params[:id]).decorate
+    authorize! @bookmark
     @bookmarkable = @bookmark.bookmarkable
     load_workshop_data if @bookmark.bookmarkable_class_name == "Workshop"
   end
 
   def destroy
     @bookmark = Bookmark.find(params[:id])
+    authorize! @bookmark
     if @bookmark
       @bookmark.destroy
       @bookmarkable = @bookmark.bookmarkable
@@ -79,6 +84,7 @@ class BookmarksController < ApplicationController
   end
 
   def tally
+    authorize! :tally, with: BookmarkPolicy
     bookmark_ids = Bookmark.filter_by_params(params).pluck(:id)
 
     # Aggregate counts cleanly

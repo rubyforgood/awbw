@@ -3,6 +3,7 @@ class StoryIdeasController < ApplicationController
   before_action :set_story_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize! :index, with: StoryIdeaPolicy
     per_page = params[:number_of_items_per_page].presence || 25
 
 
@@ -14,18 +15,22 @@ class StoryIdeasController < ApplicationController
   end
 
   def show
+    authorize! @story_idea
   end
 
   def new
+    authorize! :create, with: StoryIdeaPolicy
     @story_idea = StoryIdea.new
     set_form_variables
   end
 
   def edit
+    authorize! @story_idea, to: :update?
     set_form_variables
   end
 
   def create
+    authorize! :create, with: StoryIdeaPolicy
     @story_idea = StoryIdea.new(story_idea_params)
 
     if @story_idea.save
@@ -48,6 +53,7 @@ class StoryIdeasController < ApplicationController
   end
 
   def update
+    authorize! @story_idea
     if @story_idea.update(story_idea_params.except(:images))
       redirect_to story_ideas_path, notice: "StoryIdea was successfully updated.", status: :see_other
     else
@@ -57,6 +63,7 @@ class StoryIdeasController < ApplicationController
   end
 
   def destroy
+    authorize! @story_idea
     @story_idea.destroy!
     redirect_to story_ideas_path, notice: "StoryIdea was successfully destroyed."
   end

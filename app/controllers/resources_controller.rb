@@ -25,16 +25,19 @@ class ResourcesController < ApplicationController
   end
 
   def stories
+    authorize! :index, with: ResourcePolicy
     @stories = Resource.story.paginate(page: params[:page], per_page: 6).decorate
   end
 
   def new
+    authorize! :create, with: ResourcePolicy
     @resource = Resource.new.decorate
     set_form_variables
   end
 
   def edit
     @resource = Resource.includes(user: :facilitator).find(resource_id_param).decorate
+    authorize! @resource, to: :update?
     set_form_variables
 
     if turbo_frame_request?
@@ -46,11 +49,13 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(resource_id_param).decorate
+    authorize! @resource
     track_view(@resource)
     load_forms
   end
 
   def create
+    authorize! :create, with: ResourcePolicy
     @resource = current_user.resources.build(resource_params)
 
     if @resource.save
@@ -69,6 +74,7 @@ class ResourcesController < ApplicationController
 
   def update
     @resource = Resource.find(params[:id])
+    authorize! @resource
     @resource.user ||= current_user
     if @resource.update(resource_params)
       flash[:notice] = "Resource updated."
@@ -82,11 +88,13 @@ class ResourcesController < ApplicationController
 
   def destroy
     @resource = Resource.find(params[:id])
+    authorize! @resource
     @resource.destroy!
     redirect_to resources_path, notice: "Resource was successfully destroyed."
   end
 
   def search
+    authorize! :index, with: ResourcePolicy
     process_search
     @sortable_fields = Resource::PUBLISHED_KINDS
     render :index
@@ -94,6 +102,7 @@ class ResourcesController < ApplicationController
 
   def download
     @resource = Resource.find(params[:resource_id])
+    authorize! @resource, to: :show?
 
     attachment = @resource&.downloadable_asset&.file
     if attachment.attached?

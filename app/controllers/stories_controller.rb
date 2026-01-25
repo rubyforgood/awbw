@@ -23,6 +23,7 @@ class StoriesController < ApplicationController
   end
 
   def show
+    authorize! @story
     @story = @story.decorate
     track_view(@story)
 
@@ -33,12 +34,14 @@ class StoriesController < ApplicationController
   end
 
   def new
+    authorize! :create, with: StoryPolicy
     @story = Story.new.decorate
     @story = @story.decorate
     set_form_variables
   end
 
   def edit
+    authorize! @story, to: :update?
     @story = @story.decorate
     set_form_variables
     if turbo_frame_request?
@@ -49,6 +52,7 @@ class StoriesController < ApplicationController
   end
 
   def create
+    authorize! :create, with: StoryPolicy
     @story = Story.new(story_params)
 
     if @story.save
@@ -65,6 +69,7 @@ class StoriesController < ApplicationController
   end
 
   def update
+    authorize! @story
     if @story.update(story_params.except(:images))
       redirect_to stories_path, notice: "Story was successfully updated.", status: :see_other
     else
@@ -75,6 +80,7 @@ class StoriesController < ApplicationController
   end
 
   def destroy
+    authorize! @story
     @story.destroy!
     redirect_to stories_path, notice: "Story was successfully destroyed."
   end

@@ -11,21 +11,25 @@ class TutorialsController < ApplicationController
   end
 
   def show
+    authorize! @tutorial
     @tutorial = @tutorial.decorate
     track_view(@tutorial)
   end
 
   def new
+    authorize! :create, with: TutorialPolicy
     @tutorial = Tutorial.new.decorate
     set_form_variables
   end
 
   def edit
+    authorize! @tutorial, to: :update?
     @tutorial = @tutorial.decorate
     set_form_variables
   end
 
   def create
+    authorize! :create, with: TutorialPolicy
     @tutorial = Tutorial.new(tutorial_params)
 
     if @tutorial.save
@@ -38,6 +42,7 @@ class TutorialsController < ApplicationController
   end
 
   def update
+    authorize! @tutorial
     if @tutorial.update(tutorial_params)
       redirect_to tutorials_path, notice: "Tutorial was successfully updated.", status: :see_other
     else
@@ -48,6 +53,7 @@ class TutorialsController < ApplicationController
   end
 
   def destroy
+    authorize! @tutorial
     @tutorial.destroy!
     redirect_to tutorials_path, notice: "Tutorial was successfully destroyed."
   end

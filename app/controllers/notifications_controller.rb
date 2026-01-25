@@ -10,6 +10,7 @@ class NotificationsController < ApplicationController
   end
 
   def show
+    authorize! @notification
   end
 
   private

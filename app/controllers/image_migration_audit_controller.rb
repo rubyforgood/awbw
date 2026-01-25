@@ -3,6 +3,7 @@ class ImageMigrationAuditController < ApplicationController
   include Rails.application.routes.url_helpers
 
   def index
+    authorize! :index, with: ImageMigrationAuditPolicy
     @results = []
 
     models_to_audit = params[:models].to_s.downcase.split("-")
