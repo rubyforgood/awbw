@@ -76,6 +76,33 @@ class WorkshopsController < ApplicationController
     set_form_variables
   end
 
+  def create
+    @workshop = current_user.workshops.build(workshop_params)
+    success = false
+
+    Workshop.transaction do
+      if @workshop.save
+        assign_associations(@workshop)
+        if params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@workshop)
+        end
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("creation", e)
+      raise ActiveRecord::Rollback
+    end
+
+    if success
+      flash[:notice] = "Workshop created successfully."
+      redirect_to workshops_path(sort: "created")
+    else
+      set_form_variables
+      flash.now[:alert] = "Unable to save the workshop."
+      render :new
+    end
+  end
+
   def edit
     @workshop = Workshop.find(params[:id])
     set_form_variables
@@ -134,32 +161,6 @@ class WorkshopsController < ApplicationController
     end
   end
 
-  def create
-    @workshop = current_user.workshops.build(workshop_params)
-    success = false
-
-    Workshop.transaction do
-      if @workshop.save
-        assign_associations(@workshop)
-        if params.dig(:library_asset, :new_assets).present?
-          update_asset_owner(@workshop)
-        end
-        success = true
-      end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
-      log_workshop_error("creation", e)
-      raise ActiveRecord::Rollback
-    end
-
-    if success
-      flash[:notice] = "Workshop created successfully."
-      redirect_to workshops_path(sort: "created")
-    else
-      set_form_variables
-      flash.now[:alert] = "Unable to save the workshop."
-      render :new
-    end
-  end
 
   def search
     @params = params[:search]

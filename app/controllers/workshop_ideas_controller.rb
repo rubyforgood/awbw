@@ -1,4 +1,5 @@
 class WorkshopIdeasController < ApplicationController
+  include AssetUpdatable
   before_action :set_workshop_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -16,10 +17,6 @@ class WorkshopIdeasController < ApplicationController
     set_form_variables
   end
 
-  def edit
-    set_form_variables
-  end
-
   def create
     @workshop_idea = WorkshopIdea.new(workshop_idea_params)
 
@@ -30,12 +27,22 @@ class WorkshopIdeasController < ApplicationController
         recipient_role: :admin,
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
+
+      if params.dig(:library_asset, :new_assets).present?
+        update_asset_owner(@workshop)
+      end
+
       redirect_to workshop_ideas_path, notice: "Workshop idea was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
     end
   end
+
+  def edit
+    set_form_variables
+  end
+
 
   def update
     if @workshop_idea.update(workshop_idea_params)
@@ -96,8 +103,23 @@ class WorkshopIdeasController < ApplicationController
       :visualization, :visualization_spanish,
       :warm_up, :warm_up_spanish,
 
-      primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ],
+      :rhino_objective,
+      :rhino_materials,
+      :rhino_optional_materials,
+      :rhino_setup,
+      :rhino_introduction,
+      :rhino_opening_circle,
+      :rhino_demonstration,
+      :rhino_warm_up,
+      :rhino_visualization,
+      :rhino_creation,
+      :rhino_closing,
+      :rhino_notes,
+      :rhino_tips,
+      :rhino_misc1,
+      :rhino_misc2,
+      :rhino_extra_field,
+
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ],
