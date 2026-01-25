@@ -102,7 +102,7 @@ class MonthlyReportsController < ApplicationController
     @answers      = @monthly_report.report_form_field_answers
 
     if @monthly_report
-      authorize! @monthly_report, to: :show?, with: MonthlyReportPolicy
+      authorize! @monthly_report, with: MonthlyReportPolicy
       render :show
     else
       redirect_to authenticated_root_path, error: "Unable to find that Workshop Log."

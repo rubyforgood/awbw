@@ -39,7 +39,7 @@ class EventsController < ApplicationController
   end
 
   def update
-    authorize! @event, to: :update?
+    authorize! @event
     respond_to do |format|
       if @event.update(event_params)
         format.html { redirect_to events_path, notice: "Event was successfully updated." }
@@ -53,7 +53,7 @@ class EventsController < ApplicationController
   end
 
   def destroy
-    authorize! @event, to: :destroy?
+    authorize! @event
     @event.destroy
 
     respond_to do |format|

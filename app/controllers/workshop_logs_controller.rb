@@ -77,7 +77,7 @@ class WorkshopLogsController < ApplicationController
     @answers      = @workshop_log.report_form_field_answers
 
     if @workshop_log
-      authorize! @workshop_log, to: :show?, with: WorkshopLogPolicy
+      authorize! @workshop_log, with: WorkshopLogPolicy
       render :show
     else
       redirect_to authenticated_root_path, error: "Unable to find that Workshop Log."

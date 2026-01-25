@@ -98,7 +98,7 @@ class UsersController < ApplicationController
   end
 
   def toggle_lock_status
-    authorize! @user, to: :toggle_lock_status?
+    authorize! @user
 
     if @user.locked_at.present?
       # Unlock the user

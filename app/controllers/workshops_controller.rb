@@ -101,7 +101,7 @@ class WorkshopsController < ApplicationController
 
   def destroy
     @workshop = Workshop.find(params[:id])
-    authorize! @workshop, to: :destroy?
+    authorize! @workshop
 
     @workshop.destroy!
     redirect_to workshops_path, notice: "Workshop was successfully destroyed."
