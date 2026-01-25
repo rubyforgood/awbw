@@ -9,6 +9,8 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
+    action_policy (0.7.6)
+      ruby-next-core (>= 1.0)
     action_text-trix (2.1.16)
       railties
     actioncable (8.1.0)
@@ -426,6 +428,7 @@ GEM
       rubocop (>= 1.72)
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
+    ruby-next-core (1.2.0)
     ruby-progressbar (1.13.0)
     ruby-vips (2.2.5)
       ffi (~> 1.12)
@@ -513,9 +516,11 @@ GEM
 PLATFORMS
   aarch64-linux
   arm64-darwin-23
+  arm64-darwin-25
   x86_64-linux
 
 DEPENDENCIES
+  action_policy (~> 0.7.5)
   active_storage_validations (~> 3.0)
   ahoy_matey
   apipie-rails (~> 1.5.0)
