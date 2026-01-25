@@ -1,9 +1,12 @@
+<%= render "assets/form", owner: story_idea %>
+
 <div class="rounded-xl bg-white p-6">
-  <%= simple_form_for(story_idea, html: { multipart: true }) do |f| %>
+  <%= simple_form_for(story_idea) do |f| %>
     <%= f.hidden_field :created_by_id, value: f.object.created_by_id || (@user || current_user)&.id %>
     <%= f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
 
     <% promoted_to_story = f.object.stories.any? %>
+
     <% if promoted_to_story %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
       <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
@@ -15,16 +18,21 @@
     <% end %>
 
     <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
-    <%#= f.object.errors.full_messages %>
 
-<!--    <div class="mb-3">-->
-      <%#= f.input :title,
-                  disabled: promoted_to_story,
-                  hint: "Give your story a short title that reflects its content",
-                  input_html: {
-                    class: ("readonly" if promoted_to_story)
-                  } %>
-<!--    </div>-->
+    <%= tag.div class: "unpersisted_resource_asset_params" %>
+
+    <%# = f.object.errors.full_messages %>
+
+    <!-- <div class="mb-3"> -->
+    <%#
+      = f.input :title,
+      disabled: promoted_to_story,
+      hint: "Give your story a short title that reflects its content",
+      input_html: {
+        class: ("readonly" if promoted_to_story)
+      }
+    %>
+    <!-- </div> -->
 
     <div class="flex flex-col md:flex-row md:space-x-4 mt-6">
       <div class="flex-1 mb-4 md:mb-0">
@@ -44,6 +52,7 @@
                     input_html: {
                       class: ("readonly" if promoted_to_story)
                     } %>
+
         <%= f.input :external_workshop_title,
                     as: :text,
                     label: "External title (if no workshop above)",
@@ -60,7 +69,7 @@
                     disabled: promoted_to_story,
                     input_html: {
                       class: ("readonly" if promoted_to_story)
-                     }%>
+                     } %>
       </div>
     </div>
 
@@ -79,6 +88,7 @@
                   collection: StoryIdea::PUBLISH_PREFERENCES,
                   include_blank: "Select a preference",
                   selected: f.object.publish_preferences %>
+
       <%= f.input :youtube_url,
                   as: :text,
                   label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
@@ -88,8 +98,6 @@
                                 class: ("readonly" if promoted_to_story)
                                 } %>
     </div>
-
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
     <div class="my-12">
       <%= f.input :permission_given,
@@ -111,9 +119,8 @@
         <div class="flex-1 mb-4 md:mb-0">
           <% if promoted_to_story %>
             <div class="flex items-center space-x-2">
-              <label class="text-gray-700">
-                Promoted to Story
-              </label>
+              <label class="text-gray-700"> Promoted to Story </label>
+
               <% f.object.stories.each do |story| %>
                 <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
               <% end %>
@@ -136,6 +143,7 @@
                       method: :delete, data: { confirm: "Are you sure?" } %>
         </span>
       <% end %>
+
       <%= link_to "Cancel", story_ideas_path, class: "btn btn-secondary-outline ms-2" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>

@@ -1,88 +1,88 @@
 <div class="rounded-xl bg-white p-6">
-  <%= simple_form_for @workshop_variation, html: { multipart: true } do |f| %>
-  <%= hidden_field_tag(:from, params[:from]) %>
+  <%= render "assets/form", owner: @workshop_variation %>
 
-  <%= render 'shared/errors', resource: workshop_variation if workshop_variation.errors.any? %>
+  <%= simple_form_for @workshop_variation do |f| %>
+    <%= hidden_field_tag(:from, params[:from]) %>
 
-  <!-- Workshop selection / reference -->
-  <div class="mb-6">
-    <% if @workshop %>
-      <%= f.hidden_field :workshop_id, value: @workshop.id %>
-      <div class="text-lg font-semibold mb-2">
-        Variant of workshop:
-        <span class="text-2xl font-bold">
-          <%= link_to(@workshop.name, workshop_path(@workshop), class: "hover:underline") %>
-        </span>
-      </div>
-    <% else %>
-      <%= f.input :workshop_id,
+    <%= render 'shared/errors', resource: workshop_variation if workshop_variation.errors.any? %>
+
+    <%= tag.div class: "unpersisted_resource_asset_params" %>
+
+    <!-- Workshop selection / reference -->
+    <div class="mb-6">
+      <% if @workshop %>
+        <%= f.hidden_field :workshop_id, value: @workshop.id %>
+        <div class="text-lg font-semibold mb-2">
+          Variant of workshop:
+          <span class="text-2xl font-bold"><%= link_to(@workshop.name, workshop_path(@workshop), class: "hover:underline") %></span>
+        </div>
+      <% else %>
+        <%= f.input :workshop_id,
                   as: :select,
                   collection: @workshops,
                   required: true,
                   prompt: "Select a Workshop",
                   input_html: { class: "w-full" } %>
-    <% end %>
-  </div>
+      <% end %>
+    </div>
 
-  <!-- Variation fields -->
-  <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
-    <div>
-      <%= f.input :name, label: "Variation name", input_html: { class: "w-full" } %>
+    <!-- Variation fields -->
+    <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+      <div>
+        <%= f.input :name, label: "Variation name", input_html: { class: "w-full" } %>
 
-      <%= f.input :code,
+        <%= f.input :code,
                   as: :text,
                   required: true,
                   label: "Share a little bit about your workshop variation, how you modified the workshop to fit your population/setting/facilitation style, and/or anything about how the workshop was received by participants, things you would do differently next time, etc.",
                   input_html: { rows: 10, class: "w-full" } %>
 
-      <%= f.input :youtube_url,
+        <%= f.input :youtube_url,
                   label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
                   hint: "If you already have a video on YouTube you’d like to share",
                   input_html: { class: "w-full" } %>
-    </div>
+      </div>
 
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+      <% if current_user.super_user? %>
+        <div class="flex items-start gap-6 admin-only bg-blue-100 p-4 rounded-lg">
+          <%= f.input :inactive, as: :boolean, label: "Hidden?", input_html: { checked: f.object.id ? f.object.inactive : false } %>
 
-    <% if current_user.super_user? %>
-      <div class="flex items-start gap-6 admin-only bg-blue-100 p-4 rounded-lg">
-        <%= f.input :inactive, as: :boolean, label: "Hidden?", input_html: { checked: f.object.id ? f.object.inactive : false } %>
+          <%= f.input :position, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
 
-        <%= f.input :position, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
-
-        <%= f.input :created_by_id,
+          <%= f.input :created_by_id,
                     as: :select,
                     collection: User.order(:first_name, :last_name),
                     selected: (f.object.created_by_id || current_user.id),
                     input_html: { class: "w-full rounded-lg px-3 py-2" } %>
-      </div>
-    <% else %>
-      <%= f.hidden_field :created_by_id, value: current_user.id %>
-    <% end %>
-  </div>
+        </div>
+      <% else %>
+        <%= f.hidden_field :created_by_id, value: current_user.id %>
+      <% end %>
+    </div>
 
-  <!-- Action buttons -->
-  <div class="mt-6 flex flex-wrap gap-3">
-    <% if @workshop_variation.persisted? %>
-      <%= link_to "Delete", @workshop_variation,
+    <!-- Action buttons -->
+    <div class="mt-6 flex flex-wrap gap-3">
+      <% if @workshop_variation.persisted? %>
+        <%= link_to "Delete", @workshop_variation,
                   method: :delete,
                   data: { confirm: "Are you sure?" },
                   class: "btn btn-danger-outline" %>
-    <% end %>
+      <% end %>
 
-    <% cancel_path =
+      <% cancel_path =
          if params[:workshop_id].present?
            workshop_path(@workshop, anchor: "workshop-variations")
          elsif current_user.super_user?
            workshop_variations_path
          else
            authenticated_root_path
-         end
-    %>
-    <%= link_to 'Cancel', cancel_path,
+         end %>
+
+      <%= link_to 'Cancel', cancel_path,
                 class: "btn btn-secondary-outline" %>
 
-    <%= f.submit 'Submit',
+      <%= f.submit 'Submit',
                  class: "btn btn-primary" %>
-  </div>
-<% end %>
+    </div>
+  <% end %>
 </div>

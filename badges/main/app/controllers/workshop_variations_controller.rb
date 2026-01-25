@@ -1,5 +1,5 @@
 class WorkshopVariationsController < ApplicationController
-  include AhoyViewTracking
+  include AssetUpdatable, AhoyViewTracking
   def index
     unless current_user.super_user?
       redirect_to authenticated_root_path
@@ -22,7 +22,6 @@ class WorkshopVariationsController < ApplicationController
     @workshops = workshops.order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
-    set_form_variables
   end
 
   def create
@@ -35,6 +34,10 @@ class WorkshopVariationsController < ApplicationController
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
 
+      if params.dig(:library_asset, :new_assets).present?
+        update_asset_owner(@workshop_variation)
+      end
+
       flash[:notice] = "Workshop Variation has been created."
       if params[:from] == "workshop_show"
         redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
@@ -44,7 +47,6 @@ class WorkshopVariationsController < ApplicationController
         redirect_to authenticated_root_path
       end
     else
-      set_form_variables
       render :new
     end
   end
@@ -64,7 +66,6 @@ class WorkshopVariationsController < ApplicationController
   def edit
     @workshop_variation = WorkshopVariation.find(params[:id])
     @workshops = Workshop.published.order(:title)
-    set_form_variables
   end
 
   def update
@@ -75,7 +76,6 @@ class WorkshopVariationsController < ApplicationController
       redirect_to workshop_variations_path
     else
       flash[:alert] = "Unable to update Workshop Variation."
-      set_form_variables
       render :edit
     end
   end
@@ -83,16 +83,12 @@ class WorkshopVariationsController < ApplicationController
   private
 
   def set_form_variables
-    @workshop_variation.build_primary_asset if @workshop_variation.primary_asset.blank?
-    @workshop_variation.gallery_assets.build
   end
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
       [ :name, :code, :inactive, :position,
-       :youtube_url, :created_by_id, :workshop_id,
-       primary_asset_attributes: [ :id, :file, :_destroy ],
-       gallery_assets_attributes: [ :id, :file, :_destroy ]
+       :youtube_url, :created_by_id, :workshop_id
       ]
     )
   end
