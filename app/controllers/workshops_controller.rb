@@ -11,7 +11,7 @@ class WorkshopsController < ApplicationController
 
       @workshops = search_service.workshops
         .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges, user: [ :facilitator ], primary_asset: [ :file_attachment ])
-        .paginate(page: params[:page], per_page: params[:per_page] || 20)
+        .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
       @workshops_count = search_service.workshops.size
 
@@ -189,9 +189,6 @@ class WorkshopsController < ApplicationController
 
 
   def set_form_variables
-    @workshop.build_primary_asset if @workshop.primary_asset.blank?
-    @workshop.gallery_assets.build
-
     @age_ranges = Category.includes(:category_type).where("metadata.name = 'AgeRange'").pluck(:name)
     @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
     @windows_types = WindowsType.all
@@ -298,9 +295,6 @@ class WorkshopsController < ApplicationController
 
       category_ids: [],
       sector_ids: [],
-      primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ],
-      new_assets: [ :id, :type ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ],
