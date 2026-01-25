@@ -5,13 +5,13 @@ class DashboardController < ApplicationController
     if turbo_frame_request?
       case turbo_frame_request_id
       when "dashboard_workshops"
-        workshops = Workshop.includes(:bookmarks, :windows_type, :primary_asset, :gallery_assets)
+        workshops = Workshop.includes(:bookmarks, :windows_type, :primary_asset)
                             .featured
                             .published
                             .decorate
         @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
       when "dashboard_resources"
-        @resources = Resource.includes(:bookmarks, :downloadable_asset, :primary_asset, :gallery_assets)
+        @resources = Resource.includes(:bookmarks, :primary_asset, :downloadable_asset)
                              .featured
                              .published
                              .order(position: :asc, created_at: :desc)
@@ -30,7 +30,7 @@ class DashboardController < ApplicationController
                                        .decorate
 
       when "dashboard_events"
-        @events = Event.includes(:event_registrations, :primary_asset, :gallery_assets)
+        @events = Event.includes(:bookmarks, :primary_asset)
                        .featured
                        .published
                        .order(:start_date)
