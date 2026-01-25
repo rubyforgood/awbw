@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class QuotePolicy < ApplicationPolicy
-  # workshop scope in forms based on admin status
-
   def index?
     authenticated?
   end
@@ -21,14 +19,5 @@ class QuotePolicy < ApplicationPolicy
 
   def destroy?
     admin?
-  end
-
-  # Scope for workshop selection in forms
-  scope_for :relation, :workshops do |relation|
-    if admin?
-      relation.all
-    else
-      relation.active
-    end
   end
 end

@@ -84,7 +84,7 @@ class FacilitatorsController < ApplicationController
     if @facilitator.user
       @facilitator.user.project_users.first || @facilitator.user.project_users.build
     end
-    projects = authorized_scope(Project, type: :projects, with: FacilitatorPolicy)
+    projects = authorized_scope(Project)
     @projects_array = projects.order(:name).pluck(:name, :id)
   end
 

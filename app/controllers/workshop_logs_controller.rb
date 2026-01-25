@@ -114,7 +114,7 @@ class WorkshopLogsController < ApplicationController
                         .joins(:workshop_logs)
                         .distinct
                         .order(:last_name, :first_name)
-    @projects = authorized_scope(Project, type: :projects, with: WorkshopLogPolicy).order(:name)
+    @projects = authorized_scope(Project).order(:name)
     # @workshops = Workshop.joins(:workshop_logs)
     #                      .order(:title)
   end
@@ -132,7 +132,7 @@ class WorkshopLogsController < ApplicationController
       @workshop = Workshop.new
     end
 
-    workshops = authorized_scope(Workshop, type: :workshops, with: WorkshopLogPolicy).includes(:windows_type)
+    workshops = authorized_scope(Workshop).includes(:windows_type)
     @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id).includes(:windows_type))
                           .distinct
                           .order(title: :asc)

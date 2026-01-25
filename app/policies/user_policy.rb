@@ -28,15 +28,6 @@ class UserPolicy < ApplicationPolicy
     admin?
   end
 
-  # Scope for projects in user forms
-  scope_for :relation, :projects do |relation|
-    if admin?
-      relation.active
-    else
-      user.projects
-    end
-  end
-
   private
 
   def owner_of_self?

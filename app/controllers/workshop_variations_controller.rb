@@ -15,7 +15,7 @@ class WorkshopVariationsController < ApplicationController
 
   def new
     @workshop_variation = WorkshopVariation.new
-    @workshops = authorized_scope(Workshop, type: :workshops, with: WorkshopVariationPolicy).order(:title)
+    @workshops = authorized_scope(Workshop).order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
   end

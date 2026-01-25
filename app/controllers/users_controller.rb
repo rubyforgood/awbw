@@ -130,7 +130,7 @@ class UsersController < ApplicationController
   def set_form_variables
     set_facilitator
     @user.project_users.first || @user.project_users.build
-    projects = authorized_scope(Project, type: :projects, with: UserPolicy)
+    projects = authorized_scope(Project)
     @projects_array = projects.order(:name).pluck(:name, :id)
   end
 

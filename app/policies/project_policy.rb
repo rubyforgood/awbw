@@ -20,4 +20,13 @@ class ProjectPolicy < ApplicationPolicy
   def destroy?
     admin?
   end
+
+  # Default scope: admin sees all active, users see their own projects
+  scope_for :relation do |relation|
+    if admin?
+      relation.active
+    else
+      relation.where(id: user.project_ids)
+    end
+  end
 end

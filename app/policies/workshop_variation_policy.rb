@@ -2,7 +2,6 @@
 
 class WorkshopVariationPolicy < ApplicationPolicy
   # index = admin only
-  # create scope based on admin status
 
   def index?
     admin?
@@ -22,14 +21,5 @@ class WorkshopVariationPolicy < ApplicationPolicy
 
   def destroy?
     admin?
-  end
-
-  # Scope for workshop selection in forms
-  scope_for :relation, :workshops do |relation|
-    if admin?
-      relation.all
-    else
-      relation.published
-    end
   end
 end

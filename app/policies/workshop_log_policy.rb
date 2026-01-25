@@ -34,24 +34,6 @@ class WorkshopLogPolicy < ApplicationPolicy
     end
   end
 
-  # Scope for workshops in forms
-  scope_for :relation, :workshops do |relation|
-    if admin?
-      relation.all
-    else
-      relation.published
-    end
-  end
-
-  # Scope for projects in forms/filters
-  scope_for :relation, :projects do |relation|
-    if admin?
-      relation.active
-    else
-      user.projects
-    end
-  end
-
   private
 
   def owner?

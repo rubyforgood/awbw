@@ -66,26 +66,4 @@ class ApplicationPolicy < ActionPolicy::Base
       relation.all
     end
   end
-
-  # Scope for forms (e.g., selecting workshops in forms)
-  scope_for :relation, :form do |relation|
-    if admin?
-      relation.all
-    elsif relation.respond_to?(:published)
-      relation.published
-    elsif relation.respond_to?(:active)
-      relation.active
-    else
-      relation.all
-    end
-  end
-
-  # Scope for projects accessible to user
-  scope_for :relation, :projects do |relation|
-    if admin?
-      relation.active
-    else
-      relation.where(id: user.project_ids)
-    end
-  end
 end

@@ -51,7 +51,7 @@ class QuotesController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @workshops = authorized_scope(Workshop, type: :workshops, with: QuotePolicy).order(:title)
+    @workshops = authorized_scope(Workshop).order(:title)
   end
 
   private
