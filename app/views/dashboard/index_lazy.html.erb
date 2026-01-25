@@ -7,7 +7,7 @@
 <% end %>
 
 <%= turbo_frame_tag "dashboard_resources" do %>
-  <%= render "dashboard/resources", resources: @resources, title: "Popular Resources" %>
+  <%= render "resources_cards", resources: @resources, title: "Popular Resources" %>
 <% end %>
 
 <%= turbo_frame_tag "dashboard_events" do %>

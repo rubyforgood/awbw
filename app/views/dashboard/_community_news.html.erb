@@ -6,9 +6,8 @@
                title: title,
                subtitle: "Announcements and updates" %>
 
-    <%# turbo_frame_tag "dashboard_community_news", src: authenticated_root_path do %>
-    <%= render "community_news_cards_skeleton" %>
-
-    <%# end %>
+    <%= turbo_frame_tag "dashboard_community_news", src: authenticated_root_path do %>
+      <%= render "community_news_cards_skeleton" %>
+    <% end %>
   </div>
 </section>
