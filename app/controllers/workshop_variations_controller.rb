@@ -22,7 +22,6 @@ class WorkshopVariationsController < ApplicationController
     @workshops = workshops.order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
-    set_form_variables
   end
 
   def create
@@ -35,7 +34,10 @@ class WorkshopVariationsController < ApplicationController
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
 
-      assign_associations(@workshop_variation)
+      if params.dig(:library_asset, :new_assets).present?
+        update_asset_owner(@workshop_variation)
+      end
+
       flash[:notice] = "Workshop Variation has been created."
       if params[:from] == "workshop_show"
         redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
@@ -45,7 +47,6 @@ class WorkshopVariationsController < ApplicationController
         redirect_to authenticated_root_path
       end
     else
-      set_form_variables
       render :new
     end
   end
@@ -75,7 +76,6 @@ class WorkshopVariationsController < ApplicationController
       redirect_to workshop_variations_path
     else
       flash[:alert] = "Unable to update Workshop Variation."
-      set_form_variables
       render :edit
     end
   end

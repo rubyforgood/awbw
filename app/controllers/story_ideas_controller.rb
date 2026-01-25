@@ -1,4 +1,5 @@
 class StoryIdeasController < ApplicationController
+  include AssetUpdatable
   before_action :set_story_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -34,6 +35,11 @@ class StoryIdeasController < ApplicationController
         recipient_role: :admin,
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
+
+      if params.dig(:library_asset, :new_assets).present?
+        update_asset_owner(@story_idea)
+      end
+
       redirect_to story_ideas_path, notice: "StoryIdea was successfully created."
     else
       set_form_variables
@@ -57,9 +63,6 @@ class StoryIdeasController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
-    @story_idea.gallery_assets.build
-
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @projects = (@user || current_user).projects.order(:name)
     @windows_types = WindowsType.all
@@ -67,17 +70,6 @@ class StoryIdeasController < ApplicationController
     @users = User.active.or(User.where(id: @story_idea.created_by_id))
                  .order(:first_name, :last_name)
   end
-
-  # def remove_image
-  #   @story_idea = StoryIdea.find(params[:id])
-  #   @image = @story_idea.images.find(params[:image_id])
-  #   @image.purge
-  #
-  #   respond_to do |format|
-  #     format.turbo_stream
-  #     format.html { redirect_to edit_story_path(@story_idea), notice: "Asset removed." }
-  #   end
-  # end
 
   private
 
@@ -92,8 +84,6 @@ class StoryIdeasController < ApplicationController
       :permission_given, :publish_preferences, :promoted_to_story,
       :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
-      primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 end
