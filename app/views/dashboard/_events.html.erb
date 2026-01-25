@@ -6,9 +6,8 @@
                title: title,
                subtitle: "Workshops, trainings, and upcoming gatherings" %>
 
-    <%# turbo_frame_tag "dashboard_events", src: authenticated_root_path do %>
-    <%= render "events_cards_skeleton" %>
-
-    <%# end %>
+    <%= turbo_frame_tag "dashboard_events", src: authenticated_root_path do %>
+      <%= render "events_cards_skeleton" %>
+    <% end %>
   </div>
 </section>

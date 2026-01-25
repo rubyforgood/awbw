@@ -1,0 +1,14 @@
+<% if stories&.any? %>
+  <div class="space-y-4">
+    <% stories.first(3).each do |story| %>
+      <%= render "stories/story_card", story: story %>
+    <% end %>
+  </div>
+  <div class="mt-6 text-right">
+    <%= link_to "Read all stories",
+                stories_path,
+                class: "text-primary font-medium hover:underline" %>
+  </div>
+<% else %>
+  <p class="text-gray-500">No stories yet.</p>
+<% end %>
