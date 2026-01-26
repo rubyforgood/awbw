@@ -1,9 +1,4 @@
 module ApplicationHelper
-  def root_link_path
-    # user_signed_in? ? root_path : root_path
-    root_path
-  end
-
   def search_page(params)
     params[:search] ? params[:search][:page] : 1
   end

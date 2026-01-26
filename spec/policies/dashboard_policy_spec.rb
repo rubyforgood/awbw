@@ -4,7 +4,6 @@ RSpec.describe DashboardPolicy, type: :policy do
   let(:admin_user) { build_stubbed :user, super_user: true }
   let(:regular_user) { build_stubbed :user, super_user: false }
 
-  # Helper method to create policy with different contexts
   def policy_for(record: nil, user:)
     described_class.new(record, user: user)
   end

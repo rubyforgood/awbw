@@ -119,9 +119,5 @@ Rails.application.routes.draw do
     end
   end
 
-  # Root paths
   root to: "dashboard#index"
-  # authenticated :user do
-  #   root to: "dashboard#index", as: :authenticated_root
-  # end
 end
