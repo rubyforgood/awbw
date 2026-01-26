@@ -121,13 +121,7 @@ Rails.application.routes.draw do
 
   # Root paths
   root to: "dashboard#index"
-  authenticated :user do
-    root to: "dashboard#index", as: :authenticated_root
-  end
-  # Wrap Devise routes in a scope for unauthenticated users
-  devise_scope :user do
-    unauthenticated do
-      root to: "devise/sessions#new", as: :unauthenticated_root
-    end
-  end
+  # authenticated :user do
+  #   root to: "dashboard#index", as: :authenticated_root
+  # end
 end
