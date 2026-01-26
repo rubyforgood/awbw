@@ -56,3 +56,10 @@ custom-rhino-editor a:hover {
 /* Dashed border for grid cells that have hasBorder=false (editor only) */
 custom-rhino-editor .grid-cell-editor[hasborder="false"] {
   border: 2px dashed #ced4da; }
+
+custom-rhino-editor span.mention {
+  border: 1px solid #000;
+  border-radius: 0.4rem;
+  padding: 0.1rem 0.3rem;
+  box-decoration-break: clone;
+}

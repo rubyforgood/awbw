@@ -4,6 +4,7 @@ class ProjectUser < ApplicationRecord
 
   # Validations
   validates_presence_of :project_id
+  validates_presence_of :title
 
   # Enum
   enum :position, { default: 0, liaison: 1, leader: 2, assistant: 3 }

@@ -1,0 +1,14 @@
+<div id="asset_collection" class="flex flex-wrap justify-center gap-2 p-3 m-2 bg-white my-5 rounded-md">
+  <% owner.assets.compact
+      .select { |a| Asset.allowed_types_for_owner(owner).include?(a.type) }
+      .sort_by do |asset|
+        case asset.type
+        when "PrimaryAsset" then 0
+        when "DownloadableAsset" then 1
+        else 2
+        end
+      end
+      .each do |asset| %>
+    <%= render "assets/card", asset: asset, owner: owner %>
+  <% end %>
+</div>

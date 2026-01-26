@@ -4,6 +4,17 @@ FactoryBot.define do
     last_name  { Faker::Name.last_name.gsub("'", " ") }
     email      { Faker::Internet.unique.email(name: "#{first_name} #{last_name}") }
     password { "MyString" }
+
+    # CONFIRMABLE
+    confirmed_at { Time.current }
+
+    # LOCKABLE
+    locked_at { nil }
+    failed_attempts { 0 }
+
+    # TRACKABLE
+    sign_in_count { 0 }
+
     # address { "MyString" }
     # address2 { "MyString" }
     # city { "MyString" }
@@ -41,6 +52,14 @@ FactoryBot.define do
     # avatar_file_size { 1 }
     # avatar_updated_at { "2025-10-25 22:57:35" }
     # subscribecode { "MyString" }
+
+    trait :unconfirmed do
+      confirmed_at { nil }
+    end
+
+    trait :locked do
+      locked_at { Time.current }
+    end
 
     trait :admin do
       super_user { true }

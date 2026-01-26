@@ -1,17 +1,28 @@
 FactoryBot.define do
   factory :community_news do
     title { "MyString" }
-    body { "MyText" }
-    youtube_url { "MyString" }
-    published { false }
+    published { true }
     featured { false }
-    inactive { false }
-    author { "MyString" }
-    reference_url { "MyString" }
-    project { nil }
-    windows_type { nil }
-    workshop { nil }
-    created_by { nil }
-    updated_by { nil }
+    reference_url { "" }
+    youtube_url { "" }
+    association :author, factory: :user
+    association :created_by, factory: :user
+    association :updated_by, factory: :user
+
+    trait :published do
+      published { true }
+    end
+
+    trait :featured do
+      featured { true }
+    end
+
+    trait :with_project do
+      association :project
+    end
+
+    trait :with_windows_type do
+      association :windows_type
+    end
   end
 end

@@ -35,7 +35,7 @@ export default class extends Controller {
     const id = item.dataset.sortableId;
     const url = this.urlValue.replace(":id", id);
     put(url, {
-      body: JSON.stringify({ ordering: newIndex + 1 }), // add 1 to change sortablejs 0-based index to 1-based for positioning gem
+      body: JSON.stringify({ position: newIndex + 1 }), // add 1 to change sortablejs 0-based index to 1-based for positioning gem
     });
   }
 }

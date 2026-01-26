@@ -25,8 +25,7 @@
             </thead>
 
             <tbody class="divide-y divide-gray-200">
-            <% @quotes.each do |quote| %>
-              <% quote = quote.decorate %>
+            <% @quotes.decorate.each do |quote| %>
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <div class="mb-1">

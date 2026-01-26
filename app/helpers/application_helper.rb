@@ -53,7 +53,7 @@ module ApplicationHelper
 
     if obj.form_builder and obj.form_builder.name == "Share a Story"
       if action.empty?
-       return report_path(obj)
+        return report_path(obj)
       else
         return send("reports_#{action}story_path", obj)
       end
@@ -124,5 +124,13 @@ module ApplicationHelper
 
   def display_count(value)
     value.to_i.zero? ? "--" : number_with_delimiter(value)
+  end
+
+  def navbar_bg_class
+    staging_environment? ? "bg-red-600" : "bg-primary"
+  end
+
+  def staging_environment?
+    ENV["RAILS_ENV"] == "staging" || Rails.env == "staging"
   end
 end

@@ -1,0 +1,57 @@
+<div class="min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="<%= DomainTheme.bg_class_for(:resources) %> border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+      <!-- Top Right Utility Buttons -->
+      <div class="text-right mb-4 space-x-1">
+        <span class="inline-block text-md">
+          <%= render "bookmarks/editable_bookmark_button", resource: @resource.object %>
+        </span>
+
+        <% if current_user.super_user? %>
+          <%= link_to("Edit", edit_resource_path(@resource),
+                      class: "admin-only bg-blue-100 btn btn-primary-outline") %>
+        <% end %>
+
+        <% if @resource.external_url.present? %>
+          <%= link_to "Website", safe_url(@resource.external_url), target: "_blank", rel: "noopener noreferrer",
+                      class: "btn btn-secondary-outline" %>
+        <% end %>
+
+        <%= link_to ("<span title='Download #{@resource.kind} image'>" +
+          " Download <span class='fa fa-download'></span></span>").html_safe,
+                    resource_download_path(@resource),
+                    class: "btn btn-utility" if @resource.downloadable_asset&.file&.attached? %>
+      </div>
+
+      <!-- Resource Card -->
+      <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+        <!-- Title -->
+        <div class="font-semibold text-gray-900 mb-2">
+          <%= title_with_badges(@resource, font_size: "text-3xl") %>
+          <%= "(#{@resource.windows_type&.short_name})" if @resource.windows_type %>
+        </div>
+
+        <!-- Author and Date -->
+        <div class="flex flex-col gap-1">
+          <% unless @resource.toolkit_and_form? %>
+            <div class="flex items-center text-gray-600 text-sm gap-2">
+              <span><%= @resource.author %></span>
+
+              <% unless @resource.story? %>
+                <span class="<%= "border-l border-gray-400 pl-2" if @resource.author.present? %>">
+                  <%= @resource.display_date %>
+                </span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Assets -->
+        <%= render "assets/display_assets", resource: @resource %>
+
+        <!-- Main Text -->
+        <div class="prose mx-auto leading-relaxed text-gray-800 text-left"><%= @resource.display_text %></div>
+      </div>
+    </div>
+  </div>
+</div>

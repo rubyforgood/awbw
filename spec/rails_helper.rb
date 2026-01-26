@@ -51,6 +51,7 @@ RSpec.configure do |config|
   config.use_transactional_fixtures = true
   config.include Devise::Test::IntegrationHelpers, type: :request
   config.include Devise::Test::ControllerHelpers, type: :view
+  config.include Devise::Test::ControllerHelpers, type: :controller
   # You can uncomment this line to turn off ActiveRecord support entirely.
   # config.use_active_record = false
 
@@ -83,10 +84,18 @@ RSpec.configure do |config|
   config.before(:suite) { Warden.test_mode! }
   config.after { Warden.test_reset! }
 
+  config.include ActiveJob::TestHelper
+
   # ==> Mailer Prevention (add this block)
   config.before(:each) do
     ActionMailer::Base.delivery_method = :test
     ActionMailer::Base.deliveries.clear
   end
   # <== End Mailer Prevention
+
+  # Clear jobs
+  config.before(:each) do
+    clear_enqueued_jobs
+    clear_performed_jobs
+  end
 end

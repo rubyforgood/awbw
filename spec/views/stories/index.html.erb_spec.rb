@@ -7,18 +7,19 @@ RSpec.describe "stories/index", type: :view do
 
   before(:each) do
     sign_in user
+    allow(view).to receive(:turbo_frame_request?).and_return(true)
     assign(:stories,
            StoryDecorator.decorate_collection(paginated([ story1, story2 ])))
   end
 
   it "renders a list of stories" do
-    render
+    render template: "stories/index_lazy"
     expect(rendered).to include(story1.title, story2.title)
   end
 
   it "renders a friendly message when no stories exist" do
     assign(:stories, paginated([]))
-    render
+    render template: "stories/index_lazy"
     expect(rendered).to match(/No stories found/)
   end
 end

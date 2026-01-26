@@ -41,7 +41,7 @@
         <hr class="border-gray-300 mb-4">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <% @quotes.each do |quote| %>
+          <% @quotes.decorate.each do |quote| %>
             <div class="space-y-1">
               <p class="italic text-gray-700 text-sm"><%= quote.quote %></p>
               <p class="text-sm font-bold text-gray-800">- <%= quote.speaker %></p>

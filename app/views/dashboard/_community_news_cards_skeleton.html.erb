@@ -1,0 +1,24 @@
+<% 3.times do %>
+  <div class="bg-white shadow-sm rounded-xl p-4 animate-pulse mt-4">
+    <!-- Skeleton bookmark -->
+    <div class="absolute top-3 right-3">
+      <div class="w-5 h-5 bg-gray-200 rounded"></div>
+    </div>
+
+    <div class="flex flex-row items-start gap-4">
+      <!-- LEFT: Title + body -->
+      <div class="flex-1 pr-10 space-y-1">
+        <!-- Title -->
+        <div class="h-5 w-1/5 bg-gray-200 rounded"></div>
+
+        <div class="h-3 w-full bg-gray-200 rounded"></div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<div class="mt-6 text-right">
+  <%= link_to "Read all news",
+                community_news_index_path,
+                class: "text-primary font-medium hover:underline" %>
+</div>

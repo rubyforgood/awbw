@@ -1,16 +1,17 @@
 class ProjectsController < ApplicationController
+  include AhoyViewTracking
   before_action :set_project, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Project.search_by_params(params).order(:name)
+    unpaginated = Project.includes(:logo_attachment, :windows_type, :project_status).search_by_params(params).order(:name)
     @projects_count = unpaginated.count
     @projects = unpaginated.paginate(page: params[:page], per_page: per_page)
     set_index_variables
   end
 
   def show
-    @project.increment_view_count!(session: session, request: request)
+    track_view(@project)
 
     # Reuse WorkshopLogsController#index logic programmatically
     workshop_logs_controller = WorkshopLogsController.new

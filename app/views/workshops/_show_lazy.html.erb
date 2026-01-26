@@ -1,0 +1,5 @@
+<%= turbo_frame_tag "show_lazy" do %>
+  <%= render "show_tags", workshop: workshop %>
+  <%= render "show_body", workshop: workshop %>
+  <%= render "show_associations", workshop: workshop %>
+<% end %>

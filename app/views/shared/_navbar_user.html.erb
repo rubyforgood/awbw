@@ -10,7 +10,7 @@
   >
     <span class="sr-only">Open user menu</span>
     <span class="absolute -inset-1.5"></span>
-    <% image = current_user.avatar.attached? ? url_for(current_user.avatar) : "missing.png" %>
+    <% image = current_user&.avatar&.attached? ? url_for(current_user.avatar) : "missing.png" %>
     <%= image_tag image,
                   id: "avatar-image",
                   class: "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10 img-circle avatar" %>
@@ -22,7 +22,7 @@
   id="avatar-dropdown"
   data-dropdown-target="content"
 >
-  <% if current_user.super_user? %>
+  <% if current_user&.super_user? %>
     <%= link_to dashboard_admin_path,
                 class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
       <i class="fas fa-cog"></i>
@@ -30,16 +30,18 @@
     <% end %>
   <% end %>
 
-  <%= link_to (current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user)),
-              class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
-    <i class="fas fa-user"></i>
-    <span>My profile</span>
+  <% if current_user&.super_user %>
+    <%= link_to (current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user)),
+                class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+      <i class="fas fa-user"></i>
+      <span>My profile</span>
+    <% end %>
   <% end %>
 
-  <% if current_user.project_users.any? %>
+  <% if current_user&.super_user && current_user.project_users.any? %>
     <% current_user.project_users.each do |project_user| %>
       <%= link_to project_path(project_user.project),
-                  class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+                  class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
         <i class="fas fa-users"></i>
         <span>
           My team<%= " (" + project_user.project.name.truncate(12) + ")" if current_user.project_users.many? %>

@@ -1,0 +1,31 @@
+<!-- CARD -->
+<style>
+  .card {
+      max-width: 600px;
+      background-color: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+  }
+
+  .button {
+      display: inline-block;
+      padding: 10px 16px;
+      background-color: #2563eb;
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+  }
+</style>
+
+<!--[if mso | IE]>
+<table width="600" align="center"><tr><td>
+<![endif]-->
+
+<div class="card">
+  <%= yield %>
+</div>
+
+<!--[if mso | IE]>
+</td></tr></table>
+<![endif]-->

@@ -17,16 +17,14 @@
     <span>Contact us</span>
   <% end %>
 
+  <%= link_to tutorials_path, class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
+    <i class="fas fa-circle-info"></i>
+    <span>Tutorials</span>
+  <% end %>
 
   <%= link_to "https://www.awbw.org", target: "_blank", class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
     <i class="fas fa-globe"></i>
     <span>Public website</span>
-  <% end %>
-
-
-  <%= link_to tutorials_path, class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
-    <i class="fas fa-circle-info"></i>
-    <span>Tutorials</span>
   <% end %>
 </div>
 

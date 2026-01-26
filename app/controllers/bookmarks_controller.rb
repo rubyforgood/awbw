@@ -3,7 +3,7 @@ class BookmarksController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page] || 25
-    unfiltered = Bookmark.includes(:primary_asset, :gallery_assets, :windows_type)
+    unfiltered = Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ])
     filtered = unfiltered.search(params)
     filtered = filtered.sorted(params[:sort])
 

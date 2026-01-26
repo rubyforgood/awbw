@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "facilitators/edit", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
   let(:facilitator) { create(:facilitator, pronouns: "sdfsdf") }

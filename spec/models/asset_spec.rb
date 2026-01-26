@@ -4,7 +4,7 @@ RSpec.describe Asset do
   # pending "add some examples to (or delete) #{__FILE__}"
 
   describe "associations" do
-    it { should belong_to(:owner) } # Polymorphic
+    it { should belong_to(:owner).optional } # Polymorphic
     it { should belong_to(:report).optional } # Assuming report can be optional
   end
 

@@ -1,4 +1,4 @@
-FROM ruby:3.3.8-slim AS base
+FROM ruby:4.0.1-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -12,7 +12,7 @@ ENV RAILS_ENV=production \
     PATH="/gems/bin:$PATH"
 
 # Install bundler
-RUN gem install bundler -v 2.5.22
+RUN gem install bundler -v 4.0.4
 
 
 FROM base AS assets
@@ -21,7 +21,6 @@ FROM base AS assets
 RUN apt-get update -qq && apt-get install -y \
   build-essential \
   nodejs \
-  yarn \
   imagemagick \
   libvips \
   poppler-utils \
@@ -40,7 +39,7 @@ RUN apt-get update -qq && apt-get install -y \
 COPY . .
 
 RUN npm ci
-RUN bundle install --without development test
+RUN bundle config set without 'development test' && bundle install
 
 # These envs are used in the rails application. While they are entirely 
 # unrelated to the docker build process, they are required for the app to run.

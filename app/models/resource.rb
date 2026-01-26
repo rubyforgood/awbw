@@ -1,9 +1,10 @@
 class Resource < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
+  include ActionText::Attachable
 
-  PUBLISHED_KINDS = [ "Handout", "Scholarship", "Template", "Toolkit", "Form" ]
-  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme" ]
+  PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
+  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
 
   has_rich_text :rhino_text
 
@@ -31,7 +32,16 @@ class Resource < ApplicationRecord
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :rich_text_assets, -> { where(type: "RichTextAsset") },
          as: :owner, class_name: "RichTextAsset", dependent: :destroy
+  has_one :downloadable_asset, -> { where(type: "DownloadableAsset") },
+         as: :owner, class_name: "DownloadableAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
+
+  has_many :action_text_mentions,
+           as: :mentionable,
+           dependent: :destroy
+
+  has_many :action_text_rich_texts,
+           through: :action_text_mentions
 
   # Default values
   attribute :inactive, :boolean, default: false
@@ -55,11 +65,14 @@ class Resource < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes :title, :author, :text
+
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :featured, ->(featured = nil) { featured.present? ? where(featured: featured) : where(featured: true) }
@@ -111,10 +124,6 @@ class Resource < ApplicationRecord
     title || id
   end
 
-  def download_attachment
-    primary_asset || gallery_assets.first || attachments.first
-  end
-
   def type_enum
     types.map { |title| [ title.titleize, title ] }
   end
@@ -134,12 +143,9 @@ class Resource < ApplicationRecord
     created_at.month
   end
 
-  def published?
-    !inactive? && published_kind?
-  end
-
-  def published_kind?
-    self.class::PUBLISHED_KINDS.include?(kind)
+  ## ActionText:Attachable
+  def attachable_content_type
+    "application/vnd.active_record.resource"
   end
 
   private

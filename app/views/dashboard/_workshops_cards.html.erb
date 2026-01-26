@@ -1,0 +1,13 @@
+<%= turbo_frame_tag "dashboard_workshops" do %>
+  <% if workshops&.any? %>
+    <%= render "dashboard/workshops_carousel", workshops: @workshops %>
+    <div class="mt-6 text-right">
+      <%= link_to "Search all workshops",
+              workshops_path,
+              data: { turbo_frame: "_top"},
+              class: "text-primary font-medium hover:underline" %>
+    </div>
+  <% else %>
+    <p class="text-gray-500">No workshops available right now.</p>
+  <% end %>
+<% end %>

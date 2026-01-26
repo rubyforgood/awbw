@@ -1,0 +1,13 @@
+<div id="user_lock_status">
+  <% if user.locked_at.present? %>
+    <span class="flex items-center gap-2 text-sm text-red-600">
+      <span class="fa fa-circle text-red-500"></span>
+      <span>Locked account</span>
+    </span>
+  <% else %>
+    <span class="flex items-center gap-2 text-sm text-green-600">
+      <span class="fa fa-circle text-green-500"></span>
+      <span>Active account</span>
+    </span>
+  <% end %>
+</div>

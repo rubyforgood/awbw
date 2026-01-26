@@ -57,11 +57,11 @@
 
       <!-- ACTION BUTTONS -->
       <div class="absolute bottom-3 right-3 flex items-center space-x-2 z-30">
-        <% if resource.download_attachment&.file&.attached? %>
+        <% if resource.downloadable_asset&.file&.attached? %>
           <%= link_to(
                 content_tag(:span, "", class: "fa fa-download"),
                 resource_download_path(resource.object),
-                data: { turbo_frame: "_top", turbo_prefetch: false },
+                data: { turbo: false, turbo_prefetch: false },
                 class: "btn btn-utility"
               ) %>
         <% end %>

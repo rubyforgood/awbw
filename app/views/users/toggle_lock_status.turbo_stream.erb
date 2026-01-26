@@ -1,0 +1,3 @@
+<%= turbo_stream.replace "user_lock_status", partial: "users/lock_status_indicator", locals: { user: @user } %>
+<%= turbo_stream.replace "toggle_lock_button", partial: "users/toggle_lock_button", locals: { user: @user } %>
+<%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>

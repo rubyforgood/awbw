@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "stories/edit", type: :view do
-    let(:user) { create(:user) }
+  let(:user) { create(:user) }
   let(:story) { create(:story, created_by: user, updated_by: user, body: "MyBody", youtube_url: "Youtube_url") }
 
   before(:each) do
@@ -23,7 +23,7 @@ RSpec.describe "stories/edit", type: :view do
 
       assert_select "select[name=?]", "story[workshop_id]"
 
-      assert_select "textarea[name=?]", "story[body]"
+      assert_select "input[name=?][type=?]", "story[rhino_body]", "hidden"
 
       assert_select "textarea[name=?]", "story[youtube_url]"
 
@@ -31,5 +31,32 @@ RSpec.describe "stories/edit", type: :view do
 
       assert_select "select[name=?]", "story[created_by_id]"
     end
+  end
+
+  it "does not render the Website button when website_url is nil" do
+    story.update(website_url: nil)
+    assign(:story, story.decorate)
+
+    render
+
+    assert_select "a", text: "Website", count: 0
+  end
+
+  it "does not render the Website button when website_url is blank" do
+    story.update(website_url: "")
+    assign(:story, story.decorate)
+
+    render
+
+    assert_select "a", text: "Website", count: 0
+  end
+
+  it "renders the Website button when website_url is present" do
+    story.update(website_url: "https://example.com")
+    assign(:story, story.decorate)
+
+    render
+
+    assert_select "a", text: "Website"
   end
 end

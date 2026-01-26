@@ -7,7 +7,7 @@
       "check_name": "MassAssignment",
       "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
       "file": "app/controllers/monthly_reports_controller.rb",
-      "line": 243,
+      "line": 241,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
       "code": "params[:quotes].permit!",
       "render_path": null,
@@ -47,36 +47,13 @@
       "note": ""
     },
     {
-      "warning_type": "SQL Injection",
-      "warning_code": 0,
-      "fingerprint": "a724323441f79b7912916ff769f3e8f0ae3a3e5f55c5f30a8283d6653f84c95e",
-      "check_name": "SQL",
-      "message": "Possible SQL injection",
-      "file": "app/services/workshop_search_service.rb",
-      "line": 95,
-      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
-      "code": "Arel.sql(\"FIELD(id, #{search_by_sectors(search_by_categories(search_by_author_name((Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published or (Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published(true) or if ActiveModel::Type::Boolean.new.cast(params[:inactive]) and (not ActiveModel::Type::Boolean.new.cast(params[:active])) then\n  Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i)).published(false)\nelse\n  Workshop.all.windows_type_ids(params[:windows_types].values.map(&:to_i))\nend)), params[:author_name]), params[:categories]), params[:sectors]).title(params[:title]).search(params[:query]).map(&:id).join(\",\")})\")",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "WorkshopSearchService",
-        "method": "filter_by_query"
-      },
-      "user_input": "params[:query]",
-      "confidence": "High",
-      "cwe_id": [
-        89
-      ],
-      "note": ""
-    },
-    {
       "warning_type": "Mass Assignment",
       "warning_code": 70,
       "fingerprint": "abea946803acd0f0fe12c3bcd54e9b5b04d04f78ff6672e38a6cb8db02e3b5eb",
       "check_name": "MassAssignment",
       "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
       "file": "app/controllers/reports_controller.rb",
-      "line": 270,
+      "line": 280,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
       "code": "params[:quotes].permit!",
       "render_path": null,
@@ -91,7 +68,41 @@
         915
       ],
       "note": ""
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "f5728a807c7f6f03f21b6bcd5b5aa4bfc89aaa908787b85e9a23cb923e32a81f",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped model attribute",
+      "file": "app/views/notifications/show.html.erb",
+      "line": 112,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "Notification.find(params[:id]).email_body_html",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "NotificationsController",
+          "method": "show",
+          "line": 21,
+          "file": "app/controllers/notifications_controller.rb",
+          "rendered": {
+            "name": "notifications/show",
+            "file": "app/views/notifications/show.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "notifications/show"
+      },
+      "user_input": null,
+      "confidence": "High",
+      "cwe_id": [
+        79
+      ],
+      "note": "sdf"
     }
   ],
-  "brakeman_version": "7.1.0"
+  "brakeman_version": "7.1.2"
 }

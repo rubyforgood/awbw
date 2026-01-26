@@ -35,24 +35,25 @@ Rails.application.configure do
   # URL helpers, *_url helpers, mailers
   Rails.application.routes.default_url_options[:host] ||= "localhost:3000"
 
-  # blob.url, disk service
   config.after_initialize do
+    Bullet.enable = true
+    Bullet.rails_logger = true
+
+    # blob.url, disk service
     ActiveStorage::Current.url_options = {
       protocol: "http",
       host: "localhost",
       port: 3000
     }
-  end
 
-  config.action_mailer.delivery_method = :file
-  config.after_initialize do
     if ActionMailer::Base.delivery_method == :smtp
       raise "SMTP must not be enabled in development"
     end
   end
+
+  config.action_mailer.delivery_method = :file
   config.action_mailer.perform_deliveries = true
   config.action_mailer.show_previews = true
-  config.action_mailer.preview_paths = [ "#{Rails.root}/lib/mailer_previews" ]
 
   config.action_mailer.file_settings = {
     location: Rails.root.join("tmp/mail")
@@ -65,7 +66,7 @@ Rails.application.configure do
   config.action_mailer.perform_caching = false
 
   # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.action_mailer.default_url_options = { host: "localhost", port: 3000, protocol: "http" }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -77,7 +78,7 @@ Rails.application.configure do
   config.active_record.verbose_query_logs = true
 
   # Append comments with runtime information tags to SQL queries in logs.
-  config.active_record.query_log_tags_enabled = true
+  config.active_record.query_log_tags_enabled = false
 
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true

@@ -1,15 +1,30 @@
 puts "Creating Users…"
-admin = User.where(first_name: "Umberto", last_name: "User",
-                   email: "umberto.user@example.com",
-                   super_user: true)
-            .first_or_create!(password: "password")
-nonadmin = User.where(first_name: "Amy", last_name: "User",
-                      email: "amy.user@example.com",
-                      super_user: false)
-               .first_or_create!(password: "password")
-User.where(first_name: "Orphaned Reports", last_name: "User",
-           email: "orphaned_reports@awbw.org").first_or_create!(password: "password")
-user_password = Devise::Encryptor.digest(User, 'password')
+
+# Admin
+User.find_or_create_by!(email: "umberto.user@example.com") do |user|
+  user.first_name = "Umberto"
+  user.last_name = "User"
+  user.password = "password"
+  user.super_user = true
+end
+
+# Non-Admin
+User.find_or_create_by!(email: "amy.user@example.com") do |user|
+  user.first_name = "Amy"
+  user.last_name = "User"
+  user.password = "password"
+  user.super_user = false
+end
+
+# Orphaned
+User.find_or_create_by!(email: "orphaned_reports@awbw.org") do |user|
+  user.first_name = "Orphaned Reports"
+  user.last_name = "User"
+  user.password = "password"
+  user.super_user = false
+end
+
+user_password = Devise::Encryptor.digest(User, "password")
 User.in_batches do |batch|
   batch.update_all(encrypted_password: user_password)
 end

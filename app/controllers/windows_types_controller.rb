@@ -55,7 +55,7 @@ class WindowsTypesController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @categories = Category.age_ranges.published.order(:name)
+    @categories = Category.age_ranges.published.ordered_by_position_and_name
     @windows_type.categorizable_items.build
   end
 

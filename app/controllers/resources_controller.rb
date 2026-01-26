@@ -1,11 +1,16 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable
+  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
 
   def index
     authorize!
 
     if turbo_frame_request?
-      per_page = params[:number_of_items_per_page].presence || 25
+      per_page = params[:number_of_items_per_page].presence || 18
+      unfiltered = Resource.where(kind: Resource::PUBLISHED_KINDS) # TODO - #FIXME brittle
+        .includes(:primary_asset, :gallery_assets, :attachments, :bookmarks, :downloadable_asset, primary_asset: [ :file_attachment ], downloadable_asset: [ :file_attachment ])
+      filtered = unfiltered.search_by_params(params)
+        .by_created
+      @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
       base_scope =
         authorized_scope(Resource.where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
@@ -21,9 +26,11 @@ class ResourcesController < ApplicationController
 
       total_count    = base_scope.count
       filtered_count = filtered.count
-
-      @count_display =
-        filtered_count == total_count ? total_count : "#{filtered_count}/#{total_count}"
+      @count_display = if filtered_count == total_count
+        total_count
+      else
+        "#{filtered_count}/#{total_count}"
+      end
 
       render :resource_results
     else
@@ -42,29 +49,31 @@ class ResourcesController < ApplicationController
   end
 
   def edit
-    @resource = Resource.find(resource_id_param).decorate
-    authorize! @resource
+    @resource = Resource.includes(user: :facilitator).find(resource_id_param).decorate
     set_form_variables
+
+    if turbo_frame_request?
+      render :editor_lazy
+    else
+      render :edit
+    end
   end
 
   def show
     @resource = Resource.find(resource_id_param).decorate
-    authorize! @resource
-    @resource.increment_view_count!(session: session, request: request)
+    track_view(@resource)
     load_forms
-  end
-
-  def rhino_text
-    @resource = Resource.find(resource_id_param).decorate
-    authorize! @resource
-    load_forms
-    render :show_test
   end
 
   def create
     authorize!
     @resource = current_user.resources.build(resource_params)
+
     if @resource.save
+      if params.dig(:library_asset, :new_assets).present?
+        update_asset_owner(@resource)
+      end
+
       redirect_to resources_path
     else
       @resource = @resource.decorate
@@ -103,17 +112,11 @@ class ResourcesController < ApplicationController
 
   def download
     @resource = Resource.find(params[:resource_id])
-    authorize! @resource
-    @resource.increment!(:download_count)
 
-    attachment = if params[:attachment_id].to_i > 0
-      Attachment.where(owner_type: "Resource", id: params[:attachment_id]).last
-    else
-      Resource.find(params[:resource_id]).download_attachment
-    end
-
-    if attachment&.file&.blob.present?
-      redirect_to rails_blob_url(attachment.file, disposition: "attachment")
+    attachment = @resource&.downloadable_asset&.file
+    if attachment.attached?
+      track_download(@resource)
+      redirect_to rails_blob_url(attachment, disposition: "attachment")
     else
       if params[:from] == "resources_index"
         path = resources_path
@@ -149,16 +152,14 @@ class ResourcesController < ApplicationController
       params[:id]
     end
 
-    def resource_params
-      params.require(:resource).permit(
-        :text, :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
-        :agency, :author, :filemaker_code, :windows_type_id, :ordering,
-        primary_asset_attributes: [ :id, :file, :_destroy ],
-        gallery_assets_attributes: [ :id, :file, :_destroy ],
-        categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
-        sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
-      )
-    end
+  def resource_params
+    params.require(:resource).permit(
+      :rhino_text, :kind, :male, :female, :title, :featured, :inactive, :url,
+      :agency, :author, :filemaker_code, :windows_type_id, :position,
+      categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
+      sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
+    )
+  end
 
     def load_forms
       form = @resource.form

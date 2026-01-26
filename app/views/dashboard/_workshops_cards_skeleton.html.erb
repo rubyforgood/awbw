@@ -1,0 +1,40 @@
+<div class="swiper swiper-initialized swiper-horizontal swiper-backface-hidden">
+  <!-- Slides Skeleton -->
+  <div class="swiper-wrapper flex items-stretch">
+    <% 6.times do %>
+      <div
+        class="
+          swiper-slide relative overflow-hidden block h-96 rounded-xl border border-gray-200 shadow-sm bg-white p-4
+          cursor-pointer animate-pulse
+        "
+        style="width: 257.5px; margin-right: 30px;"
+      >
+        <!-- Bookmark Icon Placeholder -->
+        <div class="absolute bottom-3 right-3 w-5 h-5 bg-gray-300 rounded-full"></div>
+
+        <!-- Media Placeholder -->
+        <div class="w-full h-16 bg-gray-300 rounded border border-gray-200 mb-4"></div>
+
+        <!-- Content Placeholder -->
+        <div class="p-4 space-y-2">
+          <div class="flex justify-between text-xs text-gray-400">
+            <span class="w-16 h-3 bg-gray-300 rounded"></span>
+            <span class="w-12 h-3 bg-gray-300 rounded"></span>
+          </div>
+
+          <div class="space-y-1">
+            <div class="w-3/4 h-5 bg-gray-300 rounded"></div>
+            <div class="w-full h-3 bg-gray-300 rounded"></div>
+            <div class="w-5/6 h-3 bg-gray-300 rounded"></div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<div class="mt-6 text-right">
+  <%= link_to "Search all workshops",
+              workshops_path,
+              class: "text-primary font-medium hover:underline" %>
+</div>

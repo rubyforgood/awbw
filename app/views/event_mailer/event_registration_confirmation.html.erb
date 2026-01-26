@@ -1,0 +1,74 @@
+<h1>Event registration confirmed</h1>
+
+<div style="margin-top: 36px; text-align: left;">
+  <p>
+    Hello <strong><%= @user.full_name %></strong>,
+  </p>
+
+  <p>
+    This message confirms your registration for the following <%= @organization_name %> event:
+  </p>
+
+  <div style="text-align: left;">
+    <table width="100%"
+           cellpadding="0"
+           cellspacing="0"
+           style="background-color:#f3f4f6;border-radius:6px;padding:12px;margin:16px 0;">
+      <tr>
+        <td style="padding:6px 0;">
+          <span style="padding-bottom: 12px"><strong>Event</strong></span><br>
+          <%= @event.title %>
+        </td>
+      </tr>
+
+      <tr>
+        <td style="padding:6px 0;">
+          <span style="padding-bottom: 12px"><strong>Date</strong></span><br>
+          <%= @event.times(display_day: true, display_date: true) %>
+        </td>
+      </tr>
+
+      <% if @event.location.present? %>
+        <tr>
+          <td style="padding:6px 0;">
+            <span style="padding-bottom: 12px"><strong>Location</strong></span><br>
+            <%= @event.location %>
+          </td>
+        </tr>
+      <% end %>
+
+      <% if @event.labelled_cost.present? %>
+        <tr>
+          <td style="padding:6px 0;">
+            <span style="padding-bottom: 12px"><strong>Cost</strong></span><br>
+            <%= @event.labelled_cost %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+
+  <% if @event.detail.present? %>
+    <span style="padding-bottom: 12px"><strong>Details</strong></span><br>
+    <p>
+      <%= simple_format(@event.detail) %>
+    </p>
+    <hr style="margin: 24px 0;">
+  <% end %>
+
+  <% if @event.registration_close_date %>
+    <p>
+      Registration closes on
+      <%= @event.registration_close_date.strftime("%A, %B %-d, %Y at %-l:%M %p %Z") %>.
+    </p>
+  <% end %>
+</div>
+
+
+<p>
+  Visit the event page for updates, directions, or calendar links:
+</p>
+
+<p>
+  <a href="<%= @event_url %>" class="button">View event</a>
+</p>

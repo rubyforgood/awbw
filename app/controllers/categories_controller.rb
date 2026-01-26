@@ -9,13 +9,13 @@ class CategoriesController < ApplicationController
     filtered = unfiltered.category_type_id(params[:category_type_id])
                           .category_name(params[:category_name])
                           .published_search(params[:published_search])
-                          .order("metadata.name ASC, categories.name ASC")
+                          .order(Arel.sql("metadata.name, categories.position, categories.name"))
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
 
     @count_display = if filtered.count == unfiltered.count
-                       unfiltered.count
+      unfiltered.count
     else
-                       "#{filtered.count}/#{unfiltered.count}"
+      "#{filtered.count}/#{unfiltered.count}"
     end
   end
 
@@ -43,11 +43,17 @@ class CategoriesController < ApplicationController
   end
 
   def update
-    if @category.update(category_params)
-      redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other
-    else
-      set_form_variables
-      render :edit, status: :unprocessable_content
+    respond_to do |format|
+      if @category.update(category_params)
+        format.html { redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other }
+        format.json { head :ok }
+      else
+        format.html do
+          set_form_variables
+          render :edit, status: :unprocessable_content
+        end
+        format.json { render json: { errors: @category.errors }, status: :unprocessable_content }
+      end
     end
   end
 
@@ -69,8 +75,12 @@ class CategoriesController < ApplicationController
 
   # Strong parameters
   def category_params
-    params.require(:category).permit(
-      :name, :category_type_id, :metadatum_id, :published
-    )
+    if params[:category]
+      params.require(:category).permit(
+        :name, :category_type_id, :metadatum_id, :published, :position
+      )
+    else
+      params.permit(:position)
+    end
   end
 end

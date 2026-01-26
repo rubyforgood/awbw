@@ -78,10 +78,6 @@
   @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300;
 }
 
-.rotate-180 {
-  transform: rotate(180deg);
-}
-
 .is-active {
   @apply text-primary border-b-2 border-primary font-bold bg-gray-100;
 }
@@ -112,4 +108,42 @@
 .tableWrapper {
   padding: 1rem 0;
   overflow-x: auto;
+}
+
+/* Password related fields */
+.password-container {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 36px; /* aligns with input vertically */
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #6b7280; /* gray-500 */
+}
+
+.toggle-password:hover {
+  color: #374151; /* gray-700 */
+}
+
+/* Hide Chrome / Edge / Safari (macOS + iOS) password reveal icon */
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Swiper equal height slides */
+.swiper-wrapper.flex.items-stretch .swiper-slide {
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
 }

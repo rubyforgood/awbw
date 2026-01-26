@@ -1,5 +1,4 @@
 class Sector < ApplicationRecord
-  attr_accessor :_create
   include NameFilterable
   SECTOR_TYPES = [ "Veterans & Military", "Sexual Assault", "Substance Abuse", "LGBTQIA",
                   "Child Abuse", "Education/Schools", "Domestic Violence", "Other" ]
@@ -11,7 +10,11 @@ class Sector < ApplicationRecord
   has_many :quotes, through: :workshops
 
   # Validations
-  validates_presence_of :name, uniqueness: true
+  validates :name, presence: true, uniqueness: { case_sensitive: false }
+
+  # Cache expiration
+  after_save :expire_sectors_cache
+  after_destroy :expire_sectors_cache
 
   # Scopes
   scope :published, ->(published = nil) {
@@ -20,4 +23,10 @@ class Sector < ApplicationRecord
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
+
+  private
+
+  def expire_sectors_cache
+    Rails.cache.delete("published_sectors_with_sectorable_items")
+  end
 end

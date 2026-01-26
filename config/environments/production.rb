@@ -43,13 +43,16 @@ Rails.application.configure do
   # Do not fallback to assets pipeline if a precompiled asset is missed.
   config.assets.compile = false
 
+  app_host = ENV.fetch("APP_HOST", "localhost")
+
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
+  config.action_mailer.asset_host = app_host
 
   # Store uploaded files on the digitalocean (see config/storage.yml for options).
   config.active_storage.service = :digitalocean
 
-  app_host = ENV.fetch("APP_HOST", "localhost")
+
   Rails.application.routes.default_url_options[:host] = app_host
 
   config.after_initialize do
@@ -82,7 +85,7 @@ Rails.application.configure do
   config.active_support.report_deprecations = false
 
   # Replace the default in-process memory cache store with a durable alternative.
-  # config.cache_store = :mem_cache_store
+  config.cache_store = :file_store, Rails.root.join("tmp", "cache")
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   # config.active_job.queue_adapter = :resque

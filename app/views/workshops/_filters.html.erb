@@ -23,12 +23,6 @@
 <!-- Checkboxes -->
 
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 overflow-visible p-4">
-  <%= render "dropdown_filter",
-             dom_id_prefix: "windows-types",
-             label_text: "Windows Type",
-             items: @windows_types,
-             label_method: :short_name,
-             param_name: :windows_types %>
 
   <%= render "categories_fields", category_types: @category_types %>
 
@@ -37,6 +31,13 @@
              label_text: "Service Population",
              items: @sectors.reject { |sector| sector.name == "Other" },
              param_name: :sectors %>
+
+  <%= render "dropdown_filter",
+             dom_id_prefix: "windows-types",
+             label_text: "Windows Type",
+             items: @windows_types,
+             label_method: :short_name,
+             param_name: :windows_types %>
 
   <%= render "inactive_fields" if current_user.super_user? %>
 </div>

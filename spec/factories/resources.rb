@@ -6,7 +6,7 @@ FactoryBot.define do
 
     # Use after(:create) to assign sectors
     after(:create) do |resource|
-      sector = create(:sector, name: "General") # adjust factory as needed
+      sector = Sector.published.first || create(:sector) # adjust factory as needed
       resource.sectors << sector
     end
   end
