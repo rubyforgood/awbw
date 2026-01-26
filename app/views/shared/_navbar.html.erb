@@ -1,4 +1,6 @@
-<nav class="relative <%= navbar_bg_class %> print:hidden" data-controller="dropdown">
+<nav class="relative
+<%= ENV["RAILS_ENV"] == "staging" || Rails.env == "staging" ? "bg-red-600" : "bg-primary" %>
+print:hidden" data-controller="dropdown">
   <div class="px-2 sm:px-6 lg:px-8">
     <div class="relative flex items-center justify-between py-2.5">
       <div class="absolute inset-y-0 left-0 flex items-center md:hidden">
