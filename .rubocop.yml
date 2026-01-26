@@ -1,6 +1,8 @@
 # Omakase Ruby styling for Rails
+
 inherit_gem:
   rubocop-rails-omakase: rubocop.yml
+  action_policy: config/rubocop-rspec.yml
 
 # Your own specialized rules go here
   #

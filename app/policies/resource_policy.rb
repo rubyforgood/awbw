@@ -1,28 +1,15 @@
 class ResourcePolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
-  alias_rule :edit?, :destroy?, to: :update?
-  alias_rule :rhino_text?, to: :show?
 
-  def index?
-    true
-  end
+
 
   def download?
     true
   end
 
-  def show?
-    admin? || record.published?
-  end
 
-  def new?
-    admin?
-  end
 
-  def update?
-    admin? || owner?
-  end
 
   def filter_published?
     admin?

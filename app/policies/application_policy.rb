@@ -10,6 +10,21 @@ class ApplicationPolicy < ActionPolicy::Base
   authorize :user, optional: true, allow_nil: true
   pre_check :verify_authenticated!
 
+  alias_rule :new?, :create?, :edit?, :update?, :destroy?, to: :manage?
+
+  def manage?
+    admin?
+  end
+
+  def index?
+    true
+  end
+
+  def show?
+    admin? || record.published?
+  end
+
+
   private
   # Define shared methods useful for most policies.
 

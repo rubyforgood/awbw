@@ -44,6 +44,7 @@ class ResourcesController < ApplicationController
   end
 
   def new
+    authorize!
     @resource = Resource.new.decorate
     set_form_variables
   end
@@ -132,25 +133,22 @@ class ResourcesController < ApplicationController
 
   private
 
-    def set_form_variables
-      @resource.build_primary_asset if @resource.primary_asset.blank?
-      @resource.gallery_assets.build
+  def set_form_variables
+    @windows_types = WindowsType.all
+    @authors = User.active.or(User.where(id: @resource.user_id))
+      .order(:first_name, :last_name)
+      .map { |u| [ u.full_name, u.id ] }
+  end
 
-      @windows_types = WindowsType.all
-      @authors = User.active.or(User.where(id: @resource.user_id))
-        .order(:first_name, :last_name)
-        .map { |u| [ u.full_name, u.id ] }
-    end
+  def process_search
+    @params = search_params
+    @query = search_params[:query]
+    @resources = Search.new.search(search_params, current_user).paginate(page: params[:search][:page])
+  end
 
-    def process_search
-      @params = search_params
-      @query = search_params[:query]
-      @resources = Search.new.search(search_params, current_user).paginate(page: params[:search][:page])
-    end
-
-    def resource_id_param
-      params[:id]
-    end
+  def resource_id_param
+    params[:id]
+  end
 
   def resource_params
     params.require(:resource).permit(
@@ -161,17 +159,17 @@ class ResourcesController < ApplicationController
     )
   end
 
-    def load_forms
-      form = @resource.form
-      if form
-        @user_form = Report.new(user: current_user, owner: @resource)
-        form.form_fields.where(status: 1).each do |field|
-          @user_form.report_form_field_answers.build(form_field: field)
-        end
+  def load_forms
+    form = @resource.form
+    if form
+      @user_form = Report.new(user: current_user, owner: @resource)
+      form.form_fields.where(status: 1).each do |field|
+        @user_form.report_form_field_answers.build(form_field: field)
       end
     end
+  end
 
-    def search_params
-      params[:search]
-    end
+  def search_params
+    params[:search]
+  end
 end
