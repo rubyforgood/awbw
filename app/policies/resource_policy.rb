@@ -1,15 +1,9 @@
 class ResourcePolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
-
-
-
   def download?
     true
   end
-
-
-
 
   def filter_published?
     admin?
