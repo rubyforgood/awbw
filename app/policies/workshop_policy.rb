@@ -13,8 +13,4 @@ class WorkshopPolicy < ApplicationPolicy
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
   #
-  relation_scope do |relation|
-    next relation if user.admin?
-    relation.where(pu: user)
-  end
 end

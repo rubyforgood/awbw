@@ -144,6 +144,10 @@ class Resource < ApplicationRecord
     created_at.month
   end
 
+  def published?
+    !inactive? && PUBLISHED_KINDS.include?(kind)
+  end
+
   ## ActionText:Attachable
   def attachable_content_type
     "application/vnd.active_record.resource"

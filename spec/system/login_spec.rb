@@ -3,11 +3,6 @@ require "rails_helper"
 RSpec.describe "User login", type: :system do
   let(:user) { create(:user) }
 
-  before do
-    driven_by :selenium_chrome_headless
-    Capybara.current_session.driver.browser.manage.window.resize_to(1400, 900) # desktop
-  end
-
   it "shows default avatar when logged out" do
     visit root_path
     expect(page).to_not have_css("#avatar")
