@@ -125,4 +125,12 @@ module ApplicationHelper
   def display_count(value)
     value.to_i.zero? ? "--" : number_with_delimiter(value)
   end
+
+  def navbar_bg_class
+    staging_environment? ? "bg-red-600" : "bg-primary"
+  end
+
+  def staging_environment?
+    ENV["RAILS_ENV"] == "staging" || Rails.env == "staging"
+  end
 end

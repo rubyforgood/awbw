@@ -50,3 +50,7 @@ node_modules
 .vite
 # Ignore local Active Storage
 storage
+
+# Ignore key files for decrypting credentials and more.
+/config/credentials/*.key
+

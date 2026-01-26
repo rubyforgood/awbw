@@ -72,4 +72,32 @@ RSpec.describe "shared/_navbar", type: :view do
       expect(rendered).to include("My profile")
     end
   end
+
+  context "when in staging environment" do
+    before do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("RAILS_ENV").and_return("staging")
+      allow(view).to receive(:current_user).and_return(nil)
+      allow(view).to receive(:user_signed_in?).and_return(false)
+      render_nav
+    end
+
+    it "uses red background color" do
+      expect(rendered).to have_css("nav.bg-red-600")
+    end
+  end
+
+  context "when not in staging environment" do
+    before do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("RAILS_ENV").and_return("production")
+      allow(view).to receive(:current_user).and_return(nil)
+      allow(view).to receive(:user_signed_in?).and_return(false)
+      render_nav
+    end
+
+    it "uses primary background color" do
+      expect(rendered).to have_css("nav.bg-primary")
+    end
+  end
 end
