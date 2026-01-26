@@ -3,6 +3,7 @@ class DashboardController < ApplicationController
   skip_before_action :authenticate_user!
 
   def index
+    authorize! :dashboard
     if turbo_frame_request?
       case turbo_frame_request_id
       when "dashboard_workshops"

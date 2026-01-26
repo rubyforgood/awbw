@@ -15,7 +15,7 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionPolicy::Unauthorized do |exception|
     flash[:alert] = exception.message.presence || "You are not authorized to perform this action."
-    redirect_back_or_to root_link_path # TODO handle unauthenticated
+    redirect_back_or_to new_user_session_path
   end
 
   private
