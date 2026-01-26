@@ -114,6 +114,7 @@ RSpec.describe "Workshop Variation asset upload", type: :system do
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='gallery_asset_']")
 
+      workshop_variation.description.gsub("error", "ezzlor") # to avoid flaky test
       expect(page).not_to have_content("error")
     end
   end

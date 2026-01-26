@@ -50,9 +50,9 @@ class CategoriesController < ApplicationController
       else
         format.html do
           set_form_variables
-          render :edit, status: :unprocessable_entity
+          render :edit, status: :unprocessable_content
         end
-        format.json { render json: { errors: @category.errors }, status: :unprocessable_entity }
+        format.json { render json: { errors: @category.errors }, status: :unprocessable_content }
       end
     end
   end

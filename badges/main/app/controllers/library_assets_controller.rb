@@ -31,7 +31,7 @@
          render turbo_stream: turbo_stream.replace(
            "flash_now",
            partial: "shared/flash_messages",
-           status: :unprocessable_entity
+           status: :unprocessable_content
          )
        end
      else
@@ -92,7 +92,7 @@
          render turbo_stream: turbo_stream.replace(
            "flash_now",
            partial: "shared/flash_messages",
-           status: :unprocessable_entity
+           status: :unprocessable_content
          )
        end
      end
