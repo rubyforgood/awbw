@@ -43,7 +43,7 @@ class DashboardController < ApplicationController
   end
 
   def admin
-    return redirect_to authenticated_root_path, alert: "You do not have permission." unless current_user.super_user?
+    return redirect_to root_path, alert: "You do not have permission." unless current_user.super_user?
 
     @system_cards       = system_cards
     @user_content_cards = user_content_cards

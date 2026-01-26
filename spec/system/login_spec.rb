@@ -9,20 +9,20 @@ RSpec.describe "User login", type: :system do
   end
 
   it "shows default avatar when logged out" do
-    visit unauthenticated_root_path
+    visit root_path
     expect(page).to_not have_css("#avatar")
     expect(page).to_not have_css("img[src*='missing.png']")
   end
 
   scenario "User login shows avatar only after login" do
-    visit unauthenticated_root_path
+    visit root_path
 
     # Logged out state
     expect(page).not_to have_css("#avatar")
 
     # Log in
     sign_in user
-    visit authenticated_root_path
+    visit root_path
 
     # Logged in state
     expect(page).to have_css("#avatar")

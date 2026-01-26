@@ -2,7 +2,7 @@ class WorkshopVariationsController < ApplicationController
   include AssetUpdatable, AhoyViewTracking
   def index
     unless current_user.super_user?
-      redirect_to authenticated_root_path
+      redirect_to root_path
       return
     end
 
@@ -44,7 +44,7 @@ class WorkshopVariationsController < ApplicationController
       elsif params[:from] == "index"
         redirect_to workshop_variations_path
       else
-        redirect_to authenticated_root_path
+        redirect_to root_path
       end
     else
       render :new

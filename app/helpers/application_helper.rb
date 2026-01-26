@@ -1,6 +1,7 @@
 module ApplicationHelper
   def root_link_path
-    user_signed_in? ? authenticated_root_path : unauthenticated_root_path
+    # user_signed_in? ? root_path : root_path
+    root_path
   end
 
   def search_page(params)
