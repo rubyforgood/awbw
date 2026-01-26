@@ -34,6 +34,7 @@ class Event < ApplicationRecord
   end
 
   scope :featured, -> { where(featured: true) }
+  scope :visitor_featured, -> { where(visitor_featured: true) }
   scope :published, ->(published = nil) { publicly_visible(published) }
   scope :publicly_visible, ->(publicly_visible = nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }

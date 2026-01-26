@@ -117,6 +117,7 @@ class Workshop < ApplicationRecord
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :featured, -> { where(featured: true) }
+  scope :visitor_featured, -> { where(visitor_featured: true) }
   scope :legacy, -> { where(legacy: true) }
   scope :published, ->(published = nil) { published.to_s.present? ?
            where(inactive: !published) : where(inactive: false) }

@@ -7,13 +7,14 @@ class ApplicationPolicy < ActionPolicy::Base
   #
   # Read more about authorization context: https://actionpolicy.evilmartians.io/#/authorization_context
   #
+  authorize :user, optional: true, allow_nil: true
   pre_check :verify_authenticated!
 
   private
   # Define shared methods useful for most policies.
 
   def admin?
-    user.super_user?
+    user&.super_user?
   end
 
   def owner?
@@ -22,9 +23,8 @@ class ApplicationPolicy < ActionPolicy::Base
 
   def authenticated? = user.present?
 
-  def unauthenticated? = !authenticated?
 
   def verify_authenticated!
-    deny! if unauthenticated?
+    deny! unless authenticated?
   end
 end
