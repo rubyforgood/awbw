@@ -51,8 +51,8 @@ RSpec.describe "/workshop_logs", type: :request do
       get workshop_logs_path, params: { workshop_id: workshop.id }
 
       expect(response).to have_http_status(:success)
-      expect(assigns(:workshop_logs_unpaginated)).to include(workshop_log)
-      expect(assigns(:workshop_logs_unpaginated)).not_to include(other_log)
+      expect(response.body).to include(workshop_log.workshop.name)
+      expect(response.body).not_to include(other_log.workshop.name)
     end
 
     it "populates workshops dropdown with only workshops from visible logs" do
@@ -61,7 +61,7 @@ RSpec.describe "/workshop_logs", type: :request do
       get workshop_logs_path
 
       expect(response).to have_http_status(:success)
-      expect(assigns(:workshops)).to include(workshop)
+      expect(response.body).to include(workshop.name)
     end
   end
 
