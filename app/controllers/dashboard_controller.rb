@@ -1,5 +1,6 @@
 class DashboardController < ApplicationController
   include AdminDashboardCardsHelper
+  skip_before_action :authenticate_user!
 
   def index
     if turbo_frame_request?
