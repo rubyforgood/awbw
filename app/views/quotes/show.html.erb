@@ -10,7 +10,7 @@
           <%#= render "bookmarks/editable_bookmark_button", resource: @quote %>
         </span>
 
-        <%= link_to "Dashboard", authenticated_root_path,
+        <%= link_to "Dashboard", root_path,
                     class: "btn btn-secondary-outline" %>
 
         <% if current_user.super_user? %>
