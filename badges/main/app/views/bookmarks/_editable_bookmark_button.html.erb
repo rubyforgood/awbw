@@ -1,3 +1,5 @@
+<% resource = Draper.undecorate(resource) %>
+
 <%= tag.span id: dom_id(resource, :bookmark_button) do %>
   <% if resource.bookmarks.any? { |b| b.user_id == current_user.id } %>
     <%= link_to bookmark_path(current_user.bookmark_for(resource)),

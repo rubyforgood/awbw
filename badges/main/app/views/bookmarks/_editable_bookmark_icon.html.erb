@@ -1,4 +1,5 @@
 <% if allowed_to?(:update?, Bookmark) %>
+  <% resource = Draper.undecorate(resource) %>
   <%= tag.div id: dom_id(resource, :bookmark_icon), class: "inline-block" do %>
     <% if resource.bookmarks.any? { |b| b.user_id == current_user.id } %>
       <%= link_to bookmark_path(current_user.bookmark_for(resource)),
