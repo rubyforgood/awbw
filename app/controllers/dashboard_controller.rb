@@ -7,8 +7,15 @@ class DashboardController < ApplicationController
     if turbo_frame_request?
       case turbo_frame_request_id
       when "dashboard_workshops"
-        workshops = authorized_scope(Workshop.includes(:bookmarks, :windows_type, :primary_asset).published, with: DashboardPolicy).decorate
-        @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
+        ids = Rails.cache.fetch("featured_and_visitor_featured_workshop_ids", expires_in: 1.year) do
+          Workshop.featured_or_visitor_featured.pluck(:id)
+        end
+
+        base_scope = Workshop.includes(:bookmarks, :windows_type, :primary_asset)
+                          .where(id: ids)
+
+        @workshops = authorized_scope(base_scope, with: DashboardPolicy).decorate
+        @workshops = @workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
       when "dashboard_resources"
         @resources = authorized_scope(Resource.includes(:bookmarks, :primary_asset, :downloadable_asset)
                              .published

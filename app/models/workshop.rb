@@ -2,6 +2,7 @@ class Workshop < ApplicationRecord
   include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
+  include ActiveModel::Dirty
 
   belongs_to :windows_type, optional: true
   belongs_to :user, optional: true
@@ -95,6 +96,7 @@ class Workshop < ApplicationRecord
 
   # Callbacks
   before_save :set_time_frame
+  before_save :invalidate_featured_cache_if_changed
   after_save :assign_pending_associations
 
   # Validations
@@ -138,6 +140,9 @@ class Workshop < ApplicationRecord
     left_joins(:bookmarks)
       .select("workshops.*, COUNT(bookmarks.id) AS bookmarks_count")
       .group("workshops.id")
+  }
+  scope :featured_or_visitor_featured, -> {
+    where("(featured = ? OR visitor_featured = ?) AND inactive = ?", true, true, false)
   }
 
   # Search Cop
@@ -271,6 +276,22 @@ class Workshop < ApplicationRecord
     end
   end
 
+  ## ActionText:Attachable
+  def attachable_content_type
+    "application/vnd.active_record.workshop"
+  end
+
+  def invalidate_featured_cache_if_changed
+    if featured_or_visitor_featured_changed?
+      Rails.cache.delete("featured_and_visitor_featured_workshop_ids")
+    end
+  end
+
+  def featured_or_visitor_featured_changed?
+    featured_changed? || visitor_featured_changed? || inactive_changed?
+  end
+
+
   private
 
   def assign_pending_associations
@@ -286,10 +307,5 @@ class Workshop < ApplicationRecord
       self.categories = Category.where(id: @pending_category_ids)
       @pending_category_ids = nil
     end
-  end
-
-  ## ActionText:Attachable
-  def attachable_content_type
-    "application/vnd.active_record.workshop"
   end
 end
