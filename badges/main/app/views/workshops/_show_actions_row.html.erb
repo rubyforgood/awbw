@@ -1,23 +1,21 @@
 <div class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden p-2">
   <!-- Left: Bookmark -->
   <div class="flex items-center gap-2">
-
     <%= render "bookmarks/editable_bookmark_button", resource: workshop.object %>
+
     <%= tag.span id: dom_id(workshop, :bookmark_count_facilitator), class: "text-gray-600 text-sm" do %>
-      (Bookmarked by
-      <%= pluralize(workshop.bookmarks.count, "facilitator") %>,
+      (Bookmarked by <%= pluralize(workshop.bookmarks.count, "facilitator") %>,
     <% end %>
+
     <%= tag.span id: dom_id(workshop, :led_count), class: "text-gray-600 text-sm" do %>
-      Led:
-      <%= pluralize(workshop.led_count, "time") %>)
+      Led: <%= pluralize(workshop.led_count, "time") %>)
     <% end %>
   </div>
 
   <% if workshop.inactive %>
-    <div class="flex items-center gap-4 text-red-500">
-      <%= "***THIS WORKSHOP IS HIDDEN***" %>
-    </div>
+    <div class="flex items-center gap-4 text-red-500"><%= "***THIS WORKSHOP IS HIDDEN***" %></div>
   <% end %>
+
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
     <% if current_user.super_user? %>
@@ -25,6 +23,9 @@
                   edit_workshop_path(workshop),
                   class: "btn btn-secondary-outline admin-only bg-blue-100" %>
     <% end %>
-    <%= print_button(workshop, printable_type: "Workshop", button_text: "Print page") %>
+
+    <%= print_button(workshop, printable_type: "Workshop", button_text: "Print", image_toggle: true) %>
+
   </div>
 </div>
+

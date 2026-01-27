@@ -147,3 +147,10 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   display: flex !important;
   flex-direction: column !important;
 }
+
+/* Toggle images on print via stimulus "print-options" */
+@media print {
+  .prose[data-print-options-images-value="false"] img {
+    display: none !important;
+  }
+}

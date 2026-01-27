@@ -41,3 +41,6 @@ application.register("toggle-lock", ToggleLockController)
 
 import PrefetchLazyController from "./prefetch_lazy_controller"
 application.register("prefetch-lazy", PrefetchLazyController)
+
+import PrintOptionsController from "./print_options_controller"
+application.register("print-options", PrintOptionsController)

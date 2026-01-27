@@ -1,3 +1,9 @@
 <%# flow-root to prevent table overflow %>
 <%# Override prose table text alignment %>
-<div class="prose max-w-none flow-root [&_td]:align-top [&_th]:align-top"><%= yield %></div>
+<div
+  class="prose max-w-none flow-root [&_td]:align-top [&_th]:align-top"
+  data-controller="print-options"
+  data-print-options-images-value="true"
+>
+  <%= yield %>
+</div>
