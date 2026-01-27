@@ -1,8 +1,6 @@
 class ApplicationController < ActionController::Base
   prepend ActionPolicy::Draper
-  # Prevent CSRF attacks by raising an exception.
-  # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :exception
+
   before_action :authenticate_user!  # ensures only logged-in users can access pages
 
   # TODO add this callback to verify
@@ -14,7 +12,7 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionPolicy::Unauthorized do |exception|
     flash[:alert] = exception.message.presence || "You are not authorized to perform this action."
-    redirect_back_or_to new_user_session_path
+    redirect_back_or_to root_path
   end
 
   private
