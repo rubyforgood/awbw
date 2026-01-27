@@ -11,6 +11,7 @@ export default class extends Controller {
     this.toggle = document.getElementById("print-images-toggle");
     if (!this.toggle) return;
 
+    //ensure value matches icon
     this.updateIcons();
 
     this.toggle.addEventListener("click", this.handleToggle);
@@ -22,7 +23,6 @@ export default class extends Controller {
   }
 
   handleToggle = (event) => {
-    event.preventDefault();
     this.imagesValue = !this.imagesValue;
     this.updateIcons();
   };
