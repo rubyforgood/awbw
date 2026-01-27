@@ -25,6 +25,12 @@
                   edit_workshop_path(workshop),
                   class: "btn btn-secondary-outline admin-only bg-blue-100" %>
     <% end %>
-    <%= print_button(workshop, printable_type: "Workshop", button_text: "Print page") %>
+
+    <%= print_button(workshop, printable_type: "Workshop", button_text: "Print") %>
+
+    <div id="print-images-toggle" class="inline-flex items-center cursor-pointer select-none">
+      <%= icon "image-check", class: "w-6 h-6", id: "image-check-icon" %>
+      <%= icon "image-x", class: "w-6 h-6 hidden", id: "image-x-icon" %>
+    </div>
   </div>
 </div>

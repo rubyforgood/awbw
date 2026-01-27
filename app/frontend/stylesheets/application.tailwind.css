@@ -147,3 +147,9 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   display: flex !important;
   flex-direction: column !important;
 }
+
+@media print {
+  .prose[data-print-options-images-value="false"] img {
+    display: none !important;
+  }
+}
