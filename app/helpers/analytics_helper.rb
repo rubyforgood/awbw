@@ -4,7 +4,7 @@ module AnalyticsHelper
                    path: admin_analytics_print_path,
                    button_class: "btn btn-utility",
                    icon_class: "fas fa-print",
-                   button_text: "Print",
+                   button_text: nil,
                    title: "Print",
                   image_toggle: false)
     model = record.respond_to?(:object) ? record.object : record
@@ -16,13 +16,11 @@ module AnalyticsHelper
       else             model.class.name
       end.delete_suffix("Decorator")
 
-    # The print button content
     print_content = safe_join([
       tag.i(class: icon_class),
       tag.span(button_text, class: "ml-1")
     ])
 
-    # image hidden toggle
     toggle_div = if image_toggle
       tag.div(
       id: "print-images-toggle",
@@ -36,10 +34,8 @@ module AnalyticsHelper
     end
     end
 
-    # Wrap both in an outer inline-flex container
     tag.div(class: "inline-flex items-center #{button_class} ") do
       safe_join([
-        # Print link
         link_to("#",
                 title: title,
                 data: {
