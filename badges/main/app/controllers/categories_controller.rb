@@ -9,7 +9,7 @@ class CategoriesController < ApplicationController
     filtered = unfiltered.category_type_id(params[:category_type_id])
                           .category_name(params[:category_name])
                           .published_search(params[:published_search])
-                          .order(Arel.sql("metadata.name, categories.position, categories.name"))
+                          .order(Arel.sql("category_types.name, categories.position, categories.name"))
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
 
     @count_display = if filtered.count == unfiltered.count
@@ -77,7 +77,7 @@ class CategoriesController < ApplicationController
   def category_params
     if params[:category]
       params.require(:category).permit(
-        :name, :category_type_id, :metadatum_id, :published, :position
+        :name, :category_type_id, :published, :position
       )
     else
       params.permit(:position)

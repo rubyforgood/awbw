@@ -190,7 +190,7 @@ class WorkshopsController < ApplicationController
 
 
   def set_form_variables
-    @age_ranges = Category.includes(:category_type).where("metadata.name = 'AgeRange'").pluck(:name)
+    @age_ranges = Category.includes(:category_type).where("category_types.name = 'AgeRange'").pluck(:name)
     @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
     @windows_types = WindowsType.all
     @workshop_ideas = WorkshopIdea.order(created_at: :desc)

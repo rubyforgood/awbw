@@ -34,7 +34,7 @@ class TaggingsController < ApplicationController
       .includes(:category_type)
       .joins(:category_type, :categorizable_items)
       .published
-      .select("categories.*, metadata.name AS category_type_name")
+      .select("categories.*, category_types.name AS category_type_name")
       .distinct
       .order(Arel.sql("category_type_name, categories.position, categories.name"))
 

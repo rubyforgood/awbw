@@ -23,7 +23,7 @@
 
       <div class="flex flex-wrap gap-2">
         <% categories
-             .order(Arel.sql("metadata.name, categories.position, categories.name")).each do |category| %>
+             .order(Arel.sql("category_types.name, categories.position, categories.name")).each do |category| %>
           <%= render "categories/tagging_label", category: category %>
         <% end %>
       </div>
