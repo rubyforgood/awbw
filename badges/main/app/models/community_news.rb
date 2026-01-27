@@ -43,6 +43,7 @@ class CommunityNews < ApplicationRecord
   end
 
   scope :featured, -> { where(featured: true) }
+  scope :visitor_featured, -> { where(visitor_featured: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :community_news_name, ->(community_news_name) {

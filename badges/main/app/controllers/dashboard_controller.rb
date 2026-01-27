@@ -1,39 +1,34 @@
 class DashboardController < ApplicationController
   include AdminDashboardCardsHelper
+  skip_before_action :authenticate_user!
 
   def index
+    authorize! :dashboard
     if turbo_frame_request?
       case turbo_frame_request_id
       when "dashboard_workshops"
-        workshops = Workshop.includes(:bookmarks, :windows_type, :primary_asset)
-                            .featured
-                            .published
-                            .decorate
+        workshops = authorized_scope(Workshop.includes(:bookmarks, :windows_type, :primary_asset).published, with: DashboardPolicy).decorate
         @workshops = workshops.sort { |x, y| Date.parse(y.date) <=> Date.parse(x.date) }
       when "dashboard_resources"
-        @resources = Resource.includes(:bookmarks, :primary_asset, :downloadable_asset)
-                             .featured
+        @resources = authorized_scope(Resource.includes(:bookmarks, :primary_asset, :downloadable_asset)
                              .published
                              .order(position: :asc, created_at: :desc)
-                             .limit(6)
+                             .limit(6), with: DashboardPolicy)
                              .decorate
 
       when "dashboard_stories"
-        @stories = Story.featured
-                        .published
-                        .order(:title)
+        @stories = authorized_scope(Story.published
+                        .order(:title), with: DashboardPolicy)
                         .decorate
       when "dashboard_community_news"
-        @community_news = CommunityNews.featured
-                                       .published
-                                       .order(updated_at: :desc)
+        @community_news = authorized_scope(CommunityNews.published
+                                       .order(updated_at: :desc), with: DashboardPolicy)
                                        .decorate
 
       when "dashboard_events"
-        @events = Event.includes(:bookmarks, :primary_asset)
-                       .featured
+        @events = authorized_scope(Event.includes(:bookmarks, :primary_asset)
                        .published
-                       .order(:start_date)
+                       .order(:start_date), with: DashboardPolicy)
                        .decorate
       end
       render :index_lazy
@@ -43,7 +38,7 @@ class DashboardController < ApplicationController
   end
 
   def admin
-    return redirect_to authenticated_root_path, alert: "You do not have permission." unless current_user.super_user?
+    return redirect_to root_path, alert: "You do not have permission." unless current_user.super_user?
 
     @system_cards       = system_cards
     @user_content_cards = user_content_cards

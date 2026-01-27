@@ -6,7 +6,7 @@
                title: title,
                subtitle: "Tools and activities used across our network" %>
 
-             <%= turbo_frame_tag "dashboard_resources", src: authenticated_root_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+             <%= turbo_frame_tag "dashboard_resources", src: root_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
       <%= render "resources_cards_skeleton" %>
     <% end %>
   </div>

@@ -6,7 +6,7 @@
                title: title,
                subtitle: "Announcements and updates" %>
 
-             <%= turbo_frame_tag "dashboard_community_news", src: authenticated_root_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+             <%= turbo_frame_tag "dashboard_community_news", src: root_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
       <%= render "community_news_cards_skeleton" %>
     <% end %>
   </div>

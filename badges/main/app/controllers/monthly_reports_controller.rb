@@ -83,7 +83,7 @@ class MonthlyReportsController < ApplicationController
 
       if @saved
         flash[:notice] = "Thanks for reporting on a update report. "
-        redirect_to authenticated_root_path
+        redirect_to root_path
       else
         @agencies  = current_user.projects.
                        where(windows_type_id: @report.windows_type_id)
@@ -105,10 +105,10 @@ class MonthlyReportsController < ApplicationController
       if current_user.super_user? || (@monthly_report.project && current_user.project_ids.include?(@monthly_report.project.id))
         render :show
       else
-        redirect_to authenticated_root_path, error: "You do not have permission to view this page."
+        redirect_to root_path, error: "You do not have permission to view this page."
       end
     else
-      redirect_to authenticated_root_path, error: "Unable to find that Workshop Log."
+      redirect_to root_path, error: "Unable to find that Workshop Log."
     end
   end
 

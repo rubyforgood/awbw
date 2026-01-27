@@ -109,35 +109,35 @@ RSpec.describe "/project_statuses", type: :request do
 
     it "cannot access index" do
       get project_statuses_url
-      expect(response).to redirect_to(authenticated_root_path)
+      expect(response).to redirect_to(root_path)
     end
 
     it "cannot access show" do
       ps = ProjectStatus.create!(valid_attributes)
       get project_status_url(ps)
-      expect(response).to redirect_to(authenticated_root_path)
+      expect(response).to redirect_to(root_path)
     end
 
     it "cannot access new" do
       get new_project_status_url
-      expect(response).to redirect_to(authenticated_root_path)
+      expect(response).to redirect_to(root_path)
     end
 
     it "cannot create" do
       post project_statuses_url, params: { project_status: valid_attributes }
-      expect(response).to redirect_to(authenticated_root_path)
+      expect(response).to redirect_to(root_path)
     end
 
     it "cannot edit" do
       ps = ProjectStatus.create!(valid_attributes)
       get edit_project_status_url(ps)
-      expect(response).to redirect_to(authenticated_root_path)
+      expect(response).to redirect_to(root_path)
     end
 
     it "cannot destroy" do
       ps = ProjectStatus.create!(valid_attributes)
       delete project_status_url(ps)
-      expect(response).to redirect_to(authenticated_root_path)
+      expect(response).to redirect_to(root_path)
     end
   end
 

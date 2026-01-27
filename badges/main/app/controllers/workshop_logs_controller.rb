@@ -48,7 +48,7 @@ class WorkshopLogsController < ApplicationController
 
     if success
       flash[:notice] = "Thanks for reporting on a workshop."
-      redirect_to authenticated_root_path
+      redirect_to root_path
     else
       flash.now[:alert] = "Failed to update workshop log."
       set_form_variables
@@ -69,7 +69,7 @@ class WorkshopLogsController < ApplicationController
         notification_type: 0)
 
       flash[:notice] = "Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile."
-      redirect_to authenticated_root_path
+      redirect_to root_path
     else
       flash.now[:alert] = "Failed to create workshop log."
       set_form_variables
@@ -86,10 +86,10 @@ class WorkshopLogsController < ApplicationController
       if current_user.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
         render :show
       else
-        redirect_to authenticated_root_path, error: "You do not have permission to view this page."
+        redirect_to root_path, error: "You do not have permission to view this page."
       end
     else
-      redirect_to authenticated_root_path, error: "Unable to find that Workshop Log."
+      redirect_to root_path, error: "Unable to find that Workshop Log."
     end
   end
 

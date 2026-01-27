@@ -1,6 +1,6 @@
 module SectorHelper
   def sector_button(sector, font_size: "text-md")
-    link_to authenticated_root_path(sector),
+    link_to root_path(sector),
             class: "group inline-flex items-center gap-2 px-4 py-2
                   border border-purple-800 text-purple-500 rounded-lg
                   hover:bg-purple-800 hover:text-white transition-colors duration-200

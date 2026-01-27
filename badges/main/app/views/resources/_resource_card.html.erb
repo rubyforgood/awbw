@@ -51,7 +51,7 @@
                     data: { turbo_frame: "_top", turbo_prefetch: false },
                     class: "inline-flex min-w-0 max-w-full text-lg font-semibold
                             text-gray-900 leading-tight hover:underline" do %>
-          <%= title_with_badges(resource, show_hidden_badge: current_user.super_user?).html_safe %>
+          <%= title_with_badges(resource, show_hidden_badge: current_user&.super_user?).html_safe %>
         <% end %>
       </div>
 
@@ -66,7 +66,7 @@
               ) %>
         <% end %>
 
-        <% if controller_name == "resources" && current_user.super_user? %>
+        <% if controller_name == "resources" &&  allowed_to?(:edit?, resource) %>
           <%= link_to(
                 content_tag(:span, "", class: "far fa-edit"),
                 edit_resource_path(resource.object),

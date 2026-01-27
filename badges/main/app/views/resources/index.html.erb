@@ -7,7 +7,7 @@
       </div>
 
       <div class="text-right text-end">
-        <% if current_user.super_user? %>
+        <% if allowed_to?(:new?, Resource) %>
           <%= link_to "New Resource",
                       new_resource_path,
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>

@@ -6,7 +6,7 @@
                title: title,
                subtitle: "Workshops, trainings, and upcoming gatherings" %>
 
-             <%= turbo_frame_tag "dashboard_events", src: authenticated_root_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+             <%= turbo_frame_tag "dashboard_events", src: root_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
       <%= render "events_cards_skeleton" %>
     <% end %>
   </div>

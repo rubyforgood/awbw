@@ -75,7 +75,7 @@
          elsif current_user.super_user?
            workshop_variations_path
          else
-           authenticated_root_path
+           root_path
          end %>
 
       <%= link_to 'Cancel', cancel_path,

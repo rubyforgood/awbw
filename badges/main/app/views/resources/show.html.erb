@@ -7,7 +7,7 @@
           <%= render "bookmarks/editable_bookmark_button", resource: @resource.object %>
         </span>
 
-        <% if current_user.super_user? %>
+        <% if allowed_to?(:edit?, @resource) %>
           <%= link_to("Edit", edit_resource_path(@resource),
                       class: "admin-only bg-blue-100 btn btn-primary-outline") %>
         <% end %>
