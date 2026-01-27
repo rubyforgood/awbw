@@ -1,23 +1,21 @@
 <div class="flex flex-wrap items-center justify-between gap-6 mt-4 print:hidden p-2">
   <!-- Left: Bookmark -->
   <div class="flex items-center gap-2">
-
     <%= render "bookmarks/editable_bookmark_button", resource: workshop.object %>
+
     <%= tag.span id: dom_id(workshop, :bookmark_count_facilitator), class: "text-gray-600 text-sm" do %>
-      (Bookmarked by
-      <%= pluralize(workshop.bookmarks.count, "facilitator") %>,
+      (Bookmarked by <%= pluralize(workshop.bookmarks.count, "facilitator") %>,
     <% end %>
+
     <%= tag.span id: dom_id(workshop, :led_count), class: "text-gray-600 text-sm" do %>
-      Led:
-      <%= pluralize(workshop.led_count, "time") %>)
+      Led: <%= pluralize(workshop.led_count, "time") %>)
     <% end %>
   </div>
 
   <% if workshop.inactive %>
-    <div class="flex items-center gap-4 text-red-500">
-      <%= "***THIS WORKSHOP IS HIDDEN***" %>
-    </div>
+    <div class="flex items-center gap-4 text-red-500"><%= "***THIS WORKSHOP IS HIDDEN***" %></div>
   <% end %>
+
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
     <% if current_user.super_user? %>
@@ -29,8 +27,9 @@
     <%= print_button(workshop, printable_type: "Workshop", button_text: "Print") %>
 
     <div id="print-images-toggle" class="inline-flex items-center cursor-pointer select-none">
-      <%= icon "image-check", class: "w-6 h-6", id: "image-check-icon" %>
-      <%= icon "image-x", class: "w-6 h-6 hidden", id: "image-x-icon" %>
+      <%= icon "image-check", class: "w-6 h-6 animate-fade", id: "image-check-icon" %>
+      <%= icon "image-x", class: "w-6 h-6 animate-fade hidden", id: "image-x-icon" %>
     </div>
   </div>
 </div>
+

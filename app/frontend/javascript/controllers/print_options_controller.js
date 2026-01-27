@@ -9,7 +9,6 @@ export default class extends Controller {
 
   connect() {
     this.toggle = document.getElementById("print-images-toggle");
-    console.log(this.toggle);
     if (!this.toggle) return;
 
     this.updateIcons();
