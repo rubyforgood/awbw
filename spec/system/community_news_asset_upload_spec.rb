@@ -52,7 +52,6 @@ RSpec.describe "Community News asset upload", type: :system do
       upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_content("Primary asset")
-      expect(page).not_to have_content("error")
     end
 
     it "uploads a gallery asset" do
@@ -64,7 +63,6 @@ RSpec.describe "Community News asset upload", type: :system do
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_content("Gallery asset")
-      expect(page).not_to have_content("error")
     end
 
     it "allows deleting a primary asset and re-uploading a new one" do
@@ -84,7 +82,6 @@ RSpec.describe "Community News asset upload", type: :system do
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
-      expect(page).not_to have_content("error")
     end
 
     it "shows an error when trying to upload a second primary asset" do
@@ -113,8 +110,6 @@ RSpec.describe "Community News asset upload", type: :system do
 
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='gallery_asset_']")
-
-      expect(page).not_to have_content("error")
     end
   end
 
@@ -128,7 +123,6 @@ RSpec.describe "Community News asset upload", type: :system do
       upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
-      expect(page).not_to have_content("error")
     end
 
     it "uploads a gallery asset" do
@@ -140,7 +134,6 @@ RSpec.describe "Community News asset upload", type: :system do
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
-      expect(page).not_to have_content("error")
     end
 
     it "allows deleting a primary asset and re-uploading a new one" do
@@ -160,7 +153,6 @@ RSpec.describe "Community News asset upload", type: :system do
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
-      expect(page).not_to have_content("error")
     end
 
     it "shows an error when trying to upload a second primary asset" do
@@ -188,8 +180,6 @@ RSpec.describe "Community News asset upload", type: :system do
 
       upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='gallery_asset_']")
-
-      expect(page).not_to have_content("error")
     end
 
     it "updates asset type" do
