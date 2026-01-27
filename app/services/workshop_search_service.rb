@@ -115,7 +115,7 @@ class WorkshopSearchService
 
   def filter_by_title
     return unless params[:title].present?
-    @workshops = @workshops.title(params[:title])
+    @workshops = @workshops.search("title:#{params[:title]}")
   end
 
   def filter_by_query
