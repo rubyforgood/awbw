@@ -1,28 +1,11 @@
 # frozen_string_literal: true
 
 class BookmarkPolicy < ApplicationPolicy
-  def index?
-    authenticated?
-  end
-
-  def show?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
+  # personal and tally are custom actions that require authentication (handled by pre_check)
+  alias_rule :personal?, :tally?, to: :index?
 
   def destroy?
     admin? || owner?
-  end
-
-  def personal?
-    authenticated?
-  end
-
-  def tally?
-    authenticated?
   end
 
   private

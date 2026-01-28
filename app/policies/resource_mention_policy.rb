@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
 class ResourceMentionPolicy < ApplicationPolicy
-  def index?
-    authenticated?
-  end
-
   # Scope resources based on admin status
   scope_for :relation do |relation|
     if admin?

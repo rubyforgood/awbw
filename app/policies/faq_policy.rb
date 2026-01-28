@@ -4,26 +4,6 @@ class FaqPolicy < ApplicationPolicy
   # scope active vs all
   alias_rule :edit?, to: :update?
 
-  def index?
-    authenticated?
-  end
-
-  def show?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
-
-  def update?
-    authenticated?
-  end
-
-  def destroy?
-    admin?
-  end
-
   # Scope for FAQ index - admins see all, others see active
   scope_for :relation do |relation|
     if admin?

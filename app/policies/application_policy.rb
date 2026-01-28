@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 class ApplicationPolicy < ActionPolicy::Base
+  # Require authentication for all policy checks
+  pre_check :authenticated?
+
   # Common authorization predicates
 
   def authenticated?
-    user.present?
+    user.present? || deny!
   end
 
   def admin?
@@ -25,13 +28,14 @@ class ApplicationPolicy < ActionPolicy::Base
   end
 
   # Default CRUD rules - override in specific policies as needed
+  # Note: pre_check :authenticated? ensures user is logged in before these run
 
   def index?
-    authenticated?
+    true
   end
 
   def show?
-    authenticated?
+    true
   end
 
   def new?
@@ -39,7 +43,7 @@ class ApplicationPolicy < ActionPolicy::Base
   end
 
   def create?
-    authenticated?
+    true
   end
 
   def edit?
@@ -47,7 +51,7 @@ class ApplicationPolicy < ActionPolicy::Base
   end
 
   def update?
-    authenticated?
+    true
   end
 
   def destroy?

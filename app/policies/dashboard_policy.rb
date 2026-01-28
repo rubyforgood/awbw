@@ -3,14 +3,6 @@
 class DashboardPolicy < ApplicationPolicy
   # admin dashboard = admin only
 
-  def index?
-    authenticated?
-  end
-
-  def admin?
-    user&.super_user?
-  end
-
   # For accessing the admin dashboard
   def admin_dashboard?
     admin?

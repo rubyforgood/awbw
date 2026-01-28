@@ -5,24 +5,8 @@ class WorkshopPolicy < ApplicationPolicy
   # edit = admin or owner
   # scope published vs all
 
-  def index?
-    authenticated?
-  end
-
-  def show?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
-
   def update?
     admin? || owner?
-  end
-
-  def destroy?
-    admin?
   end
 
   # Scope for workshop index - admins see all, others see published

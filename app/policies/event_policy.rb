@@ -6,24 +6,8 @@ class EventPolicy < ApplicationPolicy
   # scope published vs all
   alias_rule :edit?, to: :update?
 
-  def index?
-    authenticated?
-  end
-
-  def show?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
-
   def update?
     admin? || creator?
-  end
-
-  def destroy?
-    admin?
   end
 
   # Scope for event index - admins see all, others see published

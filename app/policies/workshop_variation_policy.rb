@@ -6,20 +6,4 @@ class WorkshopVariationPolicy < ApplicationPolicy
   def index?
     admin?
   end
-
-  def show?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
-
-  def update?
-    authenticated?
-  end
-
-  def destroy?
-    admin?
-  end
 end

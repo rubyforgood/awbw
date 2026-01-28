@@ -1,43 +1,9 @@
 # frozen_string_literal: true
 
 class ReportPolicy < ApplicationPolicy
-  def show?
-    authenticated?
-  end
-
-  def monthly_select_type?
-    authenticated?
-  end
-
-  def monthly?
-    authenticated?
-  end
-
-  def share_story?
-    authenticated?
-  end
-
-  def edit?
-    authenticated?
-  end
-
-  def edit_story?
-    authenticated?
-  end
-
-  def update?
-    authenticated?
-  end
-
-  def update_story?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
-
-  def create_story?
-    authenticated?
-  end
+  # All custom report actions require authentication (handled by pre_check)
+  alias_rule :monthly_select_type?, :monthly?, :share_story?, to: :index?
+  alias_rule :edit_story?, to: :edit?
+  alias_rule :update_story?, to: :update?
+  alias_rule :create_story?, to: :create?
 end

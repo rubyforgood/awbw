@@ -1,23 +1,8 @@
 # frozen_string_literal: true
 
 class LibraryAssetPolicy < ApplicationPolicy
-  def show?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
-
-  def edit?
-    authenticated?
-  end
-
-  def update?
-    authenticated?
-  end
-
+  # Any authenticated user can destroy library assets
   def destroy?
-    authenticated?
+    true
   end
 end

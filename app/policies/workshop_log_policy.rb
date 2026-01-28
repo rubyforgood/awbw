@@ -4,24 +4,8 @@ class WorkshopLogPolicy < ApplicationPolicy
   # show = admin, owner, or project member
   # index scoped by project membership
 
-  def index?
-    authenticated?
-  end
-
   def show?
     admin? || owner? || project_member?
-  end
-
-  def create?
-    authenticated?
-  end
-
-  def update?
-    authenticated?
-  end
-
-  def destroy?
-    admin?
   end
 
   # Scope for workshop log index - admin sees all, others see own or project-related

@@ -8,20 +8,8 @@ class UserPolicy < ApplicationPolicy
     admin?
   end
 
-  def show?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
-
   def update?
     admin? || owner_of_self?
-  end
-
-  def destroy?
-    admin?
   end
 
   def toggle_lock_status?
