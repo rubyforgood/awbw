@@ -1,3 +1,4 @@
+<%= turbo_stream.replace("community_news_count", partial: "community_news_count") %>
 <% if @community_news.any? %>
   <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm blur-on-submit">
     <table class="min-w-full divide-y divide-gray-200">
@@ -22,11 +23,11 @@
 
               <!-- Assets -->
               <%= render "assets/display_image",
-                           resource: news,
-                           width: 24, height: 14,
-                           variant: :index,
-                           link_to_object: true,
-                           file: news.display_image %>
+                          resource: news,
+                          width: 24, height: 14,
+                          variant: :index,
+                          link_to_object: true,
+                          file: news.display_image %>
 
               <!-- TITLE + BADGES -->
               <span class="inline-flex items-center gap-2">
