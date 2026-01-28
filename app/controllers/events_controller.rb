@@ -18,7 +18,7 @@ class EventsController < ApplicationController
   end
 
   def edit
-    authorize! @event, to: :update?
+    authorize! @event
     set_form_variables
   end
 

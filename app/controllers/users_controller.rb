@@ -2,7 +2,7 @@ class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status ]
 
   def index
-    authorize! :index, with: UserPolicy
+    authorize!
 
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)

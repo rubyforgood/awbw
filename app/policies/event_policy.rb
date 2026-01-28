@@ -4,6 +4,7 @@ class EventPolicy < ApplicationPolicy
   # edit = admin or creator
   # destroy = admin only
   # scope published vs all
+  alias_rule :edit?, to: :update?
 
   def index?
     authenticated?

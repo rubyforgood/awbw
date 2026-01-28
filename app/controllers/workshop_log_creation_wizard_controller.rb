@@ -5,7 +5,7 @@ class WorkshopLogCreationWizardController < ApplicationController
   before_action :set_breadcrumb
 
   def show
-    authorize! :show, with: WorkshopLogCreationWizardPolicy
+    authorize!
     @user = current_user
     @agencies = current_user.projects
     windows_type_id = params[:windows_type_id] || WindowsType.where(short_name: "COMBINED")
@@ -15,7 +15,7 @@ class WorkshopLogCreationWizardController < ApplicationController
   end
 
   def update
-    authorize! :update, with: WorkshopLogCreationWizardPolicy
+    authorize!
     @user = current_user
     @agencies = current_user.projects
     windows_type_id = params["workshop"]["workshop_logs_attributes"].values[0]["windows_type_id"]

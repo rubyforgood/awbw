@@ -25,19 +25,19 @@ class ResourcesController < ApplicationController
   end
 
   def stories
-    authorize! :index, with: ResourcePolicy
+    authorize!
     @stories = Resource.story.paginate(page: params[:page], per_page: 6).decorate
   end
 
   def new
-    authorize! :create, with: ResourcePolicy
+    authorize!
     @resource = Resource.new.decorate
     set_form_variables
   end
 
   def edit
     @resource = Resource.includes(user: :facilitator).find(resource_id_param).decorate
-    authorize! @resource, to: :update?
+    authorize! @resource
     set_form_variables
 
     if turbo_frame_request?
@@ -55,7 +55,7 @@ class ResourcesController < ApplicationController
   end
 
   def create
-    authorize! :create, with: ResourcePolicy
+    authorize!
     @resource = current_user.resources.build(resource_params)
 
     if @resource.save
@@ -94,7 +94,7 @@ class ResourcesController < ApplicationController
   end
 
   def search
-    authorize! :index, with: ResourcePolicy
+    authorize!
     process_search
     @sortable_fields = Resource::PUBLISHED_KINDS
     render :index
@@ -102,7 +102,7 @@ class ResourcesController < ApplicationController
 
   def download
     @resource = Resource.find(params[:resource_id])
-    authorize! @resource, to: :show?
+    authorize! @resource
 
     attachment = @resource&.downloadable_asset&.file
     if attachment.attached?

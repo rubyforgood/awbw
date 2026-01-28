@@ -2,7 +2,7 @@ class WorkshopIdeasController < ApplicationController
   before_action :set_workshop_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: WorkshopIdeaPolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     workshop_ideas = WorkshopIdea.search(params.slice(:title, :author_name))
     @workshop_ideas_count = workshop_ideas.size
@@ -14,18 +14,18 @@ class WorkshopIdeasController < ApplicationController
   end
 
   def new
-    authorize! :create, with: WorkshopIdeaPolicy
+    authorize!
     @workshop_idea = WorkshopIdea.new
     set_form_variables
   end
 
   def edit
-    authorize! @workshop_idea, to: :update?
+    authorize! @workshop_idea
     set_form_variables
   end
 
   def create
-    authorize! :create, with: WorkshopIdeaPolicy
+    authorize!
     @workshop_idea = WorkshopIdea.new(workshop_idea_params)
 
     if @workshop_idea.save

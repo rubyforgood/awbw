@@ -2,7 +2,7 @@ class SectorsController < ApplicationController
   before_action :set_sector, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: SectorPolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unfiltered = Sector.all
     filtered = unfiltered.sector_name(params[:sector_name])
@@ -22,18 +22,18 @@ class SectorsController < ApplicationController
   end
 
   def new
-    authorize! :create, with: SectorPolicy
+    authorize!
     @sector = Sector.new
     set_form_variables
   end
 
   def edit
-    authorize! @sector, to: :update?
+    authorize! @sector
     set_form_variables
   end
 
   def create
-    authorize! :create, with: SectorPolicy
+    authorize!
     @sector = Sector.new(sector_params)
 
     if @sector.save

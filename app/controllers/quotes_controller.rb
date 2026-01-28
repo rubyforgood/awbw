@@ -3,7 +3,7 @@ class QuotesController < ApplicationController
   before_action :set_quote, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: QuotePolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = Quote.where.not(quote: [ nil, "" ])
                        .search_by_params(params)
@@ -18,18 +18,18 @@ class QuotesController < ApplicationController
   end
 
   def new
-    authorize! :create, with: QuotePolicy
+    authorize!
     @quote = Quote.new
     set_form_variables
   end
 
   def edit
-    authorize! @quote, to: :update?
+    authorize! @quote
     set_form_variables
   end
 
   def create
-    authorize! :create, with: QuotePolicy
+    authorize!
     @quote = Quote.new(quote_params)
 
     if @quote.save

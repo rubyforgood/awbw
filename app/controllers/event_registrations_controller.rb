@@ -2,7 +2,7 @@ class EventRegistrationsController < ApplicationController
   before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: EventRegistrationPolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = EventRegistration.search_by_params(params)
     @event_registrations_count = unpaginated.size
@@ -14,18 +14,18 @@ class EventRegistrationsController < ApplicationController
   end
 
   def new
-    authorize! :create, with: EventRegistrationPolicy
+    authorize!
     @event_registration = EventRegistration.new
     set_form_variables
   end
 
   def edit
-    authorize! @event_registration, to: :update?
+    authorize! @event_registration
     set_form_variables
   end
 
   def create
-    authorize! :create, with: EventRegistrationPolicy
+    authorize!
     @event_registration = EventRegistration.new(event_registration_params)
 
     if @event_registration.save

@@ -34,14 +34,14 @@ class StoriesController < ApplicationController
   end
 
   def new
-    authorize! :create, with: StoryPolicy
+    authorize!
     @story = Story.new.decorate
     @story = @story.decorate
     set_form_variables
   end
 
   def edit
-    authorize! @story, to: :update?
+    authorize! @story
     @story = @story.decorate
     set_form_variables
     if turbo_frame_request?
@@ -52,7 +52,7 @@ class StoriesController < ApplicationController
   end
 
   def create
-    authorize! :create, with: StoryPolicy
+    authorize!
     @story = Story.new(story_params)
 
     if @story.save

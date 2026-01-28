@@ -1,7 +1,7 @@
 class WorkshopVariationsController < ApplicationController
   include AssetUpdatable, AhoyViewTracking
   def index
-    authorize! :index, with: WorkshopVariationPolicy
+    authorize!
 
     @workshop_variations =
       WorkshopVariation

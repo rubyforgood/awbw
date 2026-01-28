@@ -17,19 +17,19 @@ class TutorialsController < ApplicationController
   end
 
   def new
-    authorize! :create, with: TutorialPolicy
+    authorize!
     @tutorial = Tutorial.new.decorate
     set_form_variables
   end
 
   def edit
-    authorize! @tutorial, to: :update?
+    authorize! @tutorial
     @tutorial = @tutorial.decorate
     set_form_variables
   end
 
   def create
-    authorize! :create, with: TutorialPolicy
+    authorize!
     @tutorial = Tutorial.new(tutorial_params)
 
     if @tutorial.save

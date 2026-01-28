@@ -5,7 +5,7 @@
    before_action :set_owner, only: [ :create, :update ]
 
    def show
-     authorize! @asset, with: LibraryAssetPolicy
+     authorize! @asset
      if @asset&.file.attached?
        redirect_to rails_blob_url(@asset.file, disposition: "inline")
      else
@@ -14,7 +14,7 @@
    end
 
    def create
-     authorize! :create, with: LibraryAssetPolicy
+     authorize!
      if @owner
        valid_asset = validate_asset_type_constraint(asset_params[:type], @owner.assets)
 
@@ -60,7 +60,7 @@
    end
 
    def edit
-     authorize! @asset, with: LibraryAssetPolicy
+     authorize! @asset
      if @asset
        render template: "assets/edit"
      else
@@ -70,7 +70,7 @@
    end
 
    def update
-     authorize! @asset, with: LibraryAssetPolicy
+     authorize! @asset
      valid_asset = @owner.present? ? validate_asset_type_constraint(asset_params[:type], @owner.assets) : true
      if  valid_asset && @asset&.update(asset_params)
        flash.now[:notice] = "Asset updated."
@@ -103,7 +103,7 @@
    end
 
    def destroy
-     authorize! @asset, with: LibraryAssetPolicy
+     authorize! @asset
      if @asset
        @asset.destroy
        render turbo_stream: turbo_stream.remove(@asset)

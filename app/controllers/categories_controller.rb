@@ -2,7 +2,7 @@ class CategoriesController < ApplicationController
   before_action :set_category, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: CategoryPolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     @category_types = CategoryType.order(:name)
 
@@ -25,18 +25,18 @@ class CategoriesController < ApplicationController
   end
 
   def new
-    authorize! :create, with: CategoryPolicy
+    authorize!
     @category = Category.new
     set_form_variables
   end
 
   def edit
-    authorize! @category, to: :update?
+    authorize! @category
     set_form_variables
   end
 
   def create
-    authorize! :create, with: CategoryPolicy
+    authorize!
     @category = Category.new(category_params)
 
     if @category.save

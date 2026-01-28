@@ -3,7 +3,7 @@ class StoryIdeasController < ApplicationController
   before_action :set_story_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: StoryIdeaPolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
 
 
@@ -19,18 +19,18 @@ class StoryIdeasController < ApplicationController
   end
 
   def new
-    authorize! :create, with: StoryIdeaPolicy
+    authorize!
     @story_idea = StoryIdea.new
     set_form_variables
   end
 
   def edit
-    authorize! @story_idea, to: :update?
+    authorize! @story_idea
     set_form_variables
   end
 
   def create
-    authorize! :create, with: StoryIdeaPolicy
+    authorize!
     @story_idea = StoryIdea.new(story_idea_params)
 
     if @story_idea.save

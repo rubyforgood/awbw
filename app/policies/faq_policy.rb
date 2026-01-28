@@ -2,6 +2,7 @@
 
 class FaqPolicy < ApplicationPolicy
   # scope active vs all
+  alias_rule :edit?, to: :update?
 
   def index?
     authenticated?

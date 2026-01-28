@@ -2,6 +2,9 @@
 
 class ResourcePolicy < ApplicationPolicy
   # scope published vs all
+  alias_rule :edit?, to: :update?
+  alias_rule :download?, to: :show?
+  alias_rule :stories?, :search?, to: :index?
 
   def index?
     authenticated?

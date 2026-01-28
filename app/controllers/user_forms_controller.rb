@@ -1,6 +1,6 @@
 class UserFormsController < ApplicationController
   def create
-    authorize! :create, with: UserFormPolicy
+    authorize!
     @user_form = current_user.user_forms.build(user_form_params)
     if @user_form.save
       flash[:notice] = "User form successfully created"

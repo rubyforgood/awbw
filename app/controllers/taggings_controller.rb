@@ -1,6 +1,6 @@
 class TaggingsController < ApplicationController
   def index
-    authorize! :index, with: TaggingPolicy
+    authorize!
     @sector_names = params[:sector_names].to_s
     @category_names = params[:category_names].to_s
 
@@ -25,7 +25,7 @@ class TaggingsController < ApplicationController
   end
 
   def matrix
-    authorize! :matrix, with: TaggingPolicy
+    authorize!
     @sectors = Sector
       .joins(:sectorable_items)
       .published

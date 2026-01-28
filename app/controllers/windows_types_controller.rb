@@ -2,7 +2,7 @@ class WindowsTypesController < ApplicationController
   before_action :set_windows_type, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: WindowsTypePolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = WindowsType.all
     @windows_types_count = unpaginated.count
@@ -14,18 +14,18 @@ class WindowsTypesController < ApplicationController
   end
 
   def new
-    authorize! :create, with: WindowsTypePolicy
+    authorize!
     @windows_type = WindowsType.new
     set_form_variables
   end
 
   def edit
-    authorize! @windows_type, to: :update?
+    authorize! @windows_type
     set_form_variables
   end
 
   def create
-    authorize! :create, with: WindowsTypePolicy
+    authorize!
     @windows_type = WindowsType.new(windows_type_params)
 
     # Convert checkbox values into categorizable_items updates

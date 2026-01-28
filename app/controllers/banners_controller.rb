@@ -2,7 +2,7 @@ class BannersController < ApplicationController
   before_action :set_banner, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: BannerPolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = Banner.all
     @banners_count = unpaginated.count
@@ -14,18 +14,18 @@ class BannersController < ApplicationController
   end
 
   def new
-    authorize! :create, with: BannerPolicy
+    authorize!
     @banner = Banner.new
     set_form_variables
   end
 
   def edit
-    authorize! @banner, to: :update?
+    authorize! @banner
     set_form_variables
   end
 
   def create
-    authorize! :create, with: BannerPolicy
+    authorize!
     @banner = Banner.new(banner_params)
 
     if @banner.save

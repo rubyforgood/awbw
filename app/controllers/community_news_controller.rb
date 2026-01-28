@@ -33,13 +33,13 @@ class CommunityNewsController < ApplicationController
   end
 
   def new
-    authorize! :create, with: CommunityNewsPolicy
+    authorize!
     @community_news = CommunityNews.new.decorate
     set_form_variables
   end
 
   def edit
-    authorize! @community_news, to: :update?
+    authorize! @community_news
     @community_news = @community_news.decorate
     set_form_variables
     if turbo_frame_request?
@@ -50,7 +50,7 @@ class CommunityNewsController < ApplicationController
   end
 
   def create
-    authorize! :create, with: CommunityNewsPolicy
+    authorize!
     @community_news = CommunityNews.new(community_news_params)
 
     if @community_news.save

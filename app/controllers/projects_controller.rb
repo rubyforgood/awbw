@@ -3,7 +3,7 @@ class ProjectsController < ApplicationController
   before_action :set_project, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! :index, with: ProjectPolicy
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = Project.includes(:logo_attachment, :windows_type, :project_status).search_by_params(params).order(:name)
     @projects_count = unpaginated.count
@@ -45,18 +45,18 @@ class ProjectsController < ApplicationController
   end
 
   def new
-    authorize! :create, with: ProjectPolicy
+    authorize!
     @project = Project.new
     set_form_variables
   end
 
   def edit
-    authorize! @project, to: :update?
+    authorize! @project
     set_form_variables
   end
 
   def create
-    authorize! :create, with: ProjectPolicy
+    authorize!
     @project = Project.new(project_params)
 
     if @project.save

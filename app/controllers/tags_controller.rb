@@ -1,10 +1,10 @@
 class TagsController < ApplicationController
   def index
-    authorize! :index, with: TagPolicy
+    authorize!
   end
 
   def sectors
-    authorize! :sectors, with: TagPolicy
+    authorize!
     @sectors = Rails.cache.fetch("published_sectors_with_sectorable_items", expires_in: 1.month) do
       Sector
         .includes(:sectorable_items)
@@ -17,7 +17,7 @@ class TagsController < ApplicationController
   end
 
   def categories
-    authorize! :categories, with: TagPolicy
+    authorize!
     @categories_by_type = Rails.cache.fetch("published_categories_by_type", expires_in: 1.month) do
       categories =
         Category

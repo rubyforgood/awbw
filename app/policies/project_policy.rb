@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ProjectPolicy < ApplicationPolicy
+  alias_rule :edit?, to: :update?
+
   def index?
     authenticated?
   end

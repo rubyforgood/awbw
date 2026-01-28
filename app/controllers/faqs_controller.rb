@@ -13,18 +13,18 @@ class FaqsController < ApplicationController
   end
 
   def new
-    authorize! :create, with: FaqPolicy
+    authorize!
     @faq = Faq.new
     set_form_variables
   end
 
   def edit
-    authorize! @faq, to: :update?
+    authorize! @faq
     set_form_variables
   end
 
   def create
-    authorize! :create, with: FaqPolicy
+    authorize!
     @faq = Faq.new(faq_params)
 
     if @faq.save

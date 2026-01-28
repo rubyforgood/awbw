@@ -1,10 +1,10 @@
 class ContactUsController < ApplicationController
   def index
-    authorize! :index, with: ContactUsPolicy
+    authorize!
   end
 
   def create
-    authorize! :create, with: ContactUsPolicy
+    authorize!
     ContactUsMailer.hello(params[:contact_us]).deliver_now
     flash[:notice] = "Your message was sent!"
     redirect_to "/"

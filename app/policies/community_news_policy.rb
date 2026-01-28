@@ -2,6 +2,7 @@
 
 class CommunityNewsPolicy < ApplicationPolicy
   # scope published vs all
+  alias_rule :edit?, to: :update?
 
   def index?
     authenticated?
