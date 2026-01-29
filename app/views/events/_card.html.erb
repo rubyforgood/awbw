@@ -70,7 +70,7 @@
     <!-- 4️⃣ FULL-WIDTH CALENDAR LINKS ROW -->
     <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
       <div class="flex gap-2 items-center justify-center w-full text-sm text-gray-700 mt-2">
-        <!-- <span class="font-semibold">Calendar:</span> -->
+        <span class="font-semibold">Add to your calendar:</span>
         <%= event.calendar_links %>
       </div>
     <% end %>
