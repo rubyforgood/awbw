@@ -9,7 +9,7 @@
          font-medium shadow-sm leading-none",
                     data: { turbo_method: :delete, turbo_confirm: "Remove bookmark?" } do %>
       <i class="fas fa-bookmark text-base flex-shrink-0"></i>
-      <span class="leading-none text-sm py-[2.75px]">Bookmark</span>
+      <span class="leading-none text-sm py-[2.75px]">Bookmarked</span>
     <% end %>
   <% else %>
     <%= button_to bookmarks_path(bookmark: { bookmarkable_id: resource.id, bookmarkable_type: resource.class.name }),
