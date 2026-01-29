@@ -6,26 +6,21 @@ class ResourcesController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 18
-      unfiltered = Resource.where(kind: Resource::PUBLISHED_KINDS) # TODO - #FIXME brittle
-        .includes(:primary_asset, :gallery_assets, :attachments, :bookmarks, :downloadable_asset, primary_asset: [ :file_attachment ], downloadable_asset: [ :file_attachment ])
-      filtered = unfiltered.search_by_params(params)
-        .by_created
-      @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
       base_scope =
-        authorized_scope(Resource.where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
-          .includes(:primary_asset, :gallery_assets, :attachments)
+        authorized_scope(Resource.includes(:bookmarks, primary_asset: :file_attachment,
+                                           downloadable_asset: :file_attachment).where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
 
       filtered =
         base_scope
           .search_by_params(params)
-          .by_created
+          .by_featured_first
 
       @resources =
         filtered.paginate(page: params[:page], per_page: per_page)
 
-      total_count    = base_scope.count
-      filtered_count = filtered.count
+      total_count    = base_scope.size
+      filtered_count = filtered.size
       @count_display = if filtered_count == total_count
         total_count
       else
