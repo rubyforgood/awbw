@@ -1,14 +1,19 @@
 <!-- LOGO (outside card) -->
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  style="margin-bottom: 24px;"
+>
   <tr>
     <td align="center">
       <a href="<%= root_url %>" target="_blank">
-        <img
-          src="<%= asset_url("logo-color.png") %>"
-          alt="<%= @organization_name || "AWBW" %>"
-          width="160"
-          style="display:block;border:0;outline:none;text-decoration:none;"
-          />
+        <%= image_tag(
+          "logo-color.png",
+          alt: (@organization_name || "AWBW"),
+          width: 160,
+          style: "display:block;border:0;outline:none;text-decoration:none;"
+        ) %>
       </a>
     </td>
   </tr>
