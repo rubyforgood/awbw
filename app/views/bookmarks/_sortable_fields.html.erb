@@ -1,41 +1,33 @@
 <div class="input-group">
   <%= radio_button_tag :sort, "newest",
                        params[:sort] == "newest" || params[:sort].blank?,
-                       onclick: ("$('form').submit();") %>
+                       onclick: "this.form.submit();" %>
 
-  <span class="small">
-      Newest date bookmarked
-    </span>
+  <span class="small"> Newest date bookmarked </span>
 </div>
 
 <div class="input-group">
   <%= radio_button_tag :sort, "title",
                        params[:sort] == "title",
-                       onclick: ("$('form').submit();") %>
+                       onclick: "this.form.submit();" %>
 
-  <span class="small">
-    Title
-  </span>
+  <span class="small"> Title </span>
 </div>
 
 <div class="input-group">
   <%= radio_button_tag :sort, "popularity",
                        params[:sort] == "popularity",
-                       onclick: ("$('form').submit();") %>
+                       onclick: "this.form.submit();" %>
 
-  <span class="small">
-    Most bookmarked
-  </span>
+  <span class="small"> Most bookmarked </span>
 </div>
 
 <% if params[:query].present? %>
   <div class="input-group">
     <%= radio_button_tag :sort, "keywords",
                          params[:sort] == "keywords",
-                         onclick: ("$('form').submit();") %>
+                         onclick: "this.form.submit();" %>
 
-    <span class="small">
-      Keywords
-    </span>
+    <span class="small"> Keywords </span>
   </div>
 <% end %>
