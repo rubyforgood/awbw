@@ -73,6 +73,7 @@ class Resource < ApplicationRecord
 
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
+  scope :by_featured_first, -> { order(featured: :desc, created_at: :desc) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :featured, ->(featured = nil) { featured.present? ? where(featured: featured) : where(featured: true) }

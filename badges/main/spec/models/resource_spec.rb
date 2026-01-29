@@ -35,4 +35,23 @@ RSpec.describe Resource do
       expect(results).to contain_exactly(resource1)
     end
   end
+
+  describe 'scopes' do
+    describe '.by_featured_first' do
+      it 'orders featured resources before non-featured resources' do
+        user = create(:user)
+
+        # Create resources in chronological order
+        resource1 = Resource.create!(title: "Non-featured 1", user: user, kind: "Handout", featured: false, created_at: 3.days.ago)
+        resource2 = Resource.create!(title: "Featured 1", user: user, kind: "Handout", featured: true, created_at: 2.days.ago)
+        resource3 = Resource.create!(title: "Non-featured 2", user: user, kind: "Handout", featured: false, created_at: 1.day.ago)
+        resource4 = Resource.create!(title: "Featured 2", user: user, kind: "Handout", featured: true, created_at: 1.hour.ago)
+
+        results = Resource.by_featured_first
+
+        # Featured resources should come first (ordered by created_at desc), then non-featured (ordered by created_at desc)
+        expect(results).to eq([ resource4, resource2, resource3, resource1 ])
+      end
+    end
+  end
 end
