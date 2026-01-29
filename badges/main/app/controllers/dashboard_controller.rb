@@ -19,8 +19,7 @@ class DashboardController < ApplicationController
       when "dashboard_resources"
         @resources = authorized_scope(Resource.includes(:bookmarks, :primary_asset, :downloadable_asset)
                              .published
-                             .order(position: :asc, created_at: :desc)
-                             .limit(6), with: DashboardPolicy)
+                             .order(position: :asc, created_at: :desc), with: DashboardPolicy)
                              .decorate
 
       when "dashboard_stories"
