@@ -95,16 +95,13 @@ Rails.application.configure do
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = {
-    host: ENV.fetch("APP_HOST", "localhost"),
+    host: app_host,
     protocol: "https"
   }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
-  config.action_mailer.asset_host = {
-    host: app_host,
-    protocol: "https"
-  }
+  config.action_mailer.asset_host = "https://#{app_host}"
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
