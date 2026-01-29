@@ -92,6 +92,7 @@ Rails.application.routes.draw do
   resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
     member do
       get :generate_facilitator
+      post :send_reset_password_instructions
       post :toggle_lock_status
     end
   end

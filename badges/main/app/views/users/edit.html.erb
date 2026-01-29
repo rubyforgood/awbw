@@ -7,6 +7,10 @@
           <%= render "lock_status_indicator", user: @user %>
         </div>
         <div class="flex space-x-2">
+          <%= button_to "Reset password",
+                        send_reset_password_instructions_user_path(@user),
+                        method: :post,
+                        class: "btn btn-secondary-outline" %>
           <% if current_user == @user %>
             <%= link_to "Change password",
                         change_password_path,
