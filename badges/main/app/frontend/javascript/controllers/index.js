@@ -44,3 +44,6 @@ application.register("prefetch-lazy", PrefetchLazyController)
 
 import PrintOptionsController from "./print_options_controller"
 application.register("print-options", PrintOptionsController)
+
+import OptimisticBookmarkController from "./optimistic_bookmark_controller"
+application.register("optimistic-bookmark", OptimisticBookmarkController)
