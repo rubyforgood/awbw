@@ -83,7 +83,7 @@ class WorkshopsController < ApplicationController
     Workshop.transaction do
       if @workshop.save
         assign_associations(@workshop)
-        if params[:promote_idea_assets] == true
+        if params[:promote_idea_assets] == "true"
           @workshop.attach_assets_from_idea!
         elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@workshop)
