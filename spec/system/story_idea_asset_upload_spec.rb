@@ -24,9 +24,9 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
   def delete_asset(asset_type:)
     div_prefix = case asset_type
-    when "PrimaryAsset", "Primary asset"
+    when "PrimaryAsset", "Primary"
       "primary_asset_"
-    when "GalleryAsset", "Gallery asset"
+    when "GalleryAsset", "Gallery"
       "gallery_asset_"
     else
       raise "Unknown asset type: #{asset_type}"
@@ -48,10 +48,9 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_content("Primary asset")
+      expect(page).to have_content("Primary")
     end
 
     it "uploads a gallery asset" do
@@ -59,10 +58,9 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Gallery", file: "spec/fixtures/files/sample.png")
 
-      expect(page).to have_content("Gallery asset")
+      expect(page).to have_content("Gallery")
     end
 
     it "allows deleting a primary asset and re-uploading a new one" do
@@ -70,16 +68,15 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      delete_asset(asset_type: "Primary asset")
+      delete_asset(asset_type: "Primary")
 
       expect(page).not_to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Gallery", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
     end
@@ -89,12 +86,11 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_content("Only one Primary or Downloadable asset allowed.")
     end
@@ -104,11 +100,10 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Gallery", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='gallery_asset_']")
     end
   end
@@ -119,8 +114,7 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
     end
@@ -130,8 +124,7 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Gallery", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
     end
@@ -141,16 +134,15 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      delete_asset(asset_type: "Primary asset")
+      delete_asset(asset_type: "Primary")
 
       expect(page).not_to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Gallery", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='gallery_asset_']")
     end
@@ -160,11 +152,10 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_selector("div[id^='primary_asset_']")
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
 
       expect(page).to have_content("Only one Primary or Downloadable asset allowed.")
     end
@@ -174,11 +165,10 @@ RSpec.describe "Story Idea asset upload", type: :system do
 
       visit edit_story_idea_path(story_idea)
 
-      find("#assets-button").click
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='primary_asset_']")
 
-      upload_asset(type: "Gallery asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Gallery", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='gallery_asset_']")
     end
 
@@ -186,14 +176,13 @@ RSpec.describe "Story Idea asset upload", type: :system do
       story_idea = create(:story_idea, title: SecureRandom.uuid, body: "Test content")
 
       visit edit_story_idea_path(story_idea)
-      find("#assets-button").click
 
       # Upload a Primary asset
-      upload_asset(type: "Primary asset", file: "spec/fixtures/files/sample.png")
+      upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
       expect(page).to have_selector("div[id^='primary_asset_']")
 
       within("div[id^='primary_asset_']") do
-        select "Gallery asset", from: "library_asset_type"
+        select "Gallery", from: "library_asset_type"
       end
 
       within("div[id^='primary_asset_']") do
