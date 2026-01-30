@@ -1,12 +1,12 @@
 <%= tag.div id: "asset_upload" do %>
-  <% owner = owner&.decorated? ? owner.object : owner %>
+  <% owner = Draper.undecorate(owner) %>
 
   <%= form_with model: LibraryAsset.new, class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4 mb-2" do |f| %>
-    <% if owner&.persisted? %>
+    <% if owner&.respond_to?(:to_sgid) && owner&.persisted? %>
       <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
     <% else %>
       <%= tag.div class: "unpersisted_resource_asset_params" %>
-      <%= hidden_field_tag :owner_class, owner.class.name , autocomplete: "off" %>
+      <%= hidden_field_tag :owner_class, owner.respond_to?(:owner_class ) ? owner.owner_class : owner.class.name, autocomplete: "off" %>
     <% end %>
 
     <div class="bg-gray-50 p-4 rounded-md shadow-md">
@@ -15,7 +15,7 @@
 
       <div class="relative">
         <%= f.select :type,
-          Asset.allowed_types_for_owner(owner).map { |t| [t.underscore.humanize, t] },
+          Asset.allowed_types_for_owner(owner).map { |t| [t.underscore.humanize.split.first, t]},
           { required: true },
           class: "block w-full appearance-none rounded-md border border-gray-300
                   bg-white

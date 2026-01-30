@@ -82,10 +82,11 @@ RSpec.describe "Stories", type: :system do
 
         visit edit_story_path(story)
 
-        fill_in "Title", with: "A New Title"
-        select adult_window.short_name, from: "Windows type"
-
-        click_on 'Update Story'
+        within("#edit_story_#{story.id}") do
+            fill_in "Title", with: "A New Title"
+            select adult_window.short_name, from: "Windows type"
+            click_on 'Update Story'
+          end
 
         expect(page).to have_content("A New Title")
         expect(page).to have_content("Story was successfully updated.")

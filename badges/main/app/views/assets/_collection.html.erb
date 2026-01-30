@@ -11,4 +11,20 @@
       .each do |asset| %>
     <%= render "assets/card", asset: asset, owner: owner %>
   <% end %>
+
+  <%= tag.div class: "flex flex-col items-center justify-evenly border border-gray-300 rounded-md shadow-sm p-2 min-h-48 w-40 justify-self-stretch" do %>
+    <div class="flex flex-col items-center">
+      <p class="text-xs font-medium">Primary Attachment</p>
+      <p class="text-xs font-normal">(main display image)</p>
+      <p class="text-xs font-light">One allowed</p>
+      <p class="text-xs font-light">Type: .png, .jpeg</p>
+    </div>
+
+    <div class="flex flex-col items-center">
+      <p class="text-xs font-medium">Gallery Attachments</p>
+      <p class="text-xs font-normal">(extra images etc.)</p>
+      <p class="text-xs font-light">Multiple allowed</p>
+      <p class="text-xs font-light">Type: .png, .jpg, .pdf, .doc .odt</p>
+    </div>
+  <% end %>
 </div>

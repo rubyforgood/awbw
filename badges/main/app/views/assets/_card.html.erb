@@ -1,4 +1,4 @@
-<%= tag.div id: dom_id(asset), class: "flex flex-col items-center border border-gray-300 rounded-md shadow-sm p-2" do %>
+<%= tag.div id: dom_id(asset), class: "flex flex-col items-center border border-gray-300 rounded-md shadow-sm p-2 w-40" do %>
   <%= render "assets/type_selector", asset: asset, owner: (defined?(owner) ? owner : nil) %>
 
   <div class="relative group w-fit">

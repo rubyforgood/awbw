@@ -1,7 +1,6 @@
 <%# Handling form and collection for unpersisted_owner %>
-<%= turbo_stream.replace("asset_upload", partial: "assets/upload") %>
+<%= turbo_stream.replace("asset_upload", partial: "assets/upload", locals: {owner: @unpersisted_owner}) %>
 <%= turbo_stream.replace("asset_collection", partial: "assets/collection", locals: {owner: @unpersisted_owner}) %>
-
 <%= turbo_stream.replace_all ".unpersisted_resource_asset_params" do %>
 
   <%= tag.div class: "unpersisted_resource_asset_params" do %>

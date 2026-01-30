@@ -1,5 +1,6 @@
 <% padding ||= "p-3" %>
 <% form ||= "" %>
+<% hidden  = local_assigns.fetch(:hidden, true) %>
 
 <% label_tag =
   if form.present?
@@ -30,5 +31,5 @@
     <i id="<%= field %>-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
   </button>
 
-  <div id="<%= field %>-dropdown" class="hidden"><%= yield %></div>
+  <div id="<%= field %>-dropdown" class="<%= class_names(hidden: hidden) %>"><%= yield %></div>
 </div>
