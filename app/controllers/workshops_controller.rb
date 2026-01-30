@@ -67,8 +67,8 @@ class WorkshopsController < ApplicationController
   end
 
   def new
-    if params[:workshop_idea].present?
-      @workshop_idea = WorkshopIdea.find(params[:workshop_idea])
+    if params[:workshop_idea_id].present?
+      @workshop_idea = WorkshopIdea.find(params[:workshop_idea_id])
       @workshop = WorkshopFromIdeaService.new(@workshop_idea, user: current_user).call
     else
       @workshop = Workshop.new(user: current_user)
@@ -83,7 +83,9 @@ class WorkshopsController < ApplicationController
     Workshop.transaction do
       if @workshop.save
         assign_associations(@workshop)
-        if params.dig(:library_asset, :new_assets).present?
+        if params[:promote_idea_assets] == true
+          @workshop.attach_assets_from_idea!
+        elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@workshop)
         end
         success = true
@@ -298,7 +300,7 @@ class WorkshopsController < ApplicationController
       sector_ids: [],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
-                                            :position, :_destroy ],
+                                            :position, :_destroy ]
     )
   end
 

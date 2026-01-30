@@ -22,7 +22,7 @@
       </div>
     <% elsif current_user.super_user? && f.object.persisted? %>
       <div class="admin-only bg-blue-100 m-3 p-3">
-        <%= link_to "Promote to Workshop", new_workshop_path(workshop_idea: @workshop_idea),
+        <%= link_to "Promote to Workshop", new_workshop_path(workshop_idea_id: @workshop_idea.id),
                     class: "btn btn-secondary-outline",
                     data: { confirm: "Are you sure you want to promote this workshop idea to a workshop?" } %>
       </div>

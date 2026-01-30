@@ -431,6 +431,22 @@
 
       <%= f.submit "Submit", class: "btn btn-primary" %>
     </div>
+
+    <% if @workshop_idea %>
+      <div class="flex mt-6">
+        <%= label_tag :promote_idea_assets do %>
+          <%= check_box_tag :promote_idea_assets, true %>
+
+          <span>
+            If the workshop idea was submitted with attachments, check this box to transfer them to this new workshop.
+          </span>
+
+          <p>
+            (This will override any attachment uploaded in the form below.)
+          </p>
+        <% end %>
+      </div>
+    <% end %>
   <% end %>
 </div>
 
