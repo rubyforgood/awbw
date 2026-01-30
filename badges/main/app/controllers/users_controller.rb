@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status, :send_reset_password_instructions ]
+  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status, :confirm_email, :send_reset_password_instructions ]
 
   def index
     return redirect_to root_path unless current_user.super_user?
@@ -113,6 +113,22 @@ class UsersController < ApplicationController
       # Lock the user
       @user.update(locked_at: Time.current)
       message = "User has been locked."
+    end
+
+    respond_to do |format|
+      format.turbo_stream { flash.now[:notice] = message }
+      format.html { redirect_to edit_user_path(@user), notice: message }
+    end
+  end
+
+  def confirm_email
+    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+
+    if @user.confirmed_at.present?
+      message = "Email is already confirmed."
+    else
+      @user.update(confirmed_at: Time.current)
+      message = "Email has been manually confirmed."
     end
 
     respond_to do |format|

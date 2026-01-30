@@ -194,4 +194,50 @@ RSpec.describe "/users", type: :request do
       end
     end
   end
+
+  describe "POST /confirm_email" do
+    context "when user is a super_user" do
+      it "confirms an unconfirmed email" do
+        user = User.create! valid_attributes.merge(confirmed_at: nil)
+        expect(user.confirmed_at).to be_nil
+        post confirm_email_user_url(user)
+        user.reload
+        expect(user.confirmed_at).not_to be_nil
+        expect(response).to redirect_to(edit_user_url(user))
+        expect(flash[:notice]).to eq("Email has been manually confirmed.")
+      end
+
+      it "returns a message when email is already confirmed" do
+        user = User.create! valid_attributes.merge(confirmed_at: Time.current)
+        original_confirmed_at = user.confirmed_at
+        post confirm_email_user_url(user)
+        user.reload
+        expect(user.confirmed_at).to eq(original_confirmed_at)
+        expect(response).to redirect_to(edit_user_url(user))
+        expect(flash[:notice]).to eq("Email is already confirmed.")
+      end
+    end
+
+    context "when user is not a super_user" do
+      before do
+        non_admin_user = create(:user)
+        sign_in non_admin_user
+      end
+
+      it "redirects with an error message" do
+        user = User.create! valid_attributes
+        post confirm_email_user_url(user)
+        expect(response).to redirect_to(users_url)
+        expect(flash[:alert]).to eq("You don't have permission to perform this action.")
+      end
+
+      it "does not change the user's confirmed_at status" do
+        user = User.create! valid_attributes.merge(confirmed_at: nil)
+        original_confirmed_at = user.confirmed_at
+        post confirm_email_user_url(user)
+        user.reload
+        expect(user.confirmed_at).to eq(original_confirmed_at)
+      end
+    end
+  end
 end

@@ -1,0 +1,17 @@
+<%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>
+<%= turbo_stream.update "email_label" do %>
+  <%= email_label_with_confirmation_icon(@user) %>
+<% end %>
+<%= turbo_stream.update "confirm_email_button" do %>
+  <% if @user.confirmed_at.nil? && current_user.super_user? %>
+    <div class="mt-2">
+      <button type="button"
+              data-controller="confirm-email"
+              data-confirm-email-user-id-value="<%= @user.id %>"
+              data-action="click->confirm-email#confirm"
+              class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white border-blue-600">
+        Manually confirm email
+      </button>
+    </div>
+  <% end %>
+<% end %>

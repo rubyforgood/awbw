@@ -94,6 +94,7 @@ Rails.application.routes.draw do
       get :generate_facilitator
       post :send_reset_password_instructions
       post :toggle_lock_status
+      post :confirm_email
     end
   end
   resources :user_forms
