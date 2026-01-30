@@ -1,5 +1,3 @@
-<%= render "assets/form", owner: @resource %>
-
 <%= simple_form_for @resource, wrapper: :tailwind_form do |f| %>
   <%= render 'shared/errors', resource: @resource if @resource.errors.any? %>
 
@@ -115,3 +113,5 @@
                  rounded-lg bg-blue-600 text-white text-sm font-medium" %>
   </div>
 <% end %>
+
+<div class="my-4"><%= render "assets/form", owner: @resource %></div>

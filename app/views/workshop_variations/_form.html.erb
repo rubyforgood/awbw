@@ -1,6 +1,4 @@
 <div class="rounded-xl bg-white p-6">
-  <%= render "assets/form", owner: @workshop_variation %>
-
   <%= simple_form_for @workshop_variation do |f| %>
     <%= hidden_field_tag(:from, params[:from]) %>
 
@@ -86,3 +84,5 @@
     </div>
   <% end %>
 </div>
+
+<div class="my-4"><%= render "assets/form", owner: @workshop_variation %></div>

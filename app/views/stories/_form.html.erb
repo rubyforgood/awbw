@@ -1,5 +1,3 @@
-<%= render "assets/form", owner: @story %>
-
 <%= simple_form_for(story, html: { multipart: true }) do |f| %>
   <%= render 'shared/errors', resource: story if story.errors.any? %>
 
@@ -128,3 +126,5 @@
     </div>
   </div>
 <% end %>
+
+<div class="my-4"><%= render "assets/form", owner: @story %></div>

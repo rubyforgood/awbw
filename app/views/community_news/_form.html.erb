@@ -1,5 +1,3 @@
-<%= render "assets/form", owner: @community_news %>
-
 <%= simple_form_for(@community_news, html: { class: "space-y-8" }) do |f| %>
   <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
@@ -72,3 +70,5 @@
     <%= f.button :submit, class: "inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition" %>
   </div>
 <% end %>
+
+<div class="my-4"><%= render "assets/form", owner: @community_news %></div>
