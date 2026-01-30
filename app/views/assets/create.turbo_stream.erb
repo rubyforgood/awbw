@@ -1,10 +1,10 @@
 <%# Handling form and collection for unpersisted_owner %>
-<%= turbo_stream.replace("asset_upload", partial: "assets/upload") %>
+<%= turbo_stream.replace("asset_upload", partial: "assets/upload", locals: {owner: @unpersisted_owner}) %>
 <%= turbo_stream.replace("asset_collection", partial: "assets/collection", locals: {owner: @unpersisted_owner}) %>
-
 <%= turbo_stream.replace_all ".unpersisted_resource_asset_params" do %>
 
   <%= tag.div class: "unpersisted_resource_asset_params" do %>
+    <%# hidden_field_tag :owner_class, @owner_class , autocomplete: "off" %>
     <% @unpersisted_owner.assets.compact.each do |asset| %>
       <%= hidden_field_tag "library_asset[new_assets][][id]", asset.id %>
       <%= hidden_field_tag "library_asset[new_assets][][type]", asset.type %>
