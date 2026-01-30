@@ -35,7 +35,7 @@
          )
        end
      else
-       @unpersisted_owner = Data.define(:assets, :owner_class).new([], @owner_class)
+       @unpersisted_owner = Data.define(:assets, :owner_class).new([], params[:owner_class])
        @asset =  Asset.new(asset_params.except(:file))
        @asset.file.attach(asset_params[:file]) if asset_params[:file].present?
 
