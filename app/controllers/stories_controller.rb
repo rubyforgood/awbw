@@ -34,8 +34,8 @@ class StoriesController < ApplicationController
 
   def new
     if params[:story_idea_id].present?
-      idea = StoryIdea.find(params[:story_idea_id])
-      @story = Story.new(set_story_attributes_from(idea))
+      @story_idea = StoryIdea.find(params[:story_idea_id])
+      @story = Story.new(set_story_attributes_from(@story_idea))
     else
       @story = Story.new
     end
@@ -57,7 +57,9 @@ class StoriesController < ApplicationController
     @story = Story.new(story_params)
 
     if @story.save
-      if params.dig(:library_asset, :new_assets).present?
+      if params[:promote_idea_assets] == "true"
+        @story.attach_assets_from_idea!
+      elsif params.dig(:library_asset, :new_assets).present?
         update_asset_owner(@story)
       end
 
