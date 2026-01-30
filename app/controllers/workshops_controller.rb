@@ -67,8 +67,8 @@ class WorkshopsController < ApplicationController
   end
 
   def new
-    if params[:workshop_idea_id].present?
-      @workshop_idea = WorkshopIdea.find(params[:workshop_idea_id])
+    if params[:workshop_idea].present?
+      @workshop_idea = WorkshopIdea.find(params[:workshop_idea])
       @workshop = WorkshopFromIdeaService.new(@workshop_idea, user: current_user).call
     else
       @workshop = Workshop.new(user: current_user)
