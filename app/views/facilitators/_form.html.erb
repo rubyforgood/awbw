@@ -15,17 +15,22 @@
 
         <div class="flex flex-col md:flex-row gap-4">
           <%= f.input :date_of_birth,
-                      as: :string,
+                      as: :date,
+                      discard_year: true,
+                      order: [:month, :day],
                       input_html: {
-                        type: "date",
                         class: "w-full rounded-md border-gray-300 shadow-sm
                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                      } %>
+                      }  %>
                       <% if current_user.super_user? %>
                         <%= f.input :member_since,
-                                    as: :string,
+                                    as: :date,
+                                    discard_day: true,
+                                    start_year: 1991,
+                                    end_year: Time.current.year,
+                                    order: [:month, :year],
                                     label: "Facilitator since",
-                                    hint: "Pick Jan 1 if you only know the year",
+                                    hint: "Pick Jan if you only know the year",
                                     input_html: {
                                       type: "date",
                                       class: "w-full rounded-md border-gray-300 shadow-sm admin-only bg-blue-100 border-blue-200
