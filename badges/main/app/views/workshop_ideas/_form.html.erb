@@ -7,7 +7,11 @@
 
     <%= tag.div class: "unpersisted_resource_asset_params" %>
 
-    <% if current_user.super_user && f.object.workshops.any? %>
+    <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
+    <%= f.hidden_field :updated_by_id, value: current_user&.id %>
+
+    <% promoted_to_workshop = f.object.workshops.any? %>
+    <% if promoted_to_workshop %>
       <div class="admin-only bg-yellow-100 m-3 p-3">
         This workshops idea has been promoted to a
         <% f.object.workshops.each do |workshop| %>
@@ -16,11 +20,13 @@
         <% end %>
         and should not be edited here.
       </div>
+    <% elsif current_user.super_user? && f.object.persisted? %>
+      <div class="admin-only bg-blue-100 m-3 p-3">
+        <%= link_to "Promote to Workshop", new_workshop_path(workshop_idea_id: @workshop_idea.id),
+                    class: "btn btn-secondary-outline",
+                    data: { confirm: "All edits must be saved before promoting. Are you sure you wish to promote?All edits must be saved before promoting." } %>
+      </div>
     <% end %>
-
-    <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
-    <%= f.hidden_field :updated_by_id, value: current_user&.id %>
-
     <!-- Row 1 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <div>

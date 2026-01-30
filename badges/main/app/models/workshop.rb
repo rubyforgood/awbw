@@ -291,6 +291,16 @@ class Workshop < ApplicationRecord
     featured_changed? || visitor_featured_changed? || inactive_changed?
   end
 
+  def attach_assets_from_idea!
+    return unless workshop_idea
+
+    workshop_idea.assets.find_each do |asset|
+      new_asset = assets.build(type: asset.type)
+      new_asset.file.attach(asset.file.blob)
+    end
+
+    save!
+  end
 
   private
 

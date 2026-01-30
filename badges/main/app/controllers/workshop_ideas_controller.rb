@@ -29,7 +29,7 @@ class WorkshopIdeasController < ApplicationController
         notification_type: 0)
 
       if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@workshop)
+        update_asset_owner(@workshop_idea)
       end
 
       redirect_to workshop_ideas_path, notice: "Workshop idea was successfully created."

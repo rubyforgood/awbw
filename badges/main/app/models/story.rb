@@ -83,4 +83,14 @@ class Story < ApplicationRecord
   def organization_description
     project&.organization_description
   end
+
+  def attach_assets_from_idea!
+    return unless story_idea
+    story_idea.assets.find_each do |asset|
+      new_asset = assets.build(type: asset.type)
+      new_asset.file.attach(asset.file.blob)
+    end
+
+    save!
+  end
 end
