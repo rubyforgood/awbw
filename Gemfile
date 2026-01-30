@@ -67,7 +67,7 @@ group :development, :test do
   # https://github.com/banister/binding_of_caller/pull/90
   gem "binding_of_caller", github: "kivikakk/binding_of_caller", branch: "push-yrnnzolypxun"
 
-  gem "brakeman", "~> 8.0.0", require: false
+  gem "brakeman", "~> 8.0.1", require: false
   gem "bundler-audit", require: false
   gem "capybara", "~> 3.36"
   gem "dotenv-rails"
