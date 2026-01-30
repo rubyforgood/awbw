@@ -133,7 +133,7 @@ GEM
     bigdecimal (4.0.1)
     bootsnap (1.21.1)
       msgpack (~> 1.2)
-    brakeman (8.0.0)
+    brakeman (8.0.1)
       racc
     builder (3.3.0)
     bullet (8.1.0)
@@ -553,7 +553,7 @@ DEPENDENCIES
   better_errors
   binding_of_caller!
   bootsnap
-  brakeman (~> 8.0.0)
+  brakeman (~> 8.0.1)
   bullet
   bundler-audit
   capybara (~> 3.36)
@@ -631,7 +631,7 @@ CHECKSUMS
   bigdecimal (4.0.1) sha256=8b07d3d065a9f921c80ceaea7c9d4ae596697295b584c296fe599dd0ad01c4a7
   binding_of_caller (1.0.1)
   bootsnap (1.21.1) sha256=9373acfe732da35846623c337d3481af8ce77c7b3a927fb50e9aa92b46dbc4c4
-  brakeman (8.0.0) sha256=9fd6e793d1f8e581dd864a0e0dee3ce8864e2902fcbd314d21f952f9751dd2f6
+  brakeman (8.0.1) sha256=c68ce0ac35a6295027c4eab8b4ac597d2a0bfc82f0d62dcd334bbf944d352f70
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   bullet (8.1.0) sha256=604b7e2636ec2137dcab3ba61a56248c39a0004a0c9405d58bad0686d23b98ff
   bundler-audit (0.9.3) sha256=81c8766c71e47d0d28a0f98c7eed028539f21a6ea3cd8f685eb6f42333c9b4e9
