@@ -29,8 +29,8 @@ RSpec.describe "/events", type: :request do
     it "renders a successful response" do
       sign_in user
       get events_url
-      puts "=====Status: #{response.status}"
-      puts "Error snippet: #{response.body.scan(/<pre.*?>(.*?)<\/pre>/m)}"
+      # puts "=====Status: #{response.status}"
+      # puts "Error snippet: #{response.body.scan(/<pre.*?>(.*?)<\/pre>/m)}"
       expect(response).to be_successful
     end
   end

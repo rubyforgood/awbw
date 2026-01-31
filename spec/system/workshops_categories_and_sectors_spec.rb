@@ -3,8 +3,6 @@ require "rails_helper"
 RSpec.describe "Workshop categories & sectors", type: :system do
   let(:user) { create(:user, :admin) }
 
-  before { driven_by(:selenium_chrome_headless) }
-
   describe "CREATE workshop" do
     it "assigns categories and sectors from checkboxes" do
       sign_in(user)

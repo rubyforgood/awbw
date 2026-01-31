@@ -279,6 +279,7 @@ RSpec.describe "Resource asset upload", type: :system do
             end
 
       sleep 0.2
+
       resource = Resource.find_by!(title: title)
 
       # Assert the asset association

@@ -49,8 +49,6 @@ gem "country_select"
 gem "turbo-rails", "~> 2.0"
 gem "stimulus-rails", "~> 1.3"
 
-gem "active_storage_validations", "~> 3.0"
-
 gem "positioning", "~> 0.4.7"
 
 gem "action_policy", "~> 0.7.6"
@@ -60,13 +58,13 @@ group :development do
 end
 
 group :test do
-  gem 'database_cleaner-active_record'
+  gem "active_storage_validations", "~> 3.0"
+  gem "launchy"
 end
 
 group :development, :test do
   gem "better_errors"
   # gem "binding_of_caller"  # Temporarily commented - doesn't support Ruby 4.0.1
-  #
   # FIXME: Workaround for Ruby 4.0+
   # https://github.com/banister/binding_of_caller/pull/90
   gem "binding_of_caller", github: "kivikakk/binding_of_caller", branch: "push-yrnnzolypxun"
