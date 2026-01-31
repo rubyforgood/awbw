@@ -43,11 +43,11 @@ module AhoyViewTracking
     # ---- REAL ENVIRONMENT (per visit) ----
     return false unless ahoy&.visit_token
 
-    Ahoy::Event.where(
+    Ahoy::Event.joins(:visit).where(
       name: "#{action}.#{resource.class.table_name.singularize}",
-      visit_token: ahoy.visit_token
+      ahoy_visits: { visit_token: ahoy.visit_token }
     ).where(
-      "properties ->> 'resource_id' = ?", resource.id.to_s
+      "ahoy_events.properties ->> '$.resource_id' = ?", resource.id.to_s
     ).exists?
   end
 
