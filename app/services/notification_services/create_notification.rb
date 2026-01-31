@@ -18,6 +18,8 @@ module NotificationServices
         recipient_email: recipient_email
       )
 
+
+
       # send an email, and then persist it to the notification
       NotificationMailerJob.perform_later(notification.id, persist_delivered_email: persist_delivered_email) if deliver
 
