@@ -54,5 +54,4 @@ module AhoyViewTracking
   def request_store
     @ahoy_request_store ||= {}
   end
-
 end
