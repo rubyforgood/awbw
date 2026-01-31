@@ -120,7 +120,7 @@ RSpec.describe "/categories", type: :request do
         category_type = create(:category_type)
         category = create(:category, name: "Test", category_type: category_type, position: 1)
         patch category_url(category), params: { position: 0 }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
 
       it "handles update failures gracefully" do
@@ -130,7 +130,7 @@ RSpec.describe "/categories", type: :request do
         allow(Category).to receive(:find).with(category.id.to_s).and_return(category)
         allow(category).to receive(:update).and_return(false)
         patch category_url(category), params: { position: 2 }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
 
 
