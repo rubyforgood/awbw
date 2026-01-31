@@ -8,7 +8,7 @@ RSpec.describe "FAQ", type: :system do
 
   context "Index" do
     context "as a regular user" do
-      let(:user) { create(:user, super_user: false) }
+      let(:user) { create(:user) }
 
       before do
         sign_in user
@@ -21,11 +21,11 @@ RSpec.describe "FAQ", type: :system do
       end
     end
 
-    context "as a super user" do
-      let(:super_user) { create(:user, super_user: true) }
+    context "as an admin" do
+      let(:admin) { create(:user, :admin) }
 
       before do
-        sign_in super_user
+        sign_in admin
         visit faqs_path
       end
 

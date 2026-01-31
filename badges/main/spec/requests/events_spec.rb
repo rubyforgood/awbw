@@ -22,15 +22,15 @@ RSpec.describe "/events", type: :request do
     }
   }
   let(:user) { create(:user) }
-  let(:admin) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
   let(:event) { Event.create!(valid_attributes) }
 
   describe "GET /index" do
     it "renders a successful response" do
       sign_in user
       get events_url
-      puts "=====Status: #{response.status}"
-      puts "Error snippet: #{response.body.scan(/<pre.*?>(.*?)<\/pre>/m)}"
+      # puts "=====Status: #{response.status}"
+      # puts "Error snippet: #{response.body.scan(/<pre.*?>(.*?)<\/pre>/m)}"
       expect(response).to be_successful
     end
   end

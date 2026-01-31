@@ -12,11 +12,11 @@ RSpec.describe "faqs/index", type: :view do
     end
   end
 
-  context "as a super user" do
-    let(:super_user) { build_stubbed(:user, :admin) }
+  context "as an admin" do
+    let(:admin) { build_stubbed(:user, :admin) }
 
     before do
-      allow(view).to receive(:current_user).and_return(super_user)
+      allow(view).to receive(:current_user).and_return(admin)
       assign(:faqs, paginate_faqs([ faq1, faq2, inactive_faq ]))
       render
     end
@@ -33,13 +33,13 @@ RSpec.describe "faqs/index", type: :view do
       end
     end
 
-    it "shows New FAQ button for super_user" do
+    it "shows New FAQ button for admin" do
       expect(rendered).to include("New FAQ")
     end
   end
 
   context "as a regular user" do
-    let(:regular_user) { build_stubbed(:user, super_user: false) }
+    let(:regular_user) { build_stubbed(:user) }
 
     before do
       allow(view).to receive(:current_user).and_return(regular_user)
@@ -61,7 +61,7 @@ RSpec.describe "faqs/index", type: :view do
   end
 
   context "as any user" do
-    let(:regular_user) { build_stubbed(:user, super_user: false) }
+    let(:regular_user) { build_stubbed(:user) }
 
     before do
       allow(view).to receive(:current_user).and_return(regular_user)

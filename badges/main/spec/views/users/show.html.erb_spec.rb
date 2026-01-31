@@ -5,13 +5,10 @@ RSpec.describe "users/show", type: :view do
     create(:user,
            email: "Email@example.com",
            comment: "MyText",
-           notes: "MyText",
-           inactive: false,
-           super_user: false
-    )
+           notes: "MyText")
   end
 
-  let(:super_user) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin) }
   let(:windows_type) { create(:windows_type, name: "Adult Windows") }
   let!(:workshop) { create(:workshop, title: "Mindful Art", user: user, windows_type: windows_type) }
 
@@ -20,7 +17,7 @@ RSpec.describe "users/show", type: :view do
 
   before do
     assign(:user, user)
-    allow(view).to receive(:current_user).and_return(super_user)
+    allow(view).to receive(:current_user).and_return(admin)
   end
 
   it "renders facilitator attributes" do

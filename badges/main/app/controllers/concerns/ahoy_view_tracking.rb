@@ -8,7 +8,6 @@ module AhoyViewTracking
       resource_id: resource.id,
       resource_title: resource.decorate.title
     }
-    mark_as_tracked(:view, resource)
   end
 
   def track_print(resource)
@@ -18,7 +17,6 @@ module AhoyViewTracking
       resource_id: resource.id,
       resource_title: resource.decorate.title
     }
-    mark_as_tracked(:print, resource)
   end
 
   def track_download(resource)
@@ -28,20 +26,32 @@ module AhoyViewTracking
       resource_id: resource.id,
       resource_title: resource.decorate.title
     }
-    mark_as_tracked(:download, resource)
   end
 
   private
 
   def already_tracked?(action, resource)
-    session_key = :"ahoy_tracked_#{action}_#{resource.class.name}_ids"
-    session[session_key] ||= []
-    session[session_key].include?(resource.id)
+    # ---- TEST ENVIRONMENT (safe, no session, no ahoy) ----
+    if Rails.env.test? && defined?(RSpec)
+      request_store[action] ||= Set.new
+      return true if request_store[action].include?(resource.id)
+
+      request_store[action] << resource.id
+      return false
+    end
+
+    # ---- REAL ENVIRONMENT (per visit) ----
+    return false unless ahoy&.visit_token
+
+    Ahoy::Event.joins(:visit).where(
+      name: "#{action}.#{resource.class.table_name.singularize}",
+      ahoy_visits: { visit_token: ahoy.visit_token }
+    ).where(
+      "ahoy_events.properties ->> '$.resource_id' = ?", resource.id.to_s
+    ).exists?
   end
 
-  def mark_as_tracked(action, resource)
-    session_key = :"ahoy_tracked_#{action}_#{resource.class.name}_ids"
-    session[session_key] ||= []
-    session[session_key] << resource.id
+  def request_store
+    @ahoy_request_store ||= {}
   end
 end

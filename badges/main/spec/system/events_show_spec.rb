@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Event show page", type: :system do
   let(:user) { create(:user) }
-  let(:super_user) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
   let(:event) { create(:event, title: "My Event").decorate }
 
   before do
@@ -36,9 +36,9 @@ RSpec.describe "Event show page", type: :system do
     end
   end
 
-  describe "super user buttons" do
-    it "shows Edit button for super users only" do
-      sign_in(super_user)
+  describe "admin buttons" do
+    it "shows Edit button for admins only" do
+      sign_in(admin)
       visit event_path(event)
 
       expect(page).to have_link("Edit", href: edit_event_path(event))

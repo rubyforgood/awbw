@@ -1,12 +1,10 @@
 require "rails_helper"
 
 RSpec.describe "Workshop categories & sectors", type: :system do
-  let(:user) { create(:user, super_user: true) }
-
-  before { driven_by(:selenium_chrome_headless) }
+  let(:user) { create(:user, :admin) }
 
   describe "CREATE workshop" do
-    xit "assigns categories and sectors from checkboxes" do
+    it "assigns categories and sectors from checkboxes" do
       sign_in(user)
 
       windows_type = create(:windows_type, :adult)
@@ -19,6 +17,7 @@ RSpec.describe "Workshop categories & sectors", type: :system do
 
       visit new_workshop_path
 
+      fill_in "workshop_title", with: "Category Test Workshop"
       select windows_type.short_name, from: "workshop_windows_type_id"
 
       # Open the dropdown accordion
@@ -28,8 +27,6 @@ RSpec.describe "Workshop categories & sectors", type: :system do
       check "Youth"
       check "Veterans"
       check "Elders"
-
-      fill_in "workshop_title", with: "Category Test Workshop"
 
       expect {
         click_on "Submit"

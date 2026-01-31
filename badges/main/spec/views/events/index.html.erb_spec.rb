@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "events/index", type: :view do
-  let(:user) { create(:user, super_user: true) }
+  let(:user) { create(:user, :admin) }
   let(:event_closed) {
     create(:event, title: "Event 1",
       start_date: 1.day.from_now, end_date: 2.days.from_now,

@@ -1,8 +1,8 @@
 <div class="w-full mx-auto" data-controller="timeframe">
-  <%= simple_form_for @workshop do |f| %>
+  <%= simple_form_for @workshop, data: { turbo: false } do |f| %>
     <!-- Errors -->
     <% if workshop.errors.any? %>
-      <%= render 'shared/errors', resource: workshop %>
+      <%= render 'shared/errors', resource: @workshop %>
     <% end %>
 
     <%= tag.div class: "unpersisted_resource_asset_params" %>
@@ -280,9 +280,8 @@
                   for="<%= id %>"
                   class="
                     flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                    rounded-lg shadow-sm hover:bg-gray-100 transition
-                  "
-                >
+                    rounded-lg shadow-sm hover:bg-gray-100 transition">
+                  <%= hidden_field_tag "workshop[sector_ids][]", "" %><!-- # To ensure unchecked boxes are submitted-->
                   <%= check_box_tag "workshop[sector_ids][]",
                                     sector.id,
                                     @workshop.sector_ids.include?(sector.id),
@@ -310,9 +309,8 @@
                       for="<%= id %>"
                       class="
                         flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition
-                      "
-                    >
+                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                      <%= hidden_field_tag "workshop[category_ids][]", "" %><!-- # To ensure unchecked boxes are submitted-->
                       <%= check_box_tag "workshop[category_ids][]",
                                         category.id,
                                         @workshop.category_ids.include?(category.id),

@@ -73,9 +73,9 @@ RSpec.describe "Stories", type: :system do
   end
 
   describe 'edit story' do
-    context "When super user is logged in" do
+    context "When admin is logged in" do
       it "Super user can edit an existing story" do
-        user = create(:user, super_user: true)
+        user = create(:user, :admin)
         sign_in(user)
         adult_window = create(:windows_type, :adult)
         story = create(:story, title: "Old Title", windows_type: adult_window, created_by: user)

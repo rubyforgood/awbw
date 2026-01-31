@@ -2,10 +2,10 @@
 require "rails_helper"
 
 RSpec.describe "Resource asset upload", type: :system do
-  let(:super_user) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
 
   before do
-    sign_in super_user
+    sign_in admin
   end
 
   def upload_asset(type:, file:)
@@ -279,6 +279,7 @@ RSpec.describe "Resource asset upload", type: :system do
             end
 
       sleep 0.2
+
       resource = Resource.find_by!(title: title)
 
       # Assert the asset association

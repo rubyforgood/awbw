@@ -78,6 +78,7 @@ class WorkshopsController < ApplicationController
 
   def create
     @workshop = current_user.workshops.build(workshop_params)
+
     success = false
 
     Workshop.transaction do

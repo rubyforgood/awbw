@@ -129,8 +129,8 @@ class WorkshopLogsController < ApplicationController
     else
       current_user.projects.order(:name)
     end
-    # @workshops = Workshop.joins(:workshop_logs)
-    #                      .order(:title)
+    @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
+                         .order(:title)
   end
 
   private

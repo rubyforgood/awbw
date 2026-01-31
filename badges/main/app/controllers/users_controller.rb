@@ -75,6 +75,7 @@ class UsersController < ApplicationController
     @user = current_user
 
     if @user.update_with_password(password_params)
+
       bypass_sign_in(@user)
       flash[:notice] = "Your Password was updated."
       redirect_to root_path

@@ -4,12 +4,12 @@ FactoryBot.define do
     association :user
     association :windows_type
 
-    title { Faker::Lorem.sentence }
+    title { Faker::Lorem.sentence.gsub("error", "eldor") }
 
     inactive { false }
     featured { false }
-    objective { Faker::Lorem.paragraph }
-    materials { Faker::Lorem.paragraph }
+    objective { Faker::Lorem.paragraph.gsub("error", "eldor") }
+    materials { Faker::Lorem.paragraph.gsub("error", "eldor") }
     time_opening { rand(0..75) }
 
     transient do

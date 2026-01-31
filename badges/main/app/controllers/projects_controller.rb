@@ -13,18 +13,10 @@ class ProjectsController < ApplicationController
   def show
     track_view(@project)
 
-    # Reuse WorkshopLogsController#index logic programmatically
-    workshop_logs_controller = WorkshopLogsController.new
-    workshop_logs_controller.request = request
-    workshop_logs_controller.response = response
-    params[:project_id] = @project.id  # Inject context so the WorkshopLogsController#index scopes properly
-    workshop_logs_controller.params = params
-    workshop_logs_controller.index
-
     workshop_logs = WorkshopLog.where(project_id: @project.id)
     @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
                                      .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
-           MAX(COALESCE(date, created_at)) AS max_dt")
+       MAX(COALESCE(date, created_at)) AS max_dt")
                                      .order("max_dt DESC")
                                      .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
 
@@ -36,8 +28,15 @@ class ProjectsController < ApplicationController
     @workshop_logs_unpaginated = workshop_logs
     @workshop_logs_count = @workshop_logs_unpaginated.size
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
-    @facilitators = User.active.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
-                        .joins(:workshop_logs)
+    user_ids = @workshop_logs_unpaginated.select(:user_id)
+
+    @workshops = Workshop.includes(:windows_type)
+                         .published
+                         .references(:windows_type)
+                         .order("workshops.title ASC, windows_types.name ASC")
+
+    @facilitators = User.active
+                        .or(User.where(id: user_ids))
                         .distinct
                         .order(:last_name, :first_name)
   end
