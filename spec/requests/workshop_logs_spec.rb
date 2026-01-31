@@ -56,12 +56,18 @@ RSpec.describe "/workshop_logs", type: :request do
     end
 
     it "populates workshops dropdown with only workshops from visible logs" do
-      workshop_log = create(:workshop_log, valid_attributes)
-      
+      visible_workshop = create(:workshop)
+      hidden_workshop  = create(:workshop)
+
+      create(:workshop_log, workshop: visible_workshop, visible: true)
+      create(:workshop_log, workshop: hidden_workshop, visible: false)
+
       get workshop_logs_path
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include(workshop.name)
+
+      expect(response.body).to include(visible_workshop.name)
+      expect(response.body).not_to include(hidden_workshop.name)
     end
   end
 
