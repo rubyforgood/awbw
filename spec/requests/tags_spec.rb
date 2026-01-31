@@ -37,7 +37,7 @@ RSpec.describe "Tags index", type: :request do
     end
   end
 
-  describe "as a super user (admin)" do
+  describe "as an admin" do
     let(:admin) { create(:user, :admin) }
 
     before { sign_in admin }

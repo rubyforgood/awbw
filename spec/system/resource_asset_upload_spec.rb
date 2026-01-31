@@ -2,10 +2,10 @@
 require "rails_helper"
 
 RSpec.describe "Resource asset upload", type: :system do
-  let(:super_user) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
 
   before do
-    sign_in super_user
+    sign_in admin
   end
 
   def upload_asset(type:, file:)

@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "shared/_navbar", type: :view do
   let(:regular_user) { create(:user, super_user: false) }
-  let(:admin_user)   { create(:user, super_user: true) }
+  let(:admin_user)   { create(:user, :admin) }
 
   def render_nav
     render partial: "shared/navbar"
@@ -52,7 +52,7 @@ RSpec.describe "shared/_navbar", type: :view do
     end
   end
 
-  context "when logged in as a super user" do
+  context "when logged in as an admin" do
     before do
       allow(view).to receive(:current_user).and_return(admin_user)
       allow(view).to receive(:user_signed_in?).and_return(true)

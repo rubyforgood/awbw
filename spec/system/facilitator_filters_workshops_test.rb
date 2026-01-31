@@ -165,15 +165,15 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
       end
     end
 
-    context "when super user facilitator is logged in" do
-      let(:super_user) { create(:user, :admin) }
+    context "when admin facilitator is logged in" do
+      let(:admin) { create(:user, :admin) }
       let(:adult_window) { create(:windows_type, :adult) }
       let(:child_window) { create(:windows_type, :children) }
       let(:sector_veterans) { create(:sector, :published, name: "Veterans & Military") }
       let(:sector_lgbtqia) { create(:sector, :published, name: "LGBTQIA") }
 
       before do
-        create(:facilitator, user: super_user)
+        create(:facilitator, user: admin)
 
         # Published workshop
         published_workshop = create(:workshop,
@@ -195,11 +195,11 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
           inactive: false)
         another_published.sectors << sector_lgbtqia
 
-        sign_in super_user
+        sign_in admin
         visit workshops_path
       end
 
-      it "shows publish status filter for super user" do
+      it "shows publish status filter for admin" do
         expect(page).to have_content('Publish status')
         expect(page).to have_content('Published Workshop')
         expect(page).to have_content('Another Published Workshop')

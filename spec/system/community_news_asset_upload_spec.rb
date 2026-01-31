@@ -2,7 +2,7 @@
 require "rails_helper"
 
 RSpec.describe "Community News asset upload", type: :system do
-  let(:admin) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
 
   before do
     sign_in admin

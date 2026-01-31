@@ -22,7 +22,7 @@ RSpec.describe "/events", type: :request do
     }
   }
   let(:user) { create(:user) }
-  let(:admin) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
   let(:event) { Event.create!(valid_attributes) }
 
   describe "GET /index" do

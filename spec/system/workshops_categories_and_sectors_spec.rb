@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Workshop categories & sectors", type: :system do
-  let(:user) { create(:user, super_user: true) }
+  let(:user) { create(:user, :admin) }
 
   before { driven_by(:selenium_chrome_headless) }
 

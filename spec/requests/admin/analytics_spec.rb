@@ -2,7 +2,7 @@
 require "rails_helper"
 
 RSpec.describe "/admin/analytics", type: :request do
-  let(:admin_user) { create(:user, super_user: true) }
+  let(:admin_user) { create(:user, :admin) }
   let(:regular_user) { create(:user) }
   let!(:visit) { create(:ahoy_visit) }
 

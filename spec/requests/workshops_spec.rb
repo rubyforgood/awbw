@@ -4,12 +4,12 @@ RSpec.describe "/workshops", type: :request do
   # --- DESTROY ---------------------------------------------------------------
   describe "DELETE /destroy" do
     let(:user) { create(:user) }
-    let(:super_user) { create(:user, super_user: true) }
+    let(:admin) { create(:user, :admin) }
     let(:workshop) { create(:workshop, user: user) }
 
-    context "when current_user is a super_user" do
+    context "when current_user is an admin" do
       before do
-        sign_in super_user
+        sign_in admin
         workshop  # Ensure workshop is persisted before the test
       end
 
@@ -24,7 +24,7 @@ RSpec.describe "/workshops", type: :request do
       end
     end
 
-    context "when current_user is not a super_user" do
+    context "when current_user is not an admin" do
       before do
         sign_in user
         workshop  # Ensure workshop is persisted before the test

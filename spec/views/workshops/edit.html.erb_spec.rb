@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe "workshops/edit", type: :view do
   let(:user) { create(:user) }
-  let(:super_user) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
   let(:workshop) { create(:workshop, user: user) }
 
   before(:each) do
@@ -15,9 +15,9 @@ RSpec.describe "workshops/edit", type: :view do
     assign(:sectors, [])
   end
 
-  context "when user is a super_user" do
+  context "when user is an admin" do
     before do
-      allow(view).to receive(:current_user).and_return(super_user)
+      allow(view).to receive(:current_user).and_return(admin)
       render
     end
 
@@ -34,7 +34,7 @@ RSpec.describe "workshops/edit", type: :view do
     end
   end
 
-  context "when user is not a super_user" do
+  context "when user is not an admin" do
     before do
       allow(view).to receive(:current_user).and_return(user)
       render

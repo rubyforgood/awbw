@@ -2,7 +2,7 @@
 require "rails_helper"
 
 RSpec.describe "Story Idea asset upload", type: :system do
-  let(:admin) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
 
   before do
     sign_in admin
