@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "/projects", type: :request do
   let(:user) { create(:user) }
-  let(:admin) { create(:user, super_user: true) }
+  let(:admin) { create(:user, :admin) }
 
   let!(:location) { create(:location) }
   let!(:project_status) { create(:project_status, name: "Active") }
