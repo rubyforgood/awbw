@@ -9,7 +9,7 @@ class ApplicationController < ActionController::Base
   #
   # verify_authorized
   #
-
+  #
   rescue_from ActionPolicy::Unauthorized do |exception|
     flash[:alert] = exception.message.presence || "You are not authorized to perform this action."
     redirect_back_or_to root_path

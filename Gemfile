@@ -36,6 +36,17 @@ gem "image_processing"
 
 # Visit and event tracking
 gem "ahoy_matey"
+# To give group_by_day and similar methods to ActiveRecord relations
+gem "groupdate"
+
+# Charts and graphs
+gem "chartkick"
+
+# Geocoding for charts and other features
+gem "geocoder"
+
+# MaxMind GeoIP2 for AhoyMatey
+gem 'maxmind-geoip2', '~> 1.5', '>= 1.5.1'
 
 # Stylesheet inlining for email
 gem "premailer-rails" # applies any style tag classes to html elements for better email client compatibility
@@ -76,6 +87,7 @@ group :development, :test do
   gem "dotenv-rails"
   gem "faker"
   gem "factory_bot_rails"
+  gem "launchy"
   gem "listen"
   gem "pry-coolline"
   gem "pry-rails"

@@ -3,5 +3,7 @@ import "@rails/actiontext";
 import "rhino-editor";
 import "rhino-editor/exports/styles/trix.css";
 
+import "chartkick/chart.js"
+
 import "./controllers";
 import "./rhino/extend-editor.js";
