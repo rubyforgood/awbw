@@ -1,4 +1,4 @@
-module AhoyViewTracking
+module AhoyTracking
   extend ActiveSupport::Concern
 
   def track_view(resource)

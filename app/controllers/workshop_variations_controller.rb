@@ -1,5 +1,5 @@
 class WorkshopVariationsController < ApplicationController
-  include AssetUpdatable, AhoyViewTracking
+  include AssetUpdatable, AhoyTracking
   def index
     unless current_user.super_user?
       redirect_to root_path

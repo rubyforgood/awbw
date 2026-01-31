@@ -1,5 +1,5 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
+  include ExternallyRedirectable, AssetUpdatable, AhoyTracking
 
   def index
     authorize!

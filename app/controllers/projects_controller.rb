@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  include AhoyViewTracking
+  include AhoyTracking
   before_action :set_project, only: [ :show, :edit, :update, :destroy ]
 
   def index
