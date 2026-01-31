@@ -97,7 +97,7 @@ class Workshop < ApplicationRecord
   # Callbacks
   before_save :set_time_frame
   before_save :invalidate_featured_cache_if_changed
-  after_save :assign_pending_associations
+  after_create :assign_pending_associations
 
   # Validations
   validates_presence_of :title
