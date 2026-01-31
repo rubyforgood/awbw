@@ -66,6 +66,10 @@ class User < ApplicationRecord
     results
   end
 
+  def admin?
+    super_user
+  end
+
   def has_liasion_position_for?(project_id)
     !project_users.where(project_id: project_id, position: 1).first.nil?
   end

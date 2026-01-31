@@ -23,8 +23,8 @@ module AdminDashboardCardsHelper
   # -----------------------------
   def user_content_cards
     [
-      custom_card("Activity logs", dashboard_recent_activities_path, icon: "🧭"),
-      custom_card("Activity counts", admin_analytics_path, icon: "📊"),
+      custom_card("Activity logs", activities_recent_path, icon: "🧭"),
+      custom_card("Activity counts", activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:event_registrations, icon: "🎟️", intensity: 100),
       model_card(:story_ideas, icon: "✍️", intensity: 100),

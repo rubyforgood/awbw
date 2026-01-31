@@ -1,0 +1,83 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="grid gap-8 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+
+    <%= column_chart Ahoy::Visit.group_by_hour_of_day(:started_at, format: "%l %P").count,
+                     title: "Average visits by Hour" %>
+    <%= column_chart Ahoy::Visit.group_by_day_of_week(:started_at, format: "%A").count,
+                     title: "Average visits by Weekday" %>
+    <%= bar_chart Ahoy::Visit.where.not(city: nil)
+                             .group(:city)
+                             .count
+                             .sort_by { |_city, count| -count }
+                             .first(10)
+                             .to_h,
+                  title: "Top Cities" %>
+    <%= pie_chart Ahoy::Visit.group(:country).count,
+                  title: "Visits by Country" %>
+    <%= bar_chart Ahoy::Visit.group([:referring_domain, :landing_page])
+                             .count.sort_by { |_k, v| -v }.first(10).to_h,
+                  title: "Top Referrer → Landing Pages" %>
+    <%= bar_chart Ahoy::Visit.group(:landing_page)
+                             .order("count_id DESC")
+                             .limit(10)
+                             .count(:id),
+                  title: "Top Landing Pages", height: "350px" %>
+  </div>
+
+  <div class="grid gap-8 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+    <div data-turbo="false" class="bg-white rounded-xl shadow p-6 xl:col-span-3">
+      <%= line_chart Ahoy::Visit.group_by_day(:started_at).count,
+                     xtitle: "Date",
+                     ytitle: "Visits",
+                     height: "300px",
+                     width: "100%",
+                     title: "Visits by date" %>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6">
+      <%= bar_chart Ahoy::Event.group(:visit_id).count.sort_by { |_k, v| -v }.first(10).to_h,
+                    title: "Most Engaged Visits" %>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6">
+      <% single_page_visits = Ahoy::Event.group(:visit_id).having("count(*) = 1").count %>
+      <%= pie_chart single_page_visits,
+                    title: "Single-Event Visits (Bounce Proxy)" %>
+    </div>
+    <div class="bg-white rounded-xl shadow p-6">
+      <%= pie_chart ({"Logged In" => Ahoy::Visit.where.not(user_id: nil).count,
+                      "Anonymous" => Ahoy::Visit.where(user_id: nil).count }),
+                    title: "Login status" %>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6">
+      <%= pie_chart Ahoy::Visit.group(:device_type).count,
+                    title: "Device Type" %>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6">
+      <%= pie_chart Ahoy::Visit.group(:utm_source).count,
+                    title: "UTM Sources" %>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6">
+      <%= pie_chart Ahoy::Visit.group(:referring_domain).count,
+                    title: "Referring Domains" %>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6">
+      <%= pie_chart Ahoy::Visit.group(:browser).count,
+                    title: "Browsers" %>
+    </div>
+
+    <%= pie_chart Ahoy::Visit.group(:visitor_token).having("count(*) = 1").count,
+                  title: "New Visitors" %>
+
+    <%= pie_chart Ahoy::Visit.group(:visitor_token).having("count(*) > 1").count,
+                  title: "Returning Visitors" %>
+    <%= line_chart Ahoy::Visit.group_by_day(:started_at).group(:device_type).count,
+                   title: "Device Type Over Time" %>
+    <%= line_chart Ahoy::Visit.group_by_day(:started_at).group(:landing_page).count,
+                   title: "Landing Page Trend" %>
+  </div>
+</div>

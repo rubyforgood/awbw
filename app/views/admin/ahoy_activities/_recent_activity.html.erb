@@ -1,0 +1,66 @@
+<% activity = activity.decorate %>
+
+<div
+  class="
+    bg-white border border-gray-200 rounded shadow-sm hover:shadow-md transition
+    overflow-hidden flex flex-col md:flex-row
+  "
+>
+  <div class="w-60 items-center p-2">
+    <div class="pt-2">
+      <span class="font-bold"><%= activity.object.class.name %></span>
+      <%= activity.updated_at == activity.created_at ? "created" : "updated" %>
+    </div>
+
+    <div class="text-sm text-gray-500 font-medium pt-2 whitespace-nowrap">
+      <%= activity.updated_at.in_time_zone.strftime("%m-%d-%Y @ %I:%M %p") %>
+      <%= Rails.application.config.time_zone %>
+    </div>
+
+    <% unless params[:user_id].present? %>
+      <div class="text-sm text-gray-500 font-medium pt-2">
+        <% if activity.respond_to?(:created_by) && activity.created_by.present? %>
+          by
+          <%= link_to activity.created_by.full_name,
+                         user_path(activity.created_by),
+                         data: { turbo_prefetch: false },
+                         class: "hover:underline" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="w-20 bg-white flex items-top justify-center pt-3">
+    <!-- Assets -->
+    <%= render "assets/display_image",
+               resource: activity.object,
+               file: activity.display_image,
+               link_to_object: true,
+               icon_display: activity.object.is_a?(Resource),
+               width: 20, height: 16 %>
+  </div>
+
+  <div class="flex-1 p-4">
+    <% path = polymorphic_path(activity) %>
+
+    <%= link_to path, class: "hover:underline" do %>
+      <h3 class="text-lg font-semibold text-gray-900">
+        <%= link_to activity.title,
+                    path,
+                    data: { turbo_prefetch: false },
+                    class: "hover:underline" %>
+      </h3>
+
+      <p class="text-sm text-gray-600 line-clamp-3 mt-1"><%= activity.detail %></p>
+
+      <div class="flex justify-end mt-4 space-x-2">
+        <% if activity.object.is_a?(Resource) && activity.downloadable_asset&.file&.attached? %>
+          <%= link_to raw("<span class='fa fa-download'></span>"),
+                      resource_download_path(activity),
+                      data: { turbo_prefetch: false },
+                      class: "btn btn-utility" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
