@@ -1,5 +1,5 @@
 class StoriesController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
+  include ExternallyRedirectable, AssetUpdatable, AhoyTracking
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
   def index

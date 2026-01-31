@@ -1,8 +1,8 @@
 require "rails_helper"
 
-RSpec.describe AhoyViewTracking, type: :controller do
+RSpec.describe AhoyTracking, type: :controller do
   controller(ApplicationController) do
-    include AhoyViewTracking
+    include AhoyTracking
 
     def index
       workshop = Workshop.find(params[:id])

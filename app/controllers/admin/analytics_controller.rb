@@ -1,6 +1,6 @@
 module Admin
   class AnalyticsController < Admin::BaseController
-    include AhoyViewTracking
+    include AhoyTracking
     protect_from_forgery with: :null_session
 
     def index

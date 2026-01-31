@@ -1,5 +1,5 @@
 class CommunityNewsController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
+  include ExternallyRedirectable, AssetUpdatable, AhoyTracking
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
   def index

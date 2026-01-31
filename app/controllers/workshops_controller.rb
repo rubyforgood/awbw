@@ -1,5 +1,5 @@
 class WorkshopsController < ApplicationController
-  include AssetUpdatable, AhoyViewTracking
+  include AssetUpdatable, AhoyTracking
   def index
     @category_types = CategoryType.published.order(:name).decorate
     @sectors = Sector.published
