@@ -53,12 +53,13 @@ gem "positioning", "~> 0.4.7"
 
 gem "action_policy", "~> 0.7.6"
 
+gem "active_storage_validations", "~> 3.0"
+
 group :development do
   gem "rubocop-rails-omakase", require: false
 end
 
 group :test do
-  gem "active_storage_validations", "~> 3.0"
   gem "launchy"
 end
 
