@@ -5,6 +5,10 @@ class EventPolicy < ApplicationPolicy
 
   skip_pre_check :verify_authenticated!
 
+  def show?
+    admin? || record&.publicly_visible?
+  end
+
   relation_scope do |relation|
     if admin?
       relation
