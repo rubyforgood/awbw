@@ -20,6 +20,12 @@ RSpec.describe "community_news/new", type: :view do
       created_by: create(:user),
       updated_by: create(:user),
     ))
+
+    assign(:authors, [
+      [ "User 1", create(:user).id ],
+      [ admin.full_name, admin.id ],
+      [ "User 2", create(:user).id ]
+    ])
   end
 
   it "renders new community_news form" do
@@ -41,6 +47,16 @@ RSpec.describe "community_news/new", type: :view do
       assert_select "textarea[name=?]", "community_news[reference_url]"
 
       assert_select "select[name=?]", "community_news[project_id]"
+    end
+  end
+
+  it "defaults author_id to current_user" do
+    assign(:community_news, CommunityNews.new())
+
+    render
+
+    assert_select "select[name=?]", "community_news[author_id]" do
+      assert_select "option[selected=?][value=?]", "selected", admin.id.to_s
     end
   end
 end
