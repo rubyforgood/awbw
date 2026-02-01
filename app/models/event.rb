@@ -33,8 +33,15 @@ class Event < ApplicationRecord
     attributes :title, :description
   end
 
-  scope :featured, -> { where(featured: true) }
-  scope :visitor_featured, -> { where(visitor_featured: true) }
+
+  scope :featured, -> {
+    where(featured: true)
+      .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
+  }
+  scope :visitor_featured, -> {
+    where(vistor_featured: true)
+      .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
+  }
   scope :published, ->(published = nil) { publicly_visible(published) }
   scope :publicly_visible, ->(publicly_visible = nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
