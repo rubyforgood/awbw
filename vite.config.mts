@@ -9,7 +9,7 @@ export default defineConfig({
     RailsPlugin(),
     visualizer({
       filename: 'dist/stats.html',
-      open: true,        // auto-open in browser after build
+      open: false,
       gzipSize: true,
       brotliSize: true,
     }),
