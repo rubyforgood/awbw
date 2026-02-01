@@ -8,11 +8,14 @@ class EventPolicy < ApplicationPolicy
   relation_scope do |relation|
     if admin?
       relation
-    else
+    elsif authenticated?
       relation.left_outer_joins(:registrants)
               .where(publicly_visible: true)
               .where("registration_close_date IS NULL OR registration_close_date >= ? OR users.id = ?", Time.current, user.id)
               .distinct
+    else
+      relation.where(publicly_visible: true)
+                .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
     end
   end
 end

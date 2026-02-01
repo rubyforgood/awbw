@@ -1,5 +1,6 @@
 class EventsController < ApplicationController
   include AhoyViewTracking, AssetUpdatable
+  skip_before_action :authenticate_user!, only: %i[ index]
   before_action :set_event, only: %i[ show edit update destroy ]
   before_action :authorize_admin!, only: %i[ edit update destroy ]
 
