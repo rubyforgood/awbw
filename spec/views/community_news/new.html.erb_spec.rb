@@ -2,12 +2,10 @@ require 'rails_helper'
 
 RSpec.describe "community_news/new", type: :view do
   let(:admin) { create(:user, :admin) }
-  let(:windows_types) { create_list(:windows_type, 3) }
 
   before(:each) do
     sign_in admin
     allow(view).to receive(:current_user).and_return(admin)
-    assign(:windows_types, windows_types)
 
     assign(:community_news, CommunityNews.new(
       title: "MyString",
@@ -22,6 +20,12 @@ RSpec.describe "community_news/new", type: :view do
       created_by: create(:user),
       updated_by: create(:user),
     ))
+
+    assign(:authors, [
+      [ "User 1", create(:user).id ],
+      [ admin.full_name, admin.id ],
+      [ "User 2", create(:user).id ]
+    ])
   end
 
   it "renders new community_news form" do
@@ -43,8 +47,16 @@ RSpec.describe "community_news/new", type: :view do
       assert_select "textarea[name=?]", "community_news[reference_url]"
 
       assert_select "select[name=?]", "community_news[project_id]"
+    end
+  end
 
-      assert_select "select[name=?]", "community_news[windows_type_id]"
+  it "defaults author_id to current_user" do
+    assign(:community_news, CommunityNews.new())
+
+    render
+
+    assert_select "select[name=?]", "community_news[author_id]" do
+      assert_select "option[selected=?][value=?]", "selected", admin.id.to_s
     end
   end
 end
