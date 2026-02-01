@@ -18,13 +18,11 @@ RSpec.describe "community_news/edit", type: :view do
       updated_by: create(:user),
     )
   }
-  let(:windows_types) { create_list(:windows_type, 3) }
 
   before(:each) do
     sign_in admin
     allow(view).to receive(:current_user).and_return(admin)
     assign(:community_news, community_news)
-    assign(:windows_types, windows_types)
   end
 
   it "renders the edit community_news form" do
@@ -46,8 +44,6 @@ RSpec.describe "community_news/edit", type: :view do
       assert_select "textarea[name=?]", "community_news[reference_url]"
 
       assert_select "select[name=?]", "community_news[project_id]"
-
-      assert_select "select[name=?]", "community_news[windows_type_id]"
     end
   end
 end

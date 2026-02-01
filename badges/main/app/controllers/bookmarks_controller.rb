@@ -115,7 +115,8 @@ class BookmarksController < ApplicationController
 
   def load_workshop_data
     @quotes = @bookmarkable.quotes
-    @leader_spotlights = @bookmarkable.leader_spotlights
+    # TODO not sure why we have this as there is no 'leader_spotlights' scope on woorkshops
+    # @leader_spotlights = @bookmarkable.leader_spotlights
     @workshop_variations = @bookmarkable.workshop_variations.decorate
     @sectors = @bookmarkable.sectors
   end
