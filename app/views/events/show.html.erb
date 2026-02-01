@@ -8,7 +8,7 @@
       <div class="text-right mb-4 space-x-2">
         <%= link_to "Index", events_path, class: "btn btn-secondary-outline" %>
 
-        <% if current_user.super_user? %>
+        <% if allowed_to?(:edit, @event) %>
           <%= link_to "Edit", edit_event_path(@event),
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>
