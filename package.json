@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
+    "rollup-plugin-visualizer": "^6.0.5",
     "vite": "^5.4.20",
     "vite-plugin-ruby": "^5.1.1"
   },
