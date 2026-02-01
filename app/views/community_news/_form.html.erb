@@ -29,7 +29,7 @@
   </div>
 
   <!-- Associations -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <%= f.input :project_id,
                 as: :select,
                 label: "Organization",
@@ -38,20 +38,13 @@
                 selected: f.object.project_id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
-    <%= f.input :windows_type_id,
-                as: :select,
-                required: false,
-                include_blank: true,
-                collection: @windows_types, label_method: :short_name, value_method: :id,
-                selected: f.object.windows_type_id,
-                input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-
     <%= f.input :author_id,
                 as: :select,
                 label: "Display author",
                 required: true,
                 collection: @authors,
                 selected: f.object.author_id ||
+                  current_user&.id ||
                   User.where("first_name like 'awbw%' or last_name like 'awbw%'").last&.id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
   </div>

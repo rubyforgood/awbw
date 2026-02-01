@@ -80,7 +80,6 @@ class CommunityNewsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organizations = Project.pluck(:name, :id).sort_by(&:first)
-    @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @community_news.author_id))
                    .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
   end
@@ -96,7 +95,7 @@ class CommunityNewsController < ApplicationController
     params.require(:community_news).permit(
       :title, :rhino_body, :published, :featured,
       :reference_url, :youtube_url,
-      :project_id, :windows_type_id,
+      :project_id,
       :author_id, :created_by_id, :updated_by_id
     )
   end
