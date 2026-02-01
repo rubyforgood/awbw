@@ -4,9 +4,9 @@ class EventsController < ApplicationController
   before_action :authorize_admin!, only: %i[ edit update destroy ]
 
   def index
-    unpaginated = current_user.super_user? ? Event.all : Event.published
-    unpaginated = unpaginated.search_by_params(params)
-    @events = unpaginated.order(start_date: :desc)
+    authorize!
+    base_scope = authorized_scope(Event.all)
+    @events  = base_scope.search_by_params(params).order(start_date: :desc)
   end
 
   def show

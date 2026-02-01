@@ -34,6 +34,7 @@ class Event < ApplicationRecord
   end
 
 
+  # Action Policy
   scope :featured, -> {
     where(featured: true)
       .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
@@ -42,10 +43,12 @@ class Event < ApplicationRecord
     where(vistor_featured: true)
       .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
   }
+
   scope :published, ->(published = nil) { publicly_visible(published) }
   scope :publicly_visible, ->(publicly_visible = nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+
 
   def self.search_by_params(params)
     stories = self.all
