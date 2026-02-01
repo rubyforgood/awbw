@@ -4,6 +4,7 @@
     <div class="flex items-start justify-between mb-6">
       <div class="pr-6">
         <h2 class="text-2xl font-semibold mb-2">Workshops</h2>
+
         <p class="text-gray-700">
           Search by emotional theme, materials needed, ease of set-up, and more.
           <br>
@@ -11,6 +12,7 @@
           <%= link_to "share your ideas with us", new_workshop_variation_path, class: "text-blue-500" %>!
         </p>
       </div>
+
       <% if current_user.super_user? %>
         <%= link_to "New workshop",
                     new_workshop_path,
@@ -28,6 +30,7 @@
                  data: {turbo_stream: true, turbo_frame: "workshop_results",
                         controller: "collection share-url"}, autocomplete: "off", class: "space-y-6") do %>
       <%= render "filters" %>
+
       <div><hr class="border-gray-300 my-6"></div>
 
       <div class="mt-6"><%= render "filters_applied" %></div>
@@ -39,6 +42,7 @@
         <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">
           Sort by
         </h3>
+
         <%= render "sort_by_options" %>
       </div>
 
@@ -48,7 +52,7 @@
     <!-- Workshops List -->
     <% result_src = workshops_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag "workshop_results", src: result_src do %>
+    <%= turbo_frame_tag "workshop_results", src: result_src, autoscroll: "start" do %>
       <div class="mt-6">
         <div class="space-y-4 animate-pulse">
           <% 3.times do %>
