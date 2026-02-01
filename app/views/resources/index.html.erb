@@ -24,7 +24,7 @@
     <!-- Results Table -->
     <% result_src = resources_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag :resource_results, src: result_src do %>
+    <%= turbo_frame_tag :resource_results, src: result_src, autoscroll: "start" do %>
       <div class="min-h-screen">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           <% 9.times do %>
