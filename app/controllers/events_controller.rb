@@ -93,7 +93,7 @@ class EventsController < ApplicationController
                                   :featured,
                                   :start_date, :end_date,
                                   :registration_close_date,
-                                  :publicly_visible
+                                  :inactive
                                   )
   end
 end

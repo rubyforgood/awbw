@@ -6,7 +6,7 @@ class EventPolicy < ApplicationPolicy
   skip_pre_check :verify_authenticated!
 
   def show?
-    admin? || record&.publicly_visible?
+    admin? || record&.published
   end
 
   relation_scope do |relation|
@@ -14,11 +14,11 @@ class EventPolicy < ApplicationPolicy
       relation
     elsif authenticated?
       relation.left_outer_joins(:registrants)
-              .where(publicly_visible: true)
+              .where(inactive: false)
               .where("registration_close_date IS NULL OR registration_close_date >= ? OR users.id = ?", Time.current, user.id)
               .distinct
     else
-      relation.where(publicly_visible: true)
+      relation.where(inactive: false)
                 .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
     end
   end
