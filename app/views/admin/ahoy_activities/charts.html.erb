@@ -1,83 +1,397 @@
-<div class="max-w-7xl mx-auto px-4 py-8">
-  <div class="grid gap-8 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+<style>
+  .chart-card { @apply bg-white rounded-xl shadow p-6; }
+</style>
 
-    <%= column_chart Ahoy::Visit.group_by_hour_of_day(:started_at, format: "%l %P").count,
-                     title: "Average visits by Hour" %>
-    <%= column_chart Ahoy::Visit.group_by_day_of_week(:started_at, format: "%A").count,
-                     title: "Average visits by Weekday" %>
-    <%= bar_chart Ahoy::Visit.where.not(city: nil)
-                             .group(:city)
-                             .count
-                             .sort_by { |_city, count| -count }
-                             .first(10)
-                             .to_h,
-                  title: "Top Cities" %>
-    <%= pie_chart Ahoy::Visit.group(:country).count,
-                  title: "Visits by Country" %>
-    <%= bar_chart Ahoy::Visit.group([:referring_domain, :landing_page])
-                             .count.sort_by { |_k, v| -v }.first(10).to_h,
-                  title: "Top Referrer → Landing Pages" %>
-    <%= bar_chart Ahoy::Visit.group(:landing_page)
-                             .order("count_id DESC")
-                             .limit(10)
-                             .count(:id),
-                  title: "Top Landing Pages", height: "350px" %>
+<div class="max-w-7xl mx-auto px-4 py-8 space-y-16">
+  <!-- FILTER BAR -->
+  <div class="flex justify-end">
+    <div class="flex justify-end">
+      <%= form_with url: activities_charts_path, method: :get, local: true,
+                    class: "flex items-center gap-4" do %>
+
+        <label class="text-sm font-medium text-gray-700">Audience:</label>
+        <%= select_tag :audience,
+                       options_for_select(
+                         [
+                           ["All", "all"],
+                           ["Visitors (anon)", "visitors"],
+                           ["Users", "users"],
+                           ["Super Users (staff)", "staff"]
+                         ],
+                         params[:audience] || "all"
+                       ),
+                       class: "rounded-md border-gray-300 shadow-sm",
+                       onchange: "this.form.submit()" %>
+
+        <label class="text-sm font-medium text-gray-700">Time period:</label>
+        <%= select_tag :time_period,
+                       options_for_select(
+                         [
+                           ['All time', 'all_time'],
+                           ['Past day', 'past_day'],
+                           ['Past week', 'past_week'],
+                           ['Past month', 'past_month'],
+                           ['Past year', 'past_year']
+                         ],
+                         params[:time_period] || 'all_time'
+                       ),
+                       class: "rounded-md border-gray-300 shadow-sm",
+                       onchange: "this.form.submit()" %>
+      <% end %>
+    </div>
   </div>
 
-  <div class="grid gap-8 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-    <div data-turbo="false" class="bg-white rounded-xl shadow p-6 xl:col-span-3">
-      <%= line_chart Ahoy::Visit.group_by_day(:started_at).count,
-                     xtitle: "Date",
-                     ytitle: "Visits",
-                     height: "300px",
-                     width: "100%",
-                     title: "Visits by date" %>
-    </div>
+  <!-- SECTION 1 -->
+  <section class="space-y-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
 
-    <div class="bg-white rounded-xl shadow p-6">
-      <%= bar_chart Ahoy::Event.group(:visit_id).count.sort_by { |_k, v| -v }.first(10).to_h,
-                    title: "Most Engaged Visits" %>
-    </div>
+      <div class="chart-card">
+        <%= column_chart scoped_visits.group_by_hour_of_day(:started_at, format: "%l %P").count,
+                         title: "Average visits by Hour" %>
+      </div>
 
-    <div class="bg-white rounded-xl shadow p-6">
-      <% single_page_visits = Ahoy::Event.group(:visit_id).having("count(*) = 1").count %>
-      <%= pie_chart single_page_visits,
-                    title: "Single-Event Visits (Bounce Proxy)" %>
-    </div>
-    <div class="bg-white rounded-xl shadow p-6">
-      <%= pie_chart ({"Logged In" => Ahoy::Visit.where.not(user_id: nil).count,
-                      "Anonymous" => Ahoy::Visit.where(user_id: nil).count }),
-                    title: "Login status" %>
-    </div>
+      <div class="chart-card">
+        <%= column_chart scoped_visits.group_by_day_of_week(:started_at, format: "%A").count,
+                         title: "Average visits by Weekday" %>
+      </div>
 
-    <div class="bg-white rounded-xl shadow p-6">
-      <%= pie_chart Ahoy::Visit.group(:device_type).count,
-                    title: "Device Type" %>
+      <div class="chart-card">
+        <%= bar_chart scoped_visits.where.not(city: nil)
+                                   .group(:city)
+                                   .count.sort_by { |_c, v| -v }.first(10).to_h,
+                      title: "Top Cities" %>
+      </div>
     </div>
+  </section>
 
-    <div class="bg-white rounded-xl shadow p-6">
-      <%= pie_chart Ahoy::Visit.group(:utm_source).count,
-                    title: "UTM Sources" %>
+  <!-- SECTION 2 -->
+  <section class="space-y-10">
+    <div class="chart-card xl:col-span-3">
+      <%= line_chart scoped_visits.group_by_day(:started_at).count,
+                     xtitle: "Date", ytitle: "Visits",
+                     height: "300px", width: "100%",
+                     title: "Visits by Date" %>
     </div>
+  </section>
 
-    <div class="bg-white rounded-xl shadow p-6">
-      <%= pie_chart Ahoy::Visit.group(:referring_domain).count,
-                    title: "Referring Domains" %>
+  <!-- SECTION 3: SEARCH BEHAVIOR -->
+  <section class="space-y-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: ["filter.workshops", "search.workshops"])
+                .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.categories')"))
+                .flat_map { |arr| JSON.parse(arr) rescue [] }
+                .map { |c| c["type"] }
+                .compact
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(10)
+                .to_h,
+              title: "Workshop Search: Category Types"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: ["filter.workshops", "search.workshops"])
+                .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.categories')"))
+                .flat_map { |arr| JSON.parse(arr) rescue [] }
+                .map { |c| c["name"] }
+                .compact
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(15)
+                .to_h,
+              title: "Workshop Search: Categories"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: ["filter.workshops", "search.workshops"])
+                .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.sectors')"))
+                .flat_map { |arr| JSON.parse(arr) rescue [] }
+                .map { |s| s["name"] }
+                .compact
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(10)
+                .to_h,
+              title: "Workshop Search: Service Populations"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: "search.workshops")
+                .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.keywords.title'))"))
+                .compact
+                .reject(&:blank?)
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(10)
+                .to_h,
+              title: "Workshop Search: Titles"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: "search.workshops")
+                .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.keywords.author'))"))
+                .compact
+                .reject(&:blank?)
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(10)
+                .to_h,
+              title: "Workshop Search: Authors"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: "search.workshops")
+                .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.keywords.full_text'))"))
+                .compact
+                .reject(&:blank?)
+                .map(&:downcase)
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(10)
+                .to_h,
+              title: "Workshop Search: Full-Text"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: ["filter.workshops", "search.workshops"])
+                .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.windows_types')"))
+                .flat_map { |arr| JSON.parse(arr) rescue [] }
+                .map { |id| WindowsType.find_by(id: id)&.short_name }
+                .compact
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(10)
+                .to_h,
+              title: "Workshop Search: Windows Types"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where("name LIKE 'search_zero.%'")
+                .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.query'))"))
+                .compact
+                .reject(&:blank?)
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(10)
+                .to_h,
+              title: "Workshop Search: No Results"
+            ) %>
+      </div>
+      <div class="chart-card">
+        <%= column_chart(
+              {
+                "Keyword search" => scoped_events.where(name: "search.workshops").count,
+                "Checkbox filter" => scoped_events.where(name: "filter.workshops").count,
+                "View" => scoped_events.where(name: "view.workshop").count,
+                "Print" => scoped_events.where(name: "print.workshop").count,
+                "Download" => scoped_events.where(name: "download.workshop").count
+              },
+              title: "Workshop Discovery Funnel"
+            ) %>
+      </div>
     </div>
+  </section>
 
-    <div class="bg-white rounded-xl shadow p-6">
-      <%= pie_chart Ahoy::Visit.group(:browser).count,
-                    title: "Browsers" %>
+  <section class="space-y-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: "search.resources")
+                .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.keywords.full_text'))"))
+                .compact
+                .reject(&:blank?)
+                .map(&:downcase)
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(12)
+                .to_h,
+              title: "Resource Search: Keywords"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: "filter.resources")
+                .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.filters.kind'))"))
+                .compact
+                .reject(&:blank?)
+                .tally
+                .sort_by { |_k, v| -v }
+                .to_h,
+              title: "Resource Search: Kinds"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= column_chart(
+              {
+                "Keyword search" => scoped_events.where(name: "search.resources").count,
+                "Kind filter" => scoped_events.where(name: "filter.resources").count,
+                "View" => scoped_events.where(name: "view.resource").count,
+                "Print" => scoped_events.where(name: "print.resource").count,
+                "Download" => scoped_events.where(name: "download.resource").count
+              },
+              title: "Resource Discovery Funnel"
+            ) %>
+      </div>
     </div>
+  </section>
 
-    <%= pie_chart Ahoy::Visit.group(:visitor_token).having("count(*) = 1").count,
-                  title: "New Visitors" %>
+  <section class="space-y-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: "browse.taggings")
+                .pluck(Arel.sql("JSON_EXTRACT(properties, '$.sectors')"))
+                .flat_map { |arr| JSON.parse(arr) rescue [] }
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(15)
+                .to_h,
+              title: "Tagging views: Service Populations"
+            ) %>
+      </div>
 
-    <%= pie_chart Ahoy::Visit.group(:visitor_token).having("count(*) > 1").count,
-                  title: "Returning Visitors" %>
-    <%= line_chart Ahoy::Visit.group_by_day(:started_at).group(:device_type).count,
-                   title: "Device Type Over Time" %>
-    <%= line_chart Ahoy::Visit.group_by_day(:started_at).group(:landing_page).count,
-                   title: "Landing Page Trend" %>
-  </div>
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events
+                .where(name: "browse.taggings")
+                .pluck(Arel.sql("JSON_EXTRACT(properties, '$.categories')"))
+                .flat_map { |arr| JSON.parse(arr) rescue [] }
+                .tally
+                .sort_by { |_k, v| -v }
+                .first(15)
+                .to_h,
+              title: "Tagging views: Categories"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= column_chart(
+              {
+                "Views" => scoped_events.where("name LIKE 'view.%'").count,
+                "Prints" => scoped_events.where("name LIKE 'print.%'").count,
+                "Downloads" => scoped_events.where("name LIKE 'download.%'").count,
+                "Keyword searches" => scoped_events.where("name LIKE 'search.%'").count,
+                "Checkbox filters" => scoped_events.where("name LIKE 'filter.%'").count,
+                "Taggings" => scoped_events.where(name: "browse.taggings").count,
+              },
+              title: "User Discovery Funnel",
+              # ytitle: "Number of Events",
+              # xtitle: "User Actions"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= pie_chart(
+              {
+                "Keyword searches" => scoped_events.where(name: "search.workshops").count,
+                "Checkbox filters"  => scoped_events.where(name: "filter.workshops").count,
+                "Tagging pages" => scoped_events.where(name: "browse.taggings").count,
+              },
+              title: "How Users Discover Content"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= pie_chart(
+              scoped_events
+                .where("name LIKE 'view.%'")
+                .group("SUBSTRING_INDEX(name, '.', -1)")
+                .count,
+              title: "Content Types People View Most"
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <%= pie_chart(
+              scoped_events
+                .where("name LIKE 'print.%'")
+                .group("SUBSTRING_INDEX(name, '.', -1)")
+                .count,
+              title: "Content Types Printed Most"
+            ) %>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: DEVICES & TRAFFIC -->
+  <section class="space-y-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      <div class="chart-card">
+        <%= pie_chart scoped_visits.group(:country).count,
+                      title: "Visits by Country" %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart scoped_visits.group([:referring_domain, :landing_page])
+                                   .count.sort_by { |_k, v| -v }.first(10).to_h,
+                      title: "Top Referrer → Landing Pages" %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart scoped_visits.group(:landing_page)
+                                   .order("count_id DESC")
+                                   .limit(10)
+                                   .count(:id),
+                      title: "Top Landing Pages", height: "350px" %>
+      </div>
+
+      <div class="chart-card">
+        <%= bar_chart(
+              scoped_events.group(:visit_id).count.sort_by { |_k, v| -v }.first(10)
+                           .map { |id, c| ["Visit #{id}", c] },
+              title: "Most Engaged Visits",
+              library: { indexAxis: "y" }
+            ) %>
+      </div>
+
+      <div class="chart-card">
+        <% single_page_visits = scoped_events.group(:visit_id).having("count(*) = 1").count %>
+        <%= pie_chart single_page_visits, title: "Single-Event Visits" %>
+      </div>
+
+      <div class="chart-card">
+        <%= pie_chart ({"Logged In" => scoped_visits.where.not(user_id: nil).count,
+                        "Anonymous" => scoped_visits.where(user_id: nil).count }),
+                      title: "Login status" %>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      <div class="chart-card"><%= pie_chart scoped_visits.group(:device_type).count, title: "Device Type" %></div>
+      <div class="chart-card"><%= pie_chart scoped_visits.group(:utm_source).count, title: "UTM Sources" %></div>
+      <div class="chart-card"><%= pie_chart scoped_visits.group(:referring_domain).count, title: "Referring Domains" %></div>
+      <div class="chart-card"><%= pie_chart scoped_visits.group(:browser).count, title: "Browsers" %></div>
+      <div class="chart-card"><%= pie_chart scoped_visits.group(:visitor_token).having("count(*) = 1").count, title: "New Visitors" %></div>
+      <div class="chart-card"><%= pie_chart scoped_visits.group(:visitor_token).having("count(*) > 1").count, title: "Returning Visitors" %></div>
+    </div>
+  </section>
 </div>

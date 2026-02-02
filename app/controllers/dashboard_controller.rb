@@ -27,9 +27,10 @@ class DashboardController < ApplicationController
                         .order(:title), with: DashboardPolicy)
                         .decorate
       when "dashboard_community_news"
-        @community_news = authorized_scope(CommunityNews.published
-                                       .order(updated_at: :desc), with: DashboardPolicy)
-                                       .decorate
+        @community_news = authorized_scope(CommunityNews.includes(:bookmarks)
+                                                        .published
+                                                        .order(updated_at: :desc), with: DashboardPolicy)
+                            .decorate
 
       when "dashboard_events"
         @events = authorized_scope(Event.includes(:bookmarks, :primary_asset)
@@ -50,5 +51,4 @@ class DashboardController < ApplicationController
     @user_content_cards = user_content_cards
     @reference_cards    = reference_cards
   end
-
 end

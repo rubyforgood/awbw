@@ -37,17 +37,14 @@ Rails.application.routes.draw do
   get "tags/sectors", to: "tags#sectors", as: "tags_sectors"
   get "tags/categories", to: "tags#categories", as: "tags_categories"
 
-  namespace :admin do
-
-    post "analytics/print", to: "analytics#print"
-  end
-
   scope :activities, as: :activities do
     get "/",     to: "admin/ahoy_activities#index",   as: ""
     get :counts, to: "admin/analytics#index", as: :counts
     get :charts, to: "admin/ahoy_activities#charts", as: :charts
     get :recent, to: "admin/ahoy_activities#recent", as: :recent
+    post "analytics/print", to: "admin/analytics#print", as: :print
   end
+
   resources :banners
   resources :bookmarks do
     post :search

@@ -46,7 +46,7 @@ gem "chartkick"
 gem "geocoder"
 
 # MaxMind GeoIP2 for AhoyMatey
-gem 'maxmind-geoip2', '~> 1.5', '>= 1.5.1'
+gem "maxmind-geoip2", "~> 1.5", ">= 1.5.1"
 
 # Stylesheet inlining for email
 gem "premailer-rails" # applies any style tag classes to html elements for better email client compatibility

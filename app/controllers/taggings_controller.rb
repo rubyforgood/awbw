@@ -1,4 +1,6 @@
 class TaggingsController < ApplicationController
+  include AhoyTracking
+
   def index
     @sector_names = params[:sector_names].to_s
     @category_names = params[:category_names].to_s
@@ -21,6 +23,8 @@ class TaggingsController < ApplicationController
       pages: pages,
       number_of_items_per_page: number_of_items_per_page
     )
+
+    track_tagging_browse(@grouped_tagged_items)
   end
 
   def matrix

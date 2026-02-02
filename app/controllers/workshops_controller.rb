@@ -2,16 +2,19 @@ class WorkshopsController < ApplicationController
   include AssetUpdatable, AhoyTracking
   def index
     @category_types = CategoryType.published.order(:name).decorate
-    @sectors = Sector.published
-    @windows_types = WindowsType.all
+    @sectors        = Sector.published
+    @windows_types  = WindowsType.all
+
     if turbo_frame_request?
-      search_service = WorkshopSearchService.new(params,
-        super_user: current_user.super_user?).call
+      search_service = WorkshopSearchService.new(params, super_user: current_user.super_user?).call
       @sort = search_service.sort
 
+      track_index_intent(Workshop, search_service.workshops, params)
+
       @workshops = search_service.workshops
-        .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges, user: [ :facilitator ], primary_asset: [ :file_attachment ])
-        .paginate(page: params[:page], per_page: params[:per_page] || 12)
+                                 .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges,
+                                   user: [ :facilitator ], primary_asset: [ :file_attachment ])
+                                 .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
       @workshops_count = search_service.workshops.size
 

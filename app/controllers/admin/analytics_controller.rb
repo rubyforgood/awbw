@@ -19,24 +19,61 @@ module Admin
       @most_viewed_facilitators = decorate_with_counts(most_viewed_for_model(Facilitator, time_scope), :view_count)
 
       @most_printed_workshops = decorate_with_counts(most_printed_for_model(Workshop, time_scope), :print_count)
+      @most_printed_resources = decorate_with_counts(most_printed_for_model(Resource, time_scope), :print_count)
+      # @most_printed_community_news = decorate_with_counts(most_printed_for_model(CommunityNews, time_scope), :print_count)
+      # @most_printed_stories = decorate_with_counts(most_printed_for_model(Story, time_scope), :print_count)
+      # @most_printed_workshop_variations = decorate_with_counts(most_printed_for_model(WorkshopVariation, time_scope), :print_count)
+      # @most_printed_quotes = decorate_with_counts(most_printed_for_model(Quote, time_scope), :print_count)
+      # @most_printed_tutorials = decorate_with_counts(most_printed_for_model(Tutorial, time_scope), :print_count)
+      # @most_printed_projects = decorate_with_counts(most_printed_for_model(Project, time_scope), :print_count)
+      # @most_printed_events = decorate_with_counts(most_printed_for_model(Event, time_scope), :print_count)
+
       @most_downloaded_resources = decorate_with_counts(most_downloaded_for_model(Resource, time_scope), :download_count)
 
       @zero_engagement_workshops = zero_engagement_for_model(Workshop, time_scope).limit(10).decorate
       @zero_engagement_resources = zero_engagement_for_model(Resource, time_scope).limit(10).decorate
 
       @summary = {
-        workshops: view_count_for_model(Workshop, time_scope),
-        workshop_prints: print_count_for_model(Workshop, time_scope),
-        resources: view_count_for_model(Resource, time_scope),
-        resource_downloads: download_count_for_model(Resource, time_scope),
-        community_news: view_count_for_model(CommunityNews, time_scope),
-        stories: view_count_for_model(Story, time_scope),
-        events: view_count_for_model(Event, time_scope),
-        workshop_variations: view_count_for_model(WorkshopVariation, time_scope),
-        quotes: view_count_for_model(Quote, time_scope),
-        tutorials: view_count_for_model(Tutorial, time_scope),
-        projects: view_count_for_model(Project, time_scope),
-        facilitators: view_count_for_model(Facilitator, time_scope)
+        workshops: {
+          views: view_count_for_model(Workshop, time_scope),
+          prints: print_count_for_model(Workshop, time_scope),
+        },
+        resources: {
+          views: view_count_for_model(Resource, time_scope),
+          prints: print_count_for_model(Resource, time_scope),
+          downloads: download_count_for_model(Resource, time_scope),
+        },
+        community_news: {
+          views: view_count_for_model(CommunityNews, time_scope),
+          prints: print_count_for_model(CommunityNews, time_scope),
+        },
+        stories: {
+          views: view_count_for_model(Story, time_scope),
+          prints: print_count_for_model(Story, time_scope),
+        },
+        events: {
+          views: view_count_for_model(Event, time_scope),
+          prints: print_count_for_model(Event, time_scope),
+        },
+        workshop_variations: {
+          views: view_count_for_model(WorkshopVariation, time_scope),
+          prints: print_count_for_model(WorkshopVariation, time_scope),
+        },
+        quotes: {
+          views: view_count_for_model(Quote, time_scope),
+          prints: print_count_for_model(Quote, time_scope),
+        },
+        tutorials: {
+          views: view_count_for_model(Tutorial, time_scope),
+          prints: print_count_for_model(Tutorial, time_scope),
+        },
+        projects: {
+          views: view_count_for_model(Project, time_scope),
+          prints: print_count_for_model(Project, time_scope),
+        },
+        facilitators: {
+          views: view_count_for_model(Facilitator, time_scope),
+        }
       }
     end
 

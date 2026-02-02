@@ -10,13 +10,23 @@ Ahoy.api = true
 Ahoy.geocode = true
 
 # customize Ahoy::Event to extract resource dimensions from properties
-Ahoy::Event.class_eval do
-	before_validation :extract_resource_dimensions
+Rails.application.config.to_prepare do
+  Ahoy::Event.class_eval do
+    before_validation :extract_resource_dimensions, on: :create
 
-	def extract_resource_dimensions
-		return unless properties
+    def extract_resource_dimensions
+      props =
+        case properties
+        when String
+          JSON.parse(properties) rescue {}
+        when Hash
+          properties
+        else
+          {}
+        end
 
-		self.resource_type ||= properties["resource_type"]
-		self.resource_id   ||= properties["resource_id"]
-	end
+      self.resource_type ||= props["resource_type"]
+      self.resource_id   ||= props["resource_id"]&.to_i
+    end
+  end
 end

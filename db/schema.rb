@@ -114,10 +114,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_02_164015) do
   create_table "ahoy_events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name"
     t.json "properties"
+    t.bigint "resource_id"
+    t.string "resource_type"
     t.datetime "time"
     t.bigint "user_id"
     t.bigint "visit_id"
     t.index ["name", "time"], name: "index_ahoy_events_on_name_and_time"
+    t.index ["resource_id"], name: "index_ahoy_events_on_resource_id"
+    t.index ["resource_type", "resource_id", "time"], name: "index_ahoy_events_on_resource_type_and_resource_id_and_time"
     t.index ["user_id"], name: "index_ahoy_events_on_user_id"
     t.index ["visit_id"], name: "index_ahoy_events_on_visit_id"
   end
