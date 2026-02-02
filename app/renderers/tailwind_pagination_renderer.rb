@@ -16,7 +16,7 @@ class TailwindPaginationRenderer < WillPaginate::ActionView::LinkRenderer
       end
     end.join.html_safe
 
-    @template.content_tag(:ul, html, class: "flex items-center gap-2")
+    @template.content_tag(:ul, html, class: "flex items-center gap-2", data: { controller: "collection" })
   end
 
   protected
@@ -42,7 +42,9 @@ class TailwindPaginationRenderer < WillPaginate::ActionView::LinkRenderer
     else
       link(page,
            page,
-           class: page_link_classes)
+           class: page_link_classes,
+          "data-action" => "collection#blurOldResults")
+
     end
   end
 
@@ -51,7 +53,8 @@ class TailwindPaginationRenderer < WillPaginate::ActionView::LinkRenderer
     if page
       link(text,
            page,
-           class: arrow_classes)
+           class: arrow_classes,
+          "data-action" => "collection#blurOldResults")
     else
       disabled_arrow(text)
     end
