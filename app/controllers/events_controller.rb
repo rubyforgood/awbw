@@ -1,6 +1,6 @@
 class EventsController < ApplicationController
   include AhoyViewTracking, AssetUpdatable
-  skip_before_action :authenticate_user!, only: %i[ index]
+  skip_before_action :authenticate_user!, only: %i[ index show]
   before_action :set_event, only: %i[ show edit update destroy ]
 
   def index
@@ -93,7 +93,9 @@ class EventsController < ApplicationController
                                   :featured,
                                   :start_date, :end_date,
                                   :registration_close_date,
-                                  :inactive
+                                  :inactive,
+                                  :public,
+                                  :public_featured
                                   )
   end
 end
