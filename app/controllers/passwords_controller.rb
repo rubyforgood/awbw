@@ -1,4 +1,6 @@
 class PasswordsController < Devise::PasswordsController
+  include AhoyTracking
+
   skip_before_action :authenticate_user!, only: [ :new, :create, :edit, :update ]
 
   def create

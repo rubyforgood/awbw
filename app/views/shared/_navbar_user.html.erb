@@ -20,7 +20,7 @@
     id="avatar-dropdown"
     data-dropdown-target="content">
     <% if current_user&.super_user? %>
-      <%= link_to dashboard_admin_path,
+      <%= link_to admin_path,
                   class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
         <i class="fas fa-cog"></i>
         <span>Admin</span>

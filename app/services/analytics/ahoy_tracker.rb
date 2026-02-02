@@ -200,7 +200,7 @@ module Analytics
       def normalize_ids(value)
         case value
         when nil then []
-        when String, Integer then [value.to_s]
+        when String, Integer then [ value.to_s ]
         when Array then value.map(&:to_s)
         when Hash then value.keys.map(&:to_s)
         else []

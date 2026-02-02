@@ -6,7 +6,7 @@
           Activity counts
         </h1>
         
-        <%= form_with url: activities_counts_path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
+        <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
           <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
           <%= f.select :time_period, 
                        options_for_select([

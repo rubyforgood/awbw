@@ -1,5 +1,4 @@
 class DashboardController < ApplicationController
-  include AdminDashboardCardsHelper
   skip_before_action :authenticate_user!
 
   def index
@@ -42,13 +41,5 @@ class DashboardController < ApplicationController
     else
       render :index
     end
-  end
-
-  def admin
-    return redirect_to root_path, alert: "You do not have permission." unless current_user.super_user?
-
-    @system_cards       = system_cards
-    @user_content_cards = user_content_cards
-    @reference_cards    = reference_cards
   end
 end

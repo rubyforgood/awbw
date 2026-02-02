@@ -36,43 +36,43 @@ module Admin
       @summary = {
         workshops: {
           views: view_count_for_model(Workshop, time_scope),
-          prints: print_count_for_model(Workshop, time_scope),
+          prints: print_count_for_model(Workshop, time_scope)
         },
         resources: {
           views: view_count_for_model(Resource, time_scope),
           prints: print_count_for_model(Resource, time_scope),
-          downloads: download_count_for_model(Resource, time_scope),
+          downloads: download_count_for_model(Resource, time_scope)
         },
         community_news: {
           views: view_count_for_model(CommunityNews, time_scope),
-          prints: print_count_for_model(CommunityNews, time_scope),
+          prints: print_count_for_model(CommunityNews, time_scope)
         },
         stories: {
           views: view_count_for_model(Story, time_scope),
-          prints: print_count_for_model(Story, time_scope),
+          prints: print_count_for_model(Story, time_scope)
         },
         events: {
           views: view_count_for_model(Event, time_scope),
-          prints: print_count_for_model(Event, time_scope),
+          prints: print_count_for_model(Event, time_scope)
         },
         workshop_variations: {
           views: view_count_for_model(WorkshopVariation, time_scope),
-          prints: print_count_for_model(WorkshopVariation, time_scope),
+          prints: print_count_for_model(WorkshopVariation, time_scope)
         },
         quotes: {
           views: view_count_for_model(Quote, time_scope),
-          prints: print_count_for_model(Quote, time_scope),
+          prints: print_count_for_model(Quote, time_scope)
         },
         tutorials: {
           views: view_count_for_model(Tutorial, time_scope),
-          prints: print_count_for_model(Tutorial, time_scope),
+          prints: print_count_for_model(Tutorial, time_scope)
         },
         projects: {
           views: view_count_for_model(Project, time_scope),
-          prints: print_count_for_model(Project, time_scope),
+          prints: print_count_for_model(Project, time_scope)
         },
         facilitators: {
-          views: view_count_for_model(Facilitator, time_scope),
+          views: view_count_for_model(Facilitator, time_scope)
         }
       }
     end

@@ -14,11 +14,7 @@ class ResourcesController < ApplicationController
 
     total_count    = base_scope.size
     filtered_count = filtered.size
-    @count_display = if filtered_count == total_count
-                       total_count
-                     else
-                       "#{filtered_count}/#{total_count}"
-                     end
+    @count_display = filtered_count == total_count ? total_count : "#{filtered_count}/#{total_count}"
 
     track_index_intent(Resource, @resources, params)
 
