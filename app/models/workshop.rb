@@ -141,8 +141,8 @@ class Workshop < ApplicationRecord
       .select("workshops.*, COUNT(bookmarks.id) AS bookmarks_count")
       .group("workshops.id")
   }
-  scope :featured_or_visitor_featured, -> {
-    where("(featured = ? OR visitor_featured = ?) AND inactive = ?", true, true, false)
+  scope :featured_or_public_featured, -> {
+    where("(featured = ? OR public_featured = ?) AND inactive = ?", true, true, false)
   }
 
   # Search Cop

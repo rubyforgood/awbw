@@ -7,8 +7,8 @@ class DashboardController < ApplicationController
     if turbo_frame_request?
       case turbo_frame_request_id
       when "dashboard_workshops"
-        ids = Rails.cache.fetch("featured_and_visitor_featured_workshop_ids", expires_in: 1.year) do
-          Workshop.featured_or_visitor_featured.pluck(:id)
+        ids = Rails.cache.fetch("featured_and_public_featured_workshop_ids", expires_in: 1.year) do
+          Workshop.featured_or_public_featured.pluck(:id)
         end
 
         base_scope = Workshop.includes(:bookmarks, :windows_type, :primary_asset)
