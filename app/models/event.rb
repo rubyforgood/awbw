@@ -39,8 +39,8 @@ class Event < ApplicationRecord
     where(featured: true)
       .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
   }
-  scope :visitor_featured, -> {
-    where(visitor_featured: true)
+  scope :public_featured, -> {
+    where(public_featured: true)
       .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
   }
 
