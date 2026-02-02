@@ -6,7 +6,7 @@ class EventPolicy < ApplicationPolicy
   skip_pre_check :verify_authenticated!
 
   def show?
-    admin? || record&.published
+    admin? || !record&.inactive?
   end
 
   relation_scope do |relation|

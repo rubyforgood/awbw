@@ -13,6 +13,7 @@ RSpec.describe "events/show", type: :view do
   before do
     assign(:event, event.decorate)
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, super_user: true))
+    allow(view).to receive(:allowed_to?).and_return(true)
   end
 
   it "renders the event title" do

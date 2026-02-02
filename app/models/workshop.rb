@@ -282,13 +282,13 @@ class Workshop < ApplicationRecord
   end
 
   def invalidate_featured_cache_if_changed
-    if featured_or_visitor_featured_changed?
-      Rails.cache.delete("featured_and_visitor_featured_workshop_ids")
+    if featured_or_public_featured_changed?
+      Rails.cache.delete("featured_and_public_featured_workshop_ids")
     end
   end
 
-  def featured_or_visitor_featured_changed?
-    featured_changed? || visitor_featured_changed? || inactive_changed?
+  def featured_or_public_featured_changed?
+    featured_changed? || public_featured_changed? || inactive_changed?
   end
 
   def attach_assets_from_idea!

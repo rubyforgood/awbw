@@ -8,7 +8,7 @@ RSpec.describe "/events", type: :request do
       "start_date": 1.day.from_now,
       "end_date": 2.days.from_now,
       "registration_close_date": 3.days.ago,
-      "publicly_visible": true
+      "inactive": false
     }
   }
 
@@ -49,9 +49,9 @@ RSpec.describe "/events", type: :request do
 
   describe "GET /new" do
     it "renders a successful response" do
-      sign_in user
+      sign_in admin
       allow_any_instance_of(ApplicationController).
-        to receive(:current_user).and_return(user)
+        to receive(:current_user).and_return(admin)
 
       get new_event_url
 
@@ -79,7 +79,7 @@ RSpec.describe "/events", type: :request do
         get edit_event_url(event)
 
         expect(response).to have_http_status(:found) # 302 redirect
-        expect(response).to redirect_to(events_path)
+        expect(response).to redirect_to(root_path)
       end
     end
   end
@@ -87,27 +87,27 @@ RSpec.describe "/events", type: :request do
   describe "POST /create" do
     context "with valid parameters" do
       it "creates a new Event" do
-        sign_in user
+        sign_in admin
         expect {
           post events_url, params: { event: valid_attributes }
         }.to change(Event, :count).by(1)
       end
 
       it "redirects to the events index" do
-        sign_in user
+        sign_in admin
         post events_url, params: { event: valid_attributes }
         expect(response).to redirect_to(events_url)
       end
 
       it "displays notice if present" do
-        sign_in user
+        sign_in admin
         post events_url, params: { event: {
           title: "sample title",
           description: "sample description",
           start_date: 1.day.from_now,
           end_date: 2.days.from_now,
           registration_close_date: 3.days.ago,
-          publicly_visible: true
+          inactive: false
         } }
         follow_redirect!  # flash shows after redirect
 
@@ -117,14 +117,14 @@ RSpec.describe "/events", type: :request do
 
     context "with invalid parameters" do
       it "does not create a new Event" do
-        sign_in user
+        sign_in admin
         expect {
           post events_url, params: { event: invalid_attributes }
         }.to change(Event, :count).by(0)
       end
 
       it "renders a response with validation errors (i.e. to display the 'new' template)" do
-        sign_in user
+        sign_in admin
         post events_url, params: { event: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
       end
@@ -141,7 +141,7 @@ RSpec.describe "/events", type: :request do
 
       context "when signed in as admin" do
         it "updates the requested event" do
-          sign_in user
+          sign_in admin
           allow_any_instance_of(ApplicationController).
             to receive(:current_user).and_return(admin)
           patch event_url(event), params: { event: new_attributes }
@@ -151,7 +151,7 @@ RSpec.describe "/events", type: :request do
         end
 
         it "redirects to the events index" do
-          sign_in user
+          sign_in admin
           allow_any_instance_of(ApplicationController).
             to receive(:current_user).and_return(admin)
 
@@ -169,7 +169,7 @@ RSpec.describe "/events", type: :request do
           patch event_url(event), params: { event: new_attributes }
 
           expect(response).to have_http_status(:found)
-          expect(response).to redirect_to(events_path)
+          expect(response).to redirect_to(root_path)
         end
       end
     end
@@ -197,7 +197,7 @@ RSpec.describe "/events", type: :request do
     end
 
     it "redirects to the events list" do
-      sign_in user
+      sign_in admin
       allow_any_instance_of(ApplicationController).
         to receive(:current_user).and_return(admin)
       delete event_url(event)
