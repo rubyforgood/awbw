@@ -80,7 +80,14 @@
         <!-- Age ranges -->
         <% if workshop.age_ranges.any? %>
           <div class="text-sm text-gray-600 leading-tight">
-            Age ranges: <%= workshop.age_ranges.pluck(:name).to_sentence %>
+            Age ranges: <%= Category
+                            .joins(:categorizable_items, :category_type)
+                            .where(
+                              categorizable_items: { categorizable: workshop.object },
+                              category_types: { name: "AgeRange" }
+                            )
+                            .pluck(:name)
+                            .to_sentence %>
           </div>
         <% end %>
 
