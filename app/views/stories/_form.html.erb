@@ -11,10 +11,17 @@
                     input_html: { rows: 2,
                                   value: f.object.title || @story_idea&.title } %></div>
 
-      <div class="flex gap-4">
-        <%= f.input :published, as: :boolean, wrapper_html: { class: "flex items-center" } %>
-        <%= f.input :featured, as: :boolean, wrapper_html: { class: "flex items-center" } %>
+      <%# if allowed_to?(:manage?, story) %>
+      <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
+        <%= f.input :published, as: :boolean %>
+
+        <%# f.input :inactive, as: :boolean, label: "Hidden?" %>
+        <%= f.input :featured, as: :boolean, label: "Featured?" %>
+        <%= f.input :public, as: :boolean, label: "Public?" %>
+        <%= f.input :public_featured, as: :boolean, label: "Public Featured?" %>
       </div>
+
+      <%# end %>
     </div>
 
     <div class="flex flex-col md:flex-row md:space-x-4">
@@ -126,23 +133,23 @@
     </div>
   </div>
 
-    <% if story_idea %>
-      <div class="mt-6">
-        <%= label_tag :promote_idea_assets, class: "flex items-start space-x-3 cursor-pointer" do %>
-          <%= check_box_tag :promote_idea_assets, true, false, class: "mt-1 h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
+  <% if story_idea %>
+    <div class="mt-6">
+      <%= label_tag :promote_idea_assets, class: "flex items-start space-x-3 cursor-pointer" do %>
+        <%= check_box_tag :promote_idea_assets, true, false, class: "mt-1 h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
 
-          <div class="ml-2 flex flex-col">
-            <span class="text-gray-900 font-medium">
-              If the story idea was submitted with attachments, check this box to transfer them to this new story.
-            </span>
+        <div class="ml-2 flex flex-col">
+          <span class="text-gray-900 font-medium">
+            If the story idea was submitted with attachments, check this box to transfer them to this new story.
+          </span>
 
-            <p class="text-gray-500 text-sm mt-1">
-              (This will override any attachments uploaded in the form below once you click submit.)
-            </p>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
+          <p class="text-gray-500 text-sm mt-1">
+            (This will override any attachments uploaded in the form below once you click submit.)
+          </p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 <% end %>
 
 <div class="my-4"><%= render "assets/form", owner: @story %></div>

@@ -21,9 +21,11 @@
     </div>
 
     <% if allowed_to?(:manage?, @event) %>
-      <div class="admin-only bg-blue-100 flex items-center mt-6 md:mt-0">
-        <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?", wrapper_html: { class: "ml-2" } %>
-        <%= f.input :featured, as: :boolean, label: "Featured?", wrapper_html: { class: "ml-2" } %>
+      <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0">
+        <%= f.input :inactive, as: :boolean, label: "Hidden?" %>
+        <%= f.input :featured, as: :boolean, label: "Featured?" %>
+        <%= f.input :public, as: :boolean, label: "Public?" %>
+        <%= f.input :public_featured, as: :boolean, label: "Public Featured?" %>
       </div>
     <% end %>
   </div>
