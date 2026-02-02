@@ -75,7 +75,7 @@ class UsersController < ApplicationController
     @user = current_user
 
     if @user.update_with_password(password_params)
-      Analytics::AhoyTracker.track_event_from_model(
+      Analytics::AhoyTracker.track_auth_event(
         "auth.password_changed",
         user: @user
       )

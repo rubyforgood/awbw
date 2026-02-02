@@ -215,6 +215,6 @@ class User < ApplicationRecord
   end
 
   def track_auth_event(name)
-    Analytics::AhoyTracker.track_event_from_model(name, user: self)
+    Analytics::AhoyTracker.track_auth_event(name, user: self)
   end
 end

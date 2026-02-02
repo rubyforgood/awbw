@@ -2,6 +2,8 @@ class ApplicationController < ActionController::Base
   prepend ActionPolicy::Draper
 
   before_action :authenticate_user!  # ensures only logged-in users can access pages
+  before_action :set_current_user # for AhoyTrackable in models
+  after_action :flush_lifecycle_events
 
   # TODO add this callback to verify
   # that `authorize!` has been called in all controllers
@@ -27,5 +29,18 @@ class ApplicationController < ActionController::Base
     else
       root_path
     end
+  end
+
+  def authenticate_user!
+    super
+    ahoy.authenticate(current_user) if current_user
+  end
+
+  def flush_lifecycle_events
+    Analytics::LifecycleBuffer.flush(self)
+  end
+
+  def set_current_user
+    Current.user = current_user if user_signed_in?
   end
 end

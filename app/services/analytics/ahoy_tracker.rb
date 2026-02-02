@@ -1,10 +1,13 @@
 module Analytics
   class AhoyTracker
     class << self
-      # Core API
+      # ===============================
+      # ENTRY POINT (controller context)
+      # ===============================
       def track(controller, action, resource)
         return unless resource.present?
 
+        set_ahoy_user(controller)
         resource = unwrap(resource)
 
         case action.to_sym
@@ -17,20 +20,26 @@ module Analytics
         end
       end
 
-      # Non-resource events (auth.*, system.*, etc.)
+      # ===============================
+      # GENERIC EVENTS (non-resource, e.g. auth.*, system.*, etc.)
+      # ===============================
       def track_event(controller, name, properties = {})
         controller.ahoy.track(name, properties)
       end
 
-      # Model-level events (no controller context)
-      def track_event_from_model(name, user:)
-        Ahoy::Tracker.new.track(name, user_id: user.id)
+      # ===============================
+      # AUTH / MODEL CONTEXT EVENTS
+      # ===============================
+      def track_auth_event(name, properties = {}, user:)
+        Ahoy::Tracker.new.track(name, properties, user: user)
       end
 
+      # ===============================
+      # SEARCH / INDEX ANALYTICS
+      # ===============================
       def track_index_intent(controller, resource_class, params:, result_count:)
         return unless controller.ahoy&.visit_token
 
-        resource_name = resource_class.table_name
         cleaned = extract_search_params(params)
         return if cleaned.blank?
 
@@ -38,97 +47,77 @@ module Analytics
           resource_type: resource_class.name,
           result_count: result_count,
           keywords: cleaned[:keywords],
-          filters: enrich_filter_names(cleaned[:filters]) # 👈 ONLY CHANGE
+          filters: enrich_filter_names(cleaned[:filters])
         }.compact
 
-        event_types = []
-        event_types << "search" if cleaned[:keywords].present?
-        event_types << "filter" if cleaned[:filters].present?
-        event_types.each do |type|
-          controller.ahoy.track("#{type}.#{resource_name}", properties)
-        end
+        resource_name = resource_class.table_name
 
-        if cleaned[:keywords].present? && result_count.zero?
-          controller.ahoy.track("search_zero.#{resource_name}", properties)
-        end
+        controller.ahoy.track("filter.#{resource_name}", properties) if cleaned[:filters].present?
+        controller.ahoy.track("search.#{resource_name}", properties) if cleaned[:keywords].present?
+        controller.ahoy.track("search_zero.#{resource_name}", properties) if cleaned[:keywords].present? && result_count.zero?
       end
 
       private
 
-      # ------------------------------
-      # INTERACTION EVENTS
-      # ------------------------------
+      # ===============================
+      # USER → VISIT LINKING
+      # ===============================
+      def set_ahoy_user(controller)
+        return unless controller.current_user
+        visit = controller.ahoy&.visit
+        return unless visit
+
+        visit.update_column(:user_id, controller.current_user.id) if visit.user_id.nil?
+      end
+
+      # ===============================
+      # INTERACTION EVENTS (view, print, download)
+      # ===============================
       def track_interaction(controller, action, resource)
         return if already_tracked?(controller, action, resource)
 
-        controller.ahoy.track(
-          "#{action}.#{resource_name(resource)}",
-          base_properties(resource)
-        )
+        payload = Analytics::EventBuilder.lifecycle(action, resource)
+        controller.ahoy.track(payload[:name], payload[:properties])
       end
 
-      # ------------------------------
-      # CREATE / UPDATE / DESTROY
-      # ------------------------------
+      # ===============================
+      # CRUD EVENTS (create, update, destroy)
+      # ===============================
+
       def track_record_change(controller, action, resource)
-        properties = base_properties(resource)
+        payload = Analytics::EventBuilder.lifecycle(action, resource, user: controller.current_user)
+        controller.ahoy.track(payload[:name], payload[:properties])
 
         case action.to_sym
-        when :create
-          properties[:snapshot] = snapshot_attributes(resource)
-
+        when :create, :destroy
+          payload[:properties][:snapshot] = snapshot_attributes(resource)
         when :update
           changes = resource.previous_changes
                             .except("updated_at", "created_at", "body", "content", "metadata")
                             .select { |attr, _| safe_for_tracking?(attr) }
-          properties[:changes] = format_changes(changes) if changes.present?
 
-        when :destroy
-          properties[:snapshot] = snapshot_attributes(resource)
+          payload[:properties][:changes] = format_changes(changes) if changes.present?
         end
 
-        controller.ahoy.track(
-          "#{action}.#{resource_name(resource)}",
-          properties
-        )
+        controller.ahoy.track(payload[:name], payload[:properties])
       end
 
-      # ------------------------------
+      # ===============================
       # DEDUPING
-      # ------------------------------
+      # ===============================
       def already_tracked?(controller, action, resource)
-        # ---- TEST ENV (no ahoy cookies) ----
-        if Rails.env.test? && defined?(RSpec)
-          store = controller.instance_variable_get(:@_ahoy_request_store) || {}
-          store[action] ||= Set.new
-          return true if store[action].include?(resource.id)
-
-          store[action] << resource.id
-          controller.instance_variable_set(:@_ahoy_request_store, store)
-          return false
-        end
-
-        # ---- REAL VISIT ----
         return false unless controller.ahoy&.visit_token
 
         Ahoy::Event.joins(:visit).where(
-          name: "#{action}.#{resource_name(resource)}",
+          name: "#{action}.#{resource.class.table_name.singularize}",
           ahoy_visits: { visit_token: controller.ahoy.visit_token },
           resource_id: resource.id
         ).exists?
       end
 
-      # ------------------------------
+      # ===============================
       # HELPERS
-      # ------------------------------
-      def base_properties(resource)
-        {
-          resource_type: resource.class.name,
-          resource_id: resource.id,
-          resource_title: resource.decorate.title
-        }
-      end
-
+      # ===============================
       def enrich_filter_names(filters)
         return {} if filters.blank?
 
@@ -211,14 +200,14 @@ module Analytics
         resource.class.table_name.singularize
       end
 
+      def safe_for_tracking?(attribute)
+        !attribute.match?(/password|token|secret|key|digest|salt|otp/i)
+      end
+
       def snapshot_attributes(resource)
         resource.attributes
                 .except("updated_at", "created_at")
                 .select { |attr, _| safe_for_tracking?(attr) }
-      end
-
-      def safe_for_tracking?(attribute)
-        !attribute.match?(/password|token|secret|key|digest|salt|otp/i)
       end
 
       def unwrap(resource)
