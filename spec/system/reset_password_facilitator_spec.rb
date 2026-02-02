@@ -19,11 +19,12 @@ RSpec.describe 'Reset password (facilitator)', type: :system do
     it "fills out the form, submits, and stays logged in" do
       expect(page).to have_current_path(change_password_path)
 
-      fill_in "Current password", with: "MyString"
-      fill_in "New password", with: "new_secure_password"
-      fill_in "New password confirmation", with: "new_secure_password"
-
-      click_button "Change Password"
+      within("#change-password-form") do
+        fill_in "Current password", with: "MyString"
+        fill_in "New password", with: "new_secure_password"
+        fill_in "New password confirmation", with: "new_secure_password"
+        click_button "Change Password"
+      end
 
       expect(page).to have_current_path(root_path)
       expect(page).to have_content("Your Password was updated.")
