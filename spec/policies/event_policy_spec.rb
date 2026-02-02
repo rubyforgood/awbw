@@ -3,7 +3,8 @@ require "rails_helper"
 RSpec.describe EventPolicy, type: :policy do
   let(:admin_user) { build_stubbed :user, super_user: true }
   let(:regular_user) { build_stubbed :user, super_user: false }
-  let(:published_event) { build_stubbed :event, inactive: false }
+  let(:published_event) { build_stubbed :event, inactive: false  }
+  let(:public_event) { build_stubbed :event, inactive: false, public: true  }
   let(:unpublished_event) { build_stubbed :event, inactive: true }
   let(:open_registration_event) { build_stubbed :event, inactive: false, registration_close_date: 1.day.from_now }
   let(:closed_registration_event) { build_stubbed :event, inactive: false, registration_close_date: 1.day.ago }
@@ -33,7 +34,7 @@ RSpec.describe EventPolicy, type: :policy do
   end
 
   describe "#show?" do
-    context "when event is publicly visible" do
+    context "when event is visible" do
       context "with admin user" do
         subject { policy_for(record: published_event, user: admin_user) }
 
@@ -47,13 +48,13 @@ RSpec.describe EventPolicy, type: :policy do
       end
 
       context "with no user" do
-        subject { policy_for(record: published_event, user: nil) }
+        subject { policy_for(record: public_event, user: nil) }
 
         it { is_expected.to be_allowed_to(:show?) }
       end
     end
 
-    context "when event is not publicly visible" do
+    context "when event is not visible" do
       context "with admin user" do
         subject { policy_for(record: unpublished_event, user: admin_user) }
 
@@ -141,7 +142,7 @@ RSpec.describe EventPolicy, type: :policy do
     context "with regular user" do
       let(:policy) { policy_for(record: Event, user: regular_user) }
 
-      it "returns only publicly visible events with open registration" do
+      it "returns only visible events with open registration" do
         scope = policy.apply_scope(Event.all, type: :active_record_relation)
         expect(scope.to_sql).to include('`events`.`inactive` = FALSE')
         expect(scope.to_sql).to include('registration_close_date IS NULL OR registration_close_date >=')
@@ -152,7 +153,7 @@ RSpec.describe EventPolicy, type: :policy do
     context "with no user" do
       let(:policy) { policy_for(record: Event, user: nil) }
 
-      it "returns only publicly visible events with open registration" do
+      it "returns only visible events with open registration" do
         scope = policy.apply_scope(Event.all, type: :active_record_relation)
         expect(scope.to_sql).to include('`events`.`inactive` = FALSE')
         expect(scope.to_sql).to include('registration_close_date IS NULL OR registration_close_date >=')
