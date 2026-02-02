@@ -20,7 +20,7 @@ class Event < ApplicationRecord
 
   # Validations
   validates_presence_of :title, :start_date, :end_date
-  validates_inclusion_of :publicly_visible, in: [ true, false ]
+  validates_inclusion_of :inactive, in: [ true, false ]
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
 
   # Nested attributes
@@ -33,12 +33,23 @@ class Event < ApplicationRecord
     attributes :title, :description
   end
 
-  scope :featured, -> { where(featured: true) }
-  scope :visitor_featured, -> { where(visitor_featured: true) }
-  scope :published, ->(published = nil) { publicly_visible(published) }
-  scope :publicly_visible, ->(publicly_visible = nil) { publicly_visible ? where(publicly_visible: publicly_visible): where(publicly_visible: true) }
+
+  # Action Policy
+  scope :featured, -> {
+    where(featured: true)
+      .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
+  }
+  scope :public_featured, -> {
+    where(public: true, public_featured: true)
+      .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
+  }
+
+
+  scope :published, ->(published = nil) { published.to_s.present? ?
+           where(inactive: !published) : where(inactive: false) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+
 
   def self.search_by_params(params)
     stories = self.all
@@ -49,12 +60,8 @@ class Event < ApplicationRecord
     stories
   end
 
-  def inactive?
-    !publicly_visible
-  end
-
   def registerable?
-    publicly_visible &&
+    !inactive &&
       (registration_close_date.nil? || registration_close_date >= Time.current)
   end
 

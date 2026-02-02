@@ -69,16 +69,12 @@ RSpec.describe "Workshops", type: :system do
 
         visit new_workshop_path(windows_type_id: adult_window.id)
 
-        save_and_open_page
-
         fill_in "workshop_title", with: 'My New Workshop'
         select adult_window.short_name, from: 'workshop_windows_type_id'
         find('#body-button').click
         fill_in 'workshop_full_name', with: 'Jane Doe'
 
         click_on 'Submit'
-
-        save_and_open_page
 
         # expect(Workshop.last.title).to eq('My New Workshop')
         expect(page).to have_content('My New Workshop')

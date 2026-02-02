@@ -239,6 +239,8 @@ class WorkshopsController < ApplicationController
       :title, :featured, :inactive,
       :full_name, :user_id, :windows_type_id, :workshop_idea_id,
       :month, :year,
+      :public,
+      :public_featured,
 
       :time_intro, :time_closing, :time_creation, :time_demonstration,
       :time_warm_up, :time_opening, :time_opening_circle,
