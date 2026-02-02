@@ -5,26 +5,29 @@ RSpec.describe "events/index", type: :view do
   let(:event_closed) {
     create(:event, title: "Event 1",
       start_date: 1.day.from_now, end_date: 2.days.from_now,
-      publicly_visible: true,
+      inactive: false,
       registration_close_date: -3.days.from_now)
   }
   let(:event_open) {
     create(:event, title: "Event 2",
       start_date: 3.days.from_now, end_date: 4.days.from_now,
       registration_close_date: 5.days.from_now,
-      publicly_visible: true)
+      inactive: false)
   }
   let(:event_open_2) {
     create(:event, title: "Event 2",
       start_date: 3.days.from_now, end_date: 4.days.from_now,
       registration_close_date: nil,
-      publicly_visible: true)
+      inactive: false)
   }
   let(:events) { [ event_open, event_open ] }
 
   before do
     assign(:events, events)
     allow(view).to receive(:current_user).and_return(user)
+    allow(view).to receive(:allowed_to?).with(:new?, Event).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:edit?, Event).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:update?, Bookmark).and_return(true)
   end
 
   it "renders each event with checkbox and details" do

@@ -10,10 +10,17 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <%= f.input :title, as: :text, input_html: { rows: 1, class: "w-full" } %>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <%= f.input :published, as: :boolean, wrapper_html: { class: "flex items-center" } %>
-      <%= f.input :featured, as: :boolean, wrapper_html: { class: "flex items-center" } %>
+    <%# if allowed_to?(:manage?, @commenity_news) %>
+    <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
+      <%= f.input :published, as: :boolean %>
+
+      <%# f.input :inactive, as: :boolean, label: "Hidden?" %>
+      <%= f.input :featured, as: :boolean, label: "Featured?" %>
+      <%= f.input :public, as: :boolean, label: "Public?" %>
+      <%= f.input :public_featured, as: :boolean, label: "Public Featured?" %>
     </div>
+
+    <%# end %>
   </div>
 
   <%= rhino_editor(f, :body, label: "Body / Description") %>

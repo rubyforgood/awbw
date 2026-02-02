@@ -41,7 +41,7 @@
       <!-- RIGHT: Buttons + Registered -->
 
       <div class="flex items-center gap-3">
-        <% if current_user.super_user? %>
+        <% if allowed_to?(:edit?, event) %>
           <%= link_to "Edit",
                     edit_event_path(event),
                     data: { turbo_frame: "_top"},

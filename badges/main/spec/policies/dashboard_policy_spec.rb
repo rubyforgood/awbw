@@ -50,9 +50,9 @@ RSpec.describe DashboardPolicy, type: :policy do
     context "without user" do
       let(:policy) { policy_for(record: Workshop, user: nil) }
 
-      it "returns visitor_featured scope for unauthenticated users" do
+      it "returns public_featured scope for unauthenticated users" do
         scope = policy.apply_scope(Workshop.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`workshops`.`visitor_featured` = TRUE')
+        expect(scope.to_sql).to include('`workshops`.`public_featured` = TRUE')
       end
     end
   end
