@@ -1,9 +1,7 @@
 <div class="min-h-screen py-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-
     <!-- Outer Soft Container (Events = blue theme) -->
     <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
-
       <!-- Top Right Actions -->
       <div class="text-right mb-4 space-x-2">
         <%= link_to "Index", events_path, class: "btn btn-secondary-outline" %>
@@ -13,41 +11,29 @@
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>
 
-        <span class="inline-block">
-          <%= render "bookmarks/editable_bookmark_button", resource: @event.object %>
-        </span>
+        <span class="inline-block"><%= render "bookmarks/editable_bookmark_button", resource: @event.object %></span>
       </div>
 
       <!-- Inner White Card -->
       <div class="bg-white rounded-lg shadow p-8">
-
         <div class="grid grid-cols-1 md:grid-cols-5 gap-10">
-
           <!-- Left Column -->
           <div class="md:col-span-3">
-
             <!-- Title + Badges -->
-            <div class="my-3">
-              <%= title_with_badges(@event, font_size: "text-3xl") %>
-            </div>
+            <div class="my-3"><%= title_with_badges(@event, font_size: "text-3xl") %></div>
 
             <!-- Dates Section -->
             <div class="space-y-6">
-
-              <div class="">
-                <%= @event.times(display_day: true, display_date: true) %>
-              </div>
+              <div class=""><%= @event.times(display_day: true, display_date: true) %></div>
 
               <% if @event.labelled_cost %>
-                <div>
-                  <%= @event.labelled_cost %>
-                </div>
+                <div><%= @event.labelled_cost %></div>
               <% end %>
 
               <div class="registration-section flex flex-col gap-4 mb-6">
                 <!-- ⭐ BUTTONS -->
                 <div class="flex flex-wrap items-center gap-3">
-                  <% registered = @event.event_registrations.exists?(registrant_id: current_user.id) %>
+                  <% registered = @event.event_registrations.exists?(registrant_id: current_user&.id) %>
 
                   <% if registered %>
                     <%= button_to "De-register",
@@ -55,7 +41,6 @@
                                   method: :delete,
                                   data: { turbo_confirm: "Are you sure?" },
                                   class: "btn btn-secondary-outline" %>
-
                   <% elsif @event.registerable? %>
                     <%= button_to "Register",
                                   event_registrant_registration_path(event_id: @event),
@@ -73,22 +58,19 @@
 
                 <!-- ⭐ CALENDAR LINKS -->
                 <% if registered %>
-                  <div class="flex gap-2 items-center text-sm text-gray-700">
-                    <%= @event.calendar_links %>
-                  </div>
+                  <div class="flex gap-2 items-center text-sm text-gray-700"><%= @event.calendar_links %></div>
                 <% end %>
-
               </div>
 
               <% if @event.registration_close_date %>
                 <div>
                   <p class="font-semibold text-gray-700">Registration Close Date</p>
+
                   <p class="text-gray-900">
                     <%= @event.registration_close_date&.strftime("%B %-d, %Y %l:%M %P") || "—" %>
                   </p>
                 </div>
               <% end %>
-
             </div>
           </div>
 
@@ -101,11 +83,8 @@
 
         <!-- FULL-WIDTH DESCRIPTION -->
         <div class="mt-6 md:col-span-5">
-          <p class="text-gray-900 leading-relaxed">
-            <%= @event.detail.presence || "—" %>
-          </p>
+          <p class="text-gray-900 leading-relaxed"><%= @event.detail.presence || "—" %></p>
         </div>
-
       </div>
     </div>
   </div>
