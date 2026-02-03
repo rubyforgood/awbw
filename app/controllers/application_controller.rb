@@ -14,7 +14,9 @@ class ApplicationController < ActionController::Base
     flash[:alert] = exception.message.presence || "You are not authorized to perform this action."
     redirect_back_or_to root_path
   end
-
+  def default_authorization_policy_class
+    ApplicationPolicy
+  end
   private
 
   def after_sign_in_path_for(resource)
