@@ -1,12 +1,15 @@
 class TagsController < ApplicationController
   def index
+    authorize!
   end
 
   def sectors
+    authorize! Sector, to: :tags_index?
     @sectors = Sector.published.order(:name)
   end
 
   def categories
+    authorize! Category, to: :tags_index?
     @categories_by_type = Category
       .published
       .joins(:category_type)
