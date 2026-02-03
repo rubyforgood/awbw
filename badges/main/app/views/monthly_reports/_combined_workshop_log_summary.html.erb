@@ -24,9 +24,9 @@
             <td class='small'><%= link_to log.date_label, edit_workshop_log_path(log.id) , target: :blank %></td>
             <td class='small'><%= log.name %></td>
             <td class='small' <%= tag_options({class: "js-on-going-adult-count"}, false) %>><%= log.combined_num_ongoing('Adult') %></td>
-	    <td class='small' <%= tag_options({class: "js-on-going-children-count"}, false) %>><%= log.combined_num_ongoing('Children') %></td>
+      <td class='small' <%= tag_options({class: "js-on-going-children-count"}, false) %>><%= log.combined_num_ongoing('Children') %></td>
             <td class='small' <%= tag_options({class: "js-first-time-adult-count"}, false) %>><%= log.combined_num_first_time('Adult') %></td>
-	    <td class='small' <%= tag_options({class: "js-first-time-children-count"}, false) %>><%= log.combined_num_first_time('Children') %></td>
+      <td class='small' <%= tag_options({class: "js-first-time-children-count"}, false) %>><%= log.combined_num_first_time('Children') %></td>
           </tr>
         <% end %>
       <% end %>

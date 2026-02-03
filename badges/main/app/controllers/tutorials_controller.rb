@@ -1,5 +1,5 @@
 class TutorialsController < ApplicationController
-  include AhoyViewTracking
+  include AhoyTracking
   before_action :set_tutorial, only: [ :show, :edit, :update, :destroy ]
 
   def index

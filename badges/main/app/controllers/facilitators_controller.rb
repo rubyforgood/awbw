@@ -1,5 +1,5 @@
 class FacilitatorsController < ApplicationController
-  include AhoyViewTracking
+  include AhoyTracking
   before_action :set_facilitator, only: %i[ show edit update destroy ]
 
   def index

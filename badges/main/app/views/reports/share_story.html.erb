@@ -19,7 +19,7 @@
              <%= f.hidden_field :type %>
              <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
              <%= f.hidden_field :id, value: @report.id %>
-	     <input type="hidden" id="workshop_id" name="workshop_id" />
+       <input type="hidden" id="workshop_id" name="workshop_id" />
              <br>
            </div>
 
@@ -45,7 +45,7 @@ class:"selectpicker form-control form-control-custom" %>
            <!-- ##### SELECT WORKSHOP  #### -->
            <div class="form-group" id="w_content">
              <label class="label-select" for="select-workshop" >
-	       Enter workshop name or select from dropdown *
+         Enter workshop name or select from dropdown *
              </label>
              <div id="select_workshop">
                <%= collection_select(
@@ -68,12 +68,12 @@ class:"selectpicker form-control form-control-custom" %>
 
        <!-- ### New Workshop ### -->
        <div class="row hide" id="workshop_text_content">
-	 <div class="col-md-8 col-lg-12">
-	   <div class="form-group text-form-group">
-	     <input type="text" name="report[workshop_name]" id="workshop_name" class="form-control" placeholder='Enter the name of your new workshop'>
+   <div class="col-md-8 col-lg-12">
+     <div class="form-group text-form-group">
+       <input type="text" name="report[workshop_name]" id="workshop_name" class="form-control" placeholder='Enter the name of your new workshop'>
                 </input>
-	   </div>
-	 </div>
+     </div>
+   </div>
        </div>
 
        <!-- ### FORM FIELDS ### -->
@@ -104,7 +104,7 @@ class:"selectpicker form-control form-control-custom" %>
      <!-- ######### SUBMIT BUTTON ########## -->
      <div class="row">
        <div class="col-md-8 align-right">
-	 <input class="btn btn-primary btn-blue" id="btn_submit" type="submit" value="Submit">
+   <input class="btn btn-primary btn-blue" id="btn_submit" type="submit" value="Submit">
        </div>
      </div>
      </div>
