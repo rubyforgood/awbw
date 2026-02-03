@@ -62,11 +62,12 @@ For Docker-based development (recommended):
 
 1. Ensure Docker is installed and running on your system
 2. Run `cp .env.sample .env` and configure the environment variables (the values in the sample should work though)
-3. Use mise tasks to manage Docker containers. (`mise tasks` for a full list)
+3. Run `mise docker-exec bin/setup --skip-server` to install dependencies, setup the DBs, etc
+4. Use mise tasks to manage Docker containers. (`mise tasks` for a full list)
    - `mise docker-up` - start containers
 
-4. Visit <http://localhost:3000/> to see the AWBW portal page
-5. Log in as a sample user with the default [credentials](#credentials)
+5. Visit <http://localhost:3000/> to see the AWBW portal page
+6. Log in as a sample user with the default [credentials](#credentials)
 
 ### Database encoding
 
