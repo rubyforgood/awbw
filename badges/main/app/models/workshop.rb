@@ -1,5 +1,5 @@
 class Workshop < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include ActiveModel::Dirty
@@ -118,8 +118,6 @@ class Workshop < ApplicationRecord
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
-  scope :featured, -> { where(featured: true) }
-  scope :public_featured, -> { where(public_featured: true) }
   scope :legacy, -> { where(legacy: true) }
   scope :published, ->(published = nil) { published.to_s.present? ?
            where(inactive: !published) : where(inactive: false) }

@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe Resource do
+  it_behaves_like "featureable", factory: :resource
+
   it { should have_many(:reports) } # As owner
 
   describe 'associations' do
