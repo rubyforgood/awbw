@@ -61,24 +61,27 @@ You might also want to try VSCode with [this WSL extension](https://marketplace.
 For Docker-based development (recommended):
 
 1. Ensure Docker is installed and running on your system
-2. Use mise tasks to manage Docker containers. (`mise tasks` for a full list)
+2. Run `cp .env.sample .env` and configure the environment variables (the values in the sample should work though)
+3. Use mise tasks to manage Docker containers. (`mise tasks` for a full list)
    - `mise docker-up` - start containers
 
-3. Visit <http://localhost:3000/> to see the AWBW portal page
-4. Log in as a sample user with the default [credentials](#credentials)
+4. Visit <http://localhost:3000/> to see the AWBW portal page
+5. Log in as a sample user with the default [credentials](#credentials)
 
 ### Database encoding
-Different schema encodings on Mac vs Linux (utf8mb4 vs utf8) were causing merge challenges in schema.rb. 
+
+Different schema encodings on Mac vs Linux (utf8mb4 vs utf8) were causing merge challenges in schema.rb.
 To ensure consistent encoding across environments, we have configured utf8mb4 encoding in multiple places:
+
 - `config/database.yml` - Sets encoding and collation at the Rails level
 - `docker-compose.yml` - Overrides DATABASE_URL with explicit encoding parameters for Docker development
 - `docker/mysql/charset.cnf` - Configures MySQL server defaults
 
 You can override database settings by setting the `DATABASE_URL` environment variable in your `.env` file:
+
 ```
 DATABASE_URL=trilogy://user:password@host:port/database?encoding=utf8mb4&collation=utf8mb4_unicode_ci
 ```
-
 
 ## Dev seeds
 
@@ -126,7 +129,7 @@ Please let us know by opening up an issue! We have many new contributors come th
 6. If you create a new model run `bundle exec annotate` from the root of the app
 7. **Create RSpec tests** to validate that your work fixes the issue (if you need help with this, please reach out!). Read guidelines [here](#writing-browsersystemfeature-testsspecs).
 8. **Run the tests** and make sure all tests pass successfully; if any fail, fix the issues causing the failures. Read guidelines [here](#test-before-submitting-pull-requests).
-9.  Run `rubocop -a` to autocorrect linting issues. Manually fix anything not autocorrected. Read rubocop documentation [here](https://docs.rubocop.org/rubocop/1.82/usage/basic_usage.html).
+9. Run `rubocop -a` to autocorrect linting issues. Manually fix anything not autocorrected. Read rubocop documentation [here](https://docs.rubocop.org/rubocop/1.82/usage/basic_usage.html).
 10. **Final commit** if tests/linting require changes.
 11. **Squash smaller commits.** Read guidelines [here](#squashing-commits).
 12. **Push** up the branch
