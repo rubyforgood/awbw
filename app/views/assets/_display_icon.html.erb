@@ -3,11 +3,15 @@
 <% height ||= nil %>
 <% width ||= nil %>
 
-<div class="flex items-center justify-center
-            bg-gray-100 border border-gray-300 rounded
-            w-full h-full">
+<div
+  class="
+    flex items-center justify-center
+    bg-gray-100 border border-gray-300 rounded
+    w-full h-full
+  "
+>
   <%= render "resources/resource_icon",
-             kind: resource.kind,
+             kind: resource.try(:kind),
              height: height,
              width: width,
              variant: variant %>

@@ -36,11 +36,11 @@ class Event < ApplicationRecord
 
   # Action Policy
   scope :featured, -> {
-    where(featured: true)
+    where(featured: true, inactive: false)
       .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
   }
   scope :public_featured, -> {
-    where(public: true, public_featured: true)
+    where(public: true, public_featured: true, inactive: false)
       .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
   }
 
