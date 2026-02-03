@@ -40,7 +40,6 @@ Rails.application.routes.draw do
     get "/",                  to: "home#index"
     get "activities",          to: "ahoy_activities#index", as: "activities"
     get "activities/charts",   to: "ahoy_activities#charts", as: "activities_charts"
-    get "activities/recent",   to: "ahoy_activities#recent", as: "activities_recent"
     get "activities/counts",   to: "analytics#index", as: "activities_counts"
     post "activities/counts/print",   to: "analytics#print", as: "analytics_print"
   end

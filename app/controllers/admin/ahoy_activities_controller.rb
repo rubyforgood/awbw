@@ -52,9 +52,29 @@ module Admin
     end
 
     def charts
+      @creation_velocity_data = creation_velocity_data
     end
 
     private
+
+    def creation_velocity_data
+      models = %w[workshop_idea story_idea workshop_log quote bookmark]
+
+      base_scope = Ahoy::Event
+                     .where("name LIKE 'create.%'")
+                     .where(resource_type: models.map(&:classify))
+                     .where("time >= ?", 6.months.ago)
+
+      models.map do |model|
+        {
+          name: model.humanize.titleize.pluralize,
+          data: base_scope
+                  .where(name: "create.#{model}")
+                  .group_by_day(:time)
+                  .count
+        }
+      end.reject { |s| s[:data].empty? }
+    end
 
     def scoped_visits
       scope = Ahoy::Visit.all

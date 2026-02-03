@@ -5,6 +5,7 @@ module AdminCardsHelper
   def system_cards
     [
       model_card(:banners, icon: "📣"),
+      model_card(:facilitators, icon: "🧑‍🎨"),
       model_card(:faqs, icon: "❔", title: "FAQs"),
       model_card(:community_news, icon: "📰"),
       model_card(:events, icon: "📆"),
@@ -13,7 +14,6 @@ module AdminCardsHelper
       model_card(:resources, icon: "📚"),
       model_card(:workshops, icon: "🎨"),
       model_card(:projects, icon: "🏫"),
-      model_card(:facilitators, icon: "🧑‍🎨"),
       model_card(:users, icon: "👥",  title: "User accounts")
     ]
   end
@@ -23,8 +23,9 @@ module AdminCardsHelper
   # -----------------------------
   def user_content_cards
     [
-      custom_card("Activity logs", admin_activities_recent_path, icon: "🧭"),
-      custom_card("Activity counts", admin_activities_counts_path, icon: "📊"),
+      custom_card("Activity charts", admin_activities_charts_path, icon: "📊"),
+      custom_card("Activity counts", admin_activities_counts_path, icon: "🔢"),
+      custom_card("Activity logs", admin_activities_path, icon: "🧭"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:event_registrations, icon: "🎟️", intensity: 100),
       model_card(:story_ideas, icon: "✍️", intensity: 100),
