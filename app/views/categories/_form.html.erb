@@ -19,6 +19,7 @@
       <div class="flex-1 min-w-[220px]">
         <%= f.input :category_type_id,
                     label: "Category Type",
+                    required: true,
                     collection: @category_types,
                     label_method: :name,
                     value_method: :id,

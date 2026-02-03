@@ -1,4 +1,6 @@
 class TaggingsController < ApplicationController
+  include AhoyTracking
+
   def index
     @sector_names = params[:sector_names].to_s
     @category_names = params[:category_names].to_s
@@ -21,14 +23,16 @@ class TaggingsController < ApplicationController
       pages: pages,
       number_of_items_per_page: number_of_items_per_page
     )
+
+    track_tagging_browse(@grouped_tagged_items) if browsing_intentionally?
   end
 
   def matrix
-    @sectors = Sector
-      .joins(:sectorable_items)
-      .published
-      .distinct
-      .order(:name)
+    @sectors = Sector.includes(:sectorable_items)
+                     .joins(:sectorable_items)
+                     .published
+                     .distinct
+                     .order(:name)
 
     @categories = Category
       .includes(:category_type)
@@ -49,6 +53,7 @@ class TaggingsController < ApplicationController
 
       klass
         .published
+        .includes(:sectors)
         .joins(:sectors)
         .group("sectors.id")
         .count
@@ -58,6 +63,7 @@ class TaggingsController < ApplicationController
 
       klass
         .published
+        .includes(:categories)
         .joins(:categories)
         .group("categories.id")
         .count
@@ -86,5 +92,11 @@ class TaggingsController < ApplicationController
         }
       end
     end
+  end
+
+  private
+
+  def browsing_intentionally?
+    params[:sector_names].present? || params[:category_names].present?
   end
 end

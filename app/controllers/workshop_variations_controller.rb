@@ -1,5 +1,5 @@
 class WorkshopVariationsController < ApplicationController
-  include AssetUpdatable, AhoyViewTracking
+  include AssetUpdatable, AhoyTracking
   def index
     unless current_user.super_user?
       redirect_to root_path
@@ -8,8 +8,8 @@ class WorkshopVariationsController < ApplicationController
 
     @workshop_variations =
       WorkshopVariation
-        .joins(:workshop)
         .includes(:workshop)
+        .joins(:workshop)
         .where(workshops: { inactive: false })
         .order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
         .paginate(page: params[:page], per_page: 25)

@@ -4,10 +4,10 @@
 
     <div class="row">
       <div class="col-md-12 label-plus-comment">
-	Adult and Children's Combined (Family) Log Summary</br></br>
-	<div class="custom-smaller">
-	  Please note: If you submitted Combined/Family numbers, they will not automatically populate into your Monthly Report total. However, they will still count towards your monthly numbers. An AWBW staff member will input them separately once the Monthly Report is submitted.
-	</div>
+  Adult and Children's Combined (Family) Log Summary</br></br>
+  <div class="custom-smaller">
+    Please note: If you submitted Combined/Family numbers, they will not automatically populate into your Monthly Report total. However, they will still count towards your monthly numbers. An AWBW staff member will input them separately once the Monthly Report is submitted.
+  </div>
       </div>
     </div>
     <table class='table table-striped'>
@@ -28,9 +28,9 @@
             <td class='small'><%= link_to log.date_label, edit_workshop_log_path(log.id) , target: :blank %></td>
             <td class='small'><%= log.name %></td>
             <td class='small' <%= tag_options({class: "js-on-going-adult-count"}, false) %>><%= log.combined_num_ongoing('Adult') %></td>
-	    <td class='small' <%= tag_options({class: "js-on-going-children-count"}, false) %>><%= log.combined_num_ongoing('Children') %></td>
+      <td class='small' <%= tag_options({class: "js-on-going-children-count"}, false) %>><%= log.combined_num_ongoing('Children') %></td>
             <td class='small' <%= tag_options({class: "js-first-time-adult-count"}, false) %>><%= log.combined_num_first_time('Adult') %></td>
-	    <td class='small' <%= tag_options({class: "js-first-time-children-count"}, false) %>><%= log.combined_num_first_time('Children') %></td>
+      <td class='small' <%= tag_options({class: "js-first-time-children-count"}, false) %>><%= log.combined_num_first_time('Children') %></td>
           </tr>
         <% end %>
       <% end %>

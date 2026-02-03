@@ -1,5 +1,19 @@
 class PasswordsController < Devise::PasswordsController
+  include AhoyTracking
+
   skip_before_action :authenticate_user!, only: [ :new, :create, :edit, :update ]
+
+  def create
+    super do |resource|
+      track_event("auth.password_reset_requested", user_id: resource.id) if resource.persisted?
+    end
+  end
+
+  def update
+    super do |resource|
+      track_event("auth.password_changed", user_id: resource.id) if resource.errors.empty?
+    end
+  end
 
   protected
 
