@@ -5,7 +5,7 @@ RSpec.describe "Facilitators can view Popular Resources on the dashboard" do
     context "when logged in" do
       before do
         @user = create(:user)
-        create(:facilitator, user: @user)
+        create(:person, user: @user)
         @popular_resource = create(:resource,
           title: "Most Popular Resource",
           featured: true,

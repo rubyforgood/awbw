@@ -5,7 +5,7 @@ RSpec.describe "Facilitators can register for an event" do
     context "When Facilitator is logged in" do
       before do
         user = create(:user)
-        create(:facilitator, user: user)
+        create(:person, user: user)
 
         @event = create(:event,
           title: "Upcoming Workshop",

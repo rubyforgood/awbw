@@ -36,9 +36,9 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :published, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
+    attributes :title, :published, person_first: "people.first_name", person_last: "people.last_name"
 
-    scope { join_rich_texts.left_joins(author: :facilitator) }
+    scope { join_rich_texts.left_joins(author: :person) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
 

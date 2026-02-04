@@ -49,10 +49,10 @@
                     <%= event_registration.event.decorate.times(display_day: true, display_date: true).html_safe %>
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-800">
-                    <%# FIXME not all users have facilitators %>
-                    <% if event_registration.registrant.facilitator %>
+                    <%# FIXME not all users have people %>
+                    <% if event_registration.registrant.person %>
                       <%= link_to event_registration.registrant.full_name,
-                              facilitator_path(event_registration.registrant.facilitator),
+                              person_path(event_registration.registrant.person),
                               class: "btn btn-secondary-outline" %>
                     <% else %>
                       <%= event_registration.registrant.full_name %>

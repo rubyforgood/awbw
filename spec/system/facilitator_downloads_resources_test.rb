@@ -27,7 +27,7 @@ RSpec.describe "Facilitators can download resources", type: :system, js: true do
 
     driven_by :selenium_chrome_headless_download
 
-    create(:facilitator, user: user)
+    create(:person, user: user)
     create(:downloadable_asset, owner: resource)
     clear_downloads
   end

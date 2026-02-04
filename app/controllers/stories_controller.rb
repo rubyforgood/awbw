@@ -112,7 +112,7 @@ class StoriesController < ApplicationController
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :public, :public_featued, :youtube_url, :website_url,
       :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
-      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id
+      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_person_id
     )
   end
 

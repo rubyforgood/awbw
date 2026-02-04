@@ -5,7 +5,7 @@ module AdminCardsHelper
   def system_cards
     [
       model_card(:banners, icon: "📣"),
-      model_card(:facilitators, icon: "🧑‍🎨"),
+      model_card(:people, icon: "🧑‍🎨"),
       model_card(:faqs, icon: "❔", title: "FAQs"),
       model_card(:community_news, icon: "📰"),
       model_card(:events, icon: "📆"),

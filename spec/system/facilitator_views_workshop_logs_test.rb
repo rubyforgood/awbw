@@ -7,7 +7,7 @@ RSpec.describe "Facilitators can view a submitted workshop log" do
         Capybara.current_session.current_window.resize_to(1920, 5000)
 
         @user = create(:user)
-        create(:facilitator, user: @user)
+        create(:person, user: @user)
         windows_type = create(:windows_type, short_name: "COMBINED")
 
         form_builder = FormBuilder.create!(windows_type_id: windows_type.id, name: "The form")

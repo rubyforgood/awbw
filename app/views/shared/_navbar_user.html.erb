@@ -28,7 +28,7 @@
     <% end %>
 
     <% if current_user&.super_user %>
-      <%= link_to (current_user.facilitator ? facilitator_path(current_user.facilitator) : generate_facilitator_user_path(current_user)),
+      <%= link_to (current_user.person ? person_path(current_user.person) : generate_person_user_path(current_user)),
                   class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
         <i class="fas fa-user"></i>
         <span>My profile</span>

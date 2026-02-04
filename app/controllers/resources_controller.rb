@@ -37,7 +37,7 @@ class ResourcesController < ApplicationController
   end
 
   def edit
-    @resource = Resource.includes(user: :facilitator).find(resource_id_param).decorate
+    @resource = Resource.includes(user: :person).find(resource_id_param).decorate
     set_form_variables
 
     if turbo_frame_request?

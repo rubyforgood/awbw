@@ -6,7 +6,7 @@ class Story < ApplicationRecord
   belongs_to :windows_type
   belongs_to :project, optional: true
   belongs_to :spotlighted_person, class_name: "Person",
-             foreign_key: "spotlighted_facilitator_id", optional: true
+             foreign_key: "spotlighted_person_id", optional: true
   belongs_to :story_idea, optional: true
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy

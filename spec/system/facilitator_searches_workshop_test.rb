@@ -5,7 +5,7 @@ RSpec.describe 'Facilitators can search for a workshop' do
     context "when facilitator is logged in" do
       before do
         user = create(:user)
-        create(:facilitator, user: user)
+        create(:person, user: user)
 
         adult_window = create(:windows_type, :adult)
         workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window)

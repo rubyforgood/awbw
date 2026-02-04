@@ -12,7 +12,7 @@ class TaggingsController < ApplicationController
       stories: params[:stories_page],
       community_news: params[:community_news_page],
       events: params[:events_page],
-      facilitators: params[:facilitators_page],
+      people: params[:people_page],
       projects: params[:projects_page],
       quotes: params[:quotes_page]
     }

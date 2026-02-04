@@ -35,7 +35,7 @@ class ProjectsController < ApplicationController
                          .references(:windows_type)
                          .order("workshops.title ASC, windows_types.name ASC")
 
-    @facilitators = User.active
+    @people = User.active
                         .or(User.where(id: user_ids))
                         .distinct
                         .order(:last_name, :first_name)

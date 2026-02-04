@@ -5,7 +5,7 @@ RSpec.describe "Facilitators can search for resources" do
     context "When user is logged in" do
       before do
         user = create(:user)
-        create(:facilitator, user: user)
+        create(:person, user: user)
         create(:resource, title: "Scholarship Application Guide", featured: true, kind: "Scholarship")
         create(:resource, title: "Workshop Session Template", kind: "Template")
         create(:resource, title: "Participant Handout Package", kind: "Handout")

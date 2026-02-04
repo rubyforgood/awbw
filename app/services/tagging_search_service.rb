@@ -51,14 +51,14 @@ class TaggingSearchService
                  .paginate(page: pages[:stories] || 1, per_page: number_of_items_per_page)
                  .decorate,
 
-      facilitators: Facilitator
+      people: Person
                       .includes(:sectors)
                       .published
                       .searchable
                       .sector_names(sector_names)
                       .category_names(category_names)
                       .order(:first_name, :last_name)
-                      .paginate(page: pages[:facilitators] || 1, per_page: number_of_items_per_page)
+                      .paginate(page: pages[:people] || 1, per_page: number_of_items_per_page)
                       .decorate,
 
       projects: Project
