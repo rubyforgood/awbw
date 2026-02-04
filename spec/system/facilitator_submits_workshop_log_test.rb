@@ -65,7 +65,7 @@ RSpec.describe "Facilitators can submit a workshop log" do
         file_inputs = page.all('input[type="file"]', visible: :all)
         file_inputs.last.set(Rails.root.join('spec/fixtures/some_file1.png'))
         # Submit
-        click_button "Save Log"
+        click_button "Submit"
         expect(page).to have_content("Thank you for submitting a workshop log")
       end
 
@@ -76,21 +76,21 @@ RSpec.describe "Facilitators can submit a workshop log" do
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
         select "", from: "workshop_log[project_id]"
-        click_button "Save Log"
+        click_button "Submit"
         expect(page).to have_content("Project must exist")
 
         # Missing workshop
         visit new_workshop_log_path
         select @project.name, from: "workshop_log[project_id]"
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
-        click_button "Save Log"
+        click_button "Submit"
         expect(page).to have_content("Workshop must exist")
 
         # Missing date
         visit new_workshop_log_path
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
         select @project.name, from: "workshop_log[project_id]"
-        click_button "Save Log"
+        click_button "Submit"
         expect(page).to have_content("Date can't be blank")
       end
     end

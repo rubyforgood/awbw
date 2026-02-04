@@ -19,7 +19,7 @@ RSpec.describe "Resource asset upload", type: :system do
     )
 
     # Submit the asset form
-    click_button "Upload Asset"
+    click_button "Submit"
   end
 
 
