@@ -200,9 +200,9 @@
       organization_id.addClass('error-select-custom');
       organization_id.closest('.form-group').append('<p class="error-custom-message">Please complete this field</p>');
     } else {
-      project_id.removeClass('scroll-to-error');
-      project_id.removeClass('error-select-custom');
-      project_id.find('.error-custom-message').remove();
+        organization_id.removeClass('scroll-to-error');
+        organization_id.removeClass('error-select-custom');
+        organization_id.find('.error-custom-message').remove();
     }
     if ($('#workshop_name').val() == '' && $('#workshop_text_content').hasClass('hide') == false) {
       set_error_workshop_name();
@@ -224,15 +224,15 @@
     }
 
 
-    if ($("#workshop_log_project_id option:selected").text() == '') {
-      $("#project-select").addClass('error-select-custom');
-      $("#project-select").addClass('scroll-to-error');
-      $("#project-select").closest('.form-group').find('.error-custom-message').remove();
-      $("#project-select").closest('.form-group').append('<p class="error-custom-message">Please complete this field</p>');
+    if ($("#workshop_log_organization_id option:selected").text() == '') {
+      $("#organization-select").addClass('error-select-custom');
+      $("#organization-select").addClass('scroll-to-error');
+      $("#organization-select").closest('.form-group').find('.error-custom-message').remove();
+      $("#organization-select").closest('.form-group').append('<p class="error-custom-message">Please complete this field</p>');
     } else {
-      $("#project-select").removeClass('scroll-to-error');
-      $("#project-select").removeClass('error-select-custom');
-      $("#project-select").find('.error-custom-message').remove();
+      $("#organization-select").removeClass('scroll-to-error');
+      $("#organization-select").removeClass('error-select-custom');
+      $("#organization-select").find('.error-custom-message').remove();
     }
 
     var array_select = [];

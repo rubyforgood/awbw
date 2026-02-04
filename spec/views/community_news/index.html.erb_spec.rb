@@ -5,7 +5,8 @@ RSpec.describe "community_news/index", type: :view do
 
   let(:community_news1) { CommunityNews.create!(
     title: "Title1",
-    body: "MyText",
+    # body: "MyText",
+    rhino_body: "<p>MyText</p>",
     youtube_url: "Youtube Url",
     published: false,
     featured: false,
@@ -18,7 +19,8 @@ RSpec.describe "community_news/index", type: :view do
     ) }
   let(:community_news2) { CommunityNews.create!(
     title: "Title2",
-    body: "MyText",
+    rhino_body: "<p>MyText</p>",
+    # body: "MyText",
     youtube_url: "Youtube Url",
     published: false,
     featured: false,
@@ -38,13 +40,15 @@ RSpec.describe "community_news/index", type: :view do
   end
 
   it "renders a list of community_news" do
+    allow(view).to receive(:turbo_frame_request?).and_return(true)
     render
     expect(rendered).to include(community_news1.title, community_news2.title)
   end
 
   it "renders a friendly message when no community_news exist" do
     assign(:community_news, paginated([]))
+    allow(view).to receive(:turbo_frame_request?).and_return(true)
     render
-    expect(rendered).to match(/No community news yet/)
+    expect(rendered).to include("No community news yet")
   end
 end

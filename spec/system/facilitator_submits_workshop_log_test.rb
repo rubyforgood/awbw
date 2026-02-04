@@ -16,8 +16,8 @@ RSpec.describe "Facilitators can submit a workshop log" do
         create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, featured: true)
         create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, featured: true)
 
-        @project = create(:project, name: "Test Project", windows_type_id: @windows_type.id)
-        ProjectUser.create!(user: @user, project: @project, position: :default)
+        @organization = create(:organization, name: "Test Project", windows_type_id: @windows_type.id)
+        OrganizationUser.create!(user: @user, organization: @organization, position: :default)
 
         sign_in @user
         visit new_workshop_log_path
@@ -25,7 +25,7 @@ RSpec.describe "Facilitators can submit a workshop log" do
       it "successfully submits a complete workshop log" do
         expect(page).to have_content("New Workshop log")
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
-        select @project.name, from: "workshop_log[project_id]"
+        select @organization.name, from: "workshop_log[organization_id]"
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
 
         fill_in "workshop_log_children_ongoing", with: "5"
@@ -72,16 +72,16 @@ RSpec.describe "Facilitators can submit a workshop log" do
       it "validates required fields individually" do
         visit new_workshop_log_path
 
-        #  Missing project
+        #  Missing organization
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
-        select "", from: "workshop_log[project_id]"
+        select "", from: "workshop_log[organization_id]"
         click_button "Submit"
         expect(page).to have_content("Project must exist")
 
         # Missing workshop
         visit new_workshop_log_path
-        select @project.name, from: "workshop_log[project_id]"
+        select @organization.name, from: "workshop_log[organization_id]"
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
         click_button "Submit"
         expect(page).to have_content("Workshop must exist")
@@ -89,7 +89,7 @@ RSpec.describe "Facilitators can submit a workshop log" do
         # Missing date
         visit new_workshop_log_path
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
-        select @project.name, from: "workshop_log[project_id]"
+        select @organization.name, from: "workshop_log[organization_id]"
         click_button "Submit"
         expect(page).to have_content("Date can't be blank")
       end
