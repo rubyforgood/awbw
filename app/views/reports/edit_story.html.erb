@@ -25,8 +25,8 @@
             Please contact AWBW if your agency is not listed.
           </div>
         </div>
-        <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
-        <%= f.collection_select :organization_id, @agencies, :id, :name,
+        <% agency = @organizations.find_by(windows_type_id: f.object.windows_type.id) %>
+        <%= f.collection_select :organization_id, @organizations, :id, :name,
 { selected: agency ? agency.id : nil,class: 'js-agency-select' },
   class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewOrganization()' %>
       </div>

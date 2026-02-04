@@ -5,7 +5,7 @@ RSpec.describe "Facilitators can submit a workshop log" do
     context "when facilitator is logged in" do
       before do
         @user = create(:user)
-        create(:facilitator, user: @user)
+        create(:person, user: @user)
 
         adult_window = create(:windows_type, :adult)
         @windows_type = create(:windows_type, short_name: "COMBINED")

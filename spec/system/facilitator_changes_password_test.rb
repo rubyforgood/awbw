@@ -5,7 +5,7 @@ RSpec.describe 'Facilitators can change their password quickly and easily' do
     context 'when facilitator requests password change' do
       before do
         @user = create(:user)
-        create(:facilitator, user: @user)
+        create(:person, user: @user)
       end
 
       it 'completes the full password reset flow successfully' do

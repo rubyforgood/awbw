@@ -27,14 +27,14 @@
 
     <%= f.input :organization_id,
                 as: :select,
-                collection: @agencies,
+                collection: @organizations,
                 label_method: :type_name,
                 value_method: :id,
                 label: "Organization",
                 required: true,
                 hint: "Please contact AWBW if your agency is not listed.",
-                prompt: (@agencies.count > 1 ? "Please select the relevant agency" : nil),
-                selected: (params[:organization_id].presence || (f.object.organization_id || (@agencies.count == 1 ? @agencies.first.id : nil))),
+                prompt: (@organizations.count > 1 ? "Please select the relevant agency" : nil),
+                selected: (params[:organization_id].presence || (f.object.organization_id || (@organizations.count == 1 ? @organizations.first.id : nil))),
                 input_html: { value: params[:organization_id].presence || f.object.organization_id || @agency_id,
                               class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>

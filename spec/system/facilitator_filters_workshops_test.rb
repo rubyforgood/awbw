@@ -14,7 +14,7 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
       let(:sector_education) { create(:sector, :published, name: "Education/Schools") }
 
       before do
-        create(:facilitator, user: user)
+        create(:person, user: user)
 
         # Create test workshops
         workshop_world = create(:workshop, :published, title: 'The best workshop in the world', windows_type: adult_window)
@@ -173,7 +173,7 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
       let(:sector_lgbtqia) { create(:sector, :published, name: "LGBTQIA") }
 
       before do
-        create(:facilitator, user: admin)
+        create(:person, user: admin)
 
         # Published workshop
         published_workshop = create(:workshop,

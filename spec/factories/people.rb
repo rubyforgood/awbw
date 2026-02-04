@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :facilitator do
+  factory :person do
     association :user
     association :created_by, factory: :user
     association :updated_by, factory: :user
@@ -7,8 +7,8 @@ FactoryBot.define do
     last_name { Faker::Name.last_name.gsub("'", " ") }
 
     trait :with_organization do
-      after(:create) do |facilitator|
-        facilitator.organizations << create(:organization)
+      after(:create) do |person|
+        person.organizations << create(:organization)
       end
     end
   end

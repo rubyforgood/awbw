@@ -113,20 +113,12 @@ class WorkshopLogsController < ApplicationController
     ).sort.reverse
 
     scoped_users = current_user&.super_user? ? User.active : User.where(id: current_user.id)
-    @facilitators = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
-                                .includes(:workshop_logs, :facilitator)
+    @people = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
+                                .includes(:workshop_logs, :person)
                                 .joins(:workshop_logs)
                                 .distinct
-                                .order("facilitators.first_name, facilitators.last_name")
-    @organizations =
-      if current_user&.super_user?
-        # Organization.where(id: @workshop_logs_unpaginated.pluck(:organization_id)).order(:name)
-        Organization.active.order(:name)
-      elsif current_user
-        current_user.organizations.order(:name)
-      else
-        Organization.none
-      end
+                                .order("people.first_name, people.last_name")
+    @organizations = authorized_scope(Organization.all)
     @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
                          .order(:title)
   end
@@ -178,12 +170,12 @@ class WorkshopLogsController < ApplicationController
       end
     end
 
-    @agencies =
+    @organizations =
       Organization.where(id: current_user.organizations.select(:id))
                    .or(Organization.where(id: @workshop_log.organization_id))
                    .distinct
                    .order(:name)
-    agency = params[:agency_id].present? ? Organization.where(id: params[:agency_id]).last : @agencies.first
+    agency = params[:agency_id].present? ? Organization.where(id: params[:agency_id]).last : @organizations.first
     @agency_id = agency.id if agency
   end
 

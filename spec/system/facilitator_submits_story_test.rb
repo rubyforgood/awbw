@@ -9,7 +9,7 @@ RSpec.describe "Facilitators can submit a story", type: :system do
         create(:windows_type, :combined)
 
         @user = create(:user)
-        create(:facilitator, user: @user)
+        create(:person, user: @user)
 
         sign_in @user
         visit new_story_path

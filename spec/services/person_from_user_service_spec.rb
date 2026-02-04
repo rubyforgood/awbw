@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe FacilitatorFromUserService do
+RSpec.describe PersonFromUserService do
   subject(:service) { described_class.new(user: user) }
 
   let(:user) do
@@ -30,15 +30,15 @@ RSpec.describe FacilitatorFromUserService do
   end
 
   describe "#call" do
-    let(:facilitator) { service.call }
+    let(:person) { service.call }
 
-    it "returns a new Facilitator" do
-      expect(facilitator).to be_a(Facilitator)
-      expect(facilitator).to be_new_record
+    it "returns a new Person" do
+      expect(person).to be_a(Person)
+      expect(person).to be_new_record
     end
 
-    it "hydrates facilitator attributes from the user" do
-      expect(facilitator).to have_attributes(
+    it "hydrates person attributes from the user" do
+      expect(person).to have_attributes(
                                first_name: "Jane",
                                last_name: "Doe",
                                email: "jane@example.com",
@@ -50,7 +50,7 @@ RSpec.describe FacilitatorFromUserService do
     end
 
     it "builds contact methods from user phone fields" do
-      contact_methods = facilitator.contact_methods
+      contact_methods = person.contact_methods
 
       expect(contact_methods.size).to eq(2)
 
@@ -58,35 +58,35 @@ RSpec.describe FacilitatorFromUserService do
       secondary_phone = contact_methods.reject(&:is_primary).first
 
       expect(primary_phone).to have_attributes(
-                                 kind: "phone",
-                                 value: "111-111-1111",
-                                 is_primary: true
-                               )
+                                  kind: "phone",
+                                  value: "111-111-1111",
+                                  is_primary: true
+                                )
 
       expect(secondary_phone).to have_attributes(
-                                   kind: "phone",
-                                   value: "222-222-2222"
-                                 )
+                                    kind: "phone",
+                                    value: "222-222-2222"
+                                  )
     end
 
     it "builds addresses from user address fields" do
-      addresses = facilitator.addresses
+      addresses = person.addresses
 
       expect(addresses.size).to eq(2)
 
       expect(addresses.first).to have_attributes(
-                                   street_address: "123 Main St",
-                                   city: "Boston",
-                                   state: "MA",
-                                   zip_code: "02101"
-                                 )
+                                    street_address: "123 Main St",
+                                    city: "Boston",
+                                    state: "MA",
+                                    zip_code: "02101"
+                                  )
 
       expect(addresses.second).to have_attributes(
-                                    street_address: "456 Side St",
-                                    city: "Cambridge",
-                                    state: "MA",
-                                    zip_code: "02139"
-                                  )
+                                     street_address: "456 Side St",
+                                     city: "Cambridge",
+                                     state: "MA",
+                                     zip_code: "02139"
+                                   )
     end
 
     context "when optional user fields are blank" do
@@ -104,13 +104,13 @@ RSpec.describe FacilitatorFromUserService do
       end
 
       it "does not build contact methods" do
-        facilitator = service.call
-        expect(facilitator.contact_methods).to be_empty
+        person = service.call
+        expect(person.contact_methods).to be_empty
       end
 
       it "still builds addresses (even if values are nil)" do
-        facilitator = service.call
-        expect(facilitator.addresses.size).to eq(2)
+        person = service.call
+        expect(person.addresses.size).to eq(2)
       end
     end
   end
