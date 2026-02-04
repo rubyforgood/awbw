@@ -64,7 +64,6 @@ class WorkshopIdeasController < ApplicationController
     @potential_series_workshops = Workshop.published.order(:title)
     @sectors = Sector.published
     @windows_types = WindowsType.all
-    # @category_types = CategoryType.includes(:categories).published.decorate
     @categories_grouped =
       Category
         .includes(:category_type)
