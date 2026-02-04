@@ -47,6 +47,7 @@ class User < ApplicationRecord
 
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }
+  validate :time_zone_must_be_valid, if: :time_zone_changed?
   validates_associated :project_users
 
   # Search Cop
@@ -167,6 +168,12 @@ class User < ApplicationRecord
   end
 
   private
+
+  def time_zone_must_be_valid
+    return if time_zone.blank?
+
+    errors.add(:time_zone, "is not a valid time zone") unless ActiveSupport::TimeZone[time_zone]
+  end
 
   def set_default_values
     self.inactive = false if inactive.nil?

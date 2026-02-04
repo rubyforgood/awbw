@@ -834,6 +834,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.string "state2"
     t.string "subscribecode"
     t.boolean "super_user", default: false
+    t.string "time_zone", default: "Pacific Time (US & Canada)"
     t.string "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", precision: nil

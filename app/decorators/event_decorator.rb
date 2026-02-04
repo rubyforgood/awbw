@@ -65,8 +65,8 @@ class EventDecorator < ApplicationDecorator
   end
 
   def times(display_day: false, display_date: false)
-    s = start_date
-    e = end_date || start_date
+    s = start_date.in_time_zone(Time.zone)
+    e = (end_date || start_date).in_time_zone(Time.zone)
 
     # helpers
     day  = ->(d) { d.strftime("%a") }

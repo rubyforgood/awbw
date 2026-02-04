@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   prepend ActionPolicy::Draper
 
   before_action :authenticate_user!  # ensures only logged-in users can access pages
+  around_action :set_time_zone_from_user, if: :current_user
 
   # TODO add this callback to verify
   # that `authorize!` has been called in all controllers
@@ -26,6 +27,15 @@ class ApplicationController < ActionController::Base
       new_user_password_path
     else
       root_path
+    end
+  end
+
+  def set_time_zone_from_user
+    zone = ActiveSupport::TimeZone[current_user&.time_zone]
+    if zone
+      Time.use_zone(zone) { yield }
+    else
+      yield
     end
   end
 end

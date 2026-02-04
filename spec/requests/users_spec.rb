@@ -109,7 +109,14 @@ RSpec.describe "/users", type: :request do
         user = User.create! valid_attributes
         patch user_url(user), params: { user: new_attributes }
         user.reload
-        skip("Add assertions for updated state")
+        expect(user.first_name).to eq("Janet")
+      end
+
+      it "permits and updates time_zone" do
+        user = User.create! valid_attributes
+        patch user_url(user), params: { user: { time_zone: "EST" } }
+        user.reload
+        expect(user.time_zone).to eq("EST")
       end
 
       it "redirects to the users index" do
