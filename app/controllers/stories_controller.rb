@@ -97,7 +97,7 @@ class StoriesController < ApplicationController
   def set_form_variables
     @story_idea = StoryIdea.find(params[:story_idea_id]) if params[:story_idea_id].present?
     @user = User.find(params[:user_id]) if params[:user_id].present?
-    @projects = (@user || current_user).projects.order(:name)
+    @organizations = (@user || current_user).organizations.order(:name)
     @story_ideas = StoryIdea.includes(:created_by)
                             .references(:users)
                             .order(:created_at)
@@ -119,7 +119,7 @@ class StoriesController < ApplicationController
   def story_params
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :public_featued, :youtube_url, :website_url,
-      :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
+      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id
     )
   end
@@ -127,7 +127,7 @@ class StoriesController < ApplicationController
   def set_story_attributes_from(idea)
     {
       rhino_body: idea.body,
-      project_id: idea.project.id,
+      organization_id: idea.organization.id,
       workshop_id: idea.workshop_id,
       external_workshop_title: idea.external_workshop_title,
       windows_type_id: idea.windows_type_id,

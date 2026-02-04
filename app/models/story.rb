@@ -65,15 +65,15 @@ class Story < ApplicationRecord
   end
 
   def organization_name
-    project&.name
+    organization&.name
   end
 
   def organization_locality
-    project&.organization_locality
+    organization&.organization_locality
   end
 
   def organization_description
-    project&.organization_description
+    organization&.organization_description
   end
 
   def attach_assets_from_idea!

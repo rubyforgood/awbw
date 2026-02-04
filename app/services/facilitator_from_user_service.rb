@@ -12,7 +12,7 @@ class FacilitatorFromUserService
     hydrate_facilitator
     hydrate_addresses
     hydrate_contact_methods
-    hydrate_projects
+    hydrate_organizations
     facilitator
   end
 
@@ -30,7 +30,7 @@ class FacilitatorFromUserService
     )
   end
 
-  def hydrate_projects
+  def hydrate_organizations
     # t.integer "agency_id"
   end
 

@@ -2,7 +2,7 @@ class Bookmark < ApplicationRecord
   belongs_to :user
   belongs_to :bookmarkable, polymorphic: true
 
-  BOOKMARKABLE_MODELS = [ "CommunityNews", "Event", "Facilitator", "Project", "Resource", "Story", "StoryIdea",
+  BOOKMARKABLE_MODELS = [ "CommunityNews", "Event", "Facilitator", "Organization", "Resource", "Story", "StoryIdea",
                         "Workshop", "WorkshopIdea", "WorkshopLog", "WorkshopVariation" ]
 
   scope :for_workshops, -> { where(bookmarkable_type: "Workshop") }
@@ -55,7 +55,7 @@ class Bookmark < ApplicationRecord
       LEFT JOIN community_news      ON community_news.id      = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
       LEFT JOIN events              ON events.id              = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
       LEFT JOIN facilitators        ON facilitators.id        = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Facilitator'
-      LEFT JOIN projects            ON projects.id            = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Project'
+      LEFT JOIN organizations            ON organizations.id            = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
       LEFT JOIN resources           ON resources.id           = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
       LEFT JOIN stories             ON stories.id             = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
       LEFT JOIN story_ideas         ON story_ideas.id         = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'StoryIdea'
@@ -70,7 +70,7 @@ class Bookmark < ApplicationRecord
           community_news.title,
           events.title,
           CONCAT(facilitators.first_name, ' ', facilitators.last_name),
-          projects.name,
+          organizations.name,
           resources.title,
           stories.title,
           story_ideas.title,
@@ -93,7 +93,7 @@ class Bookmark < ApplicationRecord
       LEFT JOIN community_news ON community_news.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
       LEFT JOIN events         ON events.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
       LEFT JOIN facilitators   ON facilitators.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Facilitator'
-      LEFT JOIN projects       ON projects.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Project'
+      LEFT JOIN organizations       ON organizations.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
       LEFT JOIN resources      ON resources.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
       LEFT JOIN stories        ON stories.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
       LEFT JOIN story_ideas    ON story_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'StoryIdea'
@@ -105,7 +105,7 @@ class Bookmark < ApplicationRecord
 
     bookmarks.where(
       "community_news.title LIKE :title OR events.title LIKE :title OR facilitators.first_name LIKE :title OR
-       facilitators.last_name LIKE :title OR projects.name LIKE :title OR resources.title LIKE :title OR
+       facilitators.last_name LIKE :title OR organizations.name LIKE :title OR resources.title LIKE :title OR
        stories.title LIKE :title OR workshops.title LIKE :title OR workshop_ideas.title LIKE :title OR
        story_ideas.body LIKE :title OR -- searching body for story ideas (title exists but isn't used in UI)
        DATE_FORMAT(workshop_logs.date, '%Y-%m-%d') LIKE :title OR -- no title on workshop_logs

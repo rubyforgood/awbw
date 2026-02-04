@@ -81,7 +81,7 @@ class ReportsController < ApplicationController
         flash[:notice] = "Thanks for reporting on a update report. "
         redirect_to root_path
       else
-        @agencies  = current_user.projects.
+        @agencies  = current_user.organizations.
                        where(windows_type_id: @report.windows_type_id)
 
         flash[:alert] = "ERROR!!!!!!!!!!!!!!"
@@ -107,7 +107,7 @@ class ReportsController < ApplicationController
         flash[:notice] = "Thanks for reporting on a update report. "
         redirect_to root_path
       else
-        @agencies  = current_user.projects.
+        @agencies  = current_user.organizations.
                        where(windows_type_id: @report.windows_type_id)
 
         flash[:alert] = "ERROR!!!!!!!!!!!!!!"

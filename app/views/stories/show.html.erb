@@ -46,7 +46,7 @@
           </p>
           <p><strong>Organization Name:</strong>
             <%= link_to @story.decorate.organization_name,
-                        organization_path(@story.project),
+                        organization_path(@story.organization),
                         class: "hover:underline" %>
           </p>
           <% if @story.decorate.workshop_title.present? %>
