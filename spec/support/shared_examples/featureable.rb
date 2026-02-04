@@ -10,7 +10,7 @@ RSpec.shared_examples "featureable" do |factory:|
   let!(:public_featured_only) do
     create(factory,
       public_featured: true,
-      public: true,
+      publicly_visible: true,
       inactive: false
     )
   end
@@ -19,7 +19,7 @@ RSpec.shared_examples "featureable" do |factory:|
     create(factory,
       featured: true,
       public_featured: true,
-      public: true,
+      publicly_visible: true,
       inactive: false
     )
   end
@@ -34,7 +34,7 @@ RSpec.shared_examples "featureable" do |factory:|
   let!(:inactive_public_featured) do
     create(factory,
       public_featured: true,
-      public: true,
+      publicly_visible: true,
       inactive: true
     )
   end
@@ -47,7 +47,7 @@ RSpec.shared_examples "featureable" do |factory:|
   end
 
   describe ".public_featured" do
-    it "returns only active records with public_featured: true and public: true" do
+    it "returns only active records with public_featured: true and publicly_visible: true" do
       expect(described_class.public_featured)
         .to contain_exactly(public_featured_only, both_featured)
     end

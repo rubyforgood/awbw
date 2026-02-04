@@ -6,7 +6,7 @@ class StoryPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || record.published? || (authenticated? && record.public?)
+    admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
   #
   # Scoping
@@ -17,7 +17,7 @@ class StoryPolicy < ApplicationPolicy
     if authenticated?
       relation.published
     else
-      relation.public
+      relation.publicly_visible
     end
   end
 end

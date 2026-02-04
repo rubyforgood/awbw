@@ -10,7 +10,7 @@ class EventPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || record.public? || (authenticated? && record.published?)
+    admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
   relation_scope do |relation|

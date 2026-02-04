@@ -119,6 +119,8 @@ class Workshop < ApplicationRecord
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :legacy, -> { where(legacy: true) }
+  scope :public_featured, -> { published.where(public_featured: true) }
+  scope :publicly_visible, -> { published.where(publicly_visible: true) }
   scope :published, ->(published = nil) { published.to_s.present? ?
            where(inactive: !published) : where(inactive: false) }
   scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }

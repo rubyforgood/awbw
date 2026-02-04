@@ -6,7 +6,7 @@ class ResourcePolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || record.published? || (authenticated? && record.public?)
+    admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
   def download?
@@ -22,7 +22,7 @@ class ResourcePolicy < ApplicationPolicy
     if authenticated?
       relation.published
     else
-      relation.public
+      relation.publicly_visible
     end
   end
 end

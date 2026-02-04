@@ -9,7 +9,7 @@ RSpec.describe "Event show page", type: :system do
       :event,
       title: "My Event",
       description: "A wonderful event",
-      public: true,
+      publicly_visible: true,
       inactive: false,
       start_date: 2.days.from_now.change(hour: 10),
       end_date:   2.days.from_now.change(hour: 12),

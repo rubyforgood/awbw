@@ -6,7 +6,7 @@ class CommunityNewsPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || record.public? || (authenticated? && record.published?)
+    admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
   # Scoping
@@ -17,7 +17,7 @@ class CommunityNewsPolicy < ApplicationPolicy
     if authenticated?
       relation.published
     else
-      relation.public
+      relation.publicly_visible
     end
   end
 end
