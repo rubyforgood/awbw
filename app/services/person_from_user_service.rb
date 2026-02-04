@@ -1,25 +1,25 @@
 # frozen_string_literal: true
 
-class FacilitatorFromUserService
-  attr_reader :user, :facilitator
+class PersonFromUserService
+  attr_reader :user, :person
 
   def initialize(user:)
     @user = user
-    @facilitator = Facilitator.new
+    @person = Person.new
   end
 
   def call
-    hydrate_facilitator
+    hydrate_person
     hydrate_addresses
     hydrate_contact_methods
     hydrate_organizations
-    facilitator
+    person
   end
 
     private
 
-  def hydrate_facilitator
-    facilitator.assign_attributes(
+  def hydrate_person
+    person.assign_attributes(
       first_name: user.first_name,
       last_name: user.last_name,
       email: user.email,
@@ -35,16 +35,16 @@ class FacilitatorFromUserService
   end
 
   def hydrate_contact_methods
-    facilitator.contact_methods.build(
+    person.contact_methods.build(
       kind: :phone,
       value: user.phone,
       is_primary: true
     ) if user.phone.present?
-    facilitator.contact_methods.build(
+    person.contact_methods.build(
       kind: :phone,
       value: user.phone2,
       ) if user.phone2.present?
-    facilitator.contact_methods.build(
+    person.contact_methods.build(
       kind: :phone,
       value: user.phone3,
       ) if user.phone3.present?
@@ -53,14 +53,14 @@ class FacilitatorFromUserService
   def hydrate_addresses
     # t.integer "primary_address"
 
-    facilitator.addresses.build(
+    person.addresses.build(
       address_type: nil,
       street_address: user.address,
       city: user.city,
       state: user.state,
       zip_code: user.zip,
     )
-    facilitator.addresses.build(
+    person.addresses.build(
       address_type: nil,
       street_address: user.address2,
       city: user.city2,

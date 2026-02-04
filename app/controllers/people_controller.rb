@@ -1,30 +1,29 @@
-class FacilitatorsController < ApplicationController
+class PeopleController < ApplicationController
   include AhoyTracking
-  before_action :set_facilitator, only: %i[ show edit update destroy ]
+  before_action :set_person, only: %i[ show edit update destroy ]
 
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(Facilitator.includes(:user, :avatar_attachment, :sectorable_items,
+    base_scope = authorized_scope(Person.includes(:user, :avatar_attachment, :sectorable_items,
                                                        user: [ :avatar_attachment, :organizations ])
                                              .references(:user))
-
     filtered = base_scope.search_by_params(params.to_unsafe_h)
                          .order(:first_name, :last_name)
     @count_display = filtered.size
-    @facilitators = filtered.paginate(page: params[:page], per_page: per_page)
+    @people = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
   def show
-    @facilitator = Facilitator.find(params[:id]).decorate
-    authorize! @facilitator
-    track_view(@facilitator)
+    @person = Person.find(params[:id]).decorate
+    authorize! @person
+    track_view(@person)
   end
 
   def new
     set_user
-    @facilitator = @user ? FacilitatorFromUserService.new(user: @user).call : Facilitator.new
-    authorize! @facilitator
+    @person = @user ? PersonFromUserService.new(user: @user).call : Person.new
+    authorize! @person
     set_form_variables
   end
 
@@ -34,13 +33,13 @@ class FacilitatorsController < ApplicationController
   end
 
   def create
-    @facilitator = Facilitator.new(facilitator_params.except(:user_attributes))
-    authorize! @facilitator
-    @facilitator.user ||= (User.find(params[:facilitator][:user_attributes][:id]) if params[:facilitator][:user_attributes])
+    @person = Person.new(person_params.except(:user_attributes))
+    authorize! @person
+    @person.user ||= (User.find(params[:person][:user_attributes][:id]) if params[:person][:user_attributes])
 
     respond_to do |format|
-      if @facilitator.save
-        format.html { redirect_to @facilitator, notice: "Facilitator was successfully created." }
+      if @person.save
+        format.html { redirect_to @person, notice: "Person was successfully created." }
       else
         set_form_variables
         format.html { render :new, status: :unprocessable_content }
@@ -49,14 +48,14 @@ class FacilitatorsController < ApplicationController
   end
 
   def update
-    authorize! @facilitator
+    authorize! @person
 
-    if params[:facilitator][:_destroy] == "1"
-      @facilitator.avatar.purge
+    if params[:person][:_destroy] == "1"
+      @person.avatar.purge
     end
 
-    if @facilitator.update(facilitator_params)
-      redirect_to @facilitator, notice: "Facilitator was successfully updated."
+    if @person.update(person_params)
+      redirect_to @person, notice: "Person was successfully updated."
     else
       set_form_variables
       render :edit, status: :unprocessable_content
@@ -64,36 +63,35 @@ class FacilitatorsController < ApplicationController
   end
 
   def destroy
-    authorize! @facilitator
-    @facilitator.destroy
+    authorize! @person
+    @person.destroy
 
     respond_to do |format|
-      format.html { redirect_to facilitators_path, status: :see_other, notice: "Facilitator was successfully destroyed." }
+      format.html { redirect_to people_path, status: :see_other, notice: "Person was successfully destroyed." }
     end
   end
 
   private
   # Use callbacks to share common setup or constraints between actions.
-  def set_facilitator
-    @facilitator = Facilitator.find(params[:id])
+  def set_person
+    @person = Person.find(params[:id])
   end
 
   def set_user
     if params[:user_id].present?
       @user ||= User.find_by(id: params[:user_id])
       if @user
-        @facilitator&.user ||= @user
-        @user.facilitator ||= @facilitator
+        @person&.user ||= @user
+        @user.person ||= @person
       end
     end
   end
 
   def set_form_variables
     set_user
-    # @facilitator.build_user if @facilitator.user.blank? # Build a fresh one if missing
-
-    if @facilitator.user
-      @facilitator.user.organization_users.first || @facilitator.user.organization_users.build
+    # @person.build_user if @person.user.blank? # Build a fresh one if missing
+    if @person.user
+      @person.user.organization_users.first || @person.user.organization_users.build
     end
 
     @all_sectors = Sector.published.order(:name)
@@ -109,8 +107,8 @@ class FacilitatorsController < ApplicationController
 
 
   # Only allow a list of trusted parameters through.
-  def facilitator_params
-    params.require(:facilitator).permit(
+  def person_params
+    params.require(:person).permit(
       :avatar,
       :first_name, :last_name,
       :email, :email_type,
@@ -176,7 +174,7 @@ class FacilitatorsController < ApplicationController
         :_destroy
       ],
       user_attributes: [
-        :id, :facilitator_id,
+        :id, :person_id,
         :first_name,
         :last_name,
         :email,

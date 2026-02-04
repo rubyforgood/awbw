@@ -1,4 +1,4 @@
-class FacilitatorDecorator < ApplicationDecorator
+class PersonDecorator < ApplicationDecorator
   def title
     "#{first_name} #{last_name}"
   end
@@ -35,7 +35,7 @@ class FacilitatorDecorator < ApplicationDecorator
     badges << [ "Legacy Facilitator (10+ years)", "yellow" ] if years >= 10
     badges << [ "Seasoned Facilitator (3-10 years)", DomainTheme.bg_class_for(:facilitators) ] if member_since.present? && years >= 3
     badges << [ "New Facilitator (<3 years)", "green" ] if member_since.present? && years < 3
-    badges << [ "Spotlighted Facilitator", "gray" ] if stories_as_spotlighted_facilitator
+    badges << [ "Spotlighted Person", "gray" ] if stories_as_spotlighted_person
     badges << [ "Events Attended", DomainTheme.bg_class_for(:events) ] if user && user.events.any?
     badges << [ "Workshop Author", DomainTheme.bg_class_for(:workshops) ] if user && user.workshops.any? # indigo
     badges << [ "Story Author", DomainTheme.bg_class_for(:stories) ] if user && user.stories_as_creator.any? # pink
