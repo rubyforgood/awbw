@@ -29,7 +29,7 @@ RSpec.describe 'Reset password (facilitator)', type: :system do
       expect(page).to have_css("#avatar")
     end
   end
-  
+
   context "When user opts to 'Log out and reset' for forgotten passwords" do
     it 'logs the user out and lands on the password reset page when they choose to reset' do
       # Should be on the change password page
