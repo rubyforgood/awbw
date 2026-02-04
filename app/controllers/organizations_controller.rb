@@ -85,13 +85,13 @@ class OrganizationsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organization_statuses = OrganizationStatus.all
-    @facilitators_array = Facilitator.includes(:user)
-                                     .joins(:user)
-                                     .order(:first_name, :last_name)
-                                     .map { |f| [ f.name, f.user.id ] }
+    @people_array = Person.includes(:user)
+                          .joins(:user)
+                          .order(:first_name, :last_name)
+                          .map { |f| [ f.name, f.user.id ] }
     @organization.organization_users = @organization.organization_users
                                      .includes(:organization)
-                                     .sort_by { |ou| ou.user.facilitator&.name.to_s.downcase }
+                                     .sort_by { |ou| ou.user.person&.name.to_s.downcase }
   end
 
   def set_index_variables

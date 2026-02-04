@@ -50,9 +50,9 @@
                     </span>
                   </td>
                   <td>
-                    <% if workshop_variation.created_by && workshop_variation.created_by.facilitator %>
+                    <% if workshop_variation.created_by && workshop_variation.created_by.person %>
                       <%= link_to workshop_variation.created_by.full_name,
-                                  facilitator_path(workshop_variation.created_by.facilitator),
+                                  person_path(workshop_variation.created_by.person),
                                   class: "btn btn-secondary-outline" %>
                     <% elsif workshop_variation.created_by %>
                       <%= workshop_variation.created_by.full_name %>

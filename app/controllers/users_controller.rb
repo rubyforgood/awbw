@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy,
-                                   :generate_facilitator, :toggle_lock_status, :confirm_email,
+                                   :generate_person, :toggle_lock_status, :confirm_email,
                                    :send_reset_password_instructions ]
 
   def index
@@ -36,9 +36,9 @@ class UsersController < ApplicationController
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
 
-    # assign facilitator
-    facilitator_id = params[:facilitator_id].presence || params.dig(:user, :facilitator_id).presence
-    @user.facilitator = Facilitator.find(facilitator_id) if facilitator_id
+    # assign person
+    person_id = params[:person_id].presence || params.dig(:user, :person_id).presence
+    @user.person = Person.find(person_id) if person_id
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
@@ -101,21 +101,18 @@ class UsersController < ApplicationController
   end
 
   # ---------------------------------------------------------
-  # FACILITATOR
+  # PERSON
   # ---------------------------------------------------------
-
-  def generate_facilitator
-    authorize! @user
-
-    if @user.facilitator.present?
-      redirect_to @user.facilitator and return
-    end
-
-    @facilitator = FacilitatorFromUserService.new(user: @user).call
-    if @facilitator.save
-      redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
+  def generate_person
+    if @user.person.present?
+      redirect_to @user.person and return
     else
-      redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}"
+      @person = PersonFromUserService.new(user: @user).call
+      if @person.save
+        redirect_to @person, notice: "Person was successfully created for this user." and return
+      else
+        redirect_to @user, alert: "Unable to create person: #{@person.errors.full_messages.join(", ")}" and return
+      end
     end
   end
 
@@ -182,15 +179,14 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
-  def set_facilitator
-    @facilitator = @user.facilitator ||
-      (Facilitator.find(params[:facilitator_id]) if params[:facilitator_id].present?)
+  def set_person
+    @person = @user.person || (Person.where(id: params[:person_id]).first if params[:person_id].present?)
   end
 
   def set_form_variables
-    set_facilitator
+    set_person
     @user.organization_users.first || @user.organization_users.build
-    organizations = current_user&.super_user? ? Organization.active : current_user.organizations
+    organizations = authorized_scope(Organization.all)
     @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
 
@@ -204,7 +200,7 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :email, :confirmed, :comment, :facilitator_id, :inactive, :primary_address, :time_zone, :super_user,
+      :email, :confirmed, :comment, :person_id, :inactive, :primary_address, :time_zone, :super_user,
 
       ##### legacy to remove later
       :agency_id, :legacy, :legacy_id, :subscribecode, :avatar, :first_name, :last_name, # legacy to remove later
