@@ -53,7 +53,7 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: { case_sensitive: false }
   validate :time_zone_must_be_valid, if: :time_zone_changed?
   validate :facilitator_id_must_be_present_if_previously_set, on: :update
-  validates_associated :project_users
+  validates_associated :organization_users
 
   # Search Cop
   include SearchCop
@@ -105,8 +105,8 @@ class User < ApplicationRecord
     facilitator&.first_name.presence || first_name.presence || email
   end
 
-  def submitted_monthly_report(submitted_date = Date.today, windows_type, project_id)
-    Report.where(project_id: project_id, type: "MonthlyReport", date: submitted_date,
+  def submitted_monthly_report(submitted_date = Date.today, windows_type, organization_id)
+    Report.where(organization_id: organization_id, type: "MonthlyReport", date: submitted_date,
       windows_type: windows_type).last
   end
 

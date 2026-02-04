@@ -89,7 +89,7 @@ class StoryIdeasController < ApplicationController
 
   def set_form_variables
     @user = User.find(params[:user_id]) if params[:user_id].present?
-    @projects = (@user || current_user)&.projects&.order(:name)
+    @organizations = (@user || current_user)&.organizations&.order(:name) || Organization.none
     @windows_types = WindowsType.all
     @workshops = Workshop.order(:title)
 
@@ -108,7 +108,7 @@ class StoryIdeasController < ApplicationController
     params.require(:story_idea).permit(
       :title, :body, :youtube_url,
       :permission_given, :publish_preferences, :promoted_to_story,
-      :windows_type_id, :project_id, :workshop_id, :external_workshop_title
+      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title
     )
   end
 end

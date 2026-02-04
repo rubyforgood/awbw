@@ -61,13 +61,13 @@ class TaggingSearchService
                       .paginate(page: pages[:facilitators] || 1, per_page: number_of_items_per_page)
                       .decorate,
 
-      projects: Project
+      organizations: Organization
                   .includes(:sectors)
                   .published
                   .sector_names(sector_names)
                   .category_names(category_names)
                   .order(:name)
-                  .paginate(page: pages[:projects] || 1, per_page: number_of_items_per_page)
+                  .paginate(page: pages[:organizations] || 1, per_page: number_of_items_per_page)
                   .decorate,
 
       quotes: Quote

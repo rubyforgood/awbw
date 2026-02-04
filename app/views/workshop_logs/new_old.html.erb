@@ -120,7 +120,7 @@
           ({
             type: "Post",
             url: "validate_new",
-            data: "project_id=" + $('#workshop_log_project_id option:selected').val() + "&month=" + month + "&year=" + year + "&windows_type= " + windows_type,
+            data: "organization_id=" + $('#workshop_log_organization_id option:selected').val() + "&month=" + month + "&year=" + year + "&windows_type= " + windows_type,
             success: function (result) {
               if (result['validate'] === false) {
                 $("#btn_submit").attr("disabled", true);
@@ -194,11 +194,11 @@
         }
       }
     });
-    var project_id = $('#project-select select');
-    if (project_id.val() === '') {
-      project_id.addClass('scroll-to-error');
-      project_id.addClass('error-select-custom');
-      project_id.closest('.form-group').append('<p class="error-custom-message">Please complete this field</p>');
+    var organization_id = $('#organization-select select');
+    if (organization_id.val() === '') {
+      organization_id.addClass('scroll-to-error');
+      organization_id.addClass('error-select-custom');
+      organization_id.closest('.form-group').append('<p class="error-custom-message">Please complete this field</p>');
     } else {
       project_id.removeClass('scroll-to-error');
       project_id.removeClass('error-select-custom');
