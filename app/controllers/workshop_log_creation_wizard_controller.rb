@@ -6,7 +6,7 @@ class WorkshopLogCreationWizardController < ApplicationController
 
   def show
     @user = current_user
-    @agencies = current_user.projects
+    @agencies = current_user.organizations
     windows_type_id = params[:windows_type_id] || WindowsType.where(short_name: "COMBINED")
     @windows_type = WindowsType.find(windows_type_id) if windows_type_id
     send(step)
@@ -15,7 +15,7 @@ class WorkshopLogCreationWizardController < ApplicationController
 
   def update
     @user = current_user
-    @agencies = current_user.projects
+    @agencies = current_user.organizations
     windows_type_id = params["workshop"]["workshop_logs_attributes"].values[0]["windows_type_id"]
     @windows_type = WindowsType.find(windows_type_id)
     send("update_#{step}")
@@ -155,7 +155,7 @@ class WorkshopLogCreationWizardController < ApplicationController
       :title, :date, :windows_type_id,
       workshop_logs_attributes: [ :user_id, :rating, :reaction, :similarities, :is_embodied_art_workshop,
                                  :successes, :challenges, :differences, :date,
-                                 :suggestions, :questions, :lead_similar, :project_id,
+                                 :suggestions, :questions, :lead_similar, :organization_id,
                                  :num_participants_on_going, :num_participants_first_time,
                                  report_form_field_answers_attributes:
                                   [ :form_field_id, :answer_option_id, :answer, :_create ]

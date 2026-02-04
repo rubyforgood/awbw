@@ -35,13 +35,13 @@
       <% end %>
     <% end %>
 
-    <% if current_user&.super_user && current_user.project_users.any? %>
-      <% current_user.project_users.each do |project_user| %>
-        <%= link_to project_path(project_user.project),
+    <% if current_user&.super_user && current_user.organization_users.any? %>
+      <% current_user.organization_users.each do |organization_user| %>
+        <%= link_to organization_path(organization_user.organization),
                     class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
           <i class="fas fa-users"></i>
           <span>
-            My team<%= " (" + project_user.project.name.truncate(12) + ")" if current_user.project_users.many? %>
+            My team<%= " (" + organization_user.organization.name.truncate(12) + ")" if current_user.organization_users.many? %>
           </span>
         <% end %>
       <% end %>

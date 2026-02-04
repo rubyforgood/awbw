@@ -1,5 +1,5 @@
 class Organization < ApplicationRecord
-  include TagFilterable, Trendable, ViewCountable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true

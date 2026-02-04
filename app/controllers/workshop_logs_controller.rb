@@ -124,7 +124,7 @@ class WorkshopLogsController < ApplicationController
                         .joins(:workshop_logs)
                         .distinct
                         .order(:last_name, :first_name)
-    @projects = if current_user.super_user?
+    @organizations = if current_user.super_user?
       # Organization.where(id: @workshop_logs_unpaginated.pluck(:organization_id)).order(:name)
       Organization.active.order(:name)
     else

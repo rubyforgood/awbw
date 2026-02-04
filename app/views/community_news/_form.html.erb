@@ -37,12 +37,12 @@
 
   <!-- Associations -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <%= f.input :project_id,
+    <%= f.input :organization_id,
                 as: :select,
                 label: "Organization",
                 required: false,
                 collection: @organizations,
-                selected: f.object.project_id,
+                selected: f.object.organization_id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
     <%= f.input :author_id,

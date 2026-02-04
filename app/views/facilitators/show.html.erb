@@ -82,14 +82,14 @@
         <% if @facilitator.profile_show_affiliations? %>
           <div>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Organizational affiliations</h2>
-            <% if @facilitator.user && @facilitator.user.project_users.active.any? %>
+            <% if @facilitator.user && @facilitator.user.organization_users.active.any? %>
               <ul class="space-y-2">
-                <% @facilitator.user.project_users.active.each do |pu| %>
+                <% @facilitator.user.organization_users.active.each do |pu| %>
                   <li>
                     <% if pu.title.present? || pu.position.present? %>
                       <span class="text-gray-600"><%= pu.title.presence || pu.position.humanize %> - </span>
                     <% end %>
-                    <%= link_to pu.project.name, project_path(pu.project),
+                    <%= link_to pu.organization.name, organization_path(pu.organization),
                                 class: "text-blue-600 hover:underline font-medium" %>
                   </li>
                 <% end %>

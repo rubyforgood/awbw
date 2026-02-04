@@ -30,10 +30,10 @@ class Tag
       path: -> { Rails.application.routes.url_helpers.facilitators_path },
       klass: Facilitator
     },
-    projects: {
+    organizations: {
       icon: "🏫",
-      path: -> { Rails.application.routes.url_helpers.projects_path },
-      klass: ::Project
+      path: -> { Rails.application.routes.url_helpers.organizations_path },
+      klass: Organization
     },
     quotes: {
       icon: "💬",

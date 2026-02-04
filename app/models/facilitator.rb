@@ -57,10 +57,10 @@ class Facilitator < ApplicationRecord
   scope :published, -> { active.searchable }
   scope :published, ->(published = nil) { published ? active.searchable(published) : active.searchable }
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
-  scope :project_name, ->(project_name) {
-    return all if project_name.blank?
-    left_joins(user: { project_users: :project })
-      .where("projects.name LIKE ?", "%#{sanitize_sql_like(project_name)}%")
+  scope :organization_name, ->(organization_name) {
+    return all if organization_name.blank?
+    left_joins(user: { organization_users: :organization })
+      .where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
       .distinct }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
@@ -70,7 +70,7 @@ class Facilitator < ApplicationRecord
     results = results.search(params[:contact_info]) if params[:contact_info].present?
     results = results.sector_names(params[:sector_names]) if params[:sector_names].present?
     results = results.sector_names(params[:category_names]) if params[:category_names].present?
-    results = results.project_name(params[:project_name]) if params[:project_name].present?
+    results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results
   end

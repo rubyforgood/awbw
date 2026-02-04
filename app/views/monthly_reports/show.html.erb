@@ -24,7 +24,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800">
         <div>
           <p><span class="font-semibold text-gray-700">Facilitator:</span> <%= @monthly_report.user&.name || "—" %></p>
-          <p><span class="font-semibold text-gray-700">Organization:</span> <%= @monthly_report.project&.name || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Organization:</span> <%= @monthly_report.organization&.name || "—" %></p>
         </div>
         <div>
           <p><span class="font-semibold text-gray-700">Report date:</span> <%= @monthly_report.date&.strftime("%B %d, %Y") || "—" %></p>

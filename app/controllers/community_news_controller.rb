@@ -7,7 +7,7 @@ class CommunityNewsController < ApplicationController
       per_page = params[:number_of_items_per_page].presence || 12
       unfiltered = current_user.super_user? ? CommunityNews.all : CommunityNews.published
       filtered = unfiltered.search_by_params(params)
-      @community_news = filtered&.includes([ :bookmarks, :primary_asset, :author, :project, author: :facilitator ])
+      @community_news = filtered&.includes([ :bookmarks, :primary_asset, :author, :organization, author: :facilitator ])
                               &.paginate(page: params[:page], per_page: per_page)&.decorate
 
       @count_display = if filtered.count == unfiltered.count
@@ -79,7 +79,7 @@ class CommunityNewsController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @organizations = Project.pluck(:name, :id).sort_by(&:first)
+    @organizations = Organization.pluck(:name, :id).sort_by(&:first)
     @authors = User.active.or(User.where(id: @community_news.author_id))
                    .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
   end
@@ -95,7 +95,7 @@ class CommunityNewsController < ApplicationController
     params.require(:community_news).permit(
       :title, :rhino_body, :published, :featured, :public, :public_featured,
       :reference_url, :youtube_url,
-      :project_id,
+      :organization_id,
       :author_id, :created_by_id, :updated_by_id
     )
   end

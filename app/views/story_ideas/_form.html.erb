@@ -8,7 +8,7 @@
     <% if promoted_to_story %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
       <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
-      <%= f.hidden_field :project_id, value: f.object.project_id %>
+      <%= f.hidden_field :organization_id, value: f.object.organization_id %>
       <%= f.hidden_field :title, value: f.object.title %>
       <%= f.hidden_field :body, value: f.object.body %>
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
@@ -61,9 +61,9 @@
       </div>
 
       <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :project_id,
+        <%= f.input :organization_id,
                     label: "Organization",
-                    collection: @projects, label_method: :name, value_method: :id,
+                    collection: @organizations, label_method: :name, value_method: :id,
                     disabled: promoted_to_story,
                     input_html: {
                       class: ("readonly" if promoted_to_story)

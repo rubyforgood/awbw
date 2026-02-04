@@ -152,8 +152,8 @@ class Report < ApplicationRecord
   end
 
   def set_windows_type
-    return unless project && windows_type.nil?
-    update(windows_type_id: project.windows_type.id)
+    return unless organization && windows_type.nil?
+    update(windows_type_id: organization.windows_type.id)
   end
 
   def create_notification

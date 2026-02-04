@@ -6,7 +6,7 @@ class StoryIdeasController < ApplicationController
     per_page = params[:number_of_items_per_page].presence || 25
 
 
-    story_ideas = StoryIdea.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
+    story_ideas = StoryIdea.includes(:windows_type, :organization, :workshop, :created_by, :updated_by)
     @story_ideas = story_ideas.order(created_at: :desc)
                               .paginate(page: params[:page], per_page: per_page).decorate
 
@@ -64,7 +64,7 @@ class StoryIdeasController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @user = User.find(params[:user_id]) if params[:user_id].present?
-    @projects = (@user || current_user).projects.order(:name)
+    @organizations = (@user || current_user).organizations.order(:name)
     @windows_types = WindowsType.all
     @workshops = Workshop.all.order(:title)
     @users = User.active.or(User.where(id: @story_idea.created_by_id))
@@ -82,7 +82,7 @@ class StoryIdeasController < ApplicationController
     params.require(:story_idea).permit(
       :title, :body, :youtube_url,
       :permission_given, :publish_preferences, :promoted_to_story,
-      :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
+      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
     )
   end
