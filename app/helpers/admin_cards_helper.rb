@@ -13,7 +13,7 @@ module AdminCardsHelper
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime),
       model_card(:resources, icon: "📚"),
       model_card(:workshops, icon: "🎨"),
-      model_card(:projects, icon: "🏫"),
+      model_card(:organizations, icon: "🏫"),
       model_card(:users, icon: "👥",  title: "User accounts")
     ]
   end

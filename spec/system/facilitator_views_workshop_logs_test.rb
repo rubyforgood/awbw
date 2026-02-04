@@ -16,12 +16,12 @@ RSpec.describe "Facilitators can view a submitted workshop log" do
         @workshop1 = create(:workshop, title: 'The best workshop in the world', windows_type: windows_type, featured: true)
         @workshop2 = create(:workshop, title: 'Art therapy for beginners', windows_type: windows_type, featured: false)
 
-        @project = create(:project, name: "Test Project", windows_type_id: windows_type.id)
-        ProjectUser.create!(user: @user, project: @project, position: :default, title: "Project user")
+        @organization = create(:organization, name: "Test Project", windows_type_id: windows_type.id)
+        OrganizationUser.create!(user: @user, organization: @organization, position: :default, title: "Project user")
 
         @workshop_log1 = create(:workshop_log,
           workshop_id: @workshop1.id,
-          project_id: @project.id,
+          organization_id: @organization.id,
           user_id: @user.id,
           date: 1.day.ago,
           adults_first_time: 4,
@@ -33,7 +33,7 @@ RSpec.describe "Facilitators can view a submitted workshop log" do
 
         @workshop_log2 = create(:workshop_log,
           workshop_id: @workshop2.id,
-          project_id: @project.id,
+          organization_id: @organization.id,
           user_id: @user.id,
           date: 2.months.ago,
           adults_first_time: 2,

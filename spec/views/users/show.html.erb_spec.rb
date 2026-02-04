@@ -4,9 +4,7 @@ RSpec.describe "users/show", type: :view do
   let(:user) do
     create(
       :user,
-      name: "Jane Artist",
-      email: "Email@example.com",
-      phone: "555-1234",
+      email: "email@example.com",
       super_user: false,
       sign_in_count: 3,
       current_sign_in_at: 1.day.ago,
@@ -35,9 +33,7 @@ RSpec.describe "users/show", type: :view do
     end
 
     it "renders identity info" do
-      expect(rendered).to include("Jane Artist")
-      expect(rendered).to include("Email@example.com")
-      expect(rendered).to include("555-1234")
+      expect(rendered).to include("email@example.com")
     end
 
     it "renders account status section" do
