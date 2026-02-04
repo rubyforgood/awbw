@@ -47,7 +47,7 @@ class CommunityNews < ApplicationRecord
   scope :community_news_name, ->(community_news_name) {
     community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
   scope :featured, -> { where(featured: true) }
-  scope :public_featured, -> { published.where(public_featured: true) }
+  scope :publicly_featured, -> { published.where(publicly_featured: true) }
   scope :publicly_visible, -> { published.where(publicly_visible: true) }
   scope :published, ->(published = nil) {
     [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_04_163604) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -272,7 +272,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_163604) do
     t.integer "created_by_id", null: false
     t.boolean "featured"
     t.integer "project_id"
-    t.boolean "public_featured", default: false, null: false
+    t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published"
     t.string "reference_url"
@@ -322,7 +322,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_163604) do
     t.datetime "end_date", precision: nil
     t.boolean "featured", default: false, null: false
     t.boolean "inactive", default: true, null: false
-    t.boolean "public_featured", default: false, null: false
+    t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.datetime "registration_close_date", precision: nil
     t.datetime "start_date", precision: nil
@@ -670,7 +670,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_163604) do
     t.integer "legacy_id"
     t.boolean "male", default: false
     t.integer "position"
-    t.boolean "public_featured", default: false, null: false
+    t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.text "text", size: :long
     t.string "title"
@@ -712,7 +712,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_163604) do
     t.boolean "featured", default: false, null: false
     t.boolean "permission_given"
     t.integer "project_id"
-    t.boolean "public_featured", default: false, null: false
+    t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
     t.integer "spotlighted_facilitator_id"
@@ -1045,7 +1045,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_163604) do
     t.text "project", size: :long
     t.text "project_spanish", size: :long
     t.string "pub_issue"
-    t.boolean "public_featured", default: false, null: false
+    t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "searchable", default: false
     t.text "setup", size: :long

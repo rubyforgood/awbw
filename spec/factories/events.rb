@@ -8,7 +8,7 @@ FactoryBot.define do
     registration_close_date { 13.days.from_now }
     inactive { false }
     cost_cents { 1099 }
-    public { false }
+    publicly_visible { false }
 
     trait :registration_closed do
       registration_close_date { 13.days.ago }

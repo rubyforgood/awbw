@@ -2,7 +2,7 @@ module Featureable
   extend ActiveSupport::Concern
 
   included do
-    scope :featured, -> { where(featured: true, inactive: false) }
-    scope :public_featured, -> { where(public_featured: true, publicly_visible: true, inactive: false) }
+    scope :featured, -> { published.where(featured: true) }
+    scope :publicly_featured, -> { published.where(publicly_featured: true, publicly_visible: true) }
   end
 end

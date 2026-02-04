@@ -119,7 +119,7 @@ class Workshop < ApplicationRecord
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :legacy, -> { where(legacy: true) }
-  scope :public_featured, -> { published.where(public_featured: true) }
+  scope :publicly_featured, -> { published.where(publicly_featured: true) }
   scope :publicly_visible, -> { published.where(publicly_visible: true) }
   scope :published, ->(published = nil) { published.to_s.present? ?
            where(inactive: !published) : where(inactive: false) }
@@ -141,8 +141,8 @@ class Workshop < ApplicationRecord
       .select("workshops.*, COUNT(bookmarks.id) AS bookmarks_count")
       .group("workshops.id")
   }
-  scope :featured_or_public_featured, -> {
-    where("(featured = ? OR public_featured = ?) AND inactive = ?", true, true, false)
+  scope :featured_or_publicly_featured, -> {
+    where("(featured = ? OR publicly_featured = ?) AND inactive = ?", true, true, false)
   }
 
   # Search Cop
@@ -282,13 +282,13 @@ class Workshop < ApplicationRecord
   end
 
   def invalidate_featured_cache_if_changed
-    if featured_or_public_featured_changed?
-      Rails.cache.delete("featured_and_public_featured_workshop_ids")
+    if featured_or_publicly_featured_changed?
+      Rails.cache.delete("featured_and_publicly_featured_workshop_ids")
     end
   end
 
-  def featured_or_public_featured_changed?
-    featured_changed? || public_featured_changed? || inactive_changed?
+  def featured_or_publicly_featured_changed?
+    featured_changed? || publicly_featured_changed? || inactive_changed?
   end
 
   def attach_assets_from_idea!

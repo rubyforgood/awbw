@@ -35,7 +35,7 @@ RSpec.describe DashboardPolicy, type: :policy do
       it "returns featured scope for authenticated users" do
         scope = policy.apply_scope(Workshop.all, type: :active_record_relation)
         expect(scope.to_sql).to include('`workshops`.`featured` = TRUE')
-        expect(scope.to_sql).not_to include('`workshops`.`public_featured` = TRUE')
+        expect(scope.to_sql).not_to include('`workshops`.`publicly_featured` = TRUE')
       end
     end
 
@@ -45,16 +45,16 @@ RSpec.describe DashboardPolicy, type: :policy do
       it "returns featured scope for authenticated users" do
         scope = policy.apply_scope(Workshop.all, type: :active_record_relation)
         expect(scope.to_sql).to include('`workshops`.`featured` = TRUE')
-        expect(scope.to_sql).not_to include('`workshops`.`public_featured` = TRUE')
+        expect(scope.to_sql).not_to include('`workshops`.`publicly_featured` = TRUE')
       end
     end
 
     context "without user" do
       let(:policy) { policy_for(record: Workshop, user: nil) }
 
-      it "returns public_featured scope for unauthenticated users" do
+      it "returns publicly_featured scope for unauthenticated users" do
         scope = policy.apply_scope(Workshop.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`workshops`.`public_featured` = TRUE')
+        expect(scope.to_sql).to include('`workshops`.`publicly_featured` = TRUE')
         expect(scope.to_sql).not_to include('`workshops`.`featured` = TRUE')
       end
     end
