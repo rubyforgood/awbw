@@ -10,7 +10,7 @@ class User < ApplicationRecord
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Associations
-  belongs_to :facilitator, optional: true
+  belongs_to :person, optional: true
   has_many :bookmarks, dependent: :destroy
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :notifications, as: :noticeable
@@ -85,8 +85,8 @@ class User < ApplicationRecord
   end
 
   def full_name
-    if facilitator
-      facilitator.full_name
+    if person
+      person.full_name
     else
       if !first_name || first_name.empty?
         email
@@ -97,7 +97,7 @@ class User < ApplicationRecord
   end
 
   def devise_email_name
-    facilitator&.first_name.presence || first_name.presence || email
+    person&.first_name.presence || first_name.presence || email
   end
 
   def submitted_monthly_report(submitted_date = Date.today, windows_type, project_id)

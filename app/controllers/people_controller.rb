@@ -1,26 +1,26 @@
-class FacilitatorsController < ApplicationController
+class PeopleController < ApplicationController
   include AhoyTracking
-  before_action :set_facilitator, only: %i[ show edit update destroy ]
+  before_action :set_person, only: %i[ show edit update destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    facilitators = Facilitator
+    people = Person
                      .searchable
                      .search_by_params(params.to_unsafe_h)
                       .includes(:user, :avatar_attachment, :sectorable_items, user: [ :avatar_attachment, :projects ]).references(:user)
                      .order(:first_name, :last_name)
-    @count_display = facilitators.size
-    @facilitators = facilitators.paginate(page: params[:page], per_page: per_page)
+    @count_display = people.size
+    @people = people.paginate(page: params[:page], per_page: per_page)
   end
 
   def show
-    @facilitator = Facilitator.find(params[:id]).decorate
-    track_view(@facilitator)
+    @person = Person.find(params[:id]).decorate
+    track_view(@person)
   end
 
   def new
     set_user
-    @facilitator = @user ? FacilitatorFromUserService.new(user: @user).call : Facilitator.new
+    @person = @user ? PersonFromUserService.new(user: @user).call : Person.new
     set_form_variables
   end
 
@@ -29,12 +29,12 @@ class FacilitatorsController < ApplicationController
   end
 
   def create
-    @facilitator = Facilitator.new(facilitator_params.except(:user_attributes))
-    @facilitator.user ||= (User.find(params[:facilitator][:user_attributes][:id]) if params[:facilitator][:user_attributes])
+    @person = Person.new(person_params.except(:user_attributes))
+    @person.user ||= (User.find(params[:person][:user_attributes][:id]) if params[:person][:user_attributes])
 
     respond_to do |format|
-      if @facilitator.save
-        format.html { redirect_to @facilitator, notice: "Facilitator was successfully created." }
+      if @person.save
+        format.html { redirect_to @person, notice: "Person was successfully created." }
       else
         set_form_variables
         format.html { render :new, status: :unprocessable_content }
@@ -44,8 +44,8 @@ class FacilitatorsController < ApplicationController
 
   def update
     respond_to do |format|
-      if @facilitator.update(facilitator_params)
-        format.html { redirect_to @facilitator, notice: "Facilitator was successfully updated." }
+      if @person.update(person_params)
+        format.html { redirect_to @person, notice: "Person was successfully updated." }
       else
         set_form_variables
         format.html { render :edit, status: :unprocessable_content }
@@ -54,35 +54,35 @@ class FacilitatorsController < ApplicationController
   end
 
   def destroy
-    @facilitator.destroy
+    @person.destroy
 
     respond_to do |format|
-      format.html { redirect_to facilitators_path, status: :see_other, notice: "Facilitator was successfully destroyed." }
+      format.html { redirect_to people_path, status: :see_other, notice: "Person was successfully destroyed." }
     end
   end
 
   private
   # Use callbacks to share common setup or constraints between actions.
-  def set_facilitator
-    @facilitator = Facilitator.find(params[:id])
+  def set_person
+    @person = Person.find(params[:id])
   end
 
   def set_user
     if params[:user_id].present?
       @user ||= User.find_by(id: params[:user_id])
       if @user
-        @facilitator&.user ||= @user
-        @user.facilitator ||= @facilitator
+        @person&.user ||= @user
+        @user.person ||= @person
       end
     end
   end
 
   def set_form_variables
     set_user
-    # @facilitator.build_user if @facilitator.user.blank? # Build a fresh one if missing
+    # @person.build_user if @person.user.blank? # Build a fresh one if missing
 
-    if @facilitator.user
-      @facilitator.user.project_users.first || @facilitator.user.project_users.build
+    if @person.user
+      @person.user.project_users.first || @person.user.project_users.build
     end
     projects = if current_user.super_user?
       Project.active
@@ -94,8 +94,8 @@ class FacilitatorsController < ApplicationController
 
 
   # Only allow a list of trusted parameters through.
-  def facilitator_params
-    params.require(:facilitator).permit(
+  def person_params
+    params.require(:person).permit(
       :avatar,
       :first_name, :last_name,
       :email, :email_type,
@@ -157,7 +157,7 @@ class FacilitatorsController < ApplicationController
         :_destroy
       ],
       user_attributes: [
-        :id, :facilitator_id,
+        :id, :person_id,
         :first_name,
         :last_name,
         :email,

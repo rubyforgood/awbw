@@ -1,17 +1,17 @@
-class Facilitator < ApplicationRecord
+class Person < ApplicationRecord
   include TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
 
-  has_one :user, inverse_of: :facilitator, dependent: :nullify
+  has_one :user, inverse_of: :person, dependent: :nullify
 
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
-  has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
+  has_many :stories_as_spotlighted_person, inverse_of: :spotlighted_person, class_name: "Story",
            dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, through: :user
