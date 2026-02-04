@@ -50,7 +50,7 @@ RSpec.describe "Facilitators can submit a story", type: :system do
   end
   select @user.name, from: 'story_created_by_id'
   # Submit
-  click_button 'Create Story'
+  click_button 'Submit'
 
   expect(page).to have_content("Story was successfully created.")
   expect(page).to have_content('Healing Through Art')
