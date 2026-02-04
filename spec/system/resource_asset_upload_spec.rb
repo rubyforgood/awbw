@@ -19,9 +19,8 @@ RSpec.describe "Resource asset upload", type: :system do
     )
 
     # Submit the asset form
-    click_button "Submit"
+    click_button "Upload Asset"
   end
-
 
   def delete_asset(asset_type:)
     div_prefix = case asset_type
