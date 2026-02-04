@@ -16,9 +16,9 @@
                         change_password_path,
                         class: "btn btn-secondary-outline" %>
           <% end %>
-          <%= link_to "Facilitator",
-                      facilitator_path(@user.facilitator),
-                      class: "btn btn-secondary-outline" if @user.facilitator %>
+          <%= link_to "Person",
+                      person_path(@user.person),
+                      class: "btn btn-secondary-outline" if @user.person %>
           <%= link_to "View",
                       user_path(@user),
                       class: "btn btn-secondary-outline" %>
