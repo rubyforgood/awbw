@@ -41,8 +41,8 @@
                   <% if user.facilitator %>
                     <%= facilitator_profile_button(user.facilitator) %>
                   <% else %>
-                    <%= link_to "Create facilitator",
-                                new_facilitator_path(user_id: user.id),
+                    <%= link_to "Create person",
+                                new_person_path(user_id: user.id),
                                 class: "btn btn-secondary-outline" %>
                   <% end %>
                 </td>
