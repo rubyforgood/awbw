@@ -388,8 +388,6 @@
 
 <%# =end %>
 
-    <div class="my-4"><%= render "assets/form", owner: workshop_idea %></div>
-
     <% if current_user.super_user? %>
       <div class="admin-only bg-blue-100 p-3">
         <%= f.input :staff_notes, as: :text,
@@ -408,4 +406,7 @@
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   <% end %>
+
+
+  <div class="my-4"><%= render "assets/form", owner: workshop_idea %></div>
 </div>
