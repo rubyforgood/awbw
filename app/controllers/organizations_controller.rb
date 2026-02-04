@@ -4,7 +4,7 @@ class OrganizationsController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Organization.includes(:logo_attachment, :windows_type, :project_status)
+    unpaginated = Organization.includes(:logo_attachment, :windows_type, :organization_status)
                               .search_by_params(params).order(:name)
     @organizations_count = unpaginated.count
     @organizations = unpaginated.paginate(page: params[:page], per_page: per_page)

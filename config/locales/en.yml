@@ -34,4 +34,4 @@ en:
   activerecord:
     attributes:
       workshop_log:
-        project: "Organization"
+        organization: "Organization"

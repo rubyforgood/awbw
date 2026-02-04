@@ -10,7 +10,7 @@ module DomainTheme
     stories:              :rose,
     events:               :blue,
     facilitators:         :sky,
-    projects:             :emerald,
+    organizations:        :emerald,
     quotes:               :slate,
 
     tags:                 :lime,

@@ -25,6 +25,6 @@ RSpec.describe "Community News Index", type: :system do
     visit community_news_index_path
 
     expect(page).to have_content("No community news yet")
-    expect(page).to have_content("Create a post")
+    expect(page).to have_content("Create a community news")
   end
 end

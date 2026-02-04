@@ -13,7 +13,7 @@ RSpec.describe User do
     it { should have_many(:workshop_logs) }
     it { should have_many(:reports) }
     # Through associations require more setup, test manually if complex
-    # it { should have_many(:communal_reports).through(:projects).source(:reports) }
+    # it { should have_many(:communal_reports).through(:organizations).source(:reports) }
     it { should have_many(:bookmarks).dependent(:destroy) }
     it { should have_many(:bookmarked_workshops).through(:bookmarks).source(:bookmarkable) }
     it { should have_many(:bookmarked_resources).through(:bookmarks).source(:bookmarkable) }

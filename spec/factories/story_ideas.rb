@@ -17,7 +17,7 @@ FactoryBot.define do
                body: story_idea.body,
                workshop: story_idea.workshop,
                windows_type: story_idea.windows_type,
-               project: story_idea.organization,
+               organization: story_idea.organization,
                created_by: story_idea.created_by,
                story_idea: story_idea)
       end
