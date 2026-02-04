@@ -38,8 +38,8 @@
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <!-- Avatar -->
                 <td class="px-4 py-2 text-left">
-                  <% if user.facilitator %>
-                    <%= facilitator_profile_button(user.facilitator) %>
+                  <% if user.person %>
+                    <%= person_profile_button(user.person) %>
                   <% else %>
                     <%= link_to "Create person",
                                 new_person_path(user_id: user.id),
