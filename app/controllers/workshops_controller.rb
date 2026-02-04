@@ -13,7 +13,7 @@ class WorkshopsController < ApplicationController
 
       @workshops = search_service.workshops
                                  .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges,
-                                   user: [ :facilitator ], primary_asset: [ :file_attachment ])
+                                   user: [ :person ], primary_asset: [ :file_attachment ])
                                  .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
       @workshops_count = search_service.workshops.size

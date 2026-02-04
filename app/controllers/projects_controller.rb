@@ -78,13 +78,13 @@ class ProjectsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @project_statuses = ProjectStatus.all
-    @facilitators_array = Facilitator.includes(:user)
+    @people_array = Person.includes(:user)
                                      .joins(:user)
                                      .order(:first_name, :last_name)
                                      .map { |f| [ f.name, f.user.id ] }
     @project.project_users = @project.project_users
                                      .includes(:project)
-                                     .sort_by { |pu| pu.user.facilitator&.name.to_s.downcase }
+                                     .sort_by { |pu| pu.user.person&.name.to_s.downcase }
   end
 
   def set_index_variables

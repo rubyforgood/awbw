@@ -1,5 +1,5 @@
-<%= simple_form_for @facilitator, html: { multipart: true, class: "space-y-8" } do |f| %>
-  <%= render 'shared/errors', resource: @facilitator if @facilitator.errors.any? %>
+<%= simple_form_for @person, html: { multipart: true, class: "space-y-8" } do |f| %>
+  <%= render 'shared/errors', resource: @person if @person.errors.any? %>
 
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
@@ -29,7 +29,7 @@
                                     start_year: 1991,
                                     end_year: Time.current.year,
                                     order: [:month, :year],
-                                    label: "Facilitator since",
+                                    label: "Person since",
                                     hint: "Pick Jan if you only know the year",
                                     input_html: {
                                       type: "date",
@@ -39,7 +39,7 @@
                       <% else %>
                         <div>
                           <label class="block text-md font-medium text-gray-700 mb-1">
-                            Facilitator since
+                            Person since
                           </label>
                           <span class="text-gray-900 font-medium">
                             <%= f.object.member_since&.to_date&.strftime("%B %d, %Y") || "—" %>
@@ -87,13 +87,13 @@
           <%= f.input :email_type,
                       label: "Primary email type",
                       as: :select,
-                      collection: Facilitator::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
+                      collection: Person::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
         <% end %>
         <%= f.input :email_2, label: "Secondary email" %>
         <%= f.input :email_2_type,
                     label: "Secondary email type",
                     as: :select,
-                    collection: Facilitator::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
+                    collection: Person::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
       </div>
     </div>
   </div>
@@ -143,7 +143,7 @@
 
   <!-- USER FIELDS -->
   <%= f.fields_for :user do |u| %>
-    <%= u.hidden_field :facilitator_id, value: f.object.id %>
+    <%= u.hidden_field :person_id, value: f.object.id %>
 
     <!-- Organization Connections (PROJECT_USERS) -->
     <div class="form-group space-y-4">
@@ -205,7 +205,7 @@
   </div>
 
 
-  <!-- FACILITATOR FIELDS -->
+  <!-- PERSON FIELDS -->
   <div class="space-y-6">
     <%= f.input :bio,
                 as: :text,
@@ -242,8 +242,8 @@
       <div class="pl-3 pr-3 pb-3">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
         <%= f.input :profile_is_searchable,
-                    hint: ("Findable on " + (link_to "facilitators index",
-                                                    facilitators_path,
+                    hint: ("Findable on " + (link_to "people index",
+                                                    people_path,
                                                     class: "underline")).html_safe %>
 
         <%= f.input :display_name_preference,
@@ -266,7 +266,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
-        <%= f.input :profile_show_member_since, label: "Show facilitator since" %>
+        <%= f.input :profile_show_member_since, label: "Show person since" %>
         <%= f.input :profile_show_bio, label: "Show bio" %>
         <%= f.input :profile_show_affiliations, label: "Show affiliations" %>
         <%= f.input :profile_show_sectors, label: "Show sectors" %>
@@ -292,12 +292,12 @@
 
   <!-- Actions -->
   <div class="mt-6 flex flex-wrap gap-3">
-    <% if @facilitator.persisted? && current_user.super_user? %>
-      <%= link_to "Delete", @facilitator, method: :delete,
+    <% if @person.persisted? && current_user.super_user? %>
+      <%= link_to "Delete", @person, method: :delete,
                   data: { confirm: "Are you sure?" },
                   class: "btn btn-danger-outline" %>
     <% end %>
-    <%= link_to "Cancel", facilitators_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "Cancel", people_path, class: "btn btn-secondary-outline" %>
     <%= f.submit "Submit", class: "btn btn-primary" %>
   </div>
 <% end %>

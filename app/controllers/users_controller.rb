@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status, :confirm_email, :send_reset_password_instructions ]
+  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_person, :toggle_lock_status, :confirm_email, :send_reset_password_instructions ]
 
   def index
     return redirect_to root_path unless current_user.super_user?
@@ -30,9 +30,9 @@ class UsersController < ApplicationController
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
 
-    # assign facilitator
-    facilitator_id = params[:facilitator_id].presence || params.dig(:user, :facilitator_id).presence
-    @user.facilitator = Facilitator.find(facilitator_id) if facilitator_id
+    # assign person
+    person_id = params[:person_id].presence || params.dig(:user, :person_id).presence
+    @user.person = Person.find(person_id) if person_id
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
@@ -87,15 +87,15 @@ class UsersController < ApplicationController
     end
   end
 
-  def generate_facilitator
-    if @user.facilitator.present?
-      redirect_to @user.facilitator and return
+  def generate_person
+    if @user.person.present?
+      redirect_to @user.person and return
     else
-      @facilitator = FacilitatorFromUserService.new(user: @user).call
-      if @facilitator.save
-        redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
+      @person = PersonFromUserService.new(user: @user).call
+      if @person.save
+        redirect_to @person, notice: "Person was successfully created for this user." and return
       else
-        redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}" and return
+        redirect_to @user, alert: "Unable to create person: #{@person.errors.full_messages.join(", ")}" and return
       end
     end
   end
@@ -146,13 +146,13 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
-  def set_facilitator
-    @facilitator = @user.facilitator ||
-      (Facilitator.where(id: params[:facilitator_id]).first if params[:facilitator_id].present?)
+  def set_person
+    @person = @user.person ||
+      (Person.where(id: params[:person_id]).first if params[:person_id].present?)
   end
 
   def set_form_variables
-    set_facilitator
+    set_person
     @user.project_users.first || @user.project_users.build
     projects = if current_user.super_user?
       Project.active
@@ -176,7 +176,7 @@ class UsersController < ApplicationController
       :address, :address2, :city, :city2, :state, :state2, :zip, :zip2,
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :comment,
       :notes, :primary_address, :avatar, :subscribecode,
-      :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
+      :agency_id, :person_id, :created_by_id, :updated_by_id,
       :confirmed, :inactive, :super_user, :legacy, :legacy_id,
       project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
     )

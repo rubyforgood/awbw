@@ -2,24 +2,24 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="flex items-center justify-between mb-4">
-        <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @facilitator.class.model_name.human %></h1>
+        <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @person.class.model_name.human %></h1>
         <div class="flex space-x-2">
-          <% if current_user.super_user? || current_user == @facilitator.user %>
+          <% if current_user.super_user? || current_user == @person.user %>
             <%= link_to "Change password",
                         change_password_path,
                         class: "btn btn-secondary-outline" %>
           <% end %>
-          <% if @facilitator.user %>
+          <% if @person.user %>
             <%= link_to "User account",
-                        edit_user_path(@facilitator.user),
+                        edit_user_path(@person.user),
                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
           <% else %>
             <%= link_to "Create user account",
-                        new_user_path(facilitator_id: @facilitator.id),
+                        new_user_path(person_id: @person.id),
                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
           <% end %>
           <%= link_to "Profile",
-                      facilitator_path(@facilitator),
+                      person_path(@person),
                       class: "btn btn-secondary-outline" %>
         </div>
       </div>
@@ -28,7 +28,7 @@
 
       <div class="space-y-6">
         <div class="mt-4">
-          <%= render "form", facilitator: @facilitator %>
+          <%= render "form", person: @person %>
         </div>
       </div>
     </div>
