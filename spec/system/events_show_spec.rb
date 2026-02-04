@@ -33,7 +33,7 @@ RSpec.describe "Event show page", type: :system do
     end
 
     it "blocks guests from non-public events" do
-      event.update!(public: false)
+      event.update!(publicly_visible: false)
 
       visit event_path(event)
 
@@ -186,7 +186,7 @@ RSpec.describe "Event show page", type: :system do
 
   describe "visibility rules" do
     it "hides inactive events from non-admins" do
-      event.update!(inactive: true, public: false)
+      event.update!(inactive: true, publicly_visible: false)
 
       sign_in(user)
       visit event_path(event)
@@ -195,7 +195,7 @@ RSpec.describe "Event show page", type: :system do
     end
 
     it "allows admins to view inactive events" do
-      event.update!(inactive: true, public: false)
+      event.update!(inactive: true, publicly_visible: false)
 
       sign_in(admin)
       visit event_path(event)
