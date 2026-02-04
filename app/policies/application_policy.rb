@@ -18,11 +18,11 @@ class ApplicationPolicy < ActionPolicy::Base
   end
 
   def index?
-    true
+    admin?
   end
 
   def show?
-    admin? || record.published?
+    admin?
   end
 
 
@@ -30,7 +30,7 @@ class ApplicationPolicy < ActionPolicy::Base
   # Define shared methods useful for most policies.
 
   def admin?
-    user&.super_user?
+    user&.admin?
   end
 
   def owner?

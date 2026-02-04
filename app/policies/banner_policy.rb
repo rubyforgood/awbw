@@ -1,18 +1,14 @@
-class AhoyActivityPolicy < ApplicationPolicy
+class BannerPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
-
-  def index?
-    admin?
+  #
+  # def index?
+  #   true
+  # end
+  #
+  def show?
+    admin? || record.published?
   end
-
-  def charts?
-    admin?
-  end
-
-  def visits?
-    admin?
-  end
-
+  #
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
   #

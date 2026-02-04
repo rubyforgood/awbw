@@ -35,3 +35,7 @@ en:
     attributes:
       workshop_log:
         project: "Organization"
+  helpers:
+    submit:
+      create: "Submit"
+      update: "Save changes"

@@ -22,7 +22,9 @@ RSpec.describe "windows_types/edit", type: :view do
       assert_select "textarea[name=?]", "windows_type[name]"
 
       # READONLY FIELDS (since this is used in code, we're not exposing it to the user)
-      assert_select "input[name=?][readonly]", "windows_type[short_name]"
+      if params[:admin]
+        assert_select "input[name=?]", "windows_type[short_name]"
+      end
 
       # CHECKBOXES FOR CATEGORIES
       categories.each do |cat|

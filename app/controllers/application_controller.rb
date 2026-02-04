@@ -1,4 +1,5 @@
 class ApplicationController < ActionController::Base
+  include ActionPolicy::Controller
   prepend ActionPolicy::Draper
 
   before_action :authenticate_user!  # ensures only logged-in users can access pages

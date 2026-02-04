@@ -1,22 +1,17 @@
-class ResourcePolicy < ApplicationPolicy
+class WorkshopPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
-  #
+
   def index?
     true
   end
 
   def show?
-    admin? || record.published? || (authenticated? && record.public?)
+    admin? || record.public? || (authenticated? && record.published?)
   end
 
-  def download?
-    true
-  end
-
-  def filter_published?
-    admin?
-  end
-
+  # Scoping
+  # See https://actionpolicy.evilmartians.io/#/scoping
+  #
   relation_scope do |relation|
     next relation if admin?
     if authenticated?

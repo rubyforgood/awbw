@@ -62,9 +62,17 @@ class WorkshopIdeasController < ApplicationController
   def set_form_variables
     @age_ranges = Category.includes(:category_type).where("category_types.name = 'AgeRange'").pluck(:name)
     @potential_series_workshops = Workshop.published.order(:title)
-    @category_types = CategoryType.includes(:categories).published.decorate
     @sectors = Sector.published
     @windows_types = WindowsType.all
+    # @category_types = CategoryType.includes(:categories).published.decorate
+    @categories_grouped =
+      Category
+        .includes(:category_type)
+        .published
+        .order(:name)
+        .group_by(&:category_type)
+        .select { |type, _| type.nil? || type.published? }
+        .sort_by { |type, _| type&.name.to_s.downcase }
   end
 
   private

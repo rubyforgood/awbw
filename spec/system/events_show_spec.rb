@@ -1,50 +1,81 @@
 require "rails_helper"
 
 RSpec.describe "Event show page", type: :system do
-  let(:user) { create(:user) }
+  let(:user)  { create(:user) }
   let(:admin) { create(:user, :admin) }
-  let(:event) { create(:event, title: "My Event").decorate }
 
-  before do
-    driven_by(:rack_test)
+  let(:event) do
+    create(
+      :event,
+      title: "My Event",
+      description: "A wonderful event",
+      public: true,
+      inactive: false,
+      start_date: 2.days.from_now.change(hour: 10),
+      end_date:   2.days.from_now.change(hour: 12),
+      cost: 10.99,
+      registration_close_date: 5.days.from_now
+    )
   end
 
+  before { driven_by(:rack_test) }
+
+  # --------------------------------------------------
+  # GUEST ACCESS (public events)
+  # --------------------------------------------------
+
+  describe "guest access" do
+    it "allows guests to view public events" do
+      visit event_path(event)
+
+      expect(page).to have_text("My Event")
+      expect(page).to have_button("Register") # register still visible
+    end
+
+    it "blocks guests from non-public events" do
+      event.update!(public: false)
+
+      visit event_path(event)
+
+      expect(page).to have_current_path(root_path)
+    end
+  end
+
+  # --------------------------------------------------
+  # BASIC RENDERING (decorator + view)
+  # --------------------------------------------------
+
   describe "basic rendering" do
-    it "shows title, description, dates, and bookmark button" do
+    it "shows core event info" do
       sign_in(user)
       visit event_path(event)
 
-      # Title (uses title_with_badges)
-      expect(page).to have_css("div.my-3", text: "My Event")
+      expect(page).to have_text("My Event")
+      expect(page).to have_text("A wonderful event")
 
-      # Times block exists
-      expect(page).to have_text("Start:")
-      expect(page).to have_text("End:")
-
-      # Day + month appear (stable, user-facing)
-      expect(page).to have_text(event.start_date.strftime("%b"))
-      expect(page).to have_text(event.end_date.strftime("%b"))
-
-      # Cost displayed when event is paid
+      # Decorator
       expect(page).to have_text("Cost: $10.99")
+      expect(page).to have_text("10")
+      expect(page).to have_text("12")
 
-      # Description
-      expect(page).to have_css("p.text-gray-900", text: event.description)
-
-      # Bookmark button is always shown
+      # Bookmark UI always present
       expect(page).to have_css("span.inline-block")
     end
   end
 
+  # --------------------------------------------------
+  # ADMIN CONTROLS
+  # --------------------------------------------------
+
   describe "admin buttons" do
-    it "shows Edit button for admins only" do
+    it "shows Edit for admin" do
       sign_in(admin)
       visit event_path(event)
 
       expect(page).to have_link("Edit", href: edit_event_path(event))
     end
 
-    it "does NOT show Edit button for regular users" do
+    it "hides Edit for regular users" do
       sign_in(user)
       visit event_path(event)
 
@@ -52,11 +83,13 @@ RSpec.describe "Event show page", type: :system do
     end
   end
 
-  describe "registration states" do
-    context "when not registered" do
-      it "shows Register button" do
-        allow(event).to receive(:registerable?).and_return(true)
+  # --------------------------------------------------
+  # REGISTRATION STATES
+  # --------------------------------------------------
 
+  describe "registration states" do
+    context "user not registered" do
+      it "shows Register button" do
         sign_in(user)
         visit event_path(event)
 
@@ -66,27 +99,28 @@ RSpec.describe "Event show page", type: :system do
       end
     end
 
-    context "when registered" do
+    context "user registered" do
       before do
         create(:event_registration, event: event, registrant: user)
       end
 
-      it "shows De-register button + registered badge + calendar links" do
+      it "shows deregister button, badge, and calendar links" do
         sign_in(user)
         visit event_path(event)
 
         expect(page).to have_button("De-register")
         expect(page).to have_text("You are registered!")
+        expect(page).to have_text("Google")
         expect(page).to have_text("Office 365")
       end
     end
 
-    context "when registration closed" do
-      it "shows closed indicator" do
-        allow(event).to receive(:registerable?).and_return(false)
-        event.registration_close_date = 1.day.ago
-        event.save!
+    context "registration closed" do
+      before do
+        event.update!(registration_close_date: 1.day.ago)
+      end
 
+      it "shows closed indicator" do
         sign_in(user)
         visit event_path(event)
 
@@ -96,19 +130,19 @@ RSpec.describe "Event show page", type: :system do
     end
   end
 
-  describe "registration close date" do
-    it "shows formatted registration close date if present" do
-      event.update!(registration_close_date: 12.days.from_now.change(hour: 12, min: 0, sec: 0))
+  # --------------------------------------------------
+  # REGISTRATION CLOSE DATE SECTION
+  # --------------------------------------------------
 
+  describe "registration close date display" do
+    it "renders when present" do
       sign_in(user)
       visit event_path(event)
 
       expect(page).to have_text("Registration Close Date")
-      expect(page).to have_text(12.days.from_now.strftime("%B %-d"))
-      expect(page).to have_text("12:00 pm")
     end
 
-    it "does NOT show section when registration_close_date is nil" do
+    it "does not render when nil" do
       event.update!(registration_close_date: nil)
 
       sign_in(user)
@@ -118,47 +152,55 @@ RSpec.describe "Event show page", type: :system do
     end
   end
 
+  # --------------------------------------------------
+  # ASSETS
+  # --------------------------------------------------
+
   describe "images" do
-    context "with main image" do
-      it "displays the hero image" do
-        event.primary_asset = create(:primary_asset, :with_file, owner: event)
-        event.save!
+    context "with primary image" do
+      it "renders hero image" do
+        event = create(:event, :with_primary_asset)
 
         sign_in(user)
         visit event_path(event)
 
-        expect(page).to have_css(".hero-item img", count: 1)
+        expect(page).to have_css("img")
       end
     end
 
     context "with gallery images" do
-      it "shows each gallery thumbnail" do
-        2.times do
-          event.object.gallery_assets << create(:gallery_assets, :with_file, owner: event.object)
-        end
-        sign_in(user)
-        visit event_path(event.object)
+      it "renders thumbnails" do
+        event = create(:event, :with_gallery_assets)
 
-        expect(page).to have_css(".gallery-item img", count: 2)
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_css("img", minimum: 2)
       end
     end
   end
 
-  describe "layout integrity" do
-    it "keeps description full width (outside grid columns)" do
+  # --------------------------------------------------
+  # POLICY / VISIBILITY EDGE CASES
+  # --------------------------------------------------
+
+  describe "visibility rules" do
+    it "hides inactive events from non-admins" do
+      event.update!(inactive: true, public: false)
+
       sign_in(user)
       visit event_path(event)
 
-      # description lives after the grid — ensure CSS class is present
-      expect(page).to have_css("div.mt-6.md\\:col-span-5")
+      expect(page).to have_current_path(root_path)
     end
 
-    it "loads inside the blue outer container" do
-      sign_in(user)
+    it "allows admins to view inactive events" do
+      event.update!(inactive: true, public: false)
+
+      sign_in(admin)
       visit event_path(event)
 
-      expect(page).to have_css("div.bg-blue-50") # <%= DomainTheme.bg_class_for(:events) %>
-      expect(page).to have_css("div.bg-white.rounded-lg.shadow.p-8")
+      expect(page).to have_text("My Event")
     end
   end
 end

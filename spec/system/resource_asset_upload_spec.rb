@@ -275,7 +275,7 @@ RSpec.describe "Resource asset upload", type: :system do
       within("form[id^='edit_resource_']") do
               fill_in "Title", with: title
               select "Handout", from: "Kind"
-              click_button "Submit"
+              click_button "Save changes"
             end
 
       sleep 0.2
@@ -302,7 +302,7 @@ RSpec.describe "Resource asset upload", type: :system do
       within("form[id^='edit_resource_']") do
         fill_in "Title", with: title
         select "Handout", from: "Kind"
-        click_button "Submit"
+        click_button "Save changes"
       end
 
       sleep 0.2

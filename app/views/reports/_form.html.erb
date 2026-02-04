@@ -138,7 +138,9 @@
   <!-- ######### row 3 ########## -->
   <div class="row">
     <div class="col-md-8 align-right">
-      <%= f.submit 'Submit', class: "btn btn-primary btn-blue btn-filled" %>
+      <div class="action-buttons mt-8 flex justify-center gap-3">
+        <%= f.button :submit, class: "btn btn-primary btn-blue btn-filled" %>
+      </div>
     </div>
   </div>
 <% end %>

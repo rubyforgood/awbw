@@ -1,16 +1,20 @@
-class AhoyActivityPolicy < ApplicationPolicy
+class StoryIdeaPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
-
-  def index?
-    admin?
+  #
+  # def index?
+  #   true
+  # end
+  #
+  def new?
+    authenticated?
   end
 
-  def charts?
-    admin?
+  def update?
+    admin?# || owner?
   end
 
-  def visits?
-    admin?
+  def show?
+    admin? || owner?
   end
 
   # Scoping

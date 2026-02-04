@@ -2,7 +2,7 @@
   <% f.input :created_by_id, as: :hidden, value: current_user.id %>
 
   <% if @event.errors.any? %>
-    <%= render 'shared/errors', resource: @event %>
+    <%= render "shared/errors", resource: @event %>
   <% end %>
 
   <%= tag.div class: "unpersisted_resource_asset_params" %>
@@ -43,9 +43,9 @@
     <div>
       <%= f.label :start_date, "Start time", required: true, class: "block font-medium mb-1" %>
 
-      <%= f.text_field :start_date, type: 'datetime-local',
+      <%= f.text_field :start_date, type: "datetime-local",
                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.start_date&.strftime('%Y-%m-%dT%H:%M'),
+                       value: @event.start_date&.strftime("%Y-%m-%dT%H:%M"),
                        required: true %>
 
       <% if f.object.errors[:start_date].any? %>
@@ -56,9 +56,9 @@
     <div>
       <%= f.label :end_date, "End time", required: true, class: "block font-medium mb-1" %>
 
-      <%= f.text_field :end_date, type: 'datetime-local',
+      <%= f.text_field :end_date, type: "datetime-local",
                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.end_date&.strftime('%Y-%m-%dT%H:%M'),
+                       value: @event.end_date&.strftime("%Y-%m-%dT%H:%M"),
                        required: true %>
 
       <% if f.object.errors[:end_date].any? %>
@@ -69,9 +69,9 @@
     <div>
       <%= f.label :registration_close_date, "Registration close time", class: "block font-medium mb-1" %>
 
-      <%= f.text_field :registration_close_date, type: 'datetime-local',
+      <%= f.text_field :registration_close_date, type: "datetime-local",
                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.registration_close_date&.strftime('%Y-%m-%dT%H:%M') %>
+                       value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
 
       <% if f.object.errors[:registration_close_date].any? %>
         <p class="text-red-500 text-sm mt-1">
@@ -92,10 +92,10 @@
         <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
 
         <%= f.text_field :cost,
-                         type: 'number',
-                         step: '0.01',
-                         min: '0',
-                         placeholder: '0.00',
+                         type: "number",
+                         step: "0.01",
+                         min: "0",
+                         placeholder: "0.00",
                          oninput: "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
                          class: "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
       </div>
@@ -109,14 +109,13 @@
   <div class="flex items-center justify-between gap-4">
     <div><%= "Created by: #{f.object.created_by.name}" if f.object.created_by %></div>
 
-    <div class="flex gap-4">
-      <%= link_to "Delete", @event, class: "btn btn-danger-outline", method: :delete, data: { confirm: "Are you sure?" } %>
-      <%= link_to 'Cancel', events_path, class: "btn btn-secondary-outline" %>
+    <div class="action-buttons mt-8 flex justify-center gap-3">
+      <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
+        <%= link_to "Delete", @event, method: :delete, class: "btn btn-danger-outline",
+                    data: { confirm: "Are you sure you want to delete?" } %>
+      <% end %>
+      <%= link_to "Cancel", events_path, class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
-
-      <!-- class: 'inline-flex items-center gap-2 px-4 py-2 rounded-lg -->
-      <!-- transition-colors duration-200 font-medium shadow-sm text-sm -->
-      <!-- border border-blue-600 text-grey-600 hover:bg-blue-600 hover:text-white' -->
     </div>
   </div>
 <% end %>

@@ -96,7 +96,7 @@ RSpec.describe "Workshops", type: :system do
         fill_in "workshop_title", with: "A New Title"
         select adult_window.short_name, from: "Workshop type" # windows_type required
 
-        click_on 'Submit'
+        click_on 'Save changes'
 
         # expect(workshop.reload.title).to eq("A New Title")
         expect(page).to have_content("A New Title")

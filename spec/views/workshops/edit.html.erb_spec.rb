@@ -18,6 +18,7 @@ RSpec.describe "workshops/edit", type: :view do
   context "when user is an admin" do
     before do
       allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).with(:destroy?, workshop).and_return(true)
       render
     end
 
