@@ -21,7 +21,8 @@ RSpec.describe "/faqs", type: :request do
   let(:regular_user)     { create(:user) }
   let!(:published_faq)   { create(:faq, question: "Published FAQ", answer: "Published FAQ Body", published: true) }
   let!(:unpublished_faq) { create(:faq, question: "Unpublished FAQ", answer: "Unpublished FAQ Body", published: false) }
-  let!(:public_faq) { create(:faq, question: "Public FAQ", answer: "Public FAQ Body", published: true, publicly_visible: true) }
+  let!(:public_faq) { create(:faq, question: "Public FAQ", answer: "Public FAQ Body", published: true,
+                             publicly_visible: true) }
 
   describe "GET /index" do
     context "as an admin" do
@@ -82,8 +83,7 @@ RSpec.describe "/faqs", type: :request do
         expect(response).to be_successful
       end
 
-      xit "shows only publicly_visible FAQs" do
-
+      it "shows only publicly_visible FAQs" do
         get faqs_path
         expect(response.body).to include("Public FAQ")
         expect(response.body).not_to include("Published FAQ")
