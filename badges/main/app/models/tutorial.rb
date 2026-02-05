@@ -28,12 +28,9 @@ class Tutorial < ApplicationRecord
   end
 
   scope :body, ->(body) { where("body like ?", "%#{ body }%") }
+  scope :publicly_visible, -> { published.where(publicly_visible: true) }
   scope :published, ->(published = nil) {
-    if [ "true", "false" ].include?(published)
-      where(published: published)
-    else
-      where(published: true)
-    end
+    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true)
   }
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
   scope :title, ->(title) { where("title like ?", "%#{ title }%") }

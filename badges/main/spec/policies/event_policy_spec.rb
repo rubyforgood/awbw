@@ -4,7 +4,7 @@ RSpec.describe EventPolicy, type: :policy do
   let(:admin_user) { build_stubbed :user, super_user: true }
   let(:regular_user) { build_stubbed :user, super_user: false }
   let(:published_event) { build_stubbed :event, inactive: false  }
-  let(:public_event) { build_stubbed :event, inactive: false, public: true  }
+  let(:public_event) { build_stubbed :event, inactive: false, publicly_visible: true  }
   let(:unpublished_event) { build_stubbed :event, inactive: true }
   let(:open_registration_event) { build_stubbed :event, inactive: false, registration_close_date: 1.day.from_now }
   let(:closed_registration_event) { build_stubbed :event, inactive: false, registration_close_date: 1.day.ago }

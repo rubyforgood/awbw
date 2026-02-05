@@ -105,14 +105,13 @@
              section_title: "Upload Images / Media Releases",
              section_subtitle: "Attach photos, PDFs, or signed media release forms" %>
 
-  <!-- Submit -->
-  <div class="mt-8 flex justify-center gap-3">
-    <% if  @workshop_log.persisted? && current_user.super_user? %>
-      <%= link_to "Delete", @workshop_log, class: "btn btn-danger-outline",
-                  method: :delete, data: { confirm: "Are you sure?" } %>
+  <div class="action-buttons mt-8 flex justify-center gap-3">
+    <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
+      <%= link_to "Delete", @workshop_log, method: :delete, class: "btn btn-danger-outline",
+                  data: { confirm: "Are you sure you want to delete?" } %>
     <% end %>
     <%= link_to "Cancel", workshop_logs_path, class: "btn btn-secondary-outline" %>
-    <%= f.button :submit, "Save Log", class: "btn btn-primary" %>
+    <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 <% end %>
 </div>

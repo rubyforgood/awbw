@@ -42,12 +42,13 @@ class CommunityNews < ApplicationRecord
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
 
-  scope :featured, -> { where(featured: true) }
-  scope :public_featured, -> { where(public_featured: true) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :community_news_name, ->(community_news_name) {
     community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
+  scope :featured, -> { where(featured: true) }
+  scope :publicly_featured, -> { published.where(publicly_featured: true) }
+  scope :publicly_visible, -> { published.where(publicly_visible: true) }
   scope :published, ->(published = nil) {
     [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }

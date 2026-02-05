@@ -7,6 +7,10 @@ class Faq < ApplicationRecord
   # Scopes
   scope :active, -> { where(inactive: false) }
   scope :by_position, -> { order(position: :asc) }
+  scope :publicly_visible, -> { published.where(publicly_visible: true) }
+  scope :published, ->(published = nil) {
+    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true)
+  }
 
   # Search Cop
   include SearchCop

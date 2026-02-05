@@ -8,6 +8,10 @@ RSpec.describe "workshop_ideas/new", type: :view do
     assign(:workshop_idea, WorkshopIdea.new)
     allow(view).to receive(:current_user).and_return(user)
     assign(:windows_types, [])
+    assign(:sectors, [])
+    assign(:age_ranges, [])
+    assign(:potential_series_workshops, [])
+    assign(:categories_grouped, {})
   end
 
   it "renders new workshop_idea form" do
