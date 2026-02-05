@@ -88,7 +88,7 @@ DATABASE_URL=trilogy://user:password@host:port/database?encoding=utf8mb4&collati
   - This will add sample workshops, community news, stories, resources, FAQs, and more
 - To see your data
   - The home page will show Workshops, CommunityNews, Resources, Events, and Stories
-  - The [Admin Dashboard](http://localhost:3000/dashboard/admin) provides CRUD access for most models
+  - The [Admin Home](http://localhost:3000/admin) provides CRUD access for most models
 
 ## Credentials
 

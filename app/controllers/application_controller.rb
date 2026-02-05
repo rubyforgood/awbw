@@ -2,6 +2,8 @@ class ApplicationController < ActionController::Base
   prepend ActionPolicy::Draper
 
   before_action :authenticate_user!  # ensures only logged-in users can access pages
+  before_action :set_current_user # for AhoyTrackable in models
+  after_action :flush_lifecycle_events
   around_action :set_time_zone_from_user, if: :current_user
 
   # TODO add this callback to verify
@@ -10,12 +12,14 @@ class ApplicationController < ActionController::Base
   #
   # verify_authorized
   #
-
+  #
   rescue_from ActionPolicy::Unauthorized do |exception|
     flash[:alert] = exception.message.presence || "You are not authorized to perform this action."
     redirect_back_or_to root_path
   end
-
+  def default_authorization_policy_class
+    ApplicationPolicy
+  end
   private
 
   def after_sign_in_path_for(resource)
@@ -30,6 +34,7 @@ class ApplicationController < ActionController::Base
     end
   end
 
+
   def set_time_zone_from_user
     zone = ActiveSupport::TimeZone[current_user&.time_zone]
     if zone
@@ -37,5 +42,18 @@ class ApplicationController < ActionController::Base
     else
       yield
     end
+  end
+
+  def authenticate_user!
+    super
+    ahoy.authenticate(current_user) if current_user
+  end
+
+  def flush_lifecycle_events
+    Analytics::LifecycleBuffer.flush(self)
+  end
+
+  def set_current_user
+    Current.user = current_user if user_signed_in?
   end
 end

@@ -2,6 +2,7 @@ require 'rails_helper'
 require 'securerandom'
 
 RSpec.describe Workshop do
+  it_behaves_like "featureable", factory: :workshop
   # pending "add some examples to (or delete) #{__FILE__}"
   describe 'associations' do
     # Need create for association tests to work correctly with callbacks/scopes

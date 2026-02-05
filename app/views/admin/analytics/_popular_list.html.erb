@@ -1,12 +1,12 @@
-<div class="<%= DomainTheme.bg_class_for(color) %> border rounded-lg shadow-sm p-5">
+<div class="<%= DomainTheme.bg_class_for(color) %> border border-gray-200 rounded-lg shadow-sm p-5">
   <div class="p-6">
-    <h3 class="font-semibold text-gray-900 mb-4">
+    <div class="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-3">
       <%= title %>
-    </h3>
+    </div>
 
-    <ul class="divide-y">
+    <ul class=""><!-- divide-y divide-gray-200-->
       <% records.each do |record| %>
-        <li class="py-2 flex justify-between items-center">
+        <li class="py-1 flex justify-between items-center">
           <%= link_to record.title, public_send(path_method, record),
                       class: "text-blue-600 hover:underline truncate" %>
 

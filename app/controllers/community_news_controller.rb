@@ -1,5 +1,5 @@
 class CommunityNewsController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable, AhoyViewTracking
+  include ExternallyRedirectable, AssetUpdatable, AhoyTracking
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -93,7 +93,7 @@ class CommunityNewsController < ApplicationController
   # Strong parameters
   def community_news_params
     params.require(:community_news).permit(
-      :title, :rhino_body, :published, :featured,
+      :title, :rhino_body, :published, :featured, :public, :public_featured,
       :reference_url, :youtube_url,
       :project_id,
       :author_id, :created_by_id, :updated_by_id

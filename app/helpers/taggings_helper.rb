@@ -2,7 +2,7 @@ module TaggingsHelper
   def tagged_index_path(type, sector_names:, category_names:)
     klass = Tag::TAGGABLE_META.fetch(type)[:klass]
 
-    params = {}
+    params = { published: true }
 
     if sector_names.present?
       sector_ids = Sector.names(sector_names).published.pluck(:id)

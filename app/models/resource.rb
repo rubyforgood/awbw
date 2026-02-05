@@ -1,5 +1,5 @@
 class Resource < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
@@ -76,8 +76,6 @@ class Resource < ApplicationRecord
   scope :by_featured_first, -> { order(featured: :desc, created_at: :desc) }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
-  scope :featured, ->(featured = nil) { featured.present? ? where(featured: featured) : where(featured: true) }
-  scope :visitor_featured, -> { where(visitor_featured: true) }
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds)
@@ -110,7 +108,6 @@ class Resource < ApplicationRecord
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.kinds(params[:kinds]) if params[:kinds].present?
     resources = resources.published_search(params[:published_search]) if params[:published_search].present?
-    resources = resources.featured(params[:featured]) if params[:featured].present?
     resources
   end
 

@@ -5,7 +5,7 @@ class CategoriesController < ApplicationController
     per_page = params[:number_of_items_per_page].presence || 25
     @category_types = CategoryType.order(:name)
 
-    unfiltered = Category.joins(:category_type)
+    unfiltered = Category.includes(:category_type).joins(:category_type)
     filtered = unfiltered.category_type_id(params[:category_type_id])
                           .category_name(params[:category_name])
                           .published_search(params[:published_search])

@@ -1,0 +1,52 @@
+<div class="max-w-7xl mx-auto px-6 py-8 space-y-10">
+  <div class="admin-only bg-blue-100 rounded p-6">
+    <div class="bg-gray-50 rounded p-6">
+
+      <!-- Header row -->
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+          Activity logs
+        </h1>
+      </div>
+
+      <!-- Header with User Dropdown -->
+      <div class="flex items-center space-x-2 text-2xl font-semibold text-gray-700 mb-8">
+        <span>Recent Activity for</span>
+
+        <% if current_user.super_user? %>
+          <%= form_with url: request.path, method: :get, local: true, html: { class: "inline-block" } do %>
+            <%= hidden_field_tag :page, params[:page] %>
+            <%= hidden_field_tag :per_page, params[:per_page] %>
+
+            <%= select_tag :user_id,
+                           options_from_collection_for_select(
+                             User.active.order(:first_name, :last_name),
+                             :id, :full_name, params[:user_id] || @user&.id
+                           ),
+                           include_blank: "All Users",
+                           class: "border border-gray-300 admin-only bg-blue-100 rounded-md px-2 py-1
+                 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+                           onchange: "this.form.submit()" %>
+          <% end %>
+        <% else %>
+          <%= @user&.full_name %>
+        <% end %>
+      </div>
+
+      <!-- Index list -->
+      <div class="space-y-1">
+        <% @recent_activities.each do |event| %>
+          <div class="activity-row">
+            <div class="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition p-0">
+              <%= render "recent_activity", activity: event %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="pagination flex justify-center mt-8">
+        <%= tailwind_paginate @recent_activities %>
+      </div>
+    </div>
+  </div>
+</div>

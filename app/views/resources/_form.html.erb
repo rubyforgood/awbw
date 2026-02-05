@@ -16,15 +16,14 @@
     <div class="flex-1 min-w-[200px]">
       <label class="block font-medium mb-1">Flags</label>
 
-      <div class="flex items-center gap-6">
-        <div><%= f.input :featured, as: :boolean, wrapper: false, label_html: { class: "inline" } %></div>
-
-        <div>
-          <%= f.input :inactive, as: :boolean,
-                      label: "Hidden?",
-                      wrapper: false, label_html: { class: "inline" } %>
+      <% if allowed_to?(:manage?, @resource) %>
+        <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
+          <%= f.input :inactive, as: :boolean, label: "Hidden?" %>
+          <%= f.input :featured, as: :boolean, label: "Featured?" %>
+          <%= f.input :public, as: :boolean, label: "Public?" %>
+          <%= f.input :public_featured, as: :boolean, label: "Public Featured?" %>
         </div>
-      </div>
+      <% end %>
     </div>
 
     <% if f.object.url.present? %>

@@ -106,7 +106,7 @@ puts "Creating Events…"
        .first_or_create!(
     description: Faker::Lorem.paragraph(sentence_count: 6),
     featured: [ true, false ].sample,
-    publicly_visible: [ true, true, false ].sample,
+    inactive: [ false, false, true ].sample,
     registration_close_date: registration_close,
     created_by_id: User.first.id,
     created_at: Time.current - rand(10..90).days,

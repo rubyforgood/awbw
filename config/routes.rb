@@ -28,8 +28,6 @@ Rails.application.routes.draw do
 
   get "contact_us", to: "contact_us#index"
   post "contact_us", to: "contact_us#create"
-  get "dashboard/admin", to: "dashboard#admin"
-  get "dashboard/recent_activities", to: "dashboard#recent_activities"
   get "image_migration_audit", to: "image_migration_audit#index"
 
   get "taggings", to: "taggings#index", as: "taggings"
@@ -39,8 +37,11 @@ Rails.application.routes.draw do
   get "tags/categories", to: "tags#categories", as: "tags_categories"
 
   namespace :admin do
-    get "analytics", to: "analytics#index"
-    post "analytics/print", to: "analytics#print"
+    get "/",                  to: "home#index"
+    get "activities",          to: "ahoy_activities#index", as: "activities"
+    get "activities/charts",   to: "ahoy_activities#charts", as: "activities_charts"
+    get "activities/counts",   to: "analytics#index", as: "activities_counts"
+    post "activities/counts/print",   to: "analytics#print", as: "analytics_print"
   end
 
   resources :banners

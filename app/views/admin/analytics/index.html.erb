@@ -6,7 +6,7 @@
           Activity counts
         </h1>
         
-        <%= form_with url: admin_analytics_path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
+        <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
           <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
           <%= f.select :time_period, 
                        options_for_select([
@@ -28,30 +28,46 @@
           View counts
         </h2>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <% @summary.each do |label, value| %>
-            <div class="<%= DomainTheme.bg_class_for(label) %> border rounded-lg p-4 shadow-sm">
-              <div class="text-sm text-gray-500 uppercase">
-                <%= label.to_s.humanize %>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5 gap-y-2 gap-x-2">
+          <% @summary.each do |label, data| %>
+            <div class="<%= DomainTheme.bg_class_for(label) %> border border-gray-200 rounded-xl p-5
+            shadow-sm hover:shadow-md transition min-h-[130px]">
+              <div class="flex items-start justify-between">
+                <div class="text-xs font-semibold tracking-wide uppercase text-gray-500">
+                  <%= label.to_s.humanize %>
+                </div>
+
+                <div class="text-3xl font-bold text-gray-900 leading-none tabular-nums">
+                  <%= number_with_delimiter(data[:views]) %>
+                </div>
               </div>
-              <div class="text-2xl font-bold text-gray-900">
-                <%= number_with_delimiter(value) %>
+
+              <div class="mt-3 space-y-1 text-xs text-gray-600 flex flex-col items-end">
+                <% if data[:prints].to_i > 0 %>
+                  <div class="flex items-center gap-1">
+                    <span class="tabular-nums"><%= number_with_delimiter(data[:prints]) %></span>
+                    <span class="text-gray-500">prints</span>
+                  </div>
+                <% end %>
+
+                <% if data[:downloads].to_i > 0 %>
+                  <div class="flex items-center gap-1">
+                    <span class="tabular-nums"><%= number_with_delimiter(data[:downloads]) %></span>
+                    <span class="text-gray-500">downloads</span>
+                  </div>
+                <% end %>
               </div>
             </div>
           <% end %>
         </div>
       </section>
 
-      <!-- Popular Content -->
-      <section class="mt-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">
-          Most viewed
-        </h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <section class="space-y-4 mt-6">
+        <h2 class="text-lg font-semibold text-gray-800">Workshops</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           <%= render "admin/analytics/popular_list",
-                     title: "Workshops",
+                     title: "Most viewed",
                      records: @most_viewed_workshops,
                      path_method: :workshop_path,
                      metric: :view_count,
@@ -59,29 +75,41 @@
           %>
 
           <%= render "admin/analytics/popular_list",
-                     title: "Most printed workshops",
+                     title: "Most printed",
                      records: @most_printed_workshops,
                      path_method: :workshop_path,
                      metric: :print_count,
                      color: :workshops
           %>
+        </div>
+      </section>
 
+      <section class="space-y-4 mt-6">
+        <h2 class="text-lg font-semibold text-gray-800">Resources</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <%= render "admin/analytics/popular_list",
-                     title: "Resources",
+                     title: "Most viewed",
                      records: @most_viewed_resources,
                      path_method: :resource_path,
                      metric: :view_count,
-                     color: :resources
-          %>
-
+                     color: :resources %>
           <%= render "admin/analytics/popular_list",
-                     title: "Most downloaded resources",
+                     title: "Most printed",
+                     records: @most_printed_resources,
+                     path_method: :resource_path,
+                     metric: :print_count,
+                     color: :resources %>
+          <%= render "admin/analytics/popular_list",
+                     title: "Most downloaded",
                      records: @most_downloaded_resources,
                      path_method: :resource_path,
                      metric: :download_count,
-                     color: :resources
-          %>
+                     color: :resources %>
+        </div>
+      </section>
 
+      <section class="mt-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
           <%= render "admin/analytics/popular_list",
                      title: "Community news",
                      records: @most_viewed_community_news,

@@ -21,7 +21,6 @@ FROM base AS assets
 RUN apt-get update -qq && apt-get install -y \
   build-essential \
   nodejs \
-  imagemagick \
   libvips \
   poppler-utils \
   tzdata \
@@ -53,7 +52,6 @@ RUN SECRET_KEY_BASE=1 \
 FROM base AS server
 
 RUN apt-get update -qq && apt-get install --no-install-recommends -y \
-    imagemagick \
     libvips \
     poppler-utils \
     tzdata \

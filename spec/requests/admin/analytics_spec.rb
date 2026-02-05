@@ -1,7 +1,7 @@
 # spec/requests/admin/analytics_spec.rb
 require "rails_helper"
 
-RSpec.describe "/admin/analytics", type: :request do
+RSpec.describe "/admin/activities/counts", type: :request do
   let(:admin_user) { create(:user, :admin) }
   let(:regular_user) { create(:user) }
   let!(:visit) { create(:ahoy_visit) }
@@ -12,10 +12,10 @@ RSpec.describe "/admin/analytics", type: :request do
     cookies[:ahoy_visitor] = visit.visitor_token
   end
 
-  describe "GET /admin/analytics" do
+  describe "GET /admin/activities/counts" do
     context "with no time period filter" do
       it "returns successful response" do
-        get "/admin/analytics"
+        get "/admin/activities/counts"
         expect(response).to have_http_status(:success)
       end
 
@@ -27,7 +27,7 @@ RSpec.describe "/admin/analytics", type: :request do
           resource_title: workshop.title
         }, time: 2.months.ago)
 
-        get "/admin/analytics"
+        get "/admin/activities/counts"
 
         expect(response.body).to include("analytics")
       end
@@ -49,7 +49,7 @@ RSpec.describe "/admin/analytics", type: :request do
           resource_id: workshop.id
         }, time: 3.days.ago)
 
-        get "/admin/analytics", params: { time_period: "past_day" }
+        get "/admin/activities/counts", params: { time_period: "past_day" }
 
         expect(response).to have_http_status(:success)
         # Verify the event is counted in the summary
@@ -73,7 +73,7 @@ RSpec.describe "/admin/analytics", type: :request do
           resource_id: workshop.id
         }, time: 2.months.ago)
 
-        get "/admin/analytics", params: { time_period: "past_week" }
+        get "/admin/activities/counts", params: { time_period: "past_week" }
 
         expect(response).to have_http_status(:success)
         # Verify the event is counted in the summary
@@ -95,7 +95,7 @@ RSpec.describe "/admin/analytics", type: :request do
           resource_id: workshop.id
         }, time: 2.months.ago)
 
-        get "/admin/analytics", params: { time_period: "past_month" }
+        get "/admin/activities/counts", params: { time_period: "past_month" }
 
         expect(response).to have_http_status(:success)
         # Verify the event is counted in the summary
@@ -117,7 +117,7 @@ RSpec.describe "/admin/analytics", type: :request do
           resource_id: workshop.id
         }, time: 2.years.ago)
 
-        get "/admin/analytics", params: { time_period: "past_year" }
+        get "/admin/activities/counts", params: { time_period: "past_year" }
 
         expect(response).to have_http_status(:success)
         # Verify the event is counted in the summary
@@ -147,7 +147,7 @@ RSpec.describe "/admin/analytics", type: :request do
         })
       end
 
-      get "/admin/analytics"
+      get "/admin/activities/counts"
 
       # Query the database to verify correct ordering
       view_events = Ahoy::Event.where(name: "view.workshop").group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).count
@@ -166,7 +166,7 @@ RSpec.describe "/admin/analytics", type: :request do
         end
       end
 
-      get "/admin/analytics"
+      get "/admin/activities/counts"
 
       # Verify top 10 is enforced
       expect(response).to have_http_status(:success)
@@ -193,7 +193,7 @@ RSpec.describe "/admin/analytics", type: :request do
         })
       end
 
-      get "/admin/analytics"
+      get "/admin/activities/counts"
 
       # Query the database to verify correct ordering
       print_events = Ahoy::Event.where(name: "print.workshop").group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).count
@@ -221,7 +221,7 @@ RSpec.describe "/admin/analytics", type: :request do
         })
       end
 
-      get "/admin/analytics"
+      get "/admin/activities/counts"
 
       # Query the database to verify correct ordering
       download_events = Ahoy::Event.where(name: "download.resource").group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).count
@@ -240,7 +240,7 @@ RSpec.describe "/admin/analytics", type: :request do
         resource_id: viewed_workshop.id
       })
 
-      get "/admin/analytics"
+      get "/admin/activities/counts"
 
       # Verify zero engagement detection
       viewed_ids = Ahoy::Event.where(name: "view.workshop").pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))")).map(&:to_i)
@@ -257,7 +257,7 @@ RSpec.describe "/admin/analytics", type: :request do
       3.times { create(:ahoy_event, name: "view.workshop", properties: { resource_id: workshop.id }) }
       2.times { create(:ahoy_event, name: "view.resource", properties: { resource_id: resource.id }) }
 
-      get "/admin/analytics"
+      get "/admin/activities/counts"
 
       # Verify summary counts
       expect(Ahoy::Event.where(name: "view.workshop").count).to eq(3)
@@ -271,7 +271,7 @@ RSpec.describe "/admin/analytics", type: :request do
       2.times { create(:ahoy_event, name: "print.workshop", properties: { resource_id: workshop.id }) }
       3.times { create(:ahoy_event, name: "download.resource", properties: { resource_id: resource.id }) }
 
-      get "/admin/analytics"
+      get "/admin/activities/counts"
 
       # Verify print and download counts
       expect(Ahoy::Event.where(name: "print.workshop").count).to eq(2)
@@ -279,9 +279,9 @@ RSpec.describe "/admin/analytics", type: :request do
     end
   end
 
-  describe "POST /admin/analytics/print" do
+  describe "POST /admin/activities/counts/print" do
     before do
-      allow_any_instance_of(Admin::AnalyticsController)
+      allow(Analytics::AhoyTracker)
         .to receive(:already_tracked?)
               .and_return(false)
     end
@@ -292,7 +292,7 @@ RSpec.describe "/admin/analytics", type: :request do
       # Printing is working, and ahoy events are being created
       workshop = create(:workshop, :published)
       expect {
-        post "/admin/analytics/print", params: {
+        post "/admin/activities/counts/print", params: {
           printable_type: "Workshop",
           printable_id: workshop.id
         }
@@ -308,7 +308,7 @@ RSpec.describe "/admin/analytics", type: :request do
     end
 
     it "returns bad request for invalid printable type" do
-      post "/admin/analytics/print", params: {
+      post "/admin/activities/counts/print", params: {
         printable_type: "InvalidType",
         printable_id: 99999
       }
@@ -316,7 +316,7 @@ RSpec.describe "/admin/analytics", type: :request do
     end
 
     it "returns not found for non-existent resource" do
-      post "/admin/analytics/print", params: {
+      post "/admin/activities/counts/print", params: {
         printable_type: "Workshop",
         printable_id: 999999
       }
@@ -332,7 +332,7 @@ RSpec.describe "/admin/analytics", type: :request do
       end
 
       it "denies access to analytics page" do
-        get "/admin/analytics"
+        get "/admin/activities/counts"
         expect(response).to_not have_http_status(:success)
       end
     end
