@@ -50,3 +50,6 @@ application.register("print-options", PrintOptionsController)
 
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
+
+import AssetUploadController from "./asset_upload_controller"
+application.register("asset-upload", AssetUploadController)

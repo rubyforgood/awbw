@@ -17,6 +17,18 @@
               } %>
     </div>
 
+    <div class="flex items-center gap-4 mt-4">
+      <button
+        type="button"
+        data-asset-upload-target="fakeButton"
+        data-action="click->asset-upload#triggerFileInput"
+        class="btn btn-primary"
+      >
+        Select File
+      </button>
+
+      <span data-asset-upload-target="fileName">No file selected</span>
+    </div>
     <div class="flex-1 min-w-[200px]">
       <label class="block font-medium mb-1">Flags</label>
 
