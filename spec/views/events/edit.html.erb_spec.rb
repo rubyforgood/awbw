@@ -8,12 +8,13 @@ RSpec.describe "events/edit", type: :view do
            start_date: DateTime.new(2024, 1, 15, 10, 0),
            end_date: DateTime.new(2024, 1, 15, 16, 0),
            registration_close_date: DateTime.new(2024, 1, 10, 23, 59),
-           publicly_visible: true)
+           inactive: false)
   end
 
   before do
     assign(:event, event)
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, super_user: true))
+    allow(view).to receive(:allowed_to?).with(:manage?, event).and_return(true)
   end
 
   it "renders the editing event heading" do
@@ -28,7 +29,8 @@ RSpec.describe "events/edit", type: :view do
     expect(rendered).to have_selector("form")
     expect(rendered).to have_field("event[title]", with: "Original Title")
     expect(rendered).to have_selector("textarea[name='event[description]']", text: "Original description")
-    expect(rendered).to have_selector("input[type='checkbox'][name='event[publicly_visible]'][checked='checked']")
+    expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]']")
+    expect(rendered).not_to have_selector("input[type='checkbox'][checked='checked']")
   end
 
   it "renders action links" do
@@ -58,18 +60,17 @@ RSpec.describe "events/edit", type: :view do
     end
   end
 
-  context "when event is not publicly visible" do
+  context "when event is inactive" do
     let(:event) do
       create(:event,
              title: "Private Event",
-             publicly_visible: false)
+             inactive: true)
     end
 
-    it "renders unchecked checkbox" do
+    it "renders checked checkbox" do
       render
 
-      expect(rendered).to have_selector("input[type='checkbox'][name='event[publicly_visible]']")
-      expect(rendered).not_to have_selector("input[type='checkbox'][name='event[publicly_visible]'][checked='checked']")
+      expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]'][checked='checked']")
     end
   end
 end

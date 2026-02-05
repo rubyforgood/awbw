@@ -5,6 +5,8 @@ class User < ApplicationRecord
     :rememberable, :trackable, :validatable
 
   after_create :set_default_values
+  after_update :track_email_change
+  before_destroy :track_account_deleted
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Associations
@@ -65,6 +67,10 @@ class User < ApplicationRecord
     results = results.where(super_user: params[:super_user]) if params[:super_user].present?
     results = results.where(inactive: params[:inactive]) if params[:inactive].present?
     results
+  end
+
+  def admin?
+    super_user
   end
 
   def has_liasion_position_for?(project_id)
@@ -189,5 +195,33 @@ class User < ApplicationRecord
 
     # Reassign workshop_logs
     workshop_logs.update_all(user_id: orphaned_user.id)
+  end
+
+  def after_confirmation
+    super
+    track_auth_event("auth.account_confirmed")
+  end
+
+  def after_lock
+    super
+    track_auth_event("auth.account_locked")
+  end
+
+  def after_unlock
+    super
+    track_auth_event("auth.account_unlocked")
+  end
+
+  def track_email_change
+    return unless saved_change_to_email?
+    track_auth_event("auth.email_changed")
+  end
+
+  def track_account_deleted
+    track_auth_event("auth.account_deleted")
+  end
+
+  def track_auth_event(name)
+    Analytics::AhoyTracker.track_auth_event(name, user: self)
   end
 end

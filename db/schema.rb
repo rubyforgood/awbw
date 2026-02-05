@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_02_164015) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -114,10 +114,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
   create_table "ahoy_events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name"
     t.json "properties"
+    t.bigint "resource_id"
+    t.string "resource_type"
     t.datetime "time"
     t.bigint "user_id"
     t.bigint "visit_id"
     t.index ["name", "time"], name: "index_ahoy_events_on_name_and_time"
+    t.index ["resource_id"], name: "index_ahoy_events_on_resource_id"
+    t.index ["resource_type", "resource_id", "time"], name: "index_ahoy_events_on_resource_type_and_resource_id_and_time"
     t.index ["user_id"], name: "index_ahoy_events_on_user_id"
     t.index ["visit_id"], name: "index_ahoy_events_on_visit_id"
   end
@@ -129,17 +133,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.string "country"
     t.string "device_type"
     t.string "ip"
-    t.text "landing_page", size: :medium
+    t.text "landing_page"
     t.float "latitude"
     t.float "longitude"
     t.string "os"
     t.string "os_version"
     t.string "platform"
-    t.text "referrer", size: :medium
+    t.text "referrer"
     t.string "referring_domain"
     t.string "region"
     t.datetime "started_at"
-    t.text "user_agent", size: :medium
+    t.text "user_agent"
     t.bigint "user_id"
     t.string "utm_campaign"
     t.string "utm_content"
@@ -268,12 +272,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.integer "created_by_id", null: false
     t.boolean "featured"
     t.integer "project_id"
+    t.boolean "public", default: false, null: false
+    t.boolean "public_featured", default: false, null: false
     t.boolean "published"
     t.string "reference_url"
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
-    t.boolean "visitor_featured", default: false, null: false
     t.integer "windows_type_id"
     t.string "youtube_url"
     t.index ["author_id"], name: "index_community_news_on_author_id"
@@ -316,12 +321,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.text "description", size: :medium
     t.datetime "end_date", precision: nil
     t.boolean "featured", default: false, null: false
-    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "inactive", default: true, null: false
+    t.boolean "public", default: false, null: false
+    t.boolean "public_featured", default: false, null: false
     t.datetime "registration_close_date", precision: nil
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
-    t.boolean "visitor_featured", default: false, null: false
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
   end
 
@@ -342,7 +348,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.string "last_name", null: false
     t.string "linked_in_url"
     t.date "member_since"
-    t.text "notes", size: :medium
+    t.text "notes"
     t.boolean "profile_is_searchable", default: true, null: false
     t.boolean "profile_show_affiliations", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
@@ -487,9 +493,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.datetime "delivered_at"
-    t.text "email_body_html", size: :medium
-    t.text "email_body_text", size: :medium
-    t.text "email_subject", size: :medium
+    t.text "email_body_html"
+    t.text "email_body_text"
+    t.text "email_subject"
     t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"
@@ -663,12 +669,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.integer "legacy_id"
     t.boolean "male", default: false
     t.integer "position"
+    t.boolean "public", default: false, null: false
+    t.boolean "public_featured", default: false, null: false
     t.text "text", size: :long
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.string "url"
     t.integer "user_id"
-    t.boolean "visitor_featured", default: false, null: false
     t.integer "windows_type_id"
     t.integer "workshop_id"
     t.index ["user_id"], name: "index_resources_on_user_id"
@@ -704,13 +711,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.boolean "featured", default: false, null: false
     t.boolean "permission_given"
     t.integer "project_id"
+    t.boolean "public", default: false, null: false
+    t.boolean "public_featured", default: false, null: false
     t.boolean "published", default: false, null: false
     t.integer "spotlighted_facilitator_id"
     t.bigint "story_idea_id"
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
-    t.boolean "visitor_featured", default: false, null: false
     t.string "website_url"
     t.integer "windows_type_id", null: false
     t.integer "workshop_id"
@@ -747,7 +755,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
   end
 
   create_table "tutorials", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body", size: :medium
+    t.text "body"
     t.datetime "created_at", null: false
     t.boolean "featured", default: false, null: false
     t.integer "position", default: 10, null: false
@@ -1036,6 +1044,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.text "project", size: :long
     t.text "project_spanish", size: :long
     t.string "pub_issue"
+    t.boolean "public", default: false, null: false
+    t.boolean "public_featured", default: false, null: false
     t.boolean "searchable", default: false
     t.text "setup", size: :long
     t.text "setup_spanish", size: :long
@@ -1058,7 +1068,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
-    t.boolean "visitor_featured", default: false, null: false
     t.text "visualization", size: :long
     t.text "visualization_spanish", size: :long
     t.text "warm_up", size: :long
@@ -1079,7 +1088,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_27_171722) do
   end
 
   add_foreign_key "action_text_mentions", "action_text_rich_texts"
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "banners", "users", column: "created_by_id"

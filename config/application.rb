@@ -18,6 +18,7 @@ module Awbw
     config.autoload_paths += %W[
       #{Rails.root}/app/renderers
       #{Rails.root}/app/decorators/concerns
+      #{Rails.root}/app/presenters
     ]
     config.action_mailer.preview_paths = [
       Rails.root.join("test/mailers/previews"),

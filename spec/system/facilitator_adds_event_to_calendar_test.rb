@@ -12,7 +12,7 @@ RSpec.describe "Facilitators can register for an event" do
           start_date: 1.day.from_now,
           end_date: 2.days.from_now,
           registration_close_date: 1.day.from_now,
-          publicly_visible: true,
+          inactive: false,
           featured: true
         )
         create(:event,
@@ -20,7 +20,7 @@ RSpec.describe "Facilitators can register for an event" do
           start_date: 2.days.from_now,
           end_date: 3.days.from_now,
           registration_close_date: 1.day.from_now,
-          publicly_visible: true,
+          inactive: false,
           featured: true,
           created_by: user
         )

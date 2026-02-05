@@ -1,25 +1,28 @@
 class EventsController < ApplicationController
-  include AhoyViewTracking, AssetUpdatable
+  include AhoyTracking, AssetUpdatable
+  skip_before_action :authenticate_user!, only: %i[ index show]
   before_action :set_event, only: %i[ show edit update destroy ]
-  before_action :authorize_admin!, only: %i[ edit update destroy ]
 
   def index
-    unpaginated = current_user.super_user? ? Event.all : Event.published
-    unpaginated = unpaginated.search_by_params(params)
-    @events = unpaginated.order(start_date: :desc)
+    authorize!
+    base_scope = authorized_scope(Event.all)
+    @events  = base_scope.search_by_params(params).order(start_date: :desc)
   end
 
   def show
+    authorize! @event
     @event = @event.decorate
     track_view(@event)
   end
 
-  def new # all logged in users can create events
+  def new
+    authorize!
     @event = Event.new.decorate
     set_form_variables
   end
 
   def edit
+    authorize! @event
     set_form_variables
     unless @event.created_by == current_user || current_user.super_user?
       redirect_to events_path, alert: "You are not authorized to edit this event."
@@ -27,6 +30,7 @@ class EventsController < ApplicationController
   end
 
   def create
+    authorize!
     @event = Event.new(event_params).decorate
     @event.created_by ||= current_user
 
@@ -46,6 +50,7 @@ class EventsController < ApplicationController
   end
 
   def update
+    authorize! @event
     respond_to do |format|
       if @event.update(event_params)
         format.html { redirect_to events_path, notice: "Event was successfully updated." }
@@ -59,6 +64,7 @@ class EventsController < ApplicationController
   end
 
   def destroy
+    authorize! @event
     @event.destroy
 
     respond_to do |format|
@@ -87,12 +93,9 @@ class EventsController < ApplicationController
                                   :featured,
                                   :start_date, :end_date,
                                   :registration_close_date,
-                                  :publicly_visible
+                                  :inactive,
+                                  :public,
+                                  :public_featured
                                   )
-  end
-
-  def authorize_admin!
-    redirect_to events_path,
-                alert: "You are not authorized to perform this action." unless current_user.super_user?
   end
 end

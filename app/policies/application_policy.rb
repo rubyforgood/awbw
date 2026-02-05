@@ -10,6 +10,7 @@ class ApplicationPolicy < ActionPolicy::Base
   authorize :user, optional: true, allow_nil: true
   pre_check :verify_authenticated!
 
+  default_rule :manage?
   alias_rule :new?, :create?, :edit?, :update?, :destroy?, to: :manage?
 
   def manage?

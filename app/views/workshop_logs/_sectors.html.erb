@@ -11,10 +11,10 @@
     <div id="selector-button" class="btn-group" data-toggle="buttons">
       <label id="sector_label_<%=i%>" class="btn btn-primary btn--small btn-blue btn-sectors btn-fs-medium <%= "active" if @wl and @wl.sectorable_items.any?{|si| si.sector_id == sf[0].to_i } %>">
 
-	<input id="sector_<%= i %>" name="workshop[sectorable_items][<%= i %>][sector_id]"
-	       type="checkbox" value="<%= sf[0] %>"
-	       <%= "checked=true" if @wl and @wl.sectorable_items.any?{|si| si.sector_id == sf[0].to_i } %> />
-	<%= sf[1] %>
+  <input id="sector_<%= i %>" name="workshop[sectorable_items][<%= i %>][sector_id]"
+         type="checkbox" value="<%= sf[0] %>"
+         <%= "checked=true" if @wl and @wl.sectorable_items.any?{|si| si.sector_id == sf[0].to_i } %> />
+  <%= sf[1] %>
 
       </label>
     </div>

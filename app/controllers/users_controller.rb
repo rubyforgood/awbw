@@ -75,13 +75,15 @@ class UsersController < ApplicationController
     @user = current_user
 
     if @user.update_with_password(password_params)
-
+      Analytics::AhoyTracker.track_auth_event(
+        "auth.password_changed",
+        user: @user
+      )
       bypass_sign_in(@user)
-      flash[:notice] = "Your Password was updated."
-      redirect_to root_path
+      redirect_to root_path, notice: "Your Password was updated."
     else
       flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
-      render "change_password"
+      render :change_password
     end
   end
 

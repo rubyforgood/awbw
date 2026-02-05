@@ -1,5 +1,6 @@
 class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
+  include AhoyTrackable
 
   def bookmarks_count
     if self.respond_to?(:bookmarks)

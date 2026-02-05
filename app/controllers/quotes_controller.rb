@@ -1,5 +1,5 @@
 class QuotesController < ApplicationController
-  include AhoyViewTracking
+  include AhoyTracking
   before_action :set_quote, only: [ :show, :edit, :update, :destroy ]
 
   def index

@@ -10,6 +10,13 @@ RSpec.describe "Tags index", type: :request do
 
     before { sign_in user }
 
+    it "checks authorization via ApplicationPolicy" do
+      expect_any_instance_of(ApplicationPolicy)
+        .to receive(:index?).and_call_original
+
+      get tags_path
+    end
+
     it "renders Service Populations and Categories skeleton" do
       get tags_path
       expect(response).to have_http_status(:ok)
