@@ -16,7 +16,6 @@ class WorkshopSearchService
 
   # Main entry point
   def call
-    normalize_published_param
     filter_by_params
     order_by_params
     resolve_ids_order
@@ -58,20 +57,20 @@ class WorkshopSearchService
   end
 
   def filter_by_published_status
-    if super_user
-      active   = ActiveModel::Type::Boolean.new.cast(params[:active])   if params.key?(:active)
-      inactive = ActiveModel::Type::Boolean.new.cast(params[:inactive]) if params.key?(:inactive)
+    return @workshops = @workshops.published unless super_user
 
-      @workshops =
-        if active && !inactive
-          @workshops.published(true)
-        elsif inactive && !active
-          @workshops.published(false)
-        else
-          @workshops
-        end
-    else
-      @workshops = @workshops.published
+    pub   = params.key?(:published)   ? ActiveModel::Type::Boolean.new.cast(params[:published])   : nil
+    unpub = params.key?(:unpublished) ? ActiveModel::Type::Boolean.new.cast(params[:unpublished]) : nil
+
+    case [ pub, unpub ]
+    when [ true, nil ], [ true, false ]
+      @workshops = @workshops.published(true)     # ONLY published
+    when [ nil, true ], [ false, true ]
+      @workshops = @workshops.published(false)    # ONLY unpublished
+    when [ false, false ]
+      @workshops = @workshops.none                # NONE
+    else # incl [ nil, nil ] && [ true, true ]
+      @workshops                                  # ALL
     end
   end
 
@@ -181,20 +180,6 @@ class WorkshopSearchService
     Sector
       .names(names) # your case-insensitive / partial matching scope
       .pluck(:id)
-  end
-
-  def normalize_published_param
-    return unless params.key?(:published)
-
-    published = ActiveModel::Type::Boolean.new.cast(params[:published])
-
-    if published
-      params[:active] = true
-      params.delete(:inactive)
-    else
-      params[:inactive] = true
-      params.delete(:active)
-    end
   end
 
   # --- Sorting ---

@@ -8,7 +8,7 @@ module TagMatrixHelper
         model.category_names(tag.name)
       end
 
-    scope.published.count
+    scope.published.unscope(:group).count
   end
 
   def tag_link_for(model, tag:, type:)

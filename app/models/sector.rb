@@ -1,5 +1,5 @@
 class Sector < ApplicationRecord
-  include NameFilterable
+  include NameFilterable, Publishable
   SECTOR_TYPES = [ "Veterans & Military", "Sexual Assault", "Substance Abuse", "LGBTQIA",
                   "Child Abuse", "Education/Schools", "Domestic Violence", "Other" ]
 
@@ -17,8 +17,6 @@ class Sector < ApplicationRecord
   after_destroy :expire_sectors_cache
 
   # Scopes
-  scope :published, ->(published = nil) {
-    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
   scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }

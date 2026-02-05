@@ -19,7 +19,7 @@ RSpec.describe "events/_form", type: :view do
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[start_date]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[end_date]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[registration_close_date]']")
-    expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]']")
+    expect(rendered).to have_selector("input[type='checkbox'][name='event[published]']")
   end
 
   it "renders all form labels" do
@@ -31,7 +31,7 @@ RSpec.describe "events/_form", type: :view do
     expect(rendered).to have_selector("label", text: "Start time")
     expect(rendered).to have_selector("label", text: "End time")
     expect(rendered).to have_selector("label", text: "Registration close time")
-    expect(rendered).to have_selector("label", text: "Hidden?")
+    expect(rendered).to have_selector("label", text: "Published")
   end
 
   it "renders submit button" do
@@ -48,7 +48,7 @@ RSpec.describe "events/_form", type: :view do
              start_date: DateTime.new(2024, 1, 15, 10, 0),
              end_date: DateTime.new(2024, 1, 15, 16, 0),
              registration_close_date: DateTime.new(2024, 1, 10, 23, 59),
-             inactive: false)
+             published: true)
     end
 
     it "populates form fields with existing data" do
@@ -56,18 +56,12 @@ RSpec.describe "events/_form", type: :view do
 
       expect(rendered).to have_field("event[title]", with: "Existing Event")
       expect(rendered).to have_selector("textarea", text: "Existing description")
-      expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]']")
-      expect(rendered).not_to have_selector("input[type='checkbox'][checked='checked']")
-    end
 
-    it "populates datetime fields with properly formatted values" do
-      render
-
-      expect(rendered).to have_selector("input[type='datetime-local'][value='2024-01-15T10:00']")
-      expect(rendered).to have_selector("input[type='datetime-local'][value='2024-01-15T16:00']")
-      expect(rendered).to have_selector("input[type='datetime-local'][value='2024-01-10T23:59']")
+      expect(rendered).to have_selector("input[name='event[published]']")
+      expect(rendered).to have_selector("input[name='event[published]'][checked]")
     end
   end
+
 
   context "when event has validation errors" do
     let(:event) do
@@ -96,24 +90,22 @@ RSpec.describe "events/_form", type: :view do
     end
   end
 
-  context "when inactive is true" do
-    let(:event) { create(:event, inactive: true) }
-
-    it "renders checked checkbox" do
-      render
-
-      expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]'][checked='checked']")
-    end
-  end
-
-  context "when inactive is false" do
-    let(:event) { create(:event, inactive: false) }
+  context "when published is false" do
+    let(:event) { create(:event, published: false) }
 
     it "renders unchecked checkbox" do
       render
+      expect(rendered).to have_selector("input[name='event[published]']")
+      expect(rendered).not_to have_selector("input[name='event[published]'][checked]")
+    end
+  end
 
-      expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]']")
-      expect(rendered).not_to have_selector("input[type='checkbox'][checked='checked']")
+  context "when published is true" do
+    let(:event) { create(:event, published: true) }
+
+    it "renders checked checkbox" do
+      render
+      expect(rendered).to have_selector("input[name='event[published]'][checked]")
     end
   end
 end

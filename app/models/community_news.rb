@@ -1,5 +1,5 @@
 class CommunityNews < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
   belongs_to :project, optional: true
   belongs_to :windows_type, optional: true
@@ -33,25 +33,16 @@ class CommunityNews < ApplicationRecord
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
 
+  # Scopes
+  # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+
   # SearchCop
   include SearchCop
   search_scope :search do
     attributes :title, :published, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
-
     scope { join_rich_texts.left_joins(author: :facilitator) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
-
-  scope :category_names, ->(names) { tag_names(:categories, names) }
-  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
-  scope :community_news_name, ->(community_news_name) {
-    community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
-  scope :featured, -> { where(featured: true) }
-  scope :publicly_featured, -> { published.where(publicly_featured: true) }
-  scope :publicly_visible, -> { published.where(publicly_visible: true) }
-  scope :published, ->(published = nil) {
-    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
-  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   def self.search_by_params(params)
     conditions = {}

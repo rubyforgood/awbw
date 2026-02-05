@@ -23,6 +23,7 @@ class Notification < ApplicationRecord
     facilitator
   ].freeze
 
+  # Scopes
   scope :delivered, -> { where.not(delivered_at: nil) }
   scope :undelivered, -> { where(delivered_at: nil) }
 

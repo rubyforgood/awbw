@@ -6,7 +6,7 @@ FactoryBot.define do
 
     title { Faker::Lorem.sentence.gsub("error", "eldor") }
 
-    inactive { false }
+    published { true }
     featured { false }
     objective { Faker::Lorem.paragraph.gsub("error", "eldor") }
     materials { Faker::Lorem.paragraph.gsub("error", "eldor") }
@@ -34,7 +34,7 @@ FactoryBot.define do
     end
 
     trait :published do
-      inactive { false }
+      published { true }
     end
   end
 end

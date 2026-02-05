@@ -12,10 +12,6 @@ class FacilitatorDecorator < ApplicationDecorator
     "missing.png"
   end
 
-  def inactive?
-    !user ? false : user&.inactive?
-  end
-
   def primary_asset
     avatar
   end

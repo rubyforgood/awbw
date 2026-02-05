@@ -5,7 +5,7 @@ RSpec.describe "/faqs", type: :request do
     {
       question: "What is AWBW?",
       answer: "A Window Between Worlds (AWBW) uses art to heal trauma.",
-      inactive: false
+      published: true
     }
   end
 
@@ -13,14 +13,15 @@ RSpec.describe "/faqs", type: :request do
     {
       question: "",
       answer: "",
-      inactive: nil
+      unpublished: nil
     }
   end
 
-  let(:admin)         { create(:user, :admin) }
-  let(:regular_user)  { create(:user) }
-  let!(:active_faq)   { create(:faq, question: "Public FAQ", answer: "Public FAQ Body", inactive: false) }
-  let!(:inactive_faq) { create(:faq, question: "Hidden FAQ", answer: "Hidden FAQ Body", inactive: true) }
+  let(:admin)            { create(:user, :admin) }
+  let(:regular_user)     { create(:user) }
+  let!(:published_faq)   { create(:faq, question: "Published FAQ", answer: "Published FAQ Body", published: true) }
+  let!(:unpublished_faq) { create(:faq, question: "Unpublished FAQ", answer: "Unpublished FAQ Body", published: false) }
+  let!(:public_faq) { create(:faq, question: "Public FAQ", answer: "Public FAQ Body", published: true, publicly_visible: true) }
 
   describe "GET /index" do
     context "as an admin" do
@@ -33,22 +34,30 @@ RSpec.describe "/faqs", type: :request do
 
       it "shows all FAQs in the body" do
         get faqs_path
-        expect(response.body).to include("Public FAQ")
-        expect(response.body).to include("Hidden FAQ")
+        expect(response.body).to include("Published FAQ")
+        expect(response.body).to include("Unpublished FAQ")
       end
 
-      it "filters by inactive param" do
-        get faqs_path, params: { inactive: true }
-        expect(response.body).to include("Hidden FAQ")
-        expect(response.body).not_to include("Public FAQ")
+      it "filters by unpublished param" do
+        get faqs_path, params: { published: false }
+        expect(response.body).to include("Unpublished FAQ")
+        expect(response.body).not_to include("Published FAQ")
       end
 
-      it "filters by query" do
-        get faqs_path, params: { query: "Public" }
-        expect(Faq.search_by_params(query: "Public").pluck(:question))
-          .to include("Public FAQ")
-        expect(Faq.search_by_params(query: "Public").pluck(:question))
-          .not_to include("Hidden FAQ")
+      it "filters by published query" do
+        get faqs_path, params: { query: "Published" }
+        expect(Faq.search_by_params(query: "Published").pluck(:question))
+          .to include("Published FAQ")
+        expect(Faq.search_by_params(query: "Unpublished").pluck(:question))
+          .to include("Unpublished FAQ")
+      end
+
+      it "filters by title query" do
+        get faqs_path, params: { query: "Published FAQ" }
+        expect(Faq.search_by_params(query: "Published").pluck(:question))
+          .to include("Published FAQ")
+        expect(Faq.search_by_params(query: "Unpublished").pluck(:question))
+          .not_to include("Unpublished FAQ")
       end
     end
 
@@ -60,10 +69,25 @@ RSpec.describe "/faqs", type: :request do
         expect(response).to be_successful
       end
 
-      it "shows only active FAQs" do
+      it "shows only published FAQs" do
+        get faqs_path
+        expect(response.body).to include("Published FAQ")
+        expect(response.body).not_to include("Unpublished FAQ")
+      end
+    end
+
+    context "as a guest" do
+      xit "renders successfully" do
+        get faqs_path
+        expect(response).to be_successful
+      end
+
+      xit "shows only publicly_visible FAQs" do
+
         get faqs_path
         expect(response.body).to include("Public FAQ")
-        expect(response.body).not_to include("Hidden FAQ")
+        expect(response.body).not_to include("Published FAQ")
+        expect(response.body).not_to include("Unpublished FAQ")
       end
     end
   end

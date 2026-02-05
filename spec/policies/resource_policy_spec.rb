@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe ResourcePolicy, type: :policy do
   let(:admin_user) { build_stubbed :user, super_user: true }
   let(:regular_user) { build_stubbed :user, super_user: false }
-  let(:published_resource) { build_stubbed :resource, inactive: false, kind: "Handout" }
-  let(:unpublished_resource) { build_stubbed :resource, inactive: true, kind: "Handout" }
+  let(:published_resource) { build_stubbed :resource, kind: "Handout" }
+  let(:unpublished_resource) { build_stubbed :resource, kind: "Handout" }
 
   def policy_for(record: nil, user:)
     described_class.new(record, user: user)

@@ -14,7 +14,7 @@
   id="workshop-<%= workshop.id %>"
   class="
     flex flex-col sm:flex-row
-    <%= "admin-only bg-blue-100" if workshop.inactive? %>
+    <%= "admin-only bg-blue-100" unless workshop.published? %>
     border-b border-gray-200 bg-white py-4 gap-4
     px-4 sm:px-0">
   <div id="workshop-<%= workshop.id %>-anchor" style="position: relative; top: -200px;"></div>

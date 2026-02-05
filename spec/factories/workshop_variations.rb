@@ -4,6 +4,6 @@ FactoryBot.define do
     sequence(:name) { |n| "Variation #{n}" }
     code { "<p>Variation details using CKEditor</p>" }
     sequence(:position) { |n| n }
-    inactive { false }
+    published { true }
   end
 end

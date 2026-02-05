@@ -6,7 +6,7 @@ FactoryBot.define do
     start_date { 12.days.from_now }
     end_date   { 14.days.from_now }
     registration_close_date { 13.days.from_now }
-    inactive { false }
+    published { true }
     cost_cents { 1099 }
     publicly_visible { false }
 

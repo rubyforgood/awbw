@@ -1,5 +1,5 @@
 class Resource < ApplicationRecord
-  include Featureable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
 
@@ -44,7 +44,7 @@ class Resource < ApplicationRecord
            through: :action_text_mentions
 
   # Default values
-  attribute :inactive, :boolean, default: false
+  attribute :published, :boolean, default: false
 
   # Validations
   validates :title, presence: true, uniqueness: { case_sensitive: false }
@@ -78,22 +78,20 @@ class Resource < ApplicationRecord
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
-    where(kind: kinds)
-  }
+    where(kind: kinds) }
   scope :leader_spotlights, -> { kinds("LeaderSpotlight") }
   scope :publicly_featured, -> { published.where(publicly_featured: true) }
   scope :publicly_visible, -> { published.where(publicly_visible: true) }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
-  scope :published, ->(published = nil) {
+  scope :published, ->(published = nil) { # overrides Publishable
     if [ "true", "false" ].include?(published)
-      result = where(inactive: published == "true" ? false : true)
+      result = where(published: published == "true" ? false : true)
     else
-      result = where(inactive: false)
+      result = where(published: false)
     end
-    result.published_kinds
-  }
-  scope :published_search, ->(published_search = nil) { published_search.present? ? published(published_search) : published_kinds }
-
+    result.published_kinds }
+  scope :published_search, ->(published_search = nil) {
+    published_search.present? ? published(published_search) : published_kinds }
   scope :recent, -> { published.by_created }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
@@ -144,8 +142,8 @@ class Resource < ApplicationRecord
     created_at.month
   end
 
-  def published?
-    !inactive? && PUBLISHED_KINDS.include?(kind)
+  def published? # AR override
+    self[:published] && PUBLISHED_KINDS.include?(kind)
   end
 
   ## ActionText:Attachable

@@ -17,17 +17,17 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
         create(:facilitator, user: user)
 
         # Create test workshops
-        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, inactive: false)
+        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, published: true)
         workshop_world.sectors << sector_veterans
         workshop_world.sectors << sector_education
 
-        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: child_window, inactive: false)
+        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: child_window, published: true)
         workshop_mars.sectors << sector_lgbtqia
 
-        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: combined_window, inactive: false)
+        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: combined_window, published: true)
         workshop_hello.sectors << sector_child_abuse
 
-        workshop_combo = create(:workshop, title: 'Combined workshop', windows_type: combined_window, inactive: false)
+        workshop_combo = create(:workshop, title: 'Combined workshop', windows_type: combined_window, published: true)
         workshop_combo.sectors << sector_veterans
         workshop_combo.sectors << sector_lgbtqia
         workshop_combo.sectors << sector_education
@@ -179,20 +179,20 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
         published_workshop = create(:workshop,
           title: 'Published Workshop',
           windows_type: adult_window,
-          inactive: false)
+          published: true)
         published_workshop.sectors << sector_veterans
 
         # Hidden workshop
         hidden_workshop = create(:workshop,
           title: 'Hidden Workshop',
           windows_type: child_window,
-          inactive: true)
+          published: false)
         hidden_workshop.sectors << sector_lgbtqia
 
         another_published = create(:workshop,
           title: 'Another Published Workshop',
           windows_type: adult_window,
-          inactive: false)
+          published: true)
         another_published.sectors << sector_lgbtqia
 
         sign_in admin
@@ -206,9 +206,9 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
         expect(page).to have_content('Hidden Workshop')
       end
 
-      it "filters to show only hidden workshops" do
+      it "filters to show only unpublished workshops" do
         find("#published-button").click
-        check "inactive_true"
+        check "published_false"
 
         expect(page).to have_content('Hidden Workshop')
         expect(page).not_to have_content('Published Workshop')
@@ -217,7 +217,7 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
 
       it "filters to show only published workshops" do
         find("#published-button").click
-        check "inactive_false"
+        check "published_true"
 
         expect(page).to have_content('Published Workshop')
         expect(page).to have_content('Another Published Workshop')
@@ -226,7 +226,7 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
 
       it "combines publish status with sector filter" do
         find("#published-button").click
-        check "inactive_true"
+        check "published_false"
         find("#sectors-button").click
         check "Lgbtqia"
 

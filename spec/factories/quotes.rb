@@ -4,7 +4,11 @@ FactoryBot.define do
     speaker_name { Faker::Name.name.gsub("'", " ") }
     age { rand(18..99) }
     gender { [ 'M', 'F', 'O', nil ].sample }
-    inactive { false }
+    published { true }
     workshop_id { nil }
+
+    trait :unpublished do
+      published { false }
+    end
   end
 end

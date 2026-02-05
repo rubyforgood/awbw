@@ -3,7 +3,7 @@ RSpec.shared_examples "featureable" do |factory:|
   let!(:featured_only) do
     create(factory,
       featured: true,
-      inactive: false
+      published: true
     )
   end
 
@@ -11,7 +11,7 @@ RSpec.shared_examples "featureable" do |factory:|
     create(factory,
       publicly_featured: true,
       publicly_visible: true,
-      inactive: false
+      published: true
     )
   end
 
@@ -20,14 +20,14 @@ RSpec.shared_examples "featureable" do |factory:|
       featured: true,
       publicly_featured: true,
       publicly_visible: true,
-      inactive: false
+      published: true
     )
   end
 
   let!(:inactive_featured) do
     create(factory,
       featured: true,
-      inactive: true
+      published: false
     )
   end
 
@@ -35,7 +35,7 @@ RSpec.shared_examples "featureable" do |factory:|
     create(factory,
       publicly_featured: true,
       publicly_visible: true,
-      inactive: true
+      published: false
     )
   end
 

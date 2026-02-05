@@ -66,7 +66,7 @@ class QuotesController < ApplicationController
     params.require(:quote).permit(
       :age,
       :gender,
-      :inactive,
+      :published,
       :quote,
       :speaker_name,
       :workshop_id,

@@ -3,11 +3,11 @@ require "rails_helper"
 RSpec.describe EventPolicy, type: :policy do
   let(:admin_user) { build_stubbed :user, super_user: true }
   let(:regular_user) { build_stubbed :user, super_user: false }
-  let(:published_event) { build_stubbed :event, inactive: false  }
-  let(:public_event) { build_stubbed :event, inactive: false, publicly_visible: true  }
-  let(:unpublished_event) { build_stubbed :event, inactive: true }
-  let(:open_registration_event) { build_stubbed :event, inactive: false, registration_close_date: 1.day.from_now }
-  let(:closed_registration_event) { build_stubbed :event, inactive: false, registration_close_date: 1.day.ago }
+  let(:published_event) { build_stubbed :event }
+  let(:public_event) { build_stubbed :event, publicly_visible: true  }
+  let(:unpublished_event) { build_stubbed :event, :unpublished_event }
+  let(:open_registration_event) { build_stubbed :event, registration_close_date: 1.day.from_now }
+  let(:closed_registration_event) { build_stubbed :event, registration_close_date: 1.day.ago }
 
   def policy_for(record: nil, user:)
     described_class.new(record, user: user)

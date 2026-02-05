@@ -3,7 +3,8 @@ module NameFilterable
 
   class_methods do
     def names(input)
-      return none if input.blank?
+      # Param not provided → do not filter
+      return all if input.nil?
 
       parsed =
         Array(input)
@@ -12,6 +13,7 @@ module NameFilterable
           .reject(&:blank?)
           .map(&:downcase)
 
+      # Param provided but empty → intentionally no matches
       return none if parsed.empty?
 
       conditions = parsed.map { "LOWER(name) LIKE ?" }.join(" OR ")

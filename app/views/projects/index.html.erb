@@ -87,10 +87,10 @@
               </td>
 
               <td class="px-4 py-2 text-center">
-                <% if project.inactive? %>
-                  <span class="text-red-500 fa fa-ban"></span>
-                <% else %>
+                <% if project.published? %>
                   <span class="text-green-200 font-semibold fa fa-check-circle"></span>
+                <% else %>
+                  <span class="text-red-500 fa fa-ban"></span>
                 <% end %>
               </td>
 

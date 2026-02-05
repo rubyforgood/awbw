@@ -10,23 +10,23 @@ RSpec.describe TagFilterable do
 
   before do
     create(:sectorable_item, sector: sector_youth, sectorable: workshop_1)
+    create(:sectorable_item, sector: sector_adult, sectorable: workshop_1)
     create(:sectorable_item, sector: sector_adult, sectorable: workshop_2)
   end
 
   describe ".tag_names" do
-    it "returns all records when names are blank" do
-      expect(Workshop.tag_names(:sectors, nil))
-        .to match_array([ workshop_1, workshop_2 ])
+    it "returns none when names are blank" do
+      expect(Workshop.tag_names(:sectors, nil)).to be_empty
     end
 
     it "filters by a single tag name" do
-      result = Workshop.tag_names(:sectors, "youth")
-      expect(result).to eq([ workshop_1 ])
+      result = Workshop.tag_names(:sectors, "adult")
+      expect(result).to eq([ workshop_1, workshop_2 ])
     end
 
-    it "supports multiple tag names" do
+    it "supports multiple tag names with AND logic" do
       result = Workshop.tag_names(:sectors, "youth--adult")
-      expect(result).to match_array([ workshop_1, workshop_2 ])
+      expect(result).to match_array([ workshop_1 ])
     end
 
     it "returns distinct records" do

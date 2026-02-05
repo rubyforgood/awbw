@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :faq do
     question { Faker::Lorem.question }
     answer { Faker::Lorem.paragraph }
-    inactive { false }
+    published { true }
     sequence(:position) { |n| n }
   end
 end
