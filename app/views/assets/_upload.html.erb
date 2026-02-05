@@ -23,8 +23,11 @@
                  { selected: "GalleryAsset", required: true },
                  class:
                    "block w-full appearance-none rounded-md border border-gray-300
-                                               bg-white px-3 py-2 pr-8 text-sm text-gray-700 shadow-sm
-                                               focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
+                             bg-white px-3 py-2 pr-8 text-sm text-gray-700 shadow-sm
+                             focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 focus:ring-opacity-50",
+                 data: {
+                   "asset-upload-target": "typeSelect",
+                 } %>
 
         <div
           class="
@@ -86,7 +89,7 @@
           <%= f.submit "Upload",
                    class:
                      "btn btn-secondary-outline transition
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     disabled:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-70",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               disabled:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-70",
                    data: {
                      disable_with: "Uploading...",
                    } %>
