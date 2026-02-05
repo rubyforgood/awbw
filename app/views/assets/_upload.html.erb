@@ -23,8 +23,8 @@
                  { selected: "GalleryAsset", required: true },
                  class:
                    "block w-full appearance-none rounded-md border border-gray-300
-                                                                     bg-white px-3 py-2 pr-8 text-sm text-gray-700 shadow-sm
-                                                                     focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
+                                               bg-white px-3 py-2 pr-8 text-sm text-gray-700 shadow-sm
+                                               focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
 
         <div
           class="
@@ -39,7 +39,7 @@
 
     <div
       class="
-        bg-gray-50 w-48 h-48 rounded-md shadow-md grid place-content-center
+        bg-gray-50 w-48 h-48 mb-6 rounded-md shadow-md grid place-content-center
       "
     >
       <div
@@ -48,14 +48,17 @@
           bg-white
         "
       >
-        <%= f.label :file,
-        for: "asset_file_input" do %>
+        <%= f.label :file, 
+            for: "asset_file_input",
+            data: { "asset-upload-target": "uploadLabel" } do %>
           <%= icon(
             "upload-cloud",
             class: "w-16 h-16 hover:w-20 hover:h-20 cursor-pointer",
             title: "Add File",
           ) %>
+
         <% end %>
+
         <%= f.file_field :file,
                      direct_upload: true,
                      required: true,
@@ -79,11 +82,11 @@
                 shadow-sm
                 focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
 
-        <div class="action-buttons mt-8 flex justify-center gap-3">
+        <div class="action-buttons mt-8 flex justify-center gap-3 hidden">
           <%= f.submit "Upload",
                    class:
                      "btn btn-secondary-outline transition
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             disabled:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-70",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     disabled:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-70",
                    data: {
                      disable_with: "Uploading...",
                    } %>
