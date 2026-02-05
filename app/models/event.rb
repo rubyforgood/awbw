@@ -39,11 +39,13 @@ class Event < ApplicationRecord
     where(featured: true, inactive: false)
       .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
   }
-  scope :public_featured, -> {
-    where(public: true, public_featured: true, inactive: false)
+  scope :publicly_featured, -> {
+    where(publicly_visible: true, publicly_featured: true, inactive: false)
       .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
   }
-
+  scope :publicly_visible, -> { published.where(publicly_visible: true)
+      .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
+  }
 
   scope :published, ->(published = nil) { published.to_s.present? ?
            where(inactive: !published) : where(inactive: false) }
@@ -58,6 +60,10 @@ class Event < ApplicationRecord
     stories = stories.category_names(params[:category_names]) if params[:category_names].present?
     stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     stories
+  end
+
+  def published?
+    !inactive
   end
 
   def registerable?

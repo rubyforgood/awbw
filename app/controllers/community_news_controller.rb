@@ -5,7 +5,14 @@ class CommunityNewsController < ApplicationController
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      unfiltered = current_user.super_user? ? CommunityNews.all : CommunityNews.published
+      unfiltered =
+        if current_user&.admin?
+          CommunityNews.all
+        elsif current_user
+          CommunityNews.published
+        else
+          CommunityNews.publicly_visible
+        end
       filtered = unfiltered.search_by_params(params)
       @community_news = filtered&.includes([ :bookmarks, :primary_asset, :author, :project, author: :facilitator ])
                               &.paginate(page: params[:page], per_page: per_page)&.decorate
@@ -93,7 +100,7 @@ class CommunityNewsController < ApplicationController
   # Strong parameters
   def community_news_params
     params.require(:community_news).permit(
-      :title, :rhino_body, :published, :featured, :public, :public_featured,
+      :title, :rhino_body, :published, :featured, :publicly_visible, :publicly_featured,
       :reference_url, :youtube_url,
       :project_id,
       :author_id, :created_by_id, :updated_by_id

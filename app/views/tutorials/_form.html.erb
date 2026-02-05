@@ -35,7 +35,11 @@
                   input_html: { rows: 10, value: f.object.body } %>
     </div>
 
-    <div class="form-actions mt-3">
+    <div class="action-buttons mt-8 flex justify-center gap-3">
+      <% if f.object.persisted? && allowed_to?(:destroy?, f.object.object) %>
+        <%= link_to "Delete", @tutorial, method: :delete, class: "btn btn-danger-outline",
+                    data: { confirm: "Are you sure you want to delete?" } %>
+      <% end %>
       <%= link_to "Cancel", tutorials_path, class: "btn btn-secondary-outline ms-2" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>

@@ -5,8 +5,9 @@ RSpec.describe "events/_form", type: :view do
 
   before do
     assign(:event, event)
-    allow(view).to receive(:current_user).and_return(build_stubbed(:user, super_user: true))
+    allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
     allow(view).to receive(:allowed_to?).with(:manage?, event).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:destroy?, event).and_return(true)
   end
 
   it "renders all form fields" do

@@ -20,8 +20,8 @@
   <% end %>
   <br>
   <%= render 'comments_fields', f: f, report: @report %>
-  <div class="btn-container">
-    <%= link_to 'Cancel', root_path, class: 'btn btn-submit cancel-btn' %>
-    <%= f.submit 'Submit' %>
+  <div class="action-buttons mt-8 flex justify-center gap-3">
+    <%= link_to "Cancel", root_path, class: "btn btn-secondary-outline" %>
+    <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 <% end %> 
