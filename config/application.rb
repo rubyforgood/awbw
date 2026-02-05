@@ -30,9 +30,7 @@ module Awbw
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # Default display timezone (e.g. for Events). 
-    # TODO:Signed-in users can override via User#time_zone.
-    config.time_zone = "Pacific Time (US & Canada)"
+    # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
     config.generators do |g| # scaffold generator settings
