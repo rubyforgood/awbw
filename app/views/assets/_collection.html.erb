@@ -1,23 +1,26 @@
+<div class="bg-yellow-100 my-5 rounded-md">
+  
+<h1 class="w-full pt-4 text-center font-semibold text-2xl">Attachments</h1>
 <div
   id="asset_collection"
-  class="flex flex-wrap justify-center gap-2 p-3 m-2 bg-white my-5 rounded-md"
+  class="flex flex-wrap justify-center gap-2 p-3 m-2 "
 >
   <%= render "assets/upload", owner: owner %>
-  <%= tag.div class: "flex flex-col items-center justify-evenly border border-gray-300 rounded-md shadow-sm p-2 min-h-48 w-40 justify-self-stretch" do %>
-    <div class="flex flex-col items-center">
-      <p class="text-xs font-medium">Primary Attachment</p>
-      <p class="text-xs font-normal">(main display image)</p>
-      <p class="text-xs font-light">One allowed</p>
-      <p class="text-xs font-light">Type: .png, .jpeg</p>
-    </div>
-
-    <div class="flex flex-col items-center">
-      <p class="text-xs font-medium">Gallery Attachments</p>
-      <p class="text-xs font-normal">(extra images etc.)</p>
-      <p class="text-xs font-light">Multiple allowed</p>
-      <p class="text-xs font-light">Type: .png, .jpg, .pdf, .doc .odt</p>
-    </div>
-  <% end %>
+  <!-- <%= tag.div class: "flex flex-col items-center justify-evenly border border-gray-300 rounded-md shadow-sm p-2 min-h-48 w-40 justify-self-stretch" do %> -->
+  <!--   <div class="flex flex-col items-center"> -->
+  <!--     <p class="text-xs font-medium">Primary Attachment</p> -->
+  <!--     <p class="text-xs font-normal">(main display image)</p> -->
+  <!--     <p class="text-xs font-light">One allowed</p> -->
+  <!--     <p class="text-xs font-light">Type: .png, .jpeg</p> -->
+  <!--   </div> -->
+  <!---->
+  <!--   <div class="flex flex-col items-center"> -->
+  <!--     <p class="text-xs font-medium">Gallery Attachments</p> -->
+  <!--     <p class="text-xs font-normal">(extra images etc.)</p> -->
+  <!--     <p class="text-xs font-light">Multiple allowed</p> -->
+  <!--     <p class="text-xs font-light">Type: .png, .jpg, .pdf, .doc .odt</p> -->
+  <!--   </div> -->
+  <!-- <% end %> -->
   <% owner.assets.compact
       .select { |a| Asset.allowed_types_for_owner(owner).include?(a.type) }
       .sort_by do |asset|
@@ -31,4 +34,5 @@
     <%= render "assets/card", asset: asset, owner: owner %>
   <% end %>
 
+</div>
 </div>
