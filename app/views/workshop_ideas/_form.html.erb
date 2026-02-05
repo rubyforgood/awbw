@@ -76,11 +76,8 @@
       <% end %>
     </div>
 
-    <%= render "shared/form_dropdown", field: :body, label: "Body", padding: "mb-4 border border-gray-300 rounded-md" do %>
-      <%= render "shared/form_dropdown", form: f, field: :extra_field, label: "Extra Field" do %>
-        <%= rhino_editor(f, :extra_field) %>
-      <% end %>
-
+    <%= render "shared/form_dropdown", field: :body, label: "Body", hidden: false,
+               padding: "mb-4 border border-gray-300 rounded-md" do %>
       <%= render "shared/form_dropdown", form: f, field: :objective, label: "Workshop objective" do %>
         <%= rhino_editor(f, :objective,
                   hint: "Indicate goals of the workshop") %>
@@ -199,10 +196,13 @@
         <%= rhino_editor(f, :tips, label: "Tips",
                   hint: "Any tips on how to make this workshop a success") %>
       <% end %>
+
+      <%= render "shared/form_dropdown", form: f, field: :extra_field, label: "Extra Field" do %>
+        <%= rhino_editor(f, :extra_field) %>
+      <% end %>
     <% end %>
 
-<% 
-=begin %>
+<%# begin %>
     <!-- Accordions -->
     <div class="space-y-4">
       <div class="tags-section" data-controller="dropdown">
@@ -254,7 +254,7 @@
                 >
                   <%= check_box_tag "workshop[sector_ids][]",
                                     sector.id,
-                                    @workshop.sector_ids.include?(sector.id),
+                                    @workshop&.sector_ids&.include?(sector.id),
                                     id: id,
                                     class: "h-4 w-4 text-blue-600 rounded" %>
 
@@ -266,7 +266,7 @@
           </div>
 
           <div class="form-group space-y-6">
-            <% @categories_grouped.each do |type, cats| %>
+            <% @categories_grouped&.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                 <!-- Header -->
                 <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.titleize %></h3>
@@ -285,7 +285,7 @@
                     >
                       <%= check_box_tag "workshop[category_ids][]",
                                         category.id,
-                                        @workshop.category_ids.include?(category.id),
+                                        @workshop&.category_ids&.include?(category.id),
                                         id: id,
                                         class: "h-4 w-4 text-blue-600 rounded" %>
 
@@ -329,7 +329,7 @@
 
         <div id="translations" class="hidden border border-gray-300 p-4 rounded-b-md">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <% workshop.decorate.display_spanish_fields.each do |field| %>
+            <% @workshop&.decorate&.display_spanish_fields&.each do |field| %>
               <%= rhino_editor(f, field, label: field.to_s.humanize) %>
             <% end %>
           </div>
@@ -386,8 +386,7 @@
       </div>
     </div>
 
-<% 
-=end %>
+<%# =end %>
 
     <% if current_user.super_user? %>
       <div class="admin-only bg-blue-100 p-3">
@@ -398,23 +397,16 @@
       </div>
     <% end %>
 
-    <!-- Actions -->
-    <div class="flex gap-x-3 mt-6">
-      <% if f.object.persisted? && current_user.super_user? %>
-        <%= link_to "Delete",
-                    workshop_idea,
-                    class: "btn btn-danger-outline",
-                    method: :delete,
-                    data: { confirm: "Are you sure you want to delete this workshop idea?" } %>
+    <div class="action-buttons mt-8 flex justify-center gap-3">
+      <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
+        <%= link_to "Delete", workshop_idea, method: :delete, class: "btn btn-danger-outline",
+                    data: { confirm: "Are you sure you want to delete?" } %>
       <% end %>
-
-      <%= link_to "Cancel",
-                  (current_user.super_user? ? workshops_path : root_path),
-                  class: "btn btn-secondary-outline" %>
-
-      <%= f.submit "Submit", class: "btn btn-primary" %>
+      <%= link_to "Cancel", (current_user.super_user? ? workshops_path : root_path), class: "btn btn-secondary-outline" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   <% end %>
-</div>
 
-<div class="my-4"><%= render "assets/form", owner: workshop_idea %></div>
+
+  <div class="my-4"><%= render "assets/form", owner: workshop_idea %></div>
+</div>

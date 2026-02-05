@@ -2,7 +2,7 @@
   <%= simple_form_for @workshop_variation do |f| %>
     <%= hidden_field_tag(:from, params[:from]) %>
 
-    <%= render 'shared/errors', resource: workshop_variation if workshop_variation.errors.any? %>
+    <%= render "shared/errors", resource: workshop_variation if workshop_variation.errors.any? %>
 
     <%= tag.div class: "unpersisted_resource_asset_params" %>
 
@@ -58,13 +58,10 @@
       <% end %>
     </div>
 
-    <!-- Action buttons -->
-    <div class="mt-6 flex flex-wrap gap-3">
-      <% if @workshop_variation.persisted? %>
-        <%= link_to "Delete", @workshop_variation,
-                  method: :delete,
-                  data: { confirm: "Are you sure?" },
-                  class: "btn btn-danger-outline" %>
+    <div class="action-buttons mt-8 flex justify-center gap-3">
+      <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
+        <%= link_to "Delete", @workshop_variation, method: :delete, class: "btn btn-danger-outline",
+                    data: { confirm: "Are you sure you want to delete?" } %>
       <% end %>
 
       <% cancel_path =
@@ -75,12 +72,8 @@
          else
            root_path
          end %>
-
-      <%= link_to 'Cancel', cancel_path,
-                class: "btn btn-secondary-outline" %>
-
-      <%= f.submit 'Submit',
-                 class: "btn btn-primary" %>
+      <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   <% end %>
 </div>

@@ -66,7 +66,7 @@ RSpec.describe "Workshop categories & sectors", type: :system do
       uncheck "A"
       uncheck "X"
 
-      click_on "Submit"
+      click_on "Save changes"
 
       workshop.reload
 

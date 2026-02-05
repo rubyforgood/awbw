@@ -9,10 +9,6 @@ class AhoyActivityPolicy < ApplicationPolicy
     admin?
   end
 
-  def recent?
-    admin?
-  end
-
   def visits?
     admin?
   end

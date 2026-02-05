@@ -1,5 +1,5 @@
 <%= simple_form_for @user, html: { multipart: true, class: "space-y-8" } do |f| %>
-  <%= render 'shared/errors', resource: user if user.errors.any? %>
+  <%= render "shared/errors", resource: user if user.errors.any? %>
 
   <%= f.hidden_field :facilitator_id, value: params[:facilitator_id] %>
 
@@ -129,20 +129,14 @@
 
   <!-- Actions -->
   <!-- Action buttons -->
-  <div class="mt-6 flex flex-wrap gap-3">
+  <div class="action-buttons mt-8 flex justify-center gap-3">
     <%= render "toggle_lock_button", user: @user %>
 
-    <% if @user.persisted? %>
-      <%= link_to "Delete", @user,
-                  method: :delete,
-                  data: { confirm: "Are you sure?" },
-                  class: "btn btn-danger-outline" %>
+    <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
+      <%= link_to "Delete", @user, method: :delete, class: "btn btn-danger-outline",
+                  data: { confirm: "Are you sure you want to delete?" } %>
     <% end %>
-
-    <%= link_to 'Cancel', users_path,
-                class: "btn btn-secondary-outline" %>
-
-    <%= f.submit 'Submit',
-                 class: "btn btn-primary" %>
+    <%= link_to "Cancel", users_path, class: "btn btn-secondary-outline" %>
+    <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 <% end %>

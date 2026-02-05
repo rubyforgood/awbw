@@ -81,6 +81,8 @@ class Resource < ApplicationRecord
     where(kind: kinds)
   }
   scope :leader_spotlights, -> { kinds("LeaderSpotlight") }
+  scope :publicly_featured, -> { published.where(publicly_featured: true) }
+  scope :publicly_visible, -> { published.where(publicly_visible: true) }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
   scope :published, ->(published = nil) {
     if [ "true", "false" ].include?(published)

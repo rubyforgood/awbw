@@ -11,26 +11,17 @@ class ApplicationPolicy < ActionPolicy::Base
   pre_check :verify_authenticated!
 
   default_rule :manage?
-  alias_rule :new?, :create?, :edit?, :update?, :destroy?, to: :manage?
+  alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, :destroy?, to: :manage?
 
   def manage?
     admin?
   end
 
-  def index?
-    true
-  end
-
-  def show?
-    admin? || record.published?
-  end
-
-
   private
   # Define shared methods useful for most policies.
 
   def admin?
-    user&.super_user?
+    user&.admin?
   end
 
   def owner?

@@ -9,7 +9,7 @@ class DashboardPolicy < ApplicationPolicy
     if authenticated?
       relation.featured
     else
-      relation.public_featured
+      relation.publicly_featured
     end
   end
 end

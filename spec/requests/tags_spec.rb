@@ -10,9 +10,9 @@ RSpec.describe "Tags index", type: :request do
 
     before { sign_in user }
 
-    it "checks authorization via ApplicationPolicy" do
-      expect_any_instance_of(ApplicationPolicy)
-        .to receive(:index?).and_call_original
+    it "checks authorization via TagPolicy" do
+      expect_any_instance_of(TagPolicy)
+        .to receive(:index?).and_return(true)
 
       get tags_path
     end

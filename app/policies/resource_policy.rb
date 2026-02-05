@@ -1,6 +1,14 @@
 class ResourcePolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
+  def index?
+    true
+  end
+
+  def show?
+    admin? || record.publicly_visible? || (authenticated? && record.published?)
+  end
+
   def download?
     true
   end
@@ -10,10 +18,11 @@ class ResourcePolicy < ApplicationPolicy
   end
 
   relation_scope do |relation|
-    if admin?
-      relation
-    else
+    next relation if admin?
+    if authenticated?
       relation.published
+    else
+      relation.publicly_visible
     end
   end
 end

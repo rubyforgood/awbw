@@ -67,7 +67,8 @@ class TutorialsController < ApplicationController
   # Strong parameters
   def tutorial_params
     params.require(:tutorial).permit(
-      :title, :body, :rhino_body, :featured, :published, :position, :youtube_url,
+      :title, :body, :rhino_body, :position, :youtube_url,
+      :featured, :published, :publicly_visible,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
     )
