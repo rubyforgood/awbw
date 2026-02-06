@@ -1,5 +1,5 @@
 class Workshop < ApplicationRecord
-  include Featureable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include ActiveModel::Dirty
@@ -115,16 +115,10 @@ class Workshop < ApplicationRecord
 
 
   # Scopes
-  scope :category_names, ->(names) { tag_names(:categories, names) }
-  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
+  # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :legacy, -> { where(legacy: true) }
-  scope :publicly_featured, -> { published.where(publicly_featured: true) }
-  scope :publicly_visible, -> { published.where(publicly_visible: true) }
-  scope :published, ->(published = nil) { published.to_s.present? ?
-           where(inactive: !published) : where(inactive: false) }
   scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
-  scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
   scope :order_by_date, ->(sort_order = "asc") {
     order(Arel.sql(<<~SQL.squish))
     COALESCE(
@@ -136,13 +130,12 @@ class Workshop < ApplicationRecord
     ) #{sort_order == "asc" ? "ASC" : "DESC"}
     SQL
   }
+  scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
+  scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
   scope :with_bookmarks_count, -> {
     left_joins(:bookmarks)
       .select("workshops.*, COUNT(bookmarks.id) AS bookmarks_count")
       .group("workshops.id")
-  }
-  scope :featured_or_publicly_featured, -> {
-    where("(featured = ? OR publicly_featured = ?) AND inactive = ?", true, true, false)
   }
 
   # Search Cop
@@ -288,7 +281,7 @@ class Workshop < ApplicationRecord
   end
 
   def featured_or_publicly_featured_changed?
-    featured_changed? || publicly_featured_changed? || inactive_changed?
+    featured_changed? || publicly_featured_changed? || published_changed?
   end
 
   def attach_assets_from_idea!

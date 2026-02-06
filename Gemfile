@@ -70,10 +70,6 @@ group :development do
   gem "rubocop-rails-omakase", require: false
 end
 
-group :test do
-  gem "launchy"
-end
-
 group :development, :test do
   gem "better_errors"
   # gem "binding_of_caller"  # Temporarily commented - doesn't support Ruby 4.0.1

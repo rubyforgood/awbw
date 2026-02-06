@@ -1,17 +1,26 @@
 <%= simple_form_for(@project_status) do |f| %>
-  <div class="form-body space-y-6">
-    <!-- Form Errors -->
+  <div class="space-y-6">
+
+    <!-- Errors -->
     <%= f.error_notification %>
     <%= render "shared/errors", resource: @project_status if @project_status.errors.any? %>
 
-    <!-- Form Fields -->
-    <div class="row">
-      <% @project_status.attribute_names.reject { |a| ["id", "created_at", "updated_at"].include?(a) }.each do |attr| %>
-        <% next if ["id", "created_at", "updated_at"].include?(attr) %>
-        <div class="col-md-6 mb-3">
-          <%= f.input attr.to_sym, input_html: { class: "form-control" } %>
-        </div>
-      <% end %>
+    <!-- Fields -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <%= f.input :name,
+                  label: "Status Name",
+                  input_html: { class: "form-control" },
+                  required: true %>
+
+      <div class="flex items-center pt-6">
+        <%= f.input :published,
+                    as: :boolean,
+                    label: "Published?",
+                    input_html: { class: "h-4 w-4" },
+                    wrapper_html: { class: "mb-0" } %>
+      </div>
+
     </div>
 
     <div class="action-buttons mt-8 flex justify-center gap-3">

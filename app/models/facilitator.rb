@@ -1,5 +1,5 @@
 class Facilitator < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include Publishable, TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -53,17 +53,13 @@ class Facilitator < ApplicationRecord
     attributes contact_methods_phone: "contact_methods.value"
   end
 
-  scope :active, -> { all } # TODO - implement inactive field
-  scope :published, -> { active.searchable }
-  scope :published, ->(published = nil) { published ? active.searchable(published) : active.searchable }
+  scope :published, -> { where(published: true).searchable }
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
   scope :project_name, ->(project_name) {
     return all if project_name.blank?
     left_joins(user: { project_users: :project })
       .where("projects.name LIKE ?", "%#{sanitize_sql_like(project_name)}%")
       .distinct }
-  scope :category_names, ->(names) { tag_names(:categories, names) }
-  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 
   def self.search_by_params(params)
     results = self.all

@@ -30,11 +30,11 @@
               </div>
                           <div class="mb-3">
                 <p class="font-bold text-gray-700">Created by:</p>
-                <p class="text-gray-900"><%= @banner.created_by.full_name %> @ <%= @banner.created_at.strftime("%Y-%m-%d %I:%M %P") %></p>
+                <p class="text-gray-900"><%= @banner.created_by&.full_name %> @ <%= @banner.created_at.strftime("%Y-%m-%d %I:%M %P") %></p>
               </div>
                           <div class="mb-3">
                 <p class="font-bold text-gray-700">Updated by:</p>
-                <p class="text-gray-900"><%= @banner.updated_by.full_name %> @ <%= @banner.updated_at.strftime("%Y-%m-%d %I:%M %P") %></p>
+                <p class="text-gray-900"><%= @banner.updated_by&.full_name %> @ <%= @banner.updated_at.strftime("%Y-%m-%d %I:%M %P") %></p>
               </div>
             
           </div>

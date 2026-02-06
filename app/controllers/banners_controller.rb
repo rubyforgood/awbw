@@ -58,7 +58,7 @@ class BannersController < ApplicationController
   # Strong parameters
   def banner_params
     params.require(:banner).permit(
-      :content, :show, :created_by_id, :updated_by_id
+      :content, :published, :created_by_id, :updated_by_id
     )
   end
 end

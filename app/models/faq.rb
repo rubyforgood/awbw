@@ -1,16 +1,13 @@
 class Faq < ApplicationRecord
+  include Publishable
   positioned
 
   # Validations
   validates_presence_of :question, :answer
 
   # Scopes
-  scope :active, -> { where(inactive: false) }
+  # See Publishable
   scope :by_position, -> { order(position: :asc) }
-  scope :publicly_visible, -> { published.where(publicly_visible: true) }
-  scope :published, ->(published = nil) {
-    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true)
-  }
 
   # Search Cop
   include SearchCop
@@ -21,9 +18,9 @@ class Faq < ApplicationRecord
   def self.search_by_params(params)
     results = self.all
     results = results.search(params[:query]) if params[:query].present?
-    if params[:inactive].to_s.present?
-      value = ActiveModel::Type::Boolean.new.cast(params[:inactive])
-      results = results.where(inactive: value)
+    if params[:published].to_s.present?
+      value = ActiveModel::Type::Boolean.new.cast(params[:published])
+      results = results.where(published: value)
     end
     results
   end

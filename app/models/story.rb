@@ -1,5 +1,5 @@
 class Story < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -49,23 +49,13 @@ class Story < ApplicationRecord
   end
 
   # Scopes
-  scope :featured, -> { where(featured: true) }
-  scope :publicly_featured, -> { where(publicly_featured: true) }
-  scope :category_names, ->(names) { tag_names(:categories, names) }
-  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
-  scope :story_name, ->(story_name) {
-    story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
-  scope :publicly_featured, -> { published.where(publicly_featured: true) }
-  scope :publicly_visible, -> { published.where(publicly_visible: true) }
-  scope :published, ->(published = nil) {
-    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
-  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
+  # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
   def self.search_by_params(params)
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
-    conditions[:published] = params[:published_search] if params[:published_search].present?
+    conditions[:published] = params[:published] if params[:published].present?
 
     self.search(conditions)
   end

@@ -39,8 +39,8 @@
 
                 <tbody class="divide-y divide-gray-200">
                 <% @sectors.each do |sector| %>
-                  <tr class=" <%= "bg-gray-200" unless sector.published %>
-                  <%= sector.published ? "hover:bg-gray-50" : "hover:bg-gray-100" %> transition-colors duration-150">
+                  <tr class=" <%= "bg-gray-200" unless sector.published? %>
+                    <%= sector.published? ? "hover:bg-gray-100" : "hover:bg-gray-50" %> transition-colors duration-150">
 
                     <td class="px-4 py-2 text-md text-gray-800 truncate font-bold">
                       <%= sector.name %>

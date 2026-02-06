@@ -8,8 +8,4 @@ class CommunityNewsDecorator < ApplicationDecorator
   def external_url
     object.reference_url
   end
-
-  def inactive?
-    !published?
-  end
 end

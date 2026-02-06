@@ -1,5 +1,6 @@
 class StoriesController < ApplicationController
   include ExternallyRedirectable, AssetUpdatable, AhoyTracking
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
   def index

@@ -38,8 +38,8 @@ RSpec.describe Category do
 
   describe ".published" do
     it "returns only published categories" do
-      visible = create(:category, published: true)
-      hidden  = create(:category, published: false)
+      visible = create(:category, :published)
+      hidden  = create(:category)
 
       expect(Category.published).to contain_exactly(visible)
     end

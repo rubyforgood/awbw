@@ -1,5 +1,5 @@
 class Event < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User", optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -20,7 +20,7 @@ class Event < ApplicationRecord
 
   # Validations
   validates_presence_of :title, :start_date, :end_date
-  validates_inclusion_of :inactive, in: [ true, false ]
+  validates_inclusion_of :published, in: [ true, false ]
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
 
   # Nested attributes
@@ -33,25 +33,11 @@ class Event < ApplicationRecord
     attributes :title, :description
   end
 
-
-  # Action Policy
-  scope :featured, -> {
-    where(featured: true, inactive: false)
-      .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
-  }
-  scope :publicly_featured, -> {
-    where(publicly_visible: true, publicly_featured: true, inactive: false)
-      .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
-  }
-  scope :publicly_visible, -> { published.where(publicly_visible: true)
-      .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
-  }
-
-  scope :published, ->(published = nil) { published.to_s.present? ?
-           where(inactive: !published) : where(inactive: false) }
-  scope :category_names, ->(names) { tag_names(:categories, names) }
-  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
-
+  # Scopes
+  # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
+  scope :featured, -> { registerable.where(published: true, featured: true) }
+  scope :publicly_featured, -> { registerable.where(published: true, publicly_visible: true, publicly_featured: true) }
+  scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
 
   def self.search_by_params(params)
     stories = self.all
@@ -62,13 +48,8 @@ class Event < ApplicationRecord
     stories
   end
 
-  def published?
-    !inactive
-  end
-
   def registerable?
-    !inactive &&
-      (registration_close_date.nil? || registration_close_date >= Time.current)
+    published && (registration_close_date.nil? || registration_close_date >= Time.current)
   end
 
   def full_name

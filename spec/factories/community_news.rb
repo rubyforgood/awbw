@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :community_news do
     title { "MyString" }
-    published { true }
+    published { false }
     featured { false }
     reference_url { "" }
     youtube_url { "" }
@@ -11,6 +11,10 @@ FactoryBot.define do
 
     trait :published do
       published { true }
+    end
+
+    trait :unpublished do
+      published { false }
     end
 
     trait :featured do
