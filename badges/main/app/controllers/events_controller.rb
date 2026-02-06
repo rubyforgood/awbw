@@ -89,7 +89,7 @@ class EventsController < ApplicationController
     params.require(:event).permit(:cost,
                                   :created_by_id,
                                   :title,
-                                  :description,
+                                  :rhino_description,
                                   :featured,
                                   :start_date, :end_date,
                                   :registration_close_date,

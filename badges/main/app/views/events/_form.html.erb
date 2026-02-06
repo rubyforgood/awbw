@@ -10,18 +10,26 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div>
       <div>
-        <%= f.input :title, label: "Event title", required: true,
-                    as: :text,
-                    input_html: {
-                      rows: 1,
-                      value: f.object.title,
-                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2
-                      focus:ring-blue-500 focus:border-blue-500" } %>
+        <%= f.input :title,
+                label: "Event title",
+                required: true,
+                as: :text,
+                input_html: {
+                  rows: 1,
+                  value: f.object.title,
+                  class:
+                    "w-full rounded border-gray-300 shadow-sm px-3 py-2
+                                              focus:ring-blue-500 focus:border-blue-500",
+                } %>
       </div>
     </div>
 
     <% if allowed_to?(:manage?, @event) %>
-      <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
+      <div
+        class="
+          admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3
+        "
+      >
         <%= f.input :published, as: :boolean %>
         <%= f.input :featured, as: :boolean %>
         <%= f.input :publicly_visible, as: :boolean %>
@@ -30,52 +38,59 @@
     <% end %>
   </div>
 
-  <div>
-    <%= f.input :description,
-                as: :text,
-                input_html: {
-                  rows: 3,
-                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2
-                    focus:ring-blue-500 focus:border-blue-500" } %>
-  </div>
+  <%= rhino_editor(f, :description) %>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-12">
     <div>
-      <%= f.label :start_date, "Start time", required: true, class: "block font-medium mb-1" %>
+      <%= f.label :start_date,
+              "Start time",
+              required: true,
+              class: "block font-medium mb-1" %>
 
-      <%= f.text_field :start_date, type: "datetime-local",
-                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.start_date&.strftime("%Y-%m-%dT%H:%M"),
-                       required: true %>
+      <%= f.text_field :start_date,
+                   type: "datetime-local",
+                   class:
+                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   value: @event.start_date&.strftime("%Y-%m-%dT%H:%M"),
+                   required: true %>
 
       <% if f.object.errors[:start_date].any? %>
-        <p class="text-red-500 text-sm mt-1">Start date <%= f.object.errors[:start_date].join(", ") %></p>
+        <p class="text-red-500 text-sm mt-1">Start date
+          <%= f.object.errors[:start_date].join(", ") %></p>
       <% end %>
     </div>
 
     <div>
       <%= f.label :end_date, "End time", required: true, class: "block font-medium mb-1" %>
 
-      <%= f.text_field :end_date, type: "datetime-local",
-                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.end_date&.strftime("%Y-%m-%dT%H:%M"),
-                       required: true %>
+      <%= f.text_field :end_date,
+                   type: "datetime-local",
+                   class:
+                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   value: @event.end_date&.strftime("%Y-%m-%dT%H:%M"),
+                   required: true %>
 
       <% if f.object.errors[:end_date].any? %>
-        <p class="text-red-500 text-sm mt-1">End date <%= f.object.errors[:end_date].join(", ") %></p>
+        <p class="text-red-500 text-sm mt-1">End date
+          <%= f.object.errors[:end_date].join(", ") %></p>
       <% end %>
     </div>
 
     <div>
-      <%= f.label :registration_close_date, "Registration close time", class: "block font-medium mb-1" %>
+      <%= f.label :registration_close_date,
+              "Registration close time",
+              class: "block font-medium mb-1" %>
 
-      <%= f.text_field :registration_close_date, type: "datetime-local",
-                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
+      <%= f.text_field :registration_close_date,
+                   type: "datetime-local",
+                   class:
+                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
 
       <% if f.object.errors[:registration_close_date].any? %>
         <p class="text-red-500 text-sm mt-1">
-          Registration close date <%= f.object.errors[:registration_close_date].join(", ") %>
+          Registration close date
+          <%= f.object.errors[:registration_close_date].join(", ") %>
         </p>
       <% end %>
     </div>
@@ -92,16 +107,19 @@
         <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
 
         <%= f.text_field :cost,
-                         type: "number",
-                         step: "0.01",
-                         min: "0",
-                         placeholder: "0.00",
-                         oninput: "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
-                         class: "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+                     type: "number",
+                     step: "0.01",
+                     min: "0",
+                     placeholder: "0.00",
+                     oninput:
+                       "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
+                     class:
+                       "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
       </div>
 
       <% if f.object.errors[:cost].any? %>
-        <p class="text-red-500 text-sm mt-1">Cost <%= f.object.errors[:cost].join(", ") %></p>
+        <p class="text-red-500 text-sm mt-1">Cost
+          <%= f.object.errors[:cost].join(", ") %></p>
       <% end %>
     </div>
   <% end %>
@@ -111,8 +129,13 @@
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete", @event, method: :delete, class: "btn btn-danger-outline",
-                    data: { confirm: "Are you sure you want to delete?" } %>
+        <%= link_to "Delete",
+        @event,
+        method: :delete,
+        class: "btn btn-danger-outline",
+        data: {
+          confirm: "Are you sure you want to delete?",
+        } %>
       <% end %>
       <%= link_to "Cancel", events_path, class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
