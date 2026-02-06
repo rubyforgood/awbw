@@ -154,6 +154,6 @@ module ApplicationHelper
       "Hawaii",
       "Arizona"
     ]
-    ActiveSupport::TimeZone.us_zones.select { |z| zone_names.include?(z.name) }.sort_by { |z| zone_names.index(z.name) }.map { |z| [z.to_s, z.name] }
+    ActiveSupport::TimeZone.us_zones.select { |z| zone_names.include?(z.name) }.sort_by { |z| zone_names.index(z.name) }.map { |z| [ z.to_s, z.name ] }
   end
 end
