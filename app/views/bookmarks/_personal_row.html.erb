@@ -3,7 +3,7 @@
 <div
   id="bookmarkable-<%= bookmarkable.id %>"
   class="
-    flex flex-col md:flex-row <%= "admin-only bg-blue-100" if bookmarkable.inactive? %> border-b
+    flex flex-col md:flex-row <%= "admin-only bg-blue-100" unless bookmarkable.published? %> border-b
     border-gray-200 list-group-item-custom gap-4 py-4 mb-0">
   <div
     id="bookmarkable-<%= bookmarkable.id %>-anchor"
@@ -38,7 +38,7 @@
         <% type_name = "" %>
       <% end %>
 
-      <%= link_to "#{bookmarkable.title}#{ type_name }#{" [HIDDEN]" if bookmarkable.inactive?}",
+      <%= link_to "#{bookmarkable.title}#{ type_name }#{" [UNPUBLISHED]" unless bookmarkable.published?}",
                   polymorphic_path(bookmarkable),
                   class: "hover:underline",
                   data: { turbo: false, } %>

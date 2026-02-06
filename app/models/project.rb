@@ -1,5 +1,5 @@
 class Project < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include Publishable, TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :project_status
   belongs_to :project_obligation, optional: true
@@ -39,6 +39,8 @@ class Project < ApplicationRecord
     attributes :name
   end
 
+  # Scopes
+  # See Publishable, TagFilterable, Trendable, WindowsTypeFilterable
   scope :address, ->(address) do
     return all if address.blank?
     exact = address.to_s
@@ -59,11 +61,7 @@ class Project < ApplicationRecord
     SQL
       wildcard: wildcard, exact: exact)
   end
-  scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
-  scope :published, ->(published = nil) { published ? active(published) : active }
-  scope :category_names, ->(names) { tag_names(:categories, names) }
-  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 
   def self.search_by_params(params)
     projects = self.all

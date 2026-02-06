@@ -122,7 +122,7 @@ class WorkshopLogsController < ApplicationController
                         .order(:last_name, :first_name)
     @projects = if current_user.super_user?
       # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
-      Project.active.order(:name)
+      Project.published.order(:name)
     else
       current_user.projects.order(:name)
     end
@@ -172,7 +172,7 @@ class WorkshopLogsController < ApplicationController
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder
     if form
-      @report_field_answers = form.form_fields.active.order(:position).map do |field|
+      @report_field_answers = form.form_fields.published.order(:position).map do |field|
         @workshop_log.report_form_field_answers.find_or_initialize_by(form_field: field)
       end
     end

@@ -1,12 +1,14 @@
 class WorkshopsController < ApplicationController
   include AssetUpdatable, AhoyTracking
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
+
   def index
     @category_types = CategoryType.published.order(:name).decorate
     @sectors        = Sector.published
     @windows_types  = WindowsType.all
 
     if turbo_frame_request?
-      search_service = WorkshopSearchService.new(params, super_user: current_user.super_user?).call
+      search_service = WorkshopSearchService.new(params, user: current_user).call
       @sort = search_service.sort
 
       track_index_intent(Workshop, search_service.workshops, params)
@@ -188,9 +190,9 @@ class WorkshopsController < ApplicationController
 
   def set_show
     @quotes = Quote.where(workshop_id: @workshop.id).active
-    @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(inactive: false)
+    @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
     @workshop_variations = @workshop.workshop_variations.active
-    @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
+    @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
   end
 
 
@@ -238,7 +240,7 @@ class WorkshopsController < ApplicationController
 
   def workshop_params
     params.require(:workshop).permit(
-      :title, :featured, :inactive,
+      :title, :featured, :published,
       :full_name, :user_id, :windows_type_id, :workshop_idea_id,
       :month, :year,
       :publicly_visible,

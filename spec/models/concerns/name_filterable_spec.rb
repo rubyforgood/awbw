@@ -7,8 +7,11 @@ RSpec.describe NameFilterable do
   let!(:other)   { create(:sector, name: "Adults") }
 
   describe ".names" do
-    it "returns none for blank input" do
-      expect(Sector.names(nil)).to be_empty
+    it "returns all when param is not provided" do
+      expect(Sector.names(nil)).to match_array([ youth, healing, other ])
+    end
+
+    it "returns none when param is provided but empty" do
       expect(Sector.names("")).to be_empty
     end
 

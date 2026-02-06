@@ -18,8 +18,8 @@ RSpec.describe CategoryType do
   end
 
   describe 'scopes' do
-    let!(:published_category_type) { create(:category_type, published: true) }
-    let!(:unpublished_category_type) { create(:category_type, published: false) }
+    let!(:published_category_type) { create(:category_type, :published) }
+    let!(:unpublished_category_type) { create(:category_type) }
 
     it '.published returns only published category types' do
       expect(CategoryType.published).to include(published_category_type)

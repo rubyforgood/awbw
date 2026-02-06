@@ -90,7 +90,7 @@ class FacilitatorsController < ApplicationController
       @facilitator.user.project_users.first || @facilitator.user.project_users.build
     end
     projects = if current_user.super_user?
-      Project.active
+      Project.published
     else
       current_user.projects
     end
@@ -127,6 +127,7 @@ class FacilitatorsController < ApplicationController
       :profile_show_workshop_variations,
       :profile_show_workshops,
       :profile_show_workshop_logs,
+      :published,
       :member_since,
       :linked_in_url,
       :facebook_url,
@@ -147,6 +148,7 @@ class FacilitatorsController < ApplicationController
         :district,
         :locality,
         :phone,
+        :inactive,
         :_destroy
       ],
       contact_methods_attributes: [

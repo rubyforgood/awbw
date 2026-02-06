@@ -1,4 +1,5 @@
 class FaqsController < ApplicationController
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_faq, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -59,6 +60,6 @@ class FaqsController < ApplicationController
 
   # Strong parameters
   def faq_params
-    params.require(:faq).permit(:question, :answer, :inactive, :position, :publicly_visible)
+    params.require(:faq).permit(:question, :answer, :position, :published, :publicly_visible)
   end
 end
