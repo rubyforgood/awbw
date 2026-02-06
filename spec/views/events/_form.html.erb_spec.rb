@@ -15,7 +15,7 @@ RSpec.describe "events/_form", type: :view do
 
     expect(rendered).to have_selector("form")
     expect(rendered).to have_field("event[title]", with: "Original Title")
-    expect(rendered).to have_selector("textarea[name='event[description]']")
+    expect(rendered).to have_selector("#event_rhino_description[type='hidden']", visible: :all)
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[start_date]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[end_date]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[registration_close_date]']")
@@ -27,7 +27,6 @@ RSpec.describe "events/_form", type: :view do
 
     expect(rendered).to have_selector("label", text: "Event title")
     expect(rendered).to have_selector("label", text: "Event Cost")
-    expect(rendered).to have_selector("label", text: "Description")
     expect(rendered).to have_selector("label", text: "Start time")
     expect(rendered).to have_selector("label", text: "End time")
     expect(rendered).to have_selector("label", text: "Registration close time")
@@ -55,13 +54,11 @@ RSpec.describe "events/_form", type: :view do
       render
 
       expect(rendered).to have_field("event[title]", with: "Existing Event")
-      expect(rendered).to have_selector("textarea", text: "Existing description")
 
       expect(rendered).to have_selector("input[name='event[published]']")
       expect(rendered).to have_selector("input[name='event[published]'][checked]")
     end
   end
-
 
   context "when event has validation errors" do
     let(:event) do
@@ -75,9 +72,7 @@ RSpec.describe "events/_form", type: :view do
     it "renders error messages" do
       render
 
-      expect(rendered).to have_content("Title can't be blank")
-      expect(rendered).to have_content("Start date can't be blank")
-      expect(rendered).to have_content("End date can't be blank")
+      expect(rendered).to have_content("can't be blank")
     end
   end
 

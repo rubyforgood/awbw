@@ -8,7 +8,7 @@ RSpec.describe "Event show page", type: :system do
     create(
       :event,
       title: "My Event",
-      description: "A wonderful event",
+      rhino_description: "A wonderful event",
       publicly_visible: true,
       published: true,
       start_date: 2.days.from_now.change(hour: 10),

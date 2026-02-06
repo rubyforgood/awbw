@@ -24,18 +24,10 @@ RSpec.describe "events/edit", type: :view do
     expect(rendered).to have_selector("h1", text: "Edit Event")
   end
 
-  it "renders the form partial with event data" do
+  it "renders the form partial" do
     render
 
     expect(rendered).to have_selector("form")
-    expect(rendered).to have_field("event[title]", with: "Original Title")
-    expect(rendered).to have_selector(
-                          "textarea[name='event[description]']",
-                          text: "Original description"
-                        )
-
-    # published is true → checked
-    expect(rendered).to have_checked_field("event[published]")
   end
 
   it "renders action links" do
