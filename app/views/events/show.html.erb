@@ -30,37 +30,7 @@
                 <div><%= @event.labelled_cost %></div>
               <% end %>
 
-              <div class="registration-section flex flex-col gap-4 mb-6">
-                <!-- ⭐ BUTTONS -->
-                <div class="flex flex-wrap items-center gap-3">
-                  <% registered = @event.event_registrations.exists?(registrant_id: current_user&.id) %>
-
-                  <% if registered %>
-                    <%= button_to "De-register",
-                                  event_registrant_registration_path(event_id: @event),
-                                  method: :delete,
-                                  data: { turbo_confirm: "Are you sure?" },
-                                  class: "btn btn-secondary-outline" %>
-                  <% elsif @event.registerable? %>
-                    <%= button_to "Register",
-                                  event_registrant_registration_path(event_id: @event),
-                                  class: "btn btn-primary-outline" %>
-                  <% else %>
-                    <span class="text-sm text-gray-500 italic">Registration closed</span>
-                  <% end %>
-
-                  <% if registered %>
-                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                      You are registered!
-                    </span>
-                  <% end %>
-                </div>
-
-                <!-- ⭐ CALENDAR LINKS -->
-                <% if registered %>
-                  <div class="flex gap-2 items-center text-sm text-gray-700"><%= @event.calendar_links %></div>
-                <% end %>
-              </div>
+              <%= render "events/registration_section", event: @event %>
 
               <% if @event.registration_close_date %>
                 <div>
