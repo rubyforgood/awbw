@@ -1,9 +1,13 @@
 <% sector_names = @sector_names.to_s.split("--").join(", ") %>
 <% category_full_names =
-     Category.names(@category_names)
-             .includes(:category_type)
-             .map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }
-             .join(", ")
+     if @category_names.present?
+       Category.names(@category_names)
+               .includes(:category_type)
+               .map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }
+               .join(", ")
+     else
+       nil
+     end
 %>
 
 <div class="taggings-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tags) %> border border-gray-200 rounded-xl shadow p-6">

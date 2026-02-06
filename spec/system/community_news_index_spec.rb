@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Community News Index", type: :system do
   let(:admin) { create(:user, :admin) }
-  let(:community_news) { create(:community_news, title: "Test Community News", published: true, rhino_body: "Test content") }
+  let(:community_news) { create(:community_news, :published, title: "Test Community News", rhino_body: "Test content") }
 
   scenario "Admin visits community news index and sees results load in turbo frame" do
     community_news  # This ensures the record is created

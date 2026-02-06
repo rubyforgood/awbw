@@ -29,12 +29,12 @@
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <div class="mb-1">
-                    <% if current_user.super_user? && quote.inactive? && controller_name != "dashboard" %>
+                    <% if current_user.super_user? && !quote.published? && controller_name != "dashboard" %>
                       <span
                         class="inline-flex items-center px-2 py-0.5 rounded-full
                                text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap">
                         <i class="fa-solid fa-eye-slash mr-1"></i>
-                        Hidden
+                        Unpublished
                       </span>
 
                     <% end %>

@@ -122,7 +122,7 @@ class MonthlyReportsController < ApplicationController
 
   def render_form
     @workshop_list = Workshop.created_by_id(current_user.id)
-                             .where(inactive: false, windows_type: 3)
+                             .where(published: true, windows_type: 3)
                              .order(title: :asc)
 
     build_month_and_year

@@ -2,8 +2,8 @@ class TaggingsController < ApplicationController
   include AhoyTracking
 
   def index
-    @sector_names = params[:sector_names].to_s
-    @category_names = params[:category_names].to_s
+    @sector_names = params[:sector_names]
+    @category_names = params[:category_names]
 
     number_of_items_per_page = params[:number_of_items_per_page].present? ? params[:number_of_items_per_page].to_i : 9
     pages = {

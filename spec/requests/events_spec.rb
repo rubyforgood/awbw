@@ -8,7 +8,7 @@ RSpec.describe "/events", type: :request do
       "start_date": 1.day.from_now,
       "end_date": 2.days.from_now,
       "registration_close_date": 3.days.ago,
-      "inactive": false
+      "published": true
     }
   }
 
@@ -139,7 +139,7 @@ RSpec.describe "/events", type: :request do
           start_date: 1.day.from_now,
           end_date: 2.days.from_now,
           registration_close_date: 3.days.ago,
-          inactive: false
+          published: true
         } }
         follow_redirect!  # flash shows after redirect
 

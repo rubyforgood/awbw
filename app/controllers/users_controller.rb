@@ -154,8 +154,8 @@ class UsersController < ApplicationController
   def set_form_variables
     set_facilitator
     @user.project_users.first || @user.project_users.build
-    projects = if current_user.super_user?
-      Project.active
+    projects = if current_user.admin?
+      Project.published
     else
       current_user.projects
     end
@@ -177,7 +177,7 @@ class UsersController < ApplicationController
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :comment,
       :notes, :primary_address, :avatar, :subscribecode,
       :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
-      :confirmed, :inactive, :super_user, :legacy, :legacy_id,
+      :confirmed, :published, :super_user, :legacy, :legacy_id,
       :time_zone,
       project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
     )

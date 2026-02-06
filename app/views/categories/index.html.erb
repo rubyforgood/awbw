@@ -52,7 +52,7 @@
                     data-controller="sortable"
                     data-sortable-url-value="<%= category_path(id: ":id") %>">
                     <% @categories.each do |category| %>
-                      <tr class="<%= "bg-gray-200" unless category.published %> <%= category.published ? "hover:bg-gray-50" : "hover:bg-gray-100" %>
+                      <tr class="<%= "bg-gray-200" unless category.published? %> <%= category.published? ? "hover:bg-gray-100" : "hover:bg-gray-50" %>
                         transition-colors duration-150"
                       data-sortable-id="<%= category.id %>">
                       <td class="px-4 py-2 text-md text-gray-800 truncate font-bold">
@@ -69,13 +69,13 @@
 
                       <td class="px-4 py-2 text-center">
                         <% if category.published? %>
-                        <span class="inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">
-                          Yes
-                        </span>
+                          <span class="inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">
+                            Yes
+                          </span>
                         <% else %>
-                        <span class="inline-block px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded">
-                          No
-                        </span>
+                          <span class="inline-block px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded">
+                            No
+                          </span>
                         <% end %>
                       </td>
 

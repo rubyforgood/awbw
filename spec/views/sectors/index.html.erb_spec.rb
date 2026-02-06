@@ -5,8 +5,8 @@ RSpec.describe "sectors/index", type: :view do
 
   before do
     assign(:sectors, [
-      create(:category, name: "Sector One", published: true),
-      create(:category, name: "Sector Two", published: false)
+      create(:category, :published, name: "Sector One"),
+      create(:category, name: "Sector Two")
     ])
     allow(view).to receive(:current_user).and_return(admin)
   end

@@ -8,9 +8,9 @@ RSpec.describe "Event show page", type: :system do
     create(
       :event,
       title: "My Event",
-      description: "A wonderful event",
+      rhino_description: "A wonderful event",
       publicly_visible: true,
-      inactive: false,
+      published: true,
       start_date: 2.days.from_now.change(hour: 10),
       end_date:   2.days.from_now.change(hour: 12),
       cost: 10.99,
@@ -186,7 +186,7 @@ RSpec.describe "Event show page", type: :system do
 
   describe "visibility rules" do
     it "hides inactive events from non-admins" do
-      event.update!(inactive: true, publicly_visible: false)
+      event.update!(published: false, publicly_visible: false)
 
       sign_in(user)
       visit event_path(event)
@@ -195,7 +195,7 @@ RSpec.describe "Event show page", type: :system do
     end
 
     it "allows admins to view inactive events" do
-      event.update!(inactive: true, publicly_visible: false)
+      event.update!(published: false, publicly_visible: false)
 
       sign_in(admin)
       visit event_path(event)

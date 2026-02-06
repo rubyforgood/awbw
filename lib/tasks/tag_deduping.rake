@@ -34,7 +34,7 @@ namespace :tags do
       sorted =
         sectors.sort_by do |s|
           [
-            s.published ? 0 : 1,                    # published first
+            s.published? ? 0 : 1,                    # published first
             -(usage_by_sector_id[s.id] || 0),       # highest usage
             s.created_at || Time.current            # oldest
           ]
@@ -125,7 +125,7 @@ namespace :tags do
       sorted =
         categories.sort_by do |c|
           [
-            c.respond_to?(:published) && c.published ? 0 : 1,
+            c.respond_to?(:published) && c.published? ? 0 : 1,
             -(usage_by_category_id[c.id] || 0),
             c.created_at || Time.current
           ]
