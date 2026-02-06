@@ -131,6 +131,47 @@ RSpec.describe "Event show page", type: :system do
   end
 
   # --------------------------------------------------
+  # REGISTRATION BUTTON UPDATES VIA TURBO
+  # --------------------------------------------------
+
+  describe "registration button updates via Turbo", js: true do
+    before { driven_by(:selenium_chrome_headless) }
+
+    it "updates Register to De-register and shows badge without full page reload" do
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).to have_button("Register")
+      expect(page).not_to have_text("You are registered!")
+
+      click_button "Register"
+
+      # Turbo stream replaces the registration section; we stay on the event page
+      expect(page).to have_current_path(event_path(event))
+      expect(page).to have_button("De-register")
+      expect(page).to have_text("You are registered!")
+      expect(page).not_to have_button("Register")
+    end
+
+    it "updates De-register back to Register after de-registering" do
+      create(:event_registration, event: event, registrant: user)
+
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).to have_button("De-register")
+      accept_confirm do
+        click_button "De-register"
+      end
+
+      expect(page).to have_current_path(event_path(event))
+      expect(page).to have_button("Register")
+      expect(page).not_to have_button("De-register")
+      expect(page).not_to have_text("You are registered!")
+    end
+  end
+
+  # --------------------------------------------------
   # REGISTRATION CLOSE DATE SECTION
   # --------------------------------------------------
 
