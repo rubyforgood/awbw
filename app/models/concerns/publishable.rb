@@ -7,7 +7,7 @@ module Publishable
       where(published: value)
     end
 
-    if column_names.include?("publicly_visible")
+    if table_exists? && column_names.include?("publicly_visible")
       scope :publicly_visible, -> { published.where(publicly_visible: true) }
     end
   end
