@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -192,10 +192,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.text "content", size: :medium
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
+    t.boolean "published", default: false, null: false
     t.boolean "show"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_banners_on_created_by_id"
+    t.index ["published"], name: "index_banners_on_published"
     t.index ["updated_by_id"], name: "index_banners_on_updated_by_id"
   end
 
@@ -233,7 +235,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.string "categorizable_type"
     t.integer "category_id"
     t.datetime "created_at", precision: nil, null: false
-    t.boolean "inactive", default: true
     t.integer "legacy_id"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["categorizable_type", "categorizable_id"], name: "idx_on_categorizable_type_categorizable_id_ccce65d80c"
@@ -324,11 +325,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.boolean "inactive", default: true, null: false
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
     t.datetime "registration_close_date", precision: nil
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
+    t.index ["published"], name: "index_events_on_published"
   end
 
   create_table "facilitators", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -366,11 +369,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.boolean "profile_show_workshop_variations", default: true, null: false
     t.boolean "profile_show_workshops", default: true, null: false
     t.string "pronouns"
+    t.boolean "published", default: false, null: false
     t.string "twitter_url"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_facilitators_on_created_by_id"
+    t.index ["published"], name: "index_facilitators_on_published"
     t.index ["updated_by_id"], name: "index_facilitators_on_updated_by_id"
   end
 
@@ -380,8 +385,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.boolean "inactive"
     t.integer "position", null: false
     t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
     t.string "question"
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["published"], name: "index_faqs_on_published"
   end
 
   create_table "footers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -542,13 +549,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
   create_table "project_obligations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.string "name"
+    t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["published"], name: "index_project_obligations_on_published"
   end
 
   create_table "project_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.string "name"
+    t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["published"], name: "index_project_statuses_on_published"
   end
 
   create_table "project_users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -582,12 +593,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.string "name"
     t.text "notes", size: :long
     t.integer "project_status_id"
+    t.boolean "published", default: false, null: false
     t.date "start_date"
     t.datetime "updated_at", precision: nil, null: false
     t.string "website_url"
     t.integer "windows_type_id"
     t.index ["location_id"], name: "index_projects_on_location_id"
     t.index ["project_status_id"], name: "index_projects_on_project_status_id"
+    t.index ["published"], name: "index_projects_on_published"
     t.index ["windows_type_id"], name: "index_projects_on_windows_type_id"
   end
 
@@ -608,10 +621,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.boolean "inactive", default: true
     t.boolean "legacy", default: false
     t.integer "legacy_id"
+    t.boolean "published", default: false, null: false
     t.text "quote", size: :long
     t.string "speaker_name"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "workshop_id"
+    t.index ["published"], name: "index_quotes_on_published"
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
   end
 
@@ -672,6 +687,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.integer "position"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
     t.text "text", size: :long
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
@@ -679,6 +695,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.integer "user_id"
     t.integer "windows_type_id"
     t.integer "workshop_id"
+    t.index ["published"], name: "index_resources_on_published"
     t.index ["user_id"], name: "index_resources_on_user_id"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
@@ -686,7 +703,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
 
   create_table "sectorable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
-    t.boolean "inactive", default: true
     t.boolean "is_leader", default: false, null: false
     t.integer "sector_id"
     t.integer "sectorable_id"
@@ -986,11 +1002,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.boolean "legacy", default: false
     t.string "name"
     t.integer "position"
+    t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "variation_id"
     t.integer "workshop_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
+    t.index ["published"], name: "index_workshop_variations_on_published"
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
   end
 
@@ -1047,6 +1065,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.string "pub_issue"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
     t.boolean "searchable", default: false
     t.text "setup", size: :long
     t.text "setup_spanish", size: :long
@@ -1079,6 +1098,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_184617) do
     t.index ["created_at"], name: "index_workshops_on_created_at"
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
     t.index ["led_count"], name: "index_workshops_on_led_count"
+    t.index ["published"], name: "index_workshops_on_published"
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
     t.index ["title"], name: "index_workshops_on_title", type: :fulltext
     t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext

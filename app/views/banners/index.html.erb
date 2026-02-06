@@ -20,7 +20,7 @@
             <thead class="bg-gray-100">
             <tr>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-[60px]">Content</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/6">Published?</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/6">Published</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
             </tr>
             </thead>
@@ -30,7 +30,7 @@
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2 text-sm text-gray-800"><%= h(banner.content) %></td>
                 <td class="px-4 py-2 text-center">
-                  <% if banner.show? %>
+                  <% if banner.published? %>
                     <span class="fa fa-check-circle text-green-500"></span>
                   <% else %>
                     <span>--</span>

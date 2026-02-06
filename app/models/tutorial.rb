@@ -1,5 +1,5 @@
 class Tutorial < ApplicationRecord
-  include TagFilterable, Trendable, RichTextSearchable
+  include Publishable, TagFilterable, Trendable, RichTextSearchable
 
   has_rich_text :rhino_body
 
@@ -28,11 +28,6 @@ class Tutorial < ApplicationRecord
   end
 
   scope :body, ->(body) { where("body like ?", "%#{ body }%") }
-  scope :publicly_visible, -> { published.where(publicly_visible: true) }
-  scope :published, ->(published = nil) {
-    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true)
-  }
-  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
   scope :title, ->(title) { where("title like ?", "%#{ title }%") }
   scope :tutorial_name, ->(tutorial_name) { title(tutorial_name) }
 

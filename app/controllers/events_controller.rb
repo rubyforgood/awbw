@@ -1,6 +1,6 @@
 class EventsController < ApplicationController
   include AhoyTracking, AssetUpdatable
-  skip_before_action :authenticate_user!, only: %i[ index show]
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_event, only: %i[ show edit update destroy ]
 
   def index
@@ -89,11 +89,11 @@ class EventsController < ApplicationController
     params.require(:event).permit(:cost,
                                   :created_by_id,
                                   :title,
-                                  :description,
+                                  :rhino_description,
                                   :featured,
                                   :start_date, :end_date,
                                   :registration_close_date,
-                                  :inactive,
+                                  :published,
                                   :publicly_visible,
                                   :publicly_featured
                                   )

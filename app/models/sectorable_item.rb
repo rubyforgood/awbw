@@ -7,7 +7,7 @@ class SectorableItem < ApplicationRecord
   validates_presence_of :sectorable_type, :sectorable_id, :sector_id
   validates :sector_id, uniqueness: { scope: [ :sectorable_type, :sectorable_id ] }
 
-  scope :published, -> { where(inactive: false) }
+  scope :published, -> { where(published: true) }
 
   # Methods
   def title

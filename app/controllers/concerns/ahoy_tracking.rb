@@ -35,16 +35,15 @@ module AhoyTracking
 
     return if sectors.blank? && categories.blank?
 
-    total_results = grouped_results.values.sum { |r| r.respond_to?(:total_entries) ? r.total_entries : r.size }
-
+    # total_results = grouped_results.values.sum { |r| r.respond_to?(:total_entries) ? r.total_entries : r.size }
     ahoy.track "browse.taggings", {
       sectors: sectors,
       categories: categories,
-      result_count: total_results,
-      result_breakdown: grouped_results.transform_values do |r|
-        r.respond_to?(:total_entries) ? r.total_entries : r.size
-      end,
-      page_result_count: grouped_results.values.sum(&:size)
+      # result_count: total_results,
+      # result_breakdown: grouped_results.transform_values do |r|
+      #   r.respond_to?(:total_entries) ? r.total_entries : r.size
+      # end,
+      page_result_count: grouped_results.values.sum(&:size) # only loaded page
     }
   end
 

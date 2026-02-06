@@ -9,6 +9,10 @@ FactoryBot.define do
       published { true }
     end
 
+    trait :unpublished do
+      published { false }
+    end
+
     trait :category_age_range do
       association :category_type, factory: :age_range
     end

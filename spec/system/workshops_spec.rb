@@ -8,9 +8,9 @@ RSpec.describe "Workshops", type: :system do
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
-        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window)
-        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: adult_window)
-        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: adult_window)
+        workshop_world = create(:workshop, :published, title: 'The best workshop in the world', windows_type: adult_window)
+        workshop_mars = create(:workshop, :published, title: 'The best workshop on mars', windows_type: adult_window)
+        workshop_hello = create(:workshop, :published, title: 'oh hello!', windows_type: adult_window)
 
         visit workshops_path
 
@@ -27,9 +27,9 @@ RSpec.describe "Workshops", type: :system do
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
-        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, rhino_objective: "test")
-        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, rhino_objective: "test")
-        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: adult_window, rhino_objective: "test")
+        workshop_world = create(:workshop, :published, title: 'The best workshop in the world', windows_type: adult_window, rhino_objective: "test")
+        workshop_mars = create(:workshop, :published, title: 'The best workshop on mars', windows_type: adult_window, rhino_objective: "test")
+        workshop_hello = create(:workshop, :published, title: 'oh hello!', windows_type: adult_window, rhino_objective: "test")
 
         visit workshops_path
 
@@ -51,7 +51,7 @@ RSpec.describe "Workshops", type: :system do
       it "User sees workshop details" do
         sign_in(create(:user))
 
-        workshop = create(:workshop, title: 'The best workshop in the world. This is a tribute.')
+        workshop = create(:workshop, :published, title: 'The best workshop in the world. This is a tribute.')
 
         visit workshop_path(workshop)
 
@@ -71,6 +71,7 @@ RSpec.describe "Workshops", type: :system do
 
         fill_in "workshop_title", with: 'My New Workshop'
         select adult_window.short_name, from: 'workshop_windows_type_id'
+        find("#workshop_published", visible: :all).check
         find('#body-button').click
         fill_in 'workshop_full_name', with: 'Jane Doe'
 

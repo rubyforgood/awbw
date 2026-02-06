@@ -9,5 +9,13 @@ FactoryBot.define do
       sector = Sector.published.first || create(:sector) # adjust factory as needed
       resource.sectors << sector
     end
+
+    trait :published do
+      published { true }
+    end
+
+    trait :unpublished do
+      published { false }
+    end
   end
 end

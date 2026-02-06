@@ -18,16 +18,16 @@
       </div>
     </div>
 
-    <% if current_user.super_user? %>
+    <% if current_user&.super_user? %>
       <!-- Inactive -->
       <div class="admin-only bg-blue-100">
         <div class="w-full md:w-48 mb-3 md:mb-0">
-          <%= label_tag :inactive, "Hidden?", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= select_tag :inactive,
+          <%= label_tag :published, "Published", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= select_tag :published,
                          options_for_select([["All FAQs", ""],
-                                             ["Hidden FAQs", true],
-                                             ["Published FAQs", false]],
-                                            params[:inactive]),
+                                             ["Unpublished FAQs", false],
+                                             ["Published FAQs", true]],
+                                            params[:published]),
                          class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                              focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                          onchange: "this.form.submit()" %>

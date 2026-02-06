@@ -12,7 +12,7 @@
     <% end %>
   </div>
 
-  <% if workshop.inactive %>
+  <% unless workshop.published %>
     <div class="flex items-center gap-4 text-red-500"><%= "***THIS WORKSHOP IS HIDDEN***" %></div>
   <% end %>
 

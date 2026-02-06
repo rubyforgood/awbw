@@ -4,12 +4,10 @@ module TitleDisplayHelper
     fragments = []
 
     # --- Hidden badge ---
-    if show_hidden_badge && controller_name != "dashboard" && (
-      record.respond_to?(:inactive?) && record.inactive? && controller_name != "dashboard" ||
-      record.respond_to?(:published?) && !record.published?)
+    if show_hidden_badge && controller_name != "dashboard" && record.respond_to?(:published?) && !record.published?
       fragments << content_tag(
         :span,
-        content_tag(:i, "", class: "fa-solid fa-eye-slash mr-1") + " Hidden",
+        content_tag(:i, "", class: "fa-solid fa-eye-slash mr-1") + " Unpublished",
         class: "inline-flex items-center px-2 py-0.5 rounded-full
               text-sm font-medium bg-blue-100 text-gray-600 whitespace-nowrap"
       )

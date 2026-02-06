@@ -45,11 +45,11 @@ module AdminCardsHelper
     [
       model_card(:categories, icon: "🗂️",
                  intensity: 100,
-                 params: { published_search: true }),
+                 params: { published: true }),
       model_card(:sectors, icon: "🏭",
                  intensity: 100,
                  title: "Service populations",
-                 params: { published_search: true }),
+                 params: { published: true }),
       custom_card("Project statuses", project_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       custom_card("Windows types", windows_types_path, icon: "🪟")
     ]

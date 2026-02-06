@@ -1,9 +1,10 @@
 class FaqsController < ApplicationController
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_faq, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    faqs = current_user.super_user? ? Faq.all : Faq.active
-    @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "inactive"))
+    faqs = current_user&.super_user? ? Faq.all : (current_user ? Faq.published : Faq.publicly_visible)
+    @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "published"))
                 .by_position
                 .page(params[:page])
   end
@@ -59,6 +60,6 @@ class FaqsController < ApplicationController
 
   # Strong parameters
   def faq_params
-    params.require(:faq).permit(:question, :answer, :inactive, :position, :publicly_visible)
+    params.require(:faq).permit(:question, :answer, :position, :published, :publicly_visible)
   end
 end

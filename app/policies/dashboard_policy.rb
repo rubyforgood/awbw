@@ -1,6 +1,4 @@
 class DashboardPolicy < ApplicationPolicy
-  skip_pre_check :verify_authenticated!
-
   def index?
     true
   end

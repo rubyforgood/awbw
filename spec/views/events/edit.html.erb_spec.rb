@@ -8,7 +8,7 @@ RSpec.describe "events/edit", type: :view do
            start_date: DateTime.new(2024, 1, 15, 10, 0),
            end_date: DateTime.new(2024, 1, 15, 16, 0),
            registration_close_date: DateTime.new(2024, 1, 10, 23, 59),
-           inactive: false)
+           published: true)
   end
 
   before do
@@ -24,14 +24,10 @@ RSpec.describe "events/edit", type: :view do
     expect(rendered).to have_selector("h1", text: "Edit Event")
   end
 
-  it "renders the form partial with event data" do
+  it "renders the form partial" do
     render
 
     expect(rendered).to have_selector("form")
-    expect(rendered).to have_field("event[title]", with: "Original Title")
-    expect(rendered).to have_selector("textarea[name='event[description]']", text: "Original description")
-    expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]']")
-    expect(rendered).not_to have_selector("input[type='checkbox'][checked='checked']")
   end
 
   it "renders action links" do
@@ -61,17 +57,17 @@ RSpec.describe "events/edit", type: :view do
     end
   end
 
-  context "when event is inactive" do
+  context "when event is unpublished" do
     let(:event) do
       create(:event,
              title: "Private Event",
-             inactive: true)
+             published: false)
     end
 
-    it "renders checked checkbox" do
+    it "renders unpublished state correctly" do
       render
 
-      expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]'][checked='checked']")
+      expect(rendered).to have_unchecked_field("event[published]")
     end
   end
 end

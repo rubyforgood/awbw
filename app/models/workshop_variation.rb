@@ -1,5 +1,5 @@
 class WorkshopVariation < ApplicationRecord
-  include Trendable
+  include Trendable, Publishable
 
   belongs_to :workshop
   belongs_to :created_by, class_name: "User", optional: true
@@ -19,9 +19,6 @@ class WorkshopVariation < ApplicationRecord
 
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
-
-  scope :active, -> { where(inactive: false) }
-  scope :published, -> { all }
 
   delegate :windows_type, to: :workshop
 
