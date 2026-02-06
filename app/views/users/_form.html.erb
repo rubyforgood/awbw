@@ -45,27 +45,29 @@
               </div>
             </div>
           <% else %>
-            <div>
-              Not associated with a facilitator!
-              <br>
-              <%= link_to "Create facilitator",
-                          new_facilitator_path(user_id: @user.id),
-                          class: "btn btn-primary" if @user.persisted? %>
-            </div>
+            <% if @user.persisted? %>
+              <div>
+                Not associated with a facilitator!
+                <br>
+                <%= link_to "Create facilitator",
+                            new_facilitator_path(user_id: @user.id),
+                            class: "btn btn-primary"%>
+              </div>
+            <% end %>
           <% end %>
 
           <div class="md:flex-grow md:basis-1/3" id="email_field_wrapper">
             <% if current_user.super_user? %>
               <div class="w-full">
                 <%= f.input :email,
-                            label: email_label_with_confirmation_icon(@user),
+                            label: @user.persisted? ? email_label_with_confirmation_icon(@user) : "Email",
                             hint: "Only editable by admins",
                             input_html: { value: f.object.email.presence || @facilitator&.email,
                                           class: "w-full" },
                             wrapper_html: { class: "w-full" },
                             label_html: { id: "email_label" } %>
                 <div id="confirm_email_button">
-                  <% if @user.confirmed_at.nil? && current_user.super_user? %>
+                  <% if @user.persisted? && @user.confirmed_at.nil? && current_user.super_user? %>
                     <div class="mt-2">
                       <button type="button"
                               data-controller="confirm-email"
@@ -98,23 +100,23 @@
             <% if current_user.super_user? %>
               <div class="w-full p-3">
                 <div class="flex flex-col md:flex-row gap-4">
-                  <%= f.input :inactive, label: "No access?" %>
-                  <%= f.input :super_user %>
+                  <%= f.input :inactive %>
+                  <%= f.input :super_user, label: "Admin?" %>
                 </div>
               </div>
             <% end %>
           </div>
         </div>
+
+        <!-- Notes -->
+        <% if current_user.super_user? %>
+          <div class="comments-section">
+            <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
-
-  <!-- Notes -->
-  <% if current_user.super_user? %>
-    <div class="p-3">
-      <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
-    </div>
-  <% end %>
 
   <!-- Actions -->
   <!-- Action buttons -->
