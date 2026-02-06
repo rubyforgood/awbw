@@ -1,2 +1,3 @@
-<%= turbo_stream.replace dom_id(@event, :card), partial: "events/card", locals: {event: @event} %>
+<%= turbo_stream.replace dom_id(@event, :card), partial: "events/card", locals: { event: @event } %>
+<%= turbo_stream.replace dom_id(@event, :registration_section), partial: "events/registration_section", locals: { event: @event.decorate } %>
 <%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>
