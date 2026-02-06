@@ -5,9 +5,9 @@
 
   <%= turbo_stream.replace("copy_url", partial: "shared/copy_url") %>
 
-  <div class="mt-6">
+  <div id="workshops-list" class="mt-6">
     <% if @workshops.any? %>
-      <div id="workshops-list" class="space-y-4 animate-fade blur-on-submit">
+      <div class="space-y-4 animate-fade blur-on-submit">
         <% @workshops.each do |workshop| %>
           <%= render "workshops/index_row", workshop: workshop.decorate,
                    breadcrumb: "Workshops", link_route: workshop_path(workshop) %>

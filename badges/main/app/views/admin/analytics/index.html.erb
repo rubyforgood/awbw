@@ -108,15 +108,31 @@
         </div>
       </section>
 
-      <section class="mt-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+      <section class="space-y-4 mt-6">
+        <h2 class="text-lg font-semibold text-gray-800">Community News</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
           <%= render "admin/analytics/popular_list",
-                     title: "Community news",
+                     title: "Most viewed",
                      records: @most_viewed_community_news,
                      path_method: :community_news_path,
                      metric: :view_count,
                      color: :community_news
           %>
+
+          <%= render "admin/analytics/popular_list",
+                     title: "Most printed",
+                     records: @most_printed_community_news,
+                     path_method: :community_news_path,
+                     metric: :print_count,
+                     color: :community_news
+          %>
+        </div>
+      </section>
+
+      <section class="space-y-4 mt-6">
+        <h2 class="text-lg font-semibold text-gray-800">Stories</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           <%= render "admin/analytics/popular_list",
                      title: "Stories",
@@ -126,7 +142,18 @@
                      color: :stories
           %>
 
+          <%= render "admin/analytics/popular_list",
+                     title: "Most printed",
+                     records: @most_printed_stories,
+                     path_method: :story_path,
+                     metric: :print_count,
+                     color: :stories
+          %>
+        </div>
+      </section>
 
+      <section class="mt-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
           <%= render "admin/analytics/popular_list",
                      title: "Events",
                      records: @most_viewed_events,

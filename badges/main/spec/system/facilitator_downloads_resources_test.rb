@@ -8,7 +8,7 @@ RSpec.describe "Facilitators can download resources", type: :system, js: true do
     create(:resource,
            title: "Test Template",
            featured: true,
-           inactive: false,
+           published: true,
            kind: "Template")
   end
 

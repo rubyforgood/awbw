@@ -25,7 +25,7 @@ RSpec.describe "events/new", type: :view do
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[start_date]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[end_date]']")
     expect(rendered).to have_selector("input[type='datetime-local'][name='event[registration_close_date]']")
-    expect(rendered).to have_selector("input[type='checkbox'][name='event[inactive]']")
+    expect(rendered).to have_selector("input[type='checkbox'][name='event[published]']")
   end
 
   it "renders the Cancel link" do

@@ -57,9 +57,9 @@ RSpec.describe "/workshop_logs", type: :request do
 
     it "populates workshops dropdown with only workshops from visible logs" do
       visible_workshop = create(:workshop)
-      hidden_workshop  = create(:workshop, inactive: true)
+      hidden_workshop  = create(:workshop, published: false)
       unassigned_workshop  = create(:workshop)
-      unassigned_hidden_workshop  = create(:workshop, inactive: true)
+      unassigned_hidden_workshop  = create(:workshop, published: false)
 
       create(:workshop_log, workshop: visible_workshop)
       create(:workshop_log, workshop: hidden_workshop)

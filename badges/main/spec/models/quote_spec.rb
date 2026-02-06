@@ -17,12 +17,12 @@ RSpec.describe Quote do
   end
 
   describe 'scopes' do
-    let!(:active_quote) { create(:quote, inactive: false) }
-    let!(:inactive_quote) { create(:quote, inactive: true) }
+    let!(:published_quote) { create(:quote, :published) }
+    let!(:unpublished_quote) { create(:quote, :unpublished) }
 
     it '.active returns only active quotes' do
-      expect(Quote.active).to include(active_quote)
-      expect(Quote.active).not_to include(inactive_quote)
+      expect(Quote.published).to include(published_quote)
+      expect(Quote.published).not_to include(unpublished_quote)
     end
   end
 

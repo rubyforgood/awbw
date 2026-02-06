@@ -5,7 +5,7 @@ RSpec.describe "faqs/new", type: :view do
     assign(:faq, Faq.new(
       question: "MyString",
       answer: "MyText",
-      inactive: false,
+      published: true,
       position: 1
     ))
   end
@@ -18,7 +18,7 @@ RSpec.describe "faqs/new", type: :view do
 
       assert_select "textarea[name=?]", "faq[answer]"
 
-      assert_select "input[name=?]", "faq[inactive]"
+      assert_select "input[name=?]", "faq[published]"
 
       assert_select "input[name=?]", "faq[position]"
     end

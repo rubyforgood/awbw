@@ -15,7 +15,7 @@ namespace :story_data do
         featured:              resource.featured,
         permission_given:      true,
         project_id:            nil, # resources don't store this, add mapping if needed
-        published:             !resource.inactive,
+        published:             !resource.published,
         spotlighted_facilitator_id: nil,
         story_idea_id:         nil,
         website_url:           resource.url,

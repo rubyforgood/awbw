@@ -8,8 +8,8 @@ RSpec.describe "categories/index", type: :view do
 
   before do
     assign(:categories, [
-      create(:category, name: "Category One", category_type: type_a, published: true),
-      create(:category, name: "Category Two", category_type: type_b, published: false)
+      create(:category, :published, name: "Category One", category_type: type_a),
+      create(:category, name: "Category Two", category_type: type_b)
     ])
 
     assign(:category_types, [ type_a, type_b ])

@@ -1,6 +1,5 @@
 class Category < ApplicationRecord
-  include NameFilterable
-  include Positioning
+  include NameFilterable, Publishable
 
   positioned on: :category_type_id
 
@@ -8,8 +7,9 @@ class Category < ApplicationRecord
   has_many :categorizable_items, dependent: :destroy
   has_many :workshops, through: :categorizable_items, source: :categorizable, source_type: "Workshop"
 
+  # Scopes
+  # See NameFilterable, Publishable
   scope :age_ranges, -> { joins(:category_type).where(category_types: { name: "AgeRange" }) }
-  scope :published, -> { where(published: true) }
   scope :ordered_by_position_and_name, -> { reorder(position: :asc, name: :asc) }
 
   # Validations
@@ -29,9 +29,6 @@ class Category < ApplicationRecord
     category_type_id.present? ? where(category_type_id: category_type_id) : all }
   scope :category_name, ->(category_name) {
     category_name.present? ? where("categories.name LIKE ?", "%#{category_name}%") : all }
-  scope :published, ->(published = nil) {
-    [ "true", "false" ].include?(published) ? where(published: published) : where(published: true) }
-  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   private
 
