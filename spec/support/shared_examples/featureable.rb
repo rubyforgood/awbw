@@ -104,5 +104,4 @@ RSpec.shared_examples "featureable" do |factory:|
         .to be_a(ActiveRecord::Relation)
     end
   end
-
 end

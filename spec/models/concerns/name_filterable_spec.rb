@@ -8,7 +8,7 @@ RSpec.describe NameFilterable do
 
   describe ".names" do
     it "returns all when param is not provided" do
-      expect(Sector.names(nil)).to match_array([youth, healing, other])
+      expect(Sector.names(nil)).to match_array([ youth, healing, other ])
     end
 
     it "returns none when param is provided but empty" do
@@ -25,7 +25,7 @@ RSpec.describe NameFilterable do
 
     it "supports multiple names separated by --" do
       result = Sector.names("youth--heal")
-      expect(result).to match_array([youth, healing])
+      expect(result).to match_array([ youth, healing ])
     end
 
     it "does not include non-matching records" do

@@ -44,8 +44,8 @@ RSpec.describe "Workshop categories & sectors", type: :system do
 
       workshop = Workshop.last
 
-      expect(workshop.categories).to match_array([category_a, category_b])
-      expect(workshop.sectors).to match_array([sector_x, sector_y])
+      expect(workshop.categories).to match_array([ category_a, category_b ])
+      expect(workshop.sectors).to match_array([ sector_x, sector_y ])
     end
   end
 
@@ -66,8 +66,8 @@ RSpec.describe "Workshop categories & sectors", type: :system do
         create(
           :workshop,
           windows_type: windows_type,
-          categories: [cat1, cat2],
-          sectors: [sector1, sector2],
+          categories: [ cat1, cat2 ],
+          sectors: [ sector1, sector2 ],
           user: admin
         )
 
@@ -83,8 +83,8 @@ RSpec.describe "Workshop categories & sectors", type: :system do
 
       workshop.reload
 
-      expect(workshop.categories).to match_array([cat2])
-      expect(workshop.sectors).to match_array([sector2])
+      expect(workshop.categories).to match_array([ cat2 ])
+      expect(workshop.sectors).to match_array([ sector2 ])
     end
   end
 end
