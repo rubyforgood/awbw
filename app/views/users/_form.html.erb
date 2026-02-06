@@ -116,17 +116,18 @@
         <% end %>
       </div>
     </div>
+  </div>
 
-    <!-- Preferences: timezone for event times etc. -->
-    <div class="space-y-6 p-3">
-      <%= f.input :time_zone,
-                  as: :select,
-                  collection: ActiveSupport::TimeZone.all.map { |z| [ z.to_s, z.name ] },
-                  include_blank: "Use site default (Pacific Time)",
-                  hint: "Event times and other dates will be shown in this timezone.",
-                  input_html: { class: "w-full" },
-                  wrapper_html: { class: "w-full max-w-md" } %>
-    </div>
+  <!-- Preferences: timezone for event times etc. -->
+  <div class="space-y-6 p-3">
+    <%= f.input :time_zone,
+                as: :select,
+                collection: us_time_zone_fundamentals,
+                selected: f.object.time_zone.presence || "Pacific Time (US & Canada)",
+                include_blank: false,
+                hint: "Event times and other dates will be shown in this timezone.",
+                input_html: { class: "w-full" },
+                wrapper_html: { class: "w-full max-w-md" } %>
   </div>
 
   <!-- Actions -->
