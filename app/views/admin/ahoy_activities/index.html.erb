@@ -13,7 +13,7 @@
       <div class="flex items-center space-x-2 text-2xl font-semibold text-gray-700 mb-8">
         <span>Recent Activity for</span>
 
-        <% if current_user.super_user? %>
+        <% if current_user&.super_user? %>
           <%= form_with url: request.path, method: :get, local: true, html: { class: "inline-block" } do %>
             <%= hidden_field_tag :page, params[:page] %>
             <%= hidden_field_tag :per_page, params[:per_page] %>

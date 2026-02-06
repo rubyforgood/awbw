@@ -3,7 +3,7 @@ module Admin
     include AdminCardsHelper
 
     def index
-      return redirect_to root_path, alert: "You do not have permission." unless current_user.super_user?
+      return redirect_to root_path, alert: "You do not have permission." unless current_user&.super_user?
 
       @system_cards       = system_cards
       @user_content_cards = user_content_cards

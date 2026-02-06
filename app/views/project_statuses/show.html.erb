@@ -10,7 +10,7 @@
         <!-- Buttons Group -->
         <div class="flex items-center gap-2">
           <%= link_to("Index", project_statuses_path, class: "btn btn-secondary-outline") %>
-          <% if current_user.super_user? %>
+          <% if current_user&.super_user? %>
             <%= link_to("Edit", edit_project_status_path(@project_status), class: "btn btn-primary-outline") %>
           <% end %>
         </div>

@@ -2,11 +2,11 @@
   <div class="max-w-5xl mx-auto px-4">
 
     <div class="flex justify-end mb-6">
-      <% if current_user.super_user? || current_user == @workshop_variation.created_by %>
+      <% if current_user&.super_user? || current_user == @workshop_variation.created_by %>
         <div class="p-1">
           <%= link_to("Edit",
                       edit_workshop_variation_path(@workshop_variation),
-                      class: "btn btn-primary-outline #{ "admin-only bg-blue-100" if current_user.super_user? }") %>
+                      class: "btn btn-primary-outline #{ "admin-only bg-blue-100" if current_user&.super_user? }") %>
         </div>
       <% end %>
       <div class="p-1">

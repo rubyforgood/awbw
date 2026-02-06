@@ -9,7 +9,6 @@ class StoriesController < ApplicationController
       base_scope = authorized_scope(Story.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset))
       filtered = base_scope.search_by_params(params)
                            .order(created_at: :desc)
-
       @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
       @count_display = if filtered.count == base_scope.count

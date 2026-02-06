@@ -51,7 +51,7 @@ class QuotesController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    workshops = current_user.super_user? ? Workshop.all : Workshop.active
+    workshops = current_user&.super_user? ? Workshop.all : Workshop.active
     @workshops = workshops.order(:title)
   end
 

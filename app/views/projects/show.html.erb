@@ -8,7 +8,7 @@
         <span class="inline-block text-sm">
           <%= render "bookmarks/editable_bookmark_button", resource: @project %>
         </span>
-        <% if current_user.super_user? %>
+        <% if current_user&.super_user? %>
           <%= link_to "Edit", edit_project_path(@project),
                       class: "admin-only bg-green-100 btn btn-primary-outline" %>
         <% end %>
@@ -203,7 +203,7 @@
 
       <hr class="my-8 border-gray-200">
 
-      <% if current_user.super_user || @project.project_users.pluck(:user_id).include?(current_user.id) %>
+      <% if current_user.super_user? || @project.project_users.pluck(:user_id).include?(current_user.id) %>
         <div class="project-only bg-green-100">
           <!-- Workshop logs -->
           <% if true || @project.profile_show_workshop_logs? %>

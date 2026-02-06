@@ -110,7 +110,7 @@
                         class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                       } %>
 
-    <% if current_user.super_user? %>
+    <% if current_user&.super_user? %>
       <div class="admin-only bg-blue-100">
         <%= f.input :project_status_id,
                     as: :select,

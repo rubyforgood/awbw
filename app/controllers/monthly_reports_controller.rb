@@ -102,7 +102,7 @@ class MonthlyReportsController < ApplicationController
     @answers      = @monthly_report.report_form_field_answers
 
     if @monthly_report
-      if current_user.super_user? || (@monthly_report.project && current_user.project_ids.include?(@monthly_report.project.id))
+      if current_user&.super_user? || (@monthly_report.project && current_user.project_ids.include?(@monthly_report.project.id))
         render :show
       else
         redirect_to root_path, error: "You do not have permission to view this page."

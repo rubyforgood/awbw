@@ -3,7 +3,7 @@ module Admin
     helper_method :scoped_visits, :scoped_events
 
     def index
-      if current_user.super_user?
+      if current_user&.super_user?
         if params.key?(:user_id) && params[:user_id].present?
           @user = User.find(params[:user_id])
         elsif params.key?(:user_id) # param exists but blank

@@ -4,10 +4,8 @@ class WorkshopLogsController < ApplicationController
   def index
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-
     @workshop_logs_unpaginated = authorized_scope(WorkshopLog.includes(:workshop, :user, :windows_type)
                                                .search(params))
-
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
     @workshop_logs_count = @workshop_logs&.total_entries
 
@@ -79,7 +77,7 @@ class WorkshopLogsController < ApplicationController
     @answers      = @workshop_log.report_form_field_answers
 
     if @workshop_log
-      if current_user.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
+      if current_user&.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
         render :show
       else
         redirect_to root_path, error: "You do not have permission to view this page."
@@ -120,7 +118,7 @@ class WorkshopLogsController < ApplicationController
                         .joins(:workshop_logs)
                         .distinct
                         .order(:last_name, :first_name)
-    @projects = if current_user.super_user?
+    @projects = if current_user&.super_user?
       # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
       Project.published.order(:name)
     else
@@ -144,7 +142,7 @@ class WorkshopLogsController < ApplicationController
     end
 
     workshops = Workshop.includes(:windows_type)
-    unless current_user.super_user?
+    unless current_user&.super_user?
       workshops = workshops.published
     end
     @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id).includes(:windows_type))

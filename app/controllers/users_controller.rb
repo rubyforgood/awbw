@@ -2,7 +2,7 @@ class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status, :confirm_email, :send_reset_password_instructions ]
 
   def index
-    return redirect_to root_path unless current_user.super_user?
+    return redirect_to root_path unless current_user&.super_user?
 
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)
@@ -106,7 +106,7 @@ class UsersController < ApplicationController
   end
 
   def toggle_lock_status
-    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user&.super_user?
 
     if @user.locked_at.present?
       # Unlock the user
@@ -125,7 +125,7 @@ class UsersController < ApplicationController
   end
 
   def confirm_email
-    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user&.super_user?
 
     if @user.confirmed_at.present?
       message = "Email is already confirmed."
@@ -154,7 +154,7 @@ class UsersController < ApplicationController
   def set_form_variables
     set_facilitator
     @user.project_users.first || @user.project_users.build
-    projects = if current_user.admin?
+    projects = if current_user&.super_user?
       Project.published
     else
       current_user.projects

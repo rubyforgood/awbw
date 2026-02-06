@@ -89,7 +89,7 @@ class FacilitatorsController < ApplicationController
     if @facilitator.user
       @facilitator.user.project_users.first || @facilitator.user.project_users.build
     end
-    projects = if current_user.super_user?
+    projects = if current_user&.super_user?
       Project.published
     else
       current_user.projects

@@ -30,7 +30,7 @@
 
               <!-- TITLE + BADGES -->
               <span class="inline-flex items-center gap-2">
-                <%= link_to title_with_badges(story, show_hidden_badge: current_user.super_user?).html_safe,
+                <%= link_to title_with_badges(story, show_hidden_badge: current_user&.super_user?).html_safe,
                                   story_path(story),
                                   target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                                   class: "font-bold hover:text-indigo-800 hover:underline" %>
@@ -57,7 +57,7 @@
                                 target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                                 class: "btn btn-secondary-outline" %>
 
-              <% if current_user.super_user? %>
+              <% if current_user&.super_user? %>
                 <%= link_to "Edit", edit_story_path(story),
                                   data: {turbo_frame: "_top"},
                                   class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
@@ -76,7 +76,7 @@
   <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
     <h2 class="text-gray-600 text-lg mb-2">No stories found</h2>
 
-    <% if current_user.super_user? %>
+    <% if current_user&.super_user? %>
       <div class="admin-only bg-blue-100 p-3">
         <%= link_to "Create a story",
                             new_story_path,
