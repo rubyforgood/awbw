@@ -1,5 +1,5 @@
 class Category < ApplicationRecord
-  include NameFilterable, Positioning, Publishable
+  include NameFilterable, Publishable
 
   positioned on: :category_type_id
 
