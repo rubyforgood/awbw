@@ -114,9 +114,9 @@ RSpec.describe "/users", type: :request do
 
       it "permits and updates time_zone" do
         user = User.create! valid_attributes
-        patch user_url(user), params: { user: { time_zone: "EST" } }
+        patch user_url(user), params: { user: { time_zone: "Eastern Time (US & Canada)" } }
         user.reload
-        expect(user.time_zone).to eq("EST")
+        expect(user.time_zone).to eq("Eastern Time (US & Canada)")
       end
 
       it "redirects to the users index" do
