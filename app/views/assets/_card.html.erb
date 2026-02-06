@@ -1,4 +1,6 @@
-<%= tag.div id: dom_id(asset), class: "flex flex-col items-center bg-white border border-gray-300 rounded-md shadow-sm p-2 w-64" do %>
+<%= tag.div id: dom_id(asset), 
+data: {action: "turbo:load->asset-upload#log", asset_upload_id_param: dom_id(asset)},
+class: "flex flex-col items-center bg-white border border-gray-300 rounded-md shadow-sm p-2 w-64" do %>
   <%= render "assets/type_selector",
   asset: asset,
   owner: (defined?(owner) ? owner : nil) %>

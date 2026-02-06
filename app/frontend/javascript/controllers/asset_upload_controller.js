@@ -4,24 +4,44 @@ import { Controller } from "@hotwired/stimulus";
 export default class extends Controller {
   static targets = [
     "fileInput",
-    "fileName",
     "form",
-    "fakeButton",
-    "uploadLabel",
     "typeSelect",
+
+    "uploadButtonPrimary",
+    "primaryDeleteButton",
+    "uploadButtonDownloadable",
+    "uploadLabelPrimary",
+    "uploadLabelDownloadable",
   ];
 
-  selectedType = "GalleryAsset";
-  formTargetConnected(element) {
-    console.log("Form target connected:", element);
-    this.updateFilenameWithPreview();
+  // Store the dom_id of currently uploaded primary/downloadable assets
+  primaryAssetId = null;
+  downloadableAssetId = null;
+
+  connect() {
+    const primary = document.querySelector("[id*='primary_asset_']");
+    if (primary) {
+      this.replacePreview(this.uploadLabelPrimaryTarget, primary);
+      this.uploadButtonPrimaryTarget.classList.add("hidden");
+      this.primaryAssetId = primary.id;
+    }
   }
+  /* ─────────────────────────────
+   * Upload intent (pre-submit)
+   * ───────────────────────────── */
+
   triggerFileInput({ params: { type } }) {
     this.selectedType = type;
     this.fileInputTarget.click();
   }
+
   handleFileChange() {
-    if (this.fileInputTarget.files.length === 0) return;
+    if (this.fileInputTarget.files.length === 0) {
+      this.selectedType = "GalleryAsset";
+      if (this.hasTypeSelectTarget)
+        this.typeSelectTarget.value = this.selectedType;
+      return;
+    }
 
     if (this.hasTypeSelectTarget && this.selectedType) {
       this.typeSelectTarget.value = this.selectedType;
@@ -29,29 +49,188 @@ export default class extends Controller {
 
     this.showSpinner();
     this.formTarget.requestSubmit();
-
-    // reset if needed
-    this.selectedType = "GalleryAsset";
   }
 
   showSpinner() {
-    if (this.hasUploadLabelTarget) {
-      this.uploadLabelTarget.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-gray-600 text-5xl"></i>`;
+    const spinner = `<i class="fa-solid fa-spinner animate-spin text-gray-600 text-5xl"></i>`;
+
+    if (
+      this.selectedType === "PrimaryAsset" &&
+      this.hasUploadLabelPrimaryTarget
+    ) {
+      this.uploadLabelPrimaryTarget.innerHTML = spinner;
+    }
+
+    if (
+      this.selectedType === "DownloadableAsset" &&
+      this.hasUploadLabelDownloadableTarget
+    ) {
+      this.uploadLabelDownloadableTarget.innerHTML = spinner;
     }
   }
-  updateFilenameWithPreview() {
-    if (!this.hasFileNameTarget) return;
 
-    const primaryAsset = document.querySelector("[id^='primary_asset_']");
-    if (!primaryAsset) return;
+  /* ─────────────────────────────
+   * Turbo event handling for new frames and stream removes
+   * ───────────────────────────── */
 
-    const img = primaryAsset.querySelector("img");
+  handleFrameLoad(event) {
+    const frame = event.target;
+    const candidates = frame.querySelectorAll("[id*='_asset_']");
+    const cards = Array.from(candidates).filter((el) => {
+      // Only match IDs that contain "_asset_" and end with numbers
+      return /_asset_\d+$/.test(el.id);
+    });
+    cards.forEach((card) => {
+      console.log(card);
+      const role = this.roleFromId(card.id);
+      if (!role) return;
+
+      // Trigger assetAdded internally
+      this.assetAdded({
+        detail: {
+          id: card.id,
+          role: role,
+          element: card,
+        },
+      });
+    });
+  }
+
+  handleStream(event) {
+    const stream = event.target;
+    if (stream.action !== "remove") return;
+
+    const role = this.roleFromId(stream.target);
+    if (!role) return;
+
+    this.assetRemoved({
+      detail: {
+        id: stream.target,
+        role: role,
+      },
+    });
+  }
+
+  /* ─────────────────────────────
+   * Asset Added / Removed
+   * ───────────────────────────── */
+
+  assetAdded(event) {
+    const { role, element } = event.detail;
+    const id = event.detail.id || (element ? element.id : null);
+    if (!id) return;
+
+    if (role === "primary") {
+      this.replacePreview(this.uploadLabelPrimaryTarget, element);
+      this.uploadButtonPrimaryTarget.classList.add("hidden");
+      this.primaryDeleteButtonTarget.classList.remove("hidden");
+      this.primaryAssetId = id; // store dom_id
+    }
+
+    if (role === "downloadable") {
+      this.replacePreview(this.uploadLabelDownloadableTarget, element);
+      this.uploadButtonDownloadableTarget.classList.add("hidden");
+      this.downloadableDeleteButtonTarget.classList.remove("hidden");
+      this.downloadableAssetId = id; // store dom_id
+    }
+  }
+
+  assetRemoved(event) {
+    const { role } = event.detail;
+
+    if (role === "primary") {
+      this.resetPreview(this.uploadLabelPrimaryTarget);
+      this.uploadButtonPrimaryTarget.classList.remove("hidden");
+      this.primaryDeleteButtonTarget.classList.add("hidden");
+      this.primaryAssetId = null;
+    }
+
+    if (role === "downloadable") {
+      this.resetPreview(this.uploadLabelDownloadableTarget);
+      this.uploadButtonDownloadableTarget.classList.remove("hidden");
+      this.downloadableDeleteButtonTarget.classList.add("hidden");
+      this.downloadableAssetId = null;
+    }
+  }
+
+  /* ─────────────────────────────
+   * Preview helpers
+   * ───────────────────────────── */
+
+  replacePreview(target, card) {
+    if (!target) return;
+
+    const img = card.querySelector("img");
     if (!img) return;
 
-    // Replace the filename target content with the image
-    this.fileNameTarget.innerHTML = "";
-    const clone = img.cloneNode(true);
+    target.innerHTML = "";
+    target.appendChild(img.cloneNode(true));
+  }
 
-    this.fileNameTarget.appendChild(clone);
+  resetPreview(target) {
+    if (!target) return;
+
+    target.innerHTML = `
+      <svg class="w-16 h-16 cursor-pointer">
+        <!-- default upload icon -->
+      </svg>
+    `;
+  }
+
+  /* ─────────────────────────────
+   * Fake X button handlers
+   * ───────────────────────────── */
+
+  removeFakePrimary() {
+    if (!this.primaryAssetId) return;
+
+    this.resetPreview(this.uploadLabelPrimaryTarget);
+    this.uploadButtonPrimaryTarget.classList.remove("hidden");
+
+    const card = document.getElementById(this.primaryAssetId);
+    if (!card) return;
+
+    const deleteForm = Array.from(card.querySelectorAll("form.button_to")).find(
+      (form) => {
+        const methodInput = form.querySelector("input[name='_method']");
+        return methodInput && methodInput.value.toLowerCase() === "delete";
+      },
+    );
+
+    if (deleteForm) deleteForm.requestSubmit();
+    this.primaryAssetId = null;
+  }
+
+  removeFakeDownloadable() {
+    if (!this.downloadableAssetId) return;
+
+    this.resetPreview(this.uploadLabelDownloadableTarget);
+    this.uploadButtonDownloadableTarget.classList.remove("hidden");
+
+    const card = document.getElementById(this.downloadableAssetId);
+    if (!card) return;
+
+    const deleteForm = Array.from(card.querySelectorAll("form.button_to")).find(
+      (form) => {
+        const methodInput = form.querySelector("input[name='_method']");
+        return methodInput && methodInput.value.toLowerCase() === "delete";
+      },
+    );
+
+    if (deleteForm) deleteForm.requestSubmit();
+    this.downloadableAssetId = null;
+  }
+
+  /* ─────────────────────────────
+   * Utility: determine role from id
+   * ───────────────────────────── */
+
+  roleFromId(id) {
+    console.log(id);
+    if (!id) return null;
+    if (id.startsWith("primary_asset_")) return "primary";
+    if (id.startsWith("downloadable_asset_")) return "downloadable";
+    if (id.startsWith("gallery_asset_")) return "gallery";
+    return null;
   }
 }
