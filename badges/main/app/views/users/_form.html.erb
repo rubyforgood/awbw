@@ -118,6 +118,18 @@
     </div>
   </div>
 
+  <!-- Preferences: timezone for event times etc. -->
+  <div class="space-y-6 p-3">
+    <%= f.input :time_zone,
+                as: :select,
+                collection: us_time_zone_fundamentals,
+                selected: f.object.time_zone.presence || "Pacific Time (US & Canada)",
+                include_blank: false,
+                hint: "Event times and other dates will be shown in this timezone.",
+                input_html: { class: "w-full" },
+                wrapper_html: { class: "w-full max-w-md" } %>
+  </div>
+
   <!-- Actions -->
   <!-- Action buttons -->
   <div class="action-buttons mt-8 flex justify-center gap-3">
