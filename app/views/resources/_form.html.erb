@@ -19,37 +19,8 @@
 
     <div class="flex items-center gap-4 mt-4">
 
-      <div class="relative w-fit">
-        <!-- Fake X button to remove primary -->
-        <button
-          type="button"
-          data-action="click->asset-upload#removeFakePrimary"
-          data-asset-upload-target="primaryDeleteButton"
-          class="
-            absolute top-1 right-1 flex items-center justify-center w-7 h-7 rounded-full
-            bg-black/60 text-white hover:bg-red-600 z-10 hidden
-          "
-        >
-          ✕
-        </button>
-        <!-- Preview area for primary asset -->
-        <div data-asset-upload-target="uploadLabelPrimary">
-          <!-- initial upload icon -->
-          <svg class="w-16 h-16 cursor-pointer">
-            <!-- default upload icon SVG -->
-          </svg>
-        </div>
-        <!-- Fake Add Primary button -->
-        <button
-          type="button"
-          data-action="asset-upload#triggerFileInput"
-          data-asset-upload-type-param="PrimaryAsset"
-          data-asset-upload-target="uploadButtonPrimary"
-          class="mt-2 btn btn-secondary-outline"
-        >
-          Add Primary Image
-        </button>
-      </div>
+      <%= render "assets/asset_upload_inline", type: "primary" %>
+      <%= render "assets/asset_upload_inline", type: "downloadable" %>
     </div>
     <div class="flex-1 min-w-[200px]">
       <label class="block font-medium mb-1">Flags</label>

@@ -8,10 +8,12 @@ export default class extends Controller {
     "typeSelect",
 
     "uploadButtonPrimary",
-    "primaryDeleteButton",
-    "uploadButtonDownloadable",
     "uploadLabelPrimary",
+    "primaryDeleteButton",
+
+    "uploadButtonDownloadable",
     "uploadLabelDownloadable",
+    "downloadableDeleteButton",
   ];
 
   // Store the dom_id of currently uploaded primary/downloadable assets
@@ -23,7 +25,15 @@ export default class extends Controller {
     if (primary) {
       this.replacePreview(this.uploadLabelPrimaryTarget, primary);
       this.uploadButtonPrimaryTarget.classList.add("hidden");
+      this.primaryDeleteButtonTarget.classList.remove("hidden");
       this.primaryAssetId = primary.id;
+    }
+    const downloadable = document.querySelector("[id*='downloadable_asset_']");
+    if (downloadable) {
+      this.replacePreview(this.uploadLabelDownloadableTarget, downloadable);
+      this.uploadButtonDownloadableTarget.classList.add("hidden");
+      this.downloadableDeleteButtonTarget.classList.remove("hidden");
+      this.downloadableAssetId = downloadable.id;
     }
   }
   /* ─────────────────────────────
