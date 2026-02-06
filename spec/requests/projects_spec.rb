@@ -107,7 +107,7 @@ RSpec.describe "/projects", type: :request do
         project.reload
         expect(project.name).to eq("Updated Healing Project")
         expect(project.description).to eq("Updated description for testing.")
-        expect(project.inactive).to be(true)
+        expect(project.published).to be(true)
       end
 
       it "redirects to the projects index" do

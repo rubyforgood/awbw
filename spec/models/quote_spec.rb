@@ -17,7 +17,7 @@ RSpec.describe Quote do
   end
 
   describe 'scopes' do
-    let!(:published_quote) { create(:quote) }
+    let!(:published_quote) { create(:quote, :published) }
     let!(:unpublished_quote) { create(:quote, :unpublished) }
 
     it '.active returns only active quotes' do

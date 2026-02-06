@@ -5,8 +5,8 @@ class SectorsController < ApplicationController
     per_page = params[:number_of_items_per_page].presence || 25
     unfiltered = Sector.all
     filtered = unfiltered.sector_name(params[:sector_name])
-                          .published_search(params[:published_search])
-                          .order(:name)
+                         .published(params[:published])
+                         .order(:name)
     @sectors = filtered.paginate(page: params[:page], per_page: per_page)
 
     @count_display = if filtered.count == unfiltered.count

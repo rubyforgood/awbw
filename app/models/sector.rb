@@ -17,7 +17,6 @@ class Sector < ApplicationRecord
   after_destroy :expire_sectors_cache
 
   # Scopes
-  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }

@@ -101,7 +101,7 @@ RSpec.describe "events/_form", type: :view do
   end
 
   context "when published is true" do
-    let(:event) { create(:event, published: true) }
+    let(:event) { create(:event, :published) }
 
     it "renders checked checkbox" do
       render

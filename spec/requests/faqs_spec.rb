@@ -19,10 +19,9 @@ RSpec.describe "/faqs", type: :request do
 
   let(:admin)            { create(:user, :admin) }
   let(:regular_user)     { create(:user) }
-  let!(:published_faq)   { create(:faq, question: "Published FAQ", answer: "Published FAQ Body", published: true) }
-  let!(:unpublished_faq) { create(:faq, question: "Unpublished FAQ", answer: "Unpublished FAQ Body", published: false) }
-  let!(:public_faq) { create(:faq, question: "Public FAQ", answer: "Public FAQ Body", published: true,
-                             publicly_visible: true) }
+  let!(:published_faq)   { create(:faq, :published, question: "Published FAQ", answer: "Published FAQ Body") }
+  let!(:unpublished_faq) { create(:faq, question: "Unpublished FAQ", answer: "Unpublished FAQ Body") }
+  let!(:public_faq) { create(:faq, :published, question: "Public FAQ", answer: "Public FAQ Body", publicly_visible: true) }
 
   describe "GET /index" do
     context "as an admin" do
@@ -40,9 +39,9 @@ RSpec.describe "/faqs", type: :request do
       end
 
       it "filters by unpublished param" do
-        get faqs_path, params: { published: false }
+        get faqs_path, params: { published: "false" } # needs to be string param
         expect(response.body).to include("Unpublished FAQ")
-        expect(response.body).not_to include("Published FAQ")
+        expect(response.body).not_to match(/>Published FAQ</)
       end
 
       it "filters by published query" do
@@ -50,15 +49,18 @@ RSpec.describe "/faqs", type: :request do
         expect(Faq.search_by_params(query: "Published").pluck(:question))
           .to include("Published FAQ")
         expect(Faq.search_by_params(query: "Unpublished").pluck(:question))
-          .to include("Unpublished FAQ")
+          .to include("Unpublished FAQ") # it should be case-insensitive
       end
 
       it "filters by title query" do
         get faqs_path, params: { query: "Published FAQ" }
         expect(Faq.search_by_params(query: "Published").pluck(:question))
           .to include("Published FAQ")
+        expect(Faq.search_by_params(query: "Published").pluck(:question))
+          .to include("Unpublished FAQ") # it should be case-insensitive, and unpublished FAQ includes Published
+
         expect(Faq.search_by_params(query: "Unpublished").pluck(:question))
-          .not_to include("Unpublished FAQ")
+          .to include("Unpublished FAQ")
       end
     end
 

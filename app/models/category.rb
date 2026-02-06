@@ -29,7 +29,6 @@ class Category < ApplicationRecord
     category_type_id.present? ? where(category_type_id: category_type_id) : all }
   scope :category_name, ->(category_name) {
     category_name.present? ? where("categories.name LIKE ?", "%#{category_name}%") : all }
-  scope :published_search, ->(published_search) { published_search.present? ? published(published_search) : all }
 
   private
 

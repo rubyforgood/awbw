@@ -123,7 +123,7 @@ class ResourcesController < ApplicationController
 
   def set_form_variables
     @windows_types = WindowsType.all
-    @authors = User.published.or(User.where(id: @resource.user_id))
+    @authors = User.active.or(User.where(id: @resource.user_id))
       .order(:first_name, :last_name)
       .map { |u| [ u.full_name, u.id ] }
   end

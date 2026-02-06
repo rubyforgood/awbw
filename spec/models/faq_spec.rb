@@ -15,8 +15,8 @@ RSpec.describe Faq do
 
   describe "scopes" do
     describe ".published" do
-      let!(:published_faq) { create(:faq, published: false) }
-      let!(:unpublished_faq) { create(:faq, published: true) }
+      let!(:published_faq) { create(:faq, :published) }
+      let!(:unpublished_faq) { create(:faq) }
 
       it "returns only published FAQs" do
         expect(Faq.published).to contain_exactly(published_faq)
@@ -36,8 +36,8 @@ RSpec.describe Faq do
   end
 
   describe ".search_by_params" do
-    let!(:published_faq)   { create(:faq, question: "How to reset password?", published: false) }
-    let!(:unpublished_faq) { create(:faq, question: "Admin only FAQ", published: true) }
+    let!(:published_faq)   { create(:faq, question: "How to reset password?") }
+    let!(:unpublished_faq) { create(:faq, :published, question: "Admin only FAQ") }
 
     it "returns all when no params" do
       expect(Faq.search_by_params({})).to match_array([ published_faq, unpublished_faq ])

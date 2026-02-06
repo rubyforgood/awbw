@@ -17,17 +17,17 @@ RSpec.describe 'Facilitators can filter workshops using metadata' do
         create(:facilitator, user: user)
 
         # Create test workshops
-        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, published: true)
+        workshop_world = create(:workshop, :published, title: 'The best workshop in the world', windows_type: adult_window)
         workshop_world.sectors << sector_veterans
         workshop_world.sectors << sector_education
 
-        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: child_window, published: true)
+        workshop_mars = create(:workshop, :published, title: 'The best workshop on mars', windows_type: child_window)
         workshop_mars.sectors << sector_lgbtqia
 
-        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: combined_window, published: true)
+        workshop_hello = create(:workshop, :published, title: 'oh hello!', windows_type: combined_window)
         workshop_hello.sectors << sector_child_abuse
 
-        workshop_combo = create(:workshop, title: 'Combined workshop', windows_type: combined_window, published: true)
+        workshop_combo = create(:workshop, :published, title: 'Combined workshop', windows_type: combined_window)
         workshop_combo.sectors << sector_veterans
         workshop_combo.sectors << sector_lgbtqia
         workshop_combo.sectors << sector_education

@@ -3,8 +3,19 @@ require "rails_helper"
 RSpec.describe ResourcePolicy, type: :policy do
   let(:admin_user) { build_stubbed :user, super_user: true }
   let(:regular_user) { build_stubbed :user, super_user: false }
-  let(:published_resource) { build_stubbed :resource, kind: "Handout" }
-  let(:unpublished_resource) { build_stubbed :resource, kind: "Handout" }
+  let(:internally_published_resource) do
+    build_stubbed :resource,
+                  kind: Resource::PUBLISHED_KINDS.sample,
+                  published: true,
+                  publicly_visible: false
+  end
+
+  let(:unpublished_resource) do
+    build_stubbed :resource,
+                  kind: Resource::PUBLISHED_KINDS.sample,
+                  published: false,
+                  publicly_visible: false
+  end
 
   def policy_for(record: nil, user:)
     described_class.new(record, user: user)
@@ -27,13 +38,13 @@ RSpec.describe ResourcePolicy, type: :policy do
   describe "#show?" do
     context "when resource is published" do
       context "with admin user" do
-        subject { policy_for(record: published_resource, user: admin_user) }
+        subject { policy_for(record: internally_published_resource, user: admin_user) }
 
         it { is_expected.to be_allowed_to(:show?) }
       end
 
       context "with regular user" do
-        subject { policy_for(record: published_resource, user: regular_user) }
+        subject { policy_for(record: internally_published_resource, user: regular_user) }
 
         it { is_expected.to be_allowed_to(:show?) }
       end
@@ -104,13 +115,13 @@ RSpec.describe ResourcePolicy, type: :policy do
 
   describe "#download?" do
     context "with admin user" do
-      subject { policy_for(record: published_resource, user: admin_user) }
+      subject { policy_for(record: internally_published_resource, user: admin_user) }
 
       it { is_expected.to be_allowed_to(:download?) }
     end
 
     context "with regular user" do
-      subject { policy_for(record: published_resource, user: regular_user) }
+      subject { policy_for(record: internally_published_resource, user: regular_user) }
 
       it { is_expected.to be_allowed_to(:download?) }
     end
@@ -145,7 +156,7 @@ RSpec.describe ResourcePolicy, type: :policy do
 
       it "returns only published resources" do
         scope = policy.apply_scope(Resource.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`resources`.`inactive` = FALSE')
+        expect(scope.to_sql).to include('`resources`.`published` = TRUE')
       end
     end
   end

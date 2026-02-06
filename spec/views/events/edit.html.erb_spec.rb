@@ -29,9 +29,13 @@ RSpec.describe "events/edit", type: :view do
 
     expect(rendered).to have_selector("form")
     expect(rendered).to have_field("event[title]", with: "Original Title")
-    expect(rendered).to have_selector("textarea[name='event[description]']", text: "Original description")
-    expect(rendered).to have_selector("input[type='checkbox'][name='event[published]']")
-    expect(rendered).not_to have_selector("input[type='checkbox'][checked='checked']")
+    expect(rendered).to have_selector(
+                          "textarea[name='event[description]']",
+                          text: "Original description"
+                        )
+
+    # published is true → checked
+    expect(rendered).to have_checked_field("event[published]")
   end
 
   it "renders action links" do
@@ -68,10 +72,10 @@ RSpec.describe "events/edit", type: :view do
              published: false)
     end
 
-    it "renders checked checkbox" do
+    it "renders unpublished state correctly" do
       render
 
-      expect(rendered).to have_selector("input[type='checkbox'][name='event[published]'][checked='checked']")
+      expect(rendered).to have_unchecked_field("event[published]")
     end
   end
 end

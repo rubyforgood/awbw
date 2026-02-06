@@ -1,10 +1,11 @@
 class WorkshopSearchService
-  attr_reader :params, :super_user
+  attr_reader :params, :user, :super_user
   attr_accessor :workshops, :sort
 
-  def initialize(params = {}, super_user: false)
+  def initialize(params = {}, user: nil)
     @params = params
-    @super_user = super_user
+    @user = user
+    @super_user = user&.super_user?
     @sort = default_sort
     @workshops =
       if @sort == "popularity"
@@ -57,20 +58,24 @@ class WorkshopSearchService
   end
 
   def filter_by_published_status
-    return @workshops = @workshops.published unless super_user
+    if super_user
+      pub   = params.key?(:published)   ? ActiveModel::Type::Boolean.new.cast(params[:published])   : nil
+      unpub = params.key?(:unpublished) ? ActiveModel::Type::Boolean.new.cast(params[:unpublished]) : nil
 
-    pub   = params.key?(:published)   ? ActiveModel::Type::Boolean.new.cast(params[:published])   : nil
-    unpub = params.key?(:unpublished) ? ActiveModel::Type::Boolean.new.cast(params[:unpublished]) : nil
-
-    case [ pub, unpub ]
-    when [ true, nil ], [ true, false ]
-      @workshops = @workshops.published(true)     # ONLY published
-    when [ nil, true ], [ false, true ]
-      @workshops = @workshops.published(false)    # ONLY unpublished
-    when [ false, false ]
-      @workshops = @workshops.none                # NONE
-    else # incl [ nil, nil ] && [ true, true ]
-      @workshops                                  # ALL
+      case [ pub, unpub ]
+      when [ true, nil ], [ true, false ]
+        @workshops = @workshops.published(true)     # ONLY published
+      when [ nil, true ], [ false, true ]
+        @workshops = @workshops.published(false)    # ONLY unpublished
+      when [ false, false ]
+        @workshops = @workshops.none                # NONE
+      else # incl [ nil, nil ] && [ true, true ]
+        @workshops                                  # ALL
+      end
+    elsif user
+      @workshops = @workshops.published
+    else
+      @workshops = @workshops.publicly_visible
     end
   end
 

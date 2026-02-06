@@ -55,7 +55,7 @@ class Story < ApplicationRecord
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
-    conditions[:published] = params[:published_search] if params[:published_search].present?
+    conditions[:published] = params[:published] if params[:published].present?
 
     self.search(conditions)
   end

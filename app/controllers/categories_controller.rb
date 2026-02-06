@@ -8,7 +8,7 @@ class CategoriesController < ApplicationController
     unfiltered = Category.includes(:category_type).joins(:category_type)
     filtered = unfiltered.category_type_id(params[:category_type_id])
                           .category_name(params[:category_name])
-                          .published_search(params[:published_search])
+                          .published(params[:published])
                           .order(Arel.sql("category_types.name, categories.position, categories.name"))
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
 

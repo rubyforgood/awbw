@@ -8,7 +8,7 @@ class WorkshopsController < ApplicationController
     @windows_types  = WindowsType.all
 
     if turbo_frame_request?
-      search_service = WorkshopSearchService.new(params, super_user: current_user.super_user?).call
+      search_service = WorkshopSearchService.new(params, user: current_user).call
       @sort = search_service.sort
 
       track_index_intent(Workshop, search_service.workshops, params)

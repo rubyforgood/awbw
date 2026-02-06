@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe "FAQ", type: :system do
   include ActionView::RecordIdentifier
 
-  let!(:published_faq) { create(:faq, published: true) }
-  let!(:unpublished_faq) { create(:faq, published: false) }
+  let!(:published_faq) { create(:faq, :published) }
+  let!(:unpublished_faq) { create(:faq) }
 
   context "Index" do
     context "as a regular user" do

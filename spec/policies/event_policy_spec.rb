@@ -1,11 +1,11 @@
 require "rails_helper"
 
 RSpec.describe EventPolicy, type: :policy do
-  let(:admin_user) { build_stubbed :user, super_user: true }
-  let(:regular_user) { build_stubbed :user, super_user: false }
-  let(:published_event) { build_stubbed :event }
+  let(:admin_user) { build_stubbed :user, :admin }
+  let(:regular_user) { build_stubbed :user }
+  let(:published_event) { build_stubbed :event, :published }
   let(:public_event) { build_stubbed :event, publicly_visible: true  }
-  let(:unpublished_event) { build_stubbed :event, :unpublished_event }
+  let(:unpublished_event) { build_stubbed :event, :unpublished }
   let(:open_registration_event) { build_stubbed :event, registration_close_date: 1.day.from_now }
   let(:closed_registration_event) { build_stubbed :event, registration_close_date: 1.day.ago }
 
@@ -144,7 +144,7 @@ RSpec.describe EventPolicy, type: :policy do
 
       it "returns only visible events with open registration" do
         scope = policy.apply_scope(Event.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`events`.`inactive` = FALSE')
+        expect(scope.to_sql).to include('`events`.`published` = TRUE')
         expect(scope.to_sql).to include('registration_close_date IS NULL OR registration_close_date >=')
         expect(scope.to_sql).to include('LEFT OUTER JOIN `event_registrations`')
       end
@@ -155,7 +155,7 @@ RSpec.describe EventPolicy, type: :policy do
 
       it "returns only visible events with open registration" do
         scope = policy.apply_scope(Event.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`events`.`inactive` = FALSE')
+        expect(scope.to_sql).to include('`events`.`published` = TRUE')
         expect(scope.to_sql).to include('registration_close_date IS NULL OR registration_close_date >=')
         expect(scope.to_sql).not_to include('LEFT OUTER JOIN `registrants`')
       end
