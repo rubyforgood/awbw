@@ -2,11 +2,11 @@
 require 'rails_helper'
 
 RSpec.describe "users/new.html.erb", type: :view do
-  let(:user) { build_stubbed(:user, :admin) }
+  let(:admin) { build_stubbed(:user, :admin) }
 
   before do
-    allow(view).to receive(:current_user).and_return(user)
-    assign(:user, User.new)
+    allow(view).to receive(:current_user).and_return(admin)
+    allow(view).to receive(:allowed_to?).and_return(true)
     render
   end
 
