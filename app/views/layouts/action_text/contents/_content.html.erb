@@ -1,7 +1,10 @@
 <%# flow-root to prevent table overflow %>
 <%# Override prose table text alignment %>
 <div
-  class="prose max-w-none flow-root [&_td]:align-top [&_th]:align-top"
+  class="
+    prose max-w-none prose-strong:text-inherit prose-em:text-inherit flow-root
+    [&_td]:align-top [&_th]:align-top
+  "
   data-controller="print-options"
   data-print-options-images-value="true"
 >

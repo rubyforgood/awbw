@@ -11,6 +11,7 @@ import { GridCell } from "./grid/gridCell";
 import WorkshopMention from "./mentions/WorkshopMention.js";
 import ResourceMention from "./mentions/ResourceMention.js";
 import AssetMention from "./mentions/AssetMention.js";
+import { TextStyleKit } from "@tiptap/extension-text-style";
 
 function extendRhinoEditor(event) {
   const rhinoEditor = event.target;
@@ -23,6 +24,7 @@ function extendRhinoEditor(event) {
     TableRow,
     TableHeader,
     TableCell,
+    TextStyleKit,
     Youtube.configure({ nocookie: true }),
     TextAlign.configure({
       types: ["heading", "paragraph"],
