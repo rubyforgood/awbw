@@ -7,8 +7,13 @@ module Publishable
       where(published: value)
     end
 
-    if table_exists? && column_names.include?("publicly_visible")
-      scope :publicly_visible, -> { published.where(publicly_visible: true) }
-    end
+    scope :publicly_visible, -> {
+      # Only query DB when this scope is called
+      if table_exists? && column_names.include?("publicly_visible")
+        published.where(publicly_visible: true)
+      else
+        none
+      end
+    }
   end
 end
