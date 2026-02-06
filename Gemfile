@@ -66,6 +66,8 @@ gem "action_policy", "~> 0.7.6"
 
 gem "active_storage_validations", "~> 3.0"
 
+gem "solid_cache"
+
 group :development do
   gem "rubocop-rails-omakase", require: false
 end

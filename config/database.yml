@@ -30,5 +30,20 @@ test:
   <<: *base
   database: awbw_test
 
+staging:
+  primary: &primary_staging
+    <<: *base
+
+  cache:
+    <<: *primary_staging
+    database: awbw_staging_cache
+    migrations_paths: db/cache_migrate
+
 production:
-  <<: *base
+  primary: &primary_production
+    <<: *base
+
+  cache:
+    <<: *primary_production
+    database: awbw_production_cache
+    migrations_paths: db/cache_migrate
