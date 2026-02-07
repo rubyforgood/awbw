@@ -3,6 +3,7 @@ class WorkshopsController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
+    authorize!
     @category_types = CategoryType.published.order(:name).decorate
     @sectors        = Sector.published
     @windows_types  = WindowsType.all
@@ -47,6 +48,7 @@ class WorkshopsController < ApplicationController
     @combined_workshop_logs = current_user.project_workshop_logs(
       @report.date, combined_windows_type, current_user.agency_id
     )
+    authorize! @combined_workshop_logs
   end
 
   def build_report
@@ -74,14 +76,17 @@ class WorkshopsController < ApplicationController
     if params[:workshop_idea_id].present?
       @workshop_idea = WorkshopIdea.find(params[:workshop_idea_id])
       @workshop = WorkshopFromIdeaService.new(@workshop_idea, user: current_user).call
+      authorize! @workshop
     else
       @workshop = Workshop.new(user: current_user)
+      authorize! @workshop
     end
     set_form_variables
   end
 
   def create
     @workshop = current_user.workshops.build(workshop_params)
+    authorize! @workshop
 
     success = false
 
@@ -112,6 +117,7 @@ class WorkshopsController < ApplicationController
 
   def edit
     @workshop = Workshop.find(params[:id])
+    authorize! @workshop
     set_form_variables
 
     if turbo_frame_request?
@@ -124,10 +130,12 @@ class WorkshopsController < ApplicationController
   def show
     if turbo_frame_request?
       @workshop = Workshop.find(params[:id]).decorate
+      authorize! @workshop
       set_show
       render partial: "show_lazy", locals: { workshop: @workshop }
     else
       @workshop = Workshop.find(params[:id]).decorate
+      authorize! @workshop
       track_view(@workshop)
       render :show
     end
@@ -140,12 +148,14 @@ class WorkshopsController < ApplicationController
     end
 
     @workshop = Workshop.find(params[:id])
+    authorize! @workshop
     @workshop.destroy!
     redirect_to workshops_path, notice: "Workshop was successfully destroyed."
   end
 
   def update
     @workshop = Workshop.find(params[:id])
+    authorize! @workshop
     success = false
 
     Workshop.transaction do
@@ -179,6 +189,8 @@ class WorkshopsController < ApplicationController
     else
       @workshops = @workshops.paginate(page: params[:search][:page], per_page: workshops_per_page)
     end
+
+    authorize! @workshops
 
     load_sortable_fields
     load_metadata

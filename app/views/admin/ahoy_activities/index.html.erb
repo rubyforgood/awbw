@@ -1,51 +1,148 @@
-<div class="max-w-7xl mx-auto px-6 py-8 space-y-10">
-  <div class="admin-only bg-blue-100 rounded p-6">
-    <div class="bg-gray-50 rounded p-6">
+<div class="max-w-7xl mx-auto px-6 py-10 space-y-8">
+  <div class="admin-only bg-blue-100 rounded rounded-xl p-6">
+    <div class="bg-white rounded rounded-xl p-3">
 
-      <!-- Header row -->
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-          Activity logs
-        </h1>
+      <!-- Page Header -->
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Ahoy Events</h1>
+
+        <div class="text-sm text-gray-500">
+          <%= @events.count %> events
+        </div>
       </div>
 
-      <!-- Header with User Dropdown -->
-      <div class="flex items-center space-x-2 text-2xl font-semibold text-gray-700 mb-8">
-        <span>Recent Activity for</span>
+      <!-- Filters -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
+        <%= form_with url: request.path, method: :get, local: true do %>
 
-        <% if current_user&.super_user? %>
-          <%= form_with url: request.path, method: :get, local: true, html: { class: "inline-block" } do %>
-            <%= hidden_field_tag :page, params[:page] %>
-            <%= hidden_field_tag :per_page, params[:per_page] %>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-            <%= select_tag :user_id,
-                           options_from_collection_for_select(
-                             User.active.order(:first_name, :last_name),
-                             :id, :full_name, params[:user_id] || @user&.id
-                           ),
-                           include_blank: "All Users",
-                           class: "border border-gray-300 admin-only bg-blue-100 rounded-md px-2 py-1
-                 focus:outline-none focus:ring-1 focus:ring-indigo-500",
-                           onchange: "this.form.submit()" %>
-          <% end %>
-        <% else %>
-          <%= @user&.full_name %>
-        <% end %>
-      </div>
-
-      <!-- Index list -->
-      <div class="space-y-1">
-        <% @recent_activities.each do |event| %>
-          <div class="activity-row">
-            <div class="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition p-0">
-              <%= render "recent_activity", activity: event %>
+            <!-- Event Name -->
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                Event Name
+              </label>
+              <%= text_field_tag :name,
+                                 params[:name],
+                                 placeholder: "e.g. Viewed Workshop",
+                                 class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
+
+            <!-- User Filter -->
+            <% if current_user.super_user? %>
+              <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">
+                  User
+                </label>
+                <%= select_tag :user_id,
+                               options_from_collection_for_select(
+                                 User.order(:first_name, :last_name),
+                                 :id,
+                                 :full_name,
+                                 params[:user_id]
+                               ),
+                               include_blank: "All Users",
+                               class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+              </div>
+            <% end %>
+
+            <!-- Date From -->
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                From
+              </label>
+              <%= date_field_tag :from,
+                                 params[:from],
+                                 class: "w-full border-gray-300 rounded-md shadow-sm" %>
+            </div>
+
+            <!-- Date To -->
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                To
+              </label>
+              <%= date_field_tag :to,
+                                 params[:to],
+                                 class: "w-full border-gray-300 rounded-md shadow-sm" %>
+            </div>
+
           </div>
+
+          <!-- Quick Ranges -->
+          <div class="flex items-center gap-3 mt-6 text-sm">
+            <span class="text-gray-500">Quick:</span>
+
+            <%= link_to "24h",
+                        url_for(params.permit!.to_h.merge(from: 1.day.ago.to_date)),
+                        class: "text-indigo-600 hover:underline" %>
+
+            <%= link_to "7d",
+                        url_for(params.permit!.to_h.merge(from: 7.days.ago.to_date)),
+                        class: "text-indigo-600 hover:underline" %>
+
+            <%= link_to "30d",
+                        url_for(params.permit!.to_h.merge(from: 30.days.ago.to_date)),
+                        class: "text-indigo-600 hover:underline" %>
+          </div>
+
+          <div class="mt-6">
+            <%= submit_tag "Filter",
+                           class: "bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition" %>
+          </div>
+
         <% end %>
       </div>
 
-      <div class="pagination flex justify-center mt-8">
-        <%= tailwind_paginate @recent_activities %>
+      <!-- Events Table -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
+          <tr>
+            <th class="px-4 py-3 text-left">Time</th>
+            <th class="px-4 py-3 text-left">Event</th>
+            <th class="px-4 py-3 text-left">User</th>
+            <th class="px-4 py-3 text-left">Visit ID</th>
+            <th class="px-4 py-3 text-left">Properties</th>
+          </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-100">
+          <% @events.each do |event| %>
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-4 py-3 whitespace-nowrap text-gray-500">
+                <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
+              </td>
+
+              <td class="px-4 py-3 font-medium text-gray-900">
+                <%= event.name %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-600">
+                <% if event.user %>
+                  <%= link_to event.user.full_name,
+                              user_path(event.user),
+                              class: "text-indigo-600 hover:underline" %>
+                <% else %>
+                  <span class="text-gray-400 italic">Guest</span>
+                <% end %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-500">
+                <%= event.visit_id %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-500 max-w-xs truncate">
+                <%= event.properties.to_json %>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex justify-center mt-8">
+        <%= tailwind_paginate @events %>
       </div>
     </div>
   </div>

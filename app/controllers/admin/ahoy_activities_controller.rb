@@ -3,55 +3,89 @@ module Admin
     helper_method :scoped_visits, :scoped_events
 
     def index
-      if current_user&.super_user?
-        if params.key?(:user_id) && params[:user_id].present?
-          @user = User.find(params[:user_id])
-        elsif params.key?(:user_id) # param exists but blank
-          @user = nil
-        else
-          @user = current_user
-        end
-      else
-        @user = current_user
-      end
+      authorize! :ahoy_activity, to: :index?
+
+      @users = params[:user_id].present? ? User.where(id: params[:user_id].to_s.split("--")) : nil
 
       page = params[:page].presence&.to_i || 1
       per_page = params[:per_page].presence&.to_i || 20
 
-      scope = Ahoy::Event
-                .includes(:user, :visit)
-                .order(time: :desc)
+      scope = Ahoy::Event.includes(:user, :visit).order(time: :desc)
+
+      # Only real content interactions (not search/filter noise)
+      if params[:prefixes].present?
+        prefixes = params[:prefixes].split("--").map(&:strip)
+      else
+        prefixes = nil # %w[ create update destroy auth ] # view browse print download
+      end
+      if prefixes.present?
+        scope = scope.where(prefixes.map { |p| "ahoy_events.name LIKE ?" }.join(" OR "),
+                            *prefixes.map { |p| "#{p}.%" })
+      end
 
       # Filter by user (if viewing specific user activity)
-      scope = scope.where(user: @user) if params[:user_id].present?
+      scope = scope.where(user: @users) if @users.present?
 
       # Time filter
       scope = scope.where(time: time_range) if time_range.present?
 
-      # Only real content interactions (not search/filter noise)
-      prefixes = %w[ create update destroy auth ] # view browse print download
-      scope = scope.where(
-        prefixes.map { |p| "ahoy_events.name LIKE ?" }.join(" OR "),
-        *prefixes.map { |p| "#{p}.%" }
-      )
-
-      # Pagination happens on events
-      events = scope.paginate(page:, per_page:)
-
-      # Convert events → real domain records wrapped in presenter
-      @recent_activities = WillPaginate::Collection.create(
-        events.current_page,
-        events.per_page,
-        events.total_entries
-      ) do |pager|
-        pager.replace(events.map { |event| ActivityPresenter.new(event) })
+      if params[:from].present?
+        from_time = Time.zone.parse(params[:from]).beginning_of_day
+        scope = scope.where("ahoy_events.time >= ?", from_time)
       end
+
+      if params[:to].present?
+        to_time = Time.zone.parse(params[:to]).end_of_day
+        scope = scope.where("ahoy_events.time <= ?", to_time)
+      end
+
+      # Filter by visit
+      if params[:visit_id].present?
+        scope = scope.where(visit_id: params[:visit_id])
+      end
+
+      @events = scope.paginate(page: page, per_page: per_page)
     end
 
     def visits
+      authorize! :ahoy_activity, to: :visits?
+
+      page     = params[:page].presence&.to_i || 1
+      per_page = params[:per_page].presence&.to_i || 20
+
+      scope = Ahoy::Visit
+                .includes(:user)
+                .left_joins(:events)
+                .select("ahoy_visits.*, COUNT(ahoy_events.id) AS events_count")
+                .group("ahoy_visits.id")
+                .order(started_at: :desc)
+
+      # Filter by user
+      if params[:user_id].present?
+        scope = scope.where(user_id: params[:user_id])
+      end
+
+      # Filter by visit
+      if params[:visit_id].present?
+        scope = scope.where(id: params[:visit_id])
+      end
+
+      # Date filtering
+      if params[:from].present?
+        from_time = Time.zone.parse(params[:from]).beginning_of_day
+        scope = scope.where("ahoy_visits.started_at >= ?", from_time)
+      end
+
+      if params[:to].present?
+        to_time = Time.zone.parse(params[:to]).end_of_day
+        scope = scope.where("ahoy_visits.started_at <= ?", to_time)
+      end
+
+      @visits = scope.paginate(page: page, per_page: per_page)
     end
 
     def charts
+      authorize! :ahoy_activity, to: :charts?
       @creation_velocity_data = creation_velocity_data
     end
 

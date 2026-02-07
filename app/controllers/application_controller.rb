@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!  # ensures only logged-in users can access pages
   before_action :set_current_user # for AhoyTrackable in models
 
-  verify_authorized
+  verify_authorized unless: :devise_controller?
 
   after_action :flush_lifecycle_events
   around_action :set_time_zone_from_user, if: :current_user
