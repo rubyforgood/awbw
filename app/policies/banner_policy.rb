@@ -14,7 +14,7 @@ class BannerPolicy < ApplicationPolicy
   #
 
   relation_scope do |relation|
-    next relation if user.admin?
+    next relation if admin?
     relation.none
   end
 end

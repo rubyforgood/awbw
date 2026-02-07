@@ -15,7 +15,7 @@ class ApplicationPolicy < ActionPolicy::Base
   # Define shared methods useful for most policies.
 
   def admin?
-    user&.super_user
+    user&.super_user?
   end
 
   def authenticated? = user.present?

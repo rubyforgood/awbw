@@ -6,8 +6,8 @@ class CommunityNewsController < ApplicationController
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset, :author, :project, author: :facilitator ]))
-
+      base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset,
+                                                             :author, :project, author: :facilitator ]))
       filtered = base_scope.search_by_params(params)
       @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
 

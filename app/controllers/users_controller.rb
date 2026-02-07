@@ -189,11 +189,7 @@ class UsersController < ApplicationController
   def set_form_variables
     set_facilitator
     @user.project_users.first || @user.project_users.build
-    projects = if current_user&.super_user?
-      Project.published
-    else
-      current_user.projects
-    end
+    projects = current_user&.super_user? ? Project.published : current_user.projects
     @projects_array = projects.order(:name).pluck(:name, :id)
   end
 

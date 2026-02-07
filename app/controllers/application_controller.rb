@@ -19,10 +19,6 @@ class ApplicationController < ActionController::Base
     redirect_back_or_to root_path
   end
 
-  def admin?
-    current_user && allowed_to?(:admin?, with: ApplicationPolicy)
-  end
-
   def default_authorization_policy_class
     ApplicationPolicy
   end

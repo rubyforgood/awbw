@@ -61,9 +61,7 @@
           class="
             w-full text-lg border-transparent peer-has-hover:border
             peer-has-hover:border-gray-300 peer-has-hover:shadow-sm
-            peer-has-hover:rounded-md peer-has-hover:p-1
-          "
-        >
+            peer-has-hover:rounded-md peer-has-hover:p-1">
 
           <%= faq.question %></span>
       <% end %>
@@ -125,8 +123,7 @@
   <div
     id="<%= dom_id faq, :answer  %>"
     class="hidden py-5 border-b border-gray-300"
-    data-dropdown-target="content"
-  >
+    data-dropdown-target="content">
     <strong class="sr-only">Answer:</strong>
 
     <%= render "inline_edit", model: faq, attribute: :answer, frame_class: "flex flex-col" do %>
