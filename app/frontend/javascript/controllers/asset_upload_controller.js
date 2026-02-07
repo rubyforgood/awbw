@@ -42,6 +42,9 @@ export default class extends Controller {
 
   triggerFileInput({ params: { type } }) {
     this.selectedType = type;
+    console.log(this.fileInputTarget);
+
+    this.fileInputTarget.disabled = false;
     this.fileInputTarget.click();
   }
 
@@ -58,29 +61,30 @@ export default class extends Controller {
       this.typeSelectTarget.value = this.selectedType;
     }
 
-    this.showSpinner();
+    // this.showSpinner();
     this.formTarget.requestSubmit();
     // Reset
+    this.fileInputTarget.value = "";
     this.selectedType = "GalleryAsset";
   }
 
-  showSpinner() {
-    const spinner = `<i class="fa-solid fa-spinner animate-spin text-gray-600 text-5xl"></i>`;
+  // showSpinner() {
+  //   const spinner = `<i class="fa-solid fa-spinner animate-spin text-gray-600 text-5xl"></i>`;
 
-    if (
-      this.selectedType === "PrimaryAsset" &&
-      this.hasUploadLabelPrimaryTarget
-    ) {
-      this.uploadLabelPrimaryTarget.innerHTML = spinner;
-    }
-
-    if (
-      this.selectedType === "DownloadableAsset" &&
-      this.hasUploadLabelDownloadableTarget
-    ) {
-      this.uploadLabelDownloadableTarget.innerHTML = spinner;
-    }
-  }
+  // if (
+  //   this.selectedType === "PrimaryAsset" &&
+  //   this.hasUploadLabelPrimaryTarget
+  // ) {
+  //   this.uploadLabelPrimaryTarget.innerHTML = spinner;
+  // }
+  //
+  // if (
+  //   this.selectedType === "DownloadableAsset" &&
+  //   this.hasUploadLabelDownloadableTarget
+  // ) {
+  //   this.uploadLabelDownloadableTarget.innerHTML = spinner;
+  // }
+  // }
 
   /* ─────────────────────────────
    * Turbo event handling for new frames and stream removes

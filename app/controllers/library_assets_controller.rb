@@ -51,8 +51,8 @@
          @unpersisted_owner.assets.compact!
          render template: "assets/create", formats: [ :turbo_stream ]
        else
-         flash.now[:alert] = "Only one Primary or Downloadable asset allowed."
-         render template: "assets/create", formats: [ :turbo_stream ]
+         flash.now[:alert] = "File type unsupported or Attachment type already exists"
+         render template: "assets/create", formats: [ :turbo_stream ], status: :unprocessable_content
        end
      end
    end
