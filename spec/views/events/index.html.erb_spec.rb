@@ -47,7 +47,7 @@ RSpec.describe "events/index", type: :view do
   describe "when not allowed" do
     before do
       allow(view).to receive(:allowed_to?).and_return(false)
-      assign(:events, [event_open])
+      assign(:events, [ event_open ])
       render
     end
 

@@ -20,6 +20,4 @@ class FacilitatorPolicy < ApplicationPolicy
     next relation if admin?
     relation.published
   end
-
-
 end

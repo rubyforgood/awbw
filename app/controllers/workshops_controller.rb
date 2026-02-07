@@ -27,6 +27,7 @@ class WorkshopsController < ApplicationController
   end
 
   def summary
+    authorize! :workshop, to: :summary?
     @year = params[:year] ? params[:year].to_i : Date.current.year.to_i
     @month = params[:month] ? params[:month].to_i : Date.current.month.to_i
 
@@ -52,6 +53,7 @@ class WorkshopsController < ApplicationController
   end
 
   def build_report
+    authorize! :workshop, to: :summary?
     date = Date.new(@year, @month)
 
     form_builder = FormBuilder

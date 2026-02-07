@@ -15,12 +15,14 @@ class WorkshopLogsController < ApplicationController
 
   def new
     @workshop_log = WorkshopLog.new
+    authorize! @workshop_log
     set_form_variables
   end
 
   def update
     set_default_values
     @workshop_log = WorkshopLog.find(params[:id])
+    authorize! @workshop_log
 
     success = false
 
@@ -54,6 +56,7 @@ class WorkshopLogsController < ApplicationController
   def create
     set_default_values
     @workshop_log = WorkshopLog.new(workshop_log_params)
+    authorize! @workshop_log
 
     if @workshop_log.save
       NotificationServices::CreateNotification.call(
@@ -74,6 +77,7 @@ class WorkshopLogsController < ApplicationController
 
   def show
     @workshop_log = Report.find(params[:id]).decorate
+    authorize! @workshop_log
     @workshop     = @workshop_log.workshop&.decorate
     @answers      = @workshop_log.report_form_field_answers
 
@@ -90,6 +94,7 @@ class WorkshopLogsController < ApplicationController
 
   def edit
     @workshop_log = WorkshopLog.find(params[:id])
+    authorize! @workshop_log
     @workshop = @workshop_log.owner || Workshop.new(windows_type_id: @workshop_log.windows_type_id)
 
     set_form_variables

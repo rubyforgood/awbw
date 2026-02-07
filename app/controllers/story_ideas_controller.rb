@@ -5,16 +5,12 @@ class StoryIdeasController < ApplicationController
   before_action :set_story_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    authorize! StoryIdea
-
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-
     story_ideas = StoryIdea.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
-
     @story_ideas = story_ideas.order(created_at: :desc)
                               .paginate(page: params[:page], per_page: per_page)
                               .decorate
-
     @story_ideas_count = story_ideas.size
   end
 

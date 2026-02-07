@@ -2,10 +2,12 @@
 
 class MonthlyReportsController < ApplicationController
   def monthly_select_type
+    authorize! :monthly_report, to: :monthly_select_type?
     check_feature_fag
   end
 
   def monthly
+    authorize! :monthly_report, to: :monthly?
     check_feature_fag
     return if performed?
 
@@ -29,6 +31,7 @@ class MonthlyReportsController < ApplicationController
   def create
     check_feature_fag
     build_new_report
+    authorize! @report
 
     if params[:sectorable_items]
       if @report.save
@@ -61,6 +64,7 @@ class MonthlyReportsController < ApplicationController
     build_month_and_year
     find_form_builder
     @report = Report.find(params[:id])
+    authorize! @report
     @agencies  = current_user.projects.
                  where(windows_type_id: @report.windows_type_id)
     @month = @report.date.month
@@ -73,6 +77,7 @@ class MonthlyReportsController < ApplicationController
   def update
     check_feature_fag
     @report = MonthlyReport.find params[:id]
+    authorize! @report
 
     if params[:report]
       ActiveRecord::Base.transaction do
@@ -99,6 +104,7 @@ class MonthlyReportsController < ApplicationController
 
   def show
     @monthly_report = Report.find(params[:id]).decorate
+    authorize! @monthly_report
     @answers      = @monthly_report.report_form_field_answers
 
     if @monthly_report

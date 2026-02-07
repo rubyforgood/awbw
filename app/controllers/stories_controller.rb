@@ -4,6 +4,7 @@ class StoriesController < ApplicationController
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(Story.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset))
@@ -24,6 +25,7 @@ class StoriesController < ApplicationController
 
   def show
     @story = @story.decorate
+    authorize! @story
     track_view(@story)
 
     if @story.external_url.present? && !params[:no_redirect].present?
@@ -39,12 +41,14 @@ class StoriesController < ApplicationController
     else
       @story = Story.new
     end
+    authorize! @story
     @story.decorate
     set_form_variables
   end
 
   def edit
     @story = @story.decorate
+    authorize! @story
     set_form_variables
     if turbo_frame_request?
       render :editor_lazy
@@ -55,6 +59,7 @@ class StoriesController < ApplicationController
 
   def create
     @story = Story.new(story_params)
+    authorize! @story
 
     if @story.save
       if params[:promote_idea_assets] == "true"
@@ -72,6 +77,7 @@ class StoriesController < ApplicationController
   end
 
   def update
+    authorize! @story
     if @story.update(story_params.except(:images))
       redirect_to stories_path, notice: "Story was successfully updated.", status: :see_other
     else
@@ -82,6 +88,7 @@ class StoriesController < ApplicationController
   end
 
   def destroy
+    authorize! @story
     @story.destroy!
     redirect_to stories_path, notice: "Story was successfully destroyed."
   end

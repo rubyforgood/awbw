@@ -1,4 +1,4 @@
-class ProjectStatusesController < Admin::BaseController
+class ProjectStatusesController < ApplicationController
   before_action :set_project_status, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -13,17 +13,20 @@ class ProjectStatusesController < Admin::BaseController
   end
 
   def new
+    authorize!
     @project_status = ProjectStatus.new.decorate
     set_form_variables
   end
 
   def edit
     @project_status = @project_status.decorate
+    authorize! @project_status
     set_form_variables
   end
 
   def create
     @project_status = ProjectStatus.new(project_status_params)
+    authorize! @project_status
 
     if @project_status.save
       redirect_to project_statuses_path, notice: "Project status was successfully created."
@@ -35,6 +38,7 @@ class ProjectStatusesController < Admin::BaseController
   end
 
   def update
+    authorize! @project_status
     if @project_status.update(project_status_params)
       redirect_to project_statuses_path, notice: "Project status was successfully updated.", status: :see_other
     else
@@ -45,6 +49,7 @@ class ProjectStatusesController < Admin::BaseController
   end
 
   def destroy
+    authorize! @project_status
     @project_status.destroy!
     redirect_to project_statuses_path, notice: "Project status was successfully destroyed."
   end

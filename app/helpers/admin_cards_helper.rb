@@ -25,7 +25,7 @@ module AdminCardsHelper
     [
       custom_card("Activity charts", admin_activities_charts_path, icon: "📊"),
       custom_card("Activity counts", admin_activities_counts_path, icon: "🔢"),
-      custom_card("Activity logs", admin_activities_path, icon: "🧭"),
+      custom_card("Activity logs", admin_activities_events_path, icon: "🧭"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:event_registrations, icon: "🎟️", intensity: 100),
       model_card(:story_ideas, icon: "✍️", intensity: 100),

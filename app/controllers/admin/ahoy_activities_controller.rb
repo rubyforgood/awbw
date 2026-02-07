@@ -1,5 +1,5 @@
 module Admin
-  class AhoyActivitiesController < Admin::BaseController
+  class AhoyActivitiesController < ApplicationController
     helper_method :scoped_visits, :scoped_events
 
     def index

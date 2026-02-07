@@ -4,7 +4,7 @@ class UsersController < ApplicationController
                                    :send_reset_password_instructions ]
 
   def index
-    authorize! User
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)
 
@@ -80,10 +80,12 @@ class UsersController < ApplicationController
 
   def change_password
     @user = current_user
+    authorize! @user
   end
 
   def update_password
     @user = current_user
+    authorize! @user
 
     if @user.update_with_password(password_params)
       Analytics::AhoyTracker.track_auth_event(

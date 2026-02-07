@@ -5,6 +5,7 @@
    before_action :set_owner, only: [ :create, :update ]
 
    def show
+     authorize! @asset
      if @asset&.file.attached?
        redirect_to rails_blob_url(@asset.file, disposition: "inline")
      else
@@ -13,6 +14,7 @@
    end
 
    def create
+     authorize! :library_asset, :create
      if @owner
        valid_asset = validate_asset_type_constraint(asset_params[:type], @owner.assets)
 
@@ -59,16 +61,18 @@
 
    def edit
      if @asset
+       authorize! @asset
        render template: "assets/edit"
-     else
+     else # does this need an authorize check?
        flash.now[:alert] = "Error"
        redirect_back_or_to root_path
      end
    end
 
    def update
+     authorize! @asset
      valid_asset = @owner.present? ? validate_asset_type_constraint(asset_params[:type], @owner.assets) : true
-     if  valid_asset && @asset&.update(asset_params)
+     if valid_asset && @asset&.update(asset_params)
        flash.now[:notice] = "Asset updated."
        case turbo_frame_request_id
        when "title_asset_#{@asset.id}"
@@ -77,7 +81,6 @@
          render partial: "assets/form", locals: { asset: @asset, owner: @owner.reload }
        end
      else
-
        messages = @asset.errors.full_messages
 
        unless valid_asset
@@ -100,9 +103,10 @@
 
    def destroy
      if @asset
+       authorize! @asset
        @asset.destroy
        render turbo_stream: turbo_stream.remove(@asset)
-     else
+     else # does this need a policy check?
        flash.now[:alert] = "Error"
        redirect_back_or_to root_path
      end

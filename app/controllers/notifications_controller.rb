@@ -2,6 +2,7 @@ class NotificationsController < ApplicationController
   before_action :set_notification, only: [ :show ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     @notifications =
       if current_user&.super_user?
@@ -17,6 +18,7 @@ class NotificationsController < ApplicationController
   end
 
   def show
+    authorize! @notification
   end
 
   private

@@ -20,7 +20,13 @@ class ApplicationPolicy < ActionPolicy::Base
   def authenticated? = user.present?
 
   def owner?
-    record.respond_to?(:created_by_id) && record.created_by_id == user&.id ||
-      record.respond_to?(:user_id) && record.user_id == user&.id
+    return false unless user
+    if record.respond_to?(:created_by_id)
+      record.created_by_id == user.id
+    elsif record.respond_to?(:user_id)
+      record.user_id == user.id
+    else
+      false
+    end
   end
 end

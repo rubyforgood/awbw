@@ -4,6 +4,7 @@ class CommunityNewsController < ApplicationController
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset,
@@ -24,6 +25,7 @@ class CommunityNewsController < ApplicationController
 
   def show
     @community_news = @community_news.decorate
+    authorize! @community_news
     track_view(@community_news)
 
     if @community_news.external_url.present?
@@ -34,11 +36,13 @@ class CommunityNewsController < ApplicationController
 
   def new
     @community_news = CommunityNews.new.decorate
+    authorize! @community_news
     set_form_variables
   end
 
   def edit
     @community_news = @community_news.decorate
+    authorize! @community_news
     set_form_variables
     if turbo_frame_request?
       render :editor_lazy
@@ -49,6 +53,7 @@ class CommunityNewsController < ApplicationController
 
   def create
     @community_news = CommunityNews.new(community_news_params)
+    authorize! @community_news
 
     if @community_news.save
       if params.dig(:library_asset, :new_assets).present?
@@ -64,6 +69,7 @@ class CommunityNewsController < ApplicationController
   end
 
   def update
+    authorize! @community_news
     if @community_news.update(community_news_params)
       redirect_to community_news_index_path,
                   notice: "Community news was successfully updated.", status: :see_other
@@ -74,6 +80,7 @@ class CommunityNewsController < ApplicationController
   end
 
   def destroy
+    authorize! @community_news
     @community_news.destroy!
     redirect_to community_news_index_path, notice: "Community news was successfully destroyed."
   end

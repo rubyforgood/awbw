@@ -14,7 +14,7 @@ class BookmarkPolicy < ApplicationPolicy
   end
 
   def create?
-    admin? || authenticated? && record.user == user
+    authenticated?
   end
 
   def update?

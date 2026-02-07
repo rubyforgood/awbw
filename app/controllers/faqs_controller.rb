@@ -3,6 +3,7 @@ class FaqsController < ApplicationController
   before_action :set_faq, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     faqs = authorized_scope(Faq.all)
     @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "published"))
               .by_position
@@ -10,19 +11,23 @@ class FaqsController < ApplicationController
   end
 
   def show
+    authorize! @faq
   end
 
   def new
     @faq = Faq.new
+    authorize! @faq
     set_form_variables
   end
 
   def edit
+    authorize! @faq
     set_form_variables
   end
 
   def create
     @faq = Faq.new(faq_params)
+    authorize! @faq
 
     if @faq.save
       redirect_to faqs_path, notice: "FAQ was successfully created."
@@ -33,6 +38,7 @@ class FaqsController < ApplicationController
   end
 
   def update
+    authorize! @faq
     notice = "FAQ was successfully updated."
     flash.now[:notice] = notice
     if @faq.update(faq_params)
@@ -44,6 +50,7 @@ class FaqsController < ApplicationController
   end
 
   def destroy
+    authorize! @faq
     @faq.destroy!
     redirect_to faqs_path, notice: "FAQ was successfully destroyed."
   end

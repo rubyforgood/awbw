@@ -2,6 +2,7 @@
    before_action :set_rich_text_asset, only: [ :show, :edit, :update, :destroy ]
 
    def show
+     authorize! @rich_text_asset
      if @rich_text_asset.file.attached?
        redirect_to rails_blob_url(@rich_text_asset.file, disposition: "inline")
      else
@@ -13,6 +14,7 @@
      @owner = GlobalID::Locator.locate_signed(params[:owner_sgid])
 
      @rich_text_asset = @owner.rich_text_assets.build(title: params[:title])
+     authorize! @rich_text_asset
      @rich_text_asset.file.attach(params[:file]) if params[:file].present?
      if @rich_text_asset.save
        render partial: "rich_text_assets/form"
@@ -23,10 +25,11 @@
       render plain: "Invalid Record", status: :unprocessable_content
    end
    def edit
-     @rich_text_asset
+     authorize! @rich_text_asset
    end
 
    def update
+     authorize! @rich_text_asset
      if @rich_text_asset.update(rich_text_asset_params)
        flash.now[:notice] = "Asset updated."
        render partial: "title", locals: { asset: @rich_text_asset }
@@ -37,11 +40,12 @@
    end
 
    def destroy
+     authorize! @rich_text_asset
      @rich_text_asset.destroy
      redirect_to root_path, notice: "Asset deleted"
    end
 
-    private
+   private
 
    def set_rich_text_asset
      @rich_text_asset = RichTextAsset.find(params[:id])

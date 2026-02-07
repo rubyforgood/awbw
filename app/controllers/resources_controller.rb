@@ -39,6 +39,7 @@ class ResourcesController < ApplicationController
 
   def edit
     @resource = Resource.includes(user: :facilitator).find(resource_id_param).decorate
+    authorize! @resource
     set_form_variables
 
     if turbo_frame_request?
@@ -50,6 +51,7 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(resource_id_param).decorate
+    authorize! @resource
     track_view(@resource)
     load_forms
   end
@@ -94,6 +96,7 @@ class ResourcesController < ApplicationController
   end
 
   def search
+    authorize!
     process_search
     @sortable_fields = Resource::PUBLISHED_KINDS
     render :index
@@ -101,6 +104,7 @@ class ResourcesController < ApplicationController
 
   def download
     @resource = Resource.find(params[:resource_id])
+    authorize! @resource
 
     attachment = @resource&.downloadable_asset&.file
     if attachment.attached?
