@@ -1,8 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Event show page", type: :system do
-  let(:user)  { create(:user) }
-  let(:admin) { create(:user, :admin) }
+  let(:user)  { create(:user, time_zone: "Pacific Time (US & Canada)") }
+  let(:admin) { create(:user, :admin, time_zone: "Pacific Time (US & Canada)") }
 
   let(:event) do
     create(
@@ -11,8 +11,8 @@ RSpec.describe "Event show page", type: :system do
       rhino_description: "A wonderful event",
       publicly_visible: true,
       published: true,
-      start_date: 2.days.from_now.change(hour: 10),
-      end_date:   2.days.from_now.change(hour: 12),
+      start_date: 2.days.from_now.change(hour: 10), # UTC
+      end_date:   2.days.from_now.change(hour: 12), # UTC
       cost: 10.99,
       registration_close_date: 5.days.from_now
     )
@@ -55,8 +55,8 @@ RSpec.describe "Event show page", type: :system do
 
       # Decorator
       expect(page).to have_text("Cost: $10.99")
-      expect(page).to have_text("10")
-      expect(page).to have_text("12")
+      expect(page).to have_text("2") # Pacific Time
+      expect(page).to have_text("4") # Pacific Time
 
       # Bookmark UI always present
       expect(page).to have_css("span.inline-block")
@@ -127,6 +127,47 @@ RSpec.describe "Event show page", type: :system do
         expect(page).to have_text("Registration closed")
         expect(page).not_to have_button("Register")
       end
+    end
+  end
+
+  # --------------------------------------------------
+  # REGISTRATION BUTTON UPDATES VIA TURBO
+  # --------------------------------------------------
+
+  describe "registration button updates via Turbo", js: true do
+    before { driven_by(:selenium_chrome_headless) }
+
+    it "updates Register to De-register and shows badge without full page reload" do
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).to have_button("Register")
+      expect(page).not_to have_text("You are registered!")
+
+      click_button "Register"
+
+      # Turbo stream replaces the registration section; we stay on the event page
+      expect(page).to have_current_path(event_path(event))
+      expect(page).to have_button("De-register")
+      expect(page).to have_text("You are registered!")
+      expect(page).not_to have_button("Register")
+    end
+
+    it "updates De-register back to Register after de-registering" do
+      create(:event_registration, event: event, registrant: user)
+
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).to have_button("De-register")
+      accept_confirm do
+        click_button "De-register"
+      end
+
+      expect(page).to have_current_path(event_path(event))
+      expect(page).to have_button("Register")
+      expect(page).not_to have_button("De-register")
+      expect(page).not_to have_text("You are registered!")
     end
   end
 
