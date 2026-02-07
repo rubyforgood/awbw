@@ -15,12 +15,11 @@
         <!-- Buttons Group -->
         <div class="flex items-center gap-2">
           <%= link_to("Index", faqs_path, class: "btn btn-secondary-outline") %>
-          <% if current_user.super_user? %>
+          <% if current_user&.super_user? %>
             <%= link_to("Edit", edit_faq_path(@faq), class: "btn btn-primary-outline") %>
           <% end %>
         </div>
       </div>
-
       <div class="space-y-6">
         <div class="mt-4">
           <%= render @faq, hide_options: true %>

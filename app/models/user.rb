@@ -70,6 +70,7 @@ class User < ApplicationRecord
     results
   end
 
+  # TODO Remove once all view's use ActionPolicy
   def admin?
     super_user
   end

@@ -20,7 +20,7 @@ class ApplicationPolicy < ActionPolicy::Base
   # Define shared methods useful for most policies.
 
   def admin?
-    user&.admin?
+    user&.super_user
   end
 
   def owner?
