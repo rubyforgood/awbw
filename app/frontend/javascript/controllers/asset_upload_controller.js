@@ -46,19 +46,22 @@ export default class extends Controller {
   }
 
   handleFileChange() {
+    console.log(this.fileInputTarget);
     if (this.fileInputTarget.files.length === 0) {
       this.selectedType = "GalleryAsset";
       if (this.hasTypeSelectTarget)
         this.typeSelectTarget.value = this.selectedType;
       return;
     }
-
+    console.log(this.typeSelectTarget.value);
     if (this.hasTypeSelectTarget && this.selectedType) {
       this.typeSelectTarget.value = this.selectedType;
     }
 
     this.showSpinner();
     this.formTarget.requestSubmit();
+    // Reset
+    this.selectedType = "GalleryAsset";
   }
 
   showSpinner() {
@@ -90,19 +93,8 @@ export default class extends Controller {
       // Only match IDs that contain "_asset_" and end with numbers
       return /_asset_\d+$/.test(el.id);
     });
-    cards.forEach((card) => {
-      const role = this.roleFromId(card.id);
-      if (!role) return;
 
-      // Trigger assetAdded internally
-      this.assetAdded({
-        detail: {
-          id: card.id,
-          role: role,
-          element: card,
-        },
-      });
-    });
+    this.handleCards(cards);
   }
 
   handleStream(event) {
@@ -129,6 +121,7 @@ export default class extends Controller {
       },
     });
   }
+
   handleCards(cards) {
     cards.forEach((card) => {
       const role = this.roleFromId(card.id);
