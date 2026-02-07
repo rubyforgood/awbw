@@ -8,7 +8,7 @@
       <div class="space-y-6">
         <%= tag.div data: {controller: "asset-upload", action:"turbo:before-stream-render@document->asset-upload#handleStream 
                                                                turbo:frame-load->asset-upload#handleFrameLoad"} do %>
-          <div class="mt-4 bg-white rounded p-3"><%= render "form" %></div>
+          <div class="mt-4 bg-white rounded p-3"><%= render "form", inline_uploads: true %></div>
 
           <div class="my-4"><%= render "assets/form", owner: @resource %></div>
         <% end %>
