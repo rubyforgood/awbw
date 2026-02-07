@@ -4,10 +4,15 @@ class FacilitatorsController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    facilitators = Facilitator
-                     .searchable
+
+    base_scope = authorized_scope(Facilitator
+      .includes(:user,
+                :avatar_attachment,
+                :sectorable_items,
+                user: [ :avatar_attachment, :projects ]).references(:user))
+
+    facilitators = base_scope
                      .search_by_params(params.to_unsafe_h)
-                      .includes(:user, :avatar_attachment, :sectorable_items, user: [ :avatar_attachment, :projects ]).references(:user)
                      .order(:first_name, :last_name)
     @count_display = facilitators.size
     @facilitators = facilitators.paginate(page: params[:page], per_page: per_page)
