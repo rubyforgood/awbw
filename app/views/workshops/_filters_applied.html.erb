@@ -10,16 +10,16 @@
                         Sector.where(id: params[:sectors].to_unsafe_h.values.reject(&:blank?))
                           .pluck(:name) : [] %>
 
-<% active_applied = "Published" if params[:active] == "true" %>
+<% published_applied = "Published" if params[:published] == "true" %>
 
-<% inactive_applied = "Hidden" if params[:inactive] == "true" %>
+<% unpublished_applied = "Unpublished" if params[:published] == "true" %>
 
 <% filters_applied = [
   *windows_types_applied,
   *categories_applied,
   *sections_applied,
-  active_applied,
-  inactive_applied,
+  published_applied,
+  unpublished_applied,
   "#{ "Title: " + params[:title] if params[:title].present? }",
   "#{ "Author: " + params[:author_name] if params[:author_name].present? }",
   "#{ "Full-text: " + params[:query] if params[:query].present? }",
@@ -32,7 +32,7 @@
     </h3>
     <% if filters_applied.any? %>
       <%= filters_applied.to_sentence %>
-      <%= link_to 'Clear filters', workshops_path, class: "btn btn-primary" %>
+      <%= link_to "Clear filters", workshops_path, class: "btn btn-primary" %>
     <% else %>
       None
     <% end %>

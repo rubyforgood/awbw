@@ -141,4 +141,19 @@ module ApplicationHelper
   def email_label_with_confirmation_icon(user)
     "Email #{email_confirmation_icon(user)}".html_safe
   end
+
+  # Fundamental US time zones only (for user preference dropdown).
+  # Order: Eastern → Pacific, then Alaska, Hawaii, Arizona.
+  def us_time_zone_fundamentals
+    zone_names = [
+      "Eastern Time (US & Canada)",
+      "Central Time (US & Canada)",
+      "Mountain Time (US & Canada)",
+      "Pacific Time (US & Canada)",
+      "Alaska",
+      "Hawaii",
+      "Arizona"
+    ]
+    ActiveSupport::TimeZone.us_zones.select { |z| zone_names.include?(z.name) }.sort_by { |z| zone_names.index(z.name) }.map { |z| [ z.to_s, z.name ] }
+  end
 end

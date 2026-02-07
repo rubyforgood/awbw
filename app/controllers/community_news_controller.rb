@@ -1,26 +1,20 @@
 class CommunityNewsController < ApplicationController
   include ExternallyRedirectable, AssetUpdatable, AhoyTracking
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      unfiltered =
-        if current_user&.admin?
-          CommunityNews.all
-        elsif current_user
-          CommunityNews.published
-        else
-          CommunityNews.publicly_visible
-        end
-      filtered = unfiltered.search_by_params(params)
-      @community_news = filtered&.includes([ :bookmarks, :primary_asset, :author, :project, author: :facilitator ])
-                              &.paginate(page: params[:page], per_page: per_page)&.decorate
+      base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset, :author, :project, author: :facilitator ]))
 
-      @count_display = if filtered.count == unfiltered.count
-        unfiltered.count
+      filtered = base_scope.search_by_params(params)
+      @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
+
+      @count_display = if filtered.count == base_scope.count
+        base_scope.count
       else
-        "#{filtered.count}/#{unfiltered.count}"
+        "#{filtered.count}/#{base_scope.count}"
       end
       render :index_lazy
     else

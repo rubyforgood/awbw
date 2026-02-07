@@ -56,7 +56,7 @@ class ReportsController < ApplicationController
 
   def edit_story
     @workshop_list = Workshop.created_by_id(current_user.id)
-                             .where(inactive: false, windows_type: 3)
+                             .where(published: true, windows_type: 3)
                              .order(title: :asc)
 
     @report    = Report.find(params[:id])

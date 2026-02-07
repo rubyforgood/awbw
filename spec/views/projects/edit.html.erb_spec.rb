@@ -14,7 +14,7 @@ RSpec.describe "projects/edit", type: :view do
       location: nil,
       name: "MyString",
       description: "MyString",
-      inactive: false,
+      published: true,
       notes: "MyText"
     )
   }
@@ -35,7 +35,7 @@ RSpec.describe "projects/edit", type: :view do
 
       assert_select "select[name=?]", "project[project_status_id]"
 
-      assert_select "input[name=?]", "project[inactive]"
+      assert_select "input[name=?]", "project[published]"
 
       assert_select "textarea[name=?]", "project[notes]"
     end

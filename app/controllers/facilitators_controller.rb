@@ -4,10 +4,15 @@ class FacilitatorsController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    facilitators = Facilitator
-                     .searchable
+
+    base_scope = authorized_scope(Facilitator
+      .includes(:user,
+                :avatar_attachment,
+                :sectorable_items,
+                user: [ :avatar_attachment, :projects ]).references(:user))
+
+    facilitators = base_scope
                      .search_by_params(params.to_unsafe_h)
-                      .includes(:user, :avatar_attachment, :sectorable_items, user: [ :avatar_attachment, :projects ]).references(:user)
                      .order(:first_name, :last_name)
     @count_display = facilitators.size
     @facilitators = facilitators.paginate(page: params[:page], per_page: per_page)
@@ -85,7 +90,7 @@ class FacilitatorsController < ApplicationController
       @facilitator.user.project_users.first || @facilitator.user.project_users.build
     end
     projects = if current_user.super_user?
-      Project.active
+      Project.published
     else
       current_user.projects
     end
@@ -122,6 +127,7 @@ class FacilitatorsController < ApplicationController
       :profile_show_workshop_variations,
       :profile_show_workshops,
       :profile_show_workshop_logs,
+      :published,
       :member_since,
       :linked_in_url,
       :facebook_url,
@@ -142,6 +148,7 @@ class FacilitatorsController < ApplicationController
         :district,
         :locality,
         :phone,
+        :inactive,
         :_destroy
       ],
       contact_methods_attributes: [

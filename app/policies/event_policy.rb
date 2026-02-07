@@ -3,8 +3,6 @@ class EventPolicy < ApplicationPolicy
   #
   # override or add new rules here that are not defined in ApplicationPolicy
 
-  skip_pre_check :verify_authenticated!
-
   def index?
     true
   end

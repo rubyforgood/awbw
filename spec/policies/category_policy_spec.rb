@@ -24,7 +24,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     context "with no user" do
       subject { policy_for(user: nil) }
 
-      it { is_expected.not_to be_allowed_to(:tags_index?) }
+      it { is_expected.to be_allowed_to(:tags_index?) }
     end
   end
 end

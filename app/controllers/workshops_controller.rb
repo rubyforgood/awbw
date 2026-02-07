@@ -1,22 +1,23 @@
 class WorkshopsController < ApplicationController
   include AssetUpdatable, AhoyTracking
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
+
   def index
     @category_types = CategoryType.published.order(:name).decorate
     @sectors        = Sector.published
     @windows_types  = WindowsType.all
 
     if turbo_frame_request?
-      search_service = WorkshopSearchService.new(params, super_user: current_user.super_user?).call
+      search_service = WorkshopSearchService.new(params, user: current_user).call
       @sort = search_service.sort
 
       track_index_intent(Workshop, search_service.workshops, params)
 
-      @workshops = search_service.workshops
+      @workshops = authorized_scope(search_service.workshops
                                  .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges,
-                                   user: [ :facilitator ], primary_asset: [ :file_attachment ])
+                                   user: [ :facilitator ], primary_asset: [ :file_attachment ]))
                                  .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
-      @workshops_count = search_service.workshops.size
 
       render :workshop_results
     else
@@ -188,10 +189,10 @@ class WorkshopsController < ApplicationController
   private
 
   def set_show
-    @quotes = Quote.where(workshop_id: @workshop.id).active
-    @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(inactive: false)
-    @workshop_variations = @workshop.workshop_variations.active
-    @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published }.compact if @workshop.sectorable_items.any?
+    @quotes = Quote.where(workshop_id: @workshop.id).published
+    @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
+    @workshop_variations = @workshop.workshop_variations.published
+    @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
   end
 
 
@@ -239,7 +240,7 @@ class WorkshopsController < ApplicationController
 
   def workshop_params
     params.require(:workshop).permit(
-      :title, :featured, :inactive,
+      :title, :featured, :published,
       :full_name, :user_id, :windows_type_id, :workshop_idea_id,
       :month, :year,
       :publicly_visible,

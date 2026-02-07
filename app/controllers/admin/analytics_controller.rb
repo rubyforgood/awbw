@@ -20,8 +20,8 @@ module Admin
 
       @most_printed_workshops = decorate_with_counts(most_printed_for_model(Workshop, time_scope), :print_count)
       @most_printed_resources = decorate_with_counts(most_printed_for_model(Resource, time_scope), :print_count)
-      # @most_printed_community_news = decorate_with_counts(most_printed_for_model(CommunityNews, time_scope), :print_count)
-      # @most_printed_stories = decorate_with_counts(most_printed_for_model(Story, time_scope), :print_count)
+      @most_printed_community_news = decorate_with_counts(most_printed_for_model(CommunityNews, time_scope), :print_count)
+      @most_printed_stories = decorate_with_counts(most_printed_for_model(Story, time_scope), :print_count)
       # @most_printed_workshop_variations = decorate_with_counts(most_printed_for_model(WorkshopVariation, time_scope), :print_count)
       # @most_printed_quotes = decorate_with_counts(most_printed_for_model(Quote, time_scope), :print_count)
       # @most_printed_tutorials = decorate_with_counts(most_printed_for_model(Tutorial, time_scope), :print_count)

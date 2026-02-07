@@ -7,5 +7,13 @@ FactoryBot.define do
     rhino_body { "<p>My Body</p>" }
     association :created_by, factory: :user
     association :updated_by, factory: :user
+
+    trait :published do
+      published { true }
+    end
+
+    trait :unpublished do
+      published { false }
+    end
   end
 end

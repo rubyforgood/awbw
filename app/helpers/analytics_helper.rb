@@ -6,7 +6,7 @@ module AnalyticsHelper
                    icon_class: "fas fa-print",
                    button_text: nil,
                    title: "Print",
-                  image_toggle: false)
+                   image_toggle: false)
     model = record.respond_to?(:object) ? record.object : record
 
     resolved_type =

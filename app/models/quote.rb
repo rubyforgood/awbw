@@ -1,5 +1,5 @@
 class Quote < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include Publishable, TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -24,8 +24,6 @@ class Quote < ApplicationRecord
     attributes :quote
   end
 
-  scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
-  scope :published, ->(published = nil) { published ? active(published) : active }
   scope :category_names, ->(names) { tag_names(:categories, names) }
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 

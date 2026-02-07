@@ -1,20 +1,21 @@
 class StoriesController < ApplicationController
   include ExternallyRedirectable, AssetUpdatable, AhoyTracking
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
   def index
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      unpaginated = current_user.super_user? ? Story.all : Story.published
-      filtered = unpaginated.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset)
-                            .search_by_params(params)
-                            .order(created_at: :desc)
+      base_scope = authorized_scope(Story.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset))
+      filtered = base_scope.search_by_params(params)
+                           .order(created_at: :desc)
+
       @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
-      @count_display = if filtered.count == unpaginated.count
-        unpaginated.count
+      @count_display = if filtered.count == base_scope.count
+        base_scope.count
       else
-        "#{filtered.count}/#{unpaginated.count}"
+        "#{filtered.count}/#{base_scope.count}"
       end
       render :index_lazy
     else

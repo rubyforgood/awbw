@@ -10,7 +10,7 @@ RSpec.describe "/resources", type: :request do
       title: "Helpful Resource",
       text: "This is a very helpful resource.",
       url: "https://www.example.com",
-      inactive: false,
+      published: true,
       kind: Resource::PUBLISHED_KINDS.first,
       windows_type_id: windows_type.id,
       user_id: user.id

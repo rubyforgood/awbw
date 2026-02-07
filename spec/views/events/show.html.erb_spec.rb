@@ -4,7 +4,7 @@ RSpec.describe "events/show", type: :view do
   let(:event) do
     create(:event,
            title: "Test Event",
-           description: "This is a test event description",
+           rhino_description: "This is a test event description",
            start_date: DateTime.new(2024, 1, 15, 10, 0),
            end_date: DateTime.new(2024, 1, 15, 16, 0),
            registration_close_date: DateTime.new(2024, 1, 10, 23, 59))
@@ -47,7 +47,7 @@ RSpec.describe "events/show", type: :view do
     let(:event) do
       create(:event,
              title: "Minimal Event",
-             description: "Event with minimal data",
+             rhino_description: "Event with minimal data",
              registration_close_date: nil)
     end
     let(:formatted_event_start_time) do

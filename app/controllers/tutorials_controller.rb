@@ -1,12 +1,14 @@
 class TutorialsController < ApplicationController
   include AhoyTracking
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_tutorial, only: [ :show, :edit, :update, :destroy ]
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unfiltered = current_user.super_user? ? Tutorial.all : Tutorial.published
-    filtered = unfiltered.search_by_params(params)
-    @count_display = filtered.count == unfiltered.count ? unfiltered.count : "#{filtered.count}/#{unfiltered.count}"
+    base_scope = authorized_scope(Tutorial.all)
+    filtered = base_scope.search_by_params(params)
+
+    @count_display = filtered.size == base_scope.size ? base_scope.size : "#{filtered.count}/#{base_scope.count}"
     @tutorials = filtered.order(:position).paginate(page: params[:page], per_page: per_page).decorate
   end
 

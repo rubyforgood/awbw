@@ -31,7 +31,7 @@ FactoryBot.define do
     # comment { "MyText" }
     # notes { "MyText" }
     # confirmed { false }
-    # inactive { false }
+    # published { true }
     # legacy { false }
     # legacy_id { 1 }
     # super_user { false }

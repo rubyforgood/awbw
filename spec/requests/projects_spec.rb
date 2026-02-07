@@ -14,7 +14,7 @@ RSpec.describe "/projects", type: :request do
       start_date: Date.today - 6.months,
       end_date: Date.today + 6.months,
       project_status_id: project_status.id,
-      inactive: false,
+      published: true,
       notes: "Runs bi-weekly at community centers."
     }
   end
@@ -97,7 +97,7 @@ RSpec.describe "/projects", type: :request do
         {
           name: "Updated Healing Project",
           description: "Updated description for testing.",
-          inactive: true
+          published: false
         }
       end
 
@@ -107,7 +107,7 @@ RSpec.describe "/projects", type: :request do
         project.reload
         expect(project.name).to eq("Updated Healing Project")
         expect(project.description).to eq("Updated description for testing.")
-        expect(project.inactive).to be(true)
+        expect(project.published).to be(true)
       end
 
       it "redirects to the projects index" do

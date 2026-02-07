@@ -61,7 +61,7 @@ class WorkshopFromIdeaService
       month: workshop_idea.created_at.month,
       year: workshop_idea.created_at.year,
       featured: false,
-      inactive: true
+      published: false
     )
   end
 

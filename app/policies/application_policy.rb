@@ -8,20 +8,19 @@ class ApplicationPolicy < ActionPolicy::Base
   # Read more about authorization context: https://actionpolicy.evilmartians.io/#/authorization_context
   #
   authorize :user, optional: true, allow_nil: true
-  pre_check :verify_authenticated!
 
   default_rule :manage?
   alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, :destroy?, to: :manage?
 
   def manage?
-    admin?
+    authenticated? && admin?
   end
 
   private
   # Define shared methods useful for most policies.
 
   def admin?
-    user&.admin?
+    user&.super_user
   end
 
   def owner?

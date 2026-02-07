@@ -10,7 +10,7 @@ class WorkshopVariationsController < ApplicationController
       WorkshopVariation
         .includes(:workshop)
         .joins(:workshop)
-        .where(workshops: { inactive: false })
+        .where(workshops: { published: true })
         .order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
         .paginate(page: params[:page], per_page: 25)
         .decorate
@@ -87,7 +87,7 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [ :name, :code, :inactive, :position,
+      [ :name, :code, :published, :position,
        :youtube_url, :created_by_id, :workshop_id
       ]
     )

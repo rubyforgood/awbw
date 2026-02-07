@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe "FAQ", type: :system do
   include ActionView::RecordIdentifier
 
-  let!(:active_faq) { create(:faq, inactive: false) }
-  let!(:inactive_faq) { create(:faq, inactive: true) }
+  let!(:published_faq) { create(:faq, :published) }
+  let!(:unpublished_faq) { create(:faq) }
 
   context "Index" do
     context "as a regular user" do
@@ -15,9 +15,9 @@ RSpec.describe "FAQ", type: :system do
         visit faqs_path
       end
 
-      it "shows only active FAQs" do
-        expect(page).to have_content(active_faq.question)
-        expect(page).not_to have_content(inactive_faq.question)
+      it "shows only published FAQs" do
+        expect(page).to have_content(published_faq.question)
+        expect(page).not_to have_content(unpublished_faq.question)
       end
     end
 
@@ -29,9 +29,9 @@ RSpec.describe "FAQ", type: :system do
         visit faqs_path
       end
 
-      it "shows both active and inactive FAQs" do
-        expect(page).to have_content(active_faq.question)
-        expect(page).to have_content(inactive_faq.question)
+      it "shows both published and unpublished FAQs" do
+        expect(page).to have_content(published_faq.question)
+        expect(page).to have_content(unpublished_faq.question)
       end
     end
   end

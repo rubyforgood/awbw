@@ -79,10 +79,10 @@
 
           <%# if allowed_to?(:manage?, @workshop) %>
           <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
-            <%= f.input :inactive, as: :boolean, label: "Hidden?" %>
-            <%= f.input :featured, as: :boolean, label: "Featured?" %>
-            <%= f.input :publicly_visible, as: :boolean, label: "Publicly visible?" %>
-            <%= f.input :publicly_featured, as: :boolean, label: "Publicly featured?" %>
+            <%= f.input :published, as: :boolean %>
+            <%= f.input :featured, as: :boolean %>
+            <%= f.input :publicly_visible, as: :boolean %>
+            <%= f.input :publicly_featured, as: :boolean %>
           </div>
 
           <%# end %>

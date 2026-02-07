@@ -25,12 +25,15 @@ class CustomEditor extends TipTapEditor {
           <slot name="before-bold-button"></slot>
           <slot name="bold-button">${this.renderBoldButton()}</slot>
           <slot name="after-bold-button"></slot>
-
           <!-- Italic -->
           <slot name="before-italic-button"></slot>
           <slot name="italic-button">${this.renderItalicButton()}</slot>
           <slot name="after-italic-button"></slot>
 
+          <!-- Text Color -->
+          <slot name="before-color-picker"></slot>
+          <slot name="color-picker"> ${this.renderTextColorPicker()} </slot>
+          <slot name="after-color-picker"></slot>
           <!-- Strike -->
           <slot name="before-strike-button"></slot>
           <slot name="strike-button">${this.renderStrikeButton()}</slot>
@@ -496,6 +499,20 @@ class CustomEditor extends TipTapEditor {
           </button>
         `,
       )}
+    `;
+  }
+  renderTextColorPicker() {
+    if (!this.editor) return html``;
+
+    return html`
+      <input
+        type="color"
+        class="toolbar__color-picker"
+        @input=${(event) => {
+          this.editor.chain().focus().setColor(event.target.value).run();
+        }}
+        title="Text color"
+      />
     `;
   }
 }
