@@ -3,7 +3,7 @@ class BannersController < ApplicationController
 
   def index
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Banner.all
+    unpaginated = authorized_scope(Banner.all)
     @banners_count = unpaginated.count
     @banners = unpaginated.paginate(page: params[:page], per_page: per_page)
   end

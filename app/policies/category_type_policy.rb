@@ -1,4 +1,4 @@
-class SectorPolicy < ApplicationPolicy
+class CategoryTypePolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   # override or add new rules here that are not defined in ApplicationPolicy
@@ -8,8 +8,4 @@ class SectorPolicy < ApplicationPolicy
   def create?  = admin?
   def update?  = admin?
   def destroy? = admin?
-
-  def tags_index?
-    true
-  end
 end

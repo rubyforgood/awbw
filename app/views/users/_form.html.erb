@@ -112,7 +112,7 @@
       </div>
     </div>
   </div>
-<<<<<<< HEAD
+
   <!-- Preferences: timezone for event times etc. -->
   <div class="space-y-6 p-3">
     <%= f.input :time_zone,
@@ -124,7 +124,6 @@
                 input_html: { class: "w-full" },
                 wrapper_html: { class: "w-full max-w-md" } %>
   </div>
-=======
 
   <!-- Notes -->
   <% if current_user&.super_user? %>
@@ -133,9 +132,6 @@
     </div>
   <% end %>
 
->>>>>>> 9d24b0b3 (Replace calls to super_user w call to policy admin? action)
-  <!-- Actions -->
-  <!-- Action buttons -->
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <%= render "toggle_lock_button", user: @user %>
     <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>

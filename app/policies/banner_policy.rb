@@ -4,16 +4,17 @@ class BannerPolicy < ApplicationPolicy
   # def index?
   #   true
   # end
-  #
+
   def show?
     admin? || record.published?
   end
-  #
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
   #
-  # relation_scope do |relation|
-  #   next relation if admin?
-  #   relation.where(user: user)
-  # end
+
+  relation_scope do |relation|
+    next relation if user.admin?
+    relation.none
+  end
 end

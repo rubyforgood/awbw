@@ -1,19 +1,14 @@
-# Base class for application policies
 class ApplicationPolicy < ActionPolicy::Base
-  # Configure additional authorization contexts here
-  # (`user` is added by default).
-  #
-  #   authorize :account, optional: true
-  #
   # Read more about authorization context: https://actionpolicy.evilmartians.io/#/authorization_context
-  #
+
   authorize :user, optional: true, allow_nil: true
+  scope_matcher :relation, ActiveRecord::Relation
 
-  default_rule :manage?
-  alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, :destroy?, to: :manage?
+  default_rule :deny!
+  # alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, :destroy?, to: :manage? ## this is causing inheritance issues with StoryIdeaPolicy, which has its own index? and show? rules
 
-  def manage?
-    authenticated? && admin?
+  def deny!
+    false
   end
 
   private
@@ -23,14 +18,10 @@ class ApplicationPolicy < ActionPolicy::Base
     user&.super_user
   end
 
-  def owner?
-    record.user_id == user.id
-  end
-
   def authenticated? = user.present?
 
-
-  def verify_authenticated!
-    deny! unless authenticated?
+  def owner?
+    record.respond_to?(:created_by_id) && record.created_by_id == user&.id ||
+      record.respond_to?(:user_id) && record.user_id == user&.id
   end
 end

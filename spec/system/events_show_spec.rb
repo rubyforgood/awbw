@@ -7,10 +7,10 @@ RSpec.describe "Event show page", type: :system do
   let(:event) do
     create(
       :event,
+      :published,
+      :publicly_visible,
       title: "My Event",
       rhino_description: "A wonderful event",
-      publicly_visible: true,
-      published: true,
       start_date: 2.days.from_now.change(hour: 10), # UTC
       end_date:   2.days.from_now.change(hour: 12), # UTC
       cost: 10.99,

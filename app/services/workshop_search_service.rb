@@ -1,11 +1,11 @@
 class WorkshopSearchService
-  attr_reader :params, :user, :super_user
+  attr_reader :params, :user, :admin
   attr_accessor :workshops, :sort
 
   def initialize(params = {}, user: nil)
     @params = params
     @user = user
-    @super_user = user&.super_user?
+    @admin = user&.super_user?
     @sort = default_sort
     @workshops =
       if @sort == "popularity"
@@ -58,7 +58,7 @@ class WorkshopSearchService
   end
 
   def filter_by_published_status
-    if super_user
+    if admin
       pub   = params.key?(:published)   ? ActiveModel::Type::Boolean.new.cast(params[:published])   : nil
       unpub = params.key?(:unpublished) ? ActiveModel::Type::Boolean.new.cast(params[:unpublished]) : nil
 

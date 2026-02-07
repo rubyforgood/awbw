@@ -1,9 +1,9 @@
 class BookmarkPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
-  #
-  # def index?
-  #   true
-  # end
+
+  def index?
+    admin?
+  end
 
   def personal?
     authenticated?
@@ -14,18 +14,15 @@ class BookmarkPolicy < ApplicationPolicy
   end
 
   def create?
-    # TODO check bookmark owner
-    true
+    admin? || authenticated? && record.user == user
   end
 
   def update?
-    # TODO check bookmark owner
-    true
+    admin? || owner?
   end
 
   def destroy?
-    # TODO check bookmark owner
-    true
+    admin? || owner?
   end
 
   # Scoping

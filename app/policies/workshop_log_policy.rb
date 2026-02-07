@@ -23,6 +23,7 @@ class WorkshopLogPolicy < ApplicationPolicy
   #
   relation_scope do |relation|
     next relation if admin?
-    relation.where(user: user) # TODO - maybe also allow users to see peers' within same organization
+    relation.where(user_id: user.id)
+            .or(WorkshopLog.project_id(user.project_ids)) # allow users to see peers' within same organization
   end
 end

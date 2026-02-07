@@ -13,7 +13,7 @@
         </p>
       </div>
 
-      <% if current_user&.super_user? %>
+      <% if admin? %>
         <%= link_to "New workshop",
                     new_workshop_path,
                     class: "admin-only bg-blue-100 btn btn-primary-outline" %>

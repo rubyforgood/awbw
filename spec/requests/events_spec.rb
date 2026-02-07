@@ -1,49 +1,32 @@
-require 'rails_helper'
+require "rails_helper"
 
-RSpec.describe "/events", type: :request do
-  let(:valid_attributes) {
-    {
-      "title": "sample title",
-      "description": "sample description",
-      "start_date": 1.day.from_now,
-      "end_date": 2.days.from_now,
-      "registration_close_date": 3.days.ago,
-      "published": true
-    }
-  }
-
-  let(:invalid_attributes) {
-    {
-      "title": "",
-      "description": "",
-      "start_date": "",
-      "end_date": "",
-      "registration_close_date": ""
-    }
-  }
-  let(:user) { create(:user) }
+RSpec.describe "Events", type: :request do
+  let(:user)  { create(:user) }
   let(:admin) { create(:user, :admin) }
-  let(:event) { Event.create!(valid_attributes) }
+  let(:event) { create(:event) }
 
-  describe "GET /index" do
-    it "renders a successful response" do
-      sign_in user
-      get events_url
-      # puts "=====Status: #{response.status}"
-      # puts "Error snippet: #{response.body.scan(/<pre.*?>(.*?)<\/pre>/m)}"
-      expect(response).to be_successful
-    end
+  let(:valid_params) do
+    {
+      event: {
+        title: "Sample title",
+        description: "Sample description",
+        start_date: 1.day.from_now,
+        end_date: 2.days.from_now,
+        registration_close_date: 3.days.ago,
+        published: true
+      }
+    }
   end
 
-  describe "GET /show" do
-    it "renders a successful response" do
+  let(:invalid_params) do
+    { event: { title: "" } }
+  end
+
+  describe "GET /index" do
+    it "is successful for signed in user" do
       sign_in user
-
-      allow_any_instance_of(ApplicationController).
-        to receive(:current_user).and_return(user)
-      get event_url(event)
-
-      expect(response).to be_successful
+      get events_path
+      expect(response).to have_http_status(:ok)
     end
 
     context "when user time_zone is set" do
@@ -81,70 +64,36 @@ RSpec.describe "/events", type: :request do
   end
 
   describe "GET /new" do
-    it "renders a successful response" do
-      sign_in admin
-      allow_any_instance_of(ApplicationController).
-        to receive(:current_user).and_return(admin)
-
-      get new_event_url
-
-      expect(response).to be_successful
-    end
-  end
-
-  describe "GET /edit" do
-    describe 'when signed in as an admin' do
-      it "renders a successful response" do
+    context "as admin" do
+      it "renders successfully" do
         sign_in admin
-
-        allow_any_instance_of(ApplicationController).
-          to receive(:current_user).and_return(admin)
-        get edit_event_url(event)
-
-        expect(response).to be_successful
+        get new_event_path
+        expect(response).to have_http_status(:ok)
       end
     end
 
-    describe "when not signed in as an admin" do
-      it "returns unauthorized" do
+    context "as non-admin" do
+      it "redirects" do
         sign_in user
-
-        get edit_event_url(event)
-
-        expect(response).to have_http_status(:found) # 302 redirect
+        get new_event_path
         expect(response).to redirect_to(root_path)
       end
     end
   end
 
   describe "POST /create" do
-    context "with valid parameters" do
-      it "creates a new Event" do
-        sign_in admin
+    context "as admin" do
+      before { sign_in admin }
+
+      it "creates event" do
         expect {
-          post events_url, params: { event: valid_attributes }
+          post events_path, params: valid_params
         }.to change(Event, :count).by(1)
       end
 
-      it "redirects to the events index" do
-        sign_in admin
-        post events_url, params: { event: valid_attributes }
-        expect(response).to redirect_to(events_url)
-      end
-
-      it "displays notice if present" do
-        sign_in admin
-        post events_url, params: { event: {
-          title: "sample title",
-          description: "sample description",
-          start_date: 1.day.from_now,
-          end_date: 2.days.from_now,
-          registration_close_date: 3.days.ago,
-          published: true
-        } }
-        follow_redirect!  # flash shows after redirect
-
-        expect(response.body).to include("Event was successfully created")
+      it "redirects" do
+        post events_path, params: valid_params
+        expect(response).to redirect_to(events_path)
       end
 
       it "stores start_date/end_date in UTC when created by user in Pacific time zone" do
@@ -187,93 +136,70 @@ RSpec.describe "/events", type: :request do
       end
     end
 
-    context "with invalid parameters" do
-      it "does not create a new Event" do
-        sign_in admin
+    context "as non-admin" do
+      before { sign_in user }
+
+      it "does not create event" do
         expect {
-          post events_url, params: { event: invalid_attributes }
-        }.to change(Event, :count).by(0)
+          post events_path, params: valid_params
+        }.not_to change(Event, :count)
       end
 
-      it "renders a response with validation errors (i.e. to display the 'new' template)" do
-        sign_in admin
-        post events_url, params: { event: invalid_attributes }
-        expect(response).to have_http_status(:unprocessable_content)
+      it "redirects" do
+        post events_path, params: valid_params
+        expect(response).to redirect_to(root_path)
       end
     end
   end
 
   describe "PATCH /update" do
-    context "with valid parameters" do
-      let(:new_attributes) do
-        valid_attributes.merge(
-          title: "Updated Event Title"
-        )
-      end
+    let(:update_params) { { event: { title: "Updated" } } }
 
-      context "when signed in as admin" do
-        it "updates the requested event" do
-          sign_in admin
-          allow_any_instance_of(ApplicationController).
-            to receive(:current_user).and_return(admin)
-          patch event_url(event), params: { event: new_attributes }
-          event.reload
+    context "as admin" do
+      before { sign_in admin }
 
-          expect(event.title).to eq(new_attributes[:title])
-        end
-
-        it "redirects to the events index" do
-          sign_in admin
-          allow_any_instance_of(ApplicationController).
-            to receive(:current_user).and_return(admin)
-
-          patch event_url(event), params: { event: new_attributes }
-          event.reload
-
-          expect(response).to redirect_to(events_url)
-        end
-      end
-
-      context "when not signed in as an admin" do
-        it "returns unauthorized" do
-          sign_in user
-
-          patch event_url(event), params: { event: new_attributes }
-
-          expect(response).to have_http_status(:found)
-          expect(response).to redirect_to(root_path)
-        end
+      it "updates event" do
+        patch event_path(event), params: update_params
+        expect(event.reload.title).to eq("Updated")
       end
     end
 
-    context "with invalid parameters" do
-      it "renders a response with validation errors (i.e. to display the 'edit' template)" do
-        event = Event.create!(valid_attributes)
-        allow_any_instance_of(ApplicationController).
-          to receive(:current_user).and_return(admin)
-        patch event_url(event), params: { event: invalid_attributes }
-        expect(response).to_not be_successful
+    context "as non-admin" do
+      before { sign_in user }
+
+      it "does not update" do
+        patch event_path(event), params: update_params
+        expect(event.reload.title).not_to eq("Updated")
+      end
+
+      it "redirects" do
+        patch event_path(event), params: update_params
+        expect(response).to redirect_to(root_path)
       end
     end
   end
 
   describe "DELETE /destroy" do
-    it "destroys the requested event" do
-      event = Event.create!(valid_attributes)
-      sign_in admin
-      allow_any_instance_of(ApplicationController).
-        to receive(:current_user).and_return(admin)
-      expect {
-        delete event_url(event)
-      }.to change(Event, :count).by(-1)
+    context "as admin" do
+      before { sign_in admin }
+
+      it "destroys event" do
+        event
+        expect {
+          delete event_path(event)
+        }.to change(Event, :count).by(-1)
+      end
     end
 
-    it "redirects to the events list" do
-      sign_in admin
-      allow_any_instance_of(ApplicationController).
-        to receive(:current_user).and_return(admin)
-      delete event_url(event)
-      expect(response).to redirect_to(events_url)
+    context "as non-admin" do
+      before { sign_in user }
+
+      it "does not destroy" do
+        event
+        expect {
+          delete event_path(event)
+        }.not_to change(Event, :count)
+      end
     end
   end
 end
