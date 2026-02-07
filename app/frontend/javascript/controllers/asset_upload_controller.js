@@ -22,14 +22,14 @@ export default class extends Controller {
 
   connect() {
     const primary = document.querySelector("[id*='primary_asset_']");
-    if (primary) {
+    if (primary && this.hasUploadLabelPrimaryTarget) {
       this.replacePreview(this.uploadLabelPrimaryTarget, primary);
       this.uploadButtonPrimaryTarget.classList.add("hidden");
       this.primaryDeleteButtonTarget.classList.remove("hidden");
       this.primaryAssetId = primary.id;
     }
     const downloadable = document.querySelector("[id*='downloadable_asset_']");
-    if (downloadable) {
+    if (downloadable && this.hasUploadLabelDownloadableTarget) {
       this.replacePreview(this.uploadLabelDownloadableTarget, downloadable);
       this.uploadButtonDownloadableTarget.classList.add("hidden");
       this.downloadableDeleteButtonTarget.classList.remove("hidden");

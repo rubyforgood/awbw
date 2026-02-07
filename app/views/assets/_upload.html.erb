@@ -1,4 +1,4 @@
-<%= tag.div id: "asset_upload", class: "bg-white border border-gray-300 rounded-md shadow-sm p-2 w-64" do %>
+<%= tag.div id: "asset_upload", class: "flex justify-center items-center bg-white border border-gray-300 rounded-md shadow-sm p-2 w-64" do %>
   <% owner = Draper.undecorate(owner) %>
 
   <%= form_with model: LibraryAsset.new, data: {asset_upload_target: "form"}, class: "flex flex-col items-center" do |f| %>

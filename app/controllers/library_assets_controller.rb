@@ -69,7 +69,7 @@
    def update
      valid_asset = @owner.present? ? validate_asset_type_constraint(asset_params[:type], @owner.assets) : true
      if  valid_asset && @asset&.update(asset_params)
-       flash.now[:notice] = "Asset updated."
+       flash.now[:notice] = "Attachment updated."
        case turbo_frame_request_id
        when "title_asset_#{@asset.id}"
          render partial: "assets/title", locals: { asset: @asset }

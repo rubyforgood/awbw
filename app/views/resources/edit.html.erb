@@ -8,9 +8,11 @@
       </div>
 
       <div class="space-y-6">
-        <div class="mt-4 bg-white rounded p-3"><%= render "form" %></div>
+        <%= tag.div data: {controller: "asset-upload"} do %>
+          <div class="mt-4 bg-white rounded p-3"><%= render "form" %></div>
 
-        <div class="my-4"><%= render "assets/form", owner: @resource %></div>
+          <div class="my-4"><%= render "assets/form", owner: @resource %></div>
+        <% end %>
 
         <% if params[:rich_text_assets] == 'true' %>
           <%= turbo_frame_tag "editor_assets_lazy", src: edit_resource_path(@resource) do %>
