@@ -189,9 +189,9 @@ class WorkshopsController < ApplicationController
   private
 
   def set_show
-    @quotes = Quote.where(workshop_id: @workshop.id).active
+    @quotes = Quote.where(workshop_id: @workshop.id).published
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
-    @workshop_variations = @workshop.workshop_variations.active
+    @workshop_variations = @workshop.workshop_variations.published
     @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
   end
 
