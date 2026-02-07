@@ -91,7 +91,6 @@ export default class extends Controller {
       return /_asset_\d+$/.test(el.id);
     });
     cards.forEach((card) => {
-      console.log(card);
       const role = this.roleFromId(card.id);
       if (!role) return;
 
@@ -108,6 +107,16 @@ export default class extends Controller {
 
   handleStream(event) {
     const stream = event.target;
+    if (stream.target == "assets") {
+      const template = stream.querySelector("template");
+      const candidates = template.content.querySelectorAll("[id*='_asset_']");
+      const cards = Array.from(candidates).filter((el) => {
+        // Only match IDs that contain "_asset_" and end with numbers
+        return /_asset_\d+$/.test(el.id);
+      });
+      this.handleCards(cards);
+      return;
+    }
     if (stream.action !== "remove") return;
 
     const role = this.roleFromId(stream.target);
@@ -120,7 +129,21 @@ export default class extends Controller {
       },
     });
   }
+  handleCards(cards) {
+    cards.forEach((card) => {
+      const role = this.roleFromId(card.id);
+      if (!role) return;
 
+      // Trigger assetAdded internally
+      this.assetAdded({
+        detail: {
+          id: card.id,
+          role: role,
+          element: card,
+        },
+      });
+    });
+  }
   /* ─────────────────────────────
    * Asset Added / Removed
    * ───────────────────────────── */
