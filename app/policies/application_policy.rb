@@ -2,13 +2,12 @@ class ApplicationPolicy < ActionPolicy::Base
   # Read more about authorization context: https://actionpolicy.evilmartians.io/#/authorization_context
 
   authorize :user, optional: true, allow_nil: true
-  scope_matcher :relation, ActiveRecord::Relation
 
-  default_rule :deny!
-  # alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, :destroy?, to: :manage? ## this is causing inheritance issues with StoryIdeaPolicy, which has its own index? and show? rules
+  default_rule :manage?
+  alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, :destroy?, to: :manage?
 
-  def deny!
-    false
+  def manage?
+    admin?
   end
 
   private

@@ -29,9 +29,9 @@ class StoryIdeaPolicy < ApplicationPolicy
 
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
-  #
-  # relation_scope do |relation|
-  #   next relation if admin?
-  #   relation.where(user: user)
-  # end
+
+  relation_scope do |relation|
+    next relation if admin?
+    relation.none
+  end
 end

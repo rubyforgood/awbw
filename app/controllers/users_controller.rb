@@ -5,7 +5,6 @@ class UsersController < ApplicationController
 
   def index
     authorize! User
-
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)
 

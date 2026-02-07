@@ -104,7 +104,7 @@
           </div>
         </div>
         <!-- Notes -->
-        <% if current_user.super_user? %>
+        <% if current_user&.super_user? %>
           <div class="comments-section">
             <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
           </div>
@@ -125,7 +125,6 @@
                 wrapper_html: { class: "w-full max-w-md" } %>
   </div>
 
-  <!-- Notes -->
   <% if current_user&.super_user? %>
     <div class="p-3">
       <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>

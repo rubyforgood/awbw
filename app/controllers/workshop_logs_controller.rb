@@ -2,6 +2,7 @@ class WorkshopLogsController < ApplicationController
   before_action :set_workshop, only: [ :index ]
 
   def index
+    authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
     @workshop_logs_unpaginated = authorized_scope(WorkshopLog.includes(:workshop, :user, :windows_type)

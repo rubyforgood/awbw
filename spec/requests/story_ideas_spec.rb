@@ -33,71 +33,62 @@ RSpec.describe "/story_ideas", type: :request do
     }
   end
 
-  # ---------------------------------------------------------------------------
-  # GUEST (not signed in)
-  # ---------------------------------------------------------------------------
+  context "as admin" do
+    before { sign_in admin }
 
-  context "as guest" do
     describe "GET /index" do
-      it "redirects to root" do
+      it "renders successfully" do
         get story_ideas_url
-        expect(response).to redirect_to(root_path)
+        expect(response).to be_successful
       end
     end
 
     describe "GET /show" do
-      it "redirects to root" do
-        story_idea = create(:story_idea)
-        get story_idea_url(story_idea)
-        expect(response).to redirect_to(root_path)
+      it "renders successfully" do
+        get story_idea_url(create(:story_idea))
+        expect(response).to be_successful
       end
     end
 
     describe "GET /new" do
-      it "redirects to root" do
+      it "renders successfully" do
         get new_story_idea_url
-        expect(response).to redirect_to(root_path)
+        expect(response).to be_successful
       end
     end
 
-    describe "POST /create" do
-      it "does not create a StoryIdea and redirects to root" do
-        expect {
-          post story_ideas_url, params: { story_idea: valid_attributes }
-        }.not_to change(StoryIdea, :count)
-
-        expect(response).to redirect_to(root_path)
-      end
-    end
-
-    describe "PATCH /update" do
-      it "does not update StoryIdea and redirects to root" do
-        story_idea = create(:story_idea, title: "Original Title")
-
+    describe "GET /update" do
+      it "updates own story_idea" do
+        story_idea = create(:story_idea)
         patch story_idea_url(story_idea),
               params: { story_idea: { title: "Updated Title" } }
-
-        expect(response).to redirect_to(root_path)
-        expect(story_idea.reload.title).to eq("Original Title")
+        expect(response).to redirect_to(story_ideas_url)
+        expect(story_idea.reload.title).to eq("Updated Title")
       end
     end
 
     describe "DELETE /destroy" do
-      it "does not delete StoryIdea and redirects to root" do
-        story_idea = create(:story_idea)
+      it "can delete any story_idea" do
+        story_idea = create(:story_idea, created_by: create(:user))
+        expect { delete story_idea_url(story_idea) }.to change(StoryIdea, :count).by(-1)
+      end
+    end
 
-        expect {
-          delete story_idea_url(story_idea)
-        }.not_to change(StoryIdea, :count)
+    describe "POST /create" do
+      it "creates StoryIdea without FYI notification" do
+        story_idea_count_before = StoryIdea.count
+        notification_count_before = Notification.count
 
-        expect(response).to redirect_to(root_path)
+        post story_ideas_url, params: { story_idea: valid_attributes }
+
+        expect(StoryIdea.count).to eq(story_idea_count_before + 1)
+        expect(Notification.count).to eq(notification_count_before + 1)
+
+        story_idea = StoryIdea.order(:id).last
+        expect(story_idea).to be_present
       end
     end
   end
-
-  # ---------------------------------------------------------------------------
-  # REGULAR USER
-  # ---------------------------------------------------------------------------
 
   context "as regular user" do
     before { sign_in regular_user }
@@ -178,11 +169,11 @@ RSpec.describe "/story_ideas", type: :request do
         expect(story_idea.reload.title).to eq(original_title)
       end
 
-      it "redirects to the story_ideas index" do
+      it "redirects to root" do
         story_idea = StoryIdea.create! valid_attributes
         patch story_idea_url(story_idea), params: { story_idea: valid_attributes }
         story_idea.reload
-        expect(response).to redirect_to(story_ideas_url)
+        expect(response).to redirect_to(root_path)
       end
 
       it "cannot update someone else's story_idea" do
@@ -226,50 +217,60 @@ RSpec.describe "/story_ideas", type: :request do
     end
   end
 
-
-    # ---------------------------------------------------------------------------
-  # ADMIN
-  # ---------------------------------------------------------------------------
-
-  context "as admin" do
-    before { sign_in admin }
-
+  context "as guest" do
     describe "GET /index" do
-      it "renders successfully" do
+      it "redirects to root" do
         get story_ideas_url
-        expect(response).to be_successful
+        expect(response).to redirect_to(root_path)
       end
     end
 
     describe "GET /show" do
-      it "updates own story_idea" do
+      it "redirects to root" do
         story_idea = create(:story_idea)
-        patch story_idea_url(story_idea),
-              params: { story_idea: { title: "Updated Title" } }
-        expect(response).to redirect_to(story_ideas_url)
-        expect(story_idea.reload.title).to eq("Updated Title")
+        get story_idea_url(story_idea)
+        expect(response).to redirect_to(root_path)
       end
     end
 
-    describe "DELETE /destroy" do
-      it "can delete any story_idea" do
-        story_idea = create(:story_idea, created_by: create(:user))
-        expect { delete story_idea_url(story_idea) }.to change(StoryIdea, :count).by(-1)
+    describe "GET /new" do
+      it "redirects to root" do
+        get new_story_idea_url
+        expect(response).to redirect_to(root_path)
       end
     end
 
     describe "POST /create" do
-      it "creates StoryIdea without FYI notification" do
-        story_idea_count_before = StoryIdea.count
-        notification_count_before = Notification.count
+      it "does not create a StoryIdea and redirects to root" do
+        expect {
+          post story_ideas_url, params: { story_idea: valid_attributes }
+        }.not_to change(StoryIdea, :count)
 
-        post story_ideas_url, params: { story_idea: valid_attributes }
+        expect(response).to redirect_to(root_path)
+      end
+    end
 
-        expect(StoryIdea.count).to eq(story_idea_count_before + 1)
-        expect(Notification.count).to eq(notification_count_before + 1)
+    describe "PATCH /update" do
+      it "does not update StoryIdea and redirects to root" do
+        story_idea = create(:story_idea, title: "Original Title")
 
-        story_idea = StoryIdea.order(:id).last
-        expect(story_idea).to be_present
+        patch story_idea_url(story_idea),
+              params: { story_idea: { title: "Updated Title" } }
+
+        expect(response).to redirect_to(root_path)
+        expect(story_idea.reload.title).to eq("Original Title")
+      end
+    end
+
+    describe "DELETE /destroy" do
+      it "does not delete StoryIdea and redirects to root" do
+        story_idea = create(:story_idea)
+
+        expect {
+          delete story_idea_url(story_idea)
+        }.not_to change(StoryIdea, :count)
+
+        expect(response).to redirect_to(root_path)
       end
     end
   end

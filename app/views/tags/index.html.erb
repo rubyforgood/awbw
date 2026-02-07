@@ -41,6 +41,7 @@
               Who this content is intended to support
             </p>
           </div>
+
           <% if current_user&.super_user? %>
             <div class="flex-shrink-0">
               <%= link_to "Manage service populations",
@@ -66,6 +67,7 @@
               Themes and topics represented across content
             </p>
           </div>
+
           <% if current_user&.super_user? %>
             <div class="flex-shrink-0">
               <%= link_to "Manage categories",
