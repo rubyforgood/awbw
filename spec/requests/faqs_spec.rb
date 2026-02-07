@@ -80,13 +80,14 @@ RSpec.describe "/faqs", type: :request do
     end
 
     context "as a guest" do
-      xit "renders successfully" do
+      it "renders successfully" do
         get faqs_path
         expect(response).to be_successful
       end
 
       it "shows only publicly_visible FAQs" do
         get faqs_path
+        expect(response).to be_successful
         expect(response.body).to include("Public FAQ")
         expect(response.body).not_to include("Published FAQ")
         expect(response.body).not_to include("Unpublished FAQ")

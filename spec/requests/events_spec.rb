@@ -45,6 +45,39 @@ RSpec.describe "/events", type: :request do
 
       expect(response).to be_successful
     end
+
+    context "when user time_zone is set" do
+      # 19:00 UTC = 12:00 noon PT = 15:00 (3 pm) ET (June 15, 2025 with DST)
+      let(:utc_start) { Time.utc(2025, 6, 15, 19, 0, 0) }
+      let(:utc_end)   { Time.utc(2025, 6, 15, 20, 0, 0) }
+      let!(:event_with_fixed_times) do
+        create(:event, :published,
+          start_date: utc_start,
+          end_date: utc_end,
+          title: "Timezone test event")
+      end
+
+      it "displays start time in Pacific (PT) for user with time_zone PT" do
+        user_pt = create(:user)
+        sign_in user_pt
+        get event_url(event_with_fixed_times)
+        expect(response).to be_successful
+        # 19:00 UTC = 12:00 noon PT
+        expect(response.body).to include("Sun, Jun 15 @ 12 - 1 pm")
+        expect(response.body).to include("All times displayed in (GMT-08:00) Pacific Time")
+      end
+
+      it "displays start time in Eastern for user with time_zone America/New_York" do
+        user_et = create(:user, time_zone: "Eastern Time (US & Canada)")
+        sign_in user_et
+        get event_url(event_with_fixed_times)
+
+        expect(response).to be_successful
+        # 19:00 UTC = 3:00 pm ET (3 hours later than 12 pm PT)
+        expect(response.body).to include("Sun, Jun 15 @ 3 - 4 pm")
+        expect(response.body).to include("All times displayed in (GMT-05:00) Eastern Time")
+      end
+    end
   end
 
   describe "GET /new" do
@@ -112,6 +145,45 @@ RSpec.describe "/events", type: :request do
         follow_redirect!  # flash shows after redirect
 
         expect(response.body).to include("Event was successfully created")
+      end
+
+      it "stores start_date/end_date in UTC when created by user in Pacific time zone" do
+        admin_pt = create(:user, :admin, time_zone: "Pacific Time (US & Canada)")
+        sign_in admin_pt
+        # datetime-local sends "YYYY-MM-DDTHH:MM" — interpreted in request's Time.zone (PT)
+        # 12:00–13:00 PT (PDT) on 2025-06-15 = 19:00–20:00 UTC
+        post events_url, params: { event: {
+          title: "PT event",
+          description: "desc",
+          start_date: "2025-06-15T12:00",
+          end_date: "2025-06-15T13:00",
+          registration_close_date: 1.day.ago,
+          public: true
+        } }
+
+        expect(response).to redirect_to(events_url)
+        created = Event.order(created_at: :desc).first
+        expect(created.start_date.utc).to eq(Time.utc(2025, 6, 15, 19, 0, 0))
+        expect(created.end_date.utc).to eq(Time.utc(2025, 6, 15, 20, 0, 0))
+      end
+
+      it "stores start_date/end_date in UTC when created by user in Eastern time zone" do
+        admin_et = create(:user, :admin, time_zone: "Eastern Time (US & Canada)")
+        sign_in admin_et
+        # 15:00–16:00 ET (EDT) on 2025-06-15 = 19:00–20:00 UTC
+        post events_url, params: { event: {
+          title: "ET event",
+          description: "desc",
+          start_date: "2025-06-15T15:00",
+          end_date: "2025-06-15T16:00",
+          registration_close_date: 1.day.ago,
+          public: true
+        } }
+
+        expect(response).to redirect_to(events_url)
+        created = Event.order(created_at: :desc).first
+        expect(created.start_date.utc).to eq(Time.utc(2025, 6, 15, 19, 0, 0))
+        expect(created.end_date.utc).to eq(Time.utc(2025, 6, 15, 20, 0, 0))
       end
     end
 

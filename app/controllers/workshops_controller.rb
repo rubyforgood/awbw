@@ -13,12 +13,11 @@ class WorkshopsController < ApplicationController
 
       track_index_intent(Workshop, search_service.workshops, params)
 
-      @workshops = search_service.workshops
+      @workshops = authorized_scope(search_service.workshops
                                  .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges,
-                                   user: [ :facilitator ], primary_asset: [ :file_attachment ])
+                                   user: [ :facilitator ], primary_asset: [ :file_attachment ]))
                                  .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
-      @workshops_count = search_service.workshops.size
 
       render :workshop_results
     else
@@ -190,9 +189,9 @@ class WorkshopsController < ApplicationController
   private
 
   def set_show
-    @quotes = Quote.where(workshop_id: @workshop.id).active
+    @quotes = Quote.where(workshop_id: @workshop.id).published
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
-    @workshop_variations = @workshop.workshop_variations.active
+    @workshop_variations = @workshop.workshop_variations.published
     @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
   end
 

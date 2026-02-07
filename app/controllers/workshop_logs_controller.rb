@@ -4,17 +4,13 @@ class WorkshopLogsController < ApplicationController
   def index
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    permitted_logs =
-      if current_user.super_user?
-        WorkshopLog.all
-      else
-        WorkshopLog.where(created_by_id: current_user.id)
-                   .or(WorkshopLog.project_id(current_user.project_ids))
-      end
-    @workshop_logs_unpaginated = permitted_logs.includes(:workshop, :user, :windows_type)
-                                               .search(params)
-    @workshop_logs_count = @workshop_logs_unpaginated.size
+
+    @workshop_logs_unpaginated = authorized_scope(WorkshopLog.includes(:workshop, :user, :windows_type)
+                                               .search(params))
+
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
+    @workshop_logs_count = @workshop_logs&.total_entries
+
     set_index_variables
   end
 

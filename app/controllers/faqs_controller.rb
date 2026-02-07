@@ -3,10 +3,10 @@ class FaqsController < ApplicationController
   before_action :set_faq, only: [ :show, :edit, :update, :destroy ]
 
   def index
-    faqs = current_user&.super_user? ? Faq.all : (current_user ? Faq.published : Faq.publicly_visible)
+    faqs = authorized_scope(Faq.all)
     @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "published"))
-                .by_position
-                .page(params[:page])
+              .by_position
+              .page(params[:page])
   end
 
   def show
