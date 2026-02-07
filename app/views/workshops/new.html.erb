@@ -1,14 +1,18 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
-  <div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:workshops, intensity: 100) %>
-    border border-gray-200 rounded-xl shadow p-6">
+  <div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:workshops, intensity: 100) %> border border-gray-200 rounded-xl shadow p-6">
     <!-- Header + View Button -->
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-semibold text-gray-900">New Workshop</h1>
     </div>
 
-      <!-- Form -->
-    <div class="bg-white rounded p-6">
-      <%= render "form", workshop: @workshop, url: '/workshops' %>
+    <!-- Form -->
+    <div class="space-y-6">
+      <%= tag.div data: {controller: "asset-upload", action:"turbo:before-stream-render@document->asset-upload#handleStream 
+                                                               turbo:frame-load->asset-upload#handleFrameLoad"} do %>
+        <div class="mt-4 bg-white rounded p-3"><%= render "form", workshop: @workshop, url: '/workshops', inline_uploads: true %></div>
+
+        <div class="my-4"><%= render "assets/form", owner: @workshop %></div>
+      <% end %>
     </div>
   </div>
 </div>
