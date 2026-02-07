@@ -18,6 +18,6 @@ class FacilitatorPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    relation.published.searchable # Do we need 'searchabl'? We have  scope :published, -> { active.searchable }
+    relation.published
   end
 end

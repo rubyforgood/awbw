@@ -4,7 +4,7 @@ class FaqsController < ApplicationController
 
   def index
     faqs = authorized_scope(Faq.all)
-    @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "inactive"))
+    @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "published"))
               .by_position
               .page(params[:page])
   end
