@@ -2,14 +2,15 @@
 <% button_target = "uploadButton#{type.capitalize}" %>
 <% delete_target = "#{type}DeleteButton" %>
 <% type_param = "#{type.capitalize}Asset" %>
+
 <% button_text =
   case type
   when "primary"
-    "Add Primary Image"
+    "Primary Image"
   when "downloadable"
-    "Add Downloadable File"
+    "Downloadable File"
   when "gallery"
-    "Add Gallery Attachment"
+    "Gallery Attachment"
   end %>
 
 <div class="relative w-fit">
@@ -27,21 +28,28 @@
   >
     ✕
   </button>
+
   <!-- Preview area -->
-  <div data-asset-upload-target="<%= upload_target %>">
-    <!-- initial upload icon -->
-    <svg class="w-16 h-16 cursor-pointer">
-      <!-- default upload icon SVG -->
-    </svg>
+  <div data-asset-upload-target="<%= upload_target %>"></div>
+
+  <div>
+    <button
+      type="button"
+      data-action="asset-upload#triggerFileInput"
+      data-asset-upload-type-param="<%= type_param %>"
+      data-asset-upload-target="<%= button_target %>"
+    >
+      <div class="bg-gray-50 w-48 h-48 mb-6 rounded-md shadow-md grid place-content-center">
+        <div class="w-32 h-32 p-2 border rounded-md flex flex-col justify-end items-center gap-2 bg-white">
+          <%= icon( "upload-cloud",
+                    class: "w-16 h-16 hover:w-20 hover:h-20 cursor-pointer",
+                    title: "Add File") %>
+
+          <p class="text-sx">Add File</p>
+        </div>
+      </div>
+    </button>
+
+    <p class="text-sm font-semibold text-center"><%= button_text %></p>
   </div>
-  <!-- Fake Add button -->
-  <button
-    type="button"
-    data-action="asset-upload#triggerFileInput"
-    data-asset-upload-type-param="<%= type_param %>"
-    data-asset-upload-target="<%= button_target %>"
-    class="mt-2 btn btn-secondary-outline"
-  >
-    <%= button_text %>
-  </button>
 </div>

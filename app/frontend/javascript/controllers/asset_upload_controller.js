@@ -190,16 +190,28 @@ export default class extends Controller {
     if (!img) return;
 
     target.innerHTML = "";
-    target.appendChild(img.cloneNode(true));
+    const outerDiv = document.createElement("div");
+    outerDiv.className =
+      "bg-gray-50 w-48 h-48 mb-6 rounded-md shadow-md grid place-content-center";
+
+    const innerDiv = document.createElement("div");
+    innerDiv.className =
+      "w-32 h-32 p-2 rounded-md shadow-md flex flex-col justify-end items-center gap-2 bg-white";
+
+    const clonedImg = img.cloneNode(true);
+    clonedImg.className = "w-full h-full object-cover rounded-md";
+
+    innerDiv.appendChild(clonedImg);
+    outerDiv.appendChild(innerDiv);
+
+    // Append the full wrapper to the target
+    target.appendChild(outerDiv);
   }
 
   resetPreview(target) {
     if (!target) return;
 
     target.innerHTML = `
-      <svg class="w-16 h-16 cursor-pointer">
-        <!-- default upload icon -->
-      </svg>
     `;
   }
 
