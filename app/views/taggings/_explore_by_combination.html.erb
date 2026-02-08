@@ -62,7 +62,7 @@
 
           <% Category.published
                      .joins(:category_type)
-                     .select("categories.*, metadata.name AS category_type_name")
+                     .select("categories.*, category_types.name AS category_type_name")
                      .distinct
                      .order("category_type_name ASC, categories.name ASC")
                      .each do |category| %>
