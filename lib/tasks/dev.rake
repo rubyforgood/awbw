@@ -161,7 +161,7 @@ def create_workshop_variation(xml, _name = nil)
   variation = workshop.workshop_variations.find_or_create_by(
     legacy: true,
     name: search_for_value(xml, "str_name"),
-    code: search_for_value(xml, "txt_code"),
+    body: search_for_value(xml, "txt_code"),
     inactive: search_for_value(xml, "bln_inactive"),
     ordering: search_for_value(xml, "ordering"),
   )

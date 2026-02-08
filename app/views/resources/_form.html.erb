@@ -85,7 +85,7 @@
   </div>
 
   <!-- Second Row -->
-  <div class="form-group <%= 'has-error' if f.object.errors[:body].present? %>">
+  <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
     <%= rhino_editor(f, :body, label: "Description") %>
 
     <% if f.object.errors[:rhino_body].present? %>

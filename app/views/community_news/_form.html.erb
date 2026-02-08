@@ -21,7 +21,7 @@
     <%# end %>
   </div>
 
-  <div class="form-group <%= 'has-error' if f.object.errors[:body].present? %>">
+  <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
     <%= rhino_editor(f, :body, label: "Body / Description") %>
     <% if f.object.errors[:rhino_body].present? %>
       <div class="text-danger mt-1 text-sm">
