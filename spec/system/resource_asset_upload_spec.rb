@@ -8,41 +8,6 @@ RSpec.describe "Resource asset upload", type: :system do
     sign_in admin
   end
 
-  def upload_asset(type:, file:)
-    within("#asset_upload") do
-      select type, from: "library_asset_type"
-    end
-
-    attach_file(
-      "asset_file_input",
-      Rails.root.join(file)
-    )
-
-    # Submit the asset form
-    click_button "Upload Asset"
-  end
-
-  def delete_asset(asset_type:)
-    div_prefix = case asset_type
-    when "PrimaryAsset", "Primary"
-      "primary_asset_"
-    when "DownloadableAsset", "Downloadable"
-      "Downloadable_asset_"
-    when "GalleryAsset", "Gallery"
-      "gallery_asset_"
-    else
-      raise "Unknown asset type: #{asset_type}"
-    end
-
-    # Find the first matching asset container
-    asset_container = find("div[id^='#{div_prefix}']")
-
-    accept_confirm("Delete this asset?") do
-      asset_container.find("form.button_to button[type='submit']", visible: :all).click
-    end
-
-    expect(page).not_to have_selector("div[id^='#{div_prefix}']")
-  end
   context "new" do
     it "uploads a primary asset" do
       visit new_resource_path
@@ -324,7 +289,7 @@ RSpec.describe "Resource asset upload", type: :system do
       end
 
       within("div[id^='primary_asset_']") do
-        expect(find("select#library_asset_type").value).to eq("GalleryAsset")
+        expect(page).to have_select("Type", selected: "Gallery")
       end
     end
 

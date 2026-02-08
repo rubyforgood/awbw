@@ -39,8 +39,9 @@ class ProjectsController < ApplicationController
 
     @facilitators = User.active
                         .or(User.where(id: user_ids))
+                        .includes(:facilitator)
                         .distinct
-                        .order(:last_name, :first_name)
+                        .order("facilitators.first_name, facilitators.last_name")
   end
 
   def new

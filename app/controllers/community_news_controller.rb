@@ -89,6 +89,7 @@ class CommunityNewsController < ApplicationController
   def set_form_variables
     @organizations = Project.pluck(:name, :id).sort_by(&:first)
     @authors = User.active.or(User.where(id: @community_news.author_id))
+                   .includes(:facilitator)
                    .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
   end
 

@@ -120,10 +120,10 @@ class WorkshopLogsController < ApplicationController
       Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
     ).sort.reverse
     @facilitators = User.active.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
-                        .includes(:workshop_logs)
+                        .includes(:workshop_logs, :facilitator)
                         .joins(:workshop_logs)
                         .distinct
-                        .order(:last_name, :first_name)
+                        .order("facilitators.first_name, facilitators.last_name")
     @projects = if current_user&.super_user?
       # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
       Project.published.order(:name)

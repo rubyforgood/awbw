@@ -10,6 +10,12 @@ class ApplicationController < ActionController::Base
   around_action :set_time_zone_from_user, if: :current_user
 
   rescue_from ActionPolicy::Unauthorized do |exception|
+    Rails.logger.error "🚨 POLICY DENIED"
+    Rails.logger.error "  path: #{request.fullpath}"
+    Rails.logger.error "  user: #{current_user&.id}"
+    Rails.logger.error "  message: #{exception.message}"
+    Rails.logger.error "  policy: #{exception.result.policy}"
+    Rails.logger.error "  rule: #{exception.result.rule}"
     flash[:alert] = exception.message.presence || "You are not authorized to perform this action." # TODO - make this more user-friendly
     redirect_back_or_to root_path
   end
@@ -34,11 +40,27 @@ class ApplicationController < ActionController::Base
   end
 
   def authenticate_user!
+    Rails.logger.warn "AUTH CHECK → #{request.fullpath}"
+    Rails.logger.warn "  user_signed_in?: #{user_signed_in?}"
+    Rails.logger.warn "  current_user: #{current_user&.id}"
+    Rails.logger.warn "  devise_controller?: #{devise_controller?}"
+    Rails.logger.warn "  referrer: #{request.referrer}"
     return super if devise_controller?
     return if user_signed_in?
     ahoy.authenticate(current_user)
-    redirect_to root_path # this part is questionable
   end
+
+  # def authenticate_user!
+  #   return super if devise_controller?
+  #   return if user_signed_in?
+  #   ahoy.authenticate(current_user)
+  #   redirect_to root_path # this part is questionable
+  # end
+
+  # def authenticate_user!
+  #   ahoy.authenticate(current_user) if user_signed_in?
+  #   super
+  # end
 
   def flush_lifecycle_events
     Analytics::LifecycleBuffer.flush(self) # needed for Ahoy tracking in models

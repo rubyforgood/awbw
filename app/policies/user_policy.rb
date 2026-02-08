@@ -1,39 +1,19 @@
 class UserPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
-  def index?
-    admin?
+  def index? = admin?
+  def show? = admin?
+  def new? = admin?
+  def create? = admin?
+  def edit? = admin?
+  def update? = admin?
+  def destroy? = admin?
+  def toggle_lock_status? = admin?
+  def confirm_email? = admin?
+  def change_password?
+    authenticated?
   end
-
-  def show?
-    admin?
-  end
-
-  def new?
-    admin?
-  end
-
-  def create?
-    admin?
-  end
-
-  def edit?
-    admin?
-  end
-
-  def update?
-    admin?
-  end
-
-  def destroy?
-    admin?
-  end
-
-  def toggle_lock_status?
-    admin?
-  end
-
-  def confirm_email?
-    admin?
+  def update_password?
+    authenticated?
   end
 end

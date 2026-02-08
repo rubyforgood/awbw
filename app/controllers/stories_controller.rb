@@ -104,7 +104,8 @@ class StoriesController < ApplicationController
     @windows_types = WindowsType.all
     @workshops = Workshop.all.order(:title)
     @users = User.active.or(User.where(id: @story.created_by_id))
-                 .order(:first_name, :last_name)
+                 .includes(:facilitator)
+                 .order("facilitators.first_name, facilitators.last_name")
   end
 
 

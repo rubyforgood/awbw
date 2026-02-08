@@ -81,8 +81,12 @@ class EventRegistrationsController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @events = Event.where(published: true).order(:start_date)
-    @registrants = User.active.order(:last_name, :first_name)
+    @events =
+      Event.where(published: true)
+           .or(Event.where(id: @event_registration.event_id))
+           .distinct
+           .order(start_date: :desc)
+    @registrants = User.active.includes(:facilitator).order("facilitators.first_name, facilitators.last_name")
   end
 
   private

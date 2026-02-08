@@ -2,7 +2,7 @@
 require 'rails_helper'
 
 RSpec.describe "users/new.html.erb", type: :view do
-  let(:user) { create(:user) }
+  let(:user) { User.new }
   let(:admin) { create(:user, :admin) }
 
   before do
@@ -17,11 +17,8 @@ RSpec.describe "users/new.html.erb", type: :view do
 
     assert_select "form[action=?][method=?]", users_path, "post" do
       assert_select "input[name=?]", "user[email]"
-
       assert_select "textarea[name=?]", "user[comment]"
-
       assert_select "input[name=?]", "user[inactive]"
-
       assert_select "input[name=?]", "user[super_user]"
     end
   end

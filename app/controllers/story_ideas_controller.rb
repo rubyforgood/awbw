@@ -93,9 +93,9 @@ class StoryIdeasController < ApplicationController
     @windows_types = WindowsType.all
     @workshops = Workshop.order(:title)
 
-    @users = User.active
+    @users = User.active.includes(:facilitator)
     @users = @users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
-    @users = @users.distinct.order(:first_name, :last_name)
+    @users = @users.distinct.order("facilitators.first_name, facilitators.last_name")
   end
 
   private

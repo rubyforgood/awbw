@@ -11,6 +11,10 @@ class EventPolicy < ApplicationPolicy
     admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
+  def register?
+    authenticated? && record.published?
+  end
+
   relation_scope do |relation|
     next relation if admin?
     if authenticated? # logged in users can see events they are registered for even if registration is closed

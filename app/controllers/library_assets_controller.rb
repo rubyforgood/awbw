@@ -14,7 +14,7 @@
    end
 
    def create
-     authorize! :library_asset, :create
+     authorize! :library_asset, to: :create?
      if @owner
        valid_asset = validate_asset_type_constraint(asset_params[:type], @owner.assets)
 

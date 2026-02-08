@@ -54,8 +54,16 @@ class Event < ApplicationRecord
     published && (registration_close_date.nil? || registration_close_date >= Time.current)
   end
 
+  def time_title
+    "(#{ start_text }) #{ name }"
+  end
+
   def full_name
-    "#{ title } (#{ start_date.strftime("%Y-%m-%d @ %I:%M %p") })"
+    "#{ name } (#{ start_text })"
+  end
+
+  def start_text
+    start_date.strftime("%Y-%m-%d @ %I:%M %p")
   end
 
   def name

@@ -83,14 +83,14 @@ RSpec.describe "/users", type: :request do
 
       it "redirects to root" do
         get user_url(user)
-        expect(response).to be_successful
+        expect(response).to redirect_to(root_path)
       end
     end
 
     context "as guest" do
       it "redirects to root" do
         get user_url(user)
-        expect(response).to be_successful
+        expect(response).to redirect_to(root_path)
       end
     end
   end
@@ -384,20 +384,20 @@ RSpec.describe "/users", type: :request do
     context "as regular_user" do
       before { sign_in regular_user }
 
-      it "does not confirm email" do
+      it "does not confirm email and redirects to root" do
         post confirm_email_user_url(user)
         user.reload
         expect(user.confirmed_at).to be_nil
-        expect(response).to redirect_to(users_url)
+        expect(response).to redirect_to(root_path)
       end
     end
 
     context "as guest" do
-      it "does not confirm email" do
+      it "does not confirm email and redirects to root" do
         post confirm_email_user_url(user)
         user.reload
         expect(user.confirmed_at).to be_nil
-        expect(response).to redirect_to(users_url)
+        expect(response).to redirect_to(root_path)
       end
     end
   end

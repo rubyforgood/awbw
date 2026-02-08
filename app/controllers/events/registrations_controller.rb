@@ -4,6 +4,7 @@ module Events
 
     def create
       @event_registration = @event.event_registrations.new(registrant: current_user)
+      authorize! @event_registration, to: :register?
 
       if @event_registration.save
         success = "You have successfully registered for this event."
@@ -21,31 +22,38 @@ module Events
     end
 
     def destroy
-      @event_registration = @event.event_registrations.find_by(registrant: current_user)
+      registration = @event.event_registrations.find_by(registrant: current_user)
 
-      unless @event_registration
-        alert = "Registration not found"
+      unless registration
         respond_to do |format|
-          format.turbo_stream { flash.now[:alert] = alert }
-          format.html { redirect_to @event, alert: alert }
+          format.turbo_stream do
+            flash.now[:alert] = "Registration not found"
+            render turbo_stream: turbo_stream.replace(
+              "flash",
+              partial: "shared/flash"
+            )
+          end
+          format.html { redirect_to @event, alert: "Registration not found" }
         end
         return
       end
 
-      if @event_registration.destroy
-        success = "You are no longer registered."
-        respond_to do |format|
-          format.turbo_stream { flash.now[:notice] = success }
-          format.html { redirect_to @event, notice: success }
+      authorize! registration, to: :register?
+
+      registration.destroy!
+
+      respond_to do |format|
+        format.turbo_stream do
+          flash.now[:notice] = "You are no longer registered."
+          render turbo_stream: turbo_stream.replace(
+            "flash",
+            partial: "shared/flash"
+          )
         end
-      else
-        error = @event_registration.errors.full_messages.to_sentence
-        respond_to do |format|
-          format.turbo_stream { flash.now[:alert] = error }
-          format.html { redirect_to @event, alert: error }
-        end
+        format.html { redirect_to @event, notice: "You are no longer registered." }
       end
     end
+
 
     private
 

@@ -2,6 +2,7 @@ class ProjectStatusesController < ApplicationController
   before_action :set_project_status, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unfiltered = ProjectStatus.all
     @count_display = unfiltered.count
@@ -10,11 +11,12 @@ class ProjectStatusesController < ApplicationController
 
   def show
     @project_status = @project_status.decorate
+    authorize! @project_status
   end
 
   def new
-    authorize!
     @project_status = ProjectStatus.new.decorate
+    authorize! @project_status
     set_form_variables
   end
 

@@ -6,7 +6,7 @@
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :event_id,
                     collection: @events,
-                    label_method: :full_name, value_method: :id,
+                    label_method: :time_title, value_method: :id,
                     include_blank: true,
                     selected: f.object.event_id %>
       </div>
