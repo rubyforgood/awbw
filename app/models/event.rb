@@ -40,7 +40,6 @@ class Event < ApplicationRecord
   scope :featured, -> { registerable.where(published: true, featured: true) } # overrides Publishable
   scope :publicly_featured, -> { registerable.where(published: true, publicly_visible: true, publicly_featured: true) } # overrides Publishable
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
 
   def self.search_by_params(params)
     stories = is_a?(ActiveRecord::Relation) ? self : all
