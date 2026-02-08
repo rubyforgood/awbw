@@ -5,7 +5,7 @@ class WorkshopIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(WorkshopIdea.includes(:workshop))
+    base_scope = authorized_scope(WorkshopIdea.includes(:workshops))
     filtered = base_scope.search(params.slice(:title, :author_name))
     @workshop_ideas_count = filtered.size
     @workshop_ideas = filtered.paginate(page: params[:page], per_page: per_page).decorate

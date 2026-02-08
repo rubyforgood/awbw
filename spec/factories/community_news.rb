@@ -3,6 +3,7 @@ FactoryBot.define do
     title { "MyString" }
     published { false }
     featured { false }
+    rhino_body { "<p>Test content</p>" }
     # reference_url { nil }
     # youtube_url { nil }
     association :author, factory: :user

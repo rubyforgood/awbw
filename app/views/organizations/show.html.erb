@@ -9,7 +9,7 @@
           <%= render "bookmarks/editable_bookmark_button", resource: @organization %>
         </span>
         <% if current_user&.super_user? %>
-          <%= link_to "Edit", edit_organization_path(@project),
+          <%= link_to "Edit", edit_organization_path(@organization),
                       class: "admin-only bg-green-100 btn btn-primary-outline" %>
         <% end %>
       </div>

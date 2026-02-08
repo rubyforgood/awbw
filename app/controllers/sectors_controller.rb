@@ -7,7 +7,7 @@ class SectorsController < ApplicationController
     base_scope = authorized_scope(Sector.all)
     filtered = base_scope.sector_name(params[:sector_name])
                          .published(params[:published])
-    @sectors = filtered..order(:name).paginate(page: params[:page], per_page: per_page)
+    @sectors = filtered.order(:name).paginate(page: params[:page], per_page: per_page)
 
     @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
   end

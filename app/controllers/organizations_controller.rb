@@ -5,7 +5,7 @@ class OrganizationsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(Organization.includes(:logo_attachment, :windows_type, :project_status))
+    base_scope = authorized_scope(Organization.includes(:logo_attachment, :windows_type, :organization_status))
     filtered = base_scope.search_by_params(params).order(:name)
     @organizations_count = filtered.count
     @organizations = filtered.paginate(page: params[:page], per_page: per_page)
@@ -13,7 +13,7 @@ class OrganizationsController < ApplicationController
   end
 
   def show
-    authorize! @project
+    authorize! @organization
     track_view(@organization)
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
@@ -50,13 +50,13 @@ class OrganizationsController < ApplicationController
   end
 
   def edit
-    authorize! @project
+    authorize! @organization
     set_form_variables
   end
 
   def create
     @organization = Organization.new(organization_params)
-    authorize! @project
+    authorize! @organization
 
     if @organization.save
       redirect_to organizations_path, notice: "Organization was successfully created."

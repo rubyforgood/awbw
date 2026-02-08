@@ -16,6 +16,7 @@ class WorkshopVariation < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
+  validates :body, presence: true
 
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
@@ -23,7 +24,7 @@ class WorkshopVariation < ApplicationRecord
   delegate :windows_type, to: :workshop
 
   def description
-    code # TODO - rename this field
+    body
   end
 
   def title
