@@ -3,6 +3,7 @@ class QuotesController < ApplicationController
   before_action :set_quote, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = Quote.where.not(quote: [ nil, "" ])
                        .search_by_params(params)
@@ -12,20 +13,24 @@ class QuotesController < ApplicationController
   end
 
   def show
+    authorize! @quote
     track_view(@quote)
   end
 
   def new
     @quote = Quote.new
+    authorize! @quote
     set_form_variables
   end
 
   def edit
+    authorize! @quote
     set_form_variables
   end
 
   def create
     @quote = Quote.new(quote_params)
+    authorize! @quote
 
     if @quote.save
       redirect_to quotes_path, notice: "Quote was successfully created."
@@ -36,6 +41,7 @@ class QuotesController < ApplicationController
   end
 
   def update
+    authorize! @quote
     if @quote.update(quote_params)
       redirect_to quotes_path, notice: "Quote was successfully updated.", status: :see_other
     else
@@ -45,13 +51,14 @@ class QuotesController < ApplicationController
   end
 
   def destroy
+    authorize! @quote
     @quote.destroy!
     redirect_to quotes_path, notice: "Quote was successfully destroyed."
   end
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    workshops = current_user.super_user? ? Workshop.all : Workshop.active
+    workshops = current_user&.super_user? ? Workshop.all : Workshop.active
     @workshops = workshops.order(:title)
   end
 

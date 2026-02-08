@@ -2,6 +2,7 @@ class SectorsController < ApplicationController
   before_action :set_sector, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unfiltered = Sector.all
     filtered = unfiltered.sector_name(params[:sector_name])
@@ -17,19 +18,23 @@ class SectorsController < ApplicationController
   end
 
   def show
+    authorize! @sector
   end
 
   def new
     @sector = Sector.new
+    authorize! @sector
     set_form_variables
   end
 
   def edit
+    authorize! @sector
     set_form_variables
   end
 
   def create
     @sector = Sector.new(sector_params)
+    authorize! @sector
 
     if @sector.save
       redirect_to sectors_path, notice: "Sector was successfully created."
@@ -40,6 +45,7 @@ class SectorsController < ApplicationController
   end
 
   def update
+    authorize! @sector
     if @sector.update(sector_params)
       redirect_to sectors_path, notice: "Sector was successfully updated.", status: :see_other
     else
@@ -49,6 +55,7 @@ class SectorsController < ApplicationController
   end
 
   def destroy
+    authorize! @sector
     @sector.destroy!
     redirect_to sectors_path, notice: "Sector was successfully destroyed."
   end

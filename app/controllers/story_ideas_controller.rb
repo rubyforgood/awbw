@@ -1,32 +1,41 @@
 class StoryIdeasController < ApplicationController
   include AssetUpdatable
+
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_story_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-
-
     story_ideas = StoryIdea.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
     @story_ideas = story_ideas.order(created_at: :desc)
-                              .paginate(page: params[:page], per_page: per_page).decorate
-
+                              .paginate(page: params[:page], per_page: per_page)
+                              .decorate
     @story_ideas_count = story_ideas.size
   end
 
   def show
+    authorize! @story_idea
   end
 
   def new
     @story_idea = StoryIdea.new
+    authorize! @story_idea
+
     set_form_variables
   end
 
   def edit
+    authorize! @story_idea
+
     set_form_variables
   end
 
   def create
     @story_idea = StoryIdea.new(story_idea_params)
+    @story_idea.created_by = current_user
+    @story_idea.updated_by = current_user
+    authorize! @story_idea
 
     if @story_idea.save
       NotificationServices::CreateNotification.call(
@@ -40,7 +49,12 @@ class StoryIdeasController < ApplicationController
         update_asset_owner(@story_idea)
       end
 
-      redirect_to story_ideas_path, notice: "StoryIdea was successfully created."
+      flash[:notice] = "StoryIdea was successfully created."
+      if allowed_to?(:index?, StoryIdea)
+        redirect_to story_ideas_path
+      else
+        redirect_to root_path
+      end
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -48,8 +62,16 @@ class StoryIdeasController < ApplicationController
   end
 
   def update
+    @story_idea.updated_by = current_user
+    authorize! @story_idea
+
     if @story_idea.update(story_idea_params.except(:images))
-      redirect_to story_ideas_path, notice: "StoryIdea was successfully updated.", status: :see_other
+      flash[:notice] = "StoryIdea was successfully updated."
+      if allowed_to?(:index?, StoryIdea)
+        redirect_to story_ideas_path, status: :see_other
+      else
+        redirect_to root_path, status: :see_other
+      end
     else
       set_form_variables
       render :edit, status: :unprocessable_content
@@ -57,18 +79,23 @@ class StoryIdeasController < ApplicationController
   end
 
   def destroy
+    authorize! @story_idea
+
     @story_idea.destroy!
     redirect_to story_ideas_path, notice: "StoryIdea was successfully destroyed."
   end
 
-  # Optional hooks for setting variables for forms or index
+  # ---------------------------------------------------------
+
   def set_form_variables
     @user = User.find(params[:user_id]) if params[:user_id].present?
-    @projects = (@user || current_user).projects.order(:name)
+    @projects = (@user || current_user)&.projects&.order(:name)
     @windows_types = WindowsType.all
-    @workshops = Workshop.all.order(:title)
-    @users = User.active.or(User.where(id: @story_idea.created_by_id))
-                 .order(:first_name, :last_name)
+    @workshops = Workshop.order(:title)
+
+    @users = User.active.includes(:facilitator)
+    @users = @users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
+    @users = @users.distinct.order("facilitators.first_name, facilitators.last_name")
   end
 
   private
@@ -77,13 +104,11 @@ class StoryIdeasController < ApplicationController
     @story_idea = StoryIdea.find(params[:id])
   end
 
-  # Strong parameters
   def story_idea_params
     params.require(:story_idea).permit(
       :title, :body, :youtube_url,
       :permission_given, :publish_preferences, :promoted_to_story,
-      :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
-      :created_by_id, :updated_by_id,
+      :windows_type_id, :project_id, :workshop_id, :external_workshop_title
     )
   end
 end

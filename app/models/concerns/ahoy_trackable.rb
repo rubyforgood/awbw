@@ -9,9 +9,25 @@ module AhoyTrackable
 
   private
 
+  def devise_only_changes?(changes)
+    auth_fields = %w[
+      current_sign_in_at
+      last_sign_in_at
+      current_sign_in_ip
+      last_sign_in_ip
+      sign_in_count
+      remember_created_at
+    ]
+
+    (changes.keys - auth_fields).empty?
+  end
+
   def track_update_event
-    # Skip the fake "update" that happens right after create
-    return if previously_new_record?
+    return if previously_new_record? # Skip the fake "update" that happens right after create
+
+    changes = previous_changes.except("updated_at", "created_at")
+    return if changes.empty?
+    return if devise_only_changes?(changes)
 
     track_lifecycle_event("update")
   end

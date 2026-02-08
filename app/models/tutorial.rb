@@ -32,7 +32,7 @@ class Tutorial < ApplicationRecord
   scope :tutorial_name, ->(tutorial_name) { title(tutorial_name) }
 
   def self.search_by_params(params)
-    resources = all
+    resources = is_a?(ActiveRecord::Relation) ? self : all
     resources = resources.search(params[:search]) if params[:search].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.body(params[:body]) if params[:body].present?

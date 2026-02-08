@@ -1,9 +1,11 @@
 class ReportsController < ApplicationController
   def show
+    authorize! @report
     @report = Report.find(params[:id])
   end
 
   def monthly_select_type
+    authorize! :report, to: :monthly_select_type?
   end
 
   def monthly

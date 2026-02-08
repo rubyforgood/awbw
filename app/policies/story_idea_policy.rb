@@ -1,11 +1,19 @@
 class StoryIdeaPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
-  #
-  # def index?
-  #   true
-  # end
-  #
+
+  def index?
+    admin?
+  end
+
+  def show?
+    admin? || owner?
+  end
+
   def new?
+    authenticated?
+  end
+
+  def create?
     authenticated?
   end
 
@@ -13,15 +21,17 @@ class StoryIdeaPolicy < ApplicationPolicy
     admin?# || owner?
   end
 
-  def show?
-    admin? || owner?
+  def destroy?
+    admin?
   end
+
+  private
 
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
-  #
-  # relation_scope do |relation|
-  #   next relation if admin?
-  #   relation.where(user: user)
-  # end
+
+  relation_scope do |relation|
+    next relation if admin?
+    relation.none
+  end
 end

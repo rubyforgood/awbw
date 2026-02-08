@@ -31,7 +31,7 @@
 
               <!-- TITLE + BADGES -->
               <span class="inline-flex items-center gap-2">
-                <%= link_to title_with_badges(news, show_hidden_badge: current_user.super_user?).html_safe,
+                <%= link_to title_with_badges(news, show_hidden_badge: current_user&.super_user?).html_safe,
                               community_news_path(news),
                               data: { turbo_prefetch: false, turbo_frame: "_top" },
                               target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
@@ -47,7 +47,7 @@
 
             <td class="px-6 py-4 text-right">
               <div class="inline-flex gap-2">
-                <% if current_user.super_user? %>
+                <% if current_user&.super_user? %>
                   <%= link_to "Edit",
                                 edit_community_news_path(news),
                                 data: {turbo_frame: "_top"},
@@ -72,8 +72,7 @@
 <% else %>
   <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
     <h2 class="text-gray-600 text-lg mb-2">No community news yet</h2>
-
-    <% if current_user.super_user? %>
+    <% if current_user&.super_user? %>
       <div class="admin-only bg-blue-100 p-3">
         <%= link_to "Create a post",
                         new_community_news_path,

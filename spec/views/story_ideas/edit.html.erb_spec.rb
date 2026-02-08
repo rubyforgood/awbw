@@ -12,6 +12,7 @@ RSpec.describe "story_ideas/edit", type: :view do
     assign(:projects, [])
     assign(:users, [])
     allow(view).to receive(:current_user).and_return(user)
+    allow(view).to receive(:allowed_to?).and_return(false)
     render
   end
 
@@ -35,6 +36,7 @@ RSpec.describe "story_ideas/edit", type: :view do
   context "when current_user is an admin" do
     before do
       allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
       render
     end
 

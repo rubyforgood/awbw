@@ -6,10 +6,9 @@
   <% end %>
 
   <%# === Collect flash messages === %>
-  <% flash_notices =
-       flash.to_a.reject do |_, msg|
-         msg.blank? || msg.is_a?(Array) || msg.is_a?(ActiveRecord::Relation)
-       end %>
+  <% flash_notices = flash.to_a.reject do |_, msg| %>
+    <% msg.blank? || msg.is_a?(Array) || msg.is_a?(ActiveRecord::Relation) %>
+  <% end %>
 
   <%# === Discard flash so it doesn’t persist on next request === %>
   <% flash.discard %>
@@ -32,37 +31,26 @@
          end %>
 
     <%# === Detect reset-password–style messages === %>
-    <% persistent =
-         msg.to_s.match?(/reset your password|password instructions|set your password/i) %>
-
-    <% timeout =
-         persistent ? 12000 : 4000 %>
-
+    <% persistent = msg.to_s.match?(/reset your password|password instructions|set your password/i) %>
+    <% timeout = persistent ? 12000 : 4000 %>
     <% disable_outside_click = ["alert", "error"].include?(type.to_s) %>
 
     <div
       class="max-w-3xl my-2"
       data-controller="dismiss"
       data-dismiss-timeout-value="<%= timeout %>"
-      data-dismiss-disable-outside-click-value="<%= disable_outside_click %>"
-    >
-      <div
-        class="
-          flex items-center justify-between px-4 py-3 rounded shadow-md
-          <%= bg_class %> <%= text_class %>
-        "
-      >
+      data-dismiss-disable-outside-click-value="<%= disable_outside_click %>">
+      <div class="flex items-center justify-between px-4 py-3 rounded shadow-md <%= bg_class %> <%= text_class %>">
         <div class="flex-1 text-center font-medium">
           <p class="<%= type %>">
-            <%= msg.is_a?(String) ? msg : msg.html_safe %>
+            <%= msg.html_safe %>
           </p>
         </div>
 
         <button
           type="button"
           data-action="click->dismiss#hide"
-          class="ml-4 text-xl text-current hover:text-gray-500 focus:outline-none"
-        >
+          class="ml-4 text-xl text-current hover:text-gray-500 focus:outline-none">
           <i class="fas fa-times"></i>
         </button>
       </div>

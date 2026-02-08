@@ -37,11 +37,12 @@ Rails.application.routes.draw do
   get "tags/categories", to: "tags#categories", as: "tags_categories"
 
   namespace :admin do
-    get "/",                  to: "home#index"
-    get "activities",          to: "ahoy_activities#index", as: "activities"
-    get "activities/charts",   to: "ahoy_activities#charts", as: "activities_charts"
-    get "activities/counts",   to: "analytics#index", as: "activities_counts"
-    post "activities/counts/print",   to: "analytics#print", as: "analytics_print"
+    get "/",                         to: "home#index" # admin home page
+    get "activities/events",         to: "ahoy_activities#index", as: "activities_events"
+    get "activities/visits",         to: "ahoy_activities#visits", as: "activities_visits"
+    get "activities/charts",         to: "ahoy_activities#charts", as: "activities_charts"
+    get "activities/counts",         to: "analytics#index", as: "activities_counts"
+    post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
   end
 
   resources :banners
@@ -56,7 +57,7 @@ Rails.application.routes.draw do
   resources :community_news
   resources :event_registrations
   resources :events do
-    resource :registrations, only: %i[create destroy], module: :events, as: :registrant_registration
+    resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
   end
   resources :facilitators
   resources :faqs

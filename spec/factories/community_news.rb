@@ -9,6 +9,10 @@ FactoryBot.define do
     association :created_by, factory: :user
     association :updated_by, factory: :user
 
+    trait :featured do
+      featured { true }
+    end
+
     trait :published do
       published { true }
     end
@@ -17,8 +21,12 @@ FactoryBot.define do
       published { false }
     end
 
-    trait :featured do
-      featured { true }
+    trait :publicly_visible do
+      publicly_visible { true }
+    end
+
+    trait :publicly_featured do
+      publicly_featured { true }
     end
 
     trait :with_project do

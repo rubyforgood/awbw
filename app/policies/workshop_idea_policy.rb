@@ -1,11 +1,15 @@
 class WorkshopIdeaPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
-  #
-  # def index?
-  #   true
-  # end
+
+  def index?
+    admin?
+  end
 
   def new?
+    authenticated?
+  end
+
+  def create?
     authenticated?
   end
 

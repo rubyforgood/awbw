@@ -12,6 +12,7 @@ RSpec.describe "workshops/show", type: :view do
   context "when user is an admin" do
     before do
       allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
       render
     end
 
@@ -23,6 +24,7 @@ RSpec.describe "workshops/show", type: :view do
   context "when user is not an admin" do
     before do
       allow(view).to receive(:current_user).and_return(user)
+      allow(view).to receive(:allowed_to?).and_return(false)
       render
     end
 
