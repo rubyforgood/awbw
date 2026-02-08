@@ -4,6 +4,7 @@ class EventRegistrationPolicy < ApplicationPolicy
   # override or add new rules here that are not defined in ApplicationPolicy
 
   def index?   = admin?
+  def create? = admin? || owner?
   def destroy?   = admin? || owner?
 
 
