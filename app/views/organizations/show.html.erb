@@ -203,7 +203,7 @@
 
       <hr class="my-8 border-gray-200">
 
-      <% if current_user.super_user? || @organization.organization_users.pluck(:user_id).include?(current_user.id) %>
+      <% if current_user&.super_user? || @organization.organization_users.pluck(:user_id).include?(current_user.id) %>
         <div class="organization-only bg-green-100">
           <!-- Workshop logs -->
           <% if true || @organization.profile_show_workshop_logs? %>

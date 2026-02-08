@@ -449,13 +449,13 @@
 
     <!-- Actions -->
     <div class="flex gap-x-3 mt-6">
-      <% if f.object.persisted? && current_user.super_user? %>
+      <% if f.object.persisted? && current_user&.super_user? %>
         <%= link_to "Delete", @workshop, class: "btn btn-danger-outline",
                     method: :delete, data: { confirm: "Are you sure?" } %>
       <% end %>
 
       <%= link_to "Cancel",
-                  (current_user.super_user? ? workshops_path : authenticated_root_path),
+                  (current_user&.super_user? ? workshops_path : authenticated_root_path),
                   class: "btn btn-secondary-outline" %>
       <%= f.submit "Submit", class: "btn btn-primary" %>
     </div>

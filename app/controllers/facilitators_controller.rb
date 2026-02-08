@@ -96,7 +96,7 @@ class FacilitatorsController < ApplicationController
     if @facilitator.user
       @facilitator.user.organization_users.first || @facilitator.user.organization_users.build
     end
-    organizations = if current_user.super_user?
+    organizations = if current_user&.super_user?
       Organization.active
     else
       current_user.organizations
