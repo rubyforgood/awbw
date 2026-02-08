@@ -1,16 +1,16 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "Stories", type: :system do
-  describe 'story index' do
-    context "When user is logged in" do
-      it 'User sees overview of stories' do
+  describe "story index" do
+    context "as a regular_user" do
+      it "sees overview of stories" do
         sign_in(create(:user))
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
-        story_world = create(:story, :published, title: 'The best story in the world', windows_type: adult_window)
-        story_mars = create(:story, :published, title: 'The best story on mars', windows_type: adult_window)
-        story_hello = create(:story, :published, title: 'oh hello!', windows_type: adult_window)
+        story_world = create(:story, :published, title: "The best story in the world", windows_type: adult_window)
+        story_mars = create(:story, :published, title: "The best story on mars", windows_type: adult_window)
+        story_hello = create(:story, :published, title: "oh hello!", windows_type: adult_window)
 
         visit stories_path
 
@@ -22,7 +22,7 @@ RSpec.describe "Stories", type: :system do
         expect(page).to have_content(story_hello.title)
       end
 
-      it 'User sees message when no stories exist' do
+      it "sees message when no stories exist" do
         sign_in(create(:user))
 
         visit stories_path
@@ -33,23 +33,23 @@ RSpec.describe "Stories", type: :system do
         expect(page).to have_content("No stories found")
       end
 
-      it 'User can search for a story' do
+      it "User can search for a story" do
         user = create(:user)
         sign_in(user)
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
         facilitator = create(:facilitator, first_name: "John", last_name: "Doe")
-        story_world = create(:story, :published, title: 'The best story in the world', windows_type: adult_window, created_by: facilitator.user, rhino_body: "healing through art")
-        story_mars = create(:story, :published, title: 'The best story on mars', windows_type: adult_window, created_by: facilitator.user, rhino_body: "healing through art")
-        story_hello = create(:story, :published, title: 'oh hello!', windows_type: adult_window, rhino_body: "healing through art")
+        story_world = create(:story, :published, title: "The best story in the world", windows_type: adult_window, created_by: facilitator.user, rhino_body: "healing through art")
+        story_mars = create(:story, :published, title: "The best story on mars", windows_type: adult_window, created_by: facilitator.user, rhino_body: "healing through art")
+        story_hello = create(:story, :published, title: "oh hello!", windows_type: adult_window, rhino_body: "healing through art")
 
         visit stories_path
 
         expect(page).to have_content(story_world.title)
 
-        fill_in 'title', with: 'best story'
-        fill_in 'query', with: 'healing'
+        fill_in "title", with: "best story"
+        fill_in "query", with: "healing"
 
         expect(page).to have_content(story_world.title)
         expect(page).to have_content(story_mars.title)
@@ -58,21 +58,47 @@ RSpec.describe "Stories", type: :system do
     end
   end
 
-  describe 'view story' do
-    context "When user is logged in" do
-      it "User sees story details" do
+  describe "view story" do
+    context "as a regular_user" do
+      it "sees story show" do
         sign_in(create(:user))
-
-        story = create(:story, title: 'The best story in the world. This is a tribute.')
+        story = create(:story, :published, title: "The best story in the world. This is a tribute.")
 
         visit story_path(story)
 
         expect(page).to have_content(story.title)
       end
+
+      it "cannot see unpublished story show" do
+        sign_in(create(:user))
+        story = create(:story, :unpublished, title: "The best story in the world. This is a tribute.")
+        visit story_path(story)
+        expect(page).to have_current_path(root_path)
+      end
+    end
+
+    context "as a guest" do
+      it "sees publicly_visible story show" do
+        story = create(:story, :published, :publicly_visible, title: "The best story in the world. This is a tribute.")
+        visit story_path(story)
+        expect(page).to have_content("The best story in the world")
+      end
+
+      it "cannot see unpublished story show" do
+        story = create(:story, :unpublished, title: "The best story in the world. This is a tribute.")
+        visit story_path(story)
+        expect(page).to have_current_path(root_path)
+      end
+
+      it "cannot see published story show" do
+        story = create(:story, :published, title: "The best story in the world. This is a tribute.")
+        visit story_path(story)
+        expect(page).to have_current_path(root_path)
+      end
     end
   end
 
-  describe 'edit story' do
+  describe "edit story" do
     context "When admin is logged in" do
       it "Super user can edit an existing story" do
         user = create(:user, :admin)
@@ -85,7 +111,7 @@ RSpec.describe "Stories", type: :system do
         within("#edit_story_#{story.id}") do
             fill_in "Title", with: "A New Title"
             select adult_window.short_name, from: "Windows type"
-            click_on 'Save changes'
+            click_on "Save changes"
           end
 
         expect(page).to have_content("A New Title")

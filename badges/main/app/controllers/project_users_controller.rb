@@ -1,6 +1,7 @@
 class ProjectUsersController < ApplicationController
   def destroy
     project_user = ProjectUser.find(params[:id])
+    authorize! project_user
     user = project_user.user
 
     if project_user.destroy

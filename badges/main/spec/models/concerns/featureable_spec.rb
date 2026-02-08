@@ -5,15 +5,15 @@ RSpec.describe Featureable, type: :model do
   # Resource is perfect here
 
   let!(:featured_record) do
-    create(:resource, :published, featured: true)
+    create(:resource, :published, :featured)
   end
 
   let!(:publicly_featured_record) do
-    create(:resource, :published, publicly_featured: true, publicly_visible: true)
+    create(:resource, :published, :publicly_visible, :publicly_featured)
   end
 
   let!(:both_featured_record) do
-    create(:resource, :published, featured: true, publicly_featured: true, publicly_visible: true)
+    create(:resource, :published, :featured, :publicly_featured, :publicly_visible)
   end
 
   let!(:internal_record) do
@@ -21,11 +21,11 @@ RSpec.describe Featureable, type: :model do
   end
 
   let!(:unpublished_featured) do
-    create(:resource, featured: true)
+    create(:resource, :featured)
   end
 
   let!(:unpublished_publicly_featured) do
-    create(:resource, publicly_featured: true, publicly_visible: true)
+    create(:resource, :publicly_featured, :publicly_visible)
   end
 
   # ----------------------------------------------------
@@ -78,10 +78,8 @@ RSpec.describe Featureable, type: :model do
 
     it "does not include publicly_featured records that are not publicly_visible" do
       hidden_publicly_featured = create(:resource,
-                                        publicly_featured: true,
-                                        publicly_visible: false,
-                                        published: true
-      )
+                                        :publicly_featured,
+                                        :published)
       expect(Resource.publicly_featured).not_to include(hidden_publicly_featured)
     end
 

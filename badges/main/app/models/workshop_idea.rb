@@ -72,7 +72,7 @@ class WorkshopIdea < ApplicationRecord
           "%#{author_name}%", "%#{author_name}%", "%#{author_name}%") }
 
   def self.search(params)
-    results = WorkshopIdea.all
+    results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.title(params[:title]) if params[:title].present?
     results = results.author_name(params[:author_name]) if params[:author_name].present?
     results

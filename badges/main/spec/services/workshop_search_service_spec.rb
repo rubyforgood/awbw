@@ -96,10 +96,8 @@ RSpec.describe WorkshopSearchService, type: :service do
     # end
 
     context "as an admin" do
-      let(:user) { admin }
-
       it "includes unpublished workshops" do
-        service = WorkshopSearchService.new({ sort: "title" }, user: user).call
+        service = WorkshopSearchService.new({ sort: "title" }, user: admin).call
         expect(service.workshops.map(&:title)).to include("Hidden Draft")
         expect(service.workshops.map(&:title)).to include("Public Workshop")
         expect(service.workshops.map(&:title)).to include("A Workshop")
@@ -112,7 +110,7 @@ RSpec.describe WorkshopSearchService, type: :service do
       let(:user) { nil }
 
       it "shows only publicly_visible workshops" do
-        service = WorkshopSearchService.new({ sort: "title" }, user: user).call
+        service = WorkshopSearchService.new({ sort: "title" }, user: nil).call
         expect(service.workshops.map(&:title)).to include("Public Workshop")
         expect(service.workshops.map(&:title)).not_to include("Hidden Draft")
         expect(service.workshops.map(&:title)).not_to include("A Workshop")

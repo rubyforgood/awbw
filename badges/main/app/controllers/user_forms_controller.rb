@@ -1,5 +1,6 @@
 class UserFormsController < ApplicationController
   def create
+    authorize! :user_form, to: :create?
     @user_form = current_user.user_forms.build(user_form_params)
     if @user_form.save
       flash[:notice] = "User form successfully created"

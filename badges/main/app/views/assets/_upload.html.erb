@@ -1,7 +1,9 @@
 <%= tag.div id: "asset_upload" do %>
   <% owner = Draper.undecorate(owner) %>
 
-  <%= form_with model: LibraryAsset.new, class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4 mb-2" do |f| %>
+  <%= form_with model: LibraryAsset.new,
+                id: "asset_upload_form",
+                class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4 mb-2" do |f| %>
     <% if owner&.respond_to?(:to_sgid) && owner&.persisted? %>
       <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
     <% else %>
@@ -15,15 +17,16 @@
 
       <div class="relative">
         <%= f.select :type,
-          Asset.allowed_types_for_owner(owner).map { |t| [t.underscore.humanize.split.first, t]},
-          { required: true },
-          class: "block w-full appearance-none rounded-md border border-gray-300
-                  bg-white
-                  px-3 py-2 pr-8
-                  text-sm text-gray-700
-                  shadow-sm
-                  focus:border-indigo-500 focus:outline-none
-                  focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
+                     Asset.allowed_types_for_owner(owner).map { |t| [t.underscore.humanize.split.first, t]},
+                       { required: true },
+                     id: "asset_upload_type",
+                     class: "block w-full appearance-none rounded-md border border-gray-300
+                             bg-white
+                             px-3 py-2 pr-8
+                             text-sm text-gray-700
+                             shadow-sm
+                             focus:border-indigo-500 focus:outline-none
+                             focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
 
         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
           <i class="fa-solid fa-chevron-down text-sm"></i>

@@ -2,6 +2,7 @@ class TaggingsController < ApplicationController
   include AhoyTracking
 
   def index
+    authorize! :tagging, to: :index?
     @sector_names = params[:sector_names]
     @category_names = params[:category_names]
 
@@ -28,6 +29,7 @@ class TaggingsController < ApplicationController
   end
 
   def matrix
+    authorize! :tagging, to: :matrix?
     @sectors = Sector.includes(:sectorable_items)
                      .joins(:sectorable_items)
                      .published

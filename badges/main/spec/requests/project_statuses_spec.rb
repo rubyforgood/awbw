@@ -145,9 +145,9 @@ RSpec.describe "/project_statuses", type: :request do
   # UNAUTHENTICATED ACCESS (BLOCKED)
   # --------------------------------------------------
   describe "unauthenticated access" do
-    it "redirects to sign-in" do
+    it "redirects to root" do
       get project_statuses_url
-      expect(response).to redirect_to(new_user_session_path)
+      expect(response).to redirect_to(root_path)
     end
   end
 end

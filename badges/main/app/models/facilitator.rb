@@ -62,7 +62,7 @@ class Facilitator < ApplicationRecord
       .distinct }
 
   def self.search_by_params(params)
-    results = self.all
+    results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
     results = results.sector_names(params[:sector_names]) if params[:sector_names].present?
     results = results.sector_names(params[:category_names]) if params[:category_names].present?

@@ -6,6 +6,8 @@ class User < ApplicationRecord
 
   after_create :set_default_values
   after_update :track_email_change
+  after_update :track_login_event
+
   before_destroy :track_account_deleted
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
@@ -63,7 +65,7 @@ class User < ApplicationRecord
   scope :active, -> { where(inactive: false) }
 
   def self.search_by_params(params)
-    results = User.all
+    results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:search]) if params[:search].present?
     results = results.where(super_user: params[:super_user]) if params[:super_user].present?
     results = results.where(inactive: params[:inactive]) if params[:inactive].present?
@@ -221,16 +223,25 @@ class User < ApplicationRecord
     track_auth_event("auth.account_unlocked")
   end
 
+  def track_account_deleted
+    track_auth_event("auth.account_deleted")
+  end
+
+  def track_auth_event(name, properties = {})
+    payload = { name: name, properties: properties.merge(user_id: id) }
+    Analytics::LifecycleBuffer.push(payload)
+  end
+
   def track_email_change
     return unless saved_change_to_email?
     track_auth_event("auth.email_changed")
   end
 
-  def track_account_deleted
-    track_auth_event("auth.account_deleted")
-  end
+  def track_login_event
+    return unless saved_change_to_sign_in_count?
 
-  def track_auth_event(name)
-    Analytics::AhoyTracker.track_auth_event(name, user: self)
+    track_auth_event("auth.login", {
+      sign_in_count: sign_in_count
+    })
   end
 end

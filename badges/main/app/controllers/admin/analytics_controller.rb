@@ -1,9 +1,10 @@
 module Admin
-  class AnalyticsController < Admin::BaseController
+  class AnalyticsController < ApplicationController
     include AhoyTracking
-    protect_from_forgery with: :null_session
+    skip_before_action :authenticate_user!, only: :print
 
     def index
+      authorize! :analytics, to: :index?
       time_scope = apply_time_filter(params[:time_period])
 
       # Query Ahoy events for view counts within the time period
@@ -78,6 +79,10 @@ module Admin
     end
 
     def print
+      authorize! :analytics, to: :print?
+
+      return head :bad_request unless request.format.json?
+
       printable_models = {
         "Resource" => Resource,
         "Story" => Story,
@@ -95,6 +100,7 @@ module Admin
 
       head :ok
     end
+
 
     private
 

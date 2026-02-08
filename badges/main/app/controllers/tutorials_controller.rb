@@ -4,6 +4,7 @@ class TutorialsController < ApplicationController
   before_action :set_tutorial, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(Tutorial.all)
     filtered = base_scope.search_by_params(params)
@@ -14,21 +15,25 @@ class TutorialsController < ApplicationController
 
   def show
     @tutorial = @tutorial.decorate
+    authorize! @tutorial
     track_view(@tutorial)
   end
 
   def new
     @tutorial = Tutorial.new.decorate
+    authorize! @tutorial
     set_form_variables
   end
 
   def edit
     @tutorial = @tutorial.decorate
+    authorize! @tutorial
     set_form_variables
   end
 
   def create
     @tutorial = Tutorial.new(tutorial_params)
+    authorize! @tutorial
 
     if @tutorial.save
       redirect_to tutorials_path, notice: "Tutorial was successfully created."
@@ -40,6 +45,7 @@ class TutorialsController < ApplicationController
   end
 
   def update
+    authorize! @tutorial
     if @tutorial.update(tutorial_params)
       redirect_to tutorials_path, notice: "Tutorial was successfully updated.", status: :see_other
     else
@@ -50,6 +56,7 @@ class TutorialsController < ApplicationController
   end
 
   def destroy
+    authorize! @tutorial
     @tutorial.destroy!
     redirect_to tutorials_path, notice: "Tutorial was successfully destroyed."
   end
