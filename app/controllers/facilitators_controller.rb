@@ -6,7 +6,7 @@ class FacilitatorsController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(Facilitator.includes(:user, :avatar_attachment, :sectorable_items,
-                                                       user: [ :avatar_attachment, :projects ])
+                                                       user: [ :avatar_attachment, :organizations ])
                                              .references(:user))
 
     filtered = base_scope.search_by_params(params.to_unsafe_h)
