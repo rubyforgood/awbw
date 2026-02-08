@@ -27,13 +27,10 @@ class WorkshopLogPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-
     scope = relation.where(user_id: user.id) # owned logs
-
     if user.project_ids.present?
       scope = scope.or(relation.where(project_id: user.project_ids)) # logs from user's projects
     end
-
     scope
   end
 end

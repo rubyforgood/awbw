@@ -7,11 +7,11 @@ class StoryIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    story_ideas = StoryIdea.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
-    @story_ideas = story_ideas.order(created_at: :desc)
-                              .paginate(page: params[:page], per_page: per_page)
-                              .decorate
-    @story_ideas_count = story_ideas.size
+    base_scope = authorized_scope(StoryIdea.includes(:windows_type, :project, :workshop, :created_by, :updated_by))
+    @story_ideas = base_scope.order(created_at: :desc)
+                             .paginate(page: params[:page], per_page: per_page)
+                             .decorate
+    @story_ideas_count = base_scope.size
   end
 
   def show

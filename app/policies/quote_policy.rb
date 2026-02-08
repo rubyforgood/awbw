@@ -1,20 +1,8 @@
-class WorkshopIdeaPolicy < ApplicationPolicy
+class QuotePolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
   def index?
     admin?
-  end
-
-  def new?
-    authenticated?
-  end
-
-  def create?
-    authenticated?
-  end
-
-  def update?
-    admin?# || owner?
   end
 
   def show?
@@ -26,6 +14,16 @@ class WorkshopIdeaPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    relation.none
+    if authenticated?
+      relation.published
+    else
+      relation.none
+    end
+  end
+
+  private
+
+  def owner?
+    record.recipient_email == user.email
   end
 end

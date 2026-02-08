@@ -6,17 +6,14 @@ class FacilitatorsController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
 
-    base_scope = authorized_scope(Facilitator
-      .includes(:user,
-                :avatar_attachment,
-                :sectorable_items,
-                user: [ :avatar_attachment, :projects ]).references(:user))
+    base_scope = authorized_scope(Facilitator.includes(:user, :avatar_attachment, :sectorable_items,
+                                                       user: [ :avatar_attachment, :projects ])
+                                             .references(:user))
 
-    facilitators = base_scope
-                     .search_by_params(params.to_unsafe_h)
-                     .order(:first_name, :last_name)
-    @count_display = facilitators.size
-    @facilitators = facilitators.paginate(page: params[:page], per_page: per_page)
+    filtered = base_scope.search_by_params(params.to_unsafe_h)
+                             .order(:first_name, :last_name)
+    @count_display = filtered.size
+    @facilitators = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
   def show

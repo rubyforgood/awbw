@@ -12,4 +12,9 @@ class CategoryPolicy < ApplicationPolicy
   def tags_index?
     true
   end
+
+  relation_scope do |relation|
+    next relation if admin?
+    relation.none
+  end
 end

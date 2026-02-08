@@ -2,19 +2,10 @@ class WorkshopVariationsController < ApplicationController
   include AssetUpdatable, AhoyTracking
   def index
     authorize!
-    unless current_user&.super_user?
-      redirect_to root_path
-      return
-    end
 
-    @workshop_variations =
-      WorkshopVariation
-        .includes(:workshop)
-        .joins(:workshop)
-        .where(workshops: { published: true })
-        .order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
-        .paginate(page: params[:page], per_page: 25)
-        .decorate
+    base_scope = WorkshopVariation.includes(:workshop).joins(:workshop).where(workshops: { published: true })
+    filtered = base_scope.order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
+    @workshop_variations = filtered.paginate(page: params[:page], per_page: 25).decorate
   end
 
   def new
