@@ -60,10 +60,8 @@ class Story < ApplicationRecord
     conditions[:published] = params[:published] if params[:published].present?
     stories = self.search(conditions)
 
-    stories = stories.sector_names(params[:sector_names]) if params[:sector_names].present?
-    stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
-    stories = stories.category_names(params[:category_names]) if params[:category_names].present?
-    stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    stories = stories.sector_names_all(params[:sector_names]) if params[:sector_names].present?
+    stories = stories.category_names_all(params[:category_names]) if params[:category_names].present?
     stories
   end
 

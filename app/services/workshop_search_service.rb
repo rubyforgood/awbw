@@ -119,10 +119,8 @@ class WorkshopSearchService
   end
 
   def filter_by_tag_names
-    @workshops = @workshops.sector_names(@params[:sector_names]) if @params[:sector_names].present?
-    @workshops = @workshops.sector_names_all(@params[:sector_names_all]) if @params[:sector_names_all].present?
-    @workshops = @workshops.category_names(@params[:category_names]) if @params[:category_names].present?
-    @workshops = @workshops.category_names_all(@params[:category_names_all]) if @params[:category_names_all].present?
+    @workshops = @workshops.sector_names_all(@params[:sector_names]) if @params[:sector_names].present?
+    @workshops = @workshops.category_names_all(@params[:category_names]) if @params[:category_names].present?
     @workshops
   end
 

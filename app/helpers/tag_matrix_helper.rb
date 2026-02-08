@@ -3,9 +3,9 @@ module TagMatrixHelper
     scope =
       case type
       when :sector
-        model.sector_names(tag.name)
+        model.sector_names_all(tag.name)
       when :category
-        model.category_names(tag.name)
+        model.category_names_all(tag.name)
       end
 
     scope.published.unscope(:group).count
