@@ -1,7 +1,9 @@
 <%= tag.div id: "asset_upload", class: "flex justify-center items-center bg-white border border-gray-300 rounded-md shadow-sm p-2 w-64" do %>
   <% owner = Draper.undecorate(owner) %>
 
-  <%= form_with model: LibraryAsset.new, data: {asset_upload_target: "form"}, class: "flex flex-col items-center" do |f| %>
+  <%= form_with model: LibraryAsset.new,
+                id: "asset_upload_form",
+                class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4 mb-2" do |f| %>
     <% if owner&.respond_to?(:to_sgid) && owner&.persisted? %>
       <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
     <% else %>

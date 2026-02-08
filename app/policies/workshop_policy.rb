@@ -9,6 +9,10 @@ class WorkshopPolicy < ApplicationPolicy
     admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
+  def destroy?
+    admin?
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
   #

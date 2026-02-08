@@ -1,30 +1,36 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status, :confirm_email, :send_reset_password_instructions ]
+  before_action :set_user, only: [ :show, :edit, :update, :destroy,
+                                   :generate_facilitator, :toggle_lock_status, :confirm_email,
+                                   :send_reset_password_instructions ]
 
   def index
-    return redirect_to root_path unless current_user.super_user?
-
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     users = User.search_by_params(params).order(:first_name, :last_name)
+
     @users_count = users.size
     @users = users.paginate(page: params[:page], per_page: per_page)
   end
 
+  def show
+    authorize! @user
+    @user = User.find(params[:id]).decorate
+  end
+
   def new
     @user = User.new
+    authorize! @user
     set_form_variables
   end
 
   def edit
+    authorize! @user
     set_form_variables
-  end
-
-  def show
-    @user = User.find(params[:id]).decorate
   end
 
   def create
     @user = User.new(user_params)
+    authorize! @user
 
     # Optional: assign random password if none provided
     @user.password ||= SecureRandom.hex(8)
@@ -44,7 +50,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    @user = User.find(params[:id])
+    authorize! @user
 
     # Only update password if entered
     if password_param.present?
@@ -63,16 +69,23 @@ class UsersController < ApplicationController
   end
 
   def destroy
+    authorize! @user
     @user.destroy!
     redirect_to users_path, notice: "User was successfully destroyed."
   end
 
+  # ---------------------------------------------------------
+  # PASSWORD
+  # ---------------------------------------------------------
+
   def change_password
     @user = current_user
+    authorize! @user
   end
 
   def update_password
     @user = current_user
+    authorize! @user
 
     if @user.update_with_password(password_params)
       Analytics::AhoyTracker.track_auth_event(
@@ -82,31 +95,46 @@ class UsersController < ApplicationController
       bypass_sign_in(@user)
       redirect_to root_path, notice: "Your Password was updated."
     else
-      flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
+      flash[:alert] = @user.errors.full_messages.join(", ")
       render :change_password
     end
   end
 
+  # ---------------------------------------------------------
+  # FACILITATOR
+  # ---------------------------------------------------------
+
   def generate_facilitator
+    authorize! @user
+
     if @user.facilitator.present?
       redirect_to @user.facilitator and return
+    end
+
+    @facilitator = FacilitatorFromUserService.new(user: @user).call
+    if @facilitator.save
+      redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
     else
-      @facilitator = FacilitatorFromUserService.new(user: @user).call
-      if @facilitator.save
-        redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
-      else
-        redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}" and return
-      end
+      redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}"
     end
   end
 
+  # ---------------------------------------------------------
+  # RESET PASSWORD
+  # ---------------------------------------------------------
+
   def send_reset_password_instructions
+    authorize! @user
     @user.send_reset_password_instructions
     redirect_to users_path, notice: "Reset password instructions sent to #{@user.email}."
   end
 
+  # ---------------------------------------------------------
+  # LOCK / UNLOCK
+  # ---------------------------------------------------------
+
   def toggle_lock_status
-    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+    authorize! @user, to: :toggle_lock_status?
 
     if @user.locked_at.present?
       # Unlock the user
@@ -124,8 +152,12 @@ class UsersController < ApplicationController
     end
   end
 
+  # ---------------------------------------------------------
+  # CONFIRM EMAIL
+  # ---------------------------------------------------------
+
   def confirm_email
-    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+    authorize! @user, to: :confirm_email?
 
     if @user.confirmed_at.present?
       message = "Email is already confirmed."
@@ -140,6 +172,10 @@ class UsersController < ApplicationController
     end
   end
 
+  # =========================================================
+  # PRIVATE
+  # =========================================================
+
   private
 
   def set_user
@@ -148,22 +184,18 @@ class UsersController < ApplicationController
 
   def set_facilitator
     @facilitator = @user.facilitator ||
-      (Facilitator.where(id: params[:facilitator_id]).first if params[:facilitator_id].present?)
+      (Facilitator.find(params[:facilitator_id]) if params[:facilitator_id].present?)
   end
 
   def set_form_variables
     set_facilitator
     @user.project_users.first || @user.project_users.build
-    projects = if current_user.admin?
-      Project.published
-    else
-      current_user.projects
-    end
+    projects = current_user&.super_user? ? Project.published : current_user.projects
     @projects_array = projects.order(:name).pluck(:name, :id)
   end
 
   def password_param
-    params[:user][:password]
+    params.dig(:user, :password)
   end
 
   def password_params
@@ -174,11 +206,10 @@ class UsersController < ApplicationController
     params.require(:user).permit(
       :avatar, :first_name, :last_name, :email,
       :address, :address2, :city, :city2, :state, :state2, :zip, :zip2,
-      :phone, :phone2, :phone3, :birthday, :best_time_to_call, :comment,
-      :notes, :primary_address, :avatar, :subscribecode,
-      :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
-      :confirmed, :published, :super_user, :legacy, :legacy_id,
-      :time_zone,
+      :phone, :phone2, :phone3, :birthday, :best_time_to_call,
+      :comment, :facilitator_id, :notes, :primary_address, :time_zone,
+      :confirmed, :inactive, :published, :super_user,
+      :agency_id, :legacy, :legacy_id, :subscribecode,
       project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
     )
   end

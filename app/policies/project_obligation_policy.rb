@@ -1,17 +1,12 @@
-class AhoyActivityPolicy < ApplicationPolicy
+class ProjectObligationPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
-  def index?
-    admin?
-  end
+  def index?   = admin?
+  def show?    = admin?
+  def create?  = admin?
+  def update?  = admin?
+  def destroy? = admin?
 
-  def charts?
-    admin?
-  end
-
-  def visits?
-    admin?
-  end
 
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping

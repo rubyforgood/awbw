@@ -1,0 +1,114 @@
+<div class="max-w-7xl mx-auto px-6 py-10 space-y-8">
+  <div class="admin-only bg-blue-100 rounded rounded-xl p-6">
+    <div class="bg-white rounded rounded-xl p-3">
+
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">
+          Ahoy Visits
+        </h1>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
+        <%= form_with url: request.path, method: :get, local: true do %>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                User
+              </label>
+              <%= select_tag :user_id,
+                             options_from_collection_for_select(
+                               User.order(:first_name, :last_name),
+                               :id,
+                               :full_name,
+                               params[:user_id]
+                             ),
+                             include_blank: "All Users",
+                             class: "w-full border-gray-300 rounded-md shadow-sm" %>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                From
+              </label>
+              <%= date_field_tag :from, params[:from],
+                                 class: "w-full border-gray-300 rounded-md shadow-sm" %>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                To
+              </label>
+              <%= date_field_tag :to, params[:to],
+                                 class: "w-full border-gray-300 rounded-md shadow-sm" %>
+            </div>
+
+          </div>
+
+          <div class="mt-6">
+            <%= submit_tag "Filter",
+                           class: "bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700" %>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
+          <tr>
+            <th class="px-4 py-3 text-left">ID</th>
+            <th class="px-4 py-3 text-left">Started</th>
+            <th class="px-4 py-3 text-left">User</th>
+            <th class="px-4 py-3 text-left">IP</th>
+            <th class="px-4 py-3 text-left">Events</th>
+            <th class="px-4 py-3 text-left">User Agent</th>
+          </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-100">
+          <% @visits.each do |visit| %>
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-4 py-3 text-gray-700">
+                <%= visit.id %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
+                <%= visit.started_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-700">
+                <% if visit.user %>
+                  <%= link_to visit.user.full_name,
+                              user_path(visit.user),
+                              class: "text-indigo-600 hover:underline" %>
+                <% else %>
+                  <span class="text-gray-400 italic">Guest</span>
+                <% end %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-500">
+                <%= visit.ip %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-500">
+                <%= link_to visit.attributes["events_count"],
+                            admin_activities_events_path(visit_id: visit.id) %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-500 max-w-xs">
+                <%= visit.user_agent %>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-center mt-8">
+        <%= tailwind_paginate @visits %>
+      </div>
+    </div>
+  </div>
+</div>

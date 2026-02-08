@@ -18,7 +18,7 @@
 
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
-    <% if current_user.super_user? %>
+    <% if current_user&.super_user? %>
       <%= link_to "Edit",
                   edit_workshop_path(workshop),
                   class: "btn btn-secondary-outline admin-only bg-blue-100" %>

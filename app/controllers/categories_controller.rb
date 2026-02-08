@@ -2,6 +2,7 @@ class CategoriesController < ApplicationController
   before_action :set_category, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     @category_types = CategoryType.order(:name)
 
@@ -20,19 +21,23 @@ class CategoriesController < ApplicationController
   end
 
   def show
+    authorize! @category
   end
 
   def new
     @category = Category.new
+    authorize! @category
     set_form_variables
   end
 
   def edit
+    authorize! @category
     set_form_variables
   end
 
   def create
     @category = Category.new(category_params)
+    authorize! @category
 
     if @category.save
       redirect_to categories_path, notice: "Category was successfully created."
@@ -43,6 +48,7 @@ class CategoriesController < ApplicationController
   end
 
   def update
+    authorize! @category
     respond_to do |format|
       if @category.update(category_params)
         format.html { redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other }
@@ -58,6 +64,7 @@ class CategoriesController < ApplicationController
   end
 
   def destroy
+    authorize! @category
     @category.destroy!
     redirect_to categories_path, notice: "Category was successfully destroyed."
   end

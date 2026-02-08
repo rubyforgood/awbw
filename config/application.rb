@@ -15,11 +15,9 @@ module Awbw
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks generators])
-    config.autoload_paths += %W[
-      #{Rails.root}/app/renderers
-      #{Rails.root}/app/decorators/concerns
-      #{Rails.root}/app/presenters
-    ]
+    config.paths.add "app/renderers", eager_load: true
+    config.paths.add "app/decorators/concerns", eager_load: true
+    config.paths.add "app/presenters", eager_load: true
     config.action_mailer.preview_paths = [
       Rails.root.join("test/mailers/previews"),
       Rails.root.join("spec/mailers/previews"),

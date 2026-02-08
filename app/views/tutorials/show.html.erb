@@ -7,7 +7,7 @@
           <%= render "bookmarks/editable_bookmark_button", resource: @tutorial.object %>
         </span>
 
-        <% if current_user.super_user? %>
+        <% if current_user&.super_user? %>
           <%= link_to("Edit", edit_tutorial_path(@tutorial),
                       class: "admin-only bg-blue-100 btn btn-primary-outline") %>
         <% end %>

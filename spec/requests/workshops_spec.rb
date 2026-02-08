@@ -37,7 +37,7 @@ RSpec.describe "/workshops", type: :request do
 
         expect(response).to redirect_to(edit_workshop_path(workshop))
         follow_redirect!
-        expect(response.body).to include("You do not have permission to delete a workshop")
+        expect(flash[:alert]).to include("You are not authorized to perform this action")
       end
 
       it "does not destroy the workshop and redirects back from show page" do
@@ -47,17 +47,17 @@ RSpec.describe "/workshops", type: :request do
 
         expect(response).to redirect_to(workshop_path(workshop))
         follow_redirect!
-        expect(response.body).to include("You do not have permission to delete a workshop")
+        expect(flash[:alert]).to include("You are not authorized to perform this action")
       end
 
-      it "does not destroy the workshop and redirects to workshops_path as fallback" do
+      it "does not destroy the workshop and redirects to root" do
         expect {
           delete workshop_path(workshop)
         }.not_to change(Workshop, :count)
 
-        expect(response).to redirect_to(workshops_path)
+        expect(response).to redirect_to(root_path)
         follow_redirect!
-        expect(response.body).to include("You do not have permission to delete a workshop")
+        expect(flash[:alert]).to include("You are not authorized to perform this action")
       end
     end
   end

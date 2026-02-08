@@ -13,7 +13,7 @@
       </div>
 
       <!-- Action button -->
-      <%# if current_user.super_user? %>
+      <%# if current_user&.super_user? %>
       <!-- <div class="flex-shrink-0 pt-1"> -->
       <%#
         = link_to "Manage sectors",
@@ -42,7 +42,7 @@
             </p>
           </div>
 
-          <% if current_user.super_user? %>
+          <% if current_user&.super_user? %>
             <div class="flex-shrink-0">
               <%= link_to "Manage service populations",
                           sectors_path,
@@ -68,7 +68,7 @@
             </p>
           </div>
 
-          <% if current_user.super_user? %>
+          <% if current_user&.super_user? %>
             <div class="flex-shrink-0">
               <%= link_to "Manage categories",
                           categories_path,

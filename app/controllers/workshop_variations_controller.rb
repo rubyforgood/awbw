@@ -1,7 +1,8 @@
 class WorkshopVariationsController < ApplicationController
   include AssetUpdatable, AhoyTracking
   def index
-    unless current_user.super_user?
+    authorize!
+    unless current_user&.super_user?
       redirect_to root_path
       return
     end
@@ -18,7 +19,8 @@ class WorkshopVariationsController < ApplicationController
 
   def new
     @workshop_variation = WorkshopVariation.new
-    workshops = current_user.super_user? ? Workshop.all : Workshop.published
+    authorize! @workshop_variation
+    workshops = current_user&.super_user? ? Workshop.all : Workshop.published
     @workshops = workshops.order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
@@ -26,6 +28,7 @@ class WorkshopVariationsController < ApplicationController
 
   def create
     @workshop_variation = WorkshopVariation.new(workshop_variation_params)
+    authorize! @workshop_variation
     if @workshop_variation.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_variation,
@@ -53,6 +56,7 @@ class WorkshopVariationsController < ApplicationController
 
   def show
     @workshop_variation = WorkshopVariation.find(params[:id]).decorate
+    authorize! @workshop_variation
     track_view(@workshop_variation)
 
     @workshop = @workshop_variation.workshop.decorate
@@ -65,11 +69,13 @@ class WorkshopVariationsController < ApplicationController
 
   def edit
     @workshop_variation = WorkshopVariation.find(params[:id])
+    authorize! @workshop_variation
     @workshops = Workshop.published.order(:title)
   end
 
   def update
     @workshop_variation = WorkshopVariation.find(params[:id])
+    authorize! @workshop_variation
 
     if @workshop_variation.update(workshop_variation_params)
       flash[:notice] = "Workshop Variation updated successfully."

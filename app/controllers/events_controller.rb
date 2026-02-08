@@ -24,7 +24,7 @@ class EventsController < ApplicationController
   def edit
     authorize! @event
     set_form_variables
-    unless @event.created_by == current_user || current_user.super_user?
+    unless @event.created_by == current_user || current_user&.super_user?
       redirect_to events_path, alert: "You are not authorized to edit this event."
     end
   end

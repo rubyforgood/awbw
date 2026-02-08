@@ -7,7 +7,7 @@
         <span class="inline-block text-sm">
           <%= render "bookmarks/editable_bookmark_button", resource: @facilitator.object %>
         </span>
-        <% if current_user.super_user? || current_user == @facilitator.user %>
+        <% if current_user&.super_user? || current_user == @facilitator.user %>
           <%= link_to "Edit", edit_facilitator_path(@facilitator),
                       class: "admin-only #{ DomainTheme.bg_class_for(:admin_only) }
 #{ DomainTheme.bg_class_for(:user_only) } btn btn-primary-outline" %>
@@ -266,7 +266,7 @@
 
 
       <!-- SUBMITTED SECTION -->
-      <% if current_user.super_user || current_user == @facilitator.user %>
+      <% if current_user&.super_user? || current_user == @facilitator.user %>
         <div class="facilitator-only <%= DomainTheme.bg_class_for(:user_only) %> border border-green-200 rounded-lg shadow-sm">
           <!-- Header -->
           <div class="section-header flex items-center justify-between px-4 py-3 border-b border-green-200">

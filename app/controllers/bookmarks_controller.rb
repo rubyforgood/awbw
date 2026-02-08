@@ -2,6 +2,7 @@ class BookmarksController < ApplicationController
   before_action :set_breadcrumb
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page] || 25
     base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
     filtered = base_scope.search(params).sorted(params[:sort])
@@ -17,18 +18,18 @@ class BookmarksController < ApplicationController
   end
 
   def personal
+    authorize!
     per_page = params[:number_of_items_per_page] || 25
     user = User.where(id: params[:user_id]).first if params[:user_id].present?
     user ||= current_user
     @user_name = user.full_name if user
     @viewing_self = user == current_user
 
-    bookmarks = Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ])
-    bookmarks = bookmarks.search(params, user: user)
-    bookmarks = bookmarks.sorted(params[:sort])
+    base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
+    filtered = base_scope.search(params, user: user).sorted(params[:sort])
 
-    @bookmarks_count = bookmarks.length
-    @bookmarks = bookmarks.paginate(page: params[:page], per_page: per_page)
+    @bookmarks_count = filtered.length
+    @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
 
     set_index_variables
 
@@ -38,7 +39,32 @@ class BookmarksController < ApplicationController
     end
   end
 
+  def tally
+    authorize!
+    bookmark_ids = Bookmark.filter_by_params(params).pluck(:id)
+
+    # Aggregate counts cleanly
+    base_scope = authorized_scope(Bookmark.all)
+    grouped_counts = base_scope.where(id: bookmark_ids)
+                               .group(:bookmarkable_type, :bookmarkable_id)
+                               .pluck(:bookmarkable_type, :bookmarkable_id,
+                                      Arel.sql("COUNT(*) AS total_bookmarks"))
+
+    # Resolve polymorphic objects + sort desc
+    @bookmark_counts = grouped_counts.group_by(&:first).flat_map do |type, rows|
+      ids = rows.map { |_, id, _| id }
+      found = type.constantize.where(id: ids).decorate.index_by(&:id)
+
+      rows.filter_map do |(_, id, count)|
+        [ found[id], count ] if found[id]
+      end
+    end.sort_by { |_, count| -count }
+
+    set_index_variables
+  end
+
   def create
+    authorize! Bookmark
     @bookmark = current_user.bookmarks.find_or_create_by(bookmark_params)
     @bookmarkable = @bookmark.bookmarkable
     respond_to do |format|
@@ -54,12 +80,14 @@ class BookmarksController < ApplicationController
 
   def show
     @bookmark = Bookmark.find(params[:id]).decorate
+    authorize! @bookmark
     @bookmarkable = @bookmark.bookmarkable
     load_workshop_data if @bookmark.bookmarkable_class_name == "Workshop"
   end
 
   def destroy
     @bookmark = Bookmark.find(params[:id])
+    authorize! @bookmark
     if @bookmark
       @bookmark.destroy
       @bookmarkable = @bookmark.bookmarkable
@@ -77,39 +105,13 @@ class BookmarksController < ApplicationController
     end
   end
 
-  def tally
-    bookmark_ids = Bookmark.filter_by_params(params).pluck(:id)
-
-    # Aggregate counts cleanly
-    grouped_counts = Bookmark.where(id: bookmark_ids)
-      .group(:bookmarkable_type, :bookmarkable_id)
-      .pluck(:bookmarkable_type, :bookmarkable_id,
-        Arel.sql("COUNT(*) AS total_bookmarks"))
-
-    # Resolve polymorphic objects + sort desc
-    @bookmark_counts = grouped_counts.group_by(&:first).flat_map do |type, rows|
-      ids = rows.map { |_, id, _| id }
-      found = type.constantize.where(id: ids).decorate.index_by(&:id)
-
-      rows.filter_map do |(_, id, count)|
-        [ found[id], count ] if found[id]
-      end
-    end.sort_by { |_, count| -count }
-
-    @windows_types_array = WindowsType::TYPES
-
-    @bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS.map { |type| [ type, type ] }
-
-    @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
-  end
-
   private
 
   def set_index_variables
     @sortable_fields = WindowsType.where("name NOT LIKE ?", "%COMBINED%")
     @windows_types_array = WindowsType::TYPES
-    bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS
-    @bookmarkable_types = bookmarkable_types.map { |type| [ type, type ] }
+    @bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS.map { |type| [ type, type ] }
+    @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
   end
 
   def load_workshop_data

@@ -14,7 +14,7 @@
 
         <div class="flex gap-2">
           <%= link_to "Back to Monthly Reports", monthly_reports_path, class: "btn btn-secondary-outline" %>
-          <% if current_user.super_user? || @monthly_report.user == current_user %>
+          <% if current_user&.super_user? || @monthly_report.user == current_user %>
             <%= link_to "Edit Log", edit_monthly_report_path(@monthly_report), class: "btn btn-primary-outline" %>
           <% end %>
         </div>

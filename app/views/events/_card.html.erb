@@ -3,7 +3,7 @@
 <%= tag.div id: dom_id(event, :card),
             class: "relative bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md
   transition p-4 flex flex-col gap-4" do %>
-  <!-- 📌 Bookmark -->
+  <!-- Bookmark -->
   <div class="absolute top-3 right-3 z-20">
     <%= render "bookmarks/editable_bookmark_icon", resource: event.object %>
   </div>

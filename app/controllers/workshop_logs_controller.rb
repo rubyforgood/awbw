@@ -2,12 +2,11 @@ class WorkshopLogsController < ApplicationController
   before_action :set_workshop, only: [ :index ]
 
   def index
+    authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-
-    @workshop_logs_unpaginated = authorized_scope(WorkshopLog.includes(:workshop, :user, :windows_type)
-                                               .search(params))
-
+    base_scope = authorized_scope(Report, type: :active_record_relation).where(type: "WorkshopLog")
+    @workshop_logs_unpaginated = base_scope.includes(:workshop, :user, :windows_type).search(params)
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
     @workshop_logs_count = @workshop_logs&.total_entries
 
@@ -16,12 +15,14 @@ class WorkshopLogsController < ApplicationController
 
   def new
     @workshop_log = WorkshopLog.new
+    authorize! @workshop_log
     set_form_variables
   end
 
   def update
     set_default_values
     @workshop_log = WorkshopLog.find(params[:id])
+    authorize! @workshop_log
 
     success = false
 
@@ -55,6 +56,7 @@ class WorkshopLogsController < ApplicationController
   def create
     set_default_values
     @workshop_log = WorkshopLog.new(workshop_log_params)
+    authorize! @workshop_log
 
     if @workshop_log.save
       NotificationServices::CreateNotification.call(
@@ -74,12 +76,13 @@ class WorkshopLogsController < ApplicationController
   end
 
   def show
-    @workshop_log = Report.find(params[:id]).decorate
+    @workshop_log = WorkshopLog.find(params[:id]).decorate
+    authorize! @workshop_log
     @workshop     = @workshop_log.workshop&.decorate
     @answers      = @workshop_log.report_form_field_answers
 
     if @workshop_log
-      if current_user.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
+      if current_user&.super_user? || (@workshop_log.project && current_user.project_ids.include?(@workshop_log.project.id))
         render :show
       else
         redirect_to root_path, error: "You do not have permission to view this page."
@@ -91,6 +94,7 @@ class WorkshopLogsController < ApplicationController
 
   def edit
     @workshop_log = WorkshopLog.find(params[:id])
+    authorize! @workshop_log
     @workshop = @workshop_log.owner || Workshop.new(windows_type_id: @workshop_log.windows_type_id)
 
     set_form_variables
@@ -116,11 +120,11 @@ class WorkshopLogsController < ApplicationController
       Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
     ).sort.reverse
     @facilitators = User.active.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
-                        .includes(:workshop_logs)
+                        .includes(:workshop_logs, :facilitator)
                         .joins(:workshop_logs)
                         .distinct
-                        .order(:last_name, :first_name)
-    @projects = if current_user.super_user?
+                        .order("facilitators.first_name, facilitators.last_name")
+    @projects = if current_user&.super_user?
       # Project.where(id: @workshop_logs_unpaginated.pluck(:project_id)).order(:name)
       Project.published.order(:name)
     else
@@ -144,7 +148,7 @@ class WorkshopLogsController < ApplicationController
     end
 
     workshops = Workshop.includes(:windows_type)
-    unless current_user.super_user?
+    unless current_user&.super_user?
       workshops = workshops.published
     end
     @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id).includes(:windows_type))

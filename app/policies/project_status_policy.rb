@@ -1,10 +1,12 @@
 class ProjectStatusPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
-  #
-  # def index?
-  #   true
-  # end
-  #
+
+  def index?   = admin?
+  def show?    = admin?
+  def create?  = admin?
+  def update?  = admin?
+  def destroy? = admin?
+
   #
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping

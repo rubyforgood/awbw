@@ -3,6 +3,7 @@ class ProjectsController < ApplicationController
   before_action :set_project, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     unpaginated = Project.includes(:logo_attachment, :windows_type, :project_status).search_by_params(params).order(:name)
     @projects_count = unpaginated.count
@@ -11,6 +12,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
+    authorize! @project
     track_view(@project)
 
     workshop_logs = WorkshopLog.where(project_id: @project.id)
@@ -37,21 +39,25 @@ class ProjectsController < ApplicationController
 
     @facilitators = User.active
                         .or(User.where(id: user_ids))
+                        .includes(:facilitator)
                         .distinct
-                        .order(:last_name, :first_name)
+                        .order("facilitators.first_name, facilitators.last_name")
   end
 
   def new
     @project = Project.new
+    authorize! @project
     set_form_variables
   end
 
   def edit
+    authorize! @project
     set_form_variables
   end
 
   def create
     @project = Project.new(project_params)
+    authorize! @project
 
     if @project.save
       redirect_to projects_path, notice: "Organization was successfully created."
@@ -62,6 +68,7 @@ class ProjectsController < ApplicationController
   end
 
   def update
+    authorize! @project
     if @project.update(project_params)
       redirect_to projects_path, notice: "Organization was successfully updated.", status: :see_other
     else
@@ -71,6 +78,7 @@ class ProjectsController < ApplicationController
   end
 
   def destroy
+    authorize! @project
     @project.destroy!
     redirect_to projects_path, notice: "Organization was successfully destroyed."
   end
