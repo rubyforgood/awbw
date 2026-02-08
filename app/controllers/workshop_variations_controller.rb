@@ -15,37 +15,37 @@ class WorkshopVariationsController < ApplicationController
   end
 
   def create
-    if params[:workshop_variation_idea_id].present?
-      @workshop_variation_idea = WorkshopVariationIdea.find(params[:workshop_variation_idea_id])
-      @workshop_variation = WorkshopVariationFromIdeaService.new(@workshop_variation_idea, user: current_user).call
-    else
-      @workshop_variation = WorkshopVariation.new(workshop_variation_params)
-    end
-
+    @workshop_variation = current_user.workshop_variations.build(workshop_variation_params)
     authorize! @workshop_variation
 
-    if @workshop_variation.save
-      NotificationServices::CreateNotification.call(
-        noticeable: @workshop_variation,
-        kind: :idea_submitted_fyi,
-        recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-        notification_type: 0)
+    success = false
 
-      if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@workshop_variation)
+    WorkshopVariation.transaction do
+      if @workshop_variation.save
+        assign_associations(@workshop_variation)
+        if params[:promote_idea_assets] == "true"
+          @workshop_variation.attach_assets_from_idea!
+        elsif params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@workshop_variation)
+        end
+
+        if params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@workshop_variation)
+        end
+
+        success = true
       end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("creation", e)
+      raise ActiveRecord::Rollback
+    end
 
+    if success
       flash[:notice] = "Workshop Variation has been created."
-      if params[:from] == "workshop_show"
-        redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
-      elsif params[:from] == "index"
-        redirect_to workshop_variations_path
-      else
-        redirect_to root_path
-      end
+      redirect_to workshop_variations_path(sort: "created")
     else
       set_form_variables
+      flash.now[:alert] = "Unable to save the workshop variation."
       render :new
     end
   end

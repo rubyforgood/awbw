@@ -37,7 +37,12 @@ class WorkshopIdeasController < ApplicationController
         update_asset_owner(@workshop_idea)
       end
 
-      redirect_to workshop_ideas_path, notice: "Workshop idea was successfully created."
+      flash[:notice] = "Workshop idea was successfully created."
+      if allowed_to?(:index?, WorkshopIdea)
+        redirect_to workshop_ideas_path
+      else
+        redirect_to root_path
+      end
     else
       set_form_variables
       render :new, status: :unprocessable_content
