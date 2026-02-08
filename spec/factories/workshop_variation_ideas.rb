@@ -5,7 +5,6 @@ FactoryBot.define do
     youtube_url { "https://www.youtube.com/watch?v=example" }
     inactive { true }
     position { 1 }
-    
     association :workshop
     association :created_by, factory: :user
     association :updated_by, factory: :user
