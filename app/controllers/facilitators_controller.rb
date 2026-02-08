@@ -95,6 +95,10 @@ class FacilitatorsController < ApplicationController
     if @facilitator.user
       @facilitator.user.organization_users.first || @facilitator.user.organization_users.build
     end
+
+    @all_sectors = Sector.published.order(:name)
+    @current_sector_ids = @facilitator.sectorable_items.pluck(:sector_id)
+
     organizations = if current_user&.super_user?
       Organization.active
     else

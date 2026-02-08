@@ -209,7 +209,7 @@
                                     :sectorable_items,
                                     render_options: {
                                       locals: {
-                                        collection: Sector.published.where.not(name: f.object.sector_list)
+                                        collection: @all_sectors.where.not(id: @current_sector_ids)
                                       }
                                     },
                                     class: "btn btn-secondary-outline" %>
