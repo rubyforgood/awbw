@@ -8,8 +8,8 @@
          border border-gray-500 text-primary rounded-lg
          hover:bg-primary hover:text-white transition-colors duration-200
          font-medium shadow-sm leading-none",
-                    data: { 
-                      turbo_confirm: "Remove bookmark?",
+                    data: {
+                      turbo_method: :delete, turbo_confirm: "Remove bookmark?",
                       action: "click->optimistic-bookmark#toggle" 
                     } do %>
         <i data-optimistic-bookmark-target="icon" class="fas fa-bookmark text-base flex-shrink-0"></i>

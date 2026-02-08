@@ -5,8 +5,7 @@
     <%= render "active_storage/blobs/blob_thumbnail", asset: asset %>
 
     <%= button_to library_asset_path(asset),
-        method: :delete,
-        data: { turbo_confirm: "Delete this asset?" },
+        data: { turbo_method: :delete, turbo_confirm: "Delete this asset?" },
         form: { autocomplete: "off" },
         class: "
             absolute top-1 right-1

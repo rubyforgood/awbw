@@ -5,8 +5,7 @@
     <% if registered %>
       <%= button_to "De-register",
                     event_registrant_registration_path(event_id: event),
-                    method: :delete,
-                    data: { turbo_confirm: "Are you sure?" },
+                    data: { turbo_method: :delete, turbo_confirm: "Are you sure?" },
                     class: "btn btn-secondary-outline" %>
     <% elsif event.registerable? %>
       <%= button_to "Register",

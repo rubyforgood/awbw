@@ -8,9 +8,8 @@
 
     <% if user_bookmark.present? %>
       <%= button_to bookmark_path(user_bookmark),
-                    method: :delete,
                     data: { action: "optimistic-bookmark#toggle",
-                            turbo_confirm: "Remove bookmark?" },
+                            turbo_method: :delete, turbo_confirm: "Remove bookmark?" },
                     class: "inline-block" do %>
         <i data-optimistic-bookmark-target="icon"
            class="fas fa-bookmark w-5 h-5 text-blue-500 hover:text-gray-400"></i>
