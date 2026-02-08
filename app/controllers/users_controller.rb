@@ -190,7 +190,7 @@ class UsersController < ApplicationController
   def set_form_variables
     set_facilitator
     @user.organization_users.first || @user.organization_users.build
-    organizations = current_user.super_user? ? Organization.active : current_user.organizations
+    organizations = current_user&.super_user? ? Organization.active : current_user.organizations
     @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
 
