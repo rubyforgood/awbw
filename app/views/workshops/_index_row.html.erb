@@ -113,11 +113,14 @@
 
         <% unless hide_tags %>
           <% if workshop.categories.any? %>
+            <% ordered_tags = workshop.categories
+              .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+              .map(&:name)
+              .to_sentence %>
             <p class="tags mt-3 italic">
               Tags:
-              <span title="<%= workshop.categories.map(&:name).to_sentence %>">
-            <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
-          </span>
+              <span title="<%= ordered_tags %>">
+                <%= ordered_tags.truncate(150) %></span>
             </p>
           <% end %>
         <% end %>
