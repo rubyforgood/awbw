@@ -6,8 +6,6 @@ RSpec.describe "/users", type: :request do
 
   let(:valid_attributes) do
     {
-      first_name: "Jane",
-      last_name: "Doe",
       email: "jane.doe@example.com",
       password: "Password123!",
       password_confirmation: "Password123!"
@@ -25,7 +23,7 @@ RSpec.describe "/users", type: :request do
   end
 
   let(:new_attributes) do
-    { first_name: "Janet" }
+    { email: "rosa.doe@example.com" }
   end
 
   # ---------------------------------------
@@ -221,7 +219,7 @@ RSpec.describe "/users", type: :request do
         it "updates the user" do
           patch user_url(user), params: { user: new_attributes }
           user.reload
-          expect(user.first_name).to eq("Janet")
+          expect(user.email).to include("rosa")
         end
 
         it "redirects to index" do

@@ -30,8 +30,6 @@ class UsersController < ApplicationController
 
   def create
     @user = User.new(user_params)
-    @user.created_by = current_user
-    @user.updated_by = current_user
     authorize! @user
 
     # Optional: assign random password if none provided
@@ -53,7 +51,6 @@ class UsersController < ApplicationController
 
   def update
     authorize! @user
-    @user.updated_by = current_user
 
     # Only update password if entered
     if password_param.present?
