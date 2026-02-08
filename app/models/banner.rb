@@ -4,7 +4,7 @@ class Banner < ApplicationRecord
 
   validates :content, presence: true
 
-  scope :published, -> { where(show: true) }
+  scope :published, -> { where(show: true) } # overrides Publishable
 
   def name
     content.truncate(50)
