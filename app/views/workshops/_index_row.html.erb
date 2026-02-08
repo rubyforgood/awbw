@@ -80,7 +80,10 @@
         <!-- Age ranges -->
         <% if workshop.age_ranges.any? %>
           <div class="text-sm text-gray-600 leading-tight">
-            Age ranges: <%= workshop.age_ranges.pluck(:name).to_sentence %>
+            Age ranges: <%= workshop.age_ranges
+                                    .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+                                    .map(&:name)
+                                    .to_sentence %>
           </div>
         <% end %>
 
