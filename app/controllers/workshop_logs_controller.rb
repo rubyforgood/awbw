@@ -116,14 +116,15 @@ class WorkshopLogsController < ApplicationController
                         .joins(:workshop_logs)
                         .distinct
                         .order("facilitators.first_name, facilitators.last_name")
-    @organizations = if current_user&.super_user?
-                       # Organization.where(id: @workshop_logs_unpaginated.pluck(:organization_id)).order(:name)
-                       Organization.active.order(:name)
-                     elsif current_user
-                       current_user.organizations.order(:name)
-                     else
-                       Organization.none
-                     end
+    @organizations =
+      if current_user&.super_user?
+        # Organization.where(id: @workshop_logs_unpaginated.pluck(:organization_id)).order(:name)
+        Organization.active.order(:name)
+      elsif current_user
+        current_user.organizations.order(:name)
+      else
+        Organization.none
+      end
     @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
                          .order(:title)
   end
