@@ -38,15 +38,23 @@
       </div>
 
       <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :project_id,
+        <%= f.input :organization_id,
                     label: "Organization",
-                    collection: @projects, label_method: :name,
+                    collection: @organizations, label_method: :name,
                     value_method: :id,
-                    selected: f.object.project_id || @story_idea&.project_id %>
+                    selected: f.object.organization_id || @story_idea&.organization_id %>
       </div>
     </div>
 
-    <%= rhino_editor(f, :body) %>
+    <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
+      <%= rhino_editor(f, :body, label: "Body / Description") %>
+
+      <% if f.object.errors[:rhino_body].present? %>
+        <div class="text-danger mt-1 text-sm">
+          Field <%= f.object.errors[:rhino_body].first %>
+        </div>
+      <% end %>
+    </div>>
 
     <div class="flex gap-4 mb-6">
       <div class="flex-1">
@@ -79,7 +87,7 @@
         <%= f.input :created_by_id,
                     collection: @users, label_method: :full_name,
                     value_method: :id,
-                    selected: f.object.project_id || @story_idea&.project_id,
+                    selected: f.object.organization_id || @story_idea&.organization_id,
                     label: (f.object.created_by ? (
                       link_to "Story author",
                               generate_facilitator_user_path(f.object.created_by),

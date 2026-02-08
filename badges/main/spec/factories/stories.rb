@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :story do
     association :windows_type
-    association :project
+    association :organization
     association :workshop
     association :created_by, factory: :user
     association :updated_by, factory: :user

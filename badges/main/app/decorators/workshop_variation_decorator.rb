@@ -12,9 +12,9 @@ class WorkshopVariationDecorator < ApplicationDecorator
     "workshop_default.jpg"
   end
 
-  def display_code
+  def display_body
     if legacy
-      html = Nokogiri::HTML(code)
+      html = Nokogiri::HTML(body)
       html.xpath("//img").each do |img|
         src = img.attributes["src"]
         img.set_attribute("src", src)
@@ -26,7 +26,7 @@ class WorkshopVariationDecorator < ApplicationDecorator
       end
       html.to_s.html_safe
     else
-      code
+      body
     end
   end
 

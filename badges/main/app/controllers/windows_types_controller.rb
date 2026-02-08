@@ -4,9 +4,9 @@ class WindowsTypesController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = WindowsType.all
-    @windows_types_count = unpaginated.count
-    @windows_types = unpaginated.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(WindowsType.all)
+    @windows_types_count = base_scope.count
+    @windows_types = base_scope.paginate(page: params[:page], per_page: per_page)
   end
 
   def show

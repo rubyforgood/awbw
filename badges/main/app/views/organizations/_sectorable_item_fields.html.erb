@@ -1,0 +1,21 @@
+<% collection ||= Sector.published %>
+
+<div class="nested-fields flex items-center space-x-2 <%= DomainTheme.bg_class_for(:sectors) %> border border-purple-200
+                rounded-full px-3 mb-4 shadow-sm text-sm text-purple-700 hover:bg-purple-100 transition">
+  <!-- Select dropdown (optional – could be hidden if sector is already chosen) -->
+  <%= f.input :sector_id,
+              as: :select,
+              label: false,
+              collection: collection.order(:name).pluck(:name, :id),
+              selected: f.object&.sector_id,
+              include_blank: true,
+              wrapper: false,
+              input_html: {
+                class: "bg-transparent border-none focus:ring-0 text-sm text-blue-800 cursor-pointer"
+              } %>
+  <!-- Remove button -->
+  <%= link_to_remove_association "✖",
+                                 f,
+                                 class: "text-blue-500 hover:text-blue-700
+                                 font-bold text-xs transition" if f.object&.persisted? %>
+</div>

@@ -62,7 +62,7 @@
 
       <!-- Main Text -->
       <div class="prose mx-auto leading-relaxed text-gray-800 text-left">
-        <%= sanitize(@workshop_variation.code,
+        <%= sanitize(@workshop_variation.body,
                      tags: %w(p br strong em a ul ol li), attributes: %w(href target)) %>
       </div>
 

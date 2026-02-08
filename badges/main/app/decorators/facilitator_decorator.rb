@@ -4,7 +4,7 @@ class FacilitatorDecorator < ApplicationDecorator
   end
 
   def detail(length: nil)
-    text = user.project_users.active.map { |pu| "#{pu.title.presence || pu.position}, #{pu.project.name}" }.join(", ") if user
+    text = user.organization_users.active.map { |pu| "#{pu.title.presence || pu.position}, #{pu.organization.name}" }.join(", ") if user
     length ? text&.truncate(length) : text
   end
 

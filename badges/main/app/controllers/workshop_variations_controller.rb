@@ -2,33 +2,22 @@ class WorkshopVariationsController < ApplicationController
   include AssetUpdatable, AhoyTracking
   def index
     authorize!
-    unless current_user&.super_user?
-      redirect_to root_path
-      return
-    end
 
-    @workshop_variations =
-      WorkshopVariation
-        .includes(:workshop)
-        .joins(:workshop)
-        .where(workshops: { published: true })
-        .order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
-        .paginate(page: params[:page], per_page: 25)
-        .decorate
+    base_scope = WorkshopVariation.includes(:workshop).joins(:workshop).where(workshops: { published: true })
+    filtered = base_scope.order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
+    @workshop_variations = filtered.paginate(page: params[:page], per_page: 25).decorate
   end
 
   def new
     @workshop_variation = WorkshopVariation.new
     authorize! @workshop_variation
-    workshops = current_user&.super_user? ? Workshop.all : Workshop.published
-    @workshops = workshops.order(:title)
-    @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
-      Workshop.where(id: params[:workshop_id]).last
+    set_form_variables
   end
 
   def create
     @workshop_variation = WorkshopVariation.new(workshop_variation_params)
     authorize! @workshop_variation
+
     if @workshop_variation.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_variation,
@@ -50,6 +39,7 @@ class WorkshopVariationsController < ApplicationController
         redirect_to root_path
       end
     else
+      set_form_variables
       render :new
     end
   end
@@ -71,6 +61,7 @@ class WorkshopVariationsController < ApplicationController
     @workshop_variation = WorkshopVariation.find(params[:id])
     authorize! @workshop_variation
     @workshops = Workshop.published.order(:title)
+    set_form_variables
   end
 
   def update
@@ -81,6 +72,7 @@ class WorkshopVariationsController < ApplicationController
       flash[:notice] = "Workshop Variation updated successfully."
       redirect_to workshop_variations_path
     else
+      set_form_variables
       flash[:alert] = "Unable to update Workshop Variation."
       render :edit
     end
@@ -89,11 +81,15 @@ class WorkshopVariationsController < ApplicationController
   private
 
   def set_form_variables
+    workshops = current_user&.super_user? ? Workshop.all : Workshop.published
+    @workshops = workshops.order(:title)
+    @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
+      Workshop.where(id: params[:workshop_id]).last
   end
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [ :name, :code, :published, :position,
+      [ :name, :body, :published, :position,
        :youtube_url, :created_by_id, :workshop_id
       ]
     )

@@ -58,10 +58,10 @@
 
             <!-- Organizations -->
             <td class="px-4 py-2 text-sm text-gray-800">
-              <% if facilitator.user&.projects&.any? %>
-                <% user_project_names = facilitator.user.projects.map(&:name).join(", ") %>
-                <span title="<%= user_project_names %>">
-                  <%= truncate(user_project_names, length: 120) %>
+              <% if facilitator.user&.organizations&.any? %>
+                <% user_organization_names = facilitator.user.organizations.map(&:name).join(", ") %>
+                <span title="<%= user_organization_names %>">
+                  <%= truncate(user_organization_names, length: 120) %>
                 </span>
               <% else %>
                 <span>--</span>

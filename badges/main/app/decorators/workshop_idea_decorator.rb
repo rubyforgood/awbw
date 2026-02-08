@@ -33,7 +33,7 @@ class WorkshopIdeaDecorator < ApplicationDecorator
       creation_spanish: "Creación",
       closing_spanish: "Clausura",
       misc_instructions_spanish: "Instrucciones de misceláneos",
-      project_spanish: "Projecto",
+      organization_spanish: "Organización",
       description_spanish: "Descripción",
       notes_spanish: "Notas",
       tips_spanish: "Consejos"

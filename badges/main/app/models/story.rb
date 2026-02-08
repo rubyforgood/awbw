@@ -4,7 +4,7 @@ class Story < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
-  belongs_to :project, optional: true
+  belongs_to :organization, optional: true
   belongs_to :spotlighted_facilitator, class_name: "Facilitator",
              foreign_key: "spotlighted_facilitator_id", optional: true
   belongs_to :story_idea, optional: true
@@ -65,15 +65,15 @@ class Story < ApplicationRecord
   end
 
   def organization_name
-    project&.name
+    organization&.name
   end
 
   def organization_locality
-    project&.organization_locality
+    organization&.organization_locality
   end
 
   def organization_description
-    project&.organization_description
+    organization&.organization_description
   end
 
   def attach_assets_from_idea!

@@ -5,18 +5,14 @@ class FacilitatorsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
+    base_scope = authorized_scope(Facilitator.includes(:user, :avatar_attachment, :sectorable_items,
+                                                       user: [ :avatar_attachment, :organizations ])
+                                             .references(:user))
 
-    base_scope = authorized_scope(Facilitator
-      .includes(:user,
-                :avatar_attachment,
-                :sectorable_items,
-                user: [ :avatar_attachment, :projects ]).references(:user))
-
-    facilitators = base_scope
-                     .search_by_params(params.to_unsafe_h)
-                     .order(:first_name, :last_name)
-    @count_display = facilitators.size
-    @facilitators = facilitators.paginate(page: params[:page], per_page: per_page)
+    filtered = base_scope.search_by_params(params.to_unsafe_h)
+                         .order(:first_name, :last_name)
+    @count_display = filtered.size
+    @facilitators = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
   def show
@@ -94,14 +90,14 @@ class FacilitatorsController < ApplicationController
     # @facilitator.build_user if @facilitator.user.blank? # Build a fresh one if missing
 
     if @facilitator.user
-      @facilitator.user.project_users.first || @facilitator.user.project_users.build
+      @facilitator.user.organization_users.first || @facilitator.user.organization_users.build
     end
-    projects = if current_user&.super_user?
-      Project.published
+    organizations = if current_user&.super_user?
+      Organization.active
     else
-      current_user.projects
+      current_user.organizations
     end
-    @projects_array = projects.order(:name).pluck(:name, :id)
+    @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
 
 
@@ -191,9 +187,9 @@ class FacilitatorsController < ApplicationController
         :state2,
         :zip2,
         :notes,
-        project_users_attributes: [
+        organization_users_attributes: [
           :id,
-          :project_id,
+          :organization_id,
           :position,
           :title,
           :inactive,

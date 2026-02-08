@@ -6,10 +6,10 @@ class UsersController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    users = User.search_by_params(params).order(:first_name, :last_name)
-
-    @users_count = users.size
-    @users = users.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(User.includes(:facilitator))
+    filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
+    @users_count = filtered.size
+    @users = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
   def show
@@ -189,9 +189,9 @@ class UsersController < ApplicationController
 
   def set_form_variables
     set_facilitator
-    @user.project_users.first || @user.project_users.build
-    projects = current_user&.super_user? ? Project.published : current_user.projects
-    @projects_array = projects.order(:name).pluck(:name, :id)
+    @user.organization_users.first || @user.organization_users.build
+    organizations = current_user&.super_user? ? Organization.active : current_user.organizations
+    @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
 
   def password_param
@@ -204,13 +204,15 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :avatar, :first_name, :last_name, :email,
-      :address, :address2, :city, :city2, :state, :state2, :zip, :zip2,
-      :phone, :phone2, :phone3, :birthday, :best_time_to_call,
-      :comment, :facilitator_id, :notes, :primary_address, :time_zone,
-      :confirmed, :inactive, :published, :super_user,
-      :agency_id, :legacy, :legacy_id, :subscribecode,
-      project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
+      :email, :confirmed, :comment, :facilitator_id, :inactive, :primary_address, :time_zone, :super_user,
+
+      ##### legacy to remove later
+      :agency_id, :legacy, :legacy_id, :subscribecode, :avatar, :first_name, :last_name, # legacy to remove later
+      :address, :address2, :city, :city2, :state, :state2, :zip, :zip2, # legacy to remove later
+      :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
+      #####
+
+      organization_users_attributes: [ :id, :organization_id, :position, :title, :inactive, :_destroy ],
     )
   end
 end

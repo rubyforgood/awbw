@@ -11,6 +11,8 @@ RSpec.describe "Stories", type: :system do
         story_world = create(:story, :published, title: "The best story in the world", windows_type: adult_window)
         story_mars = create(:story, :published, title: "The best story on mars", windows_type: adult_window)
         story_hello = create(:story, :published, title: "oh hello!", windows_type: adult_window)
+        story_public = create(:story, :published, :publicly_visible, title: "My public story", windows_type: adult_window)
+        story_admin = create(:story, title: "The Admins tell their Story", windows_type: adult_window)
 
         visit stories_path
 
@@ -20,6 +22,8 @@ RSpec.describe "Stories", type: :system do
         expect(page).to have_content(story_world.title)
         expect(page).to have_content(story_mars.title)
         expect(page).to have_content(story_hello.title)
+        expect(page).to have_content(story_public.title)
+        expect(page).to_not have_content(story_admin.title)
       end
 
       it "sees message when no stories exist" do
@@ -43,6 +47,8 @@ RSpec.describe "Stories", type: :system do
         story_world = create(:story, :published, title: "The best story in the world", windows_type: adult_window, created_by: facilitator.user, rhino_body: "healing through art")
         story_mars = create(:story, :published, title: "The best story on mars", windows_type: adult_window, created_by: facilitator.user, rhino_body: "healing through art")
         story_hello = create(:story, :published, title: "oh hello!", windows_type: adult_window, rhino_body: "healing through art")
+        story_public = create(:story, :published, :publicly_visible, title: "My public story", windows_type: adult_window)
+        story_admin = create(:story, title: "The Admins tell their Story", windows_type: adult_window)
 
         visit stories_path
 
@@ -54,6 +60,8 @@ RSpec.describe "Stories", type: :system do
         expect(page).to have_content(story_world.title)
         expect(page).to have_content(story_mars.title)
         expect(page).not_to have_content(story_hello.title)
+        expect(page).not_to have_content(story_public.title)
+        expect(page).not_to have_content(story_admin.title)
       end
     end
   end

@@ -1,5 +1,5 @@
 <%= simple_form_for @user, html: { multipart: true, class: "space-y-8" } do |f| %>
-  <%= render "shared/errors", resource: user if user.errors.any? %>
+  <%= render "shared/errors", resource: @user if user.errors.any? %>
   <%= f.hidden_field :facilitator_id, value: @facilitator&.id || f.object.facilitator_id || params[:facilitator_id] %>
   <!-- Basic Info + Avatar -->
   <!-- Container -->
@@ -107,6 +107,12 @@
         <% if current_user&.super_user? %>
           <div class="comments-section">
             <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
+
+            <% if params[:admin] %>
+              <div class="bg-red-100">
+                <%= f.input :notes, as: :text, input_html: { rows: 3, class: "w-full" } %>
+              </div>
+            <% end %>
           </div>
         <% end %>
       </div>
