@@ -34,11 +34,11 @@ class ApplicationController < ActionController::Base
   end
 
   def authenticate_user!
-    Rails.logger.warn "AUTH CHECK → #{request.fullpath}"
-    Rails.logger.warn "  user_signed_in?: #{user_signed_in?}"
-    Rails.logger.warn "  current_user: #{current_user&.id}"
-    Rails.logger.warn "  devise_controller?: #{devise_controller?}"
-    Rails.logger.warn "  referrer: #{request.referrer}"
+    # Rails.logger.warn "AUTH CHECK → #{request.fullpath}"
+    # Rails.logger.warn "  user_signed_in?: #{user_signed_in?}"
+    # Rails.logger.warn "  current_user: #{current_user&.id}"
+    # Rails.logger.warn "  devise_controller?: #{devise_controller?}"
+    # Rails.logger.warn "  referrer: #{request.referrer}"
     return super if devise_controller?
     return if user_signed_in?
     ahoy.authenticate(current_user)
