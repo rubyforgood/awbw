@@ -1,5 +1,5 @@
 class Organization < ApplicationRecord
-  include Publishable, TagFilterable, Trendable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable # Publishable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -39,7 +39,8 @@ class Organization < ApplicationRecord
   end
 
   # Scopes
-  # See Publishable, TagFilterable, Trendable, WindowsTypeFilterable
+  # See TagFilterable, Trendable, WindowsTypeFilterable
+  scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
   scope :address, ->(address) do
     return all if address.blank?
     exact = address.to_s
@@ -60,12 +61,8 @@ class Organization < ApplicationRecord
     SQL
       wildcard: wildcard, exact: exact)
   end
-  scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
   scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
-  scope :published, ->(published = nil) { published ? active(published) : active }
-  scope :category_names, ->(names) { tag_names(:categories, names) }
-  scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all

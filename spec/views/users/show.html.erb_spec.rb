@@ -39,7 +39,7 @@ RSpec.describe "users/show", type: :view do
     it "renders account status section" do
       expect(rendered).to include("Account status")
       expect(rendered).to include("Active")
-      expect(rendered).to include("Super user")
+      expect(rendered).to include("Admin")
     end
 
     it "renders authentication data when available" do

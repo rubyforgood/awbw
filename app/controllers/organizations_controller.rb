@@ -107,8 +107,8 @@ class OrganizationsController < ApplicationController
   # Strong parameters
   def organization_params
     params.require(:organization).permit(
-      :name, :description, :start_date, :end_date, :mission_vision_values, :internal_id,
-      :inactive, :logo, :notes, :agency_type,  :agency_type_other, :website_url,
+      :name, :description, :start_date, :end_date, :mission_vision_values,
+      :agency_type,  :agency_type_other, :inactive, :internal_id, :logo, :notes,  :website_url,
       :organization_status_id, :location_id, :windows_type_id,
       sectorable_items_attributes: [
         :id,
