@@ -50,13 +50,16 @@ class FacilitatorsController < ApplicationController
 
   def update
     authorize! @facilitator
-    respond_to do |format|
-      if @facilitator.update(facilitator_params)
-        format.html { redirect_to @facilitator, notice: "Facilitator was successfully updated." }
-      else
-        set_form_variables
-        format.html { render :edit, status: :unprocessable_content }
-      end
+
+    if params[:facilitator][:_destroy] == "1"
+      @facilitator.avatar.purge
+    end
+
+    if @facilitator.update(facilitator_params)
+      redirect_to @facilitator, notice: "Facilitator was successfully updated."
+    else
+      set_form_variables
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -92,6 +95,10 @@ class FacilitatorsController < ApplicationController
     if @facilitator.user
       @facilitator.user.organization_users.first || @facilitator.user.organization_users.build
     end
+
+    @all_sectors = Sector.published.order(:name)
+    @current_sector_ids = @facilitator.sectorable_items.pluck(:sector_id)
+
     organizations = if current_user&.super_user?
       Organization.active
     else
@@ -128,7 +135,9 @@ class FacilitatorsController < ApplicationController
       :profile_show_stories,
       :profile_show_story_ideas,
       :profile_show_workshop_variations,
+      :profile_show_workshop_variation_ideas,
       :profile_show_workshops,
+      :profile_show_workshop_ideas,
       :profile_show_workshop_logs,
       :published,
       :member_since,
