@@ -333,7 +333,7 @@
 
                 <!-- Checkbox List -->
                 <div class="flex flex-wrap gap-3">
-                  <% cats.sort_by { |c| c.name.to_s }.each do |category| %>
+                  <% cats.each do |category| %>
                     <% id = "workshop_category_ids_#{category.id}" %>
                     <label for="<%= id %>" class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
                       <%= check_box_tag "workshop[category_ids][]",
