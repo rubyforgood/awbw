@@ -71,17 +71,17 @@
           <!-- Quick Ranges -->
           <div class="flex items-center gap-3 mt-6 text-sm">
             <span class="text-gray-500">Quick:</span>
-
+            <% safe_params = params.slice(:name, :user_id, :from, :to).to_unsafe_h %>
             <%= link_to "24h",
-                        url_for(params.permit!.to_h.merge(from: 1.day.ago.to_date)),
+                        url_for(safe_params.merge(from: 1.day.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
 
             <%= link_to "7d",
-                        url_for(params.permit!.to_h.merge(from: 7.days.ago.to_date)),
+                        url_for(safe_params.merge(from: 7.days.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
 
             <%= link_to "30d",
-                        url_for(params.permit!.to_h.merge(from: 30.days.ago.to_date)),
+                        url_for(safe_params.merge(from: 30.days.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
           </div>
 
