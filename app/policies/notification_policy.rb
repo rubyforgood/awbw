@@ -19,11 +19,11 @@ class NotificationPolicy < ApplicationPolicy
     else
       relation.where(recipient_email: user.email)
     end
-	end
+  end
 
-	private
+  private
 
-	def owner?
-		record.recipient_email == user.email
-	end
+  def owner?
+    record.recipient_email == user.email
+  end
 end

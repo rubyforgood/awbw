@@ -12,11 +12,12 @@ class CategoriesController < ApplicationController
                          .order(Arel.sql("category_types.name, categories.position, categories.name"))
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
 
-    @count_display = if filtered.count == base_scope.count
-                       base_scope.count
-                     else
-                       "#{filtered.count}/#{base_scope.count}"
-                     end
+    @count_display =
+      if filtered.count == base_scope.count
+        base_scope.count
+      else
+        "#{filtered.count}/#{base_scope.count}"
+      end
     set_index_variables
   end
 
