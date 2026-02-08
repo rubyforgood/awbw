@@ -5,7 +5,7 @@ RSpec.describe "/story_ideas", type: :request do
 
   let(:windows_type) { create(:windows_type) }
   let(:workshop)     { create(:workshop) }
-  let(:project)      { create(:project) }
+  let(:organization)      { create(:organization) }
 
   let(:regular_user) { create(:user) }
   let(:admin)        { create(:user, :admin) }
@@ -18,7 +18,7 @@ RSpec.describe "/story_ideas", type: :request do
       permission_given: true,
       windows_type_id: windows_type.id,
       workshop_id: workshop.id,
-      project_id: project.id,
+      organization_id: organization.id,
       created_by_id: regular_user.id,
       updated_by_id: regular_user.id
     }

@@ -13,7 +13,7 @@ module AdminCardsHelper
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime),
       model_card(:resources, icon: "📚"),
       model_card(:workshops, icon: "🎨"),
-      model_card(:projects, icon: "🏫"),
+      model_card(:organizations, icon: "🏫"),
       model_card(:users, icon: "👥",  title: "User accounts")
     ]
   end
@@ -50,7 +50,7 @@ module AdminCardsHelper
                  intensity: 100,
                  title: "Service populations",
                  params: { published: true }),
-      custom_card("Project statuses", project_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
+      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       custom_card("Windows types", windows_types_path, icon: "🪟")
     ]
   end

@@ -165,27 +165,27 @@
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
         <% if current_user&.super_user? %>
           <div class="admin-only bg-blue-100 p-3">
-            <%= u.fields_for :project_users do |project_user_form| %>
-              <%= render "project_user_fields",
-                         f: project_user_form,
-                         projects: u.object.projects,
+            <%= u.fields_for :organization_users do |organization_user_form| %>
+              <%= render "organization_user_fields",
+                         f: organization_user_form,
+                         organizations: u.object.organizations,
                          user: u.object %>
             <% end %>
 
             <div class="admin-only bg-blue-100 p-3 mt-6">
               <%= link_to_add_association "➕ Add Role",
                                           u,
-                                          :project_users,
-                                          html_options: { locals: { projects: u.object.projects } },
+                                          :organization_users,
+                                          html_options: { locals: { organizations: u.object.organizations } },
                                           class: "btn btn-secondary-outline" %>
             </div>
           </div>
         <% else %>
-          <% f.object.user && f.object.user.project_users.each do |pu| %>
+          <% f.object.user && f.object.user.organization_users.each do |ou| %>
             <div class="ps-6 mb-2">
-              <li><%= pu.title || pu.position %> - <%= pu.persisted? ? (link_to pu.project&.name,
-                                                               project_path(pu.project),
-                                                               class: "underline") : pu.project&.name %></li>
+              <li><%= ou.title || ou.position %> - <%= ou.persisted? ? (link_to ou.organization&.name,
+                                                               organization_path(ou.organization),
+                                                               class: "underline") : ou.organization&.name %></li>
             </div>
           <% end %>
         <% end %>

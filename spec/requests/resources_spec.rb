@@ -3,12 +3,12 @@ require "rails_helper"
 RSpec.describe "/resources", type: :request do
   let(:user)         { create(:user, super_user: true) }
   let(:windows_type) { create(:windows_type) }
-  let(:project)      { create(:project) }
+  let(:organization) { create(:organization) }
 
   let(:valid_attributes) do
     {
       title: "Helpful Resource",
-      text: "This is a very helpful resource.",
+      body: "This is a very helpful resource.",
       url: "https://www.example.com",
       published: true,
       kind: Resource::PUBLISHED_KINDS.first,
@@ -20,7 +20,7 @@ RSpec.describe "/resources", type: :request do
   let(:invalid_attributes) do
     {
       title: nil,
-      text: "",
+      body: "",
       kind: nil,
       user_id: user.id      # REQUIRED
     }

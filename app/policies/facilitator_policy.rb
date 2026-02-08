@@ -18,6 +18,6 @@ class FacilitatorPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    relation.published
+    relation.searchable # includes `profile_is_searchable`` and `published``
   end
 end

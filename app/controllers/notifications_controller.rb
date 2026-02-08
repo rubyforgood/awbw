@@ -4,17 +4,10 @@ class NotificationsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    @notifications =
-      if current_user&.super_user?
-        Notification.all
-      else
-        Notification.where(recipient_email: current_user.email)
-      end
-
-    @notifications = @notifications
-                       .includes(:noticeable)
-                       .order(created_at: :desc)
-                       .paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(Notification.includes(:noticeable))
+    filtered = base_scope.search_by_params(params.to_unsafe_h)
+    @notifications = filtered.order(created_at: :desc)
+                             .paginate(page: params[:page], per_page: per_page)
   end
 
   def show

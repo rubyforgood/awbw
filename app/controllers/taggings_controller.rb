@@ -14,7 +14,7 @@ class TaggingsController < ApplicationController
       community_news: params[:community_news_page],
       events: params[:events_page],
       facilitators: params[:facilitators_page],
-      projects: params[:projects_page],
+      organizations: params[:organizations_page],
       quotes: params[:quotes_page]
     }
 

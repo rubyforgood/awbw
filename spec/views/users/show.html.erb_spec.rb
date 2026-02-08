@@ -1,37 +1,92 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "users/show", type: :view do
   let(:user) do
-    create(:user,
-           email: "Email@example.com",
-           comment: "MyText",
-           notes: "MyText")
+    create(
+      :user,
+      email: "email@example.com",
+      super_user: false,
+      sign_in_count: 3,
+      current_sign_in_at: 1.day.ago,
+      last_sign_in_at: 2.days.ago
+    )
   end
-
-  let(:admin) { create(:user, :admin) }
-  let(:windows_type) { create(:windows_type, name: "Adult Windows") }
-  let!(:workshop) { create(:workshop, title: "Mindful Art", user: user, windows_type: windows_type) }
-
-  let!(:project) { create(:project, name: "Healing Arts") }
-  let!(:project_user) { create(:project_user, project: project, title: "Title", user: user, position: :leader) }
 
   before do
     assign(:user, user)
-    allow(view).to receive(:current_user).and_return(admin)
   end
 
-  it "renders facilitator attributes" do
-    render
-    expect(rendered).to include("email@example.com")
+  # --------------------------------------------------
+  # ADMIN VIEW
+  # --------------------------------------------------
+  context "when current user is a super user" do
+    let(:admin) { create(:user, :admin) }
+
+    before do
+      allow(view).to receive(:current_user).and_return(admin)
+      render
+    end
+
+    it "shows navigation buttons" do
+      expect(rendered).to have_link("Users", href: users_path)
+      expect(rendered).to have_link("Edit", href: edit_user_path(user))
+    end
+
+    it "renders identity info" do
+      expect(rendered).to include("email@example.com")
+    end
+
+    it "renders account status section" do
+      expect(rendered).to include("Account status")
+      expect(rendered).to include("Active")
+      expect(rendered).to include("Admin")
+    end
+
+    it "renders authentication data when available" do
+      expect(rendered).to include("Sign-in count")
+      expect(rendered).to include("3")
+
+      expect(rendered).to include("Current sign-in")
+      expect(rendered).to include(I18n.l(user.current_sign_in_at, format: :long))
+    end
+
+    it "renders audit timestamps" do
+      expect(rendered).to include("Created at")
+      expect(rendered).to include(I18n.l(user.updated_at, format: :long))
+    end
   end
 
-  it "renders devise data" do
-    render
-    expect(rendered).to include("Current sign-in")
+  # --------------------------------------------------
+  # NON-ADMIN VIEW
+  # --------------------------------------------------
+  context "when current user is not a super user" do
+    let(:regular_user) { create(:user) }
+
+    before do
+      allow(view).to receive(:current_user).and_return(regular_user)
+      render
+    end
+
+    it "does not show admin buttons" do
+      expect(rendered).not_to have_link("Users")
+      expect(rendered).not_to have_link("Edit")
+    end
   end
 
-  it "renders audit data" do
-    render
-    expect(rendered).to include(I18n.l(user.updated_at, format: :long))
+  # --------------------------------------------------
+  # FACILITATOR ASSOCIATION
+  # --------------------------------------------------
+  context "when user has no facilitator" do
+    let(:admin) { create(:user, :admin) }
+
+    before do
+      allow(view).to receive(:current_user).and_return(admin)
+      render
+    end
+
+    it "shows facilitator creation prompt" do
+      expect(rendered).to include("Not associated with a facilitator")
+      expect(rendered).to have_link("Create facilitator")
+    end
   end
 end

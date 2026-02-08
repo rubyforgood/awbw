@@ -37,7 +37,7 @@ class WorkshopsController < ApplicationController
     types = reports.map do |r|
       r.windows_type
     end
-    @workshop_logs = current_user.project_monthly_workshop_logs(
+    @workshop_logs = current_user.organization_monthly_workshop_logs(
       reports.first.date, *types,
     )
 
@@ -46,7 +46,7 @@ class WorkshopsController < ApplicationController
     @total_first_time = logs.reduce(0) { |sum, l| sum += l.num_first_time }
 
     combined_windows_type = WindowsType.where(short_name: "COMBINED").first
-    @combined_workshop_logs = current_user.project_workshop_logs(
+    @combined_workshop_logs = current_user.organization_workshop_logs(
       @report.date, combined_windows_type, current_user.agency_id
     )
     authorize! @combined_workshop_logs

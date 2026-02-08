@@ -14,8 +14,8 @@ namespace :story_data do
         updated_by_id:         resource.user_id || default_user_id,
         featured:              resource.featured,
         permission_given:      true,
-        project_id:            nil, # resources don't store this, add mapping if needed
-        published:             !resource.published,
+        organization_id:       nil, # resources don't store this, add mapping if needed
+        published:             !resource.inactive,
         spotlighted_facilitator_id: nil,
         story_idea_id:         nil,
         website_url:           resource.url,

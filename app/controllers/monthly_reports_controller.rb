@@ -41,7 +41,7 @@ class MonthlyReportsController < ApplicationController
         @form_builder = FormBuilder.find(@report.owner_id)
         build_month_and_year
         load_agencies
-        @agency_id = report_params["project_id"]
+        @agency_id = report_params["organization_id"]
 
         flash[:alert] = "There was a problem submitting your form: " +
                         "#{@report.errors.full_messages.join(" ")}"
@@ -64,8 +64,9 @@ class MonthlyReportsController < ApplicationController
     build_month_and_year
     find_form_builder
     @report = Report.find(params[:id])
+
     authorize! @report
-    @agencies  = current_user.projects.
+    @agencies  = current_user.organizations.
                  where(windows_type_id: @report.windows_type_id)
     @month = @report.date.month
     @year  =  @report.date.year
@@ -90,7 +91,7 @@ class MonthlyReportsController < ApplicationController
         flash[:notice] = "Thanks for reporting on a update report. "
         redirect_to root_path
       else
-        @agencies  = current_user.projects.
+        @agencies  = current_user.organizations.
                        where(windows_type_id: @report.windows_type_id)
 
         flash[:alert] = "ERROR!!!!!!!!!!!!!!"
@@ -108,7 +109,7 @@ class MonthlyReportsController < ApplicationController
     @answers      = @monthly_report.report_form_field_answers
 
     if @monthly_report
-      if current_user&.super_user? || (@monthly_report.project && current_user.project_ids.include?(@monthly_report.project.id))
+      if current_user&.super_user? || (@monthly_report.organization && current_user.organization_ids.include?(@monthly_report.organization.id))
         render :show
       else
         redirect_to root_path, error: "You do not have permission to view this page."
@@ -122,7 +123,7 @@ class MonthlyReportsController < ApplicationController
   private
 
   def load_agencies
-    @agencies  = current_user.projects.
+    @agencies  = current_user.organizations.
                    where(windows_type_id: @form_builder.windows_type_id).uniq
   end
 
@@ -149,7 +150,7 @@ class MonthlyReportsController < ApplicationController
         .decorate
     end
 
-    agency     = params[:agency_id] ? Project.find(params[:agency_id]) : current_user.projects.where(windows_type_id: @form_builder.windows_type).first
+    agency     = params[:agency_id] ? Organization.find(params[:agency_id]) : current_user.organizations.where(windows_type_id: @form_builder.windows_type).first
     @agency_id = agency.id unless agency.nil?
   end
 
@@ -202,7 +203,7 @@ class MonthlyReportsController < ApplicationController
   end
 
   def find_workshop_logs
-    @workshop_logs = current_user.project_monthly_workshop_logs(
+    @workshop_logs = current_user.organization_monthly_workshop_logs(
       @report.date, @report.windows_type
     )
 
@@ -213,7 +214,7 @@ class MonthlyReportsController < ApplicationController
 
   def find_combined_workshop_logs(agency_id)
     combined_windows_type = WindowsType.where(short_name: "COMBINED").first
-    @combined_workshop_logs = current_user.project_workshop_logs(
+    @combined_workshop_logs = current_user.organization_workshop_logs(
     @report.date, combined_windows_type, agency_id)
   end
 
@@ -231,7 +232,7 @@ class MonthlyReportsController < ApplicationController
     end
 
     params.require(:report).permit(
-      :type, :project_id, :date, :owner_id, :workshop_id,
+      :type, :organization_id, :date, :owner_id, :workshop_id,
       :owner_type, :windows_type_id, :other_description,
       media_files_attributes: [ :file ],
       report_form_field_answers_attributes:

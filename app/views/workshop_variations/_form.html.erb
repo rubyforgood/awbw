@@ -1,8 +1,8 @@
 <div class="rounded-xl bg-white p-6">
-  <%= simple_form_for @workshop_variation do |f| %>
+  <%= simple_form_for @workshop_variation, data: { turbo: false } do |f| %>
     <%= hidden_field_tag(:from, params[:from]) %>
 
-    <%= render "shared/errors", resource: workshop_variation if workshop_variation.errors.any? %>
+    <%= render "shared/errors", resource: @workshop_variation if workshop_variation.errors.any? %>
 
     <%= tag.div class: "unpersisted_resource_asset_params" %>
 

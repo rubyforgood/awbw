@@ -63,9 +63,8 @@ Rails.application.routes.draw do
   resources :faqs
   resources :notifications, only: [ :index, :show ]
   resources :organizations
-  resources :projects
-  resources :project_statuses
-  resources :project_users
+  resources :organization_statuses
+  resources :organization_users
   resources :quotes
 
   resources :monthly_reports

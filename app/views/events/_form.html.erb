@@ -38,7 +38,15 @@
     <% end %>
   </div>
 
-  <%= rhino_editor(f, :description) %>
+  <div class="form-group <%= 'has-error' if f.object.errors[:description].present? %>">
+    <%= rhino_editor(f, :description, label: "Body / Description") %>
+
+    <% if f.object.errors[:rhino_description].present? %>
+      <div class="text-danger mt-1 text-sm">
+        Field <%= f.object.errors[:rhino_description].first %>
+      </div>
+    <% end %>
+  </div>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-12">
     <div>
@@ -129,13 +137,8 @@
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete",
-        @event,
-        method: :delete,
-        class: "btn btn-danger-outline",
-        data: {
-          confirm: "Are you sure you want to delete?",
-        } %>
+        <%= link_to "Delete", @event, method: :delete, class: "btn btn-danger-outline",
+                    data: { confirm: "Are you sure you want to delete?", } %>
       <% end %>
       <%= link_to "Cancel", events_path, class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>

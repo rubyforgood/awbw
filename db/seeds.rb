@@ -45,14 +45,14 @@ FormBuilder.where(name: "Children's Workshop Log", windows_type: childrens_type)
 FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_create!(id: 7)
 FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).first_or_create!(id: 5)
 
-puts "Creating ProjectStatuses…"
-ProjectStatus::PROJECT_STATUSES.each_with_index do |status, idx|
-  ProjectStatus.where(name: status).first_or_create!(id: idx + 1)
+puts "Creating OrganizationStatuses…"
+OrganizationStatus::PROJECT_STATUSES.each_with_index do |status, idx|
+  OrganizationStatus.where(name: status).first_or_create!(id: idx + 1)
 end
 
-puts "Creating ProjectObligations…"
-ProjectObligation::OBLIGATION_TYPES.each do |obligation_type|
-  ProjectObligation.where(name: obligation_type).first_or_create!
+puts "Creating OrganizationObligations…"
+OrganizationObligation::OBLIGATION_TYPES.each do |obligation_type|
+  OrganizationObligation.where(name: obligation_type).first_or_create!
 end
 
 puts "Creating Sectors…"

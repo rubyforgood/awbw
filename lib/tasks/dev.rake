@@ -5,7 +5,7 @@ namespace :db do
       [
         :import_workshops,
         :generate_dev_seeds,
-        :import_projects,
+        :import_organizations,
         :import_quotes,
         :import_workshop_quotes,
         :import_workshop_variations
@@ -26,12 +26,12 @@ namespace :db do
       load Rails.root.join("db/seeds/dummy_dev_seeds.rb")
     end
 
-    desc "Import projects"
-    task import_projects: :environment do |task, args|
-      puts "Importing projects…"
+    desc "Import organizations"
+    task import_organizations: :environment do |task, args|
+      puts "Importing organizations…"
       CSV.foreach(full_filepath("projects.csv"), headers: true) do |row|
         next unless row["str_name"]
-        create_project(row)
+        create_organization(row)
       end
     end
 
@@ -61,27 +61,27 @@ end
 
 private
 
-def create_project(project)
-  start_date = project["dte_start"] unless project["dte_start"] == "0000-00-00"
-  end_date = project["dte_end"] unless project["dte_end"] == "0000-00-00"
-  window_id = project["windowstypeid"].to_i
+def create_organization(organization)
+  start_date = organization["dte_start"] unless organization["dte_start"] == "0000-00-00"
+  end_date = organization["dte_end"] unless organization["dte_end"] == "0000-00-00"
+  window_id = organization["windowstypeid"].to_i
 
   if (1..3).include?(window_id)
-    windows_type_id = windows_type_id(project["windowstypeid"])
+    windows_type_id = windows_type_id(organization["windowstypeid"])
   end
-  project = Project.find_or_create_by(
-    legacy_id: project["id"],
-    name: project["str_name"].slice(0, 255),
+  organization = Organization.find_or_create_by(
+    legacy_id: organization["id"],
+    name: organization["str_name"].slice(0, 255),
     windows_type_id: windows_type_id,
     start_date: start_date,
     end_date: end_date,
-    # locality: project['str_locality'],
-    description: project["txt_description"],
-    notes: project["txt_notes"],
-    filemaker_code: project["str_filemakercode"],
-    inactive: project["bln_inactive"],
+    # locality: organization['str_locality'],
+    description: organization["txt_description"],
+    notes: organization["txt_notes"],
+    filemaker_code: organization["str_filemakercode"],
+    inactive: organization["bln_inactive"],
     legacy: true,
-    project_status_id: project["statusid"]
+    organization_status_id: organization["statusid"]
   )
 end
 
@@ -161,7 +161,7 @@ def create_workshop_variation(xml, _name = nil)
   variation = workshop.workshop_variations.find_or_create_by(
     legacy: true,
     name: search_for_value(xml, "str_name"),
-    code: search_for_value(xml, "txt_code"),
+    body: search_for_value(xml, "txt_code"),
     inactive: search_for_value(xml, "bln_inactive"),
     ordering: search_for_value(xml, "ordering"),
   )
