@@ -50,7 +50,6 @@ class Story < ApplicationRecord
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :story_name, ->(story_name) {
     story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
 

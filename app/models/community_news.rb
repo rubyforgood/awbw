@@ -44,7 +44,6 @@ class CommunityNews < ApplicationRecord
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
 
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :community_news_name, ->(community_news_name) {
     community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
 

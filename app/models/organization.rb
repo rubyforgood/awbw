@@ -61,7 +61,6 @@ class Organization < ApplicationRecord
     SQL
       wildcard: wildcard, exact: exact)
   end
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
   scope :published, ->(published = nil) { published ? active(published) : active }

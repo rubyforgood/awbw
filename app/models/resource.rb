@@ -74,7 +74,6 @@ class Resource < ApplicationRecord
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
   scope :by_featured_first, -> { order(featured: :desc, created_at: :desc) }
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds) }
