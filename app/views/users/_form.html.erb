@@ -1,5 +1,5 @@
 <%= simple_form_for @user, html: { multipart: true, class: "space-y-8" } do |f| %>
-  <%= render "shared/errors", resource: user if user.errors.any? %>
+  <%= render "shared/errors", resource: @user if user.errors.any? %>
   <%= f.hidden_field :facilitator_id, value: @facilitator&.id || f.object.facilitator_id || params[:facilitator_id] %>
   <!-- Basic Info + Avatar -->
   <!-- Container -->

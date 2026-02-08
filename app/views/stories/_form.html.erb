@@ -46,7 +46,15 @@
       </div>
     </div>
 
-    <%= rhino_editor(f, :body) %>
+    <div class="form-group <%= 'has-error' if f.object.errors[:body].present? %>">
+      <%= rhino_editor(f, :body, label: "Body / Description") %>
+
+      <% if f.object.errors[:rhino_body].present? %>
+        <div class="text-danger mt-1 text-sm">
+          Field <%= f.object.errors[:rhino_body].first %>
+        </div>
+      <% end %>
+    </div>>
 
     <div class="flex gap-4 mb-6">
       <div class="flex-1">
