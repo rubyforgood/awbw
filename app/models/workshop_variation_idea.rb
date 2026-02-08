@@ -14,9 +14,10 @@ class WorkshopVariationIdea < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
 
   # Validations
-  validates :name, presence: true
+  validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
+  validates :organization_id, presence: true
   validates :workshop_id, presence: true
 
   # Nested attributes
