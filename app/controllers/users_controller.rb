@@ -6,10 +6,10 @@ class UsersController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    users = User.search_by_params(params).order(:first_name, :last_name)
-
-    @users_count = users.size
-    @users = users.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(User.includes(:facilitator))
+    filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
+    @users_count = filtered.size
+    @users = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
   def show

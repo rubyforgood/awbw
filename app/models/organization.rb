@@ -68,7 +68,7 @@ class Organization < ApplicationRecord
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 
   def self.search_by_params(params)
-    organizations = self.all
+    organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
     organizations = organizations.sector_names(params[:sector_names]) if params[:sector_names].present?
     organizations = organizations.category_names(params[:category_names]) if params[:category_names].present?

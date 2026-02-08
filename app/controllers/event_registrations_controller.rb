@@ -4,9 +4,10 @@ class EventRegistrationsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = EventRegistration.search_by_params(params)
-    @event_registrations_count = unpaginated.size
-    @event_registrations = unpaginated.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(EventRegistration.all)
+    filtered = base_scope.search_by_params(params)
+    @event_registrations_count = filtered.size
+    @event_registrations = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
   def show

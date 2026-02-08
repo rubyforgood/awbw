@@ -3,15 +3,17 @@ class OrganizationsController < ApplicationController
   before_action :set_organization, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = Organization.includes(:logo_attachment, :windows_type, :project_status)
-                              .search_by_params(params).order(:name)
-    @organizations_count = unpaginated.count
-    @organizations = unpaginated.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(Organization.includes(:logo_attachment, :windows_type, :project_status))
+    filtered = base_scope.search_by_params(params).order(:name)
+    @organizations_count = filtered.count
+    @organizations = filtered.paginate(page: params[:page], per_page: per_page)
     set_index_variables
   end
 
   def show
+    authorize! @project
     track_view(@organization)
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
@@ -36,21 +38,25 @@ class OrganizationsController < ApplicationController
     user_ids = @workshop_logs_unpaginated.select(:user_id)
     @facilitators = User.active
                         .or(User.where(id: user_ids))
+                        .includes(:facilitator)
                         .distinct
-                        .order(:last_name, :first_name)
+                        .order("facilitators.first_name, facilitators.last_name")
   end
 
   def new
     @organization = Organization.new
+    authorize! @organization
     set_form_variables
   end
 
   def edit
+    authorize! @project
     set_form_variables
   end
 
   def create
     @organization = Organization.new(organization_params)
+    authorize! @project
 
     if @organization.save
       redirect_to organizations_path, notice: "Organization was successfully created."
@@ -61,6 +67,7 @@ class OrganizationsController < ApplicationController
   end
 
   def update
+    authorize! @organization
     if @organization.update(organization_params)
       redirect_to organizations_path, notice: "Organization was successfully updated.", status: :see_other
     else
@@ -70,6 +77,7 @@ class OrganizationsController < ApplicationController
   end
 
   def destroy
+    authorize! @organization
     @organization.destroy!
     redirect_to organizations_path, notice: "Organization was successfully destroyed."
   end
@@ -77,7 +85,8 @@ class OrganizationsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organization_statuses = OrganizationStatus.all
-    @facilitators_array = Facilitator.joins(:user)
+    @facilitators_array = Facilitator.includes(:user)
+                                     .joins(:user)
                                      .order(:first_name, :last_name)
                                      .map { |f| [ f.name, f.user.id ] }
     @organization.organization_users = @organization.organization_users

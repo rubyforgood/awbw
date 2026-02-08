@@ -16,4 +16,9 @@ class UserPolicy < ApplicationPolicy
   def update_password?
     authenticated?
   end
+
+  relation_scope do |relation|
+    next relation if admin?
+    relation.where(id: user.id)
+  end
 end
