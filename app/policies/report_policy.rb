@@ -16,8 +16,8 @@ class ReportPolicy < ApplicationPolicy
 
     scope = relation.where(user_id: user.id)
 
-    if user.project_ids.present?
-      scope = scope.or(relation.where(project_id: user.project_ids))
+    if user.organization_ids.present?
+      scope = scope.or(relation.where(project_id: user.organization_ids))
     end
 
     scope

@@ -1,4 +1,4 @@
-class ProjectPolicy < ApplicationPolicy
+class OrganizationPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   def index?

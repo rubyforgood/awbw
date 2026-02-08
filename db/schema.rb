@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_08_004745) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_08_144851) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -562,14 +562,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_004745) do
     t.string "name"
     t.text "notes", size: :long
     t.integer "organization_status_id"
-    t.boolean "published", default: false, null: false
     t.date "start_date"
     t.datetime "updated_at", precision: nil, null: false
     t.string "website_url"
     t.integer "windows_type_id"
     t.index ["location_id"], name: "index_organizations_on_location_id"
     t.index ["organization_status_id"], name: "index_organizations_on_organization_status_id"
-    t.index ["published"], name: "index_organizations_on_published"
     t.index ["windows_type_id"], name: "index_organizations_on_windows_type_id"
   end
 
