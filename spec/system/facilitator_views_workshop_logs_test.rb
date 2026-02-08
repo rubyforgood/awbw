@@ -16,8 +16,8 @@ RSpec.describe "Facilitators can view a submitted workshop log" do
         @workshop1 = create(:workshop, title: 'The best workshop in the world', windows_type: windows_type, featured: true)
         @workshop2 = create(:workshop, title: 'Art therapy for beginners', windows_type: windows_type, featured: false)
 
-        @organization = create(:organization, name: "Test Project", windows_type_id: windows_type.id)
-        OrganizationUser.create!(user: @user, organization: @organization, position: :default, title: "Project user")
+        @organization = create(:organization, name: "Test Organization", windows_type_id: windows_type.id)
+        OrganizationUser.create!(user: @user, organization: @organization, position: :default, title: "Organization user")
 
         @workshop_log1 = create(:workshop_log,
           workshop_id: @workshop1.id,

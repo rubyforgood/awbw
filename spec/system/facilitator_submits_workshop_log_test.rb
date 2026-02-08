@@ -16,7 +16,7 @@ RSpec.describe "Facilitators can submit a workshop log" do
         create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, featured: true)
         create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, featured: true)
 
-        @organization = create(:organization, name: "Test Project", windows_type_id: @windows_type.id)
+        @organization = create(:organization, name: "Test Organization", windows_type_id: @windows_type.id)
         OrganizationUser.create!(user: @user, organization: @organization, position: :default)
 
         sign_in @user
@@ -77,7 +77,7 @@ RSpec.describe "Facilitators can submit a workshop log" do
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
         select "", from: "workshop_log[organization_id]"
         click_button "Submit"
-        expect(page).to have_content("Project must exist")
+        expect(page).to have_content("Organization must exist")
 
         # Missing workshop
         visit new_workshop_log_path
