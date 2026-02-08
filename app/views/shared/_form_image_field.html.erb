@@ -44,7 +44,7 @@
     <% if show_existing %>
 
       <%# ---------- IMAGE ---------- %>
-      <% if is_image && action_name != "create" %>
+      <% if is_image && file.present? && file.try(:persisted?) %>
         <%= image_tag file,
                       alt: "#{label}",
                       data: { file_preview_target: "preview" },
@@ -73,8 +73,12 @@
 
       <div data-file-preview-target="filename"
            class="text-center text-sm text-gray-500 break-all max-w-[8rem]">
-        <%= blob && action_name != "create" ? link_to(blob.filename.to_s, url_for(file),
-                                                   class: "underline") : "No file selected" %>
+        <%= if blob.present? && blob.respond_to?(:persisted?) && blob.persisted?
+              link_to(blob.filename.to_s, url_for(file), class: "underline")
+            else
+              "No file selected"
+            end
+        %>
       </div>
 
     <% end %>

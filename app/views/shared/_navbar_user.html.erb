@@ -8,7 +8,7 @@
     data-dropdown-payload-param='[{"avatar-dropdown":"hidden"}]'>
     <span class="sr-only">Open user menu</span>
     <span class="absolute -inset-1.5"></span>
-    <% image = current_user&.avatar&.attached? ? url_for(current_user.avatar) : "missing.png" %>
+    <% image = current_user&.facilitator&.avatar&.attached? ? url_for(current_user.facilitator.avatar) : "missing.png" %>
     <%= image_tag image,
                   id: "avatar-image",
                   class: "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10 img-circle avatar" %>
