@@ -208,10 +208,8 @@
                                     f,
                                     :sectorable_items,
                                     render_options: {
-                                      locals: {
-                                        collection: @all_sectors.where.not(id: @current_sector_ids)
-                                      }
-                                    },
+                                      locals: { collection: (@all_sectors || Sector.none)
+                                        .where.not(id: (@current_sector_ids || [])) } },
                                     class: "btn btn-secondary-outline" %>
       </div>
   </div>
