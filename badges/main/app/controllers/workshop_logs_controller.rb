@@ -102,20 +102,22 @@ class WorkshopLogsController < ApplicationController
   end
 
   def set_index_variables # needs to not be private
-    @month_year_options = WorkshopLog.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
+    scoped_logs = authorized_scope(WorkshopLog.all)
+    @month_year_options = scoped_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
                                      .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
            MAX(COALESCE(date, created_at)) AS max_dt")
                                      .order("max_dt DESC")
                                      .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
-
-    @year_options = WorkshopLog.pluck(
+    @year_options = scoped_logs.pluck(
       Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
     ).sort.reverse
-    @facilitators = User.active.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
-                        .includes(:workshop_logs, :facilitator)
-                        .joins(:workshop_logs)
-                        .distinct
-                        .order("facilitators.first_name, facilitators.last_name")
+
+    scoped_users = current_user&.super_user? ? User.active : User.where(id: current_user.id)
+    @facilitators = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
+                                .includes(:workshop_logs, :facilitator)
+                                .joins(:workshop_logs)
+                                .distinct
+                                .order("facilitators.first_name, facilitators.last_name")
     @organizations =
       if current_user&.super_user?
         # Organization.where(id: @workshop_logs_unpaginated.pluck(:organization_id)).order(:name)
