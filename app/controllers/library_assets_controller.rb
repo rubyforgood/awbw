@@ -63,7 +63,7 @@
      authorize! @asset, with: LibraryAssetPolicy
      if @asset
        render template: "assets/edit"
-     else # does this need an authorize check?
+     else
        flash.now[:alert] = "Error"
        redirect_back_or_to root_path
      end
@@ -106,7 +106,7 @@
      if @asset
        @asset.destroy
        render turbo_stream: turbo_stream.remove(@asset)
-     else # does this need a policy check?
+     else
        flash.now[:alert] = "Error"
        redirect_back_or_to root_path
      end

@@ -2,10 +2,11 @@ class LibraryAssetPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   # override or add new rules here that are not defined in ApplicationPolicy
-
-  def show?    = admin? # || owner?
-  def create?  = debugger authenticated? # anyone logged in can create an asset
-  def edit?    = admin? # || owner?
-  def update?  = authenticated? # anyone logged in can create an asset
-  def destroy? = admin? # || owner?
+  #
+  # TODO check the policy of the record that owns this asset
+  def show?    = admin?
+  def create?  = authenticated?
+  def edit?    = admin?
+  def update?  = authenticated?
+  def destroy? = admin?
 end
