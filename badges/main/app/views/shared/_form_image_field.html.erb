@@ -30,6 +30,7 @@
 <% blob        = file&.attached? ? file.blob : nil %>
 <% is_image    = blob&.image? %>
 <% is_pdf      = blob&.content_type == "application/pdf" %>
+<% image_dom_id = "#{dom_id(asset)}_#{field_name}_image" %>
 
 <div data-controller="file-preview" class="text-center">
 
@@ -44,8 +45,9 @@
     <% if show_existing %>
 
       <%# ---------- IMAGE ---------- %>
-      <% if is_image && action_name != "create" %>
+      <% if is_image && file.present? && file.try(:persisted?) %>
         <%= image_tag file,
+                      id: image_dom_id,
                       alt: "#{label}",
                       data: { file_preview_target: "preview" },
                       class: "w-32 h-32 object-cover border border-gray-300 shadow-sm #{rounded ? 'rounded-full' : ''}" %>
@@ -53,6 +55,7 @@
         <%# ---------- PDF PREVIEW ---------- %>
       <% elsif is_pdf && file.previewable? %>
         <%= image_tag file.preview(resize_to_limit: [300, 300]),
+                      id: image_dom_id,
                       alt: "#{label} PDF preview",
                       data: { file_preview_target: "preview" },
                       class: "w-32 h-32 object-cover border border-gray-300 shadow-sm" %>
@@ -60,7 +63,8 @@
         <%# ---------- PLACEHOLDER ---------- %>
       <% else %>
         <div class="relative w-32 h-32">
-          <img data-file-preview-target="preview"
+          <img id="<%= image_dom_id %>"
+               data-file-preview-target="preview"
                class="hidden w-32 h-32 object-cover border border-gray-300 shadow-sm" />
 
           <div data-file-preview-target="placeholder"
@@ -73,8 +77,12 @@
 
       <div data-file-preview-target="filename"
            class="text-center text-sm text-gray-500 break-all max-w-[8rem]">
-        <%= blob && action_name != "create" ? link_to(blob.filename.to_s, url_for(file),
-                                                   class: "underline") : "No file selected" %>
+        <%= if blob.present? && blob.respond_to?(:persisted?) && blob.persisted?
+              link_to(blob.filename.to_s, url_for(file), class: "underline")
+            else
+              "No file selected"
+            end
+        %>
       </div>
 
     <% end %>

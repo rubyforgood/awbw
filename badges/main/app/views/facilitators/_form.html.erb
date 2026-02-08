@@ -1,4 +1,5 @@
-<%= simple_form_for @facilitator, html: { multipart: true, class: "space-y-8" } do |f| %>
+<%= simple_form_for @facilitator, html: { multipart: true, class: "space-y-8",
+                                          data: { turbo: false } } do |f| %>
   <%= render 'shared/errors', resource: @facilitator if @facilitator.errors.any? %>
 
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
@@ -207,10 +208,8 @@
                                     f,
                                     :sectorable_items,
                                     render_options: {
-                                      locals: {
-                                        collection: Sector.published.where.not(name: f.object.sector_list)
-                                      }
-                                    },
+                                      locals: { collection: (@all_sectors || Sector.none)
+                                        .where.not(id: (@current_sector_ids || [])) } },
                                     class: "btn btn-secondary-outline" %>
       </div>
   </div>

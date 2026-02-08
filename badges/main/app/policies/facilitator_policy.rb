@@ -6,7 +6,11 @@ class FacilitatorPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || (authenticated? && record.published? && record.profile_is_searchable?)
+    admin? || owner? || (authenticated? && record.published? && record.profile_is_searchable?)
+  end
+
+  def edit?
+    admin? || owner?
   end
 
   def update?
@@ -19,5 +23,12 @@ class FacilitatorPolicy < ApplicationPolicy
   relation_scope do |relation|
     next relation if admin?
     relation.searchable # includes `profile_is_searchable`` and `published``
+  end
+
+  private
+
+  def owner?
+    return false unless authenticated?
+    record.user == user
   end
 end
