@@ -38,12 +38,12 @@
     <% end %>
   </div>
 
-  <div class="form-group <%= 'has-error' if f.object.errors[:body].present? %>">
-    <%= rhino_editor(f, :body, label: "Body / Description") %>
+  <div class="form-group <%= 'has-error' if f.object.errors[:description].present? %>">
+    <%= rhino_editor(f, :description, label: "Body / Description") %>
 
-    <% if f.object.errors[:rhino_body].present? %>
+    <% if f.object.errors[:rhino_description].present? %>
       <div class="text-danger mt-1 text-sm">
-        Field <%= f.object.errors[:rhino_body].first %>
+        Field <%= f.object.errors[:rhino_description].first %>
       </div>
     <% end %>
   </div>

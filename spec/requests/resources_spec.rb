@@ -8,7 +8,7 @@ RSpec.describe "/resources", type: :request do
   let(:valid_attributes) do
     {
       title: "Helpful Resource",
-      text: "This is a very helpful resource.",
+      body: "This is a very helpful resource.",
       url: "https://www.example.com",
       published: true,
       kind: Resource::PUBLISHED_KINDS.first,
@@ -20,7 +20,7 @@ RSpec.describe "/resources", type: :request do
   let(:invalid_attributes) do
     {
       title: nil,
-      text: "",
+      body: "",
       kind: nil,
       user_id: user.id      # REQUIRED
     }

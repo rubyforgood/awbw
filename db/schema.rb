@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_08_155352) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_08_161827) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -673,6 +673,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_155352) do
   create_table "resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "agency"
     t.string "author"
+    t.text "body", size: :long
     t.datetime "created_at", precision: nil, null: false
     t.boolean "featured", default: false
     t.boolean "female", default: false
@@ -686,7 +687,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_155352) do
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
-    t.text "text", size: :long
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.string "url"
