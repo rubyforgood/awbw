@@ -52,6 +52,7 @@ class CommunityNews < ApplicationRecord
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
+    conditions[:published] = params[:published] if params[:published].present?
     community_news = self.search(conditions)
 
     community_news = community_news.sector_names(params[:sector_names]) if params[:sector_names].present?

@@ -54,7 +54,7 @@ class Facilitator < ApplicationRecord
     attributes contact_methods_phone: "contact_methods.value"
   end
 
-  scope :published, -> { where(published: true).searchable }
+  scope :published, -> { where(published: true).searchable } # overrides Publishable
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
   scope :organization_name, ->(organization_name) {
     return all if organization_name.blank?
