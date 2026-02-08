@@ -249,19 +249,16 @@
           id="tags_button"
           class="
             flex items-center justify-between cursor-pointer w-full
-            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
-          "
+            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
           data-action="dropdown#toggle"
-          data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'
-        >
+          data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
           Tags
           <svg
             id="tags_arrow"
             class="w-6 h-6 shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+            xmlns="http://www.w3.org/2000/svg">
             <path
               fill-rule="evenodd"
               d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -286,9 +283,7 @@
                   for="<%= id %>"
                   class="
                     flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                    rounded-lg shadow-sm hover:bg-gray-100 transition
-                  "
-                >
+                    rounded-lg shadow-sm hover:bg-gray-100 transition">
                   <%= hidden_field_tag "workshop[sector_ids][]", "" %>
                   <!-- # To ensure unchecked boxes are submitted -->
                   <%= check_box_tag "workshop[sector_ids][]",
@@ -311,16 +306,14 @@
 
                 <!-- Checkbox List -->
                 <div class="flex flex-wrap gap-3">
-                  <% cats.sort_by { |c| c.name.to_s }.each do |category| %>
+                  <% cats.each do |category| %>
                     <% id = "workshop_category_ids_#{category.id}" %>
 
                     <label
                       for="<%= id %>"
                       class="
                         flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition
-                      "
-                    >
+                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
                       <%= hidden_field_tag "workshop[category_ids][]", "" %>
                       <!-- # To ensure unchecked boxes are submitted -->
                       <%= check_box_tag "workshop[category_ids][]",

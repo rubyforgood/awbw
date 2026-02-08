@@ -217,7 +217,7 @@ class WorkshopsController < ApplicationController
       Category
         .includes(:category_type)
         .published
-        .order(:name)
+        .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
         .sort_by { |type, _| type&.name.to_s.downcase }
