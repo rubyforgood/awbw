@@ -91,7 +91,7 @@ class Resource < ApplicationRecord
   scope :title, ->(title) { where("title like ?", "%#{ title }%") }
 
   def self.search_by_params(params)
-    resources = self
+    resources = is_a?(ActiveRecord::Relation) ? self : all
     resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
     resources = resources.sector_names(params[:sector_names]) if params[:sector_names].present?
     resources = resources.category_names(params[:category_names]) if params[:category_names].present?

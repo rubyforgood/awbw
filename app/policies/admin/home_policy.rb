@@ -1,7 +1,6 @@
 module Admin
   class HomePolicy < ApplicationPolicy
-  # See https://actionpolicy.evilmartians.io/#/writing_policies
-
+    # See https://actionpolicy.evilmartians.io/#/writing_policies
     def index?
       admin?
     end

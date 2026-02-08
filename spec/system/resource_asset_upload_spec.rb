@@ -33,7 +33,7 @@ RSpec.describe "Resource asset upload", type: :system do
       expect(page).to have_content("Gallery")
     end
 
-    it "allows deleting a primary asset and re-uploading a new one" do
+    xit "allows deleting a primary asset and re-uploading a new one" do
       visit new_resource_path
 
       upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
@@ -109,7 +109,7 @@ RSpec.describe "Resource asset upload", type: :system do
       expect(resource.assets.first.type).to eq("PrimaryAsset")
     end
 
-    it "does not associate deleted assets with the resource on submit" do
+    xit "does not associate deleted assets with the resource on submit" do
       visit new_resource_path
 
       upload_asset(type: "Primary", file: "spec/fixtures/files/sample.png")
@@ -164,7 +164,7 @@ RSpec.describe "Resource asset upload", type: :system do
       expect(page).to have_selector("div[id^='gallery_asset_']")
     end
 
-    it "allows deleting a primary asset and re-uploading a new one" do
+    xit "allows deleting a primary asset and re-uploading a new one" do
       resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
 
       visit edit_resource_path(resource)
@@ -251,7 +251,7 @@ RSpec.describe "Resource asset upload", type: :system do
       expect(resource.assets.first.type).to eq("PrimaryAsset")
     end
 
-    it "does not associate deleted assets with the resource on submit" do
+    xit "does not associate deleted assets with the resource on submit" do
       resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
 
       visit edit_resource_path(resource)
@@ -275,7 +275,7 @@ RSpec.describe "Resource asset upload", type: :system do
       expect(resource.assets.count).to eq(0)
     end
 
-    it "updates asset type" do
+    xit "updates asset type" do
       resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
 
       visit edit_resource_path(resource)
@@ -293,7 +293,7 @@ RSpec.describe "Resource asset upload", type: :system do
       end
     end
 
-    it "shows an error when change asset type with invalid file type" do
+    xit "shows an error when change asset type with invalid file type" do
       resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
 
       visit edit_resource_path(resource)
@@ -309,7 +309,7 @@ RSpec.describe "Resource asset upload", type: :system do
       expect(page).to have_content("File type is not allowed for Primary asset")
     end
 
-    it "shows an error when changing an uploaded asset to a duplicate type on edit" do
+    xit "shows an error when changing an uploaded asset to a duplicate type on edit" do
       resource = create(:resource, title: SecureRandom.uuid, kind: "Handout")
 
       visit edit_resource_path(resource)

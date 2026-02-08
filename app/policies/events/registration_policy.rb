@@ -1,4 +1,6 @@
 class Events::RegistrationPolicy < ApplicationPolicy
+  def manage?  = admin? || owner?
+
   def create?
     authenticated?
   end

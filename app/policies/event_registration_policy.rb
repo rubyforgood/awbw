@@ -4,18 +4,13 @@ class EventRegistrationPolicy < ApplicationPolicy
   # override or add new rules here that are not defined in ApplicationPolicy
 
   def index?   = admin?
-  def show?    = admin? || owner?
-  def create?  = admin? || owner?
-  def update?  = admin? || owner?
-  def destroy? = admin? || owner?
+  def destroy?   = admin? || owner?
 
 
   relation_scope do |relation|
     return relation if admin?
     return relation.none unless user
-
-    # regular users only see their own
-    relation.where(registrant_id: user.id)
+    relation.where(registrant_id: user.id) # regular users only see their own
   end
 
   private

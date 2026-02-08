@@ -66,7 +66,7 @@ class Organization < ApplicationRecord
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
 
   def self.search_by_params(params)
-    projects = self
+    projects = is_a?(ActiveRecord::Relation) ? self : all
     projects = projects.search(params[:query]) if params[:query].present?
     projects = projects.sector_names(params[:sector_names]) if params[:sector_names].present?
     projects = projects.category_names(params[:category_names]) if params[:category_names].present?

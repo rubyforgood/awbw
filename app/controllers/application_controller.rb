@@ -10,13 +10,7 @@ class ApplicationController < ActionController::Base
   around_action :set_time_zone_from_user, if: :current_user
 
   rescue_from ActionPolicy::Unauthorized do |exception|
-    Rails.logger.error "🚨 POLICY DENIED"
-    Rails.logger.error "  path: #{request.fullpath}"
-    Rails.logger.error "  user: #{current_user&.id}"
-    Rails.logger.error "  message: #{exception.message}"
-    Rails.logger.error "  policy: #{exception.result.policy}"
-    Rails.logger.error "  rule: #{exception.result.rule}"
-    flash[:alert] = exception.message.presence || "You are not authorized to perform this action." # TODO - make this more user-friendly
+    flash[:alert] = "You are not authorized to perform this action.<br>#{ exception.message if Rails.env.test? }"
     redirect_back_or_to root_path
   end
 

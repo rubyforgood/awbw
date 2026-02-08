@@ -28,7 +28,7 @@ class Quote < ApplicationRecord
   scope :sector_names,   ->(names) { tag_names(:sectors, names) }
 
   def self.search_by_params(params)
-    quotes = self
+    quotes = is_a?(ActiveRecord::Relation) ? self : all
     quotes = quotes.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
     quotes = quotes.sector_names(params[:sector_names]) if params[:sector_names].present?
     quotes = quotes.category_names(params[:category_names]) if params[:category_names].present?

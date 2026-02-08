@@ -21,7 +21,7 @@ class Bookmark < ApplicationRecord
 
 
   def self.search(params, user: nil)
-    bookmarks = user ? user.bookmarks : self
+    bookmarks = user ? user.bookmarks : (is_a?(ActiveRecord::Relation) ? self : all)
     bookmarks = bookmarks.filter_by_params(params)
     bookmarks = bookmarks.sorted(params[:sort])
     bookmarks

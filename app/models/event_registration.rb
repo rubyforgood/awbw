@@ -16,7 +16,7 @@ class EventRegistration < ApplicationRecord
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
 
   def self.search_by_params(params)
-    registrations = self
+    registrations = is_a?(ActiveRecord::Relation) ? self : all
     if params[:registrant_name].present?
       registrations = registrations.registrant_name(params[:registrant_name].downcase.strip)
     end

@@ -4,7 +4,7 @@ module Events
 
     def create
       @event_registration = @event.event_registrations.new(registrant: current_user)
-      authorize! @event_registration, to: :register?
+      authorize! :event_registration, to: :create?
 
       if @event_registration.save
         success = "You have successfully registered for this event."
@@ -20,9 +20,25 @@ module Events
         end
       end
     end
+    #
+    # def destroy
+    #   registration = @event.event_registrations.find_by(registrant: current_user)
+    #   authorize! :event_registration, to: :destroy?
+    #
+    #   unless registration
+    #     return respond_with_alert("Registration not found")
+    #   end
+    #
+    #   if registration.destroy
+    #     respond_with_notice("You are no longer registered.")
+    #   else
+    #     respond_with_alert(registration.errors.full_messages.to_sentence)
+    #   end
+    # end
 
     def destroy
       registration = @event.event_registrations.find_by(registrant: current_user)
+      authorize! :event_registration, to: :destroy?
 
       unless registration
         respond_to do |format|
@@ -30,15 +46,13 @@ module Events
             flash.now[:alert] = "Registration not found"
             render turbo_stream: turbo_stream.replace(
               "flash",
-              partial: "shared/flash"
+              partial: "shared/flash_messages"
             )
           end
           format.html { redirect_to @event, alert: "Registration not found" }
         end
         return
       end
-
-      authorize! registration, to: :register?
 
       registration.destroy!
 
@@ -47,13 +61,12 @@ module Events
           flash.now[:notice] = "You are no longer registered."
           render turbo_stream: turbo_stream.replace(
             "flash",
-            partial: "shared/flash"
+            partial: "shared/flash_messages"
           )
         end
         format.html { redirect_to @event, notice: "You are no longer registered." }
       end
     end
-
 
     private
 

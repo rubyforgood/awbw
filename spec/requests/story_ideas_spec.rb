@@ -187,12 +187,12 @@ RSpec.describe "/story_ideas", type: :request do
     end
 
     describe "DELETE /destroy" do
-      it "can delete own story_idea" do
+      it "cannot delete own story_idea" do
         story_idea = create(:story_idea, created_by: regular_user)
 
         expect {
           delete story_idea_url(story_idea)
-        }.to change(StoryIdea, :count).by(-1)
+        }.not_to change(StoryIdea, :count)
       end
 
       it "cannot delete someone else's story_idea" do

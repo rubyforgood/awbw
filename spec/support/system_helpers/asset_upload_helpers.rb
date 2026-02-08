@@ -1,15 +1,16 @@
 module AssetUploadHelpers
   def delete_asset(asset_type:)
-    div_prefix = case asset_type
-                 when "PrimaryAsset", "Primary"
-                   "primary_asset_"
-                 when "DownloadableAsset", "Downloadable"
-                   "Downloadable_asset_"
-                 when "GalleryAsset", "Gallery"
-                   "gallery_asset_"
-                 else
-                   raise "Unknown asset type: #{asset_type}"
-                 end
+    div_prefix =
+      case asset_type
+      when "PrimaryAsset", "Primary"
+        "primary_asset_"
+      when "DownloadableAsset", "Downloadable"
+        "Downloadable_asset_"
+      when "GalleryAsset", "Gallery"
+        "gallery_asset_"
+      else
+        raise "Unknown asset type: #{asset_type}"
+      end
 
     within("turbo-frame#assets") do
       asset_container = find("div[id^='#{div_prefix}']")

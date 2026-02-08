@@ -65,7 +65,7 @@ class User < ApplicationRecord
   scope :active, -> { where(inactive: false) }
 
   def self.search_by_params(params)
-    results = self
+    results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:search]) if params[:search].present?
     results = results.where(super_user: params[:super_user]) if params[:super_user].present?
     results = results.where(inactive: params[:inactive]) if params[:inactive].present?

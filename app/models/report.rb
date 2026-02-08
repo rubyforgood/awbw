@@ -72,7 +72,7 @@ class Report < ApplicationRecord
   scope :ordered_by_date, -> { order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")) }
 
   def self.search(params)
-    logs = self
+    logs = is_a?(ActiveRecord::Relation) ? self : all
     logs = logs.user_id(params[:user_id]) if params[:user_id].present?
     logs = logs.month_and_year(params[:month_and_year]) if params[:month_and_year].present?
     logs = logs.year(params[:year]) if params[:year].present?
