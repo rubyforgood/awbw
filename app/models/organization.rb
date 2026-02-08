@@ -94,6 +94,10 @@ class Organization < ApplicationRecord
     addresses.active.first&.locality
   end
 
+  def published? # needed for my_bookmarks
+    !inactive
+  end
+
   def sector_list
     sectors.pluck(:name)
   end
