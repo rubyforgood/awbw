@@ -83,7 +83,10 @@
         <%= bookmarkable.created_at.strftime("%B %d, %Y") %>
       <% end %>
       <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.age_ranges.any? %>
-        <br>Age ranges: <%= bookmarkable.age_ranges.pluck(:name).to_sentence %>
+        <br>Age ranges: <%= bookmarkable.age_ranges
+                                        .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+                                        .map(&:name)
+                                        .to_sentence %>
       <% end %>
     </span>
    </div>

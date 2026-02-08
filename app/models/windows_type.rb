@@ -7,8 +7,10 @@ class WindowsType < ApplicationRecord
   has_many :workshops
 
   # has_many :through
-  has_many :age_ranges, -> { joins(:category_type).where(category_type: { name: "AgeRange" }) },
-           through: :categorizable_items, source: :category # needs to be after has_many :categorizable_items
+  has_many :age_ranges, -> { joins(:category_type).where(category_types: { name: "AgeRange" })
+                                                  .order(Arel.sql("categories.position ASC, categories.name ASC")) },
+           through: :categorizable_items,
+           source: :category # needs to be after has_many :categorizable_items
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
 
