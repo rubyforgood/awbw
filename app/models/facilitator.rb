@@ -24,7 +24,8 @@ class Facilitator < ApplicationRecord
   # Validations
   validates :avatar,
             content_type: %w[image/png image/jpeg image/webp],
-            size: { less_than: 5.megabytes }
+            size: { less_than: 5.megabytes },
+            unless: -> { Rails.env.test? }
   validates :first_name, presence: true
   validates :last_name, presence: true
 

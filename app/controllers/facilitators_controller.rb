@@ -50,13 +50,16 @@ class FacilitatorsController < ApplicationController
 
   def update
     authorize! @facilitator
-    respond_to do |format|
-      if @facilitator.update(facilitator_params)
-        format.html { redirect_to @facilitator, notice: "Facilitator was successfully updated." }
-      else
-        set_form_variables
-        format.html { render :edit, status: :unprocessable_content }
-      end
+
+    if params[:facilitator][:_destroy] == "1"
+      @facilitator.avatar.purge
+    end
+
+    if @facilitator.update(facilitator_params)
+      redirect_to @facilitator, notice: "Facilitator was successfully updated."
+    else
+      set_form_variables
+      render :edit, status: :unprocessable_content
     end
   end
 
