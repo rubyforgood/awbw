@@ -16,7 +16,7 @@ class Faq < ApplicationRecord
   end
 
   def self.search_by_params(params)
-    results = self.all
+    results = self
     results = results.search(params[:query]) if params[:query].present?
     if params[:published].to_s.present?
       value = ActiveModel::Type::Boolean.new.cast(params[:published])

@@ -42,7 +42,7 @@ class Event < ApplicationRecord
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
 
   def self.search_by_params(params)
-    stories = self.all
+    stories = self
     stories = stories.search(params[:query]) if params[:query].present?
     stories = stories.sector_names(params[:sector_names]) if params[:sector_names].present?
     stories = stories.category_names(params[:category_names]) if params[:category_names].present?

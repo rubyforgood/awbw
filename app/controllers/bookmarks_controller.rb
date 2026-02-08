@@ -64,8 +64,8 @@ class BookmarksController < ApplicationController
   end
 
   def create
+    authorize! Bookmark
     @bookmark = current_user.bookmarks.find_or_create_by(bookmark_params)
-    authorize! @bookmark
     @bookmarkable = @bookmark.bookmarkable
     respond_to do |format|
       format.html {

@@ -5,8 +5,8 @@ class WorkshopLogsController < ApplicationController
     authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    @workshop_logs_unpaginated = authorized_scope(WorkshopLog.includes(:workshop, :user, :windows_type)
-                                               .search(params))
+    base_scope = authorized_scope(Report, type: :active_record_relation).where(type: "WorkshopLog")
+    @workshop_logs_unpaginated = base_scope.includes(:workshop, :user, :windows_type).search(params)
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
     @workshop_logs_count = @workshop_logs&.total_entries
 
@@ -76,7 +76,7 @@ class WorkshopLogsController < ApplicationController
   end
 
   def show
-    @workshop_log = Report.find(params[:id]).decorate
+    @workshop_log = WorkshopLog.find(params[:id]).decorate
     authorize! @workshop_log
     @workshop     = @workshop_log.workshop&.decorate
     @answers      = @workshop_log.report_form_field_answers
