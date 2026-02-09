@@ -1,5 +1,8 @@
 class Notification < ApplicationRecord
   belongs_to :noticeable, polymorphic: true, optional: true
+  belongs_to :parent_notification, class_name: "Notification", optional: true
+  belongs_to :root_notification, class_name: "Notification", optional: true
+  has_many :child_notifications, class_name: "Notification", foreign_key: :parent_notification_id, dependent: :nullify
 
   # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols
 
@@ -52,5 +55,23 @@ class Notification < ApplicationRecord
 
   def delivered?
     delivered_at.present?
+  end
+
+  def resend_count
+    # If this notification has a root, use that; otherwise, this IS the root
+    root_id = root_notification_id || id
+
+    # Count all notifications in the chain (excluding the root itself)
+    Notification.where(root_notification_id: root_id)
+                .where.not(id: root_id)
+                .count
+  end
+
+  def resend?
+    parent_notification_id.present?
+  end
+
+  def original_notification
+    root_notification || self
   end
 end

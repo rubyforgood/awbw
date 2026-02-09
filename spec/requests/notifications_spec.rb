@@ -9,7 +9,7 @@ RSpec.describe "Notifications", type: :request do
     context "as an admin" do
       before { sign_in admin }
 
-      it "creates a new notification with resend flag" do
+      it "creates a new notification with parent and root notification IDs" do
         # Force creation of the notification before the expect block
         notification_id = notification.id
 
@@ -21,9 +21,43 @@ RSpec.describe "Notifications", type: :request do
         end
 
         new_notification = Notification.last
-        expect(new_notification.resend).to be true
+        expect(new_notification.parent_notification_id).to eq(notification.id)
+        expect(new_notification.root_notification_id).to eq(notification.id)
         expect(new_notification.kind).to eq(notification.kind)
         expect(new_notification.recipient_email).to eq(notification.recipient_email)
+      end
+
+      it "tracks resend chain correctly when resending a resent notification" do
+        # Create first resend
+        first_resend = nil
+        perform_enqueued_jobs do
+          post resend_notification_path(notification)
+          first_resend = Notification.last
+        end
+
+        # Resend the resend
+        perform_enqueued_jobs do
+          expect {
+            post resend_notification_path(first_resend)
+          }.to change(Notification, :count).by(1)
+        end
+
+        second_resend = Notification.last
+        expect(second_resend.parent_notification_id).to eq(first_resend.id)
+        expect(second_resend.root_notification_id).to eq(notification.id)
+      end
+
+      it "calculates resend count correctly" do
+        notification_id = notification.id
+
+        # Create two resends
+        perform_enqueued_jobs do
+          post resend_notification_path(notification_id)
+          post resend_notification_path(notification_id)
+        end
+
+        notification.reload
+        expect(notification.resend_count).to eq(2)
       end
 
       it "sends the notification email" do

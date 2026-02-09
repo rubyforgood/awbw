@@ -17,6 +17,10 @@ class NotificationsController < ApplicationController
   def resend
     authorize! @notification, to: :resend?
 
+    # Determine parent and root for the resend chain
+    parent_id = @notification.id
+    root_id = @notification.root_notification_id || @notification.id
+
     # Create and send a new notification using the service
     new_notification = NotificationServices::CreateNotification.call(
       noticeable: @notification.noticeable,
@@ -28,8 +32,11 @@ class NotificationsController < ApplicationController
       persist_delivered_email: true
     )
 
-    # Mark the new notification as a resend
-    new_notification.update!(resend: true)
+    # Set parent and root notification IDs to track the resend chain
+    new_notification.update!(
+      parent_notification_id: parent_id,
+      root_notification_id: root_id
+    )
 
     redirect_to @notification, notice: "Notification email has been resent successfully."
   end
