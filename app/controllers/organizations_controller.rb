@@ -38,7 +38,7 @@ class OrganizationsController < ApplicationController
     user_ids = @workshop_logs_unpaginated.select(:user_id)
     @people = User.active
                   .or(User.where(id: user_ids))
-                  .includes(:facilitator)
+                  .includes(:person)
                   .distinct
                   .order("people.first_name, people.last_name")
   end

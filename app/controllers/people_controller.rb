@@ -28,7 +28,7 @@ class PeopleController < ApplicationController
   end
 
   def edit
-    authorize! @facilitator
+    authorize! @person
     set_form_variables
   end
 
@@ -95,7 +95,7 @@ class PeopleController < ApplicationController
     end
 
     @all_sectors = Sector.published.order(:name)
-    @current_sector_ids = @facilitator.sectorable_items.pluck(:sector_id)
+    @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
 
     organizations = if current_user&.super_user?
       Organization.active
