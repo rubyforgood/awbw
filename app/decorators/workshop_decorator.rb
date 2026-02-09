@@ -59,7 +59,7 @@ class WorkshopDecorator < ApplicationDecorator
   end
 
   def list_sectors
-    sectorable_items.published.map(&:sector).map(&:name).to_sentence
+    sectorable_items.map(&:sector).map(&:name).to_sentence
   end
 
   def log_fields

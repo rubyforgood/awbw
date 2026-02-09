@@ -144,7 +144,8 @@
             </div>
           <% elsif current_user&.super_user? && f.object.persisted? %>
             <div class="admin-only bg-blue-100 p-3">
-              <%= link_to "Promote to Story", new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),
+              <%= link_to "Promote to Workshop Variation",
+                          new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),
                           class: "btn btn-secondary-outline ms-2" %>
             </div>
           <% end %>
