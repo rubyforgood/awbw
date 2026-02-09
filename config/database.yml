@@ -34,7 +34,6 @@ test:
 staging:
   primary: &primary_staging
     <<: *base
-
   cache:
     <<: *primary_staging
     database: awbw_staging_cache
@@ -44,7 +43,6 @@ staging:
 production:
   primary: &primary_production
     <<: *base
-
   cache:
     <<: *primary_production
     database: awbw_production_cache
