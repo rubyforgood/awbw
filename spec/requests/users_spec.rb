@@ -399,4 +399,55 @@ RSpec.describe "/users", type: :request do
       end
     end
   end
+
+  # ---------------------------------------
+  # SEND INVITATION
+  # ---------------------------------------
+  describe "POST /send_invitation" do
+    let(:user) { create(:user, confirmed_at: nil) }
+
+    context "as admin" do
+      before { sign_in admin }
+
+      it "generates invitation token" do
+        post send_invitation_user_url(user)
+        user.reload
+        expect(user.invitation_token).not_to be_nil
+        expect(user.invitation_created_at).not_to be_nil
+        expect(user.invitation_sent_at).not_to be_nil
+      end
+
+      it "sends welcome email" do
+        expect {
+          post send_invitation_user_url(user)
+        }.to have_enqueued_job(ActionMailer::MailDeliveryJob)
+      end
+
+      it "redirects with notice" do
+        post send_invitation_user_url(user)
+        expect(flash[:notice]).to include("Invitation sent")
+        expect(response).to redirect_to(users_path)
+      end
+    end
+
+    context "as regular_user" do
+      before { sign_in regular_user }
+
+      it "does not send invitation and redirects to root" do
+        post send_invitation_user_url(user)
+        user.reload
+        expect(user.invitation_token).to be_nil
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as guest" do
+      it "does not send invitation and redirects to root" do
+        post send_invitation_user_url(user)
+        user.reload
+        expect(user.invitation_token).to be_nil
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
 end
