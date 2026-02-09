@@ -1,4 +1,5 @@
 require "rails_helper"
+require "csv"
 
 RSpec.describe "EventRegistrations", type: :request do
   let(:regular_user) { create(:user, first_name: "John", last_name: "Doe", email: "john.doe@example.com") }
@@ -20,6 +21,29 @@ RSpec.describe "EventRegistrations", type: :request do
       it "can access index" do
         get event_registrations_path
         expect(response).to have_http_status(:success)
+      end
+
+      it "exports CSV with headers and data only (no captions)" do
+        get event_registrations_path, params: { format: :csv }
+
+        expect(response).to have_http_status(:success)
+        expect(response.media_type).to eq("text/csv")
+        expect(response.headers["Content-Disposition"]).to include("attachment")
+        expect(response.headers["Content-Disposition"]).to include(".csv")
+
+        rows = CSV.parse(response.body)
+        expect(rows.size).to be >= 1
+        expect(rows.first).to eq([ "First name", "Last name", "Email", "Event" ])
+
+        data_rows = rows.drop(1)
+        expect(data_rows).not_to be_empty
+        expected_row = [
+          regular_user.first_name.to_s,
+          regular_user.last_name.to_s,
+          regular_user.email.to_s,
+          event.title.to_s
+        ]
+        expect(data_rows).to include(expected_row)
       end
 
       xit "paginates results" do
