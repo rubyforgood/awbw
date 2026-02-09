@@ -104,6 +104,30 @@
     </div>
   </div>
 
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
+      <%= f.input :location_id,
+                  label: "Location",
+                  collection: @locations,
+                  label_method: :name,
+                  value_method: :id,
+                  include_blank: true,
+                  input_html: {
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    data: { searchable_select_target: "select" },
+                  } %>
+    </div>
+    <div>
+      <%= f.input :videoconference_url,
+                  label: "Videoconference URL",
+                  as: :url,
+                  input_html: {
+                    placeholder: "https://…",
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                  } %>
+    </div>
+  </div>
+
   <% if show_feature?(:stripe_payments) %>
     <div class="mb-6">
       <div class="flex items-center justify-between gap-2 mb-1">
