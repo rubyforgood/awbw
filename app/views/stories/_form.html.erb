@@ -1,87 +1,83 @@
-<%= simple_form_for(story, html: { multipart: true }) do |f| %>
-  <%= render 'shared/errors', resource: story if story.errors.any? %>
+<%= simple_form_for(@story, html: { multipart: true }) do |f| %>
+  <%= render 'shared/errors', resource: @story if @story.errors.any? %>
 
   <%= tag.div class: "unpersisted_resource_asset_params" %>
 
   <% story_idea = @story_idea || f.object.story_idea %>
 
-  <div class="admin-only bg-blue-100 p-3">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div><%= f.input :title, as: :text,
-                    input_html: { rows: 2,
-                                  value: f.object.title || @story_idea&.title } %></div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div><%= f.input :title, as: :text,
+                     input_html: { rows: 2,
+                                   value: f.object.title || @story_idea&.title } %></div>
 
-      <%# if allowed_to?(:manage?, story) %>
-      <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
-        <%= f.input :published, as: :boolean %>
-        <%= f.input :featured, as: :boolean %>
-        <%= f.input :publicly_visible, as: :boolean %>
-        <%= f.input :publicly_featured, as: :boolean %>
-      </div>
-
-      <%# end %>
+    <%# if allowed_to?(:manage?, story) %>
+    <div class="admin-only bg-blue-100 rounded grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
+      <%= f.input :published, as: :boolean %>
+      <%= f.input :featured, as: :boolean %>
+      <%= f.input :publicly_visible, as: :boolean %>
+      <%= f.input :publicly_featured, as: :boolean %>
     </div>
 
-    <div class="flex flex-col md:flex-row md:space-x-4">
-      <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :windows_type_id,
-                    collection: @windows_types, label_method: :short_name, value_method: :id,
-                    selected: f.object.windows_type_id || @story_idea&.windows_type_id || params[:windows_type_id],
-                    prompt: "Select Windows Type" %>
-      </div>
+    <%# end %>
+  </div>
 
-      <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :workshop_id,
-                    collection: @workshops, label_method: :title, value_method: :id,
-                    selected: f.object.workshop_id || @story_idea&.workshop_id || params[:workshop_id],
-                    prompt: "Select Workshop" %>
-      </div>
-
-      <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :organization_id,
-                    label: "Organization",
-                    collection: @organizations, label_method: :name,
-                    value_method: :id,
-                    selected: f.object.organization_id || @story_idea&.organization_id %>
-      </div>
+  <div class="flex flex-col md:flex-row md:space-x-4">
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :windows_type_id,
+                  collection: @windows_types, label_method: :short_name, value_method: :id,
+                  selected: f.object.windows_type_id || @story_idea&.windows_type_id || params[:windows_type_id],
+                  prompt: "Select Windows Type" %>
     </div>
 
-    <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
-      <%= rhino_editor(f, :body, label: "Body / Description") %>
-
-      <% if f.object.errors[:rhino_body].present? %>
-        <div class="text-danger mt-1 text-sm">
-          Field <%= f.object.errors[:rhino_body].first %>
-        </div>
-      <% end %>
-    </div>>
-
-    <div class="flex gap-4 mb-6">
-      <div class="flex-1">
-        <%= f.input :youtube_url,
-                    as: :text,
-                    hint: "Embed a youtube video",
-                    input_html: { rows: 1, value: f.object.youtube_url || @story_idea&.youtube_url } %>
-      </div>
-
-      <div class="flex-1">
-        <%= f.input :website_url,
-                    as: :text,
-                    hint: "Redirect to this website",
-                    input_html: { rows: 1, value: f.object.website_url } %>
-      </div>
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :workshop_id,
+                  collection: @workshops, label_method: :title, value_method: :id,
+                  selected: f.object.workshop_id || @story_idea&.workshop_id || params[:workshop_id],
+                  prompt: "Select Workshop" %>
     </div>
 
-    <div class="flex flex-col md:flex-row md:space-x-4">
-      <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :story_idea_id,
-                    collection: @story_ideas, label_method: :full_name,
-                    value_method: :id,
-                    selected: f.object.story_idea_id || @story_idea&.id,
-                    label: (f.object.story_idea ? (link_to "Story idea",
-                      story_idea_path(story_idea), class: "hover:underline") : "Story idea").html_safe,
-                    prompt: "Select idea" %>
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :organization_id,
+                  label: "Organization",
+                  collection: @organizations, label_method: :name,
+                  value_method: :id,
+                  selected: f.object.organization_id || @story_idea&.organization_id %>
+    </div>
+  </div>
+
+  <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
+    <%= rhino_editor(f, :body,
+                     label: "Body", hint: "(HTML allowed)") %>
+
+    <% if f.object.errors[:rhino_body].present? %>
+      <div class="text-danger mt-1 text-sm">
+        Field <%= f.object.errors[:rhino_body].first %>
       </div>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+    <%= f.input :youtube_url, as: :text,
+                label: "YouTube URL",
+                hint: "(Embed a YouTube video)",
+                input_html: { rows: 1, class: "w-full", value: f.object.youtube_url || @story_idea&.youtube_url } %>
+
+    <%= f.input :website_url, as: :text,
+                label: "External URL",
+                hint: "(open in external website instead)",
+                input_html: { rows: 1, class: "w-full" } %>
+  </div>
+
+  <div class="flex flex-col md:flex-row md:space-x-4">
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :story_idea_id,
+                  collection: @story_ideas, label_method: :full_name,
+                  value_method: :id,
+                  selected: f.object.story_idea_id || @story_idea&.id,
+                  label: (f.object.story_idea ? (link_to "Story idea",
+                                                         story_idea_path(story_idea), class: "hover:underline") : "Story idea").html_safe,
+                  prompt: "Select idea" %>
+    </div>
 
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :created_by_id,
@@ -90,57 +86,56 @@
                     selected: f.object.organization_id || @story_idea&.organization_id,
                     label: (f.object.created_by ? (
                       link_to "Story author",
-                              generate_facilitator_user_path(f.object.created_by),
+                              generate_person_user_path(f.object.created_by),
                               class: "hover:underline") : "Story author").html_safe,
                     prompt: "Select User" %>
 
-        <% if story_idea %>
-          <div class="flex-1 mb-4 md:mb-0">
-            Story idea author credit:
-            <br>
-            <%= story_idea.author_credit %>
-            <br>
-            <br>
-            Story idea "publish preferences":
-            <br>
-            <div class="italic"><%= story_idea.publish_preferences %></div>
-          </div>
-        <% end %>
-      </div>
-
-      <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :spotlighted_facilitator_id,
-                    collection: Facilitator.joins(:user).order("users.first_name, users.last_name"),
-                    label_method: :full_name,
-                    value_method: :id,
-                    include_blank: true,
-                    selected: f.object.spotlighted_facilitator_id,
-                    label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
-                                                                           facilitator_path(f.object.spotlighted_facilitator_id),
-                                                                           class: "hover:underline") : "Story spotlighted facilitator").html_safe %>
-      </div>
-
-      <%= f.hidden_field :updated_by_id, value: current_user.id %>
-
-      <% if f.object.persisted? %>
-        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-          Last updated by:
+      <% if story_idea %>
+        <div class="flex-1 mb-4 md:mb-0">
+          Story idea author credit:
           <br>
-          <%= f.object.updated_by&.full_name %>
+          <%= story_idea.author_credit %>
           <br>
-          <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
+          <br>
+          Story idea "publish preferences":
+          <br>
+          <div class="italic"><%= story_idea.publish_preferences %></div>
         </div>
       <% end %>
     </div>
 
-    <div class="action-buttons mt-8 flex justify-center gap-3">
-      <% if f.object.persisted? && allowed_to?(:destroy?, f.object.object) %>
-        <%= link_to "Delete", @story, method: :delete, class: "btn btn-danger-outline",
-                    data: { confirm: "Are you sure you want to delete?" } %>
-      <% end %>
-      <%= link_to "Cancel", stories_path, class: "btn btn-secondary-outline ms-2" %>
-      <%= f.button :submit, class: "btn btn-primary" %>
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :spotlighted_facilitator_id,
+                  collection: Person.joins(:user).order("users.first_name, users.last_name"),
+                  label_method: :full_name,
+                  value_method: :id,
+                  include_blank: true,
+                  selected: f.object.spotlighted_facilitator_id,
+                  label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
+                                                                         person_path(f.object.spotlighted_facilitator_id),
+                                                                         class: "hover:underline") : "Story spotlighted facilitator").html_safe %>
     </div>
+
+    <%= f.hidden_field :updated_by_id, value: current_user.id %>
+
+    <% if f.object.persisted? %>
+      <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
+        Last updated by:
+        <br>
+        <%= f.object.updated_by&.full_name %>
+        <br>
+        <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="action-buttons mt-8 flex justify-center gap-3">
+    <% if f.object.persisted? && allowed_to?(:destroy?, f.object.object) %>
+      <%= link_to "Delete", @story, method: :delete, class: "btn btn-danger-outline",
+                  data: { confirm: "Are you sure you want to delete?" } %>
+    <% end %>
+    <%= link_to "Cancel", stories_path, class: "btn btn-secondary-outline ms-2" %>
+    <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 
   <% if story_idea %>

@@ -3,13 +3,13 @@
   <div class="flex items-center gap-2">
     <%= render "bookmarks/editable_bookmark_button", resource: workshop.object %>
 
-    <%= tag.span id: dom_id(workshop, :bookmark_count_facilitator), class: "text-gray-600 text-sm" do %>
-      (Bookmarked by <%= pluralize(workshop.bookmarks.count, "facilitator") %>,
+    <%= tag.span id: dom_id(workshop, :bookmark_count_person), class: "text-gray-600 text-sm" do %>
+      (Bookmarked by <%= pluralize(workshop.bookmarks.count, "user") %>)
     <% end %>
 
-    <%= tag.span id: dom_id(workshop, :led_count), class: "text-gray-600 text-sm" do %>
-      Led: <%= pluralize(workshop.led_count, "time") %>)
-    <% end %>
+    <%#= tag.span id: dom_id(workshop, :led_count), class: "text-gray-600 text-sm" do %>
+<!--      Led: <%##= pluralize(workshop.led_count, "time") %>)-->
+    <%# end %>
   </div>
 
   <% unless workshop.published %>
@@ -18,6 +18,8 @@
 
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
+    <%= link_to "Workshops", workshops_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
     <% if current_user&.super_user? %>
       <%= link_to "Edit",
                   edit_workshop_path(workshop),

@@ -43,7 +43,7 @@ RSpec.describe "Stories", type: :system do
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
-        facilitator = create(:facilitator, first_name: "John", last_name: "Doe")
+        facilitator = create(:person, first_name: "John", last_name: "Doe")
         story_world = create(:story, :published, title: "The best story in the world", windows_type: adult_window, created_by: facilitator.user, rhino_body: "healing through art")
         story_mars = create(:story, :published, title: "The best story on mars", windows_type: adult_window, created_by: facilitator.user, rhino_body: "healing through art")
         story_hello = create(:story, :published, title: "oh hello!", windows_type: adult_window, rhino_body: "healing through art")

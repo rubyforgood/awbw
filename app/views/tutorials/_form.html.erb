@@ -1,5 +1,5 @@
-<%= simple_form_for(tutorial, html: { multipart: true }) do |f| %>
-  <%= render 'shared/errors', resource: tutorial if tutorial.errors.any? %>
+<%= simple_form_for(@tutorial, html: { multipart: true }) do |f| %>
+  <%= render 'shared/errors', resource: @tutorial if @tutorial.errors.any? %>
 
   <div class="p-3">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

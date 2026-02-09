@@ -1,12 +1,12 @@
 namespace :user_data do
-  desc "Generate Facilitators from Users"
-  task generate_facilitator: :environment do
-    puts "🚀 Starting Facilitator creation for all Users..."
+  desc "Generate People from Users"
+  task generate_person: :environment do
+    puts "🚀 Starting Person creation for all Users..."
     puts "Environment: #{Rails.env}"
     puts "==============================================="
 
-    User.where(facilitator_id: nil).each do |user|
-      facilitator = Facilitator.where(
+    User.where(person_id: nil).each do |user|
+      person = Person.where(
         first_name: user.first_name.presence || "unknown",
         last_name: user.last_name.presence || "unknown",
         email: user.email,
@@ -18,15 +18,15 @@ namespace :user_data do
         created_by_id: user.id,
         updated_by_id: user.id
       ).first_or_create!
-      unless facilitator.contact_methods.phone.exists?
-        facilitator.contact_methods.create!(
+      unless person.contact_methods.phone.exists?
+        person.contact_methods.create!(
           kind: :phone,
           value: user.phone,
           is_primary: true
         ) if user.phone.present?
       end
-      unless facilitator.addresses.exists?
-        facilitator.addresses.create!(
+      unless person.addresses.exists?
+        person.addresses.create!(
           street_address: user.address.presence || "unknown",
           city: user.city.presence || "unknown",
           state: user.state.presence || "unknown",
@@ -36,16 +36,16 @@ namespace :user_data do
         ) if user.address.present? || user.city.present? || user.state.present? || user.zip.present?
       end
 
-      user.update!(facilitator: facilitator)
+      user.update!(person: person)
 
       user.workshops.each do |workshop|
         puts workshop.name
         puts workshop.sectors.pluck(:name)
         workshop.sectors.each do |sector|
-          facilitator.sectorable_items.where(
+          person.sectorable_items.where(
             sector: sector,
-            sectorable: facilitator,
-            sectorable_type: "Facilitator",
+            sectorable: person,
+            sectorable_type: "Person",
             is_leader: false,
           ).first_or_create!
         end

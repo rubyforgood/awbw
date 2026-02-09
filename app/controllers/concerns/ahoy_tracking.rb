@@ -30,8 +30,8 @@ module AhoyTracking
   def track_tagging_browse(grouped_results)
     return unless ahoy&.visit_token
 
-    sectors    = normalize_param_array(params[:sector_names])
-    categories = normalize_param_array(params[:category_names])
+    sectors    = normalize_param_array(params[:sector_names_all])
+    categories = normalize_param_array(params[:category_names_all])
 
     return if sectors.blank? && categories.blank?
 

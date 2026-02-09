@@ -35,24 +35,24 @@ RSpec.describe "Taggings index", type: :request do
     end
 
     it "shows categories grouped by type" do
-      get taggings_path(category_names: "Healing")
+      get taggings_path(category_names_all: "Healing")
       expect(response.body).to include("Theme")
       expect(response.body).to include("Healing")
     end
   end
 
-  describe "filtering by sector_names" do
+  describe "filtering by sector_names_all" do
     it "filters content by sector" do
-      get taggings_path(sector_names: "Youth")
+      get taggings_path(sector_names_all: "Youth")
 
       expect(response.body).to include("Youth")
       expect(response.body).to include("Art for Healing")
     end
   end
 
-  describe "filtering by category_names" do
+  describe "filtering by category_names_all" do
     it "filters content by category" do
-      get taggings_path(category_names: "Healing")
+      get taggings_path(category_names_all: "Healing")
       expect(response.body).to include("Theme: Healing")
       expect(response.body).to include("Art for Healing")
     end
@@ -60,11 +60,11 @@ RSpec.describe "Taggings index", type: :request do
 
   describe "when no matching tags exist" do
     it "does not blow up and renders empty sections" do
-      get taggings_path(sector_names: "Nonexistent")
+      get taggings_path(sector_names_all: "Nonexistent")
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Explore all tags")
-      expect(response.body).to include("No tagged items found for")
+      expect(response.body).to include("No items have this tag combination")
     end
   end
 end

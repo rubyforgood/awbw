@@ -2,8 +2,8 @@ class Bookmark < ApplicationRecord
   belongs_to :user
   belongs_to :bookmarkable, polymorphic: true
 
-  BOOKMARKABLE_MODELS = [ "CommunityNews", "Event", "Facilitator", "Organization", "Resource", "Story", "StoryIdea",
-                        "Workshop", "WorkshopIdea", "WorkshopLog", "WorkshopVariation" ]
+  BOOKMARKABLE_MODELS = [ "CommunityNews", "Event", "Person", "Organization", "Resource", "Story", "StoryIdea",
+                          "Workshop", "WorkshopIdea", "WorkshopLog", "WorkshopVariation" ]
 
   scope :for_workshops, -> { where(bookmarkable_type: "Workshop") }
   scope :bookmarkable_type, ->(bookmarkable_type) { bookmarkable_type.present? ? where(bookmarkable_type: bookmarkable_type) : all }
@@ -54,8 +54,8 @@ class Bookmark < ApplicationRecord
     bookmarks = self.joins(<<~SQL)
       LEFT JOIN community_news      ON community_news.id      = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
       LEFT JOIN events              ON events.id              = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
-      LEFT JOIN facilitators        ON facilitators.id        = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Facilitator'
-      LEFT JOIN organizations            ON organizations.id            = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
+      LEFT JOIN organizations       ON organizations.id       = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
+      LEFT JOIN people              ON people.id              = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Person'
       LEFT JOIN resources           ON resources.id           = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
       LEFT JOIN stories             ON stories.id             = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
       LEFT JOIN story_ideas         ON story_ideas.id         = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'StoryIdea'
@@ -69,7 +69,7 @@ class Bookmark < ApplicationRecord
         COALESCE(
           community_news.title,
           events.title,
-          CONCAT(facilitators.first_name, ' ', facilitators.last_name),
+          CONCAT(people.first_name, ' ', people.last_name),
           organizations.name,
           resources.title,
           stories.title,
@@ -92,8 +92,8 @@ class Bookmark < ApplicationRecord
     bookmarks = bookmarks.joins(<<~SQL)
       LEFT JOIN community_news ON community_news.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
       LEFT JOIN events         ON events.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
-      LEFT JOIN facilitators   ON facilitators.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Facilitator'
-      LEFT JOIN organizations       ON organizations.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
+      LEFT JOIN organizations  ON organizations.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
+      LEFT JOIN people         ON people.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Person'
       LEFT JOIN resources      ON resources.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
       LEFT JOIN stories        ON stories.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
       LEFT JOIN story_ideas    ON story_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'StoryIdea'
@@ -104,8 +104,8 @@ class Bookmark < ApplicationRecord
     SQL
 
     bookmarks.where(
-      "community_news.title LIKE :title OR events.title LIKE :title OR facilitators.first_name LIKE :title OR
-       facilitators.last_name LIKE :title OR organizations.name LIKE :title OR resources.title LIKE :title OR
+      "community_news.title LIKE :title OR events.title LIKE :title OR people.first_name LIKE :title OR
+       people.last_name LIKE :title OR organizations.name LIKE :title OR resources.title LIKE :title OR
        stories.title LIKE :title OR workshops.title LIKE :title OR workshop_ideas.title LIKE :title OR
        story_ideas.body LIKE :title OR -- searching body for story ideas (title exists but isn't used in UI)
        DATE_FORMAT(workshop_logs.date, '%Y-%m-%d') LIKE :title OR -- no title on workshop_logs

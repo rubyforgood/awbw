@@ -59,7 +59,7 @@ Rails.application.routes.draw do
   resources :events do
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
   end
-  resources :facilitators
+  resources :people
   resources :faqs
   resources :notifications, only: [ :index, :show ]
   resources :organizations
@@ -92,7 +92,7 @@ Rails.application.routes.draw do
   resources :tutorials
   resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
     member do
-      get :generate_facilitator
+      get :generate_person
       post :send_reset_password_instructions
       post :toggle_lock_status
       post :confirm_email
@@ -103,6 +103,7 @@ Rails.application.routes.draw do
   resources :workshop_ideas
   resources :workshop_logs
   resources :workshop_log_creation_wizard
+  resources :workshop_variation_ideas
   resources :workshop_variations
   resources :workshops do
     collection do

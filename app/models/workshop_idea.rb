@@ -26,6 +26,8 @@ class WorkshopIdea < ApplicationRecord
 
   before_save :set_time_frame
 
+  validates :title, presence: true, uniqueness: { case_sensitive: false }
+
   # Nested attributes
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },

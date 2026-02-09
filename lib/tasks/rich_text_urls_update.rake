@@ -40,7 +40,7 @@ namespace :rich_text_urls_update do
       # CommunityNews,
       # EventRegistration,
       # Event,
-      # Facilitator,
+      # Person,
       # Faq,
       # FormBuilder,
       # FormFieldAnswerOption,

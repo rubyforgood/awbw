@@ -44,12 +44,19 @@
 
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :workshop_id,
-                    collection: @workshops, label_method: :title, value_method: :id,
+                    as: :select,
+                    collection: @workshops,
+                    label_method: :type_name,
+                    value_method: :id,
+                    label: "Workshop",
+                    prompt: "Select a Workshop",
+                    required: true,
                     disabled: promoted_to_story,
-                    required: false,
-                    input_html: {
-                      class: ("readonly" if promoted_to_story)
-                    } %>
+                    selected: params[:workshop_id].presence || f.object.workshop_id,
+                    input_html: { value: params[:workshop_id].presence || f.object.workshop_id,
+                                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
+                                  focus:border-blue-500 #{ 'readonly' if promoted_to_story }" },
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
 
         <%= f.input :external_workshop_title,
                     as: :text,
@@ -61,25 +68,39 @@
       </div>
 
       <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :organization_id,
-                    label: "Organization",
-                    collection: @organizations, label_method: :name, value_method: :id,
-                    disabled: promoted_to_story,
-                    input_html: {
-                      class: ("readonly" if promoted_to_story)
-                     } %>
+        <% if current_user.organization_users.count != 1 %>
+          <%= f.input :organization_id,
+                      as: :select,
+                      collection: @organizations,
+                      label_method: :type_name,
+                      value_method: :id,
+                      label: "Organization",
+                      required: true,
+                      disabled: promoted_to_story,
+                      hint: "Please contact AWBW if your agency is not listed.",
+                      prompt: (@organizations.count > 1 ? "Please select the relevant agency" : nil),
+                      selected: (params[:organization_id].presence || (f.object.organization_id || (@organizations.count == 1 ? @organizations.first.id : nil))),
+                      input_html: { value: params[:organization_id].presence || f.object.organization_id || @organization_id,
+                                    class: "#{ "readonly" if promoted_to_story } block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                      label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+        <% else current_user.organization_users.count == 1 %>
+          <%= f.hidden_field :organization_id,
+                             value: f.object.organization_id || current_user.organization_users.first&.organization_id %>
+        <% end %>
       </div>
     </div>
 
-    <div class="mb-3">
+    <div class="mt-3 mb-6">
       <%= f.input :body,
                   as: :text,
+                  label: "Share details of your story",
+                  hint: "(HTML allowed)",
                   disabled: promoted_to_story,
                   input_html: { rows: 10,
                                 class: ("readonly" if promoted_to_story) } %>
     </div>
 
-    <div class="flex gap-4">
+    <div class="flex pt-6 gap-4">
       <%= f.input :publish_preferences,
                   as: :select,
                   required: true,

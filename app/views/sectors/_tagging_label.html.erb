@@ -11,7 +11,7 @@
 <% bg_hover_color ||= "bg-lime-200" %>
 
 <% if sector %>
-  <%= link_to taggings_path(sector_names: sector.name),
+  <%= link_to taggings_path(sector_names_all: sector.name),
     data: {turbo_frame: "_top"},
               class: "inline-flex items-center
                       rounded-md

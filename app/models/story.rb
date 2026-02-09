@@ -5,7 +5,7 @@ class Story < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
   belongs_to :organization, optional: true
-  belongs_to :spotlighted_facilitator, class_name: "Facilitator",
+  belongs_to :spotlighted_facilitator, class_name: "Person",
              foreign_key: "spotlighted_facilitator_id", optional: true
   belongs_to :story_idea, optional: true
   belongs_to :workshop, optional: true
@@ -41,23 +41,28 @@ class Story < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :published, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
+    attributes :title, :published, person_first: "people.first_name", person_last: "people.last_name"
 
-    scope { join_rich_texts.left_joins(created_by: :facilitator) }
+    scope { join_rich_texts.left_joins(created_by: :person) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  scope :story_name, ->(story_name) {
+    story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
 
   def self.search_by_params(params)
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
     conditions[:published] = params[:published] if params[:published].present?
+    stories = self.search(conditions)
 
-    self.search(conditions)
+    stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    stories
   end
 
   def name

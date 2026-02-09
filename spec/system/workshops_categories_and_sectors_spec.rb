@@ -75,9 +75,19 @@ RSpec.describe "Workshop categories & sectors", type: :system do
 
       click_button "Tags"
 
-      # Uncheck actual inputs directly
-      find("#workshop_category_ids_#{cat1.id}", visible: :all).uncheck
-      find("#workshop_sector_ids_#{sector1.id}", visible: :all).uncheck
+      within("form[action='#{workshop_path(workshop)}']") do
+        cat1_box   = find("input#workshop_category_ids_#{cat1.id}", visible: :visible)
+        sector1_box = find("input#workshop_sector_ids_#{sector1.id}", visible: :visible)
+
+        expect(cat1_box).to be_checked
+        expect(sector1_box).to be_checked
+
+        cat1_box.click
+        sector1_box.click
+
+        expect(cat1_box).not_to be_checked
+        expect(sector1_box).not_to be_checked
+      end
 
       click_button "Save changes"
 

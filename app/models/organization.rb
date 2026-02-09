@@ -61,15 +61,15 @@ class Organization < ApplicationRecord
     SQL
       wildcard: wildcard, exact: exact)
   end
-  scope :by_most_viewed, ->(limit = 10) { order(view_count: :desc).limit(limit) }
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
-  scope :published, ->(published = nil) { active(published) }
+  scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
+  scope :published, ->(published = nil) { published ? active(published) : active }
 
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.sector_names(params[:sector_names]) if params[:sector_names].present?
-    organizations = organizations.category_names(params[:category_names]) if params[:category_names].present?
+    organizations = organizations.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    organizations = organizations.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?

@@ -1,0 +1,173 @@
+<div class="rounded-xl bg-white p-6">
+  <%= simple_form_for(workshop_variation_idea, html: { multipart: true }) do |f| %>
+    <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
+    <%= f.hidden_field :updated_by_id, value: current_user&.id %>
+
+    <% promoted_to_variation = f.object.workshop_variations.any? %>
+
+    <% if promoted_to_variation %>
+      <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
+      <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
+      <%= f.hidden_field :organization_id, value: f.object.organization_id %>
+      <%= f.hidden_field :title, value: f.object.title %>
+      <%= f.hidden_field :body, value: f.object.body %>
+      <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
+      <%= f.hidden_field :permission_given, value: f.object.permission_given %>
+
+      <div class="admin-only bg-yellow-100 m-3 p-3">
+        This workshop variation idea has been promoted to a
+        <% f.object.workshop_variations.each do |workshop_variation| %>
+          <%= link_to "Workshop Variation ##{workshop_variation.id}",
+                      workshop_variation_path(workshop_variation), class: "btn btn-secondary-outline" %>
+        <% end %>
+        and should not be edited here.
+      </div>
+    <% end %>
+
+    <%= render 'shared/errors', resource: workshop_variation_idea if workshop_variation_idea.errors.any? %>
+
+    <%= tag.div class: "unpersisted_resource_asset_params" %>
+
+    <!-- Row 1 -->
+    <div class="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
+      <div>
+        <%= f.input :name,
+                    label: "Variation name",
+                    required: true,
+                    disabled: promoted_to_variation,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 #{('readonly' if promoted_to_variation)}" } %>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div>
+        <%= f.input :workshop_id,
+                    as: :select,
+                    collection: @workshops,
+                    label_method: :type_name,
+                    value_method: :id,
+                    label: "Workshop",
+                    prompt: "Select a Workshop",
+                    required: true,
+                    disabled: promoted_to_variation,
+                    selected: params[:workshop_id].presence || f.object.workshop_id,
+                    input_html: { value: params[:workshop_id].presence || f.object.workshop_id,
+                                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
+                                  focus:border-blue-500 #{ 'readonly' if promoted_to_variation }" },
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+      </div>
+      <div>
+        <%= f.input :windows_type_id,
+                    required: true,
+                    collection: @windows_types, label_method: :short_name, value_method: :id,
+                    disabled: promoted_to_variation,
+                    input_html: {
+                      class: ("readonly" if promoted_to_variation)
+                    } %>
+      </div>
+      <div>
+        <% if current_user.organization_users.count != 1 %>
+          <%= f.input :organization_id,
+                      as: :select,
+                      collection: @organizations,
+                      label_method: :type_name,
+                      value_method: :id,
+                      label: "Organization",
+                      required: true,
+                      disabled: promoted_to_variation,
+                      hint: "Please contact AWBW if your agency is not listed.",
+                      prompt: (@organizations.count > 1 ? "Please select the relevant agency" : nil),
+                      selected: (params[:organization_id].presence || (f.object.organization_id || (@organizations.count == 1 ? @organizations.first.id : nil))),
+                      input_html: { value: params[:organization_id].presence || f.object.organization_id || @organization_id,
+                                    class: "#{ "readonly" if promoted_to_variation } block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                      label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+        <% else %>
+          <%= f.hidden_field :organization_id,
+                             value: f.object.organization_id || current_user.organization_users.first&.organization_id %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="mt-3 mb-6">
+      <%= f.input :body,
+                  as: :text,
+                  required: true,
+                  label: "Share a little bit about your workshop variation, how you modified the workshop to fit your population/setting/facilitation style, and/or anything about how the workshop was received by participants, things you would do differently next time, etc.",
+                  hint: "(HTML allowed)",
+                  disabled: promoted_to_variation,
+                  input_html: { rows: 10,
+                                class: ("readonly" if promoted_to_variation) } %>
+    </div>
+
+    <div class="flex my-6 gap-4">
+      <%= f.input :publish_preferences,
+                  as: :select,
+                  required: true,
+                  collection: StoryIdea::PUBLISH_PREFERENCES,
+                  include_blank: "Select a preference",
+                  selected: f.object.publish_preferences %>
+
+      <%= f.input :youtube_url,
+                  as: :text,
+                  label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
+                  hint: "If you already have a video on YouTube you’d like to share",
+                  disabled: promoted_to_variation,
+                  input_html: { rows: 1,
+                                class: ("readonly" if promoted_to_variation)
+                  } %>
+    </div>
+
+    <div class="my-12">
+      <%= f.input :permission_given,
+                  as: :boolean,
+                  required: true,
+                  disabled: promoted_to_variation,
+                  label: "I give A Window Between Worlds permission to share the words and images I am submitting" +
+                    " online, via social media, and in external communications, including with my fellow " +
+                    "Windows Facilitators. If there is any identifying information in my images, " +
+                    "such as names or faces, I certify that I have received permission from the subject, " +
+                    "or their caregiver, to display their likeness online.",
+                  input_html: {
+                    class: ("readonly" if promoted_to_variation)
+                  } %>
+    </div>
+
+    <% if current_user&.super_user? || @user %>
+      <div class="flex flex-col md:flex-row md:space-x-4">
+        <div class="flex-1 mb-4 md:mb-0">
+          <% if promoted_to_variation %>
+            <div class="flex items-center space-x-2">
+              <label class="text-gray-700"> Promoted to Story </label>
+
+              <% f.object. workshop_variations.each do |workshop_variation| %>
+                <%= link_to workshop_variation.title, workshop_variation_path(workshop_variation), class: "btn btn-secondary-outline" %>
+              <% end %>
+            </div>
+          <% elsif current_user&.super_user? && f.object.persisted? %>
+            <div class="admin-only bg-blue-100 p-3">
+              <%= link_to "Promote to Story", new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),
+                          class: "btn btn-secondary-outline ms-2" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: true unless promoted_to_variation %>
+
+    <div class="action-buttons mt-8 flex justify-center gap-3 pt-6">
+      <% if f.object.persisted? && allowed_to?(:destroy?, f.object) && f.object. workshop_variations.none? && !promoted_to_variation %>
+        <span class="admin-only bg-blue-100 p-3">
+          <%= link_to "Promote to Workshop Variation",
+                      new_workshop_variation_path(workshop_variation_idea_id: f.object.id),
+                      class: "btn btn-secondary-outline" %>
+          <%= link_to "Delete", @workshop_variation_idea, class: "btn btn-danger-outline",
+                      data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
+        </span>
+      <% end %>
+      <%= link_to "Cancel", root_path, class: "btn btn-secondary-outline ms-2" %>
+      <%= f.button :submit, class: "btn btn-primary", disabled: promoted_to_variation %>
+    </div>
+  <% end %>
+</div>
+
+<div class="my-4"><%#= render "assets/form", owner: workshop_variation_idea %></div>

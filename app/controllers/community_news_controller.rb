@@ -8,10 +8,11 @@ class CommunityNewsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset,
-                                                             :author, :organization, author: :facilitator ]))
+                                                             :author, :organization, author: :person ]))
       filtered = base_scope.search_by_params(params)
       @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+
       render :index_lazy
     else
       render :index
@@ -84,7 +85,7 @@ class CommunityNewsController < ApplicationController
   def set_form_variables
     @organizations = Organization.pluck(:name, :id).sort_by(&:first)
     @authors = User.active.or(User.where(id: @community_news.author_id))
-                   .includes(:facilitator)
+                   .includes(:person)
                    .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
   end
 

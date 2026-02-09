@@ -25,19 +25,25 @@
                               class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
 
-    <%= f.input :organization_id,
-                as: :select,
-                collection: @agencies,
-                label_method: :type_name,
-                value_method: :id,
-                label: "Organization",
-                required: true,
-                hint: "Please contact AWBW if your agency is not listed.",
-                prompt: (@agencies.count > 1 ? "Please select the relevant agency" : nil),
-                selected: (params[:organization_id].presence || (f.object.organization_id || (@agencies.count == 1 ? @agencies.first.id : nil))),
-                input_html: { value: params[:organization_id].presence || f.object.organization_id || @agency_id,
-                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
-                label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+    <% if current_user.organization_users.count != 1 %>
+      <%= f.input :organization_id,
+                  as: :select,
+                  collection: @organizations,
+                  label_method: :type_name,
+                  value_method: :id,
+                  label: "Organization",
+                  required: true,
+                  hint: "Please contact AWBW if your agency is not listed.",
+                  prompt: (@organizations.count > 1 ? "Please select the relevant organization" : nil),
+                  selected: (params[:organization_id].presence || (f.object.organization_id || (@organizations.count == 1 ? @organizations.first.id : nil))),
+                  input_html: { value: params[:organization_id].presence || f.object.organization_id || @organization_id,
+                                class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
+                  label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+    <% else current_user.organization_users.count == 1 %>
+      <%= f.hidden_field :organization_id,
+                         value: f.object.organization_id || current_user.organization_users.first&.organization_id %>
+    <% end %>
+
     <%= f.input :date,
                 label: "Workshop Date",
                 as: :string,
@@ -103,7 +109,8 @@
   <!-- Upload Section -->
   <%= render "shared/form_image_fields", f: f, include_primary_asset: false,
              section_title: "Upload Images / Media Releases",
-             section_subtitle: "Attach photos, PDFs, or signed media release forms" %>
+             section_subtitle: "Attach photos, PDFs, or signed media release forms",
+             gallery_title: "Upload" %>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>

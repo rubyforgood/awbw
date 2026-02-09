@@ -1,13 +1,11 @@
 class SectorableItem < ApplicationRecord
   belongs_to :sector
   belongs_to :sectorable, polymorphic: true
-  has_many :facilitators, through: :sectorable_items, source: :sectorable, source_type: "Facilitator"
+  has_many :people, through: :sectorable_items, source: :sectorable, source_type: "Person"
 
   # Validations
   validates_presence_of :sectorable_type, :sectorable_id, :sector_id
   validates :sector_id, uniqueness: { scope: [ :sectorable_type, :sectorable_id ] }
-
-  scope :published, -> { where(published: true) }
 
   # Methods
   def title

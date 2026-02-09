@@ -56,11 +56,11 @@
           By:
           <% if workshop.user %>
             <%= link_to workshop.author_name,
-                        generate_facilitator_user_path(workshop.user),
+                        generate_person_user_path(workshop.user),
                         class: "hover:underline",
                         data: { turbo: false } %>
           <% else %>
-            <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
+            <%= workshop.full_name.present? ? workshop.full_name : "Person" %>
           <% end %>
           | <%= workshop.date %>
         </div>
@@ -72,10 +72,10 @@
         <% end %>
 
         <!-- Led count -->
-        <%= tag.div id: dom_id(workshop, :led_count),
+        <%#= tag.div id: dom_id(workshop, :led_count),
                     class: "text-sm text-gray-600 leading-tight" do %>
-          Led: <%= workshop.led_count %> <%= "time".pluralize(workshop.led_count.to_i) %>
-        <% end %>
+<!--          Led: <%##= workshop.led_count %> <%#= "time".pluralize(workshop.led_count.to_i) %>-->
+        <%# end %>
 
         <!-- Age ranges -->
         <% if workshop.age_ranges.any? %>

@@ -65,7 +65,7 @@ class DeviseMailer < Devise::Mailer
 
     notification = NotificationServices::CreateNotification.call(
       noticeable: @record,
-      recipient_role: "facilitator",
+      recipient_role: :person,
       recipient_email: @record.email,
       kind: kind,
       notification_type: 1,
@@ -85,7 +85,7 @@ class DeviseMailer < Devise::Mailer
     if kind == "reset_password"
       NotificationServices::CreateNotification.call(
         noticeable: @record,
-        recipient_role: "admin",
+        recipient_role: :admin,
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         kind: "reset_password_fyi",
         notification_type: 1,
