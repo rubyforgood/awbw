@@ -8,6 +8,7 @@ RSpec.describe "workshop_ideas/edit", type: :view do
   before(:each) do
     assign(:workshop_idea, workshop_idea)
     allow(view).to receive(:current_user).and_return(user)
+    allow(view).to receive(:allowed_to?).and_return(false)
 
     assign(:windows_types, [])
     assign(:sectors, [])
@@ -54,7 +55,10 @@ RSpec.describe "workshop_ideas/edit", type: :view do
   end
 
   context "when viewed by a regular user" do
-    before { allow(view).to receive(:current_user).and_return(user) }
+    before do
+      allow(view).to receive(:current_user).and_return(user)
+      allow(view).to receive(:allowed_to?).and_return(false)
+    end
 
     it "does not show the staff_notes field" do
       render
@@ -63,7 +67,10 @@ RSpec.describe "workshop_ideas/edit", type: :view do
   end
 
   context "when viewed by an admin user" do
-    before { allow(view).to receive(:current_user).and_return(admin) }
+    before do
+      allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
+    end
 
     it "shows the staff_notes field" do
       render

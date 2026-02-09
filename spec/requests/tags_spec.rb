@@ -62,10 +62,37 @@ RSpec.describe "Tags index", type: :request do
     end
   end
 
-  describe "when not signed in" do
-    it "redirects to sign-in" do
+  describe "as a guest" do
+    it "checks authorization via TagPolicy" do
+      expect_any_instance_of(TagPolicy)
+        .to receive(:index?).and_return(true)
       get tags_path
-      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    it "renders Service Populations and Categories skeleton" do
+      get tags_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Service Populations")
+      expect(response.body).to include("Categories")
+    end
+
+    it "renders sectors frame" do
+      get tags_sectors_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Youth")
+    end
+
+    it "renders categories frame" do
+      get tags_categories_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Healing")
+    end
+
+    it "does NOT show admin-only controls" do
+      get tags_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Manage sectors")
+      expect(response.body).not_to include("Manage categories")
     end
   end
 end

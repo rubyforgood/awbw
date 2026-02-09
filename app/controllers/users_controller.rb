@@ -1,38 +1,44 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [ :show, :edit, :update, :destroy, :generate_facilitator, :toggle_lock_status, :confirm_email, :send_reset_password_instructions ]
+  before_action :set_user, only: [ :show, :edit, :update, :destroy,
+                                   :generate_person, :toggle_lock_status, :confirm_email,
+                                   :send_reset_password_instructions ]
 
   def index
-    return redirect_to root_path unless current_user.super_user?
-
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    users = User.search_by_params(params).order(:first_name, :last_name)
-    @users_count = users.size
-    @users = users.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(User.includes(:person))
+    filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
+    @users_count = filtered.size
+    @users = filtered.paginate(page: params[:page], per_page: per_page)
+  end
+
+  def show
+    authorize! @user
+    @user = User.find(params[:id]).decorate
   end
 
   def new
     @user = User.new
+    authorize! @user
     set_form_variables
   end
 
   def edit
+    authorize! @user
     set_form_variables
-  end
-
-  def show
-    @user = User.find(params[:id]).decorate
   end
 
   def create
     @user = User.new(user_params)
+    authorize! @user
 
     # Optional: assign random password if none provided
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
 
-    # assign facilitator
-    facilitator_id = params[:facilitator_id].presence || params.dig(:user, :facilitator_id).presence
-    @user.facilitator = Facilitator.find(facilitator_id) if facilitator_id
+    # assign person
+    person_id = params[:person_id].presence || params.dig(:user, :person_id).presence
+    @user.person = Person.find(person_id) if person_id
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
@@ -44,7 +50,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    @user = User.find(params[:id])
+    authorize! @user
 
     # Only update password if entered
     if password_param.present?
@@ -63,16 +69,23 @@ class UsersController < ApplicationController
   end
 
   def destroy
+    authorize! @user
     @user.destroy!
     redirect_to users_path, notice: "User was successfully destroyed."
   end
 
+  # ---------------------------------------------------------
+  # PASSWORD
+  # ---------------------------------------------------------
+
   def change_password
     @user = current_user
+    authorize! @user
   end
 
   def update_password
     @user = current_user
+    authorize! @user
 
     if @user.update_with_password(password_params)
       Analytics::AhoyTracker.track_auth_event(
@@ -82,31 +95,45 @@ class UsersController < ApplicationController
       bypass_sign_in(@user)
       redirect_to root_path, notice: "Your Password was updated."
     else
-      flash[:alert] = "#{@user.errors.full_messages.join(", ")}"
+      flash[:alert] = @user.errors.full_messages.join(", ")
       render :change_password
     end
   end
 
-  def generate_facilitator
-    if @user.facilitator.present?
-      redirect_to @user.facilitator and return
+  # ---------------------------------------------------------
+  # PERSON
+  # ---------------------------------------------------------
+  def generate_person
+    authorize! @user
+
+    if @user.person.present?
+      redirect_to @user.person and return
     else
-      @facilitator = FacilitatorFromUserService.new(user: @user).call
-      if @facilitator.save
-        redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
+      @person = PersonFromUserService.new(user: @user).call
+      if @person.save
+        redirect_to @person, notice: "Person was successfully created for this user." and return
       else
-        redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}" and return
+        redirect_to @user, alert: "Unable to create person: #{@person.errors.full_messages.join(", ")}" and return
       end
     end
   end
 
+  # ---------------------------------------------------------
+  # RESET PASSWORD
+  # ---------------------------------------------------------
+
   def send_reset_password_instructions
+    authorize! @user
     @user.send_reset_password_instructions
     redirect_to users_path, notice: "Reset password instructions sent to #{@user.email}."
   end
 
+  # ---------------------------------------------------------
+  # LOCK / UNLOCK
+  # ---------------------------------------------------------
+
   def toggle_lock_status
-    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+    authorize! @user, to: :toggle_lock_status?
 
     if @user.locked_at.present?
       # Unlock the user
@@ -124,8 +151,12 @@ class UsersController < ApplicationController
     end
   end
 
+  # ---------------------------------------------------------
+  # CONFIRM EMAIL
+  # ---------------------------------------------------------
+
   def confirm_email
-    return redirect_to users_path, alert: "You don't have permission to perform this action." unless current_user.super_user?
+    authorize! @user, to: :confirm_email?
 
     if @user.confirmed_at.present?
       message = "Email is already confirmed."
@@ -140,30 +171,29 @@ class UsersController < ApplicationController
     end
   end
 
+  # =========================================================
+  # PRIVATE
+  # =========================================================
+
   private
 
   def set_user
     @user = User.find(params[:id])
   end
 
-  def set_facilitator
-    @facilitator = @user.facilitator ||
-      (Facilitator.where(id: params[:facilitator_id]).first if params[:facilitator_id].present?)
+  def set_person
+    @person = @user.person || (Person.where(id: params[:person_id]).first if params[:person_id].present?)
   end
 
   def set_form_variables
-    set_facilitator
-    @user.project_users.first || @user.project_users.build
-    projects = if current_user.admin?
-      Project.published
-    else
-      current_user.projects
-    end
-    @projects_array = projects.order(:name).pluck(:name, :id)
+    set_person
+    @user.organization_users.first || @user.organization_users.build
+    organizations = authorized_scope(Organization.all)
+    @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
 
   def password_param
-    params[:user][:password]
+    params.dig(:user, :password)
   end
 
   def password_params
@@ -172,14 +202,15 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :avatar, :first_name, :last_name, :email,
-      :address, :address2, :city, :city2, :state, :state2, :zip, :zip2,
-      :phone, :phone2, :phone3, :birthday, :best_time_to_call, :comment,
-      :notes, :primary_address, :avatar, :subscribecode,
-      :agency_id, :facilitator_id, :created_by_id, :updated_by_id,
-      :confirmed, :published, :super_user, :legacy, :legacy_id,
-      :time_zone,
-      project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
+      :email, :confirmed, :comment, :person_id, :inactive, :primary_address, :time_zone, :super_user,
+
+      ##### legacy to remove later
+      :agency_id, :legacy, :legacy_id, :subscribecode, :avatar, :first_name, :last_name, # legacy to remove later
+      :address, :address2, :city, :city2, :state, :state2, :zip, :zip2, # legacy to remove later
+      :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
+      #####
+
+      organization_users_attributes: [ :id, :organization_id, :position, :title, :inactive, :_destroy ],
     )
   end
 end

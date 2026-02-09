@@ -6,13 +6,13 @@ RSpec.describe "/workshop_logs", type: :request do
   let(:user)         { create(:user) }
   let(:windows_type) { create(:windows_type) }
   let(:workshop)     { create(:workshop) }
-  let(:project)      { create(:project) }
+  let(:organization) { create(:organization) }
 
   let(:valid_attributes) do
     {
       date: Date.current,
       workshop_id: workshop.id,
-      project_id: project.id,
+      organization_id: organization.id,
       windows_type_id: windows_type.id,
       user_id: user.id,
 
@@ -44,15 +44,15 @@ RSpec.describe "/workshop_logs", type: :request do
     end
 
     it "filters workshop logs by workshop_id" do
-      workshop_log = create(:workshop_log, valid_attributes)
+      workshop_log = create(:workshop_log, valid_attributes.merge(children_first_time: 999))
       other_workshop = create(:workshop)
-      other_log = create(:workshop_log, valid_attributes.merge(workshop_id: other_workshop.id))
+      other_log = create(:workshop_log, valid_attributes.merge(workshop_id: other_workshop.id, children_first_time: 111))
 
       get workshop_logs_path, params: { workshop_id: workshop.id }
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include(workshop_log.workshop.name)
-      expect(response.body).not_to include(other_log.workshop.name)
+      expect(response.body).to include("workshop_log_#{workshop_log.id}")
+      expect(response.body).not_to include("workshop_log_#{other_log.id}")
     end
 
     # TODO use action policy to filter

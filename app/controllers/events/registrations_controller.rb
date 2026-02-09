@@ -4,6 +4,7 @@ module Events
 
     def create
       @event_registration = @event.event_registrations.new(registrant: current_user)
+      authorize! @event_registration
 
       if @event_registration.save
         success = "You have successfully registered for this event."
@@ -22,6 +23,7 @@ module Events
 
     def destroy
       @event_registration = @event.event_registrations.find_by(registrant: current_user)
+      authorize! @event_registration
 
       unless @event_registration
         alert = "Registration not found"

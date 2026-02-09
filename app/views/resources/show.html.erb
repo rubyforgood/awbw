@@ -3,20 +3,17 @@
     <div class="<%= DomainTheme.bg_class_for(:resources) %> border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
-        <span class="inline-block text-md">
-          <%= render "bookmarks/editable_bookmark_button", resource: @resource.object %>
-        </span>
-
+        <%= link_to "Resources", resources_path, class: "btn btn-secondary-outline" %>
+        <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+        <%= link_to "External URL", safe_url(@resource.url), target: "_blank", rel: "noopener noreferrer",
+                    class: "btn btn-secondary-outline" if @resource.url.present? %>
         <% if allowed_to?(:edit?, @resource) %>
           <%= link_to("Edit", edit_resource_path(@resource),
                       class: "admin-only bg-blue-100 btn btn-primary-outline") %>
         <% end %>
-
-        <% if @resource.external_url.present? %>
-          <%= link_to "Website", safe_url(@resource.external_url), target: "_blank", rel: "noopener noreferrer",
-                      class: "btn btn-secondary-outline" %>
-        <% end %>
-
+        <span class="inline-block text-md">
+          <%= render "bookmarks/editable_bookmark_button", resource: @resource.object %>
+        </span>
         <span class="inline-block text-md">
           <%= print_button(@resource, printable_type: "Resource", button_text: "Print page") %>
         </span>
@@ -55,7 +52,7 @@
         <%= render "assets/display_assets", resource: @resource, file: @resource.display_image, variant: :hero %>
 
         <!-- Main Text -->
-        <%= @resource.rhino_text %>
+        <%= @resource.rhino_body %>
       </div>
     </div>
   </div>

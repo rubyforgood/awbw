@@ -3,11 +3,16 @@ FactoryBot.define do
     title { "MyString" }
     published { false }
     featured { false }
-    reference_url { "" }
-    youtube_url { "" }
+    rhino_body { "<p>Test content</p>" }
+    # reference_url { nil }
+    # youtube_url { nil }
     association :author, factory: :user
     association :created_by, factory: :user
     association :updated_by, factory: :user
+
+    trait :featured do
+      featured { true }
+    end
 
     trait :published do
       published { true }
@@ -17,12 +22,16 @@ FactoryBot.define do
       published { false }
     end
 
-    trait :featured do
-      featured { true }
+    trait :publicly_visible do
+      publicly_visible { true }
     end
 
-    trait :with_project do
-      association :project
+    trait :publicly_featured do
+      publicly_featured { true }
+    end
+
+    trait :with_organization do
+      association :organization
     end
 
     trait :with_windows_type do

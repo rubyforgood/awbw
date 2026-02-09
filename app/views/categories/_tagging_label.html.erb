@@ -9,7 +9,7 @@
 <% bg_hover_color ||= "bg-lime-200" %>
 
 <% if category %>
-  <%= link_to taggings_path(category_names: category.name),
+  <%= link_to taggings_path(category_names_all: category.name),
     data: {turbo_frame: "_top"},
               class: "inline-flex items-center
                       rounded-md

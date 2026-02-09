@@ -2,6 +2,7 @@ class WorkshopIdea < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
+
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :workshops
@@ -24,6 +25,8 @@ class WorkshopIdea < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
 
   before_save :set_time_frame
+
+  validates :title, presence: true, uniqueness: { case_sensitive: false }
 
   # Nested attributes
   accepts_nested_attributes_for :workshop_series_children,
@@ -72,7 +75,7 @@ class WorkshopIdea < ApplicationRecord
           "%#{author_name}%", "%#{author_name}%", "%#{author_name}%") }
 
   def self.search(params)
-    results = WorkshopIdea.all
+    results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.title(params[:title]) if params[:title].present?
     results = results.author_name(params[:author_name]) if params[:author_name].present?
     results

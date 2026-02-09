@@ -8,6 +8,14 @@ Bundler.require(*Rails.groups)
 
 module Awbw
   class Application < Rails::Application
+    # Configuration for the application, engines, and railties goes here.
+    #
+    # These settings can be overridden in specific environments using the files
+    # in config/environments, which are processed later.
+    #
+    # config.time_zone = "Central Time (US & Canada)"
+    # config.paths.add "app/extras", eager_load: true
+
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
 
@@ -15,24 +23,14 @@ module Awbw
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks generators])
-    config.autoload_paths += %W[
-      #{Rails.root}/app/renderers
-      #{Rails.root}/app/decorators/concerns
-      #{Rails.root}/app/presenters
-    ]
+    config.paths.add "app/renderers", eager_load: true
+    config.paths.add "app/decorators/concerns", eager_load: true
+    config.paths.add "app/presenters", eager_load: true
     config.action_mailer.preview_paths = [
       Rails.root.join("test/mailers/previews"),
       Rails.root.join("spec/mailers/previews"),
       Rails.root.join("lib/mailer_previews")
     ]
-
-    # Configuration for the application, engines, and railties goes here.
-    #
-    # These settings can be overridden in specific environments using the files
-    # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
 
     config.generators do |g| # scaffold generator settings
       # g.orm :active_record             # Use ActiveRecord (default)

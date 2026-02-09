@@ -37,7 +37,7 @@
       <%= render 'shared/errors', resource: @report if @report.errors.any? %>
       <!-- ######### form fields ####### -->
       <div class='form-group'>
-        <%= f.label 'Facilitator' %>
+        <%= f.label "Person" %>
         <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
         <%= f.hidden_field :user_id, value: current_user.id %>
         <%= f.hidden_field :type %>
@@ -52,9 +52,9 @@
           <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
         </div>
         <% agency = agencies.find_by(windows_type_id: f.object.windows_type.id) %>
-        <%= f.collection_select :project_id, agencies, :id, :name,
+        <%= f.collection_select :organization_id, agencies, :id, :name,
         { selected: agency ? agency.id : nil,class: 'js-agency-select' },
-        class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewProject()' %>
+        class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewOrganization()' %>
       </div>
 
       <%= f.hidden_field :owner_id, value: @form_builder.id %>

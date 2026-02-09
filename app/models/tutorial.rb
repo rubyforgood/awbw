@@ -32,11 +32,13 @@ class Tutorial < ApplicationRecord
   scope :tutorial_name, ->(tutorial_name) { title(tutorial_name) }
 
   def self.search_by_params(params)
-    resources = all
+    resources = is_a?(ActiveRecord::Relation) ? self : all
     resources = resources.search(params[:search]) if params[:search].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.body(params[:body]) if params[:body].present?
     resources = resources.published(params[:published]) if params[:published].present?
+    resources = resources.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    resources = resources.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     resources
   end
 end

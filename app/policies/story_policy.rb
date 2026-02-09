@@ -8,7 +8,7 @@ class StoryPolicy < ApplicationPolicy
   def show?
     admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
-  #
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
   #

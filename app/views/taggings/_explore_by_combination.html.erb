@@ -1,0 +1,99 @@
+<!-- Filter Dropdowns -->
+<div class="mt-8 pt-6 border-t border-gray-100">
+  <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 text-center">
+    Explore by combination
+  </h3>
+
+  <div data-controller="tags-sync-list-heights">
+
+    <!-- Two-column grid ONLY -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+      <!-- Service Population -->
+      <div class="min-w-0">
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Service Population
+          <span class="block text-xs text-gray-500 font-normal">Select all that apply</span>
+        </label>
+
+        <div class="border border-gray-300 rounded-md shadow-sm bg-white
+                  divide-y divide-gray-100 overflow-y-auto"
+             data-tags-sync-list-heights-target="source">
+
+          <% selected_sectors =
+               @sector_names_all.to_s.split("--").map(&:strip).reject(&:blank?) %>
+
+          <% Sector.published.order(:name).each do |sector| %>
+            <label class="flex items-center gap-2 px-3 py-1 text-sm cursor-pointer
+                        hover:bg-lime-50">
+              <input type="checkbox"
+                     name="sector_names_all[]"
+                     value="<%= sector.name %>"
+                     data-tags-sync-list-heights-target="sector"
+                     <%= "checked" if selected_sectors.include?(sector.name) %>
+                     class="rounded border-gray-300 text-lime-600
+                          focus:ring-lime-500" />
+
+              <span class="text-gray-900"><%= sector.name %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="min-w-0">
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Category
+          <span class="block text-xs text-gray-500 font-normal">Select all that apply</span>
+        </label>
+
+        <div class="border border-gray-300 rounded-md shadow-sm bg-white
+                  divide-y divide-gray-100 overflow-y-auto"
+             data-tags-sync-list-heights-target="dest">
+
+          <%
+            selected_categories =
+              @category_names_all.to_s
+                             .split("--")
+                             .map(&:strip)
+                             .reject(&:blank?)
+                             .map(&:downcase)
+          %>
+
+          <% Category.published
+                     .joins(:category_type)
+                     .select("categories.*, category_types.name AS category_type_name")
+                     .distinct
+                     .order("category_type_name ASC, categories.name ASC")
+                     .each do |category| %>
+
+            <label class="flex items-center gap-2 px-3 py-1 text-sm cursor-pointer
+                      hover:bg-lime-50">
+              <input type="checkbox"
+                     name="category_names_all[]"
+                     value="<%= category.name %>"
+                     data-tags-sync-list-heights-target="category"
+                     <%= "checked" if selected_categories.include?(category.name.downcase) %>
+                     class="rounded border-gray-300 text-lime-600
+                        focus:ring-lime-500" />
+
+              <span class="text-gray-900">
+                    <%= "#{category.category_type&.name}: " if category.category_type %>
+                <%= category.name %>
+                  </span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Apply Filters Button -->
+    <div class="text-center mt-4">
+      <button type="button"
+              class="btn btn-primary"
+              data-action="tags-sync-list-heights#applyFilters">
+        Apply combination filters
+      </button>
+    </div>
+  </div>
+</div>

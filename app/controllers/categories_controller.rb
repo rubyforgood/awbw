@@ -2,37 +2,43 @@ class CategoriesController < ApplicationController
   before_action :set_category, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    @category_types = CategoryType.order(:name)
 
-    unfiltered = Category.includes(:category_type).joins(:category_type)
-    filtered = unfiltered.category_type_id(params[:category_type_id])
-                          .category_name(params[:category_name])
-                          .published(params[:published])
-                          .order(Arel.sql("category_types.name, categories.position, categories.name"))
+    base_scope = authorized_scope(Category.includes(:category_type).joins(:category_type))
+    filtered = base_scope.category_type_id(params[:category_type_id])
+                         .category_name(params[:category_name])
+                         .published(params[:published])
+                         .order(Arel.sql("category_types.name, categories.position, categories.name"))
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
 
-    @count_display = if filtered.count == unfiltered.count
-      unfiltered.count
-    else
-      "#{filtered.count}/#{unfiltered.count}"
-    end
+    @count_display =
+      if filtered.count == base_scope.count
+        base_scope.count
+      else
+        "#{filtered.count}/#{base_scope.count}"
+      end
+    set_index_variables
   end
 
   def show
+    authorize! @category
   end
 
   def new
     @category = Category.new
+    authorize! @category
     set_form_variables
   end
 
   def edit
+    authorize! @category
     set_form_variables
   end
 
   def create
     @category = Category.new(category_params)
+    authorize! @category
 
     if @category.save
       redirect_to categories_path, notice: "Category was successfully created."
@@ -43,6 +49,7 @@ class CategoriesController < ApplicationController
   end
 
   def update
+    authorize! @category
     respond_to do |format|
       if @category.update(category_params)
         format.html { redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other }
@@ -58,12 +65,17 @@ class CategoriesController < ApplicationController
   end
 
   def destroy
+    authorize! @category
     @category.destroy!
     redirect_to categories_path, notice: "Category was successfully destroyed."
   end
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
+    @category_types = CategoryType.order(:name)
+  end
+
+  def set_index_variables
     @category_types = CategoryType.order(:name)
   end
 

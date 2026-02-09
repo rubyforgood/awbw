@@ -2,26 +2,31 @@ class WindowsTypesController < ApplicationController
   before_action :set_windows_type, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = WindowsType.all
-    @windows_types_count = unpaginated.count
-    @windows_types = unpaginated.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(WindowsType.all)
+    @windows_types_count = base_scope.count
+    @windows_types = base_scope.paginate(page: params[:page], per_page: per_page)
   end
 
   def show
+    authorize! @windows_type
   end
 
   def new
     @windows_type = WindowsType.new
+    authorize! @windows_type
     set_form_variables
   end
 
   def edit
+    authorize! @windows_type
     set_form_variables
   end
 
   def create
     @windows_type = WindowsType.new(windows_type_params)
+    authorize! @windows_type
 
     # Convert checkbox values into categorizable_items updates
     selected_ids = Array(params[:windows_type][:category_ids]).reject(&:blank?).map(&:to_i)
@@ -36,6 +41,7 @@ class WindowsTypesController < ApplicationController
   end
 
   def update
+    authorize! @windows_type
     # Convert checkbox values into categorizable_items updates
     selected_ids = Array(params[:windows_type][:category_ids]).reject(&:blank?).map(&:to_i)
     @windows_type.categories = Category.where(id: selected_ids)
@@ -49,6 +55,7 @@ class WindowsTypesController < ApplicationController
   end
 
   def destroy
+    authorize! @windows_type
     @windows_type.destroy!
     redirect_to windows_types_path, notice: "Windows type was successfully destroyed."
   end

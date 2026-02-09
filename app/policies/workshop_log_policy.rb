@@ -9,6 +9,10 @@ class WorkshopLogPolicy < ApplicationPolicy
     authenticated?
   end
 
+  def create?
+    authenticated?
+  end
+
   def update?
     admin?# || owner?
   end
@@ -20,9 +24,13 @@ class WorkshopLogPolicy < ApplicationPolicy
   #
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
-  #
+
   relation_scope do |relation|
     next relation if admin?
-    relation.where(user: user) # TODO - maybe also allow users to see peers' within same organization
+    scope = relation.where(user_id: user.id) # owned logs
+    if user.organization_ids.present?
+      scope = scope.or(relation.organization_ids(user.organization_ids)) # logs from user's projects
+    end
+    scope
   end
 end

@@ -1,7 +1,7 @@
 class CommunityNews < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
-  belongs_to :project, optional: true
+  belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :author, class_name: "User", optional: true
   belongs_to :created_by, class_name: "User"
@@ -39,17 +39,25 @@ class CommunityNews < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :published, facilitator_first: "facilitators.first_name", facilitator_last: "facilitators.last_name"
-    scope { join_rich_texts.left_joins(author: :facilitator) }
+    attributes :title, :published, person_first: "people.first_name", person_last: "people.last_name"
+
+    scope { join_rich_texts.left_joins(author: :person) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
+
+  scope :community_news_name, ->(community_news_name) {
+    community_news_name.present? ? where("community_news.name LIKE ?", "%#{community_news_name}%") : all }
 
   def self.search_by_params(params)
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
     conditions[:published] = params[:published] if params[:published].present?
+    community_news = self.search(conditions)
 
-    self.search(conditions)
+    community_news = community_news.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    community_news = community_news.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    # community_news = community_news.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    community_news
   end
 end

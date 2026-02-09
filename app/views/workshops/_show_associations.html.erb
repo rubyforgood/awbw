@@ -31,7 +31,7 @@
           <div class="pr-6">
             <h2 class="text-lg font-semibold mb-2">Quotes</h2>
           </div>
-          <% if current_user.super_user? && @workshop.persisted? %>
+          <% if current_user&.super_user? && @workshop.persisted? %>
             <%= link_to "New quote",
                         new_quote_path(workshop_id: @workshop.id),
                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
@@ -52,14 +52,14 @@
     </div>
   <% end %>
 
-  <% if true || @leader_spotlights.any? %>
+  <% if @leader_spotlights.any? %>
     <div id="workshop-spotlights" class="flex-1 bg-white p-4 rounded-lg shadow-md mb-3">
       <section id="workshopLeaderSpotlights">
         <div class="flex items-start justify-between mb-1">
           <div class="pr-6">
-            <h2 class="text-lg font-semibold mb-2">Related facilitator spotlight(s)</h2>
+            <h2 class="text-lg font-semibold mb-2">Related facilitator spotlights</h2>
           </div>
-          <% if current_user.super_user? && @workshop.persisted? %>
+          <% if current_user&.super_user? && @workshop.persisted? %>
             <%= link_to "New story",
                         new_story_path(workshop_id: @workshop.id,
                                        windows_type_id: @workshop.windows_type_id,

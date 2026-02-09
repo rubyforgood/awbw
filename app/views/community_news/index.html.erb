@@ -7,7 +7,7 @@
 
       <div class="text-right text-end">
         <% if current_user&.super_user? %>
-          <%= link_to "New Post",
+          <%= link_to "New community news",
                       new_community_news_path,
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
         <% end %>
@@ -20,8 +20,12 @@
 
     <% result_src = community_news_index_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag "community_news_results", src: result_src do %>
-      <%= render "results_skeleton" %>
+    <% if turbo_frame_request? %>
+      <%= render "community_news_results" %>
+    <% else %>
+      <%= turbo_frame_tag "community_news_results", src: result_src do %>
+        <%= render "results_skeleton" %>
+      <% end %>
     <% end %>
   </div>
 </div>

@@ -7,7 +7,7 @@ RSpec.describe "stories/new", type: :view do
     assign(:story, Story.new)
     assign(:windows_types, [])
     assign(:workshops, [])
-    assign(:projects, [])
+    assign(:organizations, [])
     assign(:users, [])
     allow(view).to receive(:current_user).and_return(user)
   end
@@ -18,7 +18,7 @@ RSpec.describe "stories/new", type: :view do
     assert_select "form[action=?][method=?]", stories_path, "post" do
       assert_select "select[name=?]", "story[windows_type_id]"
 
-      assert_select "select[name=?]", "story[project_id]"
+      assert_select "select[name=?]", "story[organization_id]"
 
       assert_select "select[name=?]", "story[workshop_id]"
 

@@ -18,9 +18,11 @@
       </div>
       <div class="text-right text-end">
         <% if allowed_to?(:new?, Event) %>
-          <%= link_to "New Event",
-                      new_event_path,
-                      class: "whitespace-nowrap btn btn-secondary-outline" %>
+          <div class="admin-only bg-blue-100">
+            <%= link_to "New Event",
+                        new_event_path,
+                        class: "whitespace-nowrap btn btn-secondary-outline" %>
+          </div>
         <% end %>
       </div>
     </div>

@@ -56,7 +56,7 @@
 
       <!-- ######### form fields ####### -->
       <div class='form-group'>
-        <%= f.label 'Facilitator' %>
+        <%= f.label "Person" %>
         <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
         <%= f.hidden_field :user_id, value: current_user.id %>
         <%= f.hidden_field :type %>
@@ -71,7 +71,7 @@
           <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
         </div>
         <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
-        <%= f.collection_select :project_id, @agencies, :id, :name,
+        <%= f.collection_select :organization_id, @agencies, :id, :name,
         { selected: agency ? agency.id : nil,class: 'js-agency-select' },
         class:"selectpicker form-control form-control-custom", onchange: "window.location = $.replaceUrlParam(window.location.toString(),'agency_id',$(this).val() )" %>
       </div>
@@ -261,7 +261,7 @@
 
 
   if ($.urlParam('agency_id') != null){
-    $("#report_project_id").val("<%=params[:agency_id] %>");
+    $("#report_organization_id").val("<%=params[:agency_id] %>");
   }
 
   function validateOptions(event, div_id, input_type) {

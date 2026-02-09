@@ -25,15 +25,15 @@ class Tag
       path: -> { Rails.application.routes.url_helpers.events_path },
       klass: Event
     },
-    facilitators: {
+    people: {
       icon: "🧑‍🎨",
-      path: -> { Rails.application.routes.url_helpers.facilitators_path },
-      klass: Facilitator
+      path: -> { Rails.application.routes.url_helpers.people_path },
+      klass: Person
     },
-    projects: {
+    organizations: {
       icon: "🏫",
-      path: -> { Rails.application.routes.url_helpers.projects_path },
-      klass: ::Project
+      path: -> { Rails.application.routes.url_helpers.organizations_path },
+      klass: Organization
     },
     quotes: {
       icon: "💬",

@@ -59,14 +59,14 @@
      Created by:
      <% if bookmarkable.respond_to?(:user) && bookmarkable.user %>
        <%= link_to bookmarkable.user.full_name,
-                   generate_facilitator_user_path(bookmarkable.user),
+                   generate_person_user_path(bookmarkable.user),
                    class: "hover:underline",
                    data: { turbo: false, } %>
      <% elsif bookmark.bookmarkable_type == "Workshop" %>
-       <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Facilitator" %>
+       <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Person" %>
      <% elsif bookmarkable.respond_to?(:created_by) && bookmarkable.created_by %>
        <%= link_to bookmarkable.object.created_by.full_name,
-                   generate_facilitator_user_path(bookmarkable.created_by),
+                   generate_person_user_path(bookmarkable.created_by),
                    class: "hover:underline",
                    data: { turbo: false, } %>
      <% else %>
@@ -83,7 +83,10 @@
         <%= bookmarkable.created_at.strftime("%B %d, %Y") %>
       <% end %>
       <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.age_ranges.any? %>
-        <br>Age ranges: <%= bookmarkable.age_ranges.pluck(:name).to_sentence %>
+        <br>Age ranges: <%= bookmarkable.age_ranges
+                                        .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+                                        .map(&:name)
+                                        .to_sentence %>
       <% end %>
     </span>
    </div>

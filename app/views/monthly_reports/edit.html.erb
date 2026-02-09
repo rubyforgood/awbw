@@ -39,7 +39,7 @@ A monthly report has already been submitted for this month. Please contact your 
       <%= render 'shared/errors', resource: @report if @report.errors.any? %>
       <!-- ######### form fields ####### -->
       <div class='form-group'>
-        <%= f.label 'Facilitator' %>
+        <%= f.label "Person" %>
         <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
         <%= f.hidden_field :user_id, value: current_user.id %>
         <%= f.hidden_field :type %>
@@ -54,9 +54,9 @@ A monthly report has already been submitted for this month. Please contact your 
           <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
         </div>
         <% agency = @agency_id %>
-        <%= f.collection_select :project_id, @agencies, :id, :name,
+        <%= f.collection_select :organization_id, @agencies, :id, :name,
         { selected: agency, class: 'js-agency-select' },
-        class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewProject()' %>
+        class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewOrganization()' %>
       </div>
 
       <%= render 'sectorable_items' %>
@@ -238,7 +238,7 @@ A monthly report has already been submitted for this month. Please contact your 
 
   });
 
-    $('#report_project_id').on("change", function(){
+    $('#report_organization_id').on("change", function(){
     var agency_id = this.value;
     var year = <%= @year %>;
     var month = <%= @month %>;
@@ -248,7 +248,7 @@ A monthly report has already been submitted for this month. Please contact your 
   });
 
   $("#edit_report :input").attr("disabled", true);
-  $("#report_project_id").attr("disabled", false);
+  $("#report_organization_id").attr("disabled", false);
   $("#report_date").attr("disabled", false);
 
   fillOutDates();

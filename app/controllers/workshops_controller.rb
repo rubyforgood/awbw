@@ -3,6 +3,7 @@ class WorkshopsController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
+    authorize!
     @category_types = CategoryType.published.order(:name).decorate
     @sectors        = Sector.published
     @windows_types  = WindowsType.all
@@ -14,10 +15,9 @@ class WorkshopsController < ApplicationController
       track_index_intent(Workshop, search_service.workshops, params)
 
       @workshops = authorized_scope(search_service.workshops
-                                 .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges,
-                                   user: [ :facilitator ], primary_asset: [ :file_attachment ]))
-                                 .paginate(page: params[:page], per_page: params[:per_page] || 12)
-
+                                                  .includes(:categories, :windows_type, :user, :images, :bookmarks,
+                                                            user: [ :person ], primary_asset: [ :file_attachment ]))
+                                                  .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
       render :workshop_results
     else
@@ -26,6 +26,7 @@ class WorkshopsController < ApplicationController
   end
 
   def summary
+    authorize! :workshop, to: :summary?
     @year = params[:year] ? params[:year].to_i : Date.current.year.to_i
     @month = params[:month] ? params[:month].to_i : Date.current.month.to_i
 
@@ -35,7 +36,7 @@ class WorkshopsController < ApplicationController
     types = reports.map do |r|
       r.windows_type
     end
-    @workshop_logs = current_user.project_monthly_workshop_logs(
+    @workshop_logs = current_user.organization_monthly_workshop_logs(
       reports.first.date, *types,
     )
 
@@ -44,12 +45,14 @@ class WorkshopsController < ApplicationController
     @total_first_time = logs.reduce(0) { |sum, l| sum += l.num_first_time }
 
     combined_windows_type = WindowsType.where(short_name: "COMBINED").first
-    @combined_workshop_logs = current_user.project_workshop_logs(
+    @combined_workshop_logs = current_user.organization_workshop_logs(
       @report.date, combined_windows_type, current_user.agency_id
     )
+    authorize! @combined_workshop_logs
   end
 
   def build_report
+    authorize! :workshop, to: :summary?
     date = Date.new(@year, @month)
 
     form_builder = FormBuilder
@@ -74,14 +77,17 @@ class WorkshopsController < ApplicationController
     if params[:workshop_idea_id].present?
       @workshop_idea = WorkshopIdea.find(params[:workshop_idea_id])
       @workshop = WorkshopFromIdeaService.new(@workshop_idea, user: current_user).call
+      authorize! @workshop
     else
       @workshop = Workshop.new(user: current_user)
+      authorize! @workshop
     end
     set_form_variables
   end
 
   def create
     @workshop = current_user.workshops.build(workshop_params)
+    authorize! @workshop
 
     success = false
 
@@ -112,6 +118,7 @@ class WorkshopsController < ApplicationController
 
   def edit
     @workshop = Workshop.find(params[:id])
+    authorize! @workshop
     set_form_variables
 
     if turbo_frame_request?
@@ -124,28 +131,27 @@ class WorkshopsController < ApplicationController
   def show
     if turbo_frame_request?
       @workshop = Workshop.find(params[:id]).decorate
+      authorize! @workshop
       set_show
       render partial: "show_lazy", locals: { workshop: @workshop }
     else
       @workshop = Workshop.find(params[:id]).decorate
+      authorize! @workshop
       track_view(@workshop)
       render :show
     end
   end
 
   def destroy
-    unless current_user.super_user?
-      flash[:alert] = "You do not have permission to delete a workshop"
-      return redirect_back_or_to(workshops_path)
-    end
-
     @workshop = Workshop.find(params[:id])
+    authorize! @workshop
     @workshop.destroy!
     redirect_to workshops_path, notice: "Workshop was successfully destroyed."
   end
 
   def update
     @workshop = Workshop.find(params[:id])
+    authorize! @workshop
     success = false
 
     Workshop.transaction do
@@ -180,6 +186,8 @@ class WorkshopsController < ApplicationController
       @workshops = @workshops.paginate(page: params[:search][:page], per_page: workshops_per_page)
     end
 
+    authorize! @workshops
+
     load_sortable_fields
     load_metadata
 
@@ -208,7 +216,7 @@ class WorkshopsController < ApplicationController
       Category
         .includes(:category_type)
         .published
-        .order(:name)
+        .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
         .sort_by { |type, _| type&.name.to_s.downcase }

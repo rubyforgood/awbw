@@ -1,9 +1,10 @@
 module Admin
-  class AnalyticsController < Admin::BaseController
+  class AnalyticsController < ApplicationController
     include AhoyTracking
-    protect_from_forgery with: :null_session
+    skip_before_action :authenticate_user!, only: :print
 
     def index
+      authorize! :analytics, to: :index?
       time_scope = apply_time_filter(params[:time_period])
 
       # Query Ahoy events for view counts within the time period
@@ -14,9 +15,9 @@ module Admin
       @most_viewed_stories = decorate_with_counts(most_viewed_for_model(Story, time_scope), :view_count)
       @most_viewed_quotes = decorate_with_counts(most_viewed_for_model(Quote, time_scope), :view_count)
       @most_viewed_tutorials = decorate_with_counts(most_viewed_for_model(Tutorial, time_scope), :view_count)
-      @most_viewed_projects = decorate_with_counts(most_viewed_for_model(Project, time_scope), :view_count)
+      @most_viewed_organizations = decorate_with_counts(most_viewed_for_model(Organization, time_scope), :view_count)
       @most_viewed_events = decorate_with_counts(most_viewed_for_model(Event, time_scope), :view_count)
-      @most_viewed_facilitators = decorate_with_counts(most_viewed_for_model(Facilitator, time_scope), :view_count)
+      @most_viewed_people = decorate_with_counts(most_viewed_for_model(Person, time_scope), :view_count)
 
       @most_printed_workshops = decorate_with_counts(most_printed_for_model(Workshop, time_scope), :print_count)
       @most_printed_resources = decorate_with_counts(most_printed_for_model(Resource, time_scope), :print_count)
@@ -25,7 +26,7 @@ module Admin
       # @most_printed_workshop_variations = decorate_with_counts(most_printed_for_model(WorkshopVariation, time_scope), :print_count)
       # @most_printed_quotes = decorate_with_counts(most_printed_for_model(Quote, time_scope), :print_count)
       # @most_printed_tutorials = decorate_with_counts(most_printed_for_model(Tutorial, time_scope), :print_count)
-      # @most_printed_projects = decorate_with_counts(most_printed_for_model(Project, time_scope), :print_count)
+      # @most_printed_organizations = decorate_with_counts(most_printed_for_model(Organization, time_scope), :print_count)
       # @most_printed_events = decorate_with_counts(most_printed_for_model(Event, time_scope), :print_count)
 
       @most_downloaded_resources = decorate_with_counts(most_downloaded_for_model(Resource, time_scope), :download_count)
@@ -67,17 +68,21 @@ module Admin
           views: view_count_for_model(Tutorial, time_scope),
           prints: print_count_for_model(Tutorial, time_scope)
         },
-        projects: {
-          views: view_count_for_model(Project, time_scope),
-          prints: print_count_for_model(Project, time_scope)
+        organizations: {
+          views: view_count_for_model(Organization, time_scope),
+          prints: print_count_for_model(Organization, time_scope)
         },
-        facilitators: {
-          views: view_count_for_model(Facilitator, time_scope)
+        people: {
+          views: view_count_for_model(Person, time_scope)
         }
       }
     end
 
     def print
+      authorize! :analytics, to: :print?
+
+      return head :bad_request unless request.format.json?
+
       printable_models = {
         "Resource" => Resource,
         "Story" => Story,
@@ -95,6 +100,7 @@ module Admin
 
       head :ok
     end
+
 
     private
 

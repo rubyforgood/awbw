@@ -1,25 +1,17 @@
 module TaggingsHelper
-  def tagged_index_path(type, sector_names:, category_names:)
+  def tagged_index_path(type, sector_names_all:, category_names_all:)
     klass = Tag::TAGGABLE_META.fetch(type)[:klass]
 
     params = { published: true }
 
-    if sector_names.present?
-      sector_ids = Sector.names(sector_names).published.pluck(:id)
-      params[:sectors] = hashify_ids(sector_ids)
+    if sector_names_all.present?
+      params[:sector_names_all] = sector_names_all
     end
 
-    if category_names.present?
-      category_ids = Category.names(category_names).published.pluck(:id)
-      params[:categories] = hashify_ids(category_ids)
+    if category_names_all.present?
+      params[:category_names_all] = category_names_all
     end
 
     polymorphic_path(klass, params)
-  end
-
-  private
-
-  def hashify_ids(ids)
-    ids.index_with(&:to_i)
   end
 end
