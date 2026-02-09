@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe "Facilitators can download resources", type: :system, js: true do
+RSpec.describe "People can download resources", type: :system, js: true do
   include DownloadHelpers
 
   let(:user) { create(:user) }

@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Reset password (facilitator)', type: :system do
-  let(:facilitator_user) { create(:user, :with_facilitator) }
+  let(:facilitator_user) { create(:user, :with_person) }
 
   before do
     sign_in facilitator_user

@@ -1,7 +1,7 @@
 require "rails_helper"
 
-RSpec.describe "Facilitators can view a submitted workshop log" do
-  describe "when facilitator is logged in" do
+RSpec.describe "People can view a submitted workshop log" do
+  describe "when person is logged in" do
     context "viewing workshop logs" do
       before do
         Capybara.current_session.current_window.resize_to(1920, 5000)
@@ -52,7 +52,7 @@ RSpec.describe "Facilitators can view a submitted workshop log" do
         expect(page).to have_content("Workshop logs")
         expect(page).to have_content("Date")
         expect(page).to have_content("Workshop")
-        expect(page).to have_content("Facilitator")
+        expect(page).to have_content("Person")
         expect(page).to have_content("# Ongoing")
         expect(page).to have_content("# First-time")
         expect(page).to have_content("children")

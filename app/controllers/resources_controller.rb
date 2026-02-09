@@ -128,8 +128,8 @@ class ResourcesController < ApplicationController
   def set_form_variables
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
-                   .includes(:facilitator)
-                   .order("facilitators.first_name, facilitators.last_name")
+                   .includes(:person)
+                   .order("people.first_name, people.last_name")
                    .map { |u| [ u.full_name, u.id ] }
   end
 

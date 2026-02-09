@@ -20,7 +20,7 @@ class Notification < ApplicationRecord
 
   RECIPIENT_ROLES = %w[
     admin
-    facilitator
+    person
   ].freeze
 
   # Scopes

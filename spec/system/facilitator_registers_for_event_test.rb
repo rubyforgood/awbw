@@ -1,8 +1,8 @@
 require 'rails_helper'
 
-RSpec.describe "Facilitators can register for an event" do
-  describe "Facilitators signs in, views the events and register for the events" do
-    context "When Facilitator is logged in" do
+RSpec.describe "People can register for an event" do
+  describe "Person signs in, views the events and register for the events" do
+    context "When Person is logged in" do
       before do
         user = create(:user)
         create(:person, user: user)

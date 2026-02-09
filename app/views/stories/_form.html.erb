@@ -115,9 +115,9 @@
                     value_method: :id,
                     include_blank: true,
                     selected: f.object.spotlighted_facilitator_id,
-                    label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted person",
+                    label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
                                                                            person_path(f.object.spotlighted_facilitator_id),
-                                                                           class: "hover:underline") : "Story spotlighted person").html_safe %>
+                                                                           class: "hover:underline") : "Story spotlighted facilitator").html_safe %>
       </div>
 
       <%= f.hidden_field :updated_by_id, value: current_user.id %>

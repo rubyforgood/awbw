@@ -63,7 +63,7 @@
                    class: "hover:underline",
                    data: { turbo: false, } %>
      <% elsif bookmark.bookmarkable_type == "Workshop" %>
-       <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Facilitator" %>
+       <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Person" %>
      <% elsif bookmarkable.respond_to?(:created_by) && bookmarkable.created_by %>
        <%= link_to bookmarkable.object.created_by.full_name,
                    generate_person_user_path(bookmarkable.created_by),

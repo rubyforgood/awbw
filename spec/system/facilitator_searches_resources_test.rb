@@ -1,7 +1,7 @@
 require 'rails_helper'
 
-RSpec.describe "Facilitators can search for resources" do
-  describe "create facilitator and login and resources" do
+RSpec.describe "People can search for resources" do
+  describe "create person and login and resources" do
     context "When user is logged in" do
       before do
         user = create(:user)

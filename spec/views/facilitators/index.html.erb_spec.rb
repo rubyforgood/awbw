@@ -1,19 +1,19 @@
 require 'rails_helper'
 
-RSpec.describe "facilitators/index", type: :view do
+RSpec.describe "people/index", type: :view do
   let(:admin) { create(:user, :admin) }
 
-  let(:facilitator) { create(:facilitator) }
-  let(:facilitator_2) { create(:facilitator) }
+  let(:person) { create(:person) }
+  let(:person_2) { create(:person) }
 
   before(:each) do
-    assign(:facilitators, paginated([ facilitator, facilitator_2 ]))
+    assign(:people, paginated([ person, person_2 ]))
     allow(view).to receive(:current_user).and_return(admin)
   end
 
-  it "renders a list of facilitators" do
+  it "renders a list of people" do
     render
-    expect(rendered).to match(facilitator.first_name)
-    expect(rendered).to match(facilitator_2.first_name)
+    expect(rendered).to match(person.first_name)
+    expect(rendered).to match(person_2.first_name)
   end
 end

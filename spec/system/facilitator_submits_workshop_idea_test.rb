@@ -1,9 +1,9 @@
 
 require 'rails_helper'
 
-RSpec.describe "Facilitators can submit a workshop idea", type: :system do
+RSpec.describe "People can submit a workshop idea", type: :system do
   describe "Navigate to Workshop Idea page" do
-    context "When Facilitator is logged in" do
+    context "When Person is logged in" do
       before do
         create(:windows_type, :adult)
         create(:windows_type, :children)

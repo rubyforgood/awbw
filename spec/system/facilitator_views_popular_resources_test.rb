@@ -1,7 +1,7 @@
 require 'rails_helper'
 
-RSpec.describe "Facilitators can view Popular Resources on the dashboard" do
-  describe "Facilitator views and navigates to Popular Resources" do
+RSpec.describe "People can view Popular Resources on the dashboard" do
+  describe "Person views and navigates to Popular Resources" do
     context "when logged in" do
       before do
         @user = create(:user)

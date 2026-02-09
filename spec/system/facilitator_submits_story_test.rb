@@ -1,8 +1,8 @@
 require "rails_helper"
 
-RSpec.describe "Facilitators can submit a story", type: :system do
+RSpec.describe "People can submit a story", type: :system do
   describe "Share Your Story form" do
-    context "When facilitator is logged in" do
+    context "When person is logged in" do
       before do
         create(:windows_type, :adult)
         create(:windows_type, :children)

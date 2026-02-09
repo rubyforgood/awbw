@@ -39,7 +39,7 @@ A monthly report has already been submitted for this month. Please contact your 
       <%= render 'shared/errors', resource: @report if @report.errors.any? %>
       <!-- ######### form fields ####### -->
       <div class='form-group'>
-        <%= f.label 'Facilitator' %>
+        <%= f.label "Person" %>
         <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
         <%= f.hidden_field :user_id, value: current_user.id %>
         <%= f.hidden_field :type %>

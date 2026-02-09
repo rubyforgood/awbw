@@ -1,8 +1,8 @@
 require 'rails_helper'
 
-RSpec.describe 'Facilitators can search for a workshop' do
-  describe "Facilitator searches a workshop" do
-    context "when facilitator is logged in" do
+RSpec.describe 'People can search for a workshop' do
+  describe "Person searches a workshop" do
+    context "when person is logged in" do
       before do
         user = create(:user)
         create(:person, user: user)

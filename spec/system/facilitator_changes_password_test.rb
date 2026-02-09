@@ -1,8 +1,8 @@
 require 'rails_helper'
 
-RSpec.describe 'Facilitators can change their password quickly and easily' do
-  describe 'Facilitator changes password through reset link' do
-    context 'when facilitator requests password change' do
+RSpec.describe 'People can change their password quickly and easily' do
+  describe 'Person changes password through reset link' do
+    context 'when person requests password change' do
       before do
         @user = create(:user)
         create(:person, user: @user)

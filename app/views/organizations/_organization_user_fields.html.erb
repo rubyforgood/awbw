@@ -4,7 +4,7 @@
     <div>
       <%= f.input :user_id,
                   as: :select,
-                  label: "Facilitator",
+                  label: "Person",
                   collection: @people_array,
                   include_blank: true,
                   selected: f.object&.user_id,

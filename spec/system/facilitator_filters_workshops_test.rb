@@ -1,8 +1,8 @@
 require 'rails_helper'
 
-RSpec.describe 'Facilitators can filter workshops using metadata' do
+RSpec.describe 'People can filter workshops using metadata' do
   describe "Workshop filtering" do
-    context "when regular facilitator is logged in" do
+    context "when regular person is logged in" do
       let(:user) { create(:user) }
       let(:adult_window) { create(:windows_type, :adult) }
       let(:child_window) { create(:windows_type, :children) }

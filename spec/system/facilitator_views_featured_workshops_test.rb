@@ -1,8 +1,8 @@
 require 'rails_helper'
 
-RSpec.describe 'Facilitators can bookmark workshops' do
-  describe "Facilitator bookmarks a workshop" do
-    context "when facilitator is logged in" do
+RSpec.describe 'People can bookmark workshops' do
+  describe "Person bookmarks a workshop" do
+    context "when person is logged in" do
       before do
         user = create(:user)
         create(:person, user: user)

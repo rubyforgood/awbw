@@ -33,9 +33,9 @@
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
-    <!-- Facilitator -->
+    <!-- Person -->
     <div class="flex flex-col w-full sm:w-1/2 md:w-1/4 lg:w-1/5">
-      <%= label_tag :user_id, "Facilitator", class: "text-sm font-medium text-gray-700 mb-1" %>
+      <%= label_tag :user_id, "Person", class: "text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag :user_id,
                      options_from_collection_for_select(@people, :id, :name, params[:user_id]),
                      include_blank: "All people",

@@ -36,11 +36,11 @@ class OrganizationsController < ApplicationController
                          .references(:windows_type)
                          .order("workshops.title ASC, windows_types.name ASC")
     user_ids = @workshop_logs_unpaginated.select(:user_id)
-    @facilitators = User.active
-                        .or(User.where(id: user_ids))
-                        .includes(:facilitator)
-                        .distinct
-                        .order("facilitators.first_name, facilitators.last_name")
+    @people = User.active
+                  .or(User.where(id: user_ids))
+                  .includes(:facilitator)
+                  .distinct
+                  .order("people.first_name, people.last_name")
   end
 
   def new

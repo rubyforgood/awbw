@@ -16,7 +16,7 @@ RSpec.describe "shared/_navbar", type: :view do
     end
 
     it "does not show admin-only links" do
-      expect(rendered).not_to include("Facilitators")
+      expect(rendered).not_to include("People")
       expect(rendered).not_to include("Organizations")
       expect(rendered).not_to include("Admin")
     end
@@ -40,7 +40,7 @@ RSpec.describe "shared/_navbar", type: :view do
     end
 
     it "does not show admin-only links" do
-      expect(rendered).not_to include("Facilitators")
+      expect(rendered).not_to include("People")
       expect(rendered).not_to include("Organizations")
       expect(rendered).not_to include("Admin")
     end
@@ -60,7 +60,7 @@ RSpec.describe "shared/_navbar", type: :view do
     end
 
     it "shows admin-only links in Community menu" do
-      expect(rendered).to include("Facilitators")
+      expect(rendered).to include("People")
       expect(rendered).to include("Organizations")
     end
 

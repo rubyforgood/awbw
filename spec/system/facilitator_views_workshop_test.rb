@@ -1,8 +1,8 @@
 require 'rails_helper'
 
-RSpec.describe "Facilitators can view a workshop" do
+RSpec.describe "People can view a workshop" do
   describe 'workshops views' do
-    context "When facilitator is logged in" do
+    context "When person is logged in" do
       before do
         user = create(:user)
         create(:person, user: user)

@@ -1,8 +1,8 @@
 require "rails_helper"
 
-RSpec.describe "Facilitators can submit a workshop log" do
-  describe "workshop log submission by facilitator" do
-    context "when facilitator is logged in" do
+RSpec.describe "People can submit a workshop log" do
+  describe "workshop log submission by person" do
+    context "when person is logged in" do
       before do
         @user = create(:user)
         create(:person, user: @user)

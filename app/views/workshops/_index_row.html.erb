@@ -60,7 +60,7 @@
                         class: "hover:underline",
                         data: { turbo: false } %>
           <% else %>
-            <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
+            <%= workshop.full_name.present? ? workshop.full_name : "Person" %>
           <% end %>
           | <%= workshop.date %>
         </div>

@@ -1,31 +1,31 @@
 require 'rails_helper'
 
-RSpec.describe "facilitators/edit", type: :view do
+RSpec.describe "people/edit", type: :view do
   let(:user) { create(:user) }
   let(:admin) { create(:user, :admin) }
 
-  let(:facilitator) { create(:facilitator, pronouns: "sdfsdf") }
+  let(:person) { create(:person, pronouns: "sdfsdf") }
 
   before(:each) do
-    assign(:facilitator, facilitator)
+    assign(:person, person)
     allow(view).to receive(:current_user).and_return(admin)
     allow(view).to receive(:allowed_to?).and_return(true)
     render
   end
 
   it "displays the edit heading" do
-    expect(rendered).to match(/Edit Facilitator/)
+    expect(rendered).to match(/Edit Person/)
   end
 
-  it "has a form with the facilitator fields" do
-    expect(rendered).to have_field('First name', with: facilitator.first_name)
-    expect(rendered).to have_field('Last name', with: facilitator.last_name)
-    expect(rendered).to have_field('Pronouns', with: facilitator.pronouns)
-    expect(rendered).to have_checked_field('facilitator_profile_show_pronouns') if facilitator.profile_show_pronouns
+  it "has a form with the person fields" do
+    expect(rendered).to have_field('First name', with: person.first_name)
+    expect(rendered).to have_field('Last name', with: person.last_name)
+    expect(rendered).to have_field('Pronouns', with: person.pronouns)
+    expect(rendered).to have_checked_field('person_profile_show_pronouns') if person.profile_show_pronouns
   end
 
   it "has a link to the show page" do
-    expect(rendered).to have_link('Profile', href: facilitator_path(facilitator))
+    expect(rendered).to have_link('Profile', href: person_path(person))
   end
 
   it "has a link back to change password" do
