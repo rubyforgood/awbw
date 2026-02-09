@@ -47,7 +47,7 @@
                     class: "hover:underline block",
                     data: { turbo_frame: "_top", turbo_prefetch: false } do %>
           <%= title_with_badges(workshop,
-                                show_hidden_badge: current_user&.super_user?,
+                                show_hidden_badge: current_user_admin?,
                                 display_windows_type: true).html_safe %>
         <% end %>
 

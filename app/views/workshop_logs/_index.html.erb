@@ -93,7 +93,7 @@
                   <td class="text-center bg-green-100"><%= display_count(log.adults_first_time) %></td>
 
                   <td class="text-center whitespace-nowrap">
-                    <% if current_user&.super_user? || log.user == current_user %>
+                    <% if current_user_admin? || log.user == current_user %>
                       <%= link_to "Edit",
                                   edit_workshop_log_path(log),
                                   class: "btn btn-secondary-outline text-xs px-2 py-1" %>

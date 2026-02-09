@@ -54,7 +54,7 @@
             <% end %>
           <% end %>
           <div class="md:flex-grow md:basis-1/3" id="email_field_wrapper">
-            <% if current_user&.super_user? %>
+            <% if current_user_admin? %>
               <div class="w-full">
                 <%= f.input :email,
                             label: @user.persisted? ? email_label_with_confirmation_icon(@user) : "Email",
@@ -64,7 +64,7 @@
                             wrapper_html: { class: "w-full" },
                             label_html: { id: "email_label" } %>
                 <div id="confirm_email_button">
-                  <% if @user.persisted? && @user.confirmed_at.nil? && current_user&.super_user? %>
+                  <% if @user.persisted? && @user.confirmed_at.nil? && current_user_admin? %>
                     <div class="mt-2">
                       <button type="button"
                               data-controller="confirm-email"
@@ -95,7 +95,7 @@
             <% end %>
           </div>
           <div>
-            <% if current_user&.super_user? %>
+            <% if current_user_admin? %>
               <div class="w-full p-3">
                 <div class="flex flex-col md:flex-row gap-4">
                   <%= f.input :inactive %>
@@ -106,7 +106,7 @@
           </div>
         </div>
         <!-- Notes -->
-        <% if current_user&.super_user? %>
+        <% if current_user_admin? %>
           <div class="comments-section">
             <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
 
@@ -133,7 +133,7 @@
                 wrapper_html: { class: "w-full max-w-md" } %>
   </div>
 
-  <% if current_user&.super_user? %>
+  <% if current_user_admin? %>
     <div class="p-3">
       <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
     </div>

@@ -28,7 +28,7 @@
                                  focus:ring-blue-500 focus:border-blue-500" %>
     </div>
 
-    <% if current_user&.super_user? %>
+    <% if current_user_admin? %>
       <!-- PUBLISHED -->
       <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
         <label for="published" class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">

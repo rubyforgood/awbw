@@ -44,7 +44,7 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <% if current_user&.super_user? %>
+      <% if current_user_admin? %>
         <div class="admin-only bg-blue-100 p-3 flex gap-x-2 items-center">
           <%= f.input :full_name, as: :text,
                       label: "Author's name",
@@ -217,7 +217,7 @@
         <%= rhino_editor(f, :extra_field) %>
       <% end %>
 
-      <% if current_user&.super_user? %>
+      <% if current_user_admin? %>
         <div class="admin-only bg-blue-100 m-4 p-2 rounded-md">
           <label class="block text-sm font-medium text-gray-700 mb-1">Date created</label>
 
@@ -423,7 +423,7 @@
         <%= link_to "Delete", @workshop, method: :delete, class: "btn btn-danger-outline",
                     data: { confirm: "Are you sure you want to delete?" } %>
       <% end %>
-      <%= link_to "Cancel", (current_user&.super_user? ? workshops_path : root_path),
+      <%= link_to "Cancel", (current_user_admin? ? workshops_path : root_path),
                   class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>

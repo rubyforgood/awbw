@@ -110,7 +110,7 @@
                         class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                       } %>
 
-    <% if current_user&.super_user? %>
+    <% if current_user_admin? %>
       <div class="admin-only bg-blue-100">
         <%= f.input :organization_status_id,
                     as: :select,
@@ -132,7 +132,7 @@
 
   <!-- WINDOWS / STATUS / START / END -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <% if current_user&.super_user? %>
+    <% if current_user_admin? %>
       <div class="admin-only bg-blue-100">
         <%= f.input :start_date,
                     label: "Affiliation start date",
@@ -175,7 +175,7 @@
                 input_html: {
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
-    <% if current_user&.super_user? %>
+    <% if current_user_admin? %>
       <div class="admin-only bg-blue-100">
         <%= f.input :internal_id,
                     label: "Internal Organization ID",
@@ -203,7 +203,7 @@
                 } %>
   </div>
 
-  <% if current_user&.super_user? %>
+  <% if current_user_admin? %>
     <div class="admin-only bg-blue-100">
       <div class="mb-6">
         <%= f.input :notes,
@@ -244,7 +244,7 @@
       Person affiliations
     </div>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-      <% if current_user&.super_user? %>
+      <% if current_user_admin? %>
         <div class="admin-only bg-blue-100 p-3">
           <%= f.fields_for :organization_users do |organization_user_form| %>
             <%= render "organization_user_fields",

@@ -24,7 +24,7 @@
                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                       }  %>
 
-          <% if current_user&.super_user? %>
+          <% if current_user_admin? %>
             <%= f.input :member_since,
                         as: :date,
                         discard_day: true,
@@ -49,7 +49,7 @@
             </div>
           <% end %>
 
-          <% if current_user&.super_user? %>
+          <% if current_user_admin? %>
             <div class="admin-only bg-blue-100 pt-3 px-3">
               <%= f.input :published,
                           as: :boolean,
@@ -80,7 +80,7 @@
               <%= f.object.user&.email || f.object.email %>
             </span>
             <p class="text-sm text-gray-500 mt-1">Only
-              <% if current_user&.super_user? && f.object.user&.persisted? %>
+              <% if current_user_admin? && f.object.user&.persisted? %>
                 <%= link_to "editable by admins",
                             edit_user_path(f.object.user),
                             class: "underline" %>
@@ -165,7 +165,7 @@
         <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-        <% if current_user&.super_user? %>
+        <% if current_user_admin? %>
           <div class="admin-only bg-blue-100 p-3">
             <%= u.fields_for :organization_users do |organization_user_form| %>
               <%= render "organization_user_fields",

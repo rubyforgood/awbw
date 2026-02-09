@@ -6,7 +6,7 @@
         <h1 class="text-2xl font-semibold text-gray-900">
           Organizations (<%= number_with_delimiter(@organizations_count) %>)
         </h1>
-        <% if current_user&.super_user? %>
+        <% if current_user_admin? %>
           <%= link_to "New Organization",
                       new_organization_path,
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
@@ -95,8 +95,7 @@
               </td>
 
               <td class="px-4 py-2 text-center whitespace-nowrap">
-                <% if current_user&.super_user? %>
-                  <%= link_to "Edit", edit_organization_path(organization),
+                <% if allowed_to?(:edit?, @ edit_organization_path(organization),
                               class: "admin-only bg-blue-100 btn btn-secondary-outline text-xs px-2 py-1" %>
                 <% end %>
                 <%= link_to "Profile", organization_path(organization),

@@ -20,8 +20,7 @@
   <div class="flex items-center gap-4">
     <%= link_to "Workshops", workshops_path, class: "btn btn-secondary-outline" %>
     <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
-    <% if current_user&.super_user? %>
-      <%= link_to "Edit",
+    <% if allowed_to?(:edit?, @
                   edit_workshop_path(workshop),
                   class: "btn btn-secondary-outline admin-only bg-blue-100" %>
     <% end %>

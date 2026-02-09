@@ -42,7 +42,7 @@
           <div class="pr-6">
             <h2 class="text-lg font-semibold mb-2">Quotes</h2>
           </div>
-          <% if current_user&.super_user? && @workshop.persisted? %>
+          <% if current_user_admin? && @workshop.persisted? %>
             <%= link_to "New quote",
                         new_quote_path(workshop_id: @workshop.id),
                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
@@ -70,7 +70,7 @@
           <div class="pr-6">
             <h2 class="text-lg font-semibold mb-2">Related facilitator spotlights</h2>
           </div>
-          <% if current_user&.super_user? && @workshop.persisted? %>
+          <% if current_user_admin? && @workshop.persisted? %>
             <%= link_to "New story",
                         new_story_path(workshop_id: @workshop.id,
                                        windows_type_id: @workshop.windows_type_id,

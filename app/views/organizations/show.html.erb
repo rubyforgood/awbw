@@ -6,8 +6,7 @@
 
         <%= link_to "Organizations", organizations_path, class: "btn btn-secondary-outline" %>
         <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
-        <% if current_user&.super_user? %>
-          <%= link_to "Edit", edit_organization_path(@organization),
+        <% if allowed_to?(:edit?, @ edit_organization_path(@organization),
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
         <% end %>
         <span class="inline-block text-sm">
@@ -204,7 +203,7 @@
 
       <hr class="my-8 border-gray-200">
 
-      <% if current_user&.super_user? || @organization.organization_users.pluck(:user_id).include?(current_user.id) %>
+      <% if current_user_admin? || @organization.organization_users.pluck(:user_id).include?(current_user.id) %>
         <div class="organization-only bg-green-100">
           <!-- Workshop logs -->
           <% if true || @organization.profile_show_workshop_logs? %>

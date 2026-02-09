@@ -10,8 +10,7 @@
                   data: { turbo_prefetch: false },
                   class: "hover:underline" %>
     </h2>
-    <% if current_user&.super_user? %>
-      <%= link_to "Edit",
+    <% if allowed_to?(:edit?, @
                   edit_tutorial_path(tutorial),
                   class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
     <% end %>

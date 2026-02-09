@@ -1,4 +1,8 @@
 module ApplicationHelper
+  def current_user_admin?
+    current_user&.super_user?
+  end
+
   def search_page(params)
     params[:search] ? params[:search][:page] : 1
   end

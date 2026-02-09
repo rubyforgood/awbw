@@ -10,8 +10,7 @@
                     class: "btn btn-secondary-outline" if @story.external_url.present? %>
         <%= link_to "Stories", stories_path, class: "btn btn-secondary-outline" %>
         <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
-        <% if current_user&.super_user? %>
-          <%= link_to "Edit", edit_story_path(@story),
+        <% if allowed_to?(:edit?, @ edit_story_path(@story),
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>
         <span class="inline-block text-sm">
