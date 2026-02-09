@@ -23,6 +23,11 @@ development:
   primary: &primary_development
     <<: *base
     database: awbw_development
+#  cache:
+#    <<: *primary_development
+#    database: awbw_development_cache
+#    migrations_paths: db/cache_migrate
+#    url: <%= ENV.fetch("CACHE_DATABASE_URL", nil) %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -48,3 +53,5 @@ production:
     database: awbw_production_cache
     migrations_paths: db/cache_migrate
     url: <%= ENV.fetch("CACHE_DATABASE_URL", nil) %>
+
+

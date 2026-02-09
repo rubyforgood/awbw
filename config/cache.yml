@@ -6,8 +6,8 @@ default: &default
     max_size: <%= 3.gigabytes %>
     namespace: <%= Rails.env %>
 
-development:
-  <<: *default
+#development:
+#  <<: *default
 
 test:
   <<: *default
