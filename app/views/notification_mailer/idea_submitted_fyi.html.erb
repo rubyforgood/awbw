@@ -35,65 +35,35 @@
     </div>
   <% end %>
 
-  <% if @noticeable.primary_asset&.file&.attached? %>
+  <% if @attachments.present? %>
     <h3 style="margin-top: 36px; margin-bottom: 12px;">
-      Primary asset
-    </h3>
-    <p>
-      <% blob = @noticeable.primary_asset.file.blob %>
-      <span style="margin-bottom: 6px;">
-        <a
-          href="<%= rails_blob_url(blob, disposition: "inline") %>"
-          target="_blank"
-          style="color:#2563eb; text-decoration: underline;">
-          <% if blob.image? %>
-            <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
-              <img
-                src="<%= rails_blob_url(blob, disposition: "inline") %>"
-                alt="<%= blob.filename %>"
-                width="180"
-                style="display:block;margin:6px 0;border-radius:4px;"
-                />
-              <%= blob.filename.to_s %>
-            </a>
-          <% else %>
-            <%= blob.filename.to_s %>
-          <% end %>
-        </a>
-      </span>
-    </p>
-  <% end %>
-
-
-  <!-- Attachments -->
-  <% if @noticeable.gallery_assets.any? %>
-    <h3 style="margin-top: 36px; margin-bottom: 12px;">
-      Gallery assets
+      Attachments
     </h3>
 
-    <% @noticeable.gallery_assets.each do |asset| %>
+    <% @attachments.each do |asset| %>
       <% blob = asset.file.blob %>
 
       <span style="margin-bottom: 6px;">
+        <% if blob.image? %>
+          <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
+            <img
+              src="<%= rails_blob_url(blob, disposition: "inline") %>"
+              alt="<%= blob.filename %>"
+              width="180"
+              style="display:block;margin:6px 0;border-radius:4px;"
+              />
+            <%= blob.filename.to_s %>
+          </a>
+        <% else %>
           <a
             href="<%= rails_blob_url(blob, disposition: "inline") %>"
             target="_blank"
-            style="color:#2563eb; text-decoration: underline;">
-            <% if blob.image? %>
-              <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
-                <img
-                  src="<%= rails_blob_url(blob, disposition: "inline") %>"
-                  alt="<%= blob.filename %>"
-                  width="180"
-                  style="display:block;margin:6px 0;border-radius:4px;"
-                  />
-                <%= blob.filename.to_s %>
-              </a>
-            <% else %>
-              <%= blob.filename.to_s %>
-            <% end %>
+            style="color:#2563eb; text-decoration: underline;"
+          >
+            <%= blob.filename.to_s %>
           </a>
-        </span>
+        <% end %>
+      </span>
     <% end %>
   <% end %>
 
