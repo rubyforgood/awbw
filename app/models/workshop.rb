@@ -146,10 +146,6 @@ class Workshop < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
 
     attributes :title, type: :text
-
-    scope { join_rich_texts }
-    attributes action_text_body: "action_text_rich_texts.plain_text_body"
-    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   def self.grouped_by_sector
