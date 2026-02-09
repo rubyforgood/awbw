@@ -47,7 +47,8 @@
 
             <td class="px-6 py-4 text-right">
               <div class="inline-flex gap-2">
-                <% if allowed_to?(:edit?, @
+                <% if allowed_to?(:edit?, news) %>
+                  <%= link_to "Edit",
                                 edit_community_news_path(news),
                                 data: {turbo_frame: "_top"},
                                 class: "admin-only bg-blue-100 btn btn-secondary-outline" %>

@@ -95,7 +95,8 @@
               </td>
 
               <td class="px-4 py-2 text-center whitespace-nowrap">
-                <% if allowed_to?(:edit?, @ edit_organization_path(organization),
+                <% if allowed_to?(:edit?, organization) %>
+                  <%= link_to "Edit", edit_organization_path(organization),
                               class: "admin-only bg-blue-100 btn btn-secondary-outline text-xs px-2 py-1" %>
                 <% end %>
                 <%= link_to "Profile", organization_path(organization),
