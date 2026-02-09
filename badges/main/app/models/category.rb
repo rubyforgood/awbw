@@ -29,6 +29,12 @@ class Category < ApplicationRecord
     category_type_id.present? ? where(category_type_id: category_type_id) : all }
   scope :category_name, ->(category_name) {
     category_name.present? ? where("categories.name LIKE ?", "%#{category_name}%") : all }
+  scope :category_names_all, ->(names) do
+    return all if names.blank?
+    parsed = Array(names).flat_map { |n| n.to_s.split("--") }.map(&:strip).reject(&:blank?).map(&:downcase)
+    return all if parsed.empty?
+    where("LOWER(categories.name) IN (?)", parsed)
+  end
 
   private
 
