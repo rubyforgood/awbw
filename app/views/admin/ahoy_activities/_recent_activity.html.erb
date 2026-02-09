@@ -39,8 +39,8 @@
 
   <div class="flex-1 p-4">
     <% if activity.event.name.include?("taggings") %>
-      <% path = taggings_path(sector_names: activity.event.properties["sectors"].join("--"),
-                              category_names: activity.event.properties["categories"].join("--")) %>
+      <% path = taggings_path(sector_names_all: activity.event.properties["sectors"].join("--"),
+                              category_names_all: activity.event.properties["categories"].join("--")) %>
       <% title = "Taggings" %>
       <% detail = activity.event.properties %>
     <% elsif activity.event.name.include?("auth") %>
