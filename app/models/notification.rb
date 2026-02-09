@@ -37,7 +37,7 @@ class Notification < ApplicationRecord
   scope :participant_name, ->(name) { joins(:people)
       .joins("INNER JOIN users ON users.email = notifications.recipient_email")
       .where("people.name LIKE ?", "%#{name}%") }
-  scope :record_type, ->(record_type) { where(noticeable_type: record_type.to_s.camelize.titleize.gsub(" ","")) }
+  scope :record_type, ->(record_type) { where(noticeable_type: record_type.to_s.camelize.titleize.gsub(" ", "")) }
   scope :subject_line, ->(subject) { where("notifications.email_subject LIKE ?", "%#{subject}%") }
 
   def self.search_by_params(params)
