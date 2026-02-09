@@ -175,8 +175,8 @@ class WorkshopLogsController < ApplicationController
                    .or(Organization.where(id: @workshop_log.organization_id))
                    .distinct
                    .order(:name)
-    agency = params[:agency_id].present? ? Organization.where(id: params[:agency_id]).last : @organizations.first
-    @agency_id = agency.id if agency
+    organization = params[:agency_id].present? ? Organization.where(id: params[:agency_id]).last : @organizations.first
+    @organization_id = organization.id if organization
   end
 
   def set_default_values
