@@ -44,25 +44,25 @@
       <% blob = asset.file.blob %>
 
       <span style="margin-bottom: 6px;">
-        <a
-          href="<%= rails_blob_url(blob, disposition: "inline") %>"
-          target="_blank"
-          style="color:#2563eb; text-decoration: underline;"
-        >
-          <% if blob.image? %>
-            <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
-              <img
-                src="<%= rails_blob_url(blob, disposition: "inline") %>"
-                alt="<%= blob.filename %>"
-                width="180"
-                style="display:block;margin:6px 0;border-radius:4px;"
-                />
-              <%= blob.filename.to_s %>
-            </a>
-          <% else %>
+        <% if blob.image? %>
+          <a href="<%= rails_blob_url(blob, disposition: "inline") %>" target="_blank">
+            <img
+              src="<%= rails_blob_url(blob, disposition: "inline") %>"
+              alt="<%= blob.filename %>"
+              width="180"
+              style="display:block;margin:6px 0;border-radius:4px;"
+              />
             <%= blob.filename.to_s %>
-          <% end %>
-        </a>
+          </a>
+        <% else %>
+          <a
+            href="<%= rails_blob_url(blob, disposition: "inline") %>"
+            target="_blank"
+            style="color:#2563eb; text-decoration: underline;"
+          >
+            <%= blob.filename.to_s %>
+          </a>
+        <% end %>
       </span>
     <% end %>
   <% end %>
