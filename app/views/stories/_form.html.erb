@@ -62,7 +62,7 @@
                 hint: "(Embed a YouTube video)",
                 input_html: { rows: 1, class: "w-full", value: f.object.youtube_url || @story_idea&.youtube_url } %>
 
-    <%= f.input :external_url, as: :text,
+    <%= f.input :website_url, as: :text,
                 label: "External URL",
                 hint: "(open in external website instead)",
                 input_html: { rows: 1, class: "w-full" } %>
