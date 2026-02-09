@@ -132,7 +132,6 @@ class Workshop < ApplicationRecord
     ) #{sort_order == "asc" ? "ASC" : "DESC"}
     SQL
   }
-  scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
   scope :with_bookmarks_count, -> {
     left_joins(:bookmarks)
