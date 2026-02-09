@@ -19,7 +19,7 @@
       <!-- Workshop Info -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800">
         <div>
-          <p><span class="font-semibold text-gray-700">Facilitator:</span> <%= @workshop_log.user&.name || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Person:</span> <%= @workshop_log.user&.name || "—" %></p>
           <p><span class="font-semibold text-gray-700">Organization:</span> <%= @workshop_log.organization&.name || "—" %></p>
           <p><span class="font-semibold text-gray-700">Workshop Type:</span> <%= @workshop_log.workshop&.windows_type&.short_name || "—" %></p>
         </div>

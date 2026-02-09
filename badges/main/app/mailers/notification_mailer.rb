@@ -5,7 +5,7 @@ class NotificationMailer < ApplicationMailer
     @event_registration = notification.noticeable
     @event = @event_registration.event.decorate
     @user = @event_registration.registrant
-    @facilitator = @user.facilitator
+    @person = @user.person
     @notification_type = "Event registration"
 
     # Send email to the admin
@@ -58,7 +58,7 @@ class NotificationMailer < ApplicationMailer
 
   def reset_password_fyi(notification)
     @user = notification.noticeable
-    @facilitator = @user.facilitator
+    @person = @user.person
     @notification_type = "Password reset"
 
     # Send email to the admin

@@ -36,7 +36,7 @@ FactoryBot.define do
     # legacy_id { 1 }
     # super_user { false }
     # agency_id { 1 }
-    # facilitator_id { "" }
+    # person_id { "" }
     # created_by_id { 1 }
     # updated_by_id { 1 }
     # reset_password_token { "MyString" }
@@ -65,8 +65,8 @@ FactoryBot.define do
       super_user { true }
     end
 
-    trait :with_facilitator do
-      facilitator { association :facilitator, user: instance }
+    trait :with_person do
+      person { association :person, user: instance }
     end
 
     trait :orphaned_reports do

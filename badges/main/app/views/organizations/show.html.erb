@@ -89,7 +89,7 @@
             <ul class="space-y-2">
               <% @organization.organization_users.active.each do |pu| %>
                 <li class="whitespace-nowrap">
-                  <%= pu.user.facilitator ? facilitator_profile_button(pu.user.facilitator) : pu.user.name %>
+                  <%= pu.user.person ? person_profile_button(pu.user.person) : pu.user.name %>
                   <% if pu.position.present? %>
                     <span class="text-gray-600">– <%= pu.title.presence || pu.position.humanize %></span>
                   <% end %>

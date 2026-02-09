@@ -76,7 +76,7 @@ RSpec.describe "users/show", type: :view do
   # --------------------------------------------------
   # FACILITATOR ASSOCIATION
   # --------------------------------------------------
-  context "when user has no facilitator" do
+  context "when user has no person" do
     let(:admin) { create(:user, :admin) }
 
     before do
@@ -84,9 +84,9 @@ RSpec.describe "users/show", type: :view do
       render
     end
 
-    it "shows facilitator creation prompt" do
-      expect(rendered).to include("Not associated with a facilitator")
-      expect(rendered).to have_link("Create facilitator")
+    it "shows person creation prompt" do
+      expect(rendered).to include("Not associated with a person")
+      expect(rendered).to have_link("Create person")
     end
   end
 end

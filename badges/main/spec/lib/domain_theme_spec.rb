@@ -31,7 +31,7 @@ RSpec.describe DomainTheme do
     end
 
     it "defines a color for every taggable dashboard type" do
-      # Tag::TAGGABLE_META keys: workshops, resources, community_news, stories, events, facilitators, organizations, quotes
+      # Tag::TAGGABLE_META keys: workshops, resources, community_news, stories, events, people, organizations, quotes
       expect(DomainTheme::COLORS.keys)
         .to include(*Tag::TAGGABLE_META.keys)
     end

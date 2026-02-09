@@ -241,7 +241,7 @@
 
   <div class="form-group space-y-4">
     <div class="font-semibold text-gray-700">
-      Facilitator affiliations
+      Person affiliations
     </div>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
       <% if current_user&.super_user? %>
@@ -262,7 +262,7 @@
         <% f.object.user && f.object.user.organization_users.each do |pu| %>
           <div class="ps-6 mb-2">
             <li><%= pu.title || pu.position %> -
-              <%= facilitator_profile_button(pu.user.facilitator) if pu.persisted? && pu.user.facilitator %>
+              <%= person_profile_button(pu.user.person) if pu.persisted? && pu.user.person %>
             </li>
           </div>
         <% end %>

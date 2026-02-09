@@ -9,7 +9,7 @@ module DomainTheme
     community_news:       :orange,
     stories:              :rose,
     events:               :blue,
-    facilitators:         :sky,
+    people:               :sky,
     organizations:        :emerald,
     quotes:               :slate,
 
