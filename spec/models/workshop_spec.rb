@@ -75,15 +75,15 @@ RSpec.describe Workshop do
     end
   end
 
-  # SearchCop
+  # SearchCop searches only :title and :full_name (no rich text) so MATCH uses the workshops FULLTEXT index.
   describe 'search' do
     it 'returns correct workshops when searching for the same random string' do
       random_string = Array.new(3) { SecureRandom.alphanumeric(6) }.join(' ')
 
-      workshop1 = Workshop.create!(title: "Workshop One", rhino_objective: random_string)
-      workshop2 = Workshop.create!(title: "Workshop Two", rhino_setup: random_string)
-      workshop3 = Workshop.create!(title: "Workshop Three", rhino_warm_up: random_string)
-      workshop4 = Workshop.create!(title: "Workshop Four", rhino_objective: "Other")
+      workshop1 = Workshop.create!(title: "Workshop One #{random_string}", full_name: "One")
+      workshop2 = Workshop.create!(title: "Workshop Two", full_name: "Two #{random_string}")
+      workshop3 = Workshop.create!(title: "Workshop Three #{random_string}", full_name: "Three")
+      workshop4 = Workshop.create!(title: "Workshop Four", full_name: "Other")
 
       results = Workshop.search(random_string)
 
