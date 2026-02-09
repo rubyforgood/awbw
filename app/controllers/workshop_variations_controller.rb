@@ -9,7 +9,12 @@ class WorkshopVariationsController < ApplicationController
   end
 
   def new
-    @workshop_variation = WorkshopVariation.new
+    if params[:workshop_variation_idea_id].present?
+      idea = WorkshopVariationIdea.find(params[:workshop_variation_idea_id])
+      @workshop_variation = WorkshopVariationFromIdeaService.new(idea, user: current_user).call
+    else
+      @workshop_variation = WorkshopVariation.new
+    end
     authorize! @workshop_variation
     set_form_variables
   end
@@ -91,12 +96,15 @@ class WorkshopVariationsController < ApplicationController
     @workshops = workshops.order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
+    @workshop_variation_idea = params[:workshop_variation_idea_id].present? &&
+      WorkshopVariationIdea.find_by(id: params[:workshop_variation_idea_id])
   end
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
       [ :name, :body, :published, :position,
-       :youtube_url, :created_by_id, :workshop_id
+       :youtube_url, :created_by_id, :workshop_id,
+       :workshop_variation_idea_id
       ]
     )
   end
