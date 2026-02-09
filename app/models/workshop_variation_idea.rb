@@ -2,6 +2,8 @@ class WorkshopVariationIdea < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :workshop
+  belongs_to :organization, optional: true
+  belongs_to :windows_type, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :workshop_variations

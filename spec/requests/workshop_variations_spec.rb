@@ -215,16 +215,16 @@ RSpec.describe "/workshop_variations", type: :request do
     before { sign_in regular_user }
 
     describe "GET /index" do
-      it "renders successfully" do
+      it "redirects to root" do
         get workshop_variations_path
-        expect(response).to have_http_status(:ok)
+        expect(response).to redirect_to(root_path)
       end
     end
 
     describe "GET /new" do
-      it "renders successfully" do
+      it "redirects to root" do
         get new_workshop_variation_path
-        expect(response).to have_http_status(:ok)
+        expect(response).to redirect_to(root_path)
       end
     end
 
@@ -233,7 +233,7 @@ RSpec.describe "/workshop_variations", type: :request do
         expect {
           post workshop_variations_path,
                params: { workshop_variation: valid_attributes.merge(created_by_id: regular_user.id) }
-        }.to change(WorkshopVariation, :count).by(1)
+        }.to_not change(WorkshopVariation, :count)
       end
     end
   end

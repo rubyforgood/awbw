@@ -28,8 +28,8 @@
               <p class="text-gray-900"><%= @workshop_variation_idea.workshop.title %></p>
             </div>
             <div class="mb-3 md:col-span-2">
-              <p class="font-bold text-gray-700">Description:</p>
-              <p class="text-gray-900"><%= @workshop_variation_idea.description %></p>
+              <p class="font-bold text-gray-700">Body:</p>
+              <p class="text-gray-900"><%= @workshop_variation_idea.body %></p>
             </div>
             <div class="mb-3">
               <p class="font-bold text-gray-700">YouTube URL:</p>
@@ -38,14 +38,6 @@
             <div class="mb-3">
               <p class="font-bold text-gray-700">Created by:</p>
               <p class="text-gray-900"><%= @workshop_variation_idea.created_by.full_name %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Position:</p>
-              <p class="text-gray-900"><%= @workshop_variation_idea.position %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Inactive:</p>
-              <p class="text-gray-900"><%= @workshop_variation_idea.inactive ? "Yes" : "No" %></p>
             </div>
           </div>
         </div>

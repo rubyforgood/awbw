@@ -26,9 +26,10 @@ class User < ApplicationRecord
   # created_by associations
   has_many :stories_as_creator, foreign_key: :created_by_id, class_name: "Story"
   has_many :story_ideas_as_creator, foreign_key: :created_by_id, class_name: "StoryIdea"
-  has_many :workshop_variations_as_creator, foreign_key: :created_by_id, class_name: "WorkshopVariation"
   has_many :workshops_as_creator, foreign_key: :created_by_id, class_name: "Workshop"
   has_many :workshop_ideas_as_creator, foreign_key: :created_by_id, class_name: "WorkshopIdea"
+  has_many :workshop_variations_as_creator, foreign_key: :created_by_id, class_name: "WorkshopVariation"
+  has_many :workshop_variation_ideas_creator, foreign_key: :created_by_id, class_name: "WorkshopVariationIdea"
 
   # has_many through
   has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: "Workshop"

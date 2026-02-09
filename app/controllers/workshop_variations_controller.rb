@@ -20,14 +20,14 @@ class WorkshopVariationsController < ApplicationController
   end
 
   def create
-    @workshop_variation = current_user.workshop_variations.build(workshop_variation_params)
+    @workshop_variation = current_user.workshop_variations_as_creator.build(workshop_variation_params)
     authorize! @workshop_variation
 
     success = false
 
     WorkshopVariation.transaction do
       if @workshop_variation.save
-        assign_associations(@workshop_variation)
+        # assign_associations(@workshop_variation)
         if params[:promote_idea_assets] == "true"
           @workshop_variation.attach_assets_from_idea!
         elsif params.dig(:library_asset, :new_assets).present?
@@ -90,6 +90,15 @@ class WorkshopVariationsController < ApplicationController
   end
 
   private
+  # def assign_associations(workshop_variation)
+  #   # Convert checkbox values into categorizable_items updates
+  #   selected_category_ids = Array(params[:workshop_variation][:category_ids]).reject(&:blank?).map(&:to_i)
+  #   workshop_variation.categories = Category.where(id: selected_category_ids)
+  #
+  #   # Convert checkbox values into sectorable_items updates
+  #   selected_sector_ids = Array(params[:workshop_variation][:sector_ids]).reject(&:blank?).map(&:to_i)
+  #   workshop_variation.sectors = Sector.where(id: selected_sector_ids)
+  # end
 
   def set_form_variables
     workshops = authorized_scope(Workshop.all)
@@ -102,9 +111,8 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [ :name, :body, :published, :position,
-       :youtube_url, :created_by_id, :workshop_id,
-       :workshop_variation_idea_id
+      [ :name, :body, :published, :position, :youtube_url, :created_by_id,
+        :organization_id, :workshop_id, :workshop_variation_idea_id
       ]
     )
   end

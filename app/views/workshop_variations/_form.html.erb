@@ -60,7 +60,11 @@
       <% if current_user&.super_user? %>
         <div class="flex items-start gap-6 admin-only bg-blue-100 p-4 rounded-lg">
           <%= f.input :published, as: :boolean, input_html: { checked: f.object.id ? f.object.published? : false } %>
-
+          <div>
+            Publicly visible: <%= f.object.workshop.publicly_visible? %>
+            <br>
+            (based on parent workshop's status)
+          </div>
           <%= f.input :position, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
 
           <%= f.input :created_by_id,
