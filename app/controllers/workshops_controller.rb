@@ -15,10 +15,9 @@ class WorkshopsController < ApplicationController
       track_index_intent(Workshop, search_service.workshops, params)
 
       @workshops = authorized_scope(search_service.workshops
-                                 .includes(:categories, :windows_type, :user, :images, :bookmarks, :age_ranges,
-                                   user: [ :facilitator ], primary_asset: [ :file_attachment ]))
-                                 .paginate(page: params[:page], per_page: params[:per_page] || 12)
-
+                                                  .includes(:categories, :windows_type, :user, :images, :bookmarks,
+                                                            user: [ :person ], primary_asset: [ :file_attachment ]))
+                                                  .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
       render :workshop_results
     else
@@ -37,7 +36,7 @@ class WorkshopsController < ApplicationController
     types = reports.map do |r|
       r.windows_type
     end
-    @workshop_logs = current_user.project_monthly_workshop_logs(
+    @workshop_logs = current_user.organization_monthly_workshop_logs(
       reports.first.date, *types,
     )
 
@@ -46,7 +45,7 @@ class WorkshopsController < ApplicationController
     @total_first_time = logs.reduce(0) { |sum, l| sum += l.num_first_time }
 
     combined_windows_type = WindowsType.where(short_name: "COMBINED").first
-    @combined_workshop_logs = current_user.project_workshop_logs(
+    @combined_workshop_logs = current_user.organization_workshop_logs(
       @report.date, combined_windows_type, current_user.agency_id
     )
     authorize! @combined_workshop_logs
@@ -201,7 +200,7 @@ class WorkshopsController < ApplicationController
     @quotes = Quote.where(workshop_id: @workshop.id).published
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
     @workshop_variations = @workshop.workshop_variations.published
-    @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
+    @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
   end
 
 
@@ -217,7 +216,7 @@ class WorkshopsController < ApplicationController
       Category
         .includes(:category_type)
         .published
-        .order(:name)
+        .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
         .sort_by { |type, _| type&.name.to_s.downcase }

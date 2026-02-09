@@ -56,11 +56,11 @@
           By:
           <% if workshop.user %>
             <%= link_to workshop.author_name,
-                        generate_facilitator_user_path(workshop.user),
+                        generate_person_user_path(workshop.user),
                         class: "hover:underline",
                         data: { turbo: false } %>
           <% else %>
-            <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
+            <%= workshop.full_name.present? ? workshop.full_name : "Person" %>
           <% end %>
           | <%= workshop.date %>
         </div>
@@ -72,15 +72,18 @@
         <% end %>
 
         <!-- Led count -->
-        <%= tag.div id: dom_id(workshop, :led_count),
+        <%#= tag.div id: dom_id(workshop, :led_count),
                     class: "text-sm text-gray-600 leading-tight" do %>
-          Led: <%= workshop.led_count %> <%= "time".pluralize(workshop.led_count.to_i) %>
-        <% end %>
+<!--          Led: <%##= workshop.led_count %> <%#= "time".pluralize(workshop.led_count.to_i) %>-->
+        <%# end %>
 
         <!-- Age ranges -->
         <% if workshop.age_ranges.any? %>
           <div class="text-sm text-gray-600 leading-tight">
-            Age ranges: <%= workshop.age_ranges.pluck(:name).to_sentence %>
+            Age ranges: <%= workshop.age_ranges
+                                    .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+                                    .map(&:name)
+                                    .to_sentence %>
           </div>
         <% end %>
 
@@ -110,11 +113,14 @@
 
         <% unless hide_tags %>
           <% if workshop.categories.any? %>
+            <% ordered_tags = workshop.categories
+              .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+              .map(&:name)
+              .to_sentence %>
             <p class="tags mt-3 italic">
               Tags:
-              <span title="<%= workshop.categories.map(&:name).to_sentence %>">
-            <%= workshop.categories.map(&:name).to_sentence.truncate(150) %>
-          </span>
+              <span title="<%= ordered_tags %>">
+                <%= ordered_tags.truncate(150) %></span>
             </p>
           <% end %>
         <% end %>

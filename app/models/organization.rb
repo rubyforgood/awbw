@@ -1,16 +1,13 @@
 class Organization < ApplicationRecord
-  self.table_name = "projects"
-
-  include Publishable, TagFilterable, Trendable, WindowsTypeFilterable
-
-  belongs_to :project_status
-  belongs_to :project_obligation, optional: true
+  include TagFilterable, Trendable, WindowsTypeFilterable # Publishable
+  belongs_to :organization_status
+  belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
   belongs_to :windows_type, optional: true
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :project_users, dependent: :restrict_with_error
-  has_many :users, through: :project_users
+  has_many :organization_users, dependent: :restrict_with_error
+  has_many :users, through: :organization_users
   has_many :reports, through: :users
   has_many :workshop_logs, through: :users
 
@@ -28,12 +25,12 @@ class Organization < ApplicationRecord
             content_type: %w[image/png image/jpeg image/webp],
             size: { less_than: 5.megabytes }
   validates :name, presence: true
-  validates :project_status_id, presence: true
+  validates :organization_status_id, presence: true
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :project_users, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :organization_users, allow_destroy: true, reject_if: :all_blank
 
   # SearchCop
   include SearchCop
@@ -42,7 +39,8 @@ class Organization < ApplicationRecord
   end
 
   # Scopes
-  # See Publishable, TagFilterable, Trendable, WindowsTypeFilterable
+  # See TagFilterable, Trendable, WindowsTypeFilterable
+  scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
   scope :address, ->(address) do
     return all if address.blank?
     exact = address.to_s
@@ -63,17 +61,19 @@ class Organization < ApplicationRecord
     SQL
       wildcard: wildcard, exact: exact)
   end
+  scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
+  scope :published, ->(published = nil) { published ? active(published) : active }
 
   def self.search_by_params(params)
-    projects = is_a?(ActiveRecord::Relation) ? self : all
-    projects = projects.search(params[:query]) if params[:query].present?
-    projects = projects.sector_names(params[:sector_names]) if params[:sector_names].present?
-    projects = projects.category_names(params[:category_names]) if params[:category_names].present?
-    projects = projects.address(params[:address]) if params[:address].present?
-    projects = projects.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
-    projects = projects.project_ids(params[:project_ids]) if params[:project_ids].present?
-    projects
+    organizations = is_a?(ActiveRecord::Relation) ? self : all
+    organizations = organizations.search(params[:query]) if params[:query].present?
+    organizations = organizations.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    organizations = organizations.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    organizations = organizations.address(params[:address]) if params[:address].present?
+    organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
+    organizations
   end
 
   # Methods
@@ -94,6 +94,10 @@ class Organization < ApplicationRecord
     addresses.active.first&.locality
   end
 
+  def published? # needed for my_bookmarks
+    !inactive
+  end
+
   def sector_list
     sectors.pluck(:name)
   end
@@ -101,6 +105,6 @@ class Organization < ApplicationRecord
   private
 
   def leader
-    project_users.find_by(position: 2)
+    organization_users.find_by(position: 2)
   end
 end

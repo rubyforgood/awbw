@@ -6,7 +6,7 @@ class Resource < ApplicationRecord
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
 
-  has_rich_text :rhino_text
+  has_rich_text :rhino_body
 
   belongs_to :user
   belongs_to :workshop, optional: true
@@ -64,7 +64,7 @@ class Resource < ApplicationRecord
   # Search Cop
   include SearchCop
   search_scope :search do
-    attributes :title, :author, :text
+    attributes :title, :author, :body
 
     scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
@@ -92,9 +92,9 @@ class Resource < ApplicationRecord
 
   def self.search_by_params(params)
     resources = is_a?(ActiveRecord::Relation) ? self : all
-    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
-    resources = resources.sector_names(params[:sector_names]) if params[:sector_names].present?
-    resources = resources.category_names(params[:category_names]) if params[:category_names].present?
+    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, body
+    resources = resources.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    resources = resources.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.kinds(params[:kinds]) if params[:kinds].present?

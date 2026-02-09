@@ -31,10 +31,6 @@
 
 en:
   hello: "Hello world"
-  activerecord:
-    attributes:
-      workshop_log:
-        project: "Organization"
   helpers:
     submit:
       create: "Submit"

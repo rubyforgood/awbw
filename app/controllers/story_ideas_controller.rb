@@ -7,11 +7,11 @@ class StoryIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    story_ideas = StoryIdea.includes(:windows_type, :project, :workshop, :created_by, :updated_by)
-    @story_ideas = story_ideas.order(created_at: :desc)
-                              .paginate(page: params[:page], per_page: per_page)
-                              .decorate
-    @story_ideas_count = story_ideas.size
+    base_scope = authorized_scope(StoryIdea.includes(:windows_type, :organization, :workshop, :created_by, :updated_by))
+    @story_ideas = base_scope.order(created_at: :desc)
+                             .paginate(page: params[:page], per_page: per_page)
+                             .decorate
+    @story_ideas_count = base_scope.size
   end
 
   def show
@@ -89,13 +89,13 @@ class StoryIdeasController < ApplicationController
 
   def set_form_variables
     @user = User.find(params[:user_id]) if params[:user_id].present?
-    @projects = (@user || current_user)&.projects&.order(:name)
+    @organizations = (@user || current_user)&.organizations&.order(:name) || Organization.none
     @windows_types = WindowsType.all
     @workshops = Workshop.order(:title)
 
-    @users = User.active.includes(:facilitator)
+    @users = User.active.includes(:person)
     @users = @users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
-    @users = @users.distinct.order("facilitators.first_name, facilitators.last_name")
+    @users = @users.distinct.order("people.first_name, people.last_name")
   end
 
   private
@@ -108,7 +108,7 @@ class StoryIdeasController < ApplicationController
     params.require(:story_idea).permit(
       :title, :body, :youtube_url,
       :permission_given, :publish_preferences, :promoted_to_story,
-      :windows_type_id, :project_id, :workshop_id, :external_workshop_title
+      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title
     )
   end
 end

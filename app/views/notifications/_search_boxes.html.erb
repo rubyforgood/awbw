@@ -1,0 +1,44 @@
+<!-- Filters -->
+<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+  <%= form_with url: notifications_path,
+                method: :get,
+                data: {controller: "collection",
+                      turbo_frame: "notifications_results" },
+                      autocomplete: "off",
+                class: "flex flex-wrap gap-4" do |f| %>
+    <div>
+      <%= f.label :email, "Recipient email contains",
+                  class: "text-sm font-medium text-gray-500 mb-1" %>
+
+      <%= f.text_field :email,
+                       placeholder: "mae@example.com",
+                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                                 focus:ring-blue-500 focus:border-blue-500",
+                       oninput: "this.form.requestSubmit()" %>
+    </div>
+
+    <div>
+      <%= f.label :record_type, "Record type",
+                  class: "text-sm font-medium text-gray-500 mb-1" %>
+
+      <%= f.text_field :record_type,
+                       placeholder: "e.g. StoryIdea",
+                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                                 focus:ring-blue-500 focus:border-blue-500",
+                       oninput: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="flex-grow min-w-[200px]">
+      <%= f.label :subject_line, "Subject line",
+                  class: "text-sm font-medium text-gray-500 mb-1" %>
+
+      <%= f.text_field :subject_line,
+                       placeholder: "e.g. new StoryIdea submission",
+                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                                 focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
+
+    <!-- Clear -->
+    <div><%= link_to "Clear", notifications_path, class: "btn btn-utility-outline whitespace-nowrap" %></div>
+  <% end %>
+</div>

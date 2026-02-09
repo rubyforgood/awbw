@@ -8,7 +8,7 @@ RSpec.describe "story_ideas/new", type: :view do
     assign(:story_idea, StoryIdea.new)
     assign(:windows_types, [])
     assign(:workshops, [])
-    assign(:projects, [])
+    assign(:organizations, [])
     assign(:users, [])
   end
 
@@ -22,7 +22,7 @@ RSpec.describe "story_ideas/new", type: :view do
 
       assert_select "form[action=?][method=?]", story_ideas_path, "post" do
         assert_select "select[name=?]", "story_idea[windows_type_id]"
-        assert_select "select[name=?]", "story_idea[project_id]"
+        assert_select "select[name=?]", "story_idea[organization_id]"
         assert_select "select[name=?]", "story_idea[workshop_id]"
         assert_select "textarea[name=?]", "story_idea[body]"
         assert_select "textarea[name=?]", "story_idea[youtube_url]"

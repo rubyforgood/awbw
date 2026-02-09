@@ -44,6 +44,7 @@ class WorkshopSearchService
     filter_by_author_name
     filter_by_categories
     filter_by_sectors
+    filter_by_tag_names
   end
 
   def filter_by_windows_type
@@ -117,6 +118,12 @@ class WorkshopSearchService
     sector_ids.each { |id| params[:sectors][id.to_s] = id.to_s }
   end
 
+  def filter_by_tag_names
+    @workshops = @workshops.sector_names_all(@params[:sector_names_all]) if @params[:sector_names_all].present?
+    @workshops = @workshops.category_names_all(@params[:category_names_all]) if @params[:category_names_all].present?
+    @workshops
+  end
+
   def filter_by_title
     return unless params[:title].present?
     @workshops = @workshops.search("title:#{params[:title]}")
@@ -171,10 +178,10 @@ class WorkshopSearchService
   end
 
   def sector_ids_from_names
-    return [] if params[:sector_names].blank?
+    return [] if params[:sector_names_all].blank?
 
     names =
-      params[:sector_names]
+      params[:sector_names_all]
         .to_s
         .split("--")
         .map(&:strip)

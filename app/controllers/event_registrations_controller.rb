@@ -4,9 +4,10 @@ class EventRegistrationsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    unpaginated = EventRegistration.search_by_params(params)
-    @event_registrations_count = unpaginated.size
-    @event_registrations = unpaginated.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(EventRegistration.all)
+    filtered = base_scope.search_by_params(params)
+    @event_registrations_count = filtered.size
+    @event_registrations = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
   def show
@@ -32,7 +33,7 @@ class EventRegistrationsController < ApplicationController
       NotificationServices::CreateNotification.call(
         noticeable: @event_registration,
         kind: "event_registration_confirmation",
-        recipient_role: :facilitator,
+        recipient_role: :person,
         recipient_email: current_user.email,
         notification_type: 0)
       NotificationServices::CreateNotification.call(
@@ -86,7 +87,7 @@ class EventRegistrationsController < ApplicationController
            .or(Event.where(id: @event_registration.event_id))
            .distinct
            .order(start_date: :desc)
-    @registrants = User.active.includes(:facilitator).order("facilitators.first_name, facilitators.last_name")
+    @registrants = User.active.includes(:person).order("people.first_name, people.last_name")
   end
 
   private

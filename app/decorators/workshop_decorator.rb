@@ -59,7 +59,7 @@ class WorkshopDecorator < ApplicationDecorator
   end
 
   def list_sectors
-    sectorable_items.published.map(&:sector).map(&:name).to_sentence
+    sectorable_items.map(&:sector).map(&:name).to_sentence
   end
 
   def log_fields
@@ -143,7 +143,7 @@ class WorkshopDecorator < ApplicationDecorator
       creation_spanish: "Creación",
       closing_spanish: "Clausura",
       misc_instructions_spanish: "Instrucciones de misceláneos",
-      project_spanish: "Projecto",
+      organization_spanish: "Organización",
       description_spanish: "Descripción",
       notes_spanish: "Notas",
       tips_spanish: "Consejos",

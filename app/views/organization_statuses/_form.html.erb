@@ -1,0 +1,29 @@
+<%= simple_form_for(@organization_status) do |f| %>
+  <div class="form-body space-y-6">
+    <%= f.error_notification %>
+    <%= render "shared/errors", resource: @organization_status if @organization_status.errors.any? %>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <%= f.input :name,
+                  label: "Status Name",
+                  input_html: { class: "form-control" },
+                  required: true %>
+      <div class="flex items-center pt-6">
+        <%= f.input :published,
+                    as: :boolean,
+                    label: "Published?",
+                    input_html: { class: "h-4 w-4" },
+                    wrapper_html: { class: "mb-0" } %>
+      </div>
+    </div>
+
+    <div class="action-buttons mt-8 flex justify-center gap-3">
+      <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
+        <%= link_to "Delete", @organization_status, method: :delete, class: "btn btn-danger-outline",
+                    data: { confirm: "Are you sure you want to delete?", } %>
+      <% end %>
+      <%= link_to "Cancel", organization_statuses_path, class: "btn btn-secondary-outline" %>
+      <%= f.button :submit, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

@@ -38,7 +38,7 @@ class ResourcesController < ApplicationController
   end
 
   def edit
-    @resource = Resource.includes(user: :facilitator).find(resource_id_param).decorate
+    @resource = Resource.includes(user: :person).find(resource_id_param).decorate
     authorize! @resource
     set_form_variables
 
@@ -128,8 +128,8 @@ class ResourcesController < ApplicationController
   def set_form_variables
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
-                   .includes(:facilitator)
-                   .order("facilitators.first_name, facilitators.last_name")
+                   .includes(:person)
+                   .order("people.first_name, people.last_name")
                    .map { |u| [ u.full_name, u.id ] }
   end
 
@@ -145,7 +145,7 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :rhino_text, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured, :url,
+      :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
       categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []

@@ -1,15 +1,15 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy,
-                                   :generate_facilitator, :toggle_lock_status, :confirm_email,
+                                   :generate_person, :toggle_lock_status, :confirm_email,
                                    :send_reset_password_instructions ]
 
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    users = User.search_by_params(params).order(:first_name, :last_name)
-
-    @users_count = users.size
-    @users = users.paginate(page: params[:page], per_page: per_page)
+    base_scope = authorized_scope(User.includes(:person))
+    filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
+    @users_count = filtered.size
+    @users = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
   def show
@@ -36,9 +36,9 @@ class UsersController < ApplicationController
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
 
-    # assign facilitator
-    facilitator_id = params[:facilitator_id].presence || params.dig(:user, :facilitator_id).presence
-    @user.facilitator = Facilitator.find(facilitator_id) if facilitator_id
+    # assign person
+    person_id = params[:person_id].presence || params.dig(:user, :person_id).presence
+    @user.person = Person.find(person_id) if person_id
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
@@ -101,21 +101,20 @@ class UsersController < ApplicationController
   end
 
   # ---------------------------------------------------------
-  # FACILITATOR
+  # PERSON
   # ---------------------------------------------------------
-
-  def generate_facilitator
+  def generate_person
     authorize! @user
 
-    if @user.facilitator.present?
-      redirect_to @user.facilitator and return
-    end
-
-    @facilitator = FacilitatorFromUserService.new(user: @user).call
-    if @facilitator.save
-      redirect_to @facilitator, notice: "Facilitator was successfully created for this user." and return
+    if @user.person.present?
+      redirect_to @user.person and return
     else
-      redirect_to @user, alert: "Unable to create facilitator: #{@facilitator.errors.full_messages.join(", ")}"
+      @person = PersonFromUserService.new(user: @user).call
+      if @person.save
+        redirect_to @person, notice: "Person was successfully created for this user." and return
+      else
+        redirect_to @user, alert: "Unable to create person: #{@person.errors.full_messages.join(", ")}" and return
+      end
     end
   end
 
@@ -182,16 +181,15 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
-  def set_facilitator
-    @facilitator = @user.facilitator ||
-      (Facilitator.find(params[:facilitator_id]) if params[:facilitator_id].present?)
+  def set_person
+    @person = @user.person || (Person.where(id: params[:person_id]).first if params[:person_id].present?)
   end
 
   def set_form_variables
-    set_facilitator
-    @user.project_users.first || @user.project_users.build
-    projects = current_user&.super_user? ? Project.published : current_user.projects
-    @projects_array = projects.order(:name).pluck(:name, :id)
+    set_person
+    @user.organization_users.first || @user.organization_users.build
+    organizations = authorized_scope(Organization.all)
+    @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
 
   def password_param
@@ -204,13 +202,15 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :avatar, :first_name, :last_name, :email,
-      :address, :address2, :city, :city2, :state, :state2, :zip, :zip2,
-      :phone, :phone2, :phone3, :birthday, :best_time_to_call,
-      :comment, :facilitator_id, :notes, :primary_address, :time_zone,
-      :confirmed, :inactive, :published, :super_user,
-      :agency_id, :legacy, :legacy_id, :subscribecode,
-      project_users_attributes: [ :id, :project_id, :position, :title, :inactive, :_destroy ]
+      :email, :confirmed, :comment, :person_id, :inactive, :primary_address, :time_zone, :super_user,
+
+      ##### legacy to remove later
+      :agency_id, :legacy, :legacy_id, :subscribecode, :avatar, :first_name, :last_name, # legacy to remove later
+      :address, :address2, :city, :city2, :state, :state2, :zip, :zip2, # legacy to remove later
+      :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
+      #####
+
+      organization_users_attributes: [ :id, :organization_id, :position, :title, :inactive, :_destroy ],
     )
   end
 end

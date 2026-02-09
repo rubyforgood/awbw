@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :report do
     # Associations
     association :user
-    association :project
+    association :organization
     association :windows_type # Needed by callbacks/logic
     # Polymorphic association: belongs_to :owner (can be nil or another model like FormBuilder)
     owner { nil } # Default owner

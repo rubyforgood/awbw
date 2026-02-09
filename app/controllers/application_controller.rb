@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate_user!  # ensures only logged-in users can access pages
   before_action :set_current_user # for AhoyTrackable in models
+  before_action :preload_current_user_associations
 
   verify_authorized unless: :devise_controller?
 
@@ -58,6 +59,11 @@ class ApplicationController < ActionController::Base
 
   def flush_lifecycle_events
     Analytics::LifecycleBuffer.flush(self) # needed for Ahoy tracking in models
+  end
+
+  def preload_current_user_associations
+    return unless current_user
+    current_user.organization_users.includes(:organization).load
   end
 
   def set_current_user

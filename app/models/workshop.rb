@@ -27,8 +27,10 @@ class Workshop < ApplicationRecord
   has_many :workshop_variations, dependent: :restrict_with_error
 
   # has_many through
-  has_many :age_ranges, -> { joins(:category_type).where(category_types: { name: "AgeRange" }) },
-           through: :categorizable_items, source: :category # needs to be after has_many :categorizable_items
+  has_many :age_ranges, -> { joins(:category_type).where(category_types: { name: "AgeRange" })
+               .order(Arel.sql("categories.position ASC, categories.name ASC")) },
+           through: :categorizable_items,
+           source: :category # needs to be after has_many :categorizable_items
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
   has_many :quotes, through: :quotable_item_quotes
@@ -225,7 +227,7 @@ class Workshop < ApplicationRecord
   end
 
   def published_sectors
-    sectorable_items.published.map { |item| item.sector }
+    sectorable_items.map { |item| item.sector }
   end
 
   def time_frame_total

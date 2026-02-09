@@ -7,7 +7,7 @@ class StoriesController < ApplicationController
     authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      base_scope = authorized_scope(Story.includes(:windows_type, :project, :workshop, :created_by, :bookmarks, :primary_asset))
+      base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop, :created_by, :bookmarks, :primary_asset))
       filtered = base_scope.search_by_params(params)
                            .order(created_at: :desc)
       @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
@@ -97,15 +97,15 @@ class StoriesController < ApplicationController
   def set_form_variables
     @story_idea = StoryIdea.find(params[:story_idea_id]) if params[:story_idea_id].present?
     @user = User.find(params[:user_id]) if params[:user_id].present?
-    @projects = (@user || current_user).projects.order(:name)
+    @organizations = (@user || current_user).organizations.order(:name)
     @story_ideas = StoryIdea.includes(:created_by)
                             .references(:users)
                             .order(:created_at)
     @windows_types = WindowsType.all
     @workshops = Workshop.all.order(:title)
     @users = User.active.or(User.where(id: @story.created_by_id))
-                 .includes(:facilitator)
-                 .order("facilitators.first_name, facilitators.last_name")
+                 .includes(:person)
+                 .order("people.first_name, people.last_name")
   end
 
 
@@ -119,7 +119,7 @@ class StoriesController < ApplicationController
   def story_params
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :public_featued, :youtube_url, :website_url,
-      :windows_type_id, :project_id, :workshop_id, :external_workshop_title,
+      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id
     )
   end
@@ -127,7 +127,7 @@ class StoriesController < ApplicationController
   def set_story_attributes_from(idea)
     {
       rhino_body: idea.body,
-      project_id: idea.project.id,
+      organization_id: idea.organization.id,
       workshop_id: idea.workshop_id,
       external_workshop_title: idea.external_workshop_title,
       windows_type_id: idea.windows_type_id,

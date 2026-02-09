@@ -5,9 +5,10 @@ class WorkshopIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    workshop_ideas = WorkshopIdea.search(params.slice(:title, :author_name))
-    @workshop_ideas_count = workshop_ideas.size
-    @workshop_ideas = workshop_ideas.paginate(page: params[:page], per_page: per_page).decorate
+    base_scope = authorized_scope(WorkshopIdea.includes(:workshops))
+    filtered = base_scope.search(params.slice(:title, :author_name))
+    @workshop_ideas_count = filtered.size
+    @workshop_ideas = filtered.paginate(page: params[:page], per_page: per_page).decorate
   end
 
   def show
@@ -36,7 +37,12 @@ class WorkshopIdeasController < ApplicationController
         update_asset_owner(@workshop_idea)
       end
 
-      redirect_to workshop_ideas_path, notice: "Workshop idea was successfully created."
+      flash[:notice] = "Workshop idea was successfully created."
+      if allowed_to?(:index?, WorkshopIdea)
+        redirect_to workshop_ideas_path
+      else
+        redirect_to root_path
+      end
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -75,7 +81,7 @@ class WorkshopIdeasController < ApplicationController
       Category
         .includes(:category_type)
         .published
-        .order(:name)
+        .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
         .sort_by { |type, _| type&.name.to_s.downcase }

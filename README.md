@@ -1,7 +1,7 @@
 # awbw-portal
 ![Coverage](https://rubyforgood.github.io/awbw/badges/main/coverage_badge.svg)
 
-This project is the Facilitator Portal for [A Windows Between Worlds](https://www.awbw.org). The Facilitator Portal
+This project is the Portal for [A Windows Between Worlds](https://www.awbw.org). The Portal
 offers a place for workshop leaders to find information about Workshops and Resources, 
 be informed of CommunityNews, Stories, and Events, and as the project evolves -- to connect with one another.
 
@@ -22,7 +22,7 @@ This is a Rails 8.1.0 application built with:
 - **Resource Library**: File uploads and document management
 - **Event Registration**: Search and register for events
 - **Stories Library**: Submit and view articles (stories) about workshops and facilitators
-- **Facilitator and Organization Profiles**: View facilitators and organizations at a glance
+- **Person and Organization Profiles**: View people and organizations at a glance
 - **Reporting System**: Monthly and annual reporting workflows
 - **API Access**: RESTful API for external integrations
 

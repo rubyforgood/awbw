@@ -8,7 +8,7 @@ RSpec.describe "stories/edit", type: :view do
     assign(:story, story.decorate)
     assign(:windows_types, [])
     assign(:workshops, [])
-    assign(:projects, [])
+    assign(:organizations, [])
     assign(:users, [])
     allow(view).to receive(:current_user).and_return(user)
   end
@@ -19,7 +19,7 @@ RSpec.describe "stories/edit", type: :view do
     assert_select "form[action=?][method=?]", story_path(story), "post" do
       assert_select "select[name=?]", "story[windows_type_id]"
 
-      assert_select "select[name=?]", "story[project_id]"
+      assert_select "select[name=?]", "story[organization_id]"
 
       assert_select "select[name=?]", "story[workshop_id]"
 
@@ -39,7 +39,7 @@ RSpec.describe "stories/edit", type: :view do
 
     render
 
-    assert_select "a", text: "Website", count: 0
+    assert_select "a", text: "External URL", count: 0
   end
 
   it "does not render the Website button when website_url is blank" do
@@ -48,7 +48,7 @@ RSpec.describe "stories/edit", type: :view do
 
     render
 
-    assert_select "a", text: "Website", count: 0
+    assert_select "a", text: "External URL", count: 0
   end
 
   it "renders the Website button when website_url is present" do
@@ -57,6 +57,6 @@ RSpec.describe "stories/edit", type: :view do
 
     render
 
-    assert_select "a", text: "Website"
+    assert_select "a", text: "External URL"
   end
 end

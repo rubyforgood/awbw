@@ -4,17 +4,12 @@ class SectorsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    unfiltered = Sector.all
-    filtered = unfiltered.sector_name(params[:sector_name])
+    base_scope = authorized_scope(Sector.all)
+    filtered = base_scope.sector_name(params[:sector_name])
                          .published(params[:published])
-                         .order(:name)
-    @sectors = filtered.paginate(page: params[:page], per_page: per_page)
+    @sectors = filtered.order(:name).paginate(page: params[:page], per_page: per_page)
 
-    @count_display = if filtered.count == unfiltered.count
-      unfiltered.count
-    else
-      "#{filtered.count}/#{unfiltered.count}"
-    end
+    @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
   end
 
   def show
