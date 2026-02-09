@@ -9,6 +9,9 @@
               <%= EventRegistration.model_name.human.pluralize %> (<%= @event_registrations_count %>)
             </h1>
             <div class="flex gap-2">
+              <%= link_to "Export CSV",
+                          event_registrations_path(request.query_parameters.merge(format: :csv)),
+                          class: "btn btn-secondary-outline" %>
               <% if current_user&.super_user? %>
                 <%= link_to "New #{EventRegistration.model_name.human.downcase}",
                             new_event_registration_path,
