@@ -9,6 +9,14 @@ class ResourcePolicy < ApplicationPolicy
     admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
+  def create?
+    admin?
+  end
+
+  def update?
+    admin?
+  end
+
   def download?
     true
   end

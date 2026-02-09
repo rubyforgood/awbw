@@ -126,7 +126,6 @@ RSpec.describe "/resources", type: :request do
       it "renders a response with 422 status" do
         resource = Resource.create! valid_attributes
         patch resource_url(resource), params: { resource: invalid_attributes }
-
         expect(response).to have_http_status(:unprocessable_content)
       end
     end

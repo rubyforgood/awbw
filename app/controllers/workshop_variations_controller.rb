@@ -9,37 +9,48 @@ class WorkshopVariationsController < ApplicationController
   end
 
   def new
-    @workshop_variation = WorkshopVariation.new
+    if params[:workshop_variation_idea_id].present?
+      idea = WorkshopVariationIdea.find(params[:workshop_variation_idea_id])
+      @workshop_variation = WorkshopVariationFromIdeaService.new(idea, user: current_user).call
+    else
+      @workshop_variation = WorkshopVariation.new
+    end
     authorize! @workshop_variation
     set_form_variables
   end
 
   def create
-    @workshop_variation = WorkshopVariation.new(workshop_variation_params)
+    @workshop_variation = current_user.workshop_variations_as_creator.build(workshop_variation_params)
     authorize! @workshop_variation
 
-    if @workshop_variation.save
-      NotificationServices::CreateNotification.call(
-        noticeable: @workshop_variation,
-        kind: :idea_submitted_fyi,
-        recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-        notification_type: 0)
+    success = false
 
-      if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@workshop_variation)
+    WorkshopVariation.transaction do
+      if @workshop_variation.save
+        # assign_associations(@workshop_variation)
+        if params[:promote_idea_assets] == "true"
+          @workshop_variation.attach_assets_from_idea!
+        elsif params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@workshop_variation)
+        end
+
+        if params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@workshop_variation)
+        end
+
+        success = true
       end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      log_workshop_error("creation", e)
+      raise ActiveRecord::Rollback
+    end
 
+    if success
       flash[:notice] = "Workshop Variation has been created."
-      if params[:from] == "workshop_show"
-        redirect_to workshop_path(@workshop_variation.workshop, anchor: "workshop-variations")
-      elsif params[:from] == "index"
-        redirect_to workshop_variations_path
-      else
-        redirect_to root_path
-      end
+      redirect_to workshop_variations_path(sort: "created")
     else
       set_form_variables
+      flash.now[:alert] = "Unable to save the workshop variation."
       render :new
     end
   end
@@ -79,18 +90,29 @@ class WorkshopVariationsController < ApplicationController
   end
 
   private
+  # def assign_associations(workshop_variation)
+  #   # Convert checkbox values into categorizable_items updates
+  #   selected_category_ids = Array(params[:workshop_variation][:category_ids]).reject(&:blank?).map(&:to_i)
+  #   workshop_variation.categories = Category.where(id: selected_category_ids)
+  #
+  #   # Convert checkbox values into sectorable_items updates
+  #   selected_sector_ids = Array(params[:workshop_variation][:sector_ids]).reject(&:blank?).map(&:to_i)
+  #   workshop_variation.sectors = Sector.where(id: selected_sector_ids)
+  # end
 
   def set_form_variables
-    workshops = current_user&.super_user? ? Workshop.all : Workshop.published
+    workshops = authorized_scope(Workshop.all)
     @workshops = workshops.order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
+    @workshop_variation_idea = params[:workshop_variation_idea_id].present? &&
+      WorkshopVariationIdea.find_by(id: params[:workshop_variation_idea_id])
   end
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [ :name, :body, :published, :position,
-       :youtube_url, :created_by_id, :workshop_id
+      [ :name, :body, :published, :position, :youtube_url, :created_by_id,
+        :organization_id, :workshop_id, :workshop_variation_idea_id
       ]
     )
   end

@@ -1,14 +1,14 @@
 class WorkshopVariationPolicy < ApplicationPolicy
   def index?
-    admin?
+    true
   end
 
   def show?
-    admin? || owner?
+    admin? || owner? || (authenticated? && record.published?)
   end
 
   def create?
-    admin? || owner?
+    admin?
   end
 
   def update?
@@ -21,6 +21,10 @@ class WorkshopVariationPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    relation.where(created_by: user)
+    if authenticated?
+      relation.published.or(relation.where(created_by_id: user.id))
+    else
+      relation.publicly_visible
+    end
   end
 end
