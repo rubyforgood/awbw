@@ -109,7 +109,7 @@ class MonthlyReportsController < ApplicationController
     @answers      = @monthly_report.report_form_field_answers
 
     unless @monthly_report
-      redirect_to root_path, error: "Unable to find that Workshop Log."
+      redirect_to root_path, error: "Unable to find that Monthly Report."
     end
   end
 

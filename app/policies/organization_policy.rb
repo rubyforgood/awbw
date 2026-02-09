@@ -13,7 +13,13 @@ class OrganizationPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/scoping
 
   relation_scope do |relation|
-    next relation if admin?
-    relation.published
+    if admin?
+      relation.active
+    elsif authenticated?
+      # Non-admin users see organizations they belong to
+      relation.where(id: user.organization_ids)
+    else
+      relation.published
+    end
   end
 end

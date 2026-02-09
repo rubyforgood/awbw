@@ -15,7 +15,7 @@ class ReportPolicy < ApplicationPolicy
 
   def belongs_to_organization?
     return false unless authenticated?
-    record.organization && user.organization_ids.include?(record.organization.id)
+    record.organization&.id && user.organization_ids.include?(record.organization.id)
   end
 
   relation_scope do |relation|
