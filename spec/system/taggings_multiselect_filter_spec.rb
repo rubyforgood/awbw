@@ -105,9 +105,15 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
       check 'Healing'
       click_button 'Apply combination filters'
 
-      expect(page).to have_current_path(taggings_path(sector_names_all: 'Youth', category_names_all: 'Healing'))
+      expect(page).to have_current_path(taggings_path, ignore_query: true)
+
+      # Order of params in query string is not guaranteed
+      expect(page.current_url).to match(
+        /sector_names_all=Youth.*category_names_all=Healing|category_names_all=Healing.*sector_names_all=Youth/)
+
       expect(page).to have_content('Youth')
       expect(page).to have_content('Theme: Healing')
+
       # Only workshops with BOTH Youth and Healing tags should appear
       expect(page).to have_content('Youth Healing Workshop')
       expect(page).to have_content('Combined Youth Adult Healing Workshop')
