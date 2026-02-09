@@ -1,7 +1,7 @@
-<% sector_names = @sector_names.to_s.split("--").join(", ") %>
+<% sector_names = @sector_names_all.to_s.split("--").join(", ") %>
 <% category_full_names =
-     if @category_names.present?
-       Category.names(@category_names)
+     if @category_names_all.present?
+       Category.names(@category_names_all)
                .includes(:category_type)
                .map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }
                .join(", ")
