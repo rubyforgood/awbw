@@ -61,10 +61,10 @@ class Notification < ApplicationRecord
     # If this notification has a root, use that; otherwise, this IS the root
     root_id = root_notification_id || id
 
-    # Count all notifications in the chain (excluding the root itself)
-    Notification.where(root_notification_id: root_id)
-                .where.not(id: root_id)
-                .count
+    # Memoize to avoid repeated queries
+    @resend_count ||= Notification.where(root_notification_id: root_id)
+                                   .where.not(id: root_id)
+                                   .count
   end
 
   def resend?
