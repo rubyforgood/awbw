@@ -93,9 +93,7 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
 
       # The order might be alphabetical (Adult--Youth) or as selected (Youth--Adult)
       expect(page.current_path).to eq(taggings_path)
-      expect(page.current_url).to include('sector_names_all=')
-      expect(page.current_url).to include('Adult')
-      expect(page.current_url).to include('Youth')
+      expect(page.current_url).to match(/sector_names_all=(Adult--Youth|Youth--Adult)/)
       # Only the workshop with BOTH Youth and Adult tags should appear
       expect(page).to have_content('Combined Youth Adult Healing Workshop')
       expect(page).not_to have_content('Youth Healing Workshop')
@@ -168,9 +166,7 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
 
       # The order might be alphabetical (Adult--Youth) or as selected (Youth--Adult)
       expect(page.current_path).to eq(taggings_path)
-      expect(page.current_url).to include('sector_names_all=')
-      expect(page.current_url).to include('Adult')
-      expect(page.current_url).to include('Youth')
+      expect(page.current_url).to match(/sector_names_all=(Adult--Youth|Youth--Adult)/)
       expect(page).to have_content('Combined Youth Adult Healing Workshop')
     end
 
