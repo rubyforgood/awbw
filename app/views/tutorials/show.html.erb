@@ -3,14 +3,15 @@
     <div class="<%= DomainTheme.bg_class_for(:tutorials) %> border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
-        <span class="inline-block text-md">
-          <%= render "bookmarks/editable_bookmark_button", resource: @tutorial.object %>
-        </span>
-
+        <%= link_to "Tutorials", tutorials_path, class: "btn btn-secondary-outline" %>
+        <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
         <% if current_user&.super_user? %>
           <%= link_to("Edit", edit_tutorial_path(@tutorial),
                       class: "admin-only bg-blue-100 btn btn-primary-outline") %>
         <% end %>
+        <span class="inline-block text-md">
+          <%= render "bookmarks/editable_bookmark_button", resource: @tutorial.object %>
+        </span>
       </div>
 
       <!-- Resource Card -->

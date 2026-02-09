@@ -9,7 +9,7 @@
 
 <%= turbo_stream.update dom_id(@bookmarkable, :bookmark_count_person) do  %>
   (Bookmarked by
-  <%= pluralize(@bookmarkable.bookmarks_count, "user") %>,
+  <%= pluralize(@bookmarkable.bookmarks_count, "user") %>)
 <% end  %>
 
 <%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>
