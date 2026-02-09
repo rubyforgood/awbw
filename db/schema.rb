@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -272,7 +272,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.boolean "featured"
-    t.integer "project_id"
+    t.integer "organization_id"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published"
@@ -285,7 +285,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.index ["author_id"], name: "index_community_news_on_author_id"
     t.index ["body"], name: "index_community_news_on_body", type: :fulltext
     t.index ["created_by_id"], name: "index_community_news_on_created_by_id"
-    t.index ["project_id"], name: "index_community_news_on_project_id"
+    t.index ["organization_id"], name: "index_community_news_on_organization_id"
     t.index ["updated_by_id"], name: "index_community_news_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_community_news_on_windows_type_id"
   end
@@ -332,51 +332,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
     t.index ["published"], name: "index_events_on_published"
-  end
-
-  create_table "facilitators", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "best_time_to_call"
-    t.text "bio"
-    t.datetime "created_at", null: false
-    t.integer "created_by_id"
-    t.date "date_of_birth"
-    t.string "display_name_preference"
-    t.string "email"
-    t.string "email_2"
-    t.string "email_2_type", default: "personal", null: false
-    t.string "email_type"
-    t.string "facebook_url"
-    t.string "first_name", null: false
-    t.string "instagram_url"
-    t.string "last_name", null: false
-    t.string "linked_in_url"
-    t.date "member_since"
-    t.text "notes"
-    t.boolean "profile_is_searchable", default: true, null: false
-    t.boolean "profile_show_affiliations", default: true, null: false
-    t.boolean "profile_show_bio", default: true, null: false
-    t.boolean "profile_show_email", default: true, null: false
-    t.boolean "profile_show_events_registered", default: true, null: false
-    t.boolean "profile_show_member_since", default: true, null: false
-    t.boolean "profile_show_phone", default: true, null: false
-    t.boolean "profile_show_pronouns", default: true, null: false
-    t.boolean "profile_show_sectors", default: true, null: false
-    t.boolean "profile_show_social_media", default: true, null: false
-    t.boolean "profile_show_stories", default: true, null: false
-    t.boolean "profile_show_story_ideas", default: true, null: false
-    t.boolean "profile_show_workshop_ideas", default: true, null: false
-    t.boolean "profile_show_workshop_logs", default: true, null: false
-    t.boolean "profile_show_workshop_variations", default: true, null: false
-    t.boolean "profile_show_workshops", default: true, null: false
-    t.string "pronouns"
-    t.boolean "published", default: false, null: false
-    t.string "twitter_url"
-    t.datetime "updated_at", null: false
-    t.integer "updated_by_id"
-    t.string "youtube_url"
-    t.index ["created_by_id"], name: "index_facilitators_on_created_by_id"
-    t.index ["published"], name: "index_facilitators_on_published"
-    t.index ["updated_by_id"], name: "index_facilitators_on_updated_by_id"
   end
 
   create_table "faqs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -489,13 +444,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.string "name"
     t.string "num_new_participants"
     t.string "num_ongoing_participants"
+    t.integer "organization_id"
+    t.integer "organization_user_id"
     t.string "phone"
     t.string "position"
-    t.integer "project_id"
-    t.integer "project_user_id"
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["project_id"], name: "index_monthly_reports_on_project_id"
-    t.index ["project_user_id"], name: "index_monthly_reports_on_project_user_id"
+    t.index ["organization_id"], name: "index_monthly_reports_on_organization_id"
+    t.index ["organization_user_id"], name: "index_monthly_reports_on_organization_user_id"
   end
 
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -513,6 +468,62 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
+  end
+
+  create_table "organization_obligations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "name"
+    t.boolean "published", default: false, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["published"], name: "index_organization_obligations_on_published"
+  end
+
+  create_table "organization_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "name"
+    t.boolean "published", default: false, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["published"], name: "index_organization_statuses_on_published"
+  end
+
+  create_table "organization_users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "filemaker_code"
+    t.boolean "inactive", default: false, null: false
+    t.integer "organization_agency_id"
+    t.integer "organization_id"
+    t.integer "position"
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["organization_agency_id"], name: "index_organization_users_on_organization_agency_id"
+    t.index ["organization_id"], name: "index_organization_users_on_organization_id"
+    t.index ["user_id"], name: "index_organization_users_on_user_id"
+  end
+
+  create_table "organizations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "agency_type"
+    t.string "agency_type_other"
+    t.datetime "created_at", precision: nil, null: false
+    t.text "description", size: :long
+    t.date "end_date"
+    t.string "filemaker_code"
+    t.boolean "inactive", default: false
+    t.string "internal_id"
+    t.boolean "legacy", default: false
+    t.integer "legacy_id"
+    t.integer "location_id"
+    t.string "mission_vision_values"
+    t.string "name"
+    t.text "notes", size: :long
+    t.integer "organization_status_id"
+    t.date "start_date"
+    t.datetime "updated_at", precision: nil, null: false
+    t.string "website_url"
+    t.integer "windows_type_id"
+    t.index ["location_id"], name: "index_organizations_on_location_id"
+    t.index ["organization_status_id"], name: "index_organizations_on_organization_status_id"
+    t.index ["windows_type_id"], name: "index_organizations_on_windows_type_id"
   end
 
   create_table "payments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -539,69 +550,56 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id", unique: true
   end
 
+  create_table "people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "best_time_to_call"
+    t.text "bio"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.date "date_of_birth"
+    t.string "display_name_preference"
+    t.string "email"
+    t.string "email_2"
+    t.string "email_2_type", default: "personal", null: false
+    t.string "email_type"
+    t.string "facebook_url"
+    t.string "first_name", null: false
+    t.string "instagram_url"
+    t.string "last_name", null: false
+    t.string "linked_in_url"
+    t.date "member_since"
+    t.text "notes"
+    t.boolean "profile_is_searchable", default: true, null: false
+    t.boolean "profile_show_affiliations", default: true, null: false
+    t.boolean "profile_show_bio", default: true, null: false
+    t.boolean "profile_show_email", default: true, null: false
+    t.boolean "profile_show_events_registered", default: true, null: false
+    t.boolean "profile_show_member_since", default: true, null: false
+    t.boolean "profile_show_phone", default: true, null: false
+    t.boolean "profile_show_pronouns", default: true, null: false
+    t.boolean "profile_show_sectors", default: true, null: false
+    t.boolean "profile_show_social_media", default: true, null: false
+    t.boolean "profile_show_stories", default: true, null: false
+    t.boolean "profile_show_story_ideas", default: true, null: false
+    t.boolean "profile_show_workshop_ideas", default: true, null: false
+    t.boolean "profile_show_workshop_logs", default: true, null: false
+    t.boolean "profile_show_workshop_variations", default: true, null: false
+    t.boolean "profile_show_workshops", default: true, null: false
+    t.string "pronouns"
+    t.boolean "published", default: false, null: false
+    t.string "twitter_url"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.string "youtube_url"
+    t.index ["created_by_id"], name: "index_people_on_created_by_id"
+    t.index ["published"], name: "index_people_on_published"
+    t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
+  end
+
   create_table "permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.integer "legacy_id"
     t.string "security_cat"
     t.datetime "updated_at", precision: nil, null: false
-  end
-
-  create_table "project_obligations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.string "name"
-    t.boolean "published", default: false, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.index ["published"], name: "index_project_obligations_on_published"
-  end
-
-  create_table "project_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.string "name"
-    t.boolean "published", default: false, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.index ["published"], name: "index_project_statuses_on_published"
-  end
-
-  create_table "project_users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.integer "agency_id"
-    t.datetime "created_at", precision: nil, null: false
-    t.string "filemaker_code"
-    t.boolean "inactive", default: false, null: false
-    t.integer "position"
-    t.integer "project_id"
-    t.string "title"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "user_id"
-    t.index ["agency_id"], name: "index_project_users_on_agency_id"
-    t.index ["project_id"], name: "index_project_users_on_project_id"
-    t.index ["user_id"], name: "index_project_users_on_user_id"
-  end
-
-  create_table "projects", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "agency_type"
-    t.string "agency_type_other"
-    t.datetime "created_at", precision: nil, null: false
-    t.text "description", size: :long
-    t.date "end_date"
-    t.string "filemaker_code"
-    t.boolean "inactive", default: false
-    t.string "internal_id"
-    t.boolean "legacy", default: false
-    t.integer "legacy_id"
-    t.integer "location_id"
-    t.string "mission_vision_values"
-    t.string "name"
-    t.text "notes", size: :long
-    t.integer "project_status_id"
-    t.boolean "published", default: false, null: false
-    t.date "start_date"
-    t.datetime "updated_at", precision: nil, null: false
-    t.string "website_url"
-    t.integer "windows_type_id"
-    t.index ["location_id"], name: "index_projects_on_location_id"
-    t.index ["project_status_id"], name: "index_projects_on_project_status_id"
-    t.index ["published"], name: "index_projects_on_published"
-    t.index ["windows_type_id"], name: "index_projects_on_windows_type_id"
   end
 
   create_table "quotable_item_quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -654,10 +652,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.integer "form_file_file_size"
     t.datetime "form_file_updated_at", precision: nil
     t.boolean "has_attachment", default: false
+    t.integer "organization_id"
     t.string "other_description"
     t.integer "owner_id"
     t.string "owner_type"
-    t.integer "project_id"
     t.integer "rating", default: 0
     t.integer "teens_first_time", default: 0
     t.integer "teens_ongoing", default: 0
@@ -667,7 +665,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.integer "windows_type_id"
     t.integer "workshop_id"
     t.string "workshop_name"
-    t.index ["project_id"], name: "index_reports_on_project_id"
+    t.index ["organization_id"], name: "index_reports_on_organization_id"
     t.index ["user_id"], name: "index_reports_on_user_id"
     t.index ["windows_type_id"], name: "index_reports_on_windows_type_id"
   end
@@ -675,6 +673,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
   create_table "resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "agency"
     t.string "author"
+    t.text "body", size: :long
     t.datetime "created_at", precision: nil, null: false
     t.boolean "featured", default: false
     t.boolean "female", default: false
@@ -688,7 +687,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
-    t.text "text", size: :long
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.string "url"
@@ -726,8 +724,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.integer "created_by_id", null: false
     t.string "external_workshop_title"
     t.boolean "featured", default: false, null: false
+    t.integer "organization_id"
     t.boolean "permission_given"
-    t.integer "project_id"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
@@ -741,7 +739,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.integer "workshop_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_stories_on_created_by_id"
-    t.index ["project_id"], name: "index_stories_on_project_id"
+    t.index ["organization_id"], name: "index_stories_on_organization_id"
     t.index ["published"], name: "index_stories_on_published"
     t.index ["spotlighted_facilitator_id"], name: "index_stories_on_spotlighted_facilitator_id"
     t.index ["story_idea_id"], name: "index_stories_on_story_idea_id"
@@ -755,8 +753,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.string "external_workshop_title"
+    t.integer "organization_id", null: false
     t.boolean "permission_given"
-    t.integer "project_id", null: false
     t.string "publish_preferences"
     t.string "title"
     t.datetime "updated_at", null: false
@@ -765,7 +763,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.integer "workshop_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_story_ideas_on_created_by_id"
-    t.index ["project_id"], name: "index_story_ideas_on_project_id"
+    t.index ["organization_id"], name: "index_story_ideas_on_organization_id"
     t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_story_ideas_on_windows_type_id"
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
@@ -837,7 +835,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.string "email", default: "", null: false
     t.string "email_type", default: "work", null: false
     t.string "encrypted_password", default: "", null: false
-    t.integer "facilitator_id"
     t.integer "failed_attempts", default: 0, null: false
     t.string "first_name", default: ""
     t.boolean "inactive", default: false
@@ -848,6 +845,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.integer "legacy_id"
     t.datetime "locked_at"
     t.text "notes", size: :long
+    t.integer "person_id"
     t.string "phone"
     t.string "phone2"
     t.string "phone3"
@@ -869,7 +867,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["facilitator_id"], name: "index_users_on_facilitator_id"
+    t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
@@ -958,7 +956,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.boolean "lead_similar"
     t.integer "num_participants_first_time", default: 0
     t.integer "num_participants_on_going", default: 0
-    t.integer "project_id"
+    t.integer "organization_id"
     t.text "questions", size: :long
     t.integer "rating", default: 0
     t.text "reaction", size: :long
@@ -968,7 +966,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
     t.integer "workshop_id"
-    t.index ["project_id"], name: "index_workshop_logs_on_project_id"
+    t.index ["organization_id"], name: "index_workshop_logs_on_organization_id"
     t.index ["user_id"], name: "index_workshop_logs_on_user_id"
     t.index ["workshop_id"], name: "index_workshop_logs_on_workshop_id"
   end
@@ -995,22 +993,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
     t.index ["workshop_parent_id", "workshop_child_id"], name: "index_workshop_series_memberships_on_parent_and_child", unique: true
   end
 
+  create_table "workshop_variation_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body", size: :long
+    t.datetime "created_at", null: false
+    t.integer "created_by_id", null: false
+    t.string "name", null: false
+    t.integer "organization_id", null: false
+    t.boolean "permission_given"
+    t.string "publish_preferences"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id", null: false
+    t.integer "windows_type_id", null: false
+    t.integer "workshop_id", null: false
+    t.string "youtube_url"
+    t.index ["body"], name: "index_workshop_variation_ideas_on_body", type: :fulltext
+    t.index ["created_by_id"], name: "index_workshop_variation_ideas_on_created_by_id"
+    t.index ["name"], name: "index_workshop_variation_ideas_on_name"
+    t.index ["organization_id"], name: "index_workshop_variation_ideas_on_organization_id"
+    t.index ["updated_by_id"], name: "index_workshop_variation_ideas_on_updated_by_id"
+    t.index ["windows_type_id"], name: "index_workshop_variation_ideas_on_windows_type_id"
+    t.index ["workshop_id"], name: "index_workshop_variation_ideas_on_workshop_id"
+  end
+
   create_table "workshop_variations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "code", size: :long
+    t.text "body", size: :long
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
     t.boolean "inactive", default: true
     t.boolean "legacy", default: false
     t.string "name"
+    t.integer "organization_id"
     t.integer "position"
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "variation_id"
     t.integer "workshop_id"
+    t.bigint "workshop_variation_idea_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
+    t.index ["organization_id"], name: "index_workshop_variations_on_organization_id"
     t.index ["published"], name: "index_workshop_variations_on_published"
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
+    t.index ["workshop_variation_idea_id"], name: "index_workshop_variations_on_workshop_variation_idea_id"
   end
 
   create_table "workshops", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1118,7 +1142,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
   add_foreign_key "bookmark_annotations", "bookmarks"
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "category_types"
-  add_foreign_key "community_news", "projects"
+  add_foreign_key "community_news", "organizations"
   add_foreign_key "community_news", "users", column: "author_id"
   add_foreign_key "community_news", "users", column: "created_by_id"
   add_foreign_key "community_news", "users", column: "updated_by_id"
@@ -1127,41 +1151,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "users", column: "registrant_id"
   add_foreign_key "events", "users", column: "created_by_id"
-  add_foreign_key "facilitators", "users", column: "created_by_id"
-  add_foreign_key "facilitators", "users", column: "updated_by_id"
   add_foreign_key "form_builders", "windows_types"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_fields", "forms"
   add_foreign_key "forms", "form_builders"
-  add_foreign_key "monthly_reports", "project_users"
-  add_foreign_key "monthly_reports", "projects"
-  add_foreign_key "project_users", "projects"
-  add_foreign_key "project_users", "projects", column: "agency_id"
-  add_foreign_key "project_users", "users"
-  add_foreign_key "projects", "locations"
-  add_foreign_key "projects", "project_statuses"
-  add_foreign_key "projects", "windows_types"
+  add_foreign_key "monthly_reports", "organization_users"
+  add_foreign_key "monthly_reports", "organizations"
+  add_foreign_key "organization_users", "organizations"
+  add_foreign_key "organization_users", "organizations", column: "organization_agency_id"
+  add_foreign_key "organization_users", "users"
+  add_foreign_key "organizations", "locations"
+  add_foreign_key "organizations", "organization_statuses"
+  add_foreign_key "organizations", "windows_types"
+  add_foreign_key "people", "users", column: "created_by_id"
+  add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "workshops"
   add_foreign_key "report_form_field_answers", "answer_options"
   add_foreign_key "report_form_field_answers", "form_fields"
   add_foreign_key "report_form_field_answers", "reports"
-  add_foreign_key "reports", "projects"
+  add_foreign_key "reports", "organizations"
   add_foreign_key "reports", "users"
   add_foreign_key "reports", "windows_types"
   add_foreign_key "resources", "users"
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
   add_foreign_key "sectorable_items", "sectors"
-  add_foreign_key "stories", "facilitators", column: "spotlighted_facilitator_id"
-  add_foreign_key "stories", "projects"
+  add_foreign_key "stories", "organizations"
+  add_foreign_key "stories", "people", column: "spotlighted_facilitator_id"
   add_foreign_key "stories", "story_ideas"
   add_foreign_key "stories", "users", column: "created_by_id"
   add_foreign_key "stories", "users", column: "updated_by_id"
   add_foreign_key "stories", "windows_types"
   add_foreign_key "stories", "workshops"
-  add_foreign_key "story_ideas", "projects"
+  add_foreign_key "story_ideas", "organizations"
   add_foreign_key "story_ideas", "users", column: "created_by_id"
   add_foreign_key "story_ideas", "users", column: "updated_by_id"
   add_foreign_key "story_ideas", "windows_types"
@@ -1172,21 +1196,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_032602) do
   add_foreign_key "user_forms", "users"
   add_foreign_key "user_permissions", "permissions"
   add_foreign_key "user_permissions", "users"
-  add_foreign_key "users", "facilitators"
-  add_foreign_key "users", "projects", column: "agency_id"
+  add_foreign_key "users", "organizations", column: "agency_id"
+  add_foreign_key "users", "people"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
   add_foreign_key "workshop_ideas", "users", column: "created_by_id"
   add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
   add_foreign_key "workshop_ideas", "windows_types"
-  add_foreign_key "workshop_logs", "projects"
+  add_foreign_key "workshop_logs", "organizations"
   add_foreign_key "workshop_logs", "users"
   add_foreign_key "workshop_logs", "workshops"
   add_foreign_key "workshop_resources", "resources"
   add_foreign_key "workshop_resources", "workshops"
   add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_child_id"
   add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_parent_id"
+  add_foreign_key "workshop_variation_ideas", "organizations"
+  add_foreign_key "workshop_variation_ideas", "users", column: "created_by_id"
+  add_foreign_key "workshop_variation_ideas", "users", column: "updated_by_id"
+  add_foreign_key "workshop_variation_ideas", "windows_types"
+  add_foreign_key "workshop_variation_ideas", "workshops"
+  add_foreign_key "workshop_variations", "organizations"
   add_foreign_key "workshop_variations", "users", column: "created_by_id"
+  add_foreign_key "workshop_variations", "workshop_variation_ideas"
   add_foreign_key "workshop_variations", "workshops"
   add_foreign_key "workshops", "users"
   add_foreign_key "workshops", "windows_types"
