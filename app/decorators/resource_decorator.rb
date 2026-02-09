@@ -2,7 +2,7 @@ class ResourceDecorator < ApplicationDecorator
   include ::Linkable
 
   def detail(length: nil)
-    length ? text&.truncate(length) : text  # TODO - rename field
+    length ? body&.truncate(length) : body  # TODO - rename field
   end
 
   def default_display_image

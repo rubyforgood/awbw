@@ -1,7 +1,7 @@
 <% sector_names = @sector_names_all.to_s.split("--").join(", ") %>
 <% category_full_names =
      if @category_names_all.present?
-       Category.names(@category_names_all)
+       Category.category_names_all(@category_names_all)
                .includes(:category_type)
                .map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }
                .join(", ")
@@ -25,7 +25,7 @@
     </div>
 
     <!-- ACTIVE FILTERS -->
-    <% if sector_names.present? || category_full_names.present? %>
+    <% if sector_names.present? || category_full_names.present? || @category_names_all.present? %>
       <div class="mt-4 text-center">
         <% if sector_names.present? %>
           <div class="text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
@@ -33,9 +33,9 @@
           </div>
         <% end %>
 
-        <% if category_full_names.present? %>
+        <% if category_full_names.present? || @category_names_all.present? %>
           <div class="mt-2 text-base md:text-lg text-gray-600 font-semibold">
-            <%= category_full_names %>
+            <%= category_full_names || @category_names_all %>
           </div>
         <% end %>
       </div>
@@ -46,7 +46,7 @@
   <div class="space-y-6">
 
     <!-- EMPTY / NO RESULTS STATES -->
-    <% if sector_names.blank? && category_full_names.blank? %>
+    <% if sector_names.blank? && category_full_names.blank? && @category_names_all.blank? %>
       <div class="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-400">
         Select a service population or explore tags to view related content.
       </div>
@@ -55,7 +55,7 @@
       <div class="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-500">
         No items have this tag combination:
         <div class="font-semibold text-gray-700">
-          <%= [sector_names.presence, category_full_names.presence].compact.join(", ") %>
+          <%= [sector_names.presence, category_full_names.presence, @category_names_all.presence].compact.join(", ") %>
         </div>
       </div>
     <% end %>
