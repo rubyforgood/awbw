@@ -128,11 +128,13 @@
                 notifications_path,
                 class: "text-sm text-blue-600 hover:underline" %>
 
-    <%# Optional resend hook %>
-    <%#= button_to "Resend",
-                  resend_notification_path(@notification),
-                  method: :post,
-                  class: "btn btn-secondary" %>
+    <% if allowed_to?(:resend?, @notification) %>
+      <%= button_to "Resend Email",
+                    resend_notification_path(@notification),
+                    method: :post,
+                    data: { turbo_confirm: "Are you sure you want to resend this notification email?" },
+                    class: "btn btn-primary px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+    <% end %>
   </div>
 
 </div>
