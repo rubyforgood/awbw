@@ -33,9 +33,9 @@
                 label: "Organization",
                 required: true,
                 hint: "Please contact AWBW if your agency is not listed.",
-                prompt: (@organizations.count > 1 ? "Please select the relevant agency" : nil),
+                prompt: (@organizations.count > 1 ? "Please select the relevant organization" : nil),
                 selected: (params[:organization_id].presence || (f.object.organization_id || (@organizations.count == 1 ? @organizations.first.id : nil))),
-                input_html: { value: params[:organization_id].presence || f.object.organization_id || @agency_id,
+                input_html: { value: params[:organization_id].presence || f.object.organization_id || @organization_id,
                               class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                 label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
     <%= f.input :date,
