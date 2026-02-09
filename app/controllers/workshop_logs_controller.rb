@@ -112,7 +112,7 @@ class WorkshopLogsController < ApplicationController
       Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
     ).sort.reverse
 
-    scoped_users = current_user&.super_user? ? User.active : User.where(id: current_user.id)
+    scoped_users = authorized_scope(User.active)
     @people = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
                                 .includes(:workshop_logs, :person)
                                 .joins(:workshop_logs)
@@ -137,9 +137,7 @@ class WorkshopLogsController < ApplicationController
     end
 
     workshops = Workshop.includes(:windows_type)
-    unless current_user&.super_user?
-      workshops = workshops.published
-    end
+    workshops = authorized_scope(workshops)
     @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id).includes(:windows_type))
                           .distinct
                           .order(title: :asc)

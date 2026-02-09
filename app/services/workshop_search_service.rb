@@ -1,11 +1,10 @@
 class WorkshopSearchService
-  attr_reader :params, :user, :admin
+  attr_reader :params, :user
   attr_accessor :workshops, :sort
 
   def initialize(params = {}, user: nil)
     @params = params
     @user = user
-    @admin = user&.super_user?
     @sort = default_sort
     @workshops =
       if @sort == "popularity"

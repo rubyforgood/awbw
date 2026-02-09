@@ -108,13 +108,7 @@ class MonthlyReportsController < ApplicationController
     authorize! @monthly_report
     @answers      = @monthly_report.report_form_field_answers
 
-    if @monthly_report
-      if current_user&.super_user? || (@monthly_report.organization && current_user.organization_ids.include?(@monthly_report.organization.id))
-        render :show
-      else
-        redirect_to root_path, error: "You do not have permission to view this page."
-      end
-    else
+    unless @monthly_report
       redirect_to root_path, error: "Unable to find that Workshop Log."
     end
   end
