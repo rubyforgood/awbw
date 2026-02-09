@@ -104,6 +104,8 @@ class UsersController < ApplicationController
   # PERSON
   # ---------------------------------------------------------
   def generate_person
+    authorize! @user
+
     if @user.person.present?
       redirect_to @user.person and return
     else

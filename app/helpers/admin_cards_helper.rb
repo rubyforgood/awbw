@@ -5,15 +5,15 @@ module AdminCardsHelper
   def system_cards
     [
       model_card(:banners, icon: "📣"),
-      model_card(:people, icon: "🧑‍🎨"),
       model_card(:faqs, icon: "❔", title: "FAQs"),
       model_card(:community_news, icon: "📰"),
       model_card(:events, icon: "📆"),
+      model_card(:organizations, icon: "🏫"),
+      model_card(:people, icon: "🧑‍🎨"),
       model_card(:stories, icon: "🗣️"),
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime),
       model_card(:resources, icon: "📚"),
       model_card(:workshops, icon: "🎨"),
-      model_card(:organizations, icon: "🏫"),
       model_card(:users, icon: "👥",  title: "User accounts")
     ]
   end
@@ -28,12 +28,12 @@ module AdminCardsHelper
       custom_card("Activity logs", admin_activities_events_path, icon: "🧭"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:event_registrations, icon: "🎟️", intensity: 100),
+      model_card(:quotes, icon: "💬", intensity: 100),
       model_card(:story_ideas, icon: "✍️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
       model_card(:workshop_variations, icon: "🔀", intensity: 100),
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
       model_card(:workshop_logs, icon: "📝", intensity: 100),
-      model_card(:quotes, icon: "💬", intensity: 100),
       custom_card("System notifications", notifications_path, icon: "🔔")
     ]
   end
