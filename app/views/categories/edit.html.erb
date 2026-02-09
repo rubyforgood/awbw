@@ -5,7 +5,7 @@
         <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @category.class.model_name.human %></h1>
-            <%= link_to "Taggings", taggings_path(category_names: @category.name),
+            <%= link_to "Taggings", taggings_path(category_names_all: @category.name),
                         class: "btn btn-secondary-outline" %>
           </div>
 

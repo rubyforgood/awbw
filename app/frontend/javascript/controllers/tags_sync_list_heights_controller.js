@@ -44,11 +44,11 @@ export default class extends Controller {
         const params = new URLSearchParams()
 
         if (selectedSectors.length > 0) {
-            params.set("sector_names", selectedSectors.join("--"))
+            params.set("sector_names_all", selectedSectors.join("--"))
         }
 
         if (selectedCategories.length > 0) {
-            params.set("category_names", selectedCategories.join("--"))
+            params.set("category_names_all", selectedCategories.join("--"))
         }
 
         // Always redirect to /taggings with the selected filters

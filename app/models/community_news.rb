@@ -55,9 +55,7 @@ class CommunityNews < ApplicationRecord
     conditions[:published] = params[:published] if params[:published].present?
     community_news = self.search(conditions)
 
-    community_news = community_news.sector_names(params[:sector_names]) if params[:sector_names].present?
     community_news = community_news.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
-    community_news = community_news.category_names(params[:category_names]) if params[:category_names].present?
     community_news = community_news.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     # community_news = community_news.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     community_news
