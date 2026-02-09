@@ -37,6 +37,8 @@ class Tutorial < ApplicationRecord
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.body(params[:body]) if params[:body].present?
     resources = resources.published(params[:published]) if params[:published].present?
+    resources = resources.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    resources = resources.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     resources
   end
 end
