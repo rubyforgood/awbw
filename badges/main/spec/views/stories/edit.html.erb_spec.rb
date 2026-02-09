@@ -39,7 +39,7 @@ RSpec.describe "stories/edit", type: :view do
 
     render
 
-    assert_select "a", text: "Website", count: 0
+    assert_select "a", text: "External URL", count: 0
   end
 
   it "does not render the Website button when website_url is blank" do
@@ -48,7 +48,7 @@ RSpec.describe "stories/edit", type: :view do
 
     render
 
-    assert_select "a", text: "Website", count: 0
+    assert_select "a", text: "External URL", count: 0
   end
 
   it "renders the Website button when website_url is present" do
@@ -57,6 +57,6 @@ RSpec.describe "stories/edit", type: :view do
 
     render
 
-    assert_select "a", text: "Website"
+    assert_select "a", text: "External URL"
   end
 end

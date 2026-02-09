@@ -1,8 +1,11 @@
 class WorkshopVariation < ApplicationRecord
-  include Trendable, Publishable
+  include Publishable, Trendable
 
   belongs_to :workshop
+  belongs_to :organization, optional: true
+  belongs_to :windows_type, optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :workshop_variation_idea, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   # Asset associations
@@ -23,11 +26,27 @@ class WorkshopVariation < ApplicationRecord
 
   delegate :windows_type, to: :workshop
 
+  # Scopes
+  # See Publishable, Trendable
+  scope :publicly_visible, -> { joins(:workshop).where("workshops.publicly_visible = ?", true)
+                                                .published } # overrides Publishable
+
   def description
     body
   end
 
   def title
     name
+  end
+
+  def attach_assets_from_idea!
+    return unless workshop_variation_idea
+
+    workshop_variation_idea.assets.find_each do |asset|
+      new_asset = assets.build(type: asset.type)
+      new_asset.file.attach(asset.file.blob)
+    end
+
+    save!
   end
 end

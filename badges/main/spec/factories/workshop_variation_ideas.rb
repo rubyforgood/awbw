@@ -1,0 +1,14 @@
+FactoryBot.define do
+  factory :workshop_variation_idea do
+    name { "Workshop Variation Idea" }
+    body { "This is a variation idea description" }
+    youtube_url { "https://www.youtube.com/watch?v=example" }
+    permission_given { true }
+    publish_preferences { "public" }
+    association :workshop
+    association :organization
+    association :windows_type
+    association :created_by, factory: :user
+    association :updated_by, factory: :user
+  end
+end
