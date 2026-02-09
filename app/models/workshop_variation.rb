@@ -31,4 +31,15 @@ class WorkshopVariation < ApplicationRecord
   def title
     name
   end
+
+  def attach_assets_from_idea!
+    return unless workshop_variation_idea
+
+    workshop_variation_idea.assets.find_each do |asset|
+      new_asset = assets.build(type: asset.type)
+      new_asset.file.attach(asset.file.blob)
+    end
+
+    save!
+  end
 end
