@@ -5,8 +5,8 @@
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @resource.class.model_name.human %></h1>
 
         <div class="text-right text-end">
-          <%= link_to "External URL", safe_url(@resource.external_url), target: "_blank", rel: "noopener noreferrer",
-                      class: "btn btn-secondary-outline" if @resource.external_url.present? %>
+          <%= link_to "External URL", safe_url(@resource.url), target: "_blank", rel: "noopener noreferrer",
+                      class: "btn btn-secondary-outline" if @resource.url.present? %>
           <%= link_to "View", resource_path(@resource, no_redirect: true), class: "btn btn-secondary-outline" %>
         </div>
       </div>

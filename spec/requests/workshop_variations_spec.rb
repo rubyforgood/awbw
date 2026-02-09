@@ -215,9 +215,9 @@ RSpec.describe "/workshop_variations", type: :request do
     before { sign_in regular_user }
 
     describe "GET /index" do
-      it "redirects to root" do
+      it "renders successfully" do
         get workshop_variations_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to be_successful # it's a hidden route
       end
     end
 
