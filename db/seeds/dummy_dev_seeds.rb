@@ -69,7 +69,7 @@ puts "Creating Stories…"
           workshop_id: [ nil, Workshop.all.sample&.id ].sample,
           story_idea_id: [ nil, nil, nil, nil, nil, nil, nil, nil, StoryIdea.all.sample&.id ].sample,
           windows_type_id: WindowsType.all.sample.id,
-          spotlighted_facilitator_id: [ nil, nil, nil, nil, Facilitator.all.sample&.id ].sample,
+          spotlighted_facilitator_id: [ nil, nil, nil, nil, Person.all.sample&.id ].sample,
           youtube_url: [
             nil,
             nil,

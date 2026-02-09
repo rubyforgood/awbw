@@ -12,7 +12,7 @@ class User < ApplicationRecord
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Associations
-  belongs_to :facilitator, optional: true
+  belongs_to :person, optional: true
   has_many :bookmarks, dependent: :destroy
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :notifications, as: :noticeable
@@ -52,7 +52,7 @@ class User < ApplicationRecord
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }
   validate :time_zone_must_be_valid, if: :time_zone_changed?
-  validate :facilitator_id_must_be_present_if_previously_set, on: :update
+  validate :person_id_must_be_present_if_previously_set, on: :update
   validates_associated :organization_users
 
   # Search Cop
@@ -90,8 +90,8 @@ class User < ApplicationRecord
   end
 
   def full_name
-    if facilitator
-      facilitator.full_name
+    if person
+      person.full_name
     else
       if !first_name || first_name.empty?
         email
@@ -102,7 +102,7 @@ class User < ApplicationRecord
   end
 
   def devise_email_name
-    facilitator&.first_name.presence || first_name.presence || email
+    person&.first_name.presence || first_name.presence || email
   end
 
   def submitted_monthly_report(submitted_date = Date.today, windows_type, organization_id)
@@ -185,11 +185,11 @@ class User < ApplicationRecord
     errors.add(:time_zone, "is not a valid time zone")
   end
 
-  def facilitator_id_must_be_present_if_previously_set
-    return unless facilitator_id_was.present?
-    return if facilitator_id.present?
+  def person_id_must_be_present_if_previously_set
+    return unless person_id_was.present?
+    return if person_id.present?
 
-    errors.add(:facilitator_id, "cannot be removed once set")
+    errors.add(:person_id, "cannot be removed once set")
   end
 
   def set_default_values

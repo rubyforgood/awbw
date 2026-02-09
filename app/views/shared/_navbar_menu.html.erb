@@ -81,10 +81,10 @@
       <% end %>
 
       <% if current_user&.super_user? %>
-        <%= link_to facilitators_path,
+        <%= link_to people_path,
                     class: "admin-only bg-blue-100 flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
           <i class="fas fa-user-friends"></i>
-          <span>Facilitators</span>
+          <span>People</span>
         <% end %>
 
         <%= link_to organizations_path,

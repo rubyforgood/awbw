@@ -36,11 +36,11 @@ class OrganizationsController < ApplicationController
                          .references(:windows_type)
                          .order("workshops.title ASC, windows_types.name ASC")
     user_ids = @workshop_logs_unpaginated.select(:user_id)
-    @facilitators = User.active
-                        .or(User.where(id: user_ids))
-                        .includes(:facilitator)
-                        .distinct
-                        .order("facilitators.first_name, facilitators.last_name")
+    @people = User.active
+                  .or(User.where(id: user_ids))
+                  .includes(:person)
+                  .distinct
+                  .order("people.first_name, people.last_name")
   end
 
   def new
@@ -85,13 +85,13 @@ class OrganizationsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organization_statuses = OrganizationStatus.all
-    @facilitators_array = Facilitator.includes(:user)
-                                     .joins(:user)
-                                     .order(:first_name, :last_name)
-                                     .map { |f| [ f.name, f.user.id ] }
+    @people_array = Person.includes(:user)
+                          .joins(:user)
+                          .order(:first_name, :last_name)
+                          .map { |f| [ f.name, f.user.id ] }
     @organization.organization_users = @organization.organization_users
                                      .includes(:organization)
-                                     .sort_by { |ou| ou.user.facilitator&.name.to_s.downcase }
+                                     .sort_by { |ou| ou.user.person&.name.to_s.downcase }
   end
 
   def set_index_variables

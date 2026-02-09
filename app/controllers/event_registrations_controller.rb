@@ -33,7 +33,7 @@ class EventRegistrationsController < ApplicationController
       NotificationServices::CreateNotification.call(
         noticeable: @event_registration,
         kind: "event_registration_confirmation",
-        recipient_role: :facilitator,
+        recipient_role: :person,
         recipient_email: current_user.email,
         notification_type: 0)
       NotificationServices::CreateNotification.call(
@@ -87,7 +87,7 @@ class EventRegistrationsController < ApplicationController
            .or(Event.where(id: @event_registration.event_id))
            .distinct
            .order(start_date: :desc)
-    @registrants = User.active.includes(:facilitator).order("facilitators.first_name, facilitators.last_name")
+    @registrants = User.active.includes(:person).order("people.first_name, people.last_name")
   end
 
   private

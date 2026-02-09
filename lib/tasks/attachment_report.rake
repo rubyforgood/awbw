@@ -10,7 +10,7 @@ namespace :attachment_report do
     models = [
       Address, AgeRange, AnswerOption, Attachment, Banner, Bookmark,
       Category, CategorizableItem, CommunityNews, EventRegistration, Event,
-      Facilitator, Faq, FormBuilder, FormFieldAnswerOption, FormField, Form,
+      Person, Faq, FormBuilder, FormFieldAnswerOption, FormField, Form,
       Image, Location, MediaFile, CategoryType, MonthlyReport, Notification,
       OrganizationObligation, OrganizationStatus, OrganizationUser, Project,
       QuotableItemQuote, Quote, ReportFormFieldAnswer, Report, Resource,
