@@ -40,7 +40,7 @@ RSpec.describe "events/show", type: :view do
     render
 
     expect(rendered).to have_link("Edit", href: edit_event_path(event))
-    expect(rendered).to have_link("Index", href: events_path)
+    expect(rendered).to have_link("Events", href: events_path)
   end
 
   context "when event has minimal data" do
