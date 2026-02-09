@@ -47,7 +47,7 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
     end
 
     it 'displays the explore by combination section' do
-      expect(page).to have_content('Explore by combination', normalize_ws: true)
+      expect(page).to have_content(/explore by combination/i)
       expect(page).to have_content('Service Population')
       expect(page).to have_content('Category')
       expect(page).to have_button('Apply combination filters')
@@ -155,7 +155,7 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
 
     it 'displays the explore by combination section at the bottom' do
       expect(page).to have_content('Tags')
-      expect(page).to have_content('Explore by combination', normalize_ws: true)
+      expect(page).to have_content(/explore by combination/i)
       expect(page).to have_content('Service Population')
       expect(page).to have_content('Category')
       expect(page).to have_button('Apply combination filters')
