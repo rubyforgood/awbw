@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
   let(:user) { create(:user) }
-  let!(:facilitator) { create(:facilitator, user: user) }
+  let!(:person) { create(:person, user: user) }
 
   # Create sectors
   let!(:sector_youth) { create(:sector, :published, name: "Youth") }
