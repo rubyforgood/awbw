@@ -11,6 +11,12 @@
                         send_reset_password_instructions_user_path(@user),
                         method: :post,
                         class: "btn btn-secondary-outline" %>
+          <% unless @user.confirmed? %>
+            <%= button_to "Resend Invite",
+                          send_invitation_user_path(@user),
+                          method: :post,
+                          class: "btn btn-secondary-outline" %>
+          <% end %>
           <% if current_user == @user %>
             <%= link_to "Change password",
                         change_password_path,

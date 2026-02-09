@@ -10,6 +10,7 @@ class UserPolicy < ApplicationPolicy
   def destroy? = admin?
   def toggle_lock_status? = admin?
   def confirm_email? = admin?
+  def send_invitation? = admin?
   def change_password?
     authenticated?
   end

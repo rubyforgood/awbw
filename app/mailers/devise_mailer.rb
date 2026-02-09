@@ -28,6 +28,16 @@ class DeviseMailer < Devise::Mailer
     @mail   = super
   end
 
+  def welcome_instructions(record, token, opts = {})
+    @record = record
+    @token  = token
+    @user = record
+    mail(to: @record.email, subject: "Welcome to #{@organization_name}") do |format|
+      format.html { render "welcome_instructions" }
+      format.text { render "welcome_instructions" }
+    end
+  end
+
   def default_url_options
     Rails.application.config.action_mailer.default_url_options
   end
@@ -53,7 +63,8 @@ class DeviseMailer < Devise::Mailer
     {
       "reset_password_instructions" => "reset_password",
       "confirmation_instructions"   => "account_confirmation",
-      "unlock_instructions"         => "account_unlock"
+      "unlock_instructions"         => "account_unlock",
+      "welcome_instructions"        => "welcome_invitation"
     }
   end
 

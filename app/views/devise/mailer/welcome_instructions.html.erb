@@ -1,0 +1,52 @@
+<h1>Welcome to <%= @organization_name %></h1>
+
+
+<div style="text-align: left;">
+  <p>
+    Hello <strong><%= @user.devise_email_name %></strong>,
+  </p>
+
+  <p>
+    Welcome! You've been invited to join the
+    <strong><%= @organization_name %></strong> portal.
+  </p>
+</div>
+
+<div style="
+background-color:#f3f4f6;
+  border-radius:6px;
+  padding:12px;
+  margin:16px 0;
+">
+  <p>
+    To get started and set your password, click the button below:
+  </p>
+
+  <p>
+    <%= link_to "Set your password",
+                user_welcome_url(invitation_token: @token),
+                target: "_blank",
+                style: "display:inline-block;
+                        padding:10px 16px;
+                        background:#2563eb;
+                        color:#ffffff;
+                        text-decoration:none;
+                        border-radius:6px;
+                        font-weight:bold;" %>
+  </p>
+</div>
+
+<div style="text-align: left;">
+  <p>
+    This invitation link will expire in 30 days and can only be used once.
+  </p>
+
+  <p>
+    If you have any questions, please visit
+    <%= link_to "our contact page", contact_us_url %> to connect with staff.
+  </p>
+</div>
+
+<% content_for :fallback_url do %>
+  <%= user_welcome_url(invitation_token: @token) %>
+<% end %>

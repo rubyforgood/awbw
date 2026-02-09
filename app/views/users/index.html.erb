@@ -56,9 +56,13 @@
                 <!-- Confirmed -->
                 <td class="px-4 py-2 text-center">
                   <% if user.confirmed? %>
-                    <span>--</span>
+                    <span class="fa fa-check-circle text-green-500"></span>
                   <% else %>
-                    <span class="fa fa-ban text-red-500"></span>
+                    <%= button_to "Invite",
+                                  send_invitation_user_path(user),
+                                  method: :post,
+                                  class: "btn btn-primary-outline text-xs",
+                                  data: { turbo: false } %>
                   <% end %>
                 </td>
 

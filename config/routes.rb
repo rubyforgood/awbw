@@ -98,10 +98,14 @@ Rails.application.routes.draw do
     member do
       get :generate_person
       post :send_reset_password_instructions
+      post :send_invitation
       post :toggle_lock_status
       post :confirm_email
     end
   end
+  
+  get "users/welcome/:invitation_token", to: "welcome#show", as: "user_welcome"
+  patch "users/welcome/:invitation_token", to: "welcome#update", as: "user_welcome_update"
   resources :user_forms
   resources :windows_types
   resources :workshop_ideas

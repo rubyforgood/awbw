@@ -245,4 +245,26 @@ class User < ApplicationRecord
       sign_in_count: sign_in_count
     })
   end
+
+  def generate_invitation_token!
+    loop do
+      self.invitation_token = Devise.friendly_token
+      break unless User.exists?(invitation_token: invitation_token)
+    end
+    self.invitation_created_at = Time.current
+    save(validate: false)
+  end
+
+  def clear_invitation_token!
+    update_columns(
+      invitation_token: nil,
+      invitation_created_at: nil,
+      invitation_sent_at: nil
+    )
+  end
+
+  def invitation_token_valid?
+    invitation_token.present? && invitation_created_at.present? &&
+      invitation_created_at > 30.days.ago
+  end
 end

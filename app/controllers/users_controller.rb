@@ -171,6 +171,21 @@ class UsersController < ApplicationController
     end
   end
 
+  # ---------------------------------------------------------
+  # SEND INVITATION
+  # ---------------------------------------------------------
+
+  def send_invitation
+    authorize! @user, to: :send_invitation?
+
+    @user.generate_invitation_token!
+    @user.update(invitation_sent_at: Time.current)
+    
+    DeviseMailer.welcome_instructions(@user, @user.invitation_token).deliver_later
+    
+    redirect_back_or_to users_path, notice: "Invitation sent to #{@user.email}."
+  end
+
   # =========================================================
   # PRIVATE
   # =========================================================
