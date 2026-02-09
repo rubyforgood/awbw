@@ -222,7 +222,7 @@ class Workshop < ApplicationRecord
   end
 
   def published_sectors
-    sectorable_items.published.map { |item| item.sector }
+    sectorable_items.map { |item| item.sector }
   end
 
   def time_frame_total
