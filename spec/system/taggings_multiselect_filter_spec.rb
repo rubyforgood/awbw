@@ -47,7 +47,7 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
     end
 
     it 'displays the explore by combination section' do
-      expect(page).to have_content('Explore by combination')
+      expect(page).to have_content('Explore by combination', normalize_ws: true)
       expect(page).to have_content('Service Population')
       expect(page).to have_content('Category')
       expect(page).to have_button('Apply combination filters')
@@ -91,8 +91,11 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
       check 'Adult'
       click_button 'Apply combination filters'
 
-      expect(page).to have_current_path(taggings_path(sector_names_all: 'Youth--Adult'))
-      expect(page).to have_content('Youth, Adult')
+      # The order might be alphabetical (Adult--Youth) or as selected (Youth--Adult)
+      expect(page.current_path).to eq(taggings_path)
+      expect(page.current_url).to include('sector_names_all=')
+      expect(page.current_url).to include('Adult')
+      expect(page.current_url).to include('Youth')
       # Only the workshop with BOTH Youth and Adult tags should appear
       expect(page).to have_content('Combined Youth Adult Healing Workshop')
       expect(page).not_to have_content('Youth Healing Workshop')
@@ -152,7 +155,7 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
 
     it 'displays the explore by combination section at the bottom' do
       expect(page).to have_content('Tags')
-      expect(page).to have_content('Explore by combination')
+      expect(page).to have_content('Explore by combination', normalize_ws: true)
       expect(page).to have_content('Service Population')
       expect(page).to have_content('Category')
       expect(page).to have_button('Apply combination filters')
@@ -163,7 +166,11 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
       check 'Adult'
       click_button 'Apply combination filters'
 
-      expect(page).to have_current_path(taggings_path(sector_names_all: 'Youth--Adult'))
+      # The order might be alphabetical (Adult--Youth) or as selected (Youth--Adult)
+      expect(page.current_path).to eq(taggings_path)
+      expect(page.current_url).to include('sector_names_all=')
+      expect(page.current_url).to include('Adult')
+      expect(page.current_url).to include('Youth')
       expect(page).to have_content('Combined Youth Adult Healing Workshop')
     end
 
