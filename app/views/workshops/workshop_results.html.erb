@@ -9,12 +9,8 @@
     <% if @workshops.any? %>
       <div class="space-y-4 animate-fade blur-on-submit">
         <% @workshops.each do |workshop| %>
-          <% cache workshop do %>
-            <%= render "workshops/index_row",
-            workshop: workshop.decorate,
-            breadcrumb: "Workshops",
-            link_route: workshop_path(workshop) %>
-          <% end %>
+          <%= render "workshops/index_row", workshop: workshop.decorate,
+                   breadcrumb: "Workshops", link_route: workshop_path(workshop) %>
         <% end %>
       </div>
       <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @workshops %></div>

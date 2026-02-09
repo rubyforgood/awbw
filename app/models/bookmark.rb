@@ -1,6 +1,6 @@
 class Bookmark < ApplicationRecord
   belongs_to :user
-  belongs_to :bookmarkable, polymorphic: true, touch: true
+  belongs_to :bookmarkable, polymorphic: true
 
   BOOKMARKABLE_MODELS = [ "CommunityNews", "Event", "Person", "Organization", "Resource", "Story", "StoryIdea",
                           "Workshop", "WorkshopIdea", "WorkshopLog", "WorkshopVariation" ]

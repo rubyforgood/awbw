@@ -2,12 +2,14 @@
 <% description_length ||= 600 %>
 <% spanish ||= false %>
 <% hide_tags ||= false %>
+
 <% description =
      if workshop_series_membership
        workshop_series_membership.series_description_for(spanish: spanish, length: description_length)
      else
        workshop.formatted_objective(length: description_length)
      end %>
+
 <div
   id="workshop-<%= workshop.id %>"
   class="
@@ -16,80 +18,89 @@
     border-b border-gray-200 bg-white py-4 gap-4
     px-4 sm:px-0">
   <div id="workshop-<%= workshop.id %>-anchor" style="position: relative; top: -200px;"></div>
+
   <!-- 1️⃣ Media -->
-  <% cache [workshop, workshop.display_image, "index_row"] do %>
-    <%= render "assets/display_image",
-               resource: workshop,
-               width: 32, height: 24,
-               variant: :index,
-               link_to_object: true,
-               file: workshop.display_image %>
-  <% end %>
+  <%= render "assets/display_image",
+             resource: workshop,
+             width: 32, height: 24,
+             variant: :index,
+             link_to_object: true,
+             file: workshop.display_image %>
+
+
   <!-- Content (bookmark + title+ + description) -->
   <div class="flex flex-col sm:flex-row gap-4 flex-1">
+
     <!-- 2️⃣ Title / author / metadata -->
     <div class="flex flex-1 gap-4">
+
       <!-- Bookmark column (always visible, always left of title badges) -->
       <div class="flex-shrink-0 pt-1 w-6">
-        <% cache [workshop, current_user, "bookmark_icon"] do %>
-          <%= render "bookmarks/editable_bookmark_icon", resource: workshop.object %>
-        <% end %>
+        <%= render "bookmarks/editable_bookmark_icon", resource: workshop.object %>
       </div>
+
       <!-- Title + badges + metadata -->
       <div class="flex flex-col gap-1 flex-1 min-w-0">
+
         <!-- Title with badges (single column, bookmark stays separate) -->
         <%= link_to link_route,
                     class: "hover:underline block",
                     data: { turbo_frame: "_top", turbo_prefetch: false } do %>
           <%= title_with_badges(workshop,
-                                  show_hidden_badge: current_user&.super_user?,
-                                  display_windows_type: true).html_safe %>
+                                show_hidden_badge: current_user&.super_user?,
+                                display_windows_type: true).html_safe %>
         <% end %>
+
         <!-- Author + date -->
         <div class="text-sm text-gray-600 leading-tight">
           By:
           <% if workshop.user %>
             <%= link_to workshop.author_name,
-                          generate_person_user_path(workshop.user),
-                          class: "hover:underline",
-                          data: { turbo: false } %>
+                        generate_person_user_path(workshop.user),
+                        class: "hover:underline",
+                        data: { turbo: false } %>
           <% else %>
             <%= workshop.full_name.present? ? workshop.full_name : "Person" %>
           <% end %>
           | <%= workshop.date %>
         </div>
+
         <!-- Bookmarked count -->
-          <%= tag.div id: dom_id(workshop, :bookmark_count),
-                      class: "text-sm text-gray-600 leading-tight" do %>
-            Bookmarked: <%= workshop.bookmarks_count %> <%= "time".pluralize(workshop.bookmarks_count.to_i) %>
-          <% end %>
+        <%= tag.div id: dom_id(workshop, :bookmark_count),
+                    class: "text-sm text-gray-600 leading-tight" do %>
+          Bookmarked: <%= workshop.bookmarks_count %> <%= "time".pluralize(workshop.bookmarks_count.to_i) %>
+        <% end %>
+
         <!-- Led count -->
         <%#= tag.div id: dom_id(workshop, :led_count),
                     class: "text-sm text-gray-600 leading-tight" do %>
-          <!--          Led: <%# workshop.led_count %> <%#= "time".pluralize(workshop.led_count.to_i) %>-->
-          <%# end %>
-          <!-- Age ranges -->
-          <% if workshop.age_ranges.any? %>
-            <% cache [workshop, "age_ranges", workshop.age_ranges.map(&:id).sort] do %>
-              <div class="text-sm text-gray-600 leading-tight">
-                Age ranges: <%= workshop.age_ranges
-                                      .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
-                                      .map(&:name)
-                                      .to_sentence %>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
+<!--          Led: <%##= workshop.led_count %> <%#= "time".pluralize(workshop.led_count.to_i) %>-->
+        <%# end %>
+
+        <!-- Age ranges -->
+        <% if workshop.age_ranges.any? %>
+          <div class="text-sm text-gray-600 leading-tight">
+            Age ranges: <%= workshop.age_ranges
+                                    .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+                                    .map(&:name)
+                                    .to_sentence %>
+          </div>
+        <% end %>
+
       </div>
-      <!-- 3️⃣ Description -->
-      <div class="flex flex-1 gap-4 pr-4 sm:pr-3">
-        <!-- Empty placeholder where the bookmark column would be -->
-        <div class="w-6 flex-shrink-0"></div>
-        <!-- Actual description column -->
-        <div class="flex-1 text-sm text-gray-700">
-          <p class="workshop-description">
-            <span title="<%= description %>">
-              <%= sanitize(
+    </div>
+
+    <!-- 3️⃣ Description -->
+    <div class="flex flex-1 gap-4 pr-4 sm:pr-3">
+
+      <!-- Empty placeholder where the bookmark column would be -->
+      <div class="w-6 flex-shrink-0"></div>
+
+      <!-- Actual description column -->
+      <div class="flex-1 text-sm text-gray-700">
+        <p class="workshop-description">
+      <span title="<%= description %>">
+        <%= sanitize(
               truncate(
                 CGI.unescapeHTML(description),
                 length: 215,
@@ -97,24 +108,25 @@
                 separator: " ",
                 ),
               ) %>
-            </span>
-          </p>
-          <% unless hide_tags %>
-            <% if workshop.categories.any? %>
-              <% cache [workshop, "categories_tags", workshop.categories.map(&:id).sort] do %>
-                <% ordered_tags = workshop.categories
-                .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
-                .map(&:name)
-                .to_sentence %>
-                <p class="tags mt-3 italic">
-                  Tags:
-                  <span title="<%= ordered_tags %>">
-                    <%= ordered_tags.truncate(150) %></span>
-                </p>
-              <% end %>
-            <% end %>
+      </span>
+        </p>
+
+        <% unless hide_tags %>
+          <% if workshop.categories.any? %>
+            <% ordered_tags = workshop.categories
+              .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+              .map(&:name)
+              .to_sentence %>
+            <p class="tags mt-3 italic">
+              Tags:
+              <span title="<%= ordered_tags %>">
+                <%= ordered_tags.truncate(150) %></span>
+            </p>
           <% end %>
-        </div>
+        <% end %>
+
       </div>
     </div>
+
   </div>
+</div>
