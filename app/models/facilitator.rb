@@ -65,8 +65,8 @@ class Facilitator < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
-    results = results.sector_names_all(params[:sector_names]) if params[:sector_names].present?
-    results = results.category_names_all(params[:category_names]) if params[:category_names].present?
+    results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results

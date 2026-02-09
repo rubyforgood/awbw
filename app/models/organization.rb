@@ -68,8 +68,8 @@ class Organization < ApplicationRecord
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.sector_names_all(params[:sector_names]) if params[:sector_names].present?
-    organizations = organizations.category_names_all(params[:category_names]) if params[:category_names].present?
+    organizations = organizations.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    organizations = organizations.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?

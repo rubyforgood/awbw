@@ -50,7 +50,7 @@
                   <% si_name = "#{ si.sector.name }#{ " (#{"leader"})" if si.is_leader? }" %>
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs
                   font-medium bg-gray-400 text-white whitespace-nowrap">
-                    <%= link_to si_name, taggings_path(sector_names: si.sector.name) %>
+                    <%= link_to si_name, taggings_path(sector_names_all: si.sector.name) %>
                   </span>
                 <% end %>
               </div>

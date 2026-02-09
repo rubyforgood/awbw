@@ -15,9 +15,9 @@ module TagMatrixHelper
     params =
       case type
       when :sector
-        { sector_names: tag.name, published: true }
+        { sector_names_all: tag.name, published: true }
       when :category
-        { category_names: tag.name, published: true }
+        { category_names_all: tag.name, published: true }
       end
 
     polymorphic_path(model, params)

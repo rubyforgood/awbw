@@ -27,8 +27,8 @@ class Quote < ApplicationRecord
   def self.search_by_params(params)
     quotes = is_a?(ActiveRecord::Relation) ? self : all
     quotes = quotes.search(params[:query]) if params[:query].present? # SearchCop incl title, author, text
-    quotes = quotes.sector_names_all(params[:sector_names]) if params[:sector_names].present?
-    quotes = quotes.category_names_all(params[:category_names]) if params[:category_names].present?
+    quotes = quotes.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    quotes = quotes.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     quotes = quotes.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     quotes = quotes.published(params[:published]) if params[:published].present?
     quotes = quotes.featured(params[:featured]) if params[:featured].present?

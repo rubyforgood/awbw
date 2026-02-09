@@ -3,8 +3,8 @@ class TaggingsController < ApplicationController
 
   def index
     authorize! :tagging, to: :index?
-    @sector_names = params[:sector_names]
-    @category_names = params[:category_names]
+    @sector_names_all = params[:sector_names_all]
+    @category_names_all = params[:category_names_all]
 
     number_of_items_per_page = params[:number_of_items_per_page].present? ? params[:number_of_items_per_page].to_i : 9
     pages = {
@@ -19,8 +19,8 @@ class TaggingsController < ApplicationController
     }
 
     @grouped_tagged_items = TaggingSearchService.call(
-      sector_names: @sector_names,
-      category_names: @category_names,
+      sector_names_all: @sector_names_all,
+      category_names_all: @category_names_all,
       pages: pages,
       number_of_items_per_page: number_of_items_per_page
     )
@@ -99,6 +99,6 @@ class TaggingsController < ApplicationController
   private
 
   def browsing_intentionally?
-    params[:sector_names].present? || params[:category_names].present?
+    params[:sector_names_all].present? || params[:category_names_all].present?
   end
 end

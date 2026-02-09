@@ -73,8 +73,8 @@
 
           <h2 class="text-xl font-semibold text-gray-900">
             <%= link_to tagged_index_path(type,
-                                          sector_names: @sector_names,
-                                          category_names: @category_names),
+                                          sector_names_all: @sector_names_all,
+                                          category_names_all: @category_names_all),
                         class: "hover:underline inline-flex items-center gap-2" do %>
               <span><%= type_header %></span>
               <span class="text-sm text-gray-500">
@@ -90,8 +90,8 @@
         <div class="mt-6 text-right">
           <%= link_to "View all #{type.to_s.humanize} results",
                       tagged_index_path(type,
-                                        sector_names: @sector_names,
-                                        category_names: @category_names),
+                                        sector_names_all: @sector_names_all,
+                                        category_names_all: @category_names_all),
                       data: { turbo_frame: "_top"},
                       class: "text-primary font-medium hover:underline" %>
         </div>

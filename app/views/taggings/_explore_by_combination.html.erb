@@ -21,13 +21,13 @@
              data-tags-sync-list-heights-target="source">
 
           <% selected_sectors =
-               @sector_names.to_s.split("--").map(&:strip).reject(&:blank?) %>
+               @sector_names_all.to_s.split("--").map(&:strip).reject(&:blank?) %>
 
           <% Sector.published.order(:name).each do |sector| %>
             <label class="flex items-center gap-2 px-3 py-1 text-sm cursor-pointer
                         hover:bg-lime-50">
               <input type="checkbox"
-                     name="sector_names[]"
+                     name="sector_names_all[]"
                      value="<%= sector.name %>"
                      data-tags-sync-list-heights-target="sector"
                      <%= "checked" if selected_sectors.include?(sector.name) %>
@@ -53,7 +53,7 @@
 
           <%
             selected_categories =
-              @category_names.to_s
+              @category_names_all.to_s
                              .split("--")
                              .map(&:strip)
                              .reject(&:blank?)
@@ -70,7 +70,7 @@
             <label class="flex items-center gap-2 px-3 py-1 text-sm cursor-pointer
                       hover:bg-lime-50">
               <input type="checkbox"
-                     name="category_names[]"
+                     name="category_names_all[]"
                      value="<%= category.name %>"
                      data-tags-sync-list-heights-target="category"
                      <%= "checked" if selected_categories.include?(category.name.downcase) %>
