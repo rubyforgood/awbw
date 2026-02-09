@@ -109,14 +109,14 @@
       </div>
 
       <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :spotlighted_person_id,
+        <%= f.input :spotlighted_facilitator_id,
                     collection: Person.joins(:user).order("users.first_name, users.last_name"),
                     label_method: :full_name,
                     value_method: :id,
                     include_blank: true,
-                    selected: f.object.spotlighted_person_id,
-                    label: (f.object.spotlighted_person_id ? (link_to "Story spotlighted person",
-                                                                           person_path(f.object.spotlighted_person_id),
+                    selected: f.object.spotlighted_facilitator_id,
+                    label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted person",
+                                                                           person_path(f.object.spotlighted_facilitator_id),
                                                                            class: "hover:underline") : "Story spotlighted person").html_safe %>
       </div>
 

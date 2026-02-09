@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_08_171347) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_09_005954) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -835,7 +835,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_171347) do
     t.string "email", default: "", null: false
     t.string "email_type", default: "work", null: false
     t.string "encrypted_password", default: "", null: false
-    t.integer "facilitator_id"
     t.integer "failed_attempts", default: 0, null: false
     t.string "first_name", default: ""
     t.boolean "inactive", default: false
@@ -846,6 +845,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_171347) do
     t.integer "legacy_id"
     t.datetime "locked_at"
     t.text "notes", size: :long
+    t.integer "person_id"
     t.string "phone"
     t.string "phone2"
     t.string "phone3"
@@ -867,7 +867,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_171347) do
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["facilitator_id"], name: "index_users_on_facilitator_id"
+    t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
@@ -1194,7 +1194,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_171347) do
   add_foreign_key "user_permissions", "permissions"
   add_foreign_key "user_permissions", "users"
   add_foreign_key "users", "organizations", column: "agency_id"
-  add_foreign_key "users", "people", column: "facilitator_id"
+  add_foreign_key "users", "people"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
   add_foreign_key "workshop_ideas", "users", column: "created_by_id"

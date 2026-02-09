@@ -35,7 +35,7 @@ class PersonDecorator < ApplicationDecorator
     badges << [ "Legacy Facilitator (10+ years)", "yellow" ] if years >= 10
     badges << [ "Seasoned Facilitator (3-10 years)", DomainTheme.bg_class_for(:people) ] if member_since.present? && years >= 3
     badges << [ "New Facilitator (<3 years)", "green" ] if member_since.present? && years < 3
-    badges << [ "Featured in Stories", "gray" ] if stories_as_spotlighted_person
+    badges << [ "Featured in Stories", "gray" ] if stories_as_spotlighted_facilitator
     badges << [ "Events Attended", DomainTheme.bg_class_for(:events) ] if user && user.events.any?
     badges << [ "Workshop Author", DomainTheme.bg_class_for(:workshops) ] if user && user.workshops.any? # indigo
     badges << [ "Story Author", DomainTheme.bg_class_for(:stories) ] if user && user.stories_as_creator.any? # pink
