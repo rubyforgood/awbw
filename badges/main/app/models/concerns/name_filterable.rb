@@ -16,10 +16,7 @@ module NameFilterable
       # Param provided but empty → intentionally no matches
       return none if parsed.empty?
 
-      conditions = parsed.map { "LOWER(name) LIKE ?" }.join(" OR ")
-      values     = parsed.map { |v| "%#{v}%" }
-
-      where(conditions, *values)
+      where("LOWER(name) IN (?)", parsed)
     end
   end
 end

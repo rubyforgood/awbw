@@ -86,6 +86,28 @@ RSpec.describe TaggingSearchService do
         expect(results[:workshops]).to be_empty
         expect(results[:workshops].total_entries).to eq(0)
       end
+
+      it "returns empty collections for partial/substring matches" do
+        # Should NOT match "Youth" sector with partial search "You"
+        results = described_class.call(
+          sector_names_all: "You",
+          category_names_all: nil,
+          pages: {},
+          number_of_items_per_page: 9
+        )
+
+        expect(results[:workshops]).to be_empty
+
+        # Should NOT match "Healing" category with partial search "Heal"
+        results = described_class.call(
+          sector_names_all: nil,
+          category_names_all: "Heal",
+          pages: {},
+          number_of_items_per_page: 9
+        )
+
+        expect(results[:workshops]).to be_empty
+      end
     end
   end
 end
