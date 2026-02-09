@@ -2,11 +2,11 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Reset password (facilitator)', type: :system do
-  let(:facilitator_user) { create(:user, :with_person) }
+RSpec.describe 'Reset password (person)', type: :system do
+  let(:person_user) { create(:user, :with_person) }
 
   before do
-    sign_in facilitator_user
+    sign_in person_user
     # Start on a page where the user nav is visible
     visit root_path
     # Open user nav dropdown

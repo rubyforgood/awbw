@@ -1,4 +1,4 @@
-class FacilitatorPolicy < ApplicationPolicy
+class PersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
   def index?
