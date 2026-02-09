@@ -126,7 +126,8 @@ class WorkshopSearchService
 
   def filter_by_title
     return unless params[:title].present?
-    @workshops = @workshops.search("title:#{params[:title]}")
+    safe_title = ActiveRecord::Base.sanitize_sql_like(params[:title].to_s.strip)
+    @workshops = @workshops.title(safe_title)
   end
 
   def filter_by_query
