@@ -52,12 +52,12 @@
     </div>
   <% end %>
 
-  <% if true || @leader_spotlights.any? %>
+  <% if @leader_spotlights.any? %>
     <div id="workshop-spotlights" class="flex-1 bg-white p-4 rounded-lg shadow-md mb-3">
       <section id="workshopLeaderSpotlights">
         <div class="flex items-start justify-between mb-1">
           <div class="pr-6">
-            <h2 class="text-lg font-semibold mb-2">Related people spotlights</h2>
+            <h2 class="text-lg font-semibold mb-2">Related facilitator spotlights</h2>
           </div>
           <% if current_user&.super_user? && @workshop.persisted? %>
             <%= link_to "New story",
