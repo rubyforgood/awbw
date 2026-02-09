@@ -28,8 +28,8 @@ RSpec.describe Resource do
       random_string = Array.new(3) { SecureRandom.alphanumeric(6) }.join(' ')
       user = create(:user)
 
-      resource1 = Resource.create!(title: "One", user: user, kind: "Handout", body: random_string)
-      resource2 = Resource.create!(title: "Four", user: user, kind: "Handout", body: "Other")
+      resource1 = Resource.create!(title: random_string, user: user, kind: "Handout")
+      resource2 = Resource.create!(title: "Other", user: user, kind: "Handout")
 
       expect(Resource.count).to eq(2)
 
