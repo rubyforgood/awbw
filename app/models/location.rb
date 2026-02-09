@@ -1,4 +1,6 @@
 class Location < ApplicationRecord # TODO remove this class if unused
+  has_many :events, dependent: :nullify
+
   # Validations
   validates_presence_of :city, :country
 
