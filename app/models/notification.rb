@@ -1,5 +1,5 @@
 class Notification < ApplicationRecord
-  belongs_to :noticeable, polymorphic: true
+  belongs_to :noticeable, polymorphic: true, optional: true
 
   # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols
 
@@ -16,6 +16,8 @@ class Notification < ApplicationRecord
     reset_password_fyi
     account_confirmation_fyi
     account_unlock_fyi
+    contact_us
+    contact_us_fyi
   ].freeze
 
   RECIPIENT_ROLES = %w[

@@ -6,7 +6,7 @@ RSpec.describe ContactUsMailer do
       contact_params = {
         subject: 'Test Subject',
         from: 'test@example.com',
-        q: 'adult',
+        q: 'general',
         first_name: 'John',
         last_name: 'Doe',
         agency: 'Test Agency',
@@ -20,7 +20,7 @@ RSpec.describe ContactUsMailer do
       expect(mail.from).to eq([ 'test@example.com' ])
     end
 
-    it 'defaults to the general program email when q is nil' do
+    it 'works when q is nil' do
       contact_params = {
         subject: 'Test Subject',
         from: 'test@example.com',
@@ -36,11 +36,11 @@ RSpec.describe ContactUsMailer do
       expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
     end
 
-    it 'renders the email content correctly' do
+    it 'renders the email content correctly for non-logged in user' do
       contact_params = {
         subject: 'Test Subject',
         from: 'test@example.com',
-        q: 'adult',
+        q: 'general',
         first_name: 'John',
         last_name: 'Doe',
         agency: 'Test Agency',
@@ -52,6 +52,24 @@ RSpec.describe ContactUsMailer do
       expect(mail.body.encoded).to include('John Doe')
       expect(mail.body.encoded).to include('This is a test message')
       expect(mail.body.encoded).to include('Test Agency')
+    end
+
+    it 'renders the email content correctly for logged in user' do
+      user = create(:user, first_name: 'Jane', last_name: 'Smith')
+      contact_params = {
+        subject: 'Test Subject',
+        from: user.email,
+        q: 'general',
+        first_name: user.first_name,
+        last_name: user.last_name,
+        agency: 'Test Agency',
+        message: 'This is a test message from logged in user'
+      }
+
+      mail = described_class.hello(contact_params, user)
+
+      expect(mail.body.encoded).to include('Jane Smith')
+      expect(mail.body.encoded).to include('This is a test message from logged in user')
     end
   end
 end
