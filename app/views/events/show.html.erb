@@ -45,7 +45,7 @@
                 <div>
                   <p class="font-semibold text-gray-700">Videoconference URL</p>
                   <p class="text-gray-900">
-                    <%= link_to "Join online", @event.videoconference_url, target: "_blank", rel: "noopener noreferrer", class: "text-blue-600 hover:underline" %>
+                    <%= link_to "Join online", safe_url(@event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "text-blue-600 hover:underline" %>
                   </p>
                 </div>
               <% end %>
