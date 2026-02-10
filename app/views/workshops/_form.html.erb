@@ -43,8 +43,6 @@
       </div>
     </div>
 
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
-
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <% if current_user&.super_user? %>
         <div class="admin-only bg-blue-100 p-3 flex gap-x-2 items-center">
@@ -420,6 +418,7 @@
       </div>
     </div>
 
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
         <%= link_to "Delete", @workshop, method: :delete, class: "btn btn-danger-outline",

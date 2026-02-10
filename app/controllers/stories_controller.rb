@@ -106,6 +106,8 @@ class StoriesController < ApplicationController
     @users = User.active.or(User.where(id: @story.created_by_id))
                  .includes(:person)
                  .order("people.first_name, people.last_name")
+    @story.build_primary_asset if @story.primary_asset.blank?
+    @story.gallery_assets.build
   end
 
 
@@ -120,7 +122,9 @@ class StoriesController < ApplicationController
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :public_featued, :youtube_url, :website_url,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
-      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id
+      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 

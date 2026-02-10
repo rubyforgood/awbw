@@ -60,7 +60,7 @@
                   User.where("first_name like 'awbw%' or last_name like 'awbw%'").last&.id,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
   </div>
-
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @community_news, method: :delete, class: "btn btn-danger-outline",
