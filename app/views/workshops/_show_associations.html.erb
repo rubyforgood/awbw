@@ -1,4 +1,5 @@
 <div class="show-associations-section print:hidden mt-6">
+  <%= render "show_mentions", workshop: workshop %>
   <%# if @workshop_variations.any? %>
   <div id="workshop-variations" class="flex-1 space-y-8 bg-white p-4 rounded-lg shadow-md p-3 mb-3">
     <section id="workshopVariations">
@@ -9,21 +10,17 @@
               Variations of this Workshop
             </h2>
           </div>
-
           <div class="flex gap-2 justify-end">
             <%= link_to "New variation",
                         new_workshop_variation_idea_path(from: "workshop_show", workshop_id: workshop.id),
                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
-
             <%= link_to "New variation idea",
                         new_workshop_variation_idea_path(from: "workshop_show", workshop_id: workshop.id),
                         class: "btn btn-secondary-outline" %>
           </div>
         </div>
-
         <hr class="border-gray-300 mb-4">
       </div>
-
       <div class="d-flex flex-wrap gap-2">
         <% @workshop_variations.each do |variation| %>
           <%= link_to variation.name,
@@ -34,7 +31,6 @@
     </section>
   </div>
   <%# end %>
-
   <% if @quotes.any? %>
     <div id="workshop-quotes" class="flex-1 space-y-8 bg-white p-4 rounded-lg shadow-md mb-3">
       <section id="workshopQuotes">
@@ -48,9 +44,7 @@
                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
           <% end %>
         </div>
-
         <hr class="border-gray-300 mb-4">
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <% @quotes.decorate.each do |quote| %>
             <div class="space-y-1">
@@ -62,7 +56,6 @@
       </section>
     </div>
   <% end %>
-
   <% if @leader_spotlights.any? %>
     <div id="workshop-spotlights" class="flex-1 bg-white p-4 rounded-lg shadow-md mb-3">
       <section id="workshopLeaderSpotlights">
@@ -79,7 +72,6 @@
                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
           <% end %>
         </div>
-
         <hr class="border-gray-300 mb-4">
         <div class="flex flex-wrap gap-4">
           <% @leader_spotlights.each do |spotlight| %>

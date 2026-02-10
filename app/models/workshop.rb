@@ -299,6 +299,47 @@ class Workshop < ApplicationRecord
     save!
   end
 
+  def all_mentions_grouped
+    rich_text_fields = [
+      :rhino_objective, :rhino_materials, :rhino_optional_materials, :rhino_setup,
+      :rhino_introduction, :rhino_opening_circle, :rhino_demonstration, :rhino_warm_up,
+      :rhino_visualization, :rhino_creation, :rhino_closing, :rhino_notes, :rhino_tips,
+      :rhino_misc1, :rhino_misc2, :rhino_extra_field, :rhino_objective_spanish,
+      :rhino_materials_spanish, :rhino_optional_materials_spanish, :rhino_age_range_spanish,
+      :rhino_setup_spanish, :rhino_introduction_spanish, :rhino_opening_circle_spanish,
+      :rhino_demonstration_spanish, :rhino_warm_up_spanish, :rhino_visualization_spanish,
+      :rhino_creation_spanish, :rhino_closing_spanish, :rhino_notes_spanish,
+      :rhino_tips_spanish, :rhino_misc1_spanish, :rhino_misc2_spanish,
+      :rhino_extra_field_spanish
+    ]
+
+    result = {}
+
+    rich_text_fields.each do |field|
+      rich_text = send(field)
+      next unless rich_text
+
+      mentions = ActionTextMention.where(action_text_rich_text_id: rich_text.id)
+      mentions.each do |mention|
+        mentionable_type = mention.mentionable_type
+        mentionable_id = mention.mentionable_id
+
+        result[mentionable_type] ||= []
+
+        # Find the actual record if it exists and add to the appropriate group
+        begin
+          mentionable = mentionable_type.constantize.find(mentionable_id)
+          result[mentionable_type] << mentionable unless result[mentionable_type].include?(mentionable)
+        rescue ActiveRecord::RecordNotFound, NameError
+          # Skip if record not found or model doesn't exist
+          next
+        end
+      end
+    end
+
+    result
+  end
+
   private
 
   def assign_pending_associations

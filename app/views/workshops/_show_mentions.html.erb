@@ -1,0 +1,30 @@
+<% mentions = workshop.all_mentions_grouped %>
+<% if mentions.any? %>
+  <div id="workshop-mentions" class="flex-1 bg-white p-4 rounded-lg shadow-md mb-3">
+    <section>
+      <div class="flex items-start justify-between mb-1">
+        <div class="pr-6">
+          <h2 class="text-lg font-semibold mb-2">Mentions in this Workshop</h2>
+        </div>
+      </div>
+      <hr class="border-gray-300 mb-4">
+      <div class="space-y-4">
+        <% mentions.each do |mentionable_type, mentionable_records| %>
+          <div class="mention-group">
+            <h3 class="text-sm font-medium text-gray-600 mb-2">
+              <%= mentionable_type.pluralize %>
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              <% mentionable_records.each do |record| %>
+                <%= link_to polymorphic_path(record),
+                            class: "btn btn-secondary-outline text-sm" do %>
+                  <%= record.title&.to_s %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  </div>
+<% end %>
