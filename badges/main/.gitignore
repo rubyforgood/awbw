@@ -55,3 +55,4 @@ storage
 /config/credentials/*.key
 
 dist/stats.html
+vendor/bundle/

@@ -42,6 +42,9 @@ rescue ActiveRecord::PendingMigrationError => e
   puts e.to_s.strip
   exit 1
 end
+
+ActiveJob::Base.queue_adapter = :test
+
 RSpec.configure do |config|
   # Include pagination helper globally
   config.include PaginationHelpers
