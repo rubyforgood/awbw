@@ -1,0 +1,437 @@
+<section class="storyshare">
+  <header class="storyshare__hero">
+    <div class="storyshare__hero-inner">
+      <h1 class="storyshare__title">Welcome to our Story Share</h1>
+
+      <p class="storyshare__quote">
+        “If we can share our story with someone who responds with empathy and understanding, shame can’t survive.”
+        <span class="storyshare__quote-attrib">~ Brené Brown</span>
+      </p>
+
+      <p class="storyshare__lede">
+        At A Window Between Worlds, we aim to uplift the voices and showcase the leadership of our extensive network of art workshop facilitators. We invite you to explore these impactful stories and accompanying participant artwork from trained Windows Facilitators across the country and abroad.
+        <br><br>
+        This evolving collection illustrates the transformative power of creative expression that is experienced by individuals and communities participating in our art workshops. As we share these powerful stories, we empower others facing their own challenges, helping facilitate their healing journey.
+      </p>
+
+      <%# Optional: quick filters (replace with your real links/scopes) %>
+      <nav class="storyshare__filters" aria-label="Story filters">
+        <%= link_to "Domestic Violence", stories_path(focus: "domestic_violence"), class: "pill" %>
+        <%= link_to "Self-Care & Personal Growth", stories_path(focus: "self_care"), class: "pill" %>
+        <%= link_to "Social Justice", stories_path(focus: "social_justice"), class: "pill" %>
+        <%= link_to "Facilitator Spotlights", stories_path(focus: "spotlights"), class: "pill" %>
+      </nav>
+    </div>
+  </header>
+
+  <div class="storyshare__content">
+    <% if @featured_story.present? %>
+      <section class="storyshare__featured">
+        <%= link_to story_path(@featured_story), class: "featured__media" do %>
+          <%= render "assets/display_image",
+                     resource: @featured_story,
+                     variant: :hero %>
+        <% end %>
+
+        <div class="featured__overlay">
+          <h2 class="featured__title">
+            <%= @featured_story.title %>
+          </h2>
+          <p class="featured__meta">
+            <%= @featured_story.organization_name %>
+            <% if @featured_story.organization.city_state.present? %>
+              • <%= @featured_story.organization.city_state %>
+            <% end %>
+          </p>
+        </div>
+      </section>
+    <% end %>
+
+    <section class="storyshare__sections">
+      <% ["Domestic Violence", "Social Justice", "Facilitator Spotlights"].each do |focus| %>
+        <div class="section-block">
+          <h3 class="section-title"><%= focus %></h3>
+
+          <div class="section-grid">
+            <% @stories_by_focus[focus]&.first(3)&.each do |story| %>
+              <%= render "stories/card", story: story %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </section>
+
+    <div class="storyshare__grid">
+      <% @stories.each do |story| %>
+        <article class="card">
+          <%= link_to story_path(story), class: "card__media" do %>
+            <%# Prefer image_tag + variant if you're on ActiveStorage %>
+            <%= render "assets/display_image",
+                       resource: story, file: (defined?(file) ? file : nil), variant: :hero %>
+          <% end %>
+
+          <div class="card__body">
+            <div class="card__tags">
+              <% story.sectors.first(3).each do |tag| %>
+                <span class="tag">
+                  <%= tag.name %>
+                </span>
+                <%= render "sectors/tagging_label",
+                           sector: tag,
+                           bg_color: "bg-white",
+                           bg_hover_color: "bg-lime-200" %>
+              <% end %>
+              <% story.categories.first(3).each do |tag| %>
+                <span class="tag">
+                  <%= tag.name %>
+                </span>
+                <%= render "categories/tagging_label",
+                           category: tag,
+                           name_only: true,
+                           bg_color: "bg-white",
+                           bg_hover_color: "bg-lime-200" %>
+              <% end %>
+            </div>
+
+            <h2 class="card__title">
+              <%= link_to story.title, story_path(story) %>
+            </h2>
+
+            <p class="card__meta">
+              <span class="card__org"><%= story.organization_name %></span>
+              <% if story.organization.city_state.present? %>
+                <span class="card__dot">•</span>
+                <span class="card__loc"><%= story.organization.city_state %></span>
+              <% end %>
+            </p>
+          </div>
+        </article>
+      <% end %>
+    </div>
+
+    <section class="storyshare__reading">
+      <h3>What Others Are Reading</h3>
+
+      <div class="reading-grid">
+        <% @popular_stories.first(4).each do |story| %>
+          <%= link_to story_path(story), class: "reading-tile" do %>
+            <%= render "assets/display_image",
+                       resource: story,
+                       variant: :hero %>
+            <span class="reading-label">
+          <%= story.title %>
+        </span>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+
+    <%# Optional pagination hook %>
+    <div class="storyshare__pagination">
+      <%= tailwind_paginate @stories %>
+    </div>
+  </div>
+</section>
+
+<style>
+    .storyshare {
+        --bg: #ffffff;
+        --ink: #111827;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --panel: #f9fafb;
+        --shadow: 0 8px 24px rgba(0,0,0,0.08);
+
+        background: var(--bg);
+        color: var(--ink);
+    }
+
+    /* Hero */
+    .storyshare__hero {
+        background: linear-gradient(180deg, var(--panel), #fff);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .storyshare__hero-inner {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 2.5rem 1rem 2rem;
+    }
+
+    .storyshare__title {
+        font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+        line-height: 1.15;
+        margin: 0 0 0.75rem;
+        font-weight: 700;
+    }
+
+    .storyshare__quote {
+        margin: 0 0 1rem;
+        font-size: 1.05rem;
+        color: var(--muted);
+        border-left: 3px solid var(--border);
+        padding-left: 0.9rem;
+    }
+
+    .storyshare__quote-attrib {
+        white-space: nowrap;
+    }
+
+    .storyshare__lede {
+        margin: 0 0 1.25rem;
+        max-width: 60ch;
+        color: #374151;
+    }
+
+    /* Filter pills */
+    .storyshare__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: #111827;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .pill:hover {
+        background: #f3f4f6;
+    }
+
+    /* Content */
+    .storyshare__content {
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 3rem;
+    }
+
+    .storyshare__grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1rem;
+    }
+
+    /* 1 col on mobile, 2 on md, 3 on lg */
+    .card {
+        grid-column: span 12;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: none;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    @media (min-width: 700px) {
+        .card { grid-column: span 6; }
+    }
+    @media (min-width: 1024px) {
+        .card { grid-column: span 4; }
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .card__media {
+        display: block;
+        background: #f3f4f6;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+    }
+
+    .card__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .card__body {
+        padding: 0.9rem 0.9rem 1.1rem;
+    }
+
+    .card__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .tag {
+        display: inline-flex;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: #374151;
+        font-size: 0.78rem;
+        line-height: 1.2;
+    }
+
+    .card__title {
+        font-size: 1.05rem;
+        line-height: 1.25;
+        margin: 0 0 0.5rem;
+        font-weight: 700;
+    }
+
+    .card__title a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .card__title a:hover {
+        text-decoration: underline;
+    }
+
+    .card__meta {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+    }
+
+    .card__dot {
+        opacity: 0.7;
+    }
+
+    /* Pagination */
+    .storyshare__pagination {
+        margin-top: 1.5rem;
+    }
+
+    .storyshare__featured {
+        position: relative;
+        margin-bottom: 2rem;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .featured__media {
+        display: block;
+        aspect-ratio: 16 / 6;
+    }
+
+    .featured__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .featured__overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.15));
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 2rem;
+        color: white;
+    }
+
+    .featured__title {
+        font-size: clamp(1.5rem, 2vw, 2rem);
+        font-weight: 700;
+        margin: 0 0 0.4rem;
+    }
+
+    .featured__meta {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    .section-block {
+        margin-bottom: 2.5rem;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .section-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1rem;
+    }
+
+    .section-grid .card {
+        grid-column: span 12;
+    }
+
+    @media (min-width: 768px) {
+        .section-grid .card {
+            grid-column: span 4;
+        }
+    }
+    .card__media {
+        position: relative;
+    }
+
+    .card__media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.35), transparent);
+        opacity: 0;
+        transition: opacity 150ms ease;
+    }
+
+    .card:hover .card__media::after {
+        opacity: 1;
+    }
+
+    .card__title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .reading-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1rem;
+    }
+
+    .reading-tile {
+        position: relative;
+        grid-column: span 12;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+        border-radius: 12px;
+    }
+
+    @media (min-width: 768px) {
+        .reading-tile {
+            grid-column: span 3;
+        }
+    }
+
+    .reading-tile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .reading-label {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        padding: 0.75rem;
+        background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+        color: white;
+        font-size: 0.9rem;
+    }
+
+</style>
