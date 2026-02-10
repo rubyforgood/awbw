@@ -31,7 +31,7 @@
   <section class="bg-gray-50 py-12 -mx-2 sm:-mx-6 lg:-mx-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="relative rounded-lg overflow-hidden shadow-lg" id="hero-carousel">
-        <%= link_to story_path(@featured_story), class: "block relative carousel-item active" do %>
+        <%= link_to show_share_portal_story_path(@featured_story), class: "block relative carousel-item active" do %>
           <div class="h-96 max-h-96 bg-gray-200 overflow-hidden">
             <%= render "assets/display_image",
                        resource: @featured_story,
@@ -158,7 +158,7 @@
         <% featured_dv_story = @stories_by_focus["Domestic Violence"]&.first %>
         <% if featured_dv_story %>
           <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-4">
-            <%= link_to story_path(featured_dv_story), class: "block relative" do %>
+            <%= link_to show_share_portal_story_path(featured_dv_story), class: "block relative" do %>
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_dv_story,
@@ -190,7 +190,7 @@
               <svg class="w-3 h-3 mr-2 mt-1 text-red-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-              <%= link_to story.title, story_path(story), class: "hover:text-red-700 hover:underline text-gray-800" %>
+              <%= link_to story.title, show_share_portal_story_path(story), class: "hover:text-red-700 hover:underline text-gray-800" %>
             </li>
           <% end %>
         </ul>
@@ -209,7 +209,7 @@
         <% featured_sj_story = @stories_by_focus["Social Justice"]&.first %>
         <% if featured_sj_story %>
           <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-4">
-            <%= link_to story_path(featured_sj_story), class: "block relative" do %>
+            <%= link_to show_share_portal_story_path(featured_sj_story), class: "block relative" do %>
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_sj_story,
@@ -241,7 +241,7 @@
               <svg class="w-3 h-3 mr-2 mt-1 text-green-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-              <%= link_to story.title, story_path(story), class: "hover:text-green-700 hover:underline text-gray-800" %>
+              <%= link_to story.title, show_share_portal_story_path(story), class: "hover:text-green-700 hover:underline text-gray-800" %>
             </li>
           <% end %>
         </ul>
@@ -260,7 +260,7 @@
         <% featured_fs_story = @stories_by_focus["Facilitator Spotlights"]&.first %>
         <% if featured_fs_story %>
           <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-4">
-            <%= link_to story_path(featured_fs_story), class: "block relative" do %>
+            <%= link_to show_share_portal_story_path(featured_fs_story), class: "block relative" do %>
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_fs_story,
@@ -292,7 +292,7 @@
               <svg class="w-3 h-3 mr-2 mt-1 text-purple-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-              <%= link_to story.title, story_path(story), class: "hover:text-purple-700 hover:underline text-gray-800" %>
+              <%= link_to story.title, show_share_portal_story_path(story), class: "hover:text-purple-700 hover:underline text-gray-800" %>
             </li>
           <% end %>
         </ul>
@@ -339,7 +339,7 @@
           color_config = category_colors[sector_name] || default_color
         %>
         
-        <%= link_to story_path(story), class: "group block relative aspect-[3/4] overflow-hidden hover:opacity-90 transition-opacity" do %>
+        <%= link_to show_share_portal_story_path(story), class: "group block relative aspect-[3/4] overflow-hidden hover:opacity-90 transition-opacity" do %>
           <!-- Background image -->
           <div class="absolute inset-0 bg-gray-200">
             <%= render "assets/display_image",
