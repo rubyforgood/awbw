@@ -132,6 +132,7 @@ class Workshop < ApplicationRecord
     ) #{sort_order == "asc" ? "ASC" : "DESC"}
     SQL
   }
+  scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
   scope :with_bookmarks_count, -> {
     left_joins(:bookmarks)
@@ -146,6 +147,10 @@ class Workshop < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
 
     attributes :title, type: :text
+
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   def self.grouped_by_sector
@@ -222,7 +227,7 @@ class Workshop < ApplicationRecord
   end
 
   def published_sectors
-    sectorable_items.map { |item| item.sector }
+    sectorable_items.published.map { |item| item.sector }
   end
 
   def time_frame_total

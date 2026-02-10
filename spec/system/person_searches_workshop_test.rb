@@ -32,7 +32,7 @@ RSpec.describe 'People can search for a workshop' do
         expect(page).to have_content('oh hello!')
       end
 
-      it "searches for workshop with 'world' title keyword" do
+      it "searches for workshop with 'world' keyword" do
         visit workshops_path
         fill_in 'title', with: "world"
         expect(page).to have_content('The best workshop in the world')
