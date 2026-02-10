@@ -180,9 +180,14 @@ class UsersController < ApplicationController
 
     @user.generate_invitation_token!
     @user.update(invitation_sent_at: Time.current)
-    
-    DeviseMailer.welcome_instructions(@user, @user.invitation_token).deliver_later
-    
+
+    Analytics::AhoyTracker.track_auth_event(
+      "auth.invite_sent",
+      user: @user
+    )
+
+    DeviseMailer.welcome_instructions(@user, @user.invitation_token).deliver_now
+
     redirect_back_or_to users_path, notice: "Invitation sent to #{@user.email}."
   end
 
