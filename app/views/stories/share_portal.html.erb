@@ -1,35 +1,19 @@
 </div><!-- Break out of layout container -->
 
-<!-- Navigation Tabs -->
-<div class="bg-white border-b border-gray-200 -mx-2 sm:-mx-6 lg:-mx-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <nav class="flex space-x-8 overflow-x-auto py-3" aria-label="Focus areas">
-      <%= link_to "Children", share_portal_stories_path(focus: "children"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
-      <%= link_to "Teens", share_portal_stories_path(focus: "teens"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
-      <%= link_to "Adults", share_portal_stories_path(focus: "adults"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
-      <%= link_to "Families", share_portal_stories_path(focus: "families"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
-      <%= link_to "Community", share_portal_stories_path(focus: "community"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
-      <%= link_to "Self", share_portal_stories_path(focus: "self"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
-      <%= link_to "Colleagues", share_portal_stories_path(focus: "colleagues"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
-    </nav>
-  </div>
-</div>
-
 <!-- Hero Section -->
 <section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="text-4xl font-bold text-gray-900 text-center mb-4">
+    <h1 class="font-telefon text-5xl text-black text-center mb-6">
       Welcome to our Story Share
     </h1>
 
     <blockquote class="text-center mb-6">
-      <p class="text-lg text-gray-700 italic mb-1">
-        "If we can share our story with someone who responds with empathy and understanding, shame can't survive."
+      <p class="text-lg text-gray-800 italic mb-1">
+        "If we can share our story with someone who responds with empathy and understanding, shame can't survive." ~ Brené Brown
       </p>
-      <footer class="text-gray-600">~ Brené Brown</footer>
     </blockquote>
 
-    <div class="max-w-4xl mx-auto space-y-4 text-gray-700 leading-relaxed">
+    <div class="max-w-4xl mx-auto space-y-4 text-gray-800 leading-relaxed">
       <p>
         At A Window Between Worlds, we aim to uplift the voices and showcase the leadership of our extensive network of art workshop facilitators. We invite you to explore these impactful stories and accompanying participant artwork from trained Windows Facilitators across the country and abroad.
       </p>
@@ -53,23 +37,23 @@
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
             <div class="p-8 text-white w-full">
-              <div class="inline-block bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded mb-3">
-                SCHOOLS & UNIVERSITIES
+              <div class="inline-block bg-purple-700 text-white text-xs font-semibold uppercase px-3 py-1 rounded mb-3">
+                FACILITATOR SPOTLIGHTS
               </div>
-              <h2 class="text-3xl font-bold mb-2">
+              <h2 class="font-telefon text-3xl mb-2">
                 <%= @featured_story.title %>
               </h2>
               <p class="text-sm opacity-90">
                 <%= @featured_story.organization_name %>
                 <% if @featured_story.organization.city_state.present? %>
-                  • <%= @featured_story.organization.city_state %>
+                  - <%= @featured_story.organization.city_state %>
                 <% end %>
               </p>
             </div>
           </div>
         <% end %>
 
-        <!-- Carousel Navigation (placeholder for future carousel implementation) -->
+        <!-- Carousel Navigation -->
         <button aria-label="Previous story" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg" disabled>
           <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -88,114 +72,211 @@
 <!-- Story Sections -->
 <section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-    <% ["Domestic Violence", "Social Justice", "Facilitator Spotlights"].each do |focus| %>
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-6"><%= focus %></h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <% @stories_by_focus[focus]&.first(3)&.each do |story| %>
-            <article class="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
-              <%= link_to story_path(story), class: "block" do %>
-                <div class="aspect-[4/3] bg-gray-200 relative">
-                  <%= render "assets/display_image",
-                             resource: story,
-                             variant: :hero %>
+    <!-- Domestic Violence Section -->
+    <div>
+      <h2 class="font-telefon text-3xl text-red-700 mb-6">Domestic Violence</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <% @stories_by_focus["Domestic Violence"]&.first(3)&.each do |story| %>
+          <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+            <%= link_to story_path(story), class: "block relative" do %>
+              <div class="aspect-[4/3] bg-gray-200 relative">
+                <%= render "assets/display_image",
+                           resource: story,
+                           variant: :hero %>
+                <!-- Title and Organization Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
+                  <div class="p-4 w-full">
+                    <h3 class="font-telefon text-white text-lg mb-1 leading-tight">
+                      <%= story.title %>
+                    </h3>
+                    <p class="text-white text-sm opacity-90">
+                      <%= story.organization_name %>
+                      <% if story.organization.city_state.present? %>
+                        - <%= story.organization.city_state %>
+                      <% end %>
+                    </p>
+                  </div>
                 </div>
-              <% end %>
-
-              <div class="p-4">
-                <h3 class="font-semibold text-gray-900 mb-2 text-lg hover:text-purple-700">
-                  <%= link_to story.title, story_path(story) %>
-                </h3>
-                <p class="text-sm text-gray-600">
-                  <%= story.organization_name %>
-                  <% if story.organization.city_state.present? %>
-                    • <%= story.organization.city_state %>
-                  <% end %>
-                </p>
               </div>
-            </article>
-          <% end %>
-        </div>
-
-        <!-- More Stories Links -->
-        <div class="mt-4">
-          <ul class="space-y-2 text-gray-700">
-            <% if focus == "Domestic Violence" %>
-              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
-              <% additional_stories.each do |story| %>
-                <li class="flex items-center">
-                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
-                </li>
-              <% end %>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "More Domestic Violence Stories...", stories_path(focus: "domestic_violence"), class: "hover:text-purple-700 font-medium" %>
-              </li>
-            <% elsif focus == "Social Justice" %>
-              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
-              <% additional_stories.each do |story| %>
-                <li class="flex items-center">
-                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
-                </li>
-              <% end %>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "More Social Justice Stories...", stories_path(focus: "social_justice"), class: "hover:text-purple-700 font-medium" %>
-              </li>
-            <% elsif focus == "Facilitator Spotlights" %>
-              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
-              <% additional_stories.each do |story| %>
-                <li class="flex items-center">
-                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
-                </li>
-              <% end %>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "More Facilitator Spotlights Stories...", stories_path(focus: "spotlights"), class: "hover:text-purple-700 font-medium" %>
-              </li>
             <% end %>
-          </ul>
-        </div>
+          </article>
+        <% end %>
       </div>
-    <% end %>
+
+      <!-- More Stories Links -->
+      <div class="mt-6">
+        <ul class="space-y-2 text-gray-800">
+          <% additional_stories = @stories_by_focus["Domestic Violence"]&.drop(3)&.first(3) || [] %>
+          <% additional_stories.each do |story| %>
+            <li class="flex items-start">
+              <svg class="w-4 h-4 mr-2 mt-1 text-red-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <%= link_to story.title, story_path(story), class: "hover:text-red-700 hover:underline" %>
+            </li>
+          <% end %>
+          <li class="flex items-start">
+            <svg class="w-4 h-4 mr-2 mt-1 text-red-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+            <%= link_to "More Domestic Violence Stories...", stories_path(focus: "domestic_violence"), class: "text-red-700 hover:underline font-medium" %>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Social Justice Section -->
+    <div>
+      <h2 class="font-telefon text-3xl text-green-700 mb-6">Social Justice</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <% @stories_by_focus["Social Justice"]&.first(3)&.each do |story| %>
+          <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+            <%= link_to story_path(story), class: "block relative" do %>
+              <div class="aspect-[4/3] bg-gray-200 relative">
+                <%= render "assets/display_image",
+                           resource: story,
+                           variant: :hero %>
+                <!-- Title and Organization Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
+                  <div class="p-4 w-full">
+                    <h3 class="font-telefon text-white text-lg mb-1 leading-tight">
+                      <%= story.title %>
+                    </h3>
+                    <p class="text-white text-sm opacity-90">
+                      <%= story.organization_name %>
+                      <% if story.organization.city_state.present? %>
+                        - <%= story.organization.city_state %>
+                      <% end %>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </article>
+        <% end %>
+      </div>
+
+      <!-- More Stories Links -->
+      <div class="mt-6">
+        <ul class="space-y-2 text-gray-800">
+          <% additional_stories = @stories_by_focus["Social Justice"]&.drop(3)&.first(3) || [] %>
+          <% additional_stories.each do |story| %>
+            <li class="flex items-start">
+              <svg class="w-4 h-4 mr-2 mt-1 text-green-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <%= link_to story.title, story_path(story), class: "hover:text-green-700 hover:underline" %>
+            </li>
+          <% end %>
+          <li class="flex items-start">
+            <svg class="w-4 h-4 mr-2 mt-1 text-green-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+            <%= link_to "More Social Justice Stories...", stories_path(focus: "social_justice"), class: "text-green-700 hover:underline font-medium" %>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Facilitator Spotlights Section -->
+    <div>
+      <h2 class="font-telefon text-3xl text-purple-700 mb-6">Facilitator Spotlights</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <% @stories_by_focus["Facilitator Spotlights"]&.first(3)&.each do |story| %>
+          <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+            <%= link_to story_path(story), class: "block relative" do %>
+              <div class="aspect-[4/3] bg-gray-200 relative">
+                <%= render "assets/display_image",
+                           resource: story,
+                           variant: :hero %>
+                <!-- Title and Organization Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
+                  <div class="p-4 w-full">
+                    <h3 class="font-telefon text-white text-lg mb-1 leading-tight">
+                      <%= story.title %>
+                    </h3>
+                    <p class="text-white text-sm opacity-90">
+                      <%= story.organization_name %>
+                      <% if story.organization.city_state.present? %>
+                        - <%= story.organization.city_state %>
+                      <% end %>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </article>
+        <% end %>
+      </div>
+
+      <!-- More Stories Links -->
+      <div class="mt-6">
+        <ul class="space-y-2 text-gray-800">
+          <% additional_stories = @stories_by_focus["Facilitator Spotlights"]&.drop(3)&.first(3) || [] %>
+          <% additional_stories.each do |story| %>
+            <li class="flex items-start">
+              <svg class="w-4 h-4 mr-2 mt-1 text-purple-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <%= link_to story.title, story_path(story), class: "hover:text-purple-700 hover:underline" %>
+            </li>
+          <% end %>
+          <li class="flex items-start">
+            <svg class="w-4 h-4 mr-2 mt-1 text-purple-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+            <%= link_to "More Facilitator Spotlights Stories...", stories_path(focus: "spotlights"), class: "text-purple-700 hover:underline font-medium" %>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- What Others Are Reading -->
-<section class="bg-gray-50 py-12 -mx-2 sm:-mx-6 lg:-mx-8">
+<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-8">What Others Are Reading</h2>
+    <h2 class="font-telefon text-3xl text-black mb-8">What Others Are Reading</h2>
     
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <% 
+        # Define color mapping for different categories
+        category_colors = {
+          "Self-Care & Personal Growth" => "bg-blue-600",
+          "Schools & Universities" => "bg-purple-600",
+          "Grief & Loss" => "bg-purple-600",
+          "Community Engagement" => "bg-teal-600",
+          "Domestic Violence" => "bg-pink-600",
+          "Social Justice" => "bg-green-600",
+          "Facilitator Spotlights" => "bg-purple-600"
+        }
+        
+        # Default color for categories not in the mapping
+        default_color = "bg-gray-600"
+      %>
+      
       <% @popular_stories.first(4).each do |story| %>
+        <% 
+          # Get the first sector name or use a default
+          sector_name = story.sectors.first&.name || "Story"
+          bg_color = category_colors[sector_name] || default_color
+        %>
+        
         <%= link_to story_path(story), class: "group block relative aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow" do %>
           <div class="absolute inset-0 bg-gray-200">
             <%= render "assets/display_image",
                        resource: story,
                        variant: :hero %>
           </div>
-          <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end">
             <div class="p-4 w-full">
-              <div class="inline-block bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded mb-2">
-                <%= story.sectors.first&.name&.upcase || "STORY" %>
+              <div class="inline-block <%= bg_color %> text-white text-xs font-semibold uppercase px-2 py-1 mb-2">
+                <%= sector_name %>
               </div>
-              <h3 class="text-white font-semibold text-sm leading-tight">
+              <h3 class="font-telefon text-white text-sm leading-tight">
                 <%= story.title %>
               </h3>
             </div>
@@ -209,12 +290,11 @@
 <!-- Get Involved CTA -->
 <section class="bg-white py-16 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-    <h2 class="text-3xl font-bold text-gray-900 mb-8">Get involved!</h2>
+    <h2 class="font-telefon text-4xl text-black mb-8">Get involved!</h2>
     
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <%# TODO: Replace '#' with actual training and support page routes %>
-      <%= link_to "Attend Our Training", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors" %>
-      <%= link_to "Support Our Program", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors" %>
+      <%= link_to "Attend Our Training", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-purple-700 hover:bg-purple-800 transition-colors" %>
+      <%= link_to "Support Our Program", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-purple-700 hover:bg-purple-800 transition-colors" %>
     </div>
   </div>
 </section>
