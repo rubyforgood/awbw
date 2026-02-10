@@ -1,5 +1,5 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable, AhoyTracking
+  include ExternallyRedirectable, AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index

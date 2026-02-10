@@ -4,8 +4,6 @@
 
   <%= render 'shared/errors', resource: @community_news if @community_news.errors.any? %>
 
-  <%= tag.div class: "unpersisted_resource_asset_params" %>
-
   <!-- Content Section -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <%= f.input :title, as: :text, input_html: { rows: 1, class: "w-full" } %>
