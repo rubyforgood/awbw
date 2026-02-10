@@ -78,9 +78,9 @@ class StoriesController < ApplicationController
     track_view(@story)
 
     # Fetch related stories for "What Others Are Reading" section
-    base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop, :created_by, :bookmarks, :primary_asset))
+    base_scope = authorized_scope(Story.includes(:bookmarks, :primary_asset))
     @popular_stories = base_scope.where.not(id: @story.id)
-                                 .order(created_at: :desc)
+                                 .order(Arel.sql("(SELECT COUNT(*) FROM bookmarks WHERE bookmarks.resource_id = stories.id AND bookmarks.resource_type = 'Story') DESC, created_at DESC"))
                                  .limit(4)
                                  .decorate
 
