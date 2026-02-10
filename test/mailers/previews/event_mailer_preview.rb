@@ -18,7 +18,7 @@ class EventMailerPreview < ActionMailer::Preview
   end
 
   def create_event
-    location = Location.first
+    location = Location.first || Location.create!(city: "Sheboygan", state: "WI")
     Event.create!(
       title: "Community Art Workshop",
       start_date: 3.days.from_now,
