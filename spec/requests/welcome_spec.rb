@@ -94,8 +94,17 @@ RSpec.describe "/users/welcome", type: :request do
       end
 
       it "tracks auth.password_set event" do
+        allow(Analytics::LifecycleBuffer).to receive(:push)
         expect(Analytics::LifecycleBuffer).to receive(:push).with(
           hash_including(name: "auth.password_set")
+        )
+        patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
+      end
+
+      it "tracks auth.welcome_instructions_completed event" do
+        allow(Analytics::LifecycleBuffer).to receive(:push)
+        expect(Analytics::LifecycleBuffer).to receive(:push).with(
+          hash_including(name: "auth.welcome_instructions_completed")
         )
         patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
       end
@@ -135,6 +144,14 @@ RSpec.describe "/users/welcome", type: :request do
         patch user_welcome_update_url(user.welcome_instructions_token), params: { user: { password: "" } }
         expect(response).to redirect_to(new_user_session_path)
         expect(flash[:notice]).to include("confirmed")
+      end
+
+      it "tracks auth.welcome_instructions_completed event" do
+        allow(Analytics::LifecycleBuffer).to receive(:push)
+        expect(Analytics::LifecycleBuffer).to receive(:push).with(
+          hash_including(name: "auth.welcome_instructions_completed")
+        )
+        patch user_welcome_update_url(user.welcome_instructions_token), params: { user: { password: "" } }
       end
     end
 

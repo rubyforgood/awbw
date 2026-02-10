@@ -20,6 +20,7 @@ class WelcomeController < ApplicationController
       if @user.reset_password(params[:user][:password], params[:user][:password_confirmation])
         @user.clear_welcome_instructions_token!
         @user.track_auth_event("auth.password_set")
+        @user.track_auth_event("auth.welcome_instructions_completed")
         sign_in(@user)
         redirect_to users_path, notice: "Welcome! Your password has been set successfully."
       else
@@ -29,6 +30,7 @@ class WelcomeController < ApplicationController
     else
       # User visited the page but didn't set a password
       @user.clear_welcome_instructions_token!
+      @user.track_auth_event("auth.welcome_instructions_completed")
       redirect_to new_user_session_path, notice: "Your email has been confirmed. Please log in."
     end
   end
