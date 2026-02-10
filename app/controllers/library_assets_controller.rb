@@ -5,7 +5,7 @@
    before_action :set_owner, only: [ :create, :update ]
 
    def show
-     authorize! @asset
+     authorize! @asset, with: LibraryAssetPolicy
      if @asset&.file.attached?
        redirect_to rails_blob_url(@asset.file, disposition: "inline")
      else
@@ -53,27 +53,27 @@
          @unpersisted_owner.assets.compact!
          render template: "assets/create", formats: [ :turbo_stream ]
        else
-         flash.now[:alert] = "Only one Primary or Downloadable asset allowed."
-         render template: "assets/create", formats: [ :turbo_stream ]
+         flash.now[:alert] = "File type unsupported or Attachment type already exists"
+         render template: "assets/create", formats: [ :turbo_stream ], status: :unprocessable_content
        end
      end
    end
 
    def edit
+     authorize! @asset, with: LibraryAssetPolicy
      if @asset
-       authorize! @asset
        render template: "assets/edit"
-     else # does this need an authorize check?
+     else
        flash.now[:alert] = "Error"
        redirect_back_or_to root_path
      end
    end
 
    def update
-     authorize! @asset
+     authorize! @asset, with: LibraryAssetPolicy
      valid_asset = @owner.present? ? validate_asset_type_constraint(asset_params[:type], @owner.assets) : true
-     if valid_asset && @asset&.update(asset_params)
-       flash.now[:notice] = "Asset updated."
+     if  valid_asset && @asset&.update(asset_params)
+       flash.now[:notice] = "Attachment updated."
        case turbo_frame_request_id
        when "title_asset_#{@asset.id}"
          render partial: "assets/title", locals: { asset: @asset }
@@ -102,11 +102,11 @@
    end
 
    def destroy
+     authorize! @asset, with: LibraryAssetPolicy
      if @asset
-       authorize! @asset
        @asset.destroy
        render turbo_stream: turbo_stream.remove(@asset)
-     else # does this need a policy check?
+     else
        flash.now[:alert] = "Error"
        redirect_back_or_to root_path
      end

@@ -61,10 +61,6 @@ class ResourcesController < ApplicationController
     @resource = current_user.resources.build(resource_params)
 
     if @resource.save
-      if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@resource)
-      end
-
       redirect_to resources_path
     else
       @resource = @resource.decorate
@@ -126,6 +122,8 @@ class ResourcesController < ApplicationController
   private
 
   def set_form_variables
+    @resource.build_primary_asset if @resource.primary_asset.blank?
+    @resource.gallery_assets.build
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
                    .includes(:person)
@@ -145,8 +143,12 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
+      :user_id,
       :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      donwloadable_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
       categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
     )

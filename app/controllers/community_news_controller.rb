@@ -87,6 +87,8 @@ class CommunityNewsController < ApplicationController
     @authors = User.active.or(User.where(id: @community_news.author_id))
                    .includes(:person)
                    .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
+    @community_news.build_primary_asset if @community_news.primary_asset.blank?
+    @community_news.gallery_assets.build
   end
 
   private
@@ -101,7 +103,9 @@ class CommunityNewsController < ApplicationController
       :title, :rhino_body, :published, :featured, :publicly_visible, :publicly_featured,
       :reference_url, :youtube_url,
       :organization_id,
-      :author_id, :created_by_id, :updated_by_id
+      :author_id, :created_by_id, :updated_by_id,
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 end

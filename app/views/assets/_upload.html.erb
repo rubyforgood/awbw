@@ -1,69 +1,46 @@
-<%= tag.div id: "asset_upload" do %>
+<%= tag.div id: "asset_upload", class: "flex justify-center items-center bg-white border border-gray-300 rounded-md shadow-sm p-2 w-64" do %>
   <% owner = Draper.undecorate(owner) %>
 
   <%= form_with model: LibraryAsset.new,
                 id: "asset_upload_form",
+                data: {asset_upload_target: "form"},
                 class: "max-w-md mx-auto bg-white rounded-lg p-6 space-y-4 mb-2" do |f| %>
     <% if owner&.respond_to?(:to_sgid) && owner&.persisted? %>
       <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
     <% else %>
       <%= tag.div class: "unpersisted_resource_asset_params" %>
-      <%= hidden_field_tag :owner_class, owner.respond_to?(:owner_class ) ? owner.owner_class : owner.class.name, autocomplete: "off" %>
+      <%= hidden_field_tag :owner_class,
+      owner.respond_to?(:owner_class) ? owner.owner_class : owner.class.name,
+      autocomplete: "off" %>
     <% end %>
 
-    <div class="bg-gray-50 p-4 rounded-md shadow-md">
-      <%= f.label :type,
-        class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.hidden_field :type, value: "GalleryAsset", id: "library_asset_type", data: {asset_upload_target: "typeSelect"} %>
 
-      <div class="relative">
-        <%= f.select :type,
-                     Asset.allowed_types_for_owner(owner).map { |t| [t.underscore.humanize.split.first, t]},
-                       { required: true },
-                     id: "asset_upload_type",
-                     class: "block w-full appearance-none rounded-md border border-gray-300
-                             bg-white
-                             px-3 py-2 pr-8
-                             text-sm text-gray-700
-                             shadow-sm
-                             focus:border-indigo-500 focus:outline-none
-                             focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
+    <div class="bg-gray-50 w-48 h-48 mb-6 rounded-md shadow-md grid place-content-center">
+      <div class="w-32 h-32 p-2 border rounded-md flex flex-col justify-end items-center gap-2 bg-white">
+        <%= f.label :file, 
+                    for: "asset_file_input",
+                    data: { "asset-upload-target": "uploadLabel" } do %>
+          <%= icon( "upload-cloud",
+                    class: "w-16 h-16 hover:w-20 hover:h-20 cursor-pointer",
+                    title: "Add File",
+          ) %>
+        <% end %>
 
-        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-          <i class="fa-solid fa-chevron-down text-sm"></i>
-        </div>
+        <%= f.file_field :file,
+                     direct_upload: true,
+                     required: true,
+                     id: "asset_file_input",
+                     class: "hidden",
+                     data: {
+                       "asset-upload-target": "fileInput",
+                       action: "change->asset-upload#handleFileChange",
+                     } %>
+
+        <p>Add file</p>
       </div>
     </div>
 
-    <div class="bg-gray-50 p-4 rounded-md shadow-md">
-      <%= f.label :file, "File",
-        class: "block text-sm font-medium text-gray-700 mb-1" %>
-
-      <%= f.file_field :file, direct_upload: true,
-        required: true,
-        id: "asset_file_input",
-        class: "block w-full rounded-md border border-gray-300
-                px-3 py-2 text-sm text-gray-700
-                shadow-sm
-                focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
-    </div>
-
-    <div class="bg-gray-50 p-4 rounded-md shadow-md">
-      <%= f.label :title,
-        class: "block text-sm font-medium text-gray-700 mb-1" %>
-
-      <%= f.text_field :title,
-        placeholder: "optional",
-        class: "block w-full rounded-md border border-gray-300
-                px-3 py-2 text-sm text-gray-700
-                shadow-sm
-                focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" %>
-    </div>
-
-    <div class="action-buttons mt-8 flex justify-center gap-3">
-      <%= f.submit "Upload Asset",
-                   class: "btn btn-secondary-outline transition
-                   disabled:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-70",
-        data: { disable_with: "Uploading..." } %>
-    </div>
+    <%= f.submit "Upload", class: "hidden", data: { disable_with: "Uploading..." } %>
   <% end %>
 <% end %>
