@@ -4,12 +4,10 @@
       <%= render "events/card", event: event %>
     <% end %>
   </div>
-  <div class="mt-6 text-right">
-    <%= link_to "View all events",
+  <div class="mt-6 text-right"><%= link_to "View all events",
                 events_path,
-                data: { turbo: false },
-                class: "text-primary font-medium hover:underline" %>
-  </div>
+                data: { turbo_frame: "_top" },
+                class: "text-primary font-medium hover:underline" %></div>
 <% else %>
   <p class="text-gray-500">No events at this time.</p>
 <% end %>
