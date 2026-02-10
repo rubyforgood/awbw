@@ -22,6 +22,7 @@ class StoryShareController < ApplicationController
 
     @stories_by_focus =
       sector_names.index_with do |focus|
+        # TODO: Implement sector-based filtering
         # @stories.select { |story| story.sectors.any? { |s| s.name == focus } }
         @stories.first(5)
       end
