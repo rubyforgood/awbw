@@ -69,13 +69,13 @@
           </div>
         <% end %>
 
-        <!-- Carousel Navigation -->
-        <button class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg">
+        <!-- Carousel Navigation (placeholder for future carousel implementation) -->
+        <button aria-label="Previous story" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg" disabled>
           <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <button class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg">
+        <button aria-label="Next story" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg" disabled>
           <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -122,24 +122,15 @@
         <div class="mt-4">
           <ul class="space-y-2 text-gray-700">
             <% if focus == "Domestic Violence" %>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "Creativity as a Sign of Healing", "#", class: "hover:text-purple-700" %>
-              </li>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "Permission to Feel Warm and Safe", "#", class: "hover:text-purple-700" %>
-              </li>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "A Return to Self", "#", class: "hover:text-purple-700" %>
-              </li>
+              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
+              <% additional_stories.each do |story| %>
+                <li class="flex items-center">
+                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
+                </li>
+              <% end %>
               <li class="flex items-center">
                 <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -147,24 +138,15 @@
                 <%= link_to "More Domestic Violence Stories...", stories_path(focus: "domestic_violence"), class: "hover:text-purple-700 font-medium" %>
               </li>
             <% elsif focus == "Social Justice" %>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "Healing Historical Trauma", "#", class: "hover:text-purple-700" %>
-              </li>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "Strength & Unity", "#", class: "hover:text-purple-700" %>
-              </li>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "'Building Unity and Supporting Community': Visions for a New Nepal", "#", class: "hover:text-purple-700" %>
-              </li>
+              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
+              <% additional_stories.each do |story| %>
+                <li class="flex items-center">
+                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
+                </li>
+              <% end %>
               <li class="flex items-center">
                 <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -172,24 +154,15 @@
                 <%= link_to "More Social Justice Stories...", stories_path(focus: "social_justice"), class: "hover:text-purple-700 font-medium" %>
               </li>
             <% elsif focus == "Facilitator Spotlights" %>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "Bringing Art to the List: How Creative Workshops Revitalized Workplace Wellness", "#", class: "hover:text-purple-700" %>
-              </li>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "Cultivate Visions and Tangible Goals", "#", class: "hover:text-purple-700" %>
-              </li>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <%= link_to "Wings Against Hate: Building Resilient Community to Combat Hate", "#", class: "hover:text-purple-700" %>
-              </li>
+              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
+              <% additional_stories.each do |story| %>
+                <li class="flex items-center">
+                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
+                </li>
+              <% end %>
               <li class="flex items-center">
                 <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -239,6 +212,7 @@
     <h2 class="text-3xl font-bold text-gray-900 mb-8">Get involved!</h2>
     
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <%# TODO: Replace '#' with actual training and support page routes %>
       <%= link_to "Attend Our Training", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors" %>
       <%= link_to "Support Our Program", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors" %>
     </div>
