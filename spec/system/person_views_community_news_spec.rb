@@ -12,6 +12,7 @@ RSpec.describe 'People can view Community News on the dashboard' do
         :featured,
         :published,
         :publicly_visible,
+        :publicly_featured,
         title: 'Annual Leadership Summit',
         start_date: 2.weeks.from_now,
         end_date: 3.weeks.from_now,
@@ -23,12 +24,13 @@ RSpec.describe 'People can view Community News on the dashboard' do
         :featured,
         :published,
         :publicly_visible,
+        :publicly_featured,
         title: 'March Community Newsletter',
         rhino_body: '<p>Exciting updates this month!</p>'
       )
 
       sign_in user
-      visit '/'
+      visit root_path
     end
 
     describe 'Upcoming Events section' do
