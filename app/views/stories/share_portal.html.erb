@@ -40,7 +40,7 @@
             <%= @featured_story.sectors.first&.name || "SELF-CARE & PERSONAL GROWTH" %>
           </div>
           <!-- Black overlay bar at bottom with title -->
-          <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-8 text-white">
+          <div class="absolute bottom-0 left-0 right-0 bg-black/50 p-8 text-white">
             <h2 class="font-telefon text-3xl mb-2">
               <%= @featured_story.title %>
             </h2>
@@ -310,19 +310,19 @@
     
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
       <% 
-        # Define color mapping for different categories
+        # Define color mapping for different categories with translucent overlays
         category_colors = {
-          "Self-Care & Personal Growth" => "bg-blue-600",
-          "Schools & Universities" => "bg-purple-600",
-          "Grief & Loss" => "bg-purple-600",
-          "Community Engagement" => "bg-teal-600",
-          "Domestic Violence" => "bg-pink-600",
-          "Social Justice" => "bg-green-600",
-          "Facilitator Spotlights" => "bg-purple-600"
+          "Self-Care & Personal Growth" => "bg-blue-600/70",
+          "Schools & Universities" => "bg-purple-600/70",
+          "Grief & Loss" => "bg-purple-600/70",
+          "Community Engagement" => "bg-teal-600/70",
+          "Domestic Violence" => "bg-pink-600/70",
+          "Social Justice" => "bg-green-600/70",
+          "Facilitator Spotlights" => "bg-purple-600/70"
         }
         
         # Default color for categories not in the mapping
-        default_color = "bg-gray-600"
+        default_color = "bg-gray-600/70"
       %>
       
       <% @popular_stories.first(4).each do |story| %>
@@ -333,18 +333,20 @@
         %>
         
         <%= link_to story_path(story), class: "group block relative aspect-[3/4] overflow-hidden hover:opacity-90 transition-opacity" do %>
+          <!-- Background image -->
           <div class="absolute inset-0 bg-gray-200">
             <%= render "assets/display_image",
                        resource: story,
                        variant: :hero %>
           </div>
-          <!-- Overlay gradient -->
-          <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/30 to-black/60"></div>
+          
+          <!-- Colored translucent overlay -->
+          <div class="absolute inset-0 <%= bg_color %>"></div>
           
           <!-- Centered content -->
           <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
             <!-- Square sector box -->
-            <div class="<%= bg_color %> text-white text-xs font-bold uppercase px-4 py-3 mb-4 w-32 h-12 flex items-center justify-center">
+            <div class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase px-4 py-3 mb-4 w-32 h-12 flex items-center justify-center border border-white/30">
               <%= sector_name %>
             </div>
             <!-- Title below -->
