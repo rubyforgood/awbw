@@ -85,6 +85,8 @@ class WorkshopIdeasController < ApplicationController
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
         .sort_by { |type, _| type&.name.to_s.downcase }
+    @workshop_idea.build_primary_asset if @workshop_idea.primary_asset.blank?
+    @workshop_idea.gallery_assets.build
   end
 
   private
@@ -154,6 +156,9 @@ class WorkshopIdeasController < ApplicationController
       :rhino_misc1_spanish,
       :rhino_misc2_spanish,
       :rhino_extra_field_spanish,
+
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
 
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
