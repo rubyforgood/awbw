@@ -1,7 +1,7 @@
 class StoriesController < ApplicationController
   include ExternallyRedirectable, AssetUpdatable, AhoyTracking
-  skip_before_action :authenticate_user!, only: [ :index, :show ]
-  before_action :set_story, only: [ :show, :edit, :update, :destroy ]
+  skip_before_action :authenticate_user!, only: [ :index, :show, :show_share_portal ]
+  before_action :set_story, only: [ :show, :show_share_portal, :edit, :update, :destroy ]
 
   def index
     authorize!
@@ -76,6 +76,15 @@ class StoriesController < ApplicationController
     @story = @story.decorate
     authorize! @story
     track_view(@story)
+
+    # Fetch related stories for "What Others Are Reading" section
+    base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop, :created_by, :bookmarks, :primary_asset))
+    @popular_stories = base_scope.where.not(id: @story.id)
+                                 .order(created_at: :desc)
+                                 .limit(4)
+                                 .decorate
+
+    render layout: "share_portal"
   end
 
   def new
