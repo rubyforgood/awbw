@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Story Share - AWBW</title>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+    <%= javascript_include_tag "activestorage" %>
+    <%= csrf_meta_tags %>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="shortcut icon" type="image/png" href="<%= asset_path("favicon.png") %>">
+
+    <%= vite_stylesheet_tag "application.css" %>
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag "application" %>
+  </head>
+
+  <body class="stories share_portal flex flex-col min-h-screen bg-white">
+    <div class="flex-grow" id="main">
+      <div class="sticky top-0 left-0 w-full z-50 print:hidden">
+        <!-- Story Share Portal Navbar -->
+        <nav class="bg-purple-800 text-white">
+          <%= render "shared/share_portal_navbar" %>
+        </nav>
+      </div>
+      
+      <div class="not-signed-in-user min-h-screen flex flex-col">
+        <%= render "shared/flash_messages" %>
+        <%= yield %>
+      </div>
+    </div>
+
+    <div class="site-footer print:hidden"><%= render "shared/footer" %></div>
+    <%= render "shared/footer_nav" %>
+  </body>
+</html>
