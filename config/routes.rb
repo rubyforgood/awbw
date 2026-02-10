@@ -92,11 +92,8 @@ Rails.application.routes.draw do
   end
   resources :sectors
   resources :story_ideas
-  resources :stories do
-    collection do
-      get :share_portal
-    end
-  end
+  resources :stories
+  resources :story_share, only: [ :index, :show ], path: "stories/share"
   resources :tutorials
   resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
     member do
