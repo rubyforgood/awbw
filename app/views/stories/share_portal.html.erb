@@ -1,5 +1,7 @@
+</div><!-- Break out of layout container -->
+
 <!-- Navigation Tabs -->
-<div class="bg-white border-b border-gray-200">
+<div class="bg-white border-b border-gray-200 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <nav class="flex space-x-8 overflow-x-auto py-3" aria-label="Focus areas">
       <%= link_to "Children", share_portal_stories_path(focus: "children"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
@@ -14,7 +16,7 @@
 </div>
 
 <!-- Hero Section -->
-<section class="bg-white py-12">
+<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <h1 class="text-4xl font-bold text-gray-900 text-center mb-4">
       Welcome to our Story Share
@@ -40,7 +42,7 @@
 
 <!-- Featured Story Carousel -->
 <% if @featured_story.present? %>
-  <section class="bg-gray-50 py-12">
+  <section class="bg-gray-50 py-12 -mx-2 sm:-mx-6 lg:-mx-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="relative rounded-lg overflow-hidden shadow-lg">
         <%= link_to story_path(@featured_story), class: "block relative" do %>
@@ -84,7 +86,7 @@
 <% end %>
 
 <!-- Story Sections -->
-<section class="bg-white py-12">
+<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
     <% ["Domestic Violence", "Social Justice", "Facilitator Spotlights"].each do |focus| %>
       <div>
@@ -203,7 +205,7 @@
 </section>
 
 <!-- What Others Are Reading -->
-<section class="bg-gray-50 py-12">
+<section class="bg-gray-50 py-12 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <h2 class="text-2xl font-bold text-gray-900 mb-8">What Others Are Reading</h2>
     
@@ -232,7 +234,7 @@
 </section>
 
 <!-- Get Involved CTA -->
-<section class="bg-white py-16">
+<section class="bg-white py-16 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
     <h2 class="text-3xl font-bold text-gray-900 mb-8">Get involved!</h2>
     
@@ -242,3 +244,5 @@
     </div>
   </div>
 </section>
+
+<div><!-- Restore layout container -->
