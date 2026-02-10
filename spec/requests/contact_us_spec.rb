@@ -61,7 +61,7 @@ RSpec.describe "ContactUs", type: :request do
 
       it "shows personalized greeting" do
         get contact_us_path
-        expect(response.body).to include("Hello, #{user.full_name}")
+        expect(response.body).to include("Hello, #{user.first_name}")
       end
 
       it "does not show visible form fields for name, email, and agency" do
