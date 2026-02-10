@@ -80,13 +80,17 @@ class Notification < ApplicationRecord
   def resend_number
     return nil unless resend?
 
-    # Get all notifications in the chain ordered by creation time
-    root_id = root_notification_id
-    all_resends = Notification.where(root_notification_id: root_id)
-                              .order(:created_at)
-                              .pluck(:id)
+    # Memoize to avoid repeated queries
+    @resend_number ||= begin
+      # Get all resent notifications in the chain ordered by creation time
+      # (excludes the root notification itself)
+      root_id = root_notification_id
+      all_resends = Notification.where(root_notification_id: root_id)
+                                .order(:created_at)
+                                .pluck(:id)
 
-    # Find this notification's position (1-indexed)
-    all_resends.index(id) + 1
+      # Find this notification's position (1-indexed)
+      all_resends.index(id) + 1
+    end
   end
 end
