@@ -42,8 +42,19 @@ class StoriesController < ApplicationController
 
     @stories_by_focus =
       sector_names.index_with do |focus|
-        # @stories.select { |story| story.sectors.any? { |s| s.name == focus } }
-        @stories.first(5)
+        matching = @stories.select do |story|
+          story.respond_to?(:sector_names_all) &&
+            story.sector_names_all.include?(focus)
+        end
+
+        remaining_needed = 5 - matching.size
+        if remaining_needed > 0
+          filler = @stories.reject { |story| matching.include?(story) }
+                           .first(remaining_needed)
+          matching + filler
+        else
+          matching.first(5)
+        end
       end
     @popular_stories = @stories.sort_by { |s| s.bookmarks.size }.reverse.first(6)
 

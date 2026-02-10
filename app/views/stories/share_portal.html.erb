@@ -3,23 +3,25 @@
 <!-- Hero Section -->
 <section class="bg-white mt-12 pt-6 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="font-telefon text-5xl text-black text-center mb-6">
+    <h1 class="font-telefon text-5xl text-black text-center mb-12">
       Welcome to our Story Share
     </h1>
 
     <blockquote class="text-center mb-6">
-      <p class="text-lg text-gray-800 italic mb-1">
+      <p class="text-lg text-gray-800 font-semibold">
         "If we can share our story with someone who responds with empathy and understanding, shame can't survive." ~ Brené Brown
       </p>
     </blockquote>
 
-    <div class="max-w-4xl mx-auto space-y-4 text-gray-800 leading-relaxed">
+    <div class="text-gray-800 leading-relaxed">
       <p>
         At A Window Between Worlds, we aim to uplift the voices and showcase the leadership of our extensive network of art workshop facilitators. We invite you to explore these impactful stories and accompanying participant artwork from trained Windows Facilitators across the country and abroad.
       </p>
       <p>
         This evolving collection illustrates the transformative power of creative expression that is experienced by individuals and communities participating in our art workshops. As we share these powerful stories, we empower others facing their own challenges, helping facilitate their healing journey.
       </p>
+    </div>
+
     </div>
   </div>
 </section>
@@ -194,7 +196,7 @@
         
         <!-- More Link -->
         <div class="mt-4">
-          <%= link_to "More Domestic Violence Stories...", stories_path(focus: "domestic_violence"), class: "text-red-700 hover:underline font-medium text-sm inline-flex items-center" %>
+          <%= link_to "More Domestic Violence Stories...", stories_path(sector_names_all: "Domestic Violence"), class: "text-red-700 hover:underline font-medium text-sm inline-flex items-center" %>
         </div>
       </div>
 
@@ -245,7 +247,7 @@
         
         <!-- More Link -->
         <div class="mt-4">
-          <%= link_to "More Social Justice Stories...", stories_path(focus: "social_justice"), class: "text-green-700 hover:underline font-medium text-sm inline-flex items-center" %>
+          <%= link_to "More Social Justice Stories...", stories_path(sector_names_all: "Social Justice"), class: "text-green-700 hover:underline font-medium text-sm inline-flex items-center" %>
         </div>
       </div>
 
@@ -296,7 +298,7 @@
         
         <!-- More Link -->
         <div class="mt-4">
-          <%= link_to "More Facilitator Spotlights Stories...", stories_path(focus: "spotlights"), class: "text-purple-700 hover:underline font-medium text-sm inline-flex items-center" %>
+          <%= link_to "More Facilitator Spotlights Stories...", stories_path(sector_names_all: "Facilitator Spotlights"), class: "text-purple-700 hover:underline font-medium text-sm inline-flex items-center" %>
         </div>
       </div>
     </div>
