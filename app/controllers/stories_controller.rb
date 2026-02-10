@@ -61,6 +61,12 @@ class StoriesController < ApplicationController
     end
   end
 
+  def show_share_portal
+    @story = @story.decorate
+    authorize! @story
+    track_view(@story)
+  end
+
   def new
     if params[:story_idea_id].present?
       @story_idea = StoryIdea.find(params[:story_idea_id])
