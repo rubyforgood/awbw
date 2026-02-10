@@ -1,0 +1,80 @@
+<nav class="relative bg-purple-800 print:hidden">
+  <div class="px-2 sm:px-6 lg:px-8">
+    <!-- Top Navigation Row -->
+    <div class="relative flex items-center justify-between py-3 border-b border-purple-700">
+      <div class="flex items-center space-x-8">
+        <div class="flex shrink-0 items-center">
+          <%= link_to share_portal_stories_path, class: "relative group" do %>
+            <%= image_tag("logo.png", class: "h-8 sm:h-10 w-auto block") %>
+            <%= image_tag("logo-color.png", class: "h-8 sm:h-10 absolute inset-0 w-auto opacity-0 transition-opacity duration-400 ease-out group-hover:opacity-100") %>
+          <% end %>
+        </div>
+
+        <div class="hidden md:flex space-x-6">
+          <%= link_to "Home", share_portal_stories_path, class: "text-white hover:text-purple-200 text-sm font-medium transition-colors" %>
+          <%= link_to "Domestic Violence", share_portal_stories_path(focus: "domestic_violence"), class: "text-white hover:text-purple-200 text-sm font-medium transition-colors" %>
+          <%= link_to "Self-Care & Personal Growth", share_portal_stories_path(focus: "self_care"), class: "text-white hover:text-purple-200 text-sm font-medium transition-colors" %>
+          <%= link_to "Social Justice", share_portal_stories_path(focus: "social_justice"), class: "text-white hover:text-purple-200 text-sm font-medium transition-colors" %>
+          <%= link_to "Facilitator Spotlights", share_portal_stories_path(focus: "facilitator_spotlights"), class: "text-white hover:text-purple-200 text-sm font-medium transition-colors" %>
+        </div>
+      </div>
+
+      <!-- Search Box -->
+      <div class="hidden md:block">
+        <form action="<%= share_portal_stories_path %>" method="get" class="relative">
+          <input
+            type="search"
+            name="q"
+            placeholder="Search keywords to find more stories..."
+            class="w-80 px-4 py-2 rounded-md text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+            value="<%= params[:q] %>"
+          />
+          <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="md:hidden">
+        <button
+          type="button"
+          class="relative inline-flex items-center justify-center rounded-md p-2 text-purple-200 hover:bg-purple-700 hover:text-white focus:outline-2 focus:ring-2 focus:ring-white"
+          data-action="click->toggle#toggle"
+          data-toggle-target="menu"
+        >
+          <span class="sr-only">Open main menu</span>
+          <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu, hidden by default -->
+    <div class="md:hidden hidden" data-toggle-target="menu">
+      <div class="space-y-1 pb-3 pt-2">
+        <%= link_to "Home", share_portal_stories_path, class: "block px-3 py-2 text-white hover:bg-purple-700 hover:text-purple-100 text-base font-medium rounded-md" %>
+        <%= link_to "Domestic Violence", share_portal_stories_path(focus: "domestic_violence"), class: "block px-3 py-2 text-white hover:bg-purple-700 hover:text-purple-100 text-base font-medium rounded-md" %>
+        <%= link_to "Self-Care & Personal Growth", share_portal_stories_path(focus: "self_care"), class: "block px-3 py-2 text-white hover:bg-purple-700 hover:text-purple-100 text-base font-medium rounded-md" %>
+        <%= link_to "Social Justice", share_portal_stories_path(focus: "social_justice"), class: "block px-3 py-2 text-white hover:bg-purple-700 hover:text-purple-100 text-base font-medium rounded-md" %>
+        <%= link_to "Facilitator Spotlights", share_portal_stories_path(focus: "facilitator_spotlights"), class: "block px-3 py-2 text-white hover:bg-purple-700 hover:text-purple-100 text-base font-medium rounded-md" %>
+        
+        <!-- Mobile Search -->
+        <div class="px-3 py-2">
+          <form action="<%= share_portal_stories_path %>" method="get">
+            <input
+              type="search"
+              name="q"
+              placeholder="Search stories..."
+              class="w-full px-4 py-2 rounded-md text-gray-900 text-sm"
+              value="<%= params[:q] %>"
+            />
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
