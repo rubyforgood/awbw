@@ -11,13 +11,9 @@
     <!-- Form -->
 
     <div class="space-y-6">
-      <%= tag.div data: {controller: "asset-upload"} do %>
         <div class="mt-4 bg-white rounded p-3"><%= render "form", workshop: @workshop %></div>
-
+      <% if params[:admin] == 'true' %>
         <div class="my-4"><%= render "assets/form", owner: @workshop %></div>
-      <% end %>
-
-      <% if params[:rich_text_assets] == 'true' %>
         <%= turbo_frame_tag "editor_assets_lazy", src: edit_workshop_path(@workshop) do %>
           <%= render "shared/loading" %>
         <% end %>
