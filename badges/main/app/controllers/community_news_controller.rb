@@ -1,5 +1,5 @@
 class CommunityNewsController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable, AhoyTracking
+  include ExternallyRedirectable, AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
@@ -52,9 +52,6 @@ class CommunityNewsController < ApplicationController
     authorize! @community_news
 
     if @community_news.save
-      if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@community_news)
-      end
       redirect_to community_news_index_path,
                   notice: "Community news was successfully created."
     else

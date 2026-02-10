@@ -1,8 +1,6 @@
 <%= simple_form_for(@story, html: { multipart: true }) do |f| %>
   <%= render 'shared/errors', resource: @story if @story.errors.any? %>
 
-  <%= tag.div class: "unpersisted_resource_asset_params" %>
-
   <% story_idea = @story_idea || f.object.story_idea %>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

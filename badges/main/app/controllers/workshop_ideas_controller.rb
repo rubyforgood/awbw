@@ -1,5 +1,4 @@
 class WorkshopIdeasController < ApplicationController
-  include AssetUpdatable
   before_action :set_workshop_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -32,10 +31,6 @@ class WorkshopIdeasController < ApplicationController
         recipient_role: :admin,
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
-
-      if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@workshop_idea)
-      end
 
       flash[:notice] = "Workshop idea was successfully created."
       if allowed_to?(:index?, WorkshopIdea)

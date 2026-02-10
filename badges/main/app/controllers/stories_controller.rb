@@ -1,5 +1,5 @@
 class StoriesController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable, AhoyTracking
+  include ExternallyRedirectable, AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
 
@@ -64,8 +64,6 @@ class StoriesController < ApplicationController
     if @story.save
       if params[:promote_idea_assets] == "true"
         @story.attach_assets_from_idea!
-      elsif params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@story)
       end
 
       redirect_to stories_path, notice: "Story was successfully created."

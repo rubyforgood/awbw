@@ -1,5 +1,5 @@
 class EventsController < ApplicationController
-  include AhoyTracking, AssetUpdatable
+  include AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_event, only: %i[ show edit update destroy ]
 
@@ -36,9 +36,6 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if @event.save
-        if params.dig(:library_asset, :new_assets).present?
-          update_asset_owner(@event)
-        end
         format.html { redirect_to events_path, notice: "Event was successfully created." }
         format.json { render :show, status: :created, location: @event }
       else

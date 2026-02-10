@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   #   resources :primary_assets, only: [ :show ]
   #   resources :gallery_assets, only: [ :show ]
   # end
-  resources :library_assets
+  resources :primary_assets
   resources :rich_text_assets
 
   namespace :images do

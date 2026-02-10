@@ -56,3 +56,6 @@ application.register("print-options", PrintOptionsController)
 
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
+
+import AssetPickerController from "./asset_picker_controller"
+application.register("asset-picker", AssetPickerController)
