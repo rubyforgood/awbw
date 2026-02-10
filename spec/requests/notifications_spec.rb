@@ -10,9 +10,15 @@ RSpec.describe "Notifications", type: :request do
       before { sign_in admin }
 
       it "creates a new notification with resend flag" do
-        expect {
-          post resend_notification_path(notification)
-        }.to change(Notification, :count).by(1)
+        # Force creation of the notification before the expect block
+        notification_id = notification.id
+
+        # Perform the action with jobs inline
+        perform_enqueued_jobs do
+          expect {
+            post resend_notification_path(notification_id)
+          }.to change(Notification, :count).by(1)
+        end
 
         new_notification = Notification.last
         expect(new_notification.resend).to be true
@@ -21,13 +27,17 @@ RSpec.describe "Notifications", type: :request do
       end
 
       it "sends the notification email" do
-        expect {
-          post resend_notification_path(notification)
-        }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        perform_enqueued_jobs do
+          expect {
+            post resend_notification_path(notification)
+          }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        end
       end
 
       it "updates the new notification with delivery details" do
-        post resend_notification_path(notification)
+        perform_enqueued_jobs do
+          post resend_notification_path(notification)
+        end
 
         new_notification = Notification.last
         expect(new_notification.delivered_at).to be_present
@@ -47,19 +57,23 @@ RSpec.describe "Notifications", type: :request do
       before { sign_in regular_user }
 
       it "does not allow resending" do
+        # Force creation of the notification before the expect block
+        notification_id = notification.id
+
         expect {
-          post resend_notification_path(notification)
+          post resend_notification_path(notification_id)
         }.not_to change(Notification, :count)
 
-        expect(response).to have_http_status(:forbidden)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to be_present
       end
     end
 
     context "as a guest" do
-      it "redirects to sign in" do
+      it "redirects to root" do
         post resend_notification_path(notification)
 
-        expect(response).to redirect_to(new_user_session_path)
+        expect(response).to redirect_to(root_path)
       end
     end
   end

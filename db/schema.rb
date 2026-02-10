@@ -470,6 +470,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_210556) do
     t.string "recipient_email", null: false
     t.string "recipient_role", null: false
     t.integer "root_notification_id"
+    t.boolean "resend", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
