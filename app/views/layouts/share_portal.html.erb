@@ -11,15 +11,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="shortcut icon" type="image/png" href="<%= asset_path("favicon.png") %>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <%= vite_stylesheet_tag "application.css" %>
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application" %>
+
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+      }
+      .font-telefon {
+        font-family: 'Telefon Bold', sans-serif;
+      }
+    </style>
   </head>
 
   <body class="stories share_portal flex flex-col min-h-screen bg-white">
     <div class="flex-grow" id="main">
-      <div class="sticky top-0 left-0 w-full z-50 print:hidden">
+      <div class="sticky top-0 left-0 w-full z-50 print:hidden" id="share-portal-header">
         <!-- Story Share Portal Navbar -->
         <%= render "shared/share_portal_navbar" %>
       </div>
@@ -32,5 +44,35 @@
 
     <div class="site-footer print:hidden"><%= render "shared/footer" %></div>
     <%= render "shared/footer_nav" %>
+
+    <script>
+      // Hide navigation rows on scroll
+      let lastScroll = 0;
+      const header = document.getElementById('share-portal-header');
+      const navRows = header.querySelectorAll('.nav-row');
+      
+      window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > 100) {
+          // Hide extra rows when scrolling down
+          navRows.forEach((row, index) => {
+            if (index > 0) { // Keep first row visible
+              row.style.maxHeight = '0';
+              row.style.overflow = 'hidden';
+              row.style.transition = 'max-height 0.3s ease-out';
+            }
+          });
+        } else {
+          // Show all rows when at top
+          navRows.forEach(row => {
+            row.style.maxHeight = '200px';
+            row.style.overflow = 'visible';
+          });
+        }
+        
+        lastScroll = currentScroll;
+      });
+    </script>
   </body>
 </html>

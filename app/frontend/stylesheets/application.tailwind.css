@@ -15,6 +15,27 @@
   --color-info: var(--color-blue-500);
   --color-success: var(--color-green-500);
   --color-transparent: transparent;
+
+  /* Custom fonts for Story Share Portal */
+  --font-family-telefon: "Telefon Bold", sans-serif;
+  --font-family-roboto: "Roboto", sans-serif;
+}
+
+/* Font face declarations */
+@font-face {
+  font-family: "Telefon Bold";
+  src: url("/assets/Telefon-Bold.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto";
+  src: url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 /* Used to generate classes from `domain_theme.rb`*/
