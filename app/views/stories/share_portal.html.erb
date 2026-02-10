@@ -1,437 +1,222 @@
-<section class="storyshare">
-  <header class="storyshare__hero">
-    <div class="storyshare__hero-inner">
-      <h1 class="storyshare__title">Welcome to our Story Share</h1>
+</div><!-- Break out of layout container -->
 
-      <p class="storyshare__quote">
-        “If we can share our story with someone who responds with empathy and understanding, shame can’t survive.”
-        <span class="storyshare__quote-attrib">~ Brené Brown</span>
+<!-- Navigation Tabs -->
+<div class="bg-white border-b border-gray-200 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="flex space-x-8 overflow-x-auto py-3" aria-label="Focus areas">
+      <%= link_to "Children", share_portal_stories_path(focus: "children"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
+      <%= link_to "Teens", share_portal_stories_path(focus: "teens"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
+      <%= link_to "Adults", share_portal_stories_path(focus: "adults"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
+      <%= link_to "Families", share_portal_stories_path(focus: "families"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
+      <%= link_to "Community", share_portal_stories_path(focus: "community"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
+      <%= link_to "Self", share_portal_stories_path(focus: "self"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
+      <%= link_to "Colleagues", share_portal_stories_path(focus: "colleagues"), class: "whitespace-nowrap text-gray-700 hover:text-purple-700 px-3 py-2 text-sm font-medium" %>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero Section -->
+<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h1 class="text-4xl font-bold text-gray-900 text-center mb-4">
+      Welcome to our Story Share
+    </h1>
+
+    <blockquote class="text-center mb-6">
+      <p class="text-lg text-gray-700 italic mb-1">
+        "If we can share our story with someone who responds with empathy and understanding, shame can't survive."
       </p>
+      <footer class="text-gray-600">~ Brené Brown</footer>
+    </blockquote>
 
-      <p class="storyshare__lede">
+    <div class="max-w-4xl mx-auto space-y-4 text-gray-700 leading-relaxed">
+      <p>
         At A Window Between Worlds, we aim to uplift the voices and showcase the leadership of our extensive network of art workshop facilitators. We invite you to explore these impactful stories and accompanying participant artwork from trained Windows Facilitators across the country and abroad.
-        <br><br>
+      </p>
+      <p>
         This evolving collection illustrates the transformative power of creative expression that is experienced by individuals and communities participating in our art workshops. As we share these powerful stories, we empower others facing their own challenges, helping facilitate their healing journey.
       </p>
-
-      <%# Optional: quick filters (replace with your real links/scopes) %>
-      <nav class="storyshare__filters" aria-label="Story filters">
-        <%= link_to "Domestic Violence", stories_path(focus: "domestic_violence"), class: "pill" %>
-        <%= link_to "Self-Care & Personal Growth", stories_path(focus: "self_care"), class: "pill" %>
-        <%= link_to "Social Justice", stories_path(focus: "social_justice"), class: "pill" %>
-        <%= link_to "Facilitator Spotlights", stories_path(focus: "spotlights"), class: "pill" %>
-      </nav>
-    </div>
-  </header>
-
-  <div class="storyshare__content">
-    <% if @featured_story.present? %>
-      <section class="storyshare__featured">
-        <%= link_to story_path(@featured_story), class: "featured__media" do %>
-          <%= render "assets/display_image",
-                     resource: @featured_story,
-                     variant: :hero %>
-        <% end %>
-
-        <div class="featured__overlay">
-          <h2 class="featured__title">
-            <%= @featured_story.title %>
-          </h2>
-          <p class="featured__meta">
-            <%= @featured_story.organization_name %>
-            <% if @featured_story.organization.city_state.present? %>
-              • <%= @featured_story.organization.city_state %>
-            <% end %>
-          </p>
-        </div>
-      </section>
-    <% end %>
-
-    <section class="storyshare__sections">
-      <% ["Domestic Violence", "Social Justice", "Facilitator Spotlights"].each do |focus| %>
-        <div class="section-block">
-          <h3 class="section-title"><%= focus %></h3>
-
-          <div class="section-grid">
-            <% @stories_by_focus[focus]&.first(3)&.each do |story| %>
-              <%= render "stories/card", story: story %>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-    </section>
-
-    <div class="storyshare__grid">
-      <% @stories.each do |story| %>
-        <article class="card">
-          <%= link_to story_path(story), class: "card__media" do %>
-            <%# Prefer image_tag + variant if you're on ActiveStorage %>
-            <%= render "assets/display_image",
-                       resource: story, file: (defined?(file) ? file : nil), variant: :hero %>
-          <% end %>
-
-          <div class="card__body">
-            <div class="card__tags">
-              <% story.sectors.first(3).each do |tag| %>
-                <span class="tag">
-                  <%= tag.name %>
-                </span>
-                <%= render "sectors/tagging_label",
-                           sector: tag,
-                           bg_color: "bg-white",
-                           bg_hover_color: "bg-lime-200" %>
-              <% end %>
-              <% story.categories.first(3).each do |tag| %>
-                <span class="tag">
-                  <%= tag.name %>
-                </span>
-                <%= render "categories/tagging_label",
-                           category: tag,
-                           name_only: true,
-                           bg_color: "bg-white",
-                           bg_hover_color: "bg-lime-200" %>
-              <% end %>
-            </div>
-
-            <h2 class="card__title">
-              <%= link_to story.title, story_path(story) %>
-            </h2>
-
-            <p class="card__meta">
-              <span class="card__org"><%= story.organization_name %></span>
-              <% if story.organization.city_state.present? %>
-                <span class="card__dot">•</span>
-                <span class="card__loc"><%= story.organization.city_state %></span>
-              <% end %>
-            </p>
-          </div>
-        </article>
-      <% end %>
-    </div>
-
-    <section class="storyshare__reading">
-      <h3>What Others Are Reading</h3>
-
-      <div class="reading-grid">
-        <% @popular_stories.first(4).each do |story| %>
-          <%= link_to story_path(story), class: "reading-tile" do %>
-            <%= render "assets/display_image",
-                       resource: story,
-                       variant: :hero %>
-            <span class="reading-label">
-          <%= story.title %>
-        </span>
-          <% end %>
-        <% end %>
-      </div>
-    </section>
-
-    <%# Optional pagination hook %>
-    <div class="storyshare__pagination">
-      <%= tailwind_paginate @stories %>
     </div>
   </div>
 </section>
 
-<style>
-    .storyshare {
-        --bg: #ffffff;
-        --ink: #111827;
-        --muted: #6b7280;
-        --border: #e5e7eb;
-        --panel: #f9fafb;
-        --shadow: 0 8px 24px rgba(0,0,0,0.08);
+<!-- Featured Story Carousel -->
+<% if @featured_story.present? %>
+  <section class="bg-gray-50 py-12 -mx-2 sm:-mx-6 lg:-mx-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative rounded-lg overflow-hidden shadow-lg">
+        <%= link_to story_path(@featured_story), class: "block relative" do %>
+          <div class="aspect-[16/6] bg-gray-200">
+            <%= render "assets/display_image",
+                       resource: @featured_story,
+                       variant: :hero %>
+          </div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
+            <div class="p-8 text-white w-full">
+              <div class="inline-block bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded mb-3">
+                SCHOOLS & UNIVERSITIES
+              </div>
+              <h2 class="text-3xl font-bold mb-2">
+                <%= @featured_story.title %>
+              </h2>
+              <p class="text-sm opacity-90">
+                <%= @featured_story.organization_name %>
+                <% if @featured_story.organization.city_state.present? %>
+                  • <%= @featured_story.organization.city_state %>
+                <% end %>
+              </p>
+            </div>
+          </div>
+        <% end %>
 
-        background: var(--bg);
-        color: var(--ink);
-    }
+        <!-- Carousel Navigation (placeholder for future carousel implementation) -->
+        <button aria-label="Previous story" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg" disabled>
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button aria-label="Next story" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg" disabled>
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+<% end %>
 
-    /* Hero */
-    .storyshare__hero {
-        background: linear-gradient(180deg, var(--panel), #fff);
-        border-bottom: 1px solid var(--border);
-    }
+<!-- Story Sections -->
+<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <% ["Domestic Violence", "Social Justice", "Facilitator Spotlights"].each do |focus| %>
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-6"><%= focus %></h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <% @stories_by_focus[focus]&.first(3)&.each do |story| %>
+            <article class="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
+              <%= link_to story_path(story), class: "block" do %>
+                <div class="aspect-[4/3] bg-gray-200 relative">
+                  <%= render "assets/display_image",
+                             resource: story,
+                             variant: :hero %>
+                </div>
+              <% end %>
 
-    .storyshare__hero-inner {
-        max-width: 64rem;
-        margin: 0 auto;
-        padding: 2.5rem 1rem 2rem;
-    }
+              <div class="p-4">
+                <h3 class="font-semibold text-gray-900 mb-2 text-lg hover:text-purple-700">
+                  <%= link_to story.title, story_path(story) %>
+                </h3>
+                <p class="text-sm text-gray-600">
+                  <%= story.organization_name %>
+                  <% if story.organization.city_state.present? %>
+                    • <%= story.organization.city_state %>
+                  <% end %>
+                </p>
+              </div>
+            </article>
+          <% end %>
+        </div>
 
-    .storyshare__title {
-        font-size: clamp(1.6rem, 2.2vw, 2.2rem);
-        line-height: 1.15;
-        margin: 0 0 0.75rem;
-        font-weight: 700;
-    }
+        <!-- More Stories Links -->
+        <div class="mt-4">
+          <ul class="space-y-2 text-gray-700">
+            <% if focus == "Domestic Violence" %>
+              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
+              <% additional_stories.each do |story| %>
+                <li class="flex items-center">
+                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
+                </li>
+              <% end %>
+              <li class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <%= link_to "More Domestic Violence Stories...", stories_path(focus: "domestic_violence"), class: "hover:text-purple-700 font-medium" %>
+              </li>
+            <% elsif focus == "Social Justice" %>
+              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
+              <% additional_stories.each do |story| %>
+                <li class="flex items-center">
+                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
+                </li>
+              <% end %>
+              <li class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <%= link_to "More Social Justice Stories...", stories_path(focus: "social_justice"), class: "hover:text-purple-700 font-medium" %>
+              </li>
+            <% elsif focus == "Facilitator Spotlights" %>
+              <% additional_stories = @stories_by_focus[focus]&.drop(3)&.first(3) || [] %>
+              <% additional_stories.each do |story| %>
+                <li class="flex items-center">
+                  <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <%= link_to story.title, story_path(story), class: "hover:text-purple-700" %>
+                </li>
+              <% end %>
+              <li class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <%= link_to "More Facilitator Spotlights Stories...", stories_path(focus: "spotlights"), class: "hover:text-purple-700 font-medium" %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>
 
-    .storyshare__quote {
-        margin: 0 0 1rem;
-        font-size: 1.05rem;
-        color: var(--muted);
-        border-left: 3px solid var(--border);
-        padding-left: 0.9rem;
-    }
+<!-- What Others Are Reading -->
+<section class="bg-gray-50 py-12 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-8">What Others Are Reading</h2>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <% @popular_stories.first(4).each do |story| %>
+        <%= link_to story_path(story), class: "group block relative aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow" do %>
+          <div class="absolute inset-0 bg-gray-200">
+            <%= render "assets/display_image",
+                       resource: story,
+                       variant: :hero %>
+          </div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+            <div class="p-4 w-full">
+              <div class="inline-block bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded mb-2">
+                <%= story.sectors.first&.name&.upcase || "STORY" %>
+              </div>
+              <h3 class="text-white font-semibold text-sm leading-tight">
+                <%= story.title %>
+              </h3>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</section>
 
-    .storyshare__quote-attrib {
-        white-space: nowrap;
-    }
+<!-- Get Involved CTA -->
+<section class="bg-white py-16 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-3xl font-bold text-gray-900 mb-8">Get involved!</h2>
+    
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <%# TODO: Replace '#' with actual training and support page routes %>
+      <%= link_to "Attend Our Training", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors" %>
+      <%= link_to "Support Our Program", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors" %>
+    </div>
+  </div>
+</section>
 
-    .storyshare__lede {
-        margin: 0 0 1.25rem;
-        max-width: 60ch;
-        color: #374151;
-    }
-
-    /* Filter pills */
-    .storyshare__filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.45rem 0.75rem;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: #fff;
-        color: #111827;
-        text-decoration: none;
-        font-size: 0.9rem;
-    }
-
-    .pill:hover {
-        background: #f3f4f6;
-    }
-
-    /* Content */
-    .storyshare__content {
-        max-width: 72rem;
-        margin: 0 auto;
-        padding: 1.5rem 1rem 3rem;
-    }
-
-    .storyshare__grid {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 1rem;
-    }
-
-    /* 1 col on mobile, 2 on md, 3 on lg */
-    .card {
-        grid-column: span 12;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        overflow: hidden;
-        background: #fff;
-        box-shadow: none;
-        transition: transform 120ms ease, box-shadow 120ms ease;
-    }
-
-    @media (min-width: 700px) {
-        .card { grid-column: span 6; }
-    }
-    @media (min-width: 1024px) {
-        .card { grid-column: span 4; }
-    }
-
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow);
-    }
-
-    .card__media {
-        display: block;
-        background: #f3f4f6;
-        aspect-ratio: 16 / 10;
-        overflow: hidden;
-    }
-
-    .card__media img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-
-    .card__body {
-        padding: 0.9rem 0.9rem 1.1rem;
-    }
-
-    .card__tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
-        margin-bottom: 0.55rem;
-    }
-
-    .tag {
-        display: inline-flex;
-        padding: 0.2rem 0.55rem;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: #fff;
-        color: #374151;
-        font-size: 0.78rem;
-        line-height: 1.2;
-    }
-
-    .card__title {
-        font-size: 1.05rem;
-        line-height: 1.25;
-        margin: 0 0 0.5rem;
-        font-weight: 700;
-    }
-
-    .card__title a {
-        color: inherit;
-        text-decoration: none;
-    }
-
-    .card__title a:hover {
-        text-decoration: underline;
-    }
-
-    .card__meta {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.92rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        align-items: center;
-    }
-
-    .card__dot {
-        opacity: 0.7;
-    }
-
-    /* Pagination */
-    .storyshare__pagination {
-        margin-top: 1.5rem;
-    }
-
-    .storyshare__featured {
-        position: relative;
-        margin-bottom: 2rem;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-    .featured__media {
-        display: block;
-        aspect-ratio: 16 / 6;
-    }
-
-    .featured__media img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .featured__overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.15));
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        padding: 2rem;
-        color: white;
-    }
-
-    .featured__title {
-        font-size: clamp(1.5rem, 2vw, 2rem);
-        font-weight: 700;
-        margin: 0 0 0.4rem;
-    }
-
-    .featured__meta {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-    .section-block {
-        margin-bottom: 2.5rem;
-    }
-
-    .section-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }
-
-    .section-grid {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 1rem;
-    }
-
-    .section-grid .card {
-        grid-column: span 12;
-    }
-
-    @media (min-width: 768px) {
-        .section-grid .card {
-            grid-column: span 4;
-        }
-    }
-    .card__media {
-        position: relative;
-    }
-
-    .card__media::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.35), transparent);
-        opacity: 0;
-        transition: opacity 150ms ease;
-    }
-
-    .card:hover .card__media::after {
-        opacity: 1;
-    }
-
-    .card__title {
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-    .reading-grid {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 1rem;
-    }
-
-    .reading-tile {
-        position: relative;
-        grid-column: span 12;
-        aspect-ratio: 1 / 1;
-        overflow: hidden;
-        border-radius: 12px;
-    }
-
-    @media (min-width: 768px) {
-        .reading-tile {
-            grid-column: span 3;
-        }
-    }
-
-    .reading-tile img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .reading-label {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-        padding: 0.75rem;
-        background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-        color: white;
-        font-size: 0.9rem;
-    }
-
-</style>
+<div><!-- Restore layout container -->
