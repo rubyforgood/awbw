@@ -31,24 +31,22 @@ class StoriesController < ApplicationController
                          .order(created_at: :desc)
     @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
 
-    @count_display = if filtered.count == base_scope.count
-                       base_scope.count
-                     else
-                       "#{filtered.count}/#{base_scope.count}"
-                     end
+    @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+
     @featured_story = Story.first
     sector_names = [
       "Domestic Violence",
       "Social Justice",
       "Facilitator Spotlights"
     ]
+
     @stories_by_focus =
       sector_names.index_with do |focus|
-        @stories
-          .select { |story| story.sectors.any? { |s| s.name == focus } }
+        # @stories.select { |story| story.sectors.any? { |s| s.name == focus } }
+        @stories.first(5)
       end
     @popular_stories = @stories.sort_by { |s| s.bookmarks.size }.reverse.first(6)
-    
+
     render layout: "share_portal"
   end
 
