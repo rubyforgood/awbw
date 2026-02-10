@@ -26,17 +26,19 @@
     <div class="flex flex-wrap gap-4 text-sm text-gray-200 mt-3"><span>Author: <%= workshop.author %></span><span>Category: <%= workshop.windows_type&.short_name %></span><span>Added: <%= workshop.date %></span></div>
   </div>
 
-  <%= form_with(model: PrimaryAsset.new, url: primary_assets_path, 
+  <% if allowed_to?(:manage?, workshop) %>
+    <%= form_with(model: PrimaryAsset.new, url: primary_assets_path, 
                                          data: {controller: "asset-picker"},
                                          html: { id: "primary-asset-form" }) do |f| %>
-    <%= f.file_field :file, class: "hidden",
+      <%= f.file_field :file, class: "hidden",
                             accept: "image/*",
                             direct_upload: true,
                             data: { asset_picker_target: "file",
                                     action: "change->asset-picker#fileSelected" } %>
 
-    <%= hidden_field_tag :owner_sgid, workshop.to_sgid.to_s, autocomplete: "off" %>
+      <%= hidden_field_tag :owner_sgid, workshop.to_sgid.to_s, autocomplete: "off" %>
 
-    <button data-action="asset-picker#openFileDialog" type="button" class="bg-white text-gray-700 rounded-full p-2 shadow hover:bg-gray-100 transition flex items-center"><i class="fa-solid fa-camera"></i><span class="pl-2">Change photo</span></button>
+      <button data-action="asset-picker#openFileDialog" type="button" class="bg-white text-gray-700 rounded-full p-2 shadow hover:bg-gray-100 transition flex items-center"><i class="fa-solid fa-camera"></i><span class="pl-2">Change photo</span></button>
+    <% end %>
   <% end %>
 </div>
