@@ -39,7 +39,7 @@ class Asset < ApplicationRecord
     end
   end
 
-  belongs_to :owner, polymorphic: true, optional: true
+  belongs_to :owner, polymorphic: true, optional: true, touch: true
   belongs_to :report, optional: true
 
   has_one_attached :file, dependent: :purge do |attachable|
