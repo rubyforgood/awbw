@@ -74,7 +74,13 @@
                     <%= link_to (log.date || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %>
                   </td>
                   <td class="px-2 text-left text-sm font-bold">
-                    <%= log.workshop ? link_to(log.workshop.title, workshop_path(log.workshop)) : "-" %>
+                    <% if log.workshop %>
+                      <%= link_to(log.workshop.title, workshop_path(log.workshop)) %>
+                    <% elsif log.external_workshop_title.present? %>
+                      <%= log.external_workshop_title %>
+                    <% else %>
+                      -
+                    <% end %>
                   </td>
                   <td class="px-2 text-left text-xs">
                     <%= log.user ? link_to(log.user.name, generate_person_user_path(log.user)) : "—" %>

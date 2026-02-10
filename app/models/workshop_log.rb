@@ -23,6 +23,7 @@ class WorkshopLog < Report
 
   def workshop_title
     title = owner.nil? ? workshop_name : owner.title
+    title = external_workshop_title if title.blank?
     return "" unless title
     title
   end
