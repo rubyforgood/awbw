@@ -312,33 +312,30 @@
     
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
       <% 
-        # Define color mapping for different categories with translucent overlays
+        # Define color mapping for different categories with translucent overlays matching reference photo
         category_colors = {
-          "Self-Care & Personal Growth" => "bg-blue-600/70",
-          "Schools & Universities" => "bg-purple-600/70",
-          "Grief & Loss" => "bg-purple-600/70",
-          "Community Engagement" => "bg-teal-600/70",
-          "Domestic Violence" => "bg-pink-600/70",
-          "Social Justice" => "bg-green-600/70",
-
-          "Veterans & Military" => "bg-orange-600/70",
-          "Sexual Assault" => "bg-lime-600/70",
-          "Substance Abuse" => "bg-teal-600/70",
-          # "Story" => "bg-green-600/70",
-          "Story" => "bg-purple-600/70",
-
-          "Facilitator Spotlights" => "bg-purple-600/70"
+          "Self-Care & Personal Growth" => { bg: "rgba(77, 139, 172, 0.85)", text: "text-white" },
+          "Schools & Universities" => { bg: "rgba(147, 124, 195, 0.85)", text: "text-white" },
+          "Grief & Loss" => { bg: "rgba(169, 92, 138, 0.85)", text: "text-white" },
+          "Community Engagement" => { bg: "rgba(77, 139, 172, 0.85)", text: "text-white" },
+          "Facilitator Spotlights" => { bg: "rgba(169, 62, 105, 0.85)", text: "text-white" },
+          "Domestic Violence" => { bg: "rgba(169, 62, 105, 0.85)", text: "text-white" },
+          "Social Justice" => { bg: "rgba(147, 124, 195, 0.85)", text: "text-white" },
+          "Veterans & Military" => { bg: "rgba(77, 139, 172, 0.85)", text: "text-white" },
+          "Sexual Assault" => { bg: "rgba(169, 92, 138, 0.85)", text: "text-white" },
+          "Substance Abuse" => { bg: "rgba(77, 139, 172, 0.85)", text: "text-white" },
+          "Story" => { bg: "rgba(147, 124, 195, 0.85)", text: "text-white" }
         }
         
         # Default color for categories not in the mapping
-        default_color = "bg-gray-600/70"
+        default_color = { bg: "rgba(128, 128, 128, 0.85)", text: "text-white" }
       %>
       
       <% @popular_stories.first(4).each do |story| %>
         <% 
           # Get the first sector name or use a default
           sector_name = story.sectors.first&.name || "Story"
-          bg_color = category_colors[sector_name] || default_color
+          color_config = category_colors[sector_name] || default_color
         %>
         
         <%= link_to story_path(story), class: "group block relative aspect-[3/4] overflow-hidden hover:opacity-90 transition-opacity" do %>
@@ -352,16 +349,16 @@
           </div>
           
           <!-- Colored translucent overlay -->
-          <div class="absolute inset-0 <%= bg_color %>"></div>
+          <div class="absolute inset-0" style="background-color: <%= color_config[:bg] %>;"></div>
           
-          <!-- Centered content -->
-          <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+          <!-- Top-aligned content -->
+          <div class="absolute inset-0 flex flex-col items-center pt-16 p-6 text-center">
             <!-- Square sector box -->
-            <div class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase px-4 py-3 mb-4 w-32 h-12 flex items-center justify-center border border-white/30">
+            <div class="bg-white/20 backdrop-blur-sm <%= color_config[:text] %> text-xs font-bold uppercase px-4 py-3 mb-4 w-32 h-12 flex items-center justify-center border border-white/30">
               <%= sector_name %>
             </div>
             <!-- Title below -->
-            <h3 class="font-telefon text-white text-base leading-tight">
+            <h3 class="font-telefon <%= color_config[:text] %> text-base leading-tight">
               <%= story.title %>
             </h3>
           </div>
