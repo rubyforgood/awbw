@@ -1,4 +1,6 @@
 class EventRegistrationsController < ApplicationController
+  require "csv"
+
   before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -7,7 +9,17 @@ class EventRegistrationsController < ApplicationController
     base_scope = authorized_scope(EventRegistration.all)
     filtered = base_scope.search_by_params(params)
     @event_registrations_count = filtered.size
-    @event_registrations = filtered.paginate(page: params[:page], per_page: per_page)
+    @event_registrations = filtered.includes(:registrant, :event).paginate(page: params[:page], per_page: per_page)
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        send_data csv_export(@event_registrations),
+                  filename: "event_registrations_#{Time.current.to_fs(:number)}.csv",
+                  type: "text/csv",
+                  disposition: "attachment"
+      end
+    end
   end
 
   def show
@@ -101,5 +113,21 @@ class EventRegistrationsController < ApplicationController
     params.require(:event_registration).permit(
       :event_id, :registrant_id
     )
+  end
+
+  def csv_export(registrations)
+    CSV.generate(headers: true) do |csv|
+      csv << [ "First name", "Last name", "Email", "Event" ]
+      registrations.find_each do |er|
+        r = er.registrant
+        e = er.event
+        csv << [
+          r&.first_name.to_s,
+          r&.last_name.to_s,
+          r&.email.to_s,
+          e&.title.to_s
+        ]
+      end
+    end
   end
 end
