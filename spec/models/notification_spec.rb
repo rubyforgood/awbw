@@ -64,4 +64,30 @@ RSpec.describe Notification do
     end
 >>>>>>> a9e429ca (Replace resend boolean with parent/root notification tracking for resend chain management)
   end
+
+  describe '#resend_number' do
+    it 'returns nil for original notification' do
+      notification = create(:notification)
+
+      expect(notification.resend_number).to be_nil
+    end
+
+    it 'returns 1 for first resend' do
+      original = create(:notification)
+      first_resend = create(:notification, parent_notification_id: original.id, root_notification_id: original.id)
+
+      expect(first_resend.resend_number).to eq(1)
+    end
+
+    it 'returns correct position for multiple resends' do
+      original = create(:notification)
+      first_resend = create(:notification, parent_notification_id: original.id, root_notification_id: original.id)
+      second_resend = create(:notification, parent_notification_id: first_resend.id, root_notification_id: original.id)
+      third_resend = create(:notification, parent_notification_id: second_resend.id, root_notification_id: original.id)
+
+      expect(first_resend.resend_number).to eq(1)
+      expect(second_resend.resend_number).to eq(2)
+      expect(third_resend.resend_number).to eq(3)
+    end
+  end
 end
