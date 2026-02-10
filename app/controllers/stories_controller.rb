@@ -1,5 +1,6 @@
 class StoriesController < ApplicationController
   include ExternallyRedirectable, AhoyTracking
+
   skip_before_action :authenticate_user!, only: [ :index, :show, :show_share_portal ]
   before_action :set_story, only: [ :show, :show_share_portal, :edit, :update, :destroy ]
 
