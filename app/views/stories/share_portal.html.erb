@@ -32,10 +32,10 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="relative rounded-lg overflow-hidden shadow-lg" id="hero-carousel">
         <%= link_to story_path(@featured_story), class: "block relative carousel-item active" do %>
-          <div class="h-96 max-h-96 bg-gray-200 overflow-hidden flex items-center">
+          <div class="h-96 max-h-96 bg-gray-200 overflow-hidden">
             <%= render "assets/display_image",
                        resource: @featured_story,
-                       extra_image_classes: "h-full object-cover",
+                       extra_image_classes: "!w-full h-full object-cover",
                        variant: :hero %>
           </div>
           <!-- Blue Sector Box on Top Left -->
