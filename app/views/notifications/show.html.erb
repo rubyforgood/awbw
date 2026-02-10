@@ -19,7 +19,7 @@
       </p>
     </div>
 
-    <div class="text-right text-sm">
+    <div class="text-right text-sm space-y-2">
       <% if @notification.delivered_at.present? %>
         <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 text-green-700">
           <i class="fas fa-check-circle"></i>
@@ -30,6 +30,25 @@
           <i class="fas fa-clock"></i>
           Pending
         </span>
+      <% end %>
+
+      <% if @notification.resend? %>
+        <%# This is a resent notification - show resend number and link to root %>
+        <div>
+          <%= link_to notification_path(@notification.root_notification), 
+                      class: "inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200" do %>
+            <i class="fas fa-redo"></i>
+            Resend #<%= @notification.resend_number %>
+          <% end %>
+        </div>
+      <% elsif @notification.resend_count > 0 %>
+        <%# This is a root notification with resends - show count %>
+        <div>
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 text-blue-700">
+            <i class="fas fa-redo"></i>
+            Resent <%= pluralize(@notification.resend_count, 'time') %>
+          </span>
+        </div>
       <% end %>
     </div>
   </div>
@@ -128,11 +147,13 @@
                 notifications_path,
                 class: "text-sm text-blue-600 hover:underline" %>
 
-    <%# Optional resend hook %>
-    <%#= button_to "Resend",
-                  resend_notification_path(@notification),
-                  method: :post,
-                  class: "btn btn-secondary" %>
+    <% if allowed_to?(:resend?, @notification) %>
+      <%= button_to "Resend Email",
+                    resend_notification_path(@notification),
+                    method: :post,
+                    data: { turbo_confirm: "Are you sure you want to resend this notification email?" },
+                    class: "btn btn-primary px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+    <% end %>
   </div>
 
 </div>

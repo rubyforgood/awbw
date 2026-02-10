@@ -61,7 +61,11 @@ Rails.application.routes.draw do
   end
   resources :people
   resources :faqs
-  resources :notifications, only: [ :index, :show ]
+  resources :notifications, only: [ :index, :show ] do
+    member do
+      post :resend
+    end
+  end
   resources :organizations
   resources :organization_statuses
   resources :organization_users
