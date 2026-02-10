@@ -48,6 +48,8 @@ class StoriesController < ApplicationController
           .select { |story| story.sectors.any? { |s| s.name == focus } }
       end
     @popular_stories = @stories.sort_by { |s| s.bookmarks.size }.reverse.first(6)
+    
+    render layout: "share_portal"
   end
 
   def show
