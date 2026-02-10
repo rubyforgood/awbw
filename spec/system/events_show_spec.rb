@@ -14,6 +14,8 @@ RSpec.describe "Event show page", type: :system do
       start_date: 2.days.from_now.change(hour: 10), # UTC
       end_date:   2.days.from_now.change(hour: 12), # UTC
       cost: 10.99,
+      location: create(:location),
+      videoconference_url: "https://www.example_zoom.com/123",
       registration_close_date: 5.days.from_now
     )
   end
@@ -52,6 +54,8 @@ RSpec.describe "Event show page", type: :system do
 
       expect(page).to have_text("My Event")
       expect(page).to have_text("A wonderful event")
+      expect(page).to have_text(event.location.name)
+      expect(page).to have_link("Join online", href: event.videoconference_url)
 
       # Decorator
       expect(page).to have_text("Cost: $10.99")
