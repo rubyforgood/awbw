@@ -7,6 +7,14 @@ This message confirms your registration for the following event:
 <%= @event.title %>
 <%= @event.times(display_day: true, display_date: true) %>
 
+<% if @event.location.present? %>
+Location: <%= @event.location.name %>
+<% end %>
+
+<% if @event.videoconference_url.present? %>
+Videoconference URL: <%= @event.videoconference_url %>
+<% end %>
+
 <% if @event.labelled_cost.present? %>
   <%= @event.labelled_cost %>
 <% end %>

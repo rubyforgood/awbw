@@ -4,6 +4,7 @@ class Event < ApplicationRecord
   has_rich_text :rhino_description
 
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :location, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
 

@@ -79,6 +79,7 @@ class EventsController < ApplicationController
     @event = @event.decorate
     @event.build_primary_asset if @event.primary_asset.blank?
     @event.gallery_assets.build
+    @locations = Location.order(:city, :state)
   end
 
   def set_event
@@ -88,7 +89,9 @@ class EventsController < ApplicationController
   def event_params
     params.require(:event).permit(:cost,
                                   :created_by_id,
+                                  :location_id,
                                   :title,
+                                  :videoconference_url,
                                   :rhino_description,
                                   :featured,
                                   :start_date, :end_date,

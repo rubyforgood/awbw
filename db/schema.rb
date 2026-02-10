@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_09_140001) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -323,6 +323,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
     t.datetime "end_date", precision: nil
     t.boolean "featured", default: false, null: false
     t.boolean "inactive", default: true, null: false
+    t.integer "location_id"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
@@ -330,7 +331,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
+    t.string "videoconference_url"
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
+    t.index ["location_id"], name: "index_events_on_location_id"
     t.index ["published"], name: "index_events_on_published"
   end
 
