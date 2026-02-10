@@ -86,7 +86,7 @@ RSpec.describe "ContactUs", type: :request do
         expect {
           post contact_us_path, params: valid_params
         }.to change(Notification, :count).by(2)
-        #.and have_enqueued_job.on_queue("mailers")
+        # .and have_enqueued_job.on_queue("mailers")
 
         expect(response).to redirect_to("/")
         expect(flash[:notice]).to eq("Your message was sent!")
@@ -132,7 +132,7 @@ RSpec.describe "ContactUs", type: :request do
         expect {
           post contact_us_path, params: logged_in_params
         }.to change(Notification, :count).by(2)
-        #.and have_enqueued_job.on_queue("mailers")
+        # .and have_enqueued_job.on_queue("mailers")
 
         expect(response).to redirect_to("/")
         expect(flash[:notice]).to eq("Your message was sent!")
