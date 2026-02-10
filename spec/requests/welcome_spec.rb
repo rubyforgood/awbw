@@ -87,9 +87,9 @@ RSpec.describe "/users/welcome", type: :request do
         expect(controller.current_user).to eq(user)
       end
 
-      it "redirects to root with notice" do
+      it "redirects to users_path with notice" do
         patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(users_path)
         expect(flash[:notice]).to include("Welcome")
       end
 

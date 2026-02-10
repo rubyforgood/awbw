@@ -47,6 +47,6 @@ class WelcomeController < ApplicationController
   end
 
   def track_auth_event(name)
-    Analytics::AhoyTracker.track_auth_event(name, {}, user: @user)
+    Analytics::AhoyTracker.track_auth_event(name, {user_id: @user.id, user_email: @user.email }, user: @user)
   end
 end
