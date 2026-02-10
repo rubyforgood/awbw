@@ -178,10 +178,10 @@ class UsersController < ApplicationController
   def send_invitation
     authorize! @user, to: :send_invitation?
 
-    @user.generate_invitation_token!
-    @user.update(invitation_sent_at: Time.current)
+    @user.generate_welcome_instructions_token!
+    @user.update(welcome_instructions_sent_at: Time.current)
 
-    DeviseMailer.welcome_instructions(@user, @user.invitation_token).deliver_now
+    DeviseMailer.welcome_instructions(@user, @user.welcome_instructions_token).deliver_now
 
     redirect_back_or_to users_path, notice: "Invitation sent to #{@user.email}."
   end

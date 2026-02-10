@@ -24,7 +24,7 @@ background-color:#f3f4f6;
 
   <p>
     <%= link_to "Set your password",
-                user_welcome_url(invitation_token: @token),
+                user_welcome_url(welcome_instructions_token: @token),
                 target: "_blank",
                 style: "display:inline-block;
                         padding:10px 16px;
@@ -48,5 +48,5 @@ background-color:#f3f4f6;
 </div>
 
 <% content_for :fallback_url do %>
-  <%= user_welcome_url(invitation_token: @token) %>
+  <%= user_welcome_url(welcome_instructions_token: @token) %>
 <% end %>

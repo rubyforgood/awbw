@@ -88,7 +88,7 @@
                                 send_invitation_user_path(user),
                                 method: :post,
                                 class: "btn btn-secondary-outline",
-                                data: { turbo: false } unless user.invitation_sent_at.present? %>
+                                data: { turbo: false } unless user.welcome_instructions_sent_at.present? %>
                 </td>
               </tr>
             <% end %>

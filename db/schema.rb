@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_10_140931) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_10_152225) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -846,9 +846,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_140931) do
     t.integer "failed_attempts", default: 0, null: false
     t.string "first_name", default: ""
     t.boolean "inactive", default: false
-    t.datetime "invitation_created_at"
-    t.datetime "invitation_sent_at"
-    t.string "invitation_token"
     t.string "last_name", default: ""
     t.datetime "last_sign_in_at", precision: nil
     t.string "last_sign_in_ip"
@@ -873,15 +870,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_140931) do
     t.string "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", precision: nil
+    t.datetime "welcome_instructions_created_at"
+    t.datetime "welcome_instructions_sent_at"
+    t.string "welcome_instructions_token"
     t.string "zip"
     t.string "zip2"
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["invitation_token"], name: "index_users_on_invitation_token", unique: true
     t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
   end
 
   create_table "windows_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

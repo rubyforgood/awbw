@@ -6,7 +6,7 @@ class User < ApplicationRecord
 
   after_create :set_default_values
   after_update :track_email_change
-  after_update :track_invite
+  after_update :track_welcome_instructions
   after_update :track_login_event
 
   before_destroy :track_account_deleted
@@ -179,26 +179,26 @@ class User < ApplicationRecord
     []
   end
 
-  def generate_invitation_token!
+  def generate_welcome_instructions_token!
     loop do
-      self.invitation_token = Devise.friendly_token
-      break unless User.exists?(invitation_token: invitation_token)
+      self.welcome_instructions_token = Devise.friendly_token
+      break unless User.exists?(welcome_instructions_token: welcome_instructions_token)
     end
-    self.invitation_created_at = Time.current
+    self.welcome_instructions_created_at = Time.current
     save(validate: false)
   end
 
-  def clear_invitation_token!
+  def clear_welcome_instructions_token!
     update_columns(
-      invitation_token: nil,
-      invitation_created_at: nil,
-      invitation_sent_at: nil
+      welcome_instructions_token: nil,
+      welcome_instructions_created_at: nil,
+      welcome_instructions_sent_at: nil
     )
   end
 
-  def invitation_token_valid?
-    invitation_token.present? && invitation_created_at.present? &&
-      invitation_created_at > 30.days.ago
+  def welcome_instructions_token_valid?
+    welcome_instructions_token.present? && welcome_instructions_created_at.present? &&
+      welcome_instructions_created_at > 30.days.ago
   end
 
   private
@@ -247,9 +247,9 @@ class User < ApplicationRecord
     track_auth_event("auth.account_unlocked")
   end
 
-  def track_invite
-    return unless saved_change_to_invitation_sent_at?
-    track_auth_event("auth.invite_sent")
+  def track_welcome_instructions
+    return unless saved_change_to_welcome_instructions_sent_at?
+    track_auth_event("auth.welcome_instructions_sent")
   end
 
   def track_account_deleted

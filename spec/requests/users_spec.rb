@@ -412,9 +412,9 @@ RSpec.describe "/users", type: :request do
       it "generates invitation token" do
         post send_invitation_user_url(user)
         user.reload
-        expect(user.invitation_token).not_to be_nil
-        expect(user.invitation_created_at).not_to be_nil
-        expect(user.invitation_sent_at).not_to be_nil
+        expect(user.welcome_instructions_token).not_to be_nil
+        expect(user.welcome_instructions_created_at).not_to be_nil
+        expect(user.welcome_instructions_sent_at).not_to be_nil
       end
 
       it "sends welcome email" do
@@ -436,7 +436,7 @@ RSpec.describe "/users", type: :request do
       it "does not send invitation and redirects to root" do
         post send_invitation_user_url(user)
         user.reload
-        expect(user.invitation_token).to be_nil
+        expect(user.welcome_instructions_token).to be_nil
         expect(response).to redirect_to(root_path)
       end
     end
@@ -445,7 +445,7 @@ RSpec.describe "/users", type: :request do
       it "does not send invitation and redirects to root" do
         post send_invitation_user_url(user)
         user.reload
-        expect(user.invitation_token).to be_nil
+        expect(user.welcome_instructions_token).to be_nil
         expect(response).to redirect_to(root_path)
       end
     end
