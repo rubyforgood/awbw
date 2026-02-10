@@ -1,27 +1,39 @@
 <div class="w-full aspect-[3/2] sm:aspect-[21/9] lg:aspect-[24/9] overflow-hidden rounded-xl print:hidden">
   <!-- Background image -->
   <%= render "assets/display_image",
-             resource: workshop,
-             width: "full", height: "x",
-             link: false,
-             link_to_object: false,
-             file: workshop.display_image %>
-
-  <!-- Title + meta -->
+              resource: workshop,
+              width: "full", height: "x",
+              link: false,
+              link_to_object: false,
+              file: workshop.display_image %>
 </div>
 
-<div class="px-8 py-4 my-2 border-md bg-primary rounded-xl">
-  <h1 class="text-3xl md:text-4xl font-bold text-white">
-    <%= workshop.title %>
+<!-- Title + meta -->
+<div class="flex justify-between px-8 py-4 my-2 border-md bg-primary rounded-xl">
+  <div>
+    <h1 class="text-3xl md:text-4xl font-bold text-white">
+      <%= workshop.title %>
 
-    <% unless workshop.published %>
-      <span class="text-red-300 text-lg">(Unpublished)</span>
-    <% end %>
-  </h1>
+      <% unless workshop.published %>
+        <span class="text-red-300 text-lg">(Unpublished)</span>
+      <% end %>
+    </h1>
 
-  <div class="flex flex-wrap gap-4 text-sm text-gray-200 mt-3">
-    <span>Author: <%= workshop.author %></span>
-    <span>Category: <%= workshop.windows_type&.short_name %></span>
-    <span>Added: <%= workshop.date %></span>
+    <div class="flex flex-wrap gap-4 text-sm text-gray-200 mt-3"><span>Author: <%= workshop.author %></span><span>Category: <%= workshop.windows_type&.short_name %></span><span>Added: <%= workshop.date %></span></div>
   </div>
+
+  <%= form_with(model: PrimaryAsset.new, url: primary_assets_path, html: { multipart: true, id: "primary-asset-form" }) do |f| %>
+    <%= f.file_field :file, class: "hidden", id: "primary-asset-file", accept: "image/*" %>
+    <%= hidden_field_tag :owner_sgid, workshop.to_sgid.to_s, autocomplete: "off" %>
+
+    <button type="button" class="bg-white text-gray-700 rounded-full p-2 shadow hover:bg-gray-100 transition flex items-center" onclick="document.getElementById('primary-asset-file').click()"><i class="fa-solid fa-camera"></i><span class="pl-2">Edit photo</span></button>
+  <% end %>
 </div>
+
+<script>
+  document.getElementById('primary-asset-file').addEventListener('change', function() {
+    if (this.files.length > 0) {
+      document.getElementById('primary-asset-form').submit();
+    }
+  });
+</script>
