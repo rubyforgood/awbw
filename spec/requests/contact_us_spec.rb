@@ -30,10 +30,10 @@ RSpec.describe "ContactUs", type: :request do
 
       it "shows form fields for name, email, and agency" do
         get contact_us_path
-        expect(response.body).to include('name="contact_us[first_name]"')
-        expect(response.body).to include('name="contact_us[last_name]"')
-        expect(response.body).to include('name="contact_us[from]"')
-        expect(response.body).to include('name="contact_us[agency]"')
+        expect(response.body).to include("name='contact_us[first_name]'")
+        expect(response.body).to include("name='contact_us[last_name]'")
+        expect(response.body).to include("name='contact_us[from]'")
+        expect(response.body).to include("name='contact_us[agency]'")
       end
 
       it "does not show adult or children program options" do
@@ -44,8 +44,10 @@ RSpec.describe "ContactUs", type: :request do
 
       it "has proper accessibility attributes" do
         get contact_us_path
-        expect(response.body).to include('aria-label') || expect(response.body).to include('<label')
-        expect(response.body).to include('type="submit"')
+        expect(response.body).to satisfy do |html|
+          html.include?("aria-label") || html.include?("<label")
+        end
+        expect(response.body).to include("type='submit'")
       end
     end
 
@@ -65,9 +67,9 @@ RSpec.describe "ContactUs", type: :request do
       it "does not show visible form fields for name, email, and agency" do
         get contact_us_path
         # Should use hidden fields instead
-        expect(response.body).to include('type="hidden" name="contact_us[first_name]"')
-        expect(response.body).to include('type="hidden" name="contact_us[last_name]"')
-        expect(response.body).to include('type="hidden" name="contact_us[from]"')
+        expect(response.body).to include("type='hidden' name='contact_us[first_name]'")
+        expect(response.body).to include("type='hidden' name='contact_us[last_name]'")
+        expect(response.body).to include("type='hidden' name='contact_us[from]'")
       end
 
       it "does not show adult or children program options" do
@@ -84,7 +86,7 @@ RSpec.describe "ContactUs", type: :request do
         expect {
           post contact_us_path, params: valid_params
         }.to change(Notification, :count).by(2)
-         .and have_enqueued_job.on_queue('mailers')
+         .and have_enqueued_job.on_queue("mailers")
 
         expect(response).to redirect_to("/")
         expect(flash[:notice]).to eq("Your message was sent!")
@@ -92,7 +94,7 @@ RSpec.describe "ContactUs", type: :request do
 
       it "creates a contact_us notification for the submitter" do
         post contact_us_path, params: valid_params
-        
+
         notification = Notification.find_by(kind: "contact_us")
         expect(notification).to be_present
         expect(notification.recipient_role).to eq("person")
@@ -101,7 +103,7 @@ RSpec.describe "ContactUs", type: :request do
 
       it "creates a contact_us_fyi notification for admins" do
         post contact_us_path, params: valid_params
-        
+
         notification = Notification.find_by(kind: "contact_us_fyi")
         expect(notification).to be_present
         expect(notification.recipient_role).to eq("admin")
@@ -130,7 +132,7 @@ RSpec.describe "ContactUs", type: :request do
         expect {
           post contact_us_path, params: logged_in_params
         }.to change(Notification, :count).by(2)
-         .and have_enqueued_job.on_queue('mailers')
+         .and have_enqueued_job.on_queue("mailers")
 
         expect(response).to redirect_to("/")
         expect(flash[:notice]).to eq("Your message was sent!")
@@ -138,7 +140,7 @@ RSpec.describe "ContactUs", type: :request do
 
       it "creates a contact_us notification for the logged in user" do
         post contact_us_path, params: logged_in_params
-        
+
         notification = Notification.find_by(kind: "contact_us", recipient_email: user.email)
         expect(notification).to be_present
         expect(notification.recipient_role).to eq("person")
@@ -146,7 +148,7 @@ RSpec.describe "ContactUs", type: :request do
 
       it "creates a contact_us_fyi notification for admins" do
         post contact_us_path, params: logged_in_params
-        
+
         notification = Notification.find_by(kind: "contact_us_fyi")
         expect(notification).to be_present
         expect(notification.recipient_role).to eq("admin")
