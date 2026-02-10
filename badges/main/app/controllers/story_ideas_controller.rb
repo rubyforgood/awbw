@@ -96,6 +96,8 @@ class StoryIdeasController < ApplicationController
     @users = User.active.includes(:person)
     @users = @users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
     @users = @users.distinct.order("people.first_name, people.last_name")
+    @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
+    @story_idea.gallery_assets.build
   end
 
   private
@@ -108,7 +110,9 @@ class StoryIdeasController < ApplicationController
     params.require(:story_idea).permit(
       :title, :body, :youtube_url,
       :permission_given, :publish_preferences, :promoted_to_story,
-      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title
+      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 end

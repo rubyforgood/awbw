@@ -29,6 +29,8 @@ class WorkshopIdea < ApplicationRecord
   validates :title, presence: true, uniqueness: { case_sensitive: false }
 
   # Nested attributes
+  accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true

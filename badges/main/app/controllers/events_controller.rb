@@ -95,7 +95,9 @@ class EventsController < ApplicationController
                                   :registration_close_date,
                                   :published,
                                   :publicly_visible,
-                                  :publicly_featured
+                                  :publicly_featured,
+                                  primary_asset_attributes: [ :id, :file, :_destroy ],
+                                  gallery_assets_attributes: [ :id, :file, :_destroy ]
                                   )
   end
 end

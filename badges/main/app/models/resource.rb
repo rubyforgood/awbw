@@ -52,6 +52,7 @@ class Resource < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :downloadable_asset, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :categorizable_items,

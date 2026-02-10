@@ -222,6 +222,9 @@ class WorkshopsController < ApplicationController
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)
+
+    @workshop.build_primary_asset if @workshop.primary_asset.blank?
+    @workshop.gallery_assets.build
   end
 
   def assign_associations(workshop)
@@ -313,6 +316,8 @@ class WorkshopsController < ApplicationController
 
       category_ids: [],
       sector_ids: [],
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ]
