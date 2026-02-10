@@ -1,8 +1,5 @@
-class ReplaceResendWithParentAndRootNotificationIds < ActiveRecord::Migration[8.1]
+class AddParentAndRootNotificationIdsToNotifications < ActiveRecord::Migration[8.1]
   def change
-    # Remove the resend boolean column
-    remove_column :notifications, :resend, :boolean, default: false, null: false
-
     # Add parent and root notification tracking
     add_column :notifications, :parent_notification_id, :integer, null: true
     add_column :notifications, :root_notification_id, :integer, null: true
