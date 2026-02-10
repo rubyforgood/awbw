@@ -6,11 +6,13 @@
 
         <div class="flex flex-wrap gap-2">
           <% categories.each do |category| %>
-            <%= render "categories/tagging_label",
+            <% cache category do %>
+              <%= render "categories/tagging_label",
                      category: category,
                      name_only: true,
                      bg_color: "bg-white",
                      bg_hover_color: "bg-lime-200" %>
+            <% end %>
           <% end %>
         </div>
       </div>
