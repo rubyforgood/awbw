@@ -26,6 +26,19 @@
       .font-telefon {
         font-family: 'Telefon Bold', sans-serif;
       }
+      
+      /* Hide secondary nav rows on scroll */
+      .nav-row {
+        max-height: 200px;
+        overflow: visible;
+        transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+      }
+      
+      .scrolled .nav-row:not(:first-child) {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+      }
     </style>
   </head>
 
@@ -47,31 +60,14 @@
 
     <script>
       // Hide navigation rows on scroll
-      let lastScroll = 0;
       const header = document.getElementById('share-portal-header');
-      const navRows = header.querySelectorAll('.nav-row');
       
       window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > 100) {
-          // Hide extra rows when scrolling down
-          navRows.forEach((row, index) => {
-            if (index > 0) { // Keep first row visible
-              row.style.maxHeight = '0';
-              row.style.overflow = 'hidden';
-              row.style.transition = 'max-height 0.3s ease-out';
-            }
-          });
+        if (window.pageYOffset > 100) {
+          header.classList.add('scrolled');
         } else {
-          // Show all rows when at top
-          navRows.forEach(row => {
-            row.style.maxHeight = '200px';
-            row.style.overflow = 'visible';
-          });
+          header.classList.remove('scrolled');
         }
-        
-        lastScroll = currentScroll;
       });
     </script>
   </body>
