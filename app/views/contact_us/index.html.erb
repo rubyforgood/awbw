@@ -6,11 +6,6 @@
     <div class="text-gray-700 mt-3">
       Questions? Comments? Concerns? We'd love to hear from you!
     </div>
-    <% if user_signed_in? && @user %>
-      <div class="mt-4 text-gray-700">
-        <span class="font-semibold">Hello, <%= @user.full_name %>!</span> We're glad to hear from you.
-      </div>
-    <% end %>
     <div class="text-gray-500 italic mt-3">
       Please note -- we are a training organization. If you are a survivor and in need of support,
       <br> please call 211, which connects people with social service organizations.
@@ -32,12 +27,12 @@
                       class: "text-blue-500 hover:text-blue-700" %>
         </div>
 
-        <div class="font-semibold text-gray-900">
-          Fax:
-          <%= link_to "310-396-9698",
-                      "tel:310-396-9698",
-                      class: "text-blue-500 hover:text-blue-700" %>
-        </div>
+<!--        <div class="font-semibold text-gray-900">-->
+<!--          Fax:-->
+<!--          <%#= link_to "310-396-9698",-->
+<!--                      "tel:310-396-9698",-->
+                      class: "text-blue-500 hover:text-blue-700" %>-->
+<!--        </div>-->
 
         <div class="flex flex-wrap items-center gap-3">
           <span class="font-semibold text-gray-900">Social media:</span>
@@ -93,20 +88,21 @@
         <div>
           Attn: Zachery Scott, Executive Director<br>
           A Window Between Worlds<br>
-          1029 1/2 W 24th Street<br>
-          Los Angeles, CA 90007
+          1029 1/2 W 24th Street, Los Angeles, CA 90007
         </div>
       </div>
     </div>
 
-    <div class="mt-6 text-gray-800">
+    <div class="mt-6 border-t border-gray-200 text-gray-800">
       <div>
-        <div class="font-semibold text-gray-900 mb-3">
-          Form Submission:
-        </div>
+        <% if current_user && @user %>
+          <div class="mt-4 text-xl text-gray-700 pt-6">
+            <span class="font-semibold">Hello, <%= @user.full_name %>!</span> We're glad to hear from you.
+          </div>
+        <% end %>
         
         <!-- Contact Form -->
-        <div id="contact-form" class="mt-6 border-t border-gray-200 pt-6">
+        <div id="contact-form" class="mt-6 pt-6">
           <p class="text-gray-700 mb-4">
             Please complete the short form below and our team will respond as soon as possible.
           </p>
@@ -114,7 +110,7 @@
           <%= form_tag("/contact_us", method: "POST", class: "space-y-6") do %>
             <input type="hidden" name="contact_us[q]" value="general">
 
-            <% unless user_signed_in? %>
+            <% unless current_user %>
               <!-- Name Row -->
               <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
@@ -180,7 +176,7 @@
             <div class="flex justify-end">
               <input type="submit"
                      value="Submit"
-                     class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow-sm transition">
+                     class="btn btn-primary">
             </div>
           <% end %>
         </div>
