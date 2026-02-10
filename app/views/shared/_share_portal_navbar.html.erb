@@ -5,8 +5,7 @@
       <div class="flex items-center space-x-8 absolute left-2 sm:left-6 lg:left-8">
         <div class="flex shrink-0 items-center">
           <%= link_to share_portal_stories_path, class: "relative group" do %>
-            <%= image_tag("logo.png", class: "h-12 sm:h-14 w-auto block") %>
-            <%= image_tag("logo-color.png", class: "h-12 sm:h-14 absolute inset-0 w-auto opacity-0 transition-opacity duration-400 ease-out group-hover:opacity-100") %>
+            <%= image_tag("logo-with-tagline-436x80.jpg", class: "h-16 sm:h-20 w-auto block") %>
           <% end %>
         </div>
       </div>
@@ -111,19 +110,21 @@
       </div>
     </div>
 
-    <!-- Row 3: Participant Type Navigation -->
+    <!-- Row 3: Participant Type Navigation and Search - Centered Below Row 2 -->
     <div class="nav-row border-t border-gray-200">
-      <div class="hidden lg:flex items-center justify-center py-3 space-x-6">
-        <%= link_to "Children", share_portal_stories_path(focus: "children"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Teens", share_portal_stories_path(focus: "teens"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Adults", share_portal_stories_path(focus: "adults"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Families", share_portal_stories_path(focus: "families"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Community", share_portal_stories_path(focus: "community"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Self", share_portal_stories_path(focus: "self"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
-        <%= link_to "Colleagues", share_portal_stories_path(focus: "colleagues"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+      <div class="hidden lg:flex flex-col items-center justify-center py-3 space-y-3">
+        <div class="flex items-center space-x-6">
+          <%= link_to "Children", share_portal_stories_path(focus: "children"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Teens", share_portal_stories_path(focus: "teens"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Adults", share_portal_stories_path(focus: "adults"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Families", share_portal_stories_path(focus: "families"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Community", share_portal_stories_path(focus: "community"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Self", share_portal_stories_path(focus: "self"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Colleagues", share_portal_stories_path(focus: "colleagues"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        </div>
         
-        <!-- Search Box -->
-        <div class="ml-auto">
+        <!-- Search Box - Centered Below -->
+        <div>
           <form action="<%= share_portal_stories_path %>" method="get" class="relative">
             <input
               type="search"
