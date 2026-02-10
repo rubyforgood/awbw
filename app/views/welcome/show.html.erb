@@ -8,7 +8,7 @@
       </p>
     </div>
 
-    <%= form_with url: user_welcome_update_path(@user.welcome_instructions_token), method: :patch, html: { class: "space-y-4" } do |f| %>
+    <%= form_with url: user_welcome_update_path(@user.welcome_instructions_token), method: :patch, scope: :user, html: { class: "space-y-4" } do |f| %>
 
       <% if @user.errors.any? %>
         <div class="alert alert-danger">

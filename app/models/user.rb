@@ -8,6 +8,7 @@ class User < ApplicationRecord
   after_update :track_email_change
   after_update :track_welcome_instructions
   after_update :track_login_event
+  after_update :track_confirmation
 
   before_destroy :track_account_deleted
   before_destroy :reassign_reports_and_logs_to_orphaned_user
@@ -201,6 +202,11 @@ class User < ApplicationRecord
       welcome_instructions_created_at > 30.days.ago
   end
 
+  def track_auth_event(name, properties = {})
+    payload = { name: name, properties: properties.merge(user_id: id) }
+    Analytics::LifecycleBuffer.push(payload)
+  end
+
   private
 
   def time_zone_must_be_valid
@@ -252,13 +258,14 @@ class User < ApplicationRecord
     track_auth_event("auth.welcome_instructions_sent")
   end
 
-  def track_account_deleted
-    track_auth_event("auth.account_deleted")
+  def track_confirmation
+    return unless saved_change_to_confirmed_at?
+    return if confirmed_at.nil? # Only track when confirmed, not when un-confirmed
+    track_auth_event("auth.confirm")
   end
 
-  def track_auth_event(name, properties = {})
-    payload = { name: name, properties: properties.merge(user_id: id) }
-    Analytics::LifecycleBuffer.push(payload)
+  def track_account_deleted
+    track_auth_event("auth.account_deleted")
   end
 
   def track_email_change
