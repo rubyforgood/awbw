@@ -5,22 +5,24 @@
 
   <!-- First Row -->
   <div class="title-row flex flex-wrap gap-4 my-6 py-6">
-    <div class="flex-1 min-w-[200px]"><%= f.input :title,
-              as: :text,
-              input_html: {
-                rows: 1,
-                class: "w-full rounded border-gray-300 font-bold text-md",
-              },
-              wrapper: false,
-              label_html: {
-                class: "block font-medium mb-1",
-              } %></div>
+    <div class="flex-1 min-w-[200px]">
+      <%= f.input :title,
+                  as: :text,
+                  input_html: { rows: 1, class: "w-full rounded border-gray-300 font-bold text-md" },
+                  wrapper: false,
+                  label_html: { class: "block font-medium mb-1" } %>
+    </div>
 
     <div class="flex-1 min-w-[200px]">
       <label class="block font-medium mb-1">Flags</label>
 
       <% if allowed_to?(:manage?, @resource) %>
-        <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3"><%= f.input :published, as: :boolean %><%= f.input :featured, as: :boolean %><%= f.input :publicly_visible, as: :boolean %><%= f.input :publicly_featured, as: :boolean %></div>
+        <div class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
+          <%= f.input :published, as: :boolean %>
+          <%= f.input :featured, as: :boolean %>
+          <%= f.input :publicly_visible, as: :boolean %>
+          <%= f.input :publicly_featured, as: :boolean %>
+        </div>
       <% end %>
     </div>
 
@@ -28,7 +30,9 @@
       <div class="flex-[0_0_50%] min-w-[150px] bg-red-200 p-3">
         <label class="block text-md font-medium text-gray-700 mb-1">Attachment URL</label>
 
-        <span class="text-gray-900 font-medium"><%= link_to f.object.url, f.object.url, target: "_blank", class: "underline" %></span>
+        <span class="text-gray-900 font-medium">
+          <%= link_to f.object.url, f.object.url, target: "_blank", class: "underline" %>
+        </span>
 
         <br>
 
@@ -38,61 +42,46 @@
 
         <% if params[:admin].present? %>
           <%= f.input :url, # TODO - remove this value after reattaching
-                  label: "Where the attachment is stored -- NEEDS TO BE REATTACHED",
-                  as: :text,
-                  hint: "Enter full url, e.g. https://example.com",
-                  input_html: {
-                    class: "w-full rounded border-gray-300 px-2 py-1",
-                    rows: 1,
-                  },
-                  label_html: {
-                    class: "font-medium mb-1 block",
-                  } %>
+                      label: "Where the attachment is stored -- NEEDS TO BE REATTACHED",
+                      as: :text,
+                      hint: "Enter full url, e.g. https://example.com",
+                      input_html: { class: "w-full rounded border-gray-300 px-2 py-1",
+                                    rows: 1 },
+                      label_html: { class: "font-medium mb-1 block" } %>
         <% end %>
       </div>
     <% end %>
   </div>
 
   <div class="title-row flex flex-wrap gap-4 mb-4">
-    <div class="flex-1 min-w-[200px]"><%= f.input :kind,
-              as: :select,
-              collection:
-                (
-                  if Resource::PUBLISHED_KINDS.include?(f.object.kind)
-                    Resource::PUBLISHED_KINDS
-                  else
-                    Resource::KINDS
-                  end
-                ),
-              selected: f.object.kind,
-              input_html: {
-                class: "w-full rounded border-gray-300",
-              } %></div>
+    <div class="flex-1 min-w-[200px]">
+      <%= f.input :kind,
+                  as: :select,
+                  collection: Resource::PUBLISHED_KINDS.include?(f.object.kind) ? Resource::PUBLISHED_KINDS : Resource::KINDS,
+                  selected: f.object.kind,
+                  input_html: { class: "w-full rounded border-gray-300" } %>
+    </div>
 
     <div class="flex-1 min-w-[200px]">
       <%= f.input :windows_type_id,
-              as: :select,
-              collection: @windows_types,
-              label_method: :short_name,
-              value_method: :id,
-              include_blank: true,
-              selected: f.object.windows_type_id,
-              input_html: {
-                value: f.object.windows_type_id,
-                class: "w-full rounded border-gray-300",
-              } %>
+                  as: :select,
+                  collection: @windows_types, label_method: :short_name, value_method: :id,
+                  include_blank: true,
+                  selected: f.object.windows_type_id,
+                  input_html: { value: f.object.windows_type_id,
+                                class: "w-full rounded border-gray-300" } %>
     </div>
 
-    <div class="flex-1 min-w-[200px]"><%= f.input :user_id,
-              as: :select,
-              label: "Author",
-              collection: @authors,
-              include_blank: true,
-              selected: f.object.user_id,
-              input_html: {
-                value: f.object.user_id,
-                class: "w-full rounded border-gray-300",
-              } %></div>
+    <div class="flex-1 min-w-[200px]">
+      <%= f.input :user_id,
+                  as: :select,
+                  label: "Author",
+                  collection: @authors,
+                  include_blank: true,
+                  selected: f.object.user_id,
+                  input_html: { value: f.object.user_id,
+                                class: "w-full rounded border-gray-300" } %>
+    </div>
   </div>
 
   <!-- Second Row -->
@@ -100,24 +89,22 @@
     <%= rhino_editor(f, :body, label: "Description") %>
 
     <% if f.object.errors[:rhino_body].present? %>
-      <div class="text-danger mt-1 text-sm">Field <%= f.object.errors[:rhino_body].first %></div>
+      <div class="text-danger mt-1 text-sm">
+        Field <%= f.object.errors[:rhino_body].first %>
+      </div>
     <% end %>
   </div>
 
   <!-- Second Row -->
   <div class="url-row flex flex-wrap gap-4 my-4">
-    <div class="flex-[0_0_150px]"><%= f.input :position,
-              as: :integer,
-              label: "Display order",
-              hint: "For dashboard",
-              input_html: {
-                class: "w-full rounded border-gray-300 px-2 py-1",
-                min: 1,
-                step: 1,
-              },
-              label_html: {
-                class: "font-medium mb-1 block",
-              } %></div>
+    <div class="flex-[0_0_150px]">
+      <%= f.input :position,
+                  as: :integer,
+                  label: "Display order",
+                  hint: "For dashboard",
+                  input_html: { class: "w-full rounded border-gray-300 px-2 py-1", min: 1, step: 1 },
+                  label_html: { class: "font-medium mb-1 block" } %>
+    </div>
   </div>
 
   <!-- Third Row -->
@@ -125,15 +112,9 @@
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
-      <%= link_to "Delete",
-      @resource,
-      method: :delete,
-      class: "btn btn-danger-outline",
-      data: {
-        confirm: "Are you sure you want to delete?",
-      } %>
+      <%= link_to "Delete", @resource, method: :delete, class: "btn btn-danger-outline",
+                  data: { confirm: "Are you sure you want to delete?" } %>
     <% end %>
-
     <%= link_to "Cancel", resources_path, class: "btn btn-secondary-outline" %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
