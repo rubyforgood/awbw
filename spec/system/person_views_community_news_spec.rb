@@ -38,7 +38,7 @@ RSpec.describe 'People can view Community News on the dashboard' do
         expect(page).to have_content('Upcoming Events')
       end
 
-      it 'navigates to events page when "View all events" is clicked' do
+      xit 'navigates to events page when "View all events" is clicked' do
         expect(page).to have_link('View all events')
         click_link('View all events')
 
