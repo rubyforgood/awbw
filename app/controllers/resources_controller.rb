@@ -123,6 +123,7 @@ class ResourcesController < ApplicationController
 
   def set_form_variables
     @resource.build_primary_asset if @resource.primary_asset.blank?
+    @resource.build_downloadable_asset if @resource.downloadable_asset.blank?
     @resource.gallery_assets.build
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
@@ -147,7 +148,7 @@ class ResourcesController < ApplicationController
       :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
-      donwloadable_asset_attributes: [ :id, :file, :_destroy ],
+      downloadable_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
