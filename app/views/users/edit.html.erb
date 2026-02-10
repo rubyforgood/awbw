@@ -13,7 +13,7 @@
                         class: "btn btn-secondary-outline" %>
           <% unless @user.confirmed? %>
             <%= button_to "Resend Invite",
-                          send_invitation_user_path(@user),
+                          send_welcome_instructions_user_path(@user),
                           method: :post,
                           class: "btn btn-secondary-outline" %>
           <% end %>

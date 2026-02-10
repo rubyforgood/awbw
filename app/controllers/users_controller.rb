@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy,
                                    :generate_person, :toggle_lock_status, :confirm_email,
-                                   :send_invitation, :send_reset_password_instructions ]
+                                   :send_welcome_instructions, :send_reset_password_instructions ]
 
   def index
     authorize!
@@ -175,8 +175,8 @@ class UsersController < ApplicationController
   # SEND INVITATION
   # ---------------------------------------------------------
 
-  def send_invitation
-    authorize! @user, to: :send_invitation?
+  def send_welcome_instructions
+    authorize! @user, to: :send_welcome_instructions?
 
     @user.generate_welcome_instructions_token!
     @user.update(welcome_instructions_sent_at: Time.current)

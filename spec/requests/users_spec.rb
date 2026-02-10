@@ -403,14 +403,14 @@ RSpec.describe "/users", type: :request do
   # ---------------------------------------
   # SEND INVITATION
   # ---------------------------------------
-  describe "POST /send_invitation" do
+  describe "POST /send_welcome_instructions" do
     let(:user) { create(:user, confirmed_at: nil) }
 
     context "as admin" do
       before { sign_in admin }
 
       it "generates invitation token" do
-        post send_invitation_user_url(user)
+        post send_welcome_instructions_user_url(user)
         user.reload
         expect(user.welcome_instructions_token).not_to be_nil
         expect(user.welcome_instructions_created_at).not_to be_nil
@@ -419,12 +419,12 @@ RSpec.describe "/users", type: :request do
 
       xit "sends welcome email" do # TODO fix this testing to make sure notification and email get sent
         expect {
-          post send_invitation_user_url(user)
+          post send_welcome_instructions_user_url(user)
         }.to have_enqueued_job(ActionMailer::MailDeliveryJob)
       end
 
       it "redirects with notice" do
-        post send_invitation_user_url(user)
+        post send_welcome_instructions_user_url(user)
         expect(flash[:notice]).to include("Invitation sent")
         expect(response).to redirect_to(users_path)
       end
@@ -434,7 +434,7 @@ RSpec.describe "/users", type: :request do
       before { sign_in regular_user }
 
       it "does not send invitation and redirects to root" do
-        post send_invitation_user_url(user)
+        post send_welcome_instructions_user_url(user)
         user.reload
         expect(user.welcome_instructions_token).to be_nil
         expect(response).to redirect_to(root_path)
@@ -443,7 +443,7 @@ RSpec.describe "/users", type: :request do
 
     context "as guest" do
       it "does not send invitation and redirects to root" do
-        post send_invitation_user_url(user)
+        post send_welcome_instructions_user_url(user)
         user.reload
         expect(user.welcome_instructions_token).to be_nil
         expect(response).to redirect_to(root_path)
