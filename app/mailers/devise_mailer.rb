@@ -32,7 +32,7 @@ class DeviseMailer < Devise::Mailer
     @record = record
     @token  = token
     @user = record
-    mail(to: @record.email, subject: "Welcome to #{@organization_name}") do |format|
+    mail(to: @record.email, subject: "Welcome to #{@organization_name} Portal") do |format|
       format.html { render "welcome_instructions" }
       format.text { render "welcome_instructions" }
     end
