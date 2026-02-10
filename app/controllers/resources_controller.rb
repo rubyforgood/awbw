@@ -61,7 +61,19 @@ class ResourcesController < ApplicationController
     authorize!
     @resource = current_user.resources.build(resource_params)
 
-    if @resource.save
+    success = false
+
+    Resource.transaction do
+      if @resource.save
+        assign_associations(@resource)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      Rails.logger.error "Resource create failed: #{e.class} - #{e.message}"
+      raise ActiveRecord::Rollback
+    end
+
+    if success
       redirect_to resources_path
     else
       @resource = @resource.decorate
@@ -75,7 +87,19 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:id])
     authorize! @resource
     @resource.user ||= current_user
-    if @resource.update(resource_params)
+    success = false
+
+    Resource.transaction do
+      if @resource.update(resource_params)
+        assign_associations(@resource)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      Rails.logger.error "Resource update failed: #{e.class} - #{e.message}"
+      raise ActiveRecord::Rollback
+    end
+
+    if success
       flash[:notice] = "Resource updated."
       redirect_to resources_path
     else
@@ -131,6 +155,23 @@ class ResourcesController < ApplicationController
                    .includes(:person)
                    .order("people.first_name, people.last_name")
                    .map { |u| [ u.full_name, u.id ] }
+    @categories_grouped =
+      Category
+        .includes(:category_type)
+        .published
+        .order(:position, :name)
+        .group_by(&:category_type)
+        .select { |type, _| type.nil? || type.published? }
+        .sort_by { |type, _| type&.name.to_s.downcase }
+    @sectors = Sector.published.order(:name)
+  end
+
+  def assign_associations(resource)
+    selected_category_ids = Array(params[:resource][:category_ids]).reject(&:blank?).map(&:to_i)
+    resource.categories = Category.where(id: selected_category_ids)
+
+    selected_sector_ids = Array(params[:resource][:sector_ids]).reject(&:blank?).map(&:to_i)
+    resource.sectors = Sector.where(id: selected_sector_ids)
   end
 
   def process_search
