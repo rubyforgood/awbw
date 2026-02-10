@@ -115,9 +115,14 @@
         <!-- Contact Form -->
         <div id="contact-form" class="space-y-8">
 
-          <p class="text-gray-600">
-            Please complete the short form below and our team will respond as soon as possible.
-          </p>
+          <div class="space-y-2">
+            <h3 class="text-2xl font-semibold text-gray-900">
+              Send us a message
+            </h3>
+            <p class="text-gray-600">
+              Please complete the form below and our team will respond as soon as possible.
+            </p>
+          </div>
 
           <%= form_tag("/contact_us", method: "POST", class: "space-y-8") do %>
             <input type="hidden" name="contact_us[q]" value="general">
