@@ -62,7 +62,6 @@ RSpec.describe Notification do
 
       expect(resend.original_notification).to eq(original)
     end
->>>>>>> a9e429ca (Replace resend boolean with parent/root notification tracking for resend chain management)
   end
 
   describe '#resend_number' do
