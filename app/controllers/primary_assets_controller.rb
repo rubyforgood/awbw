@@ -3,7 +3,7 @@
    before_action :set_owner, only: [ :create ]
 
    def create
-     authorize! :library_asset, to: :create?
+     authorize! @owner # We are check the policy of the record that owns the asset, eg. can a user edit @workshop
      ActiveRecord::Base.transaction do
        if existing_primary = @owner.assets.find_by(type: "PrimaryAsset")
          existing_primary.update!(type: "GalleryAsset")

@@ -1,11 +1,15 @@
 <div class="w-full aspect-[3/2] sm:aspect-[21/9] lg:aspect-[24/9] overflow-hidden rounded-xl print:hidden">
   <!-- Background image -->
-  <%= render "assets/display_image",
-              resource: workshop,
-              width: "full", height: "x",
-              link: false,
-              link_to_object: false,
-              file: workshop.display_image %>
+  <div id="hero-image"><%= render "assets/display_image",
+                resource: workshop,
+                width: "full", height: "x",
+                link: false,
+                link_to_object: false,
+                file: workshop.display_image %></div>
+</div>
+
+<div class="mt-2 h-1 w-full bg-gray-200 rounded overflow-hidden">
+  <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>
 </div>
 
 <!-- Title + meta -->
@@ -22,18 +26,17 @@
     <div class="flex flex-wrap gap-4 text-sm text-gray-200 mt-3"><span>Author: <%= workshop.author %></span><span>Category: <%= workshop.windows_type&.short_name %></span><span>Added: <%= workshop.date %></span></div>
   </div>
 
-  <%= form_with(model: PrimaryAsset.new, url: primary_assets_path, html: { multipart: true, id: "primary-asset-form" }) do |f| %>
-    <%= f.file_field :file, class: "hidden", id: "primary-asset-file", accept: "image/*" %>
+  <%= form_with(model: PrimaryAsset.new, url: primary_assets_path, 
+                                         data: {controller: "asset-picker"},
+                                         html: { id: "primary-asset-form" }) do |f| %>
+    <%= f.file_field :file, class: "hidden",
+                            accept: "image/*",
+                            direct_upload: true,
+                            data: { asset_picker_target: "file",
+                                    action: "change->asset-picker#fileSelected" } %>
+
     <%= hidden_field_tag :owner_sgid, workshop.to_sgid.to_s, autocomplete: "off" %>
 
-    <button type="button" class="bg-white text-gray-700 rounded-full p-2 shadow hover:bg-gray-100 transition flex items-center" onclick="document.getElementById('primary-asset-file').click()"><i class="fa-solid fa-camera"></i><span class="pl-2">Edit photo</span></button>
+    <button data-action="asset-picker#openFileDialog" type="button" class="bg-white text-gray-700 rounded-full p-2 shadow hover:bg-gray-100 transition flex items-center"><i class="fa-solid fa-camera"></i><span class="pl-2">Edit photo</span></button>
   <% end %>
 </div>
-
-<script>
-  document.getElementById('primary-asset-file').addEventListener('change', function() {
-    if (this.files.length > 0) {
-      document.getElementById('primary-asset-form').submit();
-    }
-  });
-</script>
