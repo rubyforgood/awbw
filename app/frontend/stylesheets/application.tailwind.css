@@ -18,6 +18,7 @@
 }
 
 /* Font face declarations */
+/* Note: Telefon-Bold.ttf is located in app/assets/fonts/ directory */
 @font-face {
   font-family: "Telefon Bold";
   src: url("/assets/Telefon-Bold.ttf") format("truetype");

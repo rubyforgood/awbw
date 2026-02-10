@@ -243,19 +243,27 @@
     
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <% 
+        # Define color mapping for different categories
         category_colors = {
-          "Self-Care & Personal Growth" => { text: "text-blue-600", bg: "bg-blue-600" },
-          "Schools & Universities" => { text: "text-purple-600", bg: "bg-purple-600" },
-          "Community Engagement" => { text: "text-teal-600", bg: "bg-teal-600" },
-          "Domestic Violence" => { text: "text-pink-600", bg: "bg-pink-600" }
+          "Self-Care & Personal Growth" => "bg-blue-600",
+          "Schools & Universities" => "bg-purple-600",
+          "Grief & Loss" => "bg-purple-600",
+          "Community Engagement" => "bg-teal-600",
+          "Domestic Violence" => "bg-pink-600",
+          "Social Justice" => "bg-green-600",
+          "Facilitator Spotlights" => "bg-purple-600"
         }
         
-        categories = ["Self-Care & Personal Growth", "Schools & Universities", "Community Engagement", "Domestic Violence"]
+        # Default color for categories not in the mapping
+        default_color = "bg-gray-600"
       %>
       
-      <% @popular_stories.first(4).each_with_index do |story, index| %>
-        <% category = categories[index % 4] %>
-        <% colors = category_colors[category] %>
+      <% @popular_stories.first(4).each do |story| %>
+        <% 
+          # Get the first sector name or use a default
+          sector_name = story.sectors.first&.name || "Story"
+          bg_color = category_colors[sector_name] || default_color
+        %>
         
         <%= link_to story_path(story), class: "group block relative aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow" do %>
           <div class="absolute inset-0 bg-gray-200">
@@ -265,8 +273,8 @@
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end">
             <div class="p-4 w-full">
-              <div class="inline-block <%= colors[:bg] %> text-white text-xs font-semibold uppercase px-2 py-1 mb-2">
-                <%= category %>
+              <div class="inline-block <%= bg_color %> text-white text-xs font-semibold uppercase px-2 py-1 mb-2">
+                <%= sector_name %>
               </div>
               <h3 class="font-telefon text-white text-sm leading-tight">
                 <%= story.title %>
