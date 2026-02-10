@@ -22,6 +22,9 @@
                         change_password_path,
                         class: "btn btn-secondary-outline" %>
           <% end %>
+          <%= link_to "Users",
+                      users_path,
+                      class: "btn btn-secondary-outline" %>
           <%= link_to "Person",
                       person_path(@user.person),
                       class: "btn btn-secondary-outline" if @user.person %>

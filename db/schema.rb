@@ -846,6 +846,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_140931) do
     t.integer "failed_attempts", default: 0, null: false
     t.string "first_name", default: ""
     t.boolean "inactive", default: false
+    t.datetime "invitation_created_at"
+    t.datetime "invitation_sent_at"
+    t.string "invitation_token"
     t.string "last_name", default: ""
     t.datetime "last_sign_in_at", precision: nil
     t.string "last_sign_in_ip"
@@ -875,6 +878,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_140931) do
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["invitation_token"], name: "index_users_on_invitation_token", unique: true
     t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true

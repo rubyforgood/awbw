@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy,
                                    :generate_person, :toggle_lock_status, :confirm_email,
-                                   :send_reset_password_instructions ]
+                                   :send_invitation, :send_reset_password_instructions ]
 
   def index
     authorize!

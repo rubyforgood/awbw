@@ -178,6 +178,28 @@ class User < ApplicationRecord
     []
   end
 
+  def generate_invitation_token!
+    loop do
+      self.invitation_token = Devise.friendly_token
+      break unless User.exists?(invitation_token: invitation_token)
+    end
+    self.invitation_created_at = Time.current
+    save(validate: false)
+  end
+
+  def clear_invitation_token!
+    update_columns(
+      invitation_token: nil,
+      invitation_created_at: nil,
+      invitation_sent_at: nil
+    )
+  end
+
+  def invitation_token_valid?
+    invitation_token.present? && invitation_created_at.present? &&
+      invitation_created_at > 30.days.ago
+  end
+
   private
 
   def time_zone_must_be_valid
@@ -195,7 +217,7 @@ class User < ApplicationRecord
 
   def set_default_values
     self.inactive = false if inactive.nil?
-    self.confirmed = true if confirmed.nil?
+    self.confirmed = false if confirmed.nil?
   end
 
   def reassign_reports_and_logs_to_orphaned_user
@@ -244,27 +266,5 @@ class User < ApplicationRecord
     track_auth_event("auth.login", {
       sign_in_count: sign_in_count
     })
-  end
-
-  def generate_invitation_token!
-    loop do
-      self.invitation_token = Devise.friendly_token
-      break unless User.exists?(invitation_token: invitation_token)
-    end
-    self.invitation_created_at = Time.current
-    save(validate: false)
-  end
-
-  def clear_invitation_token!
-    update_columns(
-      invitation_token: nil,
-      invitation_created_at: nil,
-      invitation_sent_at: nil
-    )
-  end
-
-  def invitation_token_valid?
-    invitation_token.present? && invitation_created_at.present? &&
-      invitation_created_at > 30.days.ago
   end
 end
