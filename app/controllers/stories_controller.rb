@@ -8,7 +8,9 @@ class StoriesController < ApplicationController
     authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop, :created_by, :bookmarks, :primary_asset))
+      base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop,
+                                                   :created_by, :bookmarks, :primary_asset,
+                                                   story_idea: :workshop_title))
       filtered = base_scope.search_by_params(params)
                            .order(created_at: :desc)
       @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
@@ -213,13 +215,13 @@ class StoriesController < ApplicationController
   private
 
   def set_story
-    @story = Story.find(params[:id])
+    @story = Story.find(params[:id]).includes(story_idea: :workshop_title)
   end
 
   # Strong parameters
   def story_params
     params.require(:story).permit(
-      :title, :rhino_body, :featured, :published, :publicly_visible, :public_featued, :youtube_url, :website_url,
+      :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
       category_ids: [],
