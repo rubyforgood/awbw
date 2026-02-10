@@ -108,7 +108,7 @@
   </div>
 
   <!-- Third Row -->
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: true, include_downloadable_asset: true %>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>

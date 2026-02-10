@@ -137,7 +137,7 @@
           <span class="whitespace-nowrap">New workshop variation</span>
         <% end %>
 
-        <% if current_user&.super_user? %>
+        <% if allowed_to?(:new?, WorkshopIdea) %>
           <div class="admin-only bg-blue-100">
             <%= link_to new_workshop_idea_path,
                         class: "flex items-center px-4 py-2 text-sm text-white
