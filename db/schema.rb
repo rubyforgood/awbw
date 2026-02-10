@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_09_210556) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_10_140931) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -654,6 +654,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_210556) do
     t.integer "children_ongoing", default: 0
     t.datetime "created_at", precision: nil, null: false
     t.date "date"
+    t.string "external_workshop_title"
     t.string "form_file_content_type"
     t.string "form_file_file_name"
     t.integer "form_file_file_size"

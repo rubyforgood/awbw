@@ -31,6 +31,24 @@ RSpec.describe WorkshopLog do
     # expect(build(:workshop_log)).to be_valid
   end
 
+  describe '#workshop_title' do
+    it 'returns workshop title when workshop is present' do
+      workshop = create(:workshop, title: 'Test Workshop')
+      workshop_log = build(:workshop_log, workshop: workshop, owner: nil)
+      expect(workshop_log.workshop_title).to eq('Test Workshop')
+    end
+
+    it 'returns external_workshop_title when workshop is not present' do
+      workshop_log = build(:workshop_log, workshop: nil, owner: nil, external_workshop_title: 'External Workshop')
+      expect(workshop_log.workshop_title).to eq('External Workshop')
+    end
+
+    it 'returns empty string when neither workshop nor external_workshop_title is present' do
+      workshop_log = build(:workshop_log, workshop: nil, owner: nil, external_workshop_title: nil)
+      expect(workshop_log.workshop_title).to eq('')
+    end
+  end
+
   # Add tests for specific methods like #num_ongoing, #num_first_time, callbacks
   describe 'callbacks' do
     # Test after_save :update_workshop_log_count
