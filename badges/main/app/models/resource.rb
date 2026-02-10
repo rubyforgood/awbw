@@ -62,14 +62,15 @@ class Resource < ApplicationRecord
                                  allow_destroy: true,
                                  reject_if: proc { |resource| Resource.reject?(resource) }
 
-  # Search Cop
+  # Search Cop — only attributes on resources table so MATCH() uses the FULLTEXT index (title, author, body).
+  # No join to action_text_rich_texts; that would require MATCH across two tables, which MySQL cannot index.
   include SearchCop
   search_scope :search do
     attributes :title, :author, :body
 
-    scope { join_rich_texts }
-    attributes action_text_body: "action_text_rich_texts.plain_text_body"
-    options :action_text_body, type: :text, default: true, default_operator: :or
+    # scope { join_rich_texts }
+    # attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    # options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   # Scopes

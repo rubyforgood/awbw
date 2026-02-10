@@ -10,6 +10,7 @@ RSpec.describe "stories/show", type: :view do
   before(:each) do
     sign_in admin
     allow(view).to receive(:current_user).and_return(admin)
+    allow(view).to receive(:allowed_to?).and_return(true)
     assign(:story, story)
   end
 
