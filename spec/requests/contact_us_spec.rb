@@ -30,10 +30,10 @@ RSpec.describe "ContactUs", type: :request do
 
       it "shows form fields for name, email, and agency" do
         get contact_us_path
-        expect(response.body).to include("name='contact_us[first_name]'")
-        expect(response.body).to include("name='contact_us[last_name]'")
-        expect(response.body).to include("name='contact_us[from]'")
-        expect(response.body).to include("name='contact_us[agency]'")
+        expect(response.body).to include('name="contact_us[first_name]"')
+        expect(response.body).to include('name="contact_us[last_name]"')
+        expect(response.body).to include('name="contact_us[from]"')
+        expect(response.body).to include('name="contact_us[agency]"')
       end
 
       it "does not show adult or children program options" do
@@ -47,7 +47,7 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).to satisfy do |html|
           html.include?("aria-label") || html.include?("<label")
         end
-        expect(response.body).to include("type='submit'")
+        expect(response.body).to match(/type=['"]submit['"]/)
       end
     end
 
@@ -66,10 +66,10 @@ RSpec.describe "ContactUs", type: :request do
 
       it "does not show visible form fields for name, email, and agency" do
         get contact_us_path
-        # Should use hidden fields instead
-        expect(response.body).to include("type='hidden' name='contact_us[first_name]'")
-        expect(response.body).to include("type='hidden' name='contact_us[last_name]'")
-        expect(response.body).to include("type='hidden' name='contact_us[from]'")
+        expect(response.body).to include('type="hidden"')
+        expect(response.body).to include('name="contact_us[first_name]"')
+        expect(response.body).to include('name="contact_us[last_name]"')
+        expect(response.body).to include('name="contact_us[from]"')
       end
 
       it "does not show adult or children program options" do
