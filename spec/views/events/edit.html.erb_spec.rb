@@ -14,7 +14,7 @@ RSpec.describe "events/edit", type: :view do
 
   before do
     assign(:event, event)
-    assign(:locations, [location])
+    assign(:locations, [ location ])
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
     allow(view).to receive(:allowed_to?).with(:manage?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:destroy?, event).and_return(true)

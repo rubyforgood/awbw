@@ -1,6 +1,6 @@
 class WelcomeController < ApplicationController
   include AhoyTracking
-  
+
   skip_before_action :authenticate_user!
   before_action :find_user_by_welcome_instructions_token
   before_action :validate_welcome_instructions_token

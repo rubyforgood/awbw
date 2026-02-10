@@ -103,7 +103,7 @@ Rails.application.routes.draw do
       post :confirm_email
     end
   end
-  
+
   get "users/welcome/:welcome_instructions_token", to: "welcome#show", as: "user_welcome"
   patch "users/welcome/:welcome_instructions_token", to: "welcome#update", as: "user_welcome_update"
   resources :user_forms
