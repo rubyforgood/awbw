@@ -5,8 +5,6 @@
       <%= render 'shared/errors', resource: @workshop_idea %>
     <% end %>
 
-    <%= tag.div class: "unpersisted_resource_asset_params" %>
-
     <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
     <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 

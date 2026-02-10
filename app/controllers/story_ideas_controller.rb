@@ -1,6 +1,4 @@
 class StoryIdeasController < ApplicationController
-  include AssetUpdatable
-
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_story_idea, only: [ :show, :edit, :update, :destroy ]
 
@@ -44,10 +42,6 @@ class StoryIdeasController < ApplicationController
         recipient_role: :admin,
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
-
-      if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@story_idea)
-      end
 
       flash[:notice] = "StoryIdea was successfully created."
       if allowed_to?(:index?, StoryIdea)

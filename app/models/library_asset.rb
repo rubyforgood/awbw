@@ -1,2 +1,0 @@
-class LibraryAsset < Asset
-end

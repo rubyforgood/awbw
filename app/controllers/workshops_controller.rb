@@ -1,5 +1,5 @@
 class WorkshopsController < ApplicationController
-  include AssetUpdatable, AhoyTracking
+  include AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
@@ -96,8 +96,6 @@ class WorkshopsController < ApplicationController
         assign_associations(@workshop)
         if params[:promote_idea_assets] == "true"
           @workshop.attach_assets_from_idea!
-        elsif params.dig(:library_asset, :new_assets).present?
-          update_asset_owner(@workshop)
         end
         success = true
       end

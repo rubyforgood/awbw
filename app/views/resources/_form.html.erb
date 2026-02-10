@@ -1,8 +1,6 @@
 <%= simple_form_for @resource, wrapper: :tailwind_form do |f| %>
   <%= render "shared/errors", resource: @resource if @resource.errors.any? %>
 
-  <%= tag.div class: "unpersisted_resource_asset_params" %>
-
   <!-- First Row -->
   <div class="title-row flex flex-wrap gap-4 my-6 py-6">
     <div class="flex-1 min-w-[200px]">
