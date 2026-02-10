@@ -6,6 +6,7 @@ class User < ApplicationRecord
 
   after_create :set_default_values
   after_update :track_email_change
+  after_update :track_invite
   after_update :track_login_event
 
   before_destroy :track_account_deleted
@@ -244,6 +245,11 @@ class User < ApplicationRecord
   def after_unlock
     super
     track_auth_event("auth.account_unlocked")
+  end
+
+  def track_invite
+    return unless saved_change_to_invitation_sent_at?
+    track_auth_event("auth.invite_sent")
   end
 
   def track_account_deleted
