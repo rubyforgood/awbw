@@ -18,11 +18,14 @@ class EventMailerPreview < ActionMailer::Preview
   end
 
   def create_event
+    location = Location.first || Location.create!(city: "Sheboygan", state: "WI")
     Event.create!(
       title: "Community Art Workshop",
-      detail: "Join us for a hands-on creative session focused on self-expression.",
-      start_time: 3.days.from_now,
-      end_time: 3.days.from_now + 2.hours
+      start_date: 3.days.from_now,
+      end_date: 3.days.from_now + 2.hours,
+      published: true,
+      location: location,
+      videoconference_url: "https://example.com/meeting/123"
     )
   end
 
