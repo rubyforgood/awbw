@@ -97,3 +97,5 @@ group :development, :test do
   gem "debug", "~> 1.11"
   gem "bullet"
 end
+
+gem "rack-mini-profiler", "~> 4.0"
