@@ -1,9 +1,9 @@
 class WelcomeController < ApplicationController
   skip_before_action :authenticate_user!
-  
+
   before_action :find_user_by_welcome_instructions_token
   before_action :validate_welcome_instructions_token
-  
+
   # Skip authorization check for welcome pages
   def verify_authorized
     # Intentionally skip authorization - this is a public page with token validation
