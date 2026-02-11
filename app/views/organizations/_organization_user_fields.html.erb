@@ -18,7 +18,7 @@
                   as: :text,
                   input_html: {
                     rows: 1,
-                    value: f.object&.title || f.object&.position,
+                    value: f.object&.title || f.object&.position || "FACILITATOR",
                   } %>
     </div>
 
