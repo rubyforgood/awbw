@@ -199,6 +199,7 @@ class WorkshopsController < ApplicationController
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
     @workshop_variations = @workshop.workshop_variations.published
     @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
+    @mentions = @workshop.all_mentions_grouped
   end
 
 
