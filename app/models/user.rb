@@ -37,6 +37,8 @@ class User < ApplicationRecord
   has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: "Event"
 
   has_many :events, through: :event_registrations
+  has_many :organizations, through: :person
+  has_many :windows_types, through: :organizations
 
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   # Images

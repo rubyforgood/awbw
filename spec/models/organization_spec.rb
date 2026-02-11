@@ -8,7 +8,7 @@ RSpec.describe Organization do
     it { should belong_to(:windows_type).optional }
     it { should belong_to(:organization_status) }
     it { should have_many(:organization_people) }
-    it { should have_many(:users).through(:organization_people) }
+    it { should have_many(:users).through(:people) }
     it { should have_many(:reports).through(:users) }
     it { should have_many(:workshop_logs).through(:users) }
   end

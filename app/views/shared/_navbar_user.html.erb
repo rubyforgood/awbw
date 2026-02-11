@@ -32,7 +32,7 @@
         <span>My profile</span>
       <% end %>
     <% end %>
-    <% if current_user&.super_user? && current_user.person.organization_people.any? %>
+    <% if current_user&.super_user? && current_user.person&.organization_people&.any? %>
       <% current_user.person.organization_people.each do |organization_person| %>
         <%= link_to organization_path(organization_person.organization),
                     class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>

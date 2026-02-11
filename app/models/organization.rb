@@ -7,7 +7,8 @@ class Organization < ApplicationRecord
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :organization_people, dependent: :restrict_with_error
-  has_many :users, through: :organization_people
+  has_many :people, through: :organization_people
+  has_many :users, through: :people
   has_many :reports, through: :users
   has_many :workshop_logs, through: :users
 
