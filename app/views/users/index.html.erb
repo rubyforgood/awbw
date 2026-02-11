@@ -55,8 +55,14 @@
 
                 <!-- Confirmed -->
                 <td class="px-4 py-2 text-center">
-                  <% if user.confirmed_at? %>
+                  <% if user.confirmed_at.present? %>
                     <span class="fa fa-check-circle text-green-500"></span>
+                  <% elsif user.welcome_instructions_sent_at.nil? %>
+                    <%= link_to "Invite",
+                                send_welcome_instructions_user_path(user),
+                                method: :post,
+                                class: "btn btn-secondary-outline",
+                                data: { turbo: false } unless user.welcome_instructions_sent_at.present? %>
                   <% else %>
                     <span>--</span>
                   <% end %>
@@ -84,11 +90,6 @@
                 <td class="px-4 py-2 flex justify-right gap-2">
                   <%= link_to 'Edit', edit_user_path(user), class: "btn btn-secondary-outline" %>
                   <%= link_to 'Stats', user_path(user), class: "btn btn-secondary-outline" %>
-                  <%= link_to "Invite",
-                                send_welcome_instructions_user_path(user),
-                                method: :post,
-                                class: "btn btn-secondary-outline",
-                                data: { turbo: false } unless user.welcome_instructions_sent_at.present? %>
                 </td>
               </tr>
             <% end %>

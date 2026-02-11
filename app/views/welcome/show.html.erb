@@ -1,7 +1,9 @@
 <div class="flex items-center justify-center">
 
   <div class="w-full max-w-md bg-white rounded-2xl shadow-lg mt-8 p-8">
+
     <%= render "layouts/mailer/logo" %>
+
     <div class="text-center">
       Welcome, <%= @user.first_name %>!
 
@@ -81,7 +83,7 @@
 
     <% end %>
     <div class="mt-6 text-center">
-      <%= link_to "Skip and log in later", root_path, class: "text-blue-600 hover:underline" %>
+      <%= link_to "Skip and log in later", root_path, class: "action-link-text text-black-300 hover:underline" %>
     </div>
   </div>
 </div>

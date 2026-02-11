@@ -835,7 +835,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_152225) do
     t.text "comment", size: :long
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
-    t.boolean "confirmed", default: true
+    t.boolean "confirmed", default: false
     t.datetime "confirmed_at"
     t.datetime "created_at", precision: nil
     t.datetime "current_sign_in_at", precision: nil

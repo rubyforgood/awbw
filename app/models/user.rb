@@ -1,10 +1,9 @@
 class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
-  devise :database_authenticatable, :recoverable,
+  devise :database_authenticatable, :recoverable, :confirmable,
     :rememberable, :trackable, :validatable
 
-  after_create :set_default_values
   after_update :track_email_change
   after_update :track_welcome_instructions
   after_update :track_login_event
@@ -220,11 +219,6 @@ class User < ApplicationRecord
     return if person_id.present?
 
     errors.add(:person_id, "cannot be removed once set")
-  end
-
-  def set_default_values
-    self.inactive = false if inactive.nil?
-    self.confirmed = false if confirmed.nil?
   end
 
   def reassign_reports_and_logs_to_orphaned_user
