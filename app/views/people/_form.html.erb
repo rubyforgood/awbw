@@ -140,43 +140,43 @@
       </div>
     </div>
   </div>
+  <!-- Organization Connections (PROJECT_USERS) -->
+  <div class="form-group space-y-4">
+    <div class="font-semibold text-gray-700">
+      Organizational affiliations
+      <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <% if current_user&.super_user? %>
+        <div class="admin-only bg-blue-100 p-3">
+          <%= f.fields_for :organization_people do |organization_person_form| %>
+            <%= render "organization_person_fields",
+                       f: organization_person_form,
+                       organizations: f.object.organizations,
+                       user: f.object.user %>
+          <% end %>
+          <div class="admin-only bg-blue-100 p-3 mt-6">
+            <%= link_to_add_association "➕ Add Role",
+                                        f,
+                                        :organization_people,
+                                        html_options: { locals: { organizations: f.object.organizations } },
+                                        class: "btn btn-secondary-outline" %>
+          </div>
+        </div>
+      <% else %>
+        <% f.object.organization_people.each do |ou| %>
+          <div class="ps-6 mb-2">
+            <li><%= ou.title || ou.position %> - <%= ou.persisted? ? (link_to ou.organization&.name,
+                                                             organization_path(ou.organization),
+                                                             class: "underline") : ou.organization&.name %></li>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
   <!-- USER FIELDS -->
   <%= f.fields_for :user do |u| %>
     <%= u.hidden_field :person_id, value: f.object.id %>
-    <!-- Organization Connections (PROJECT_USERS) -->
-    <div class="form-group space-y-4">
-      <div class="font-semibold text-gray-700">
-        Organizational affiliations
-        <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
-      </div>
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-        <% if current_user&.super_user? %>
-          <div class="admin-only bg-blue-100 p-3">
-            <%= u.fields_for :organization_people do |organization_person_form| %>
-              <%= render "organization_person_fields",
-                         f: organization_person_form,
-                         organizations: u.object.organizations,
-                         user: u.object %>
-            <% end %>
-            <div class="admin-only bg-blue-100 p-3 mt-6">
-              <%= link_to_add_association "➕ Add Role",
-                                          u,
-                                          :organization_people,
-                                          html_options: { locals: { organizations: u.object.organizations } },
-                                          class: "btn btn-secondary-outline" %>
-            </div>
-          </div>
-        <% else %>
-          <% f.object.user && f.object.user.person.organization_people.each do |ou| %>
-            <div class="ps-6 mb-2">
-              <li><%= ou.title || ou.position %> - <%= ou.persisted? ? (link_to ou.organization&.name,
-                                                               organization_path(ou.organization),
-                                                               class: "underline") : ou.organization&.name %></li>
-            </div>
-          <% end %>
-        <% end %>
-      </div>
-    </div>
   <% end %>
   <div class="form-group space-y-4">
     <div class="font-semibold text-gray-700">
