@@ -215,7 +215,7 @@ class StoriesController < ApplicationController
   private
 
   def set_story
-    @story = Story.find(params[:id]).includes(story_idea: :workshop_title)
+    @story = Story.find(params[:id])
   end
 
   # Strong parameters
