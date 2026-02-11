@@ -4,10 +4,10 @@ class User < ApplicationRecord
   devise :database_authenticatable, :recoverable, :confirmable,
     :rememberable, :trackable, :validatable
 
-  after_update :track_email_change
   after_update :track_welcome_instructions
+  after_update :track_welcome_completion, if: :welcome_token_cleared?
   after_update :track_login_event
-  after_update :track_confirmation
+  after_update :track_email_change
 
   before_destroy :track_account_deleted
   before_destroy :reassign_reports_and_logs_to_orphaned_user
@@ -179,13 +179,13 @@ class User < ApplicationRecord
     []
   end
 
-  def generate_welcome_instructions_token!
+  def set_welcome_instructions_token!
     loop do
       self.welcome_instructions_token = Devise.friendly_token
-      break unless User.exists?(welcome_instructions_token: welcome_instructions_token)
+      break unless self.class.exists?(welcome_instructions_token: welcome_instructions_token)
     end
+
     self.welcome_instructions_created_at = Time.current
-    save(validate: false)
   end
 
   def clear_welcome_instructions_token!
@@ -234,7 +234,7 @@ class User < ApplicationRecord
 
   def after_confirmation
     super
-    track_auth_event("auth.account_confirmed")
+    track_auth_event("auth.email_confirmed")
   end
 
   def after_lock
@@ -252,12 +252,6 @@ class User < ApplicationRecord
     track_auth_event("auth.welcome_instructions_sent")
   end
 
-  def track_confirmation
-    return unless saved_change_to_confirmed_at?
-    return if confirmed_at.nil? # Only track when confirmed, not when un-confirmed
-    track_auth_event("auth.confirm")
-  end
-
   def track_account_deleted
     track_auth_event("auth.account_deleted")
   end
@@ -273,5 +267,14 @@ class User < ApplicationRecord
     track_auth_event("auth.login", {
       sign_in_count: sign_in_count
     })
+  end
+
+  def welcome_token_cleared?
+    saved_change_to_welcome_instructions_token? &&
+      welcome_instructions_token.nil?
+  end
+
+  def track_welcome_completion
+    track_auth_event("auth.account_setup_completed")
   end
 end

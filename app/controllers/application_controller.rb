@@ -12,7 +12,7 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionPolicy::Unauthorized do |exception|
     flash[:alert] = "You are not authorized to perform this action.<br>#{ exception.message if Rails.env.test? }"
-    redirect_back_or_to root_path
+    redirect_to root_path
   end
 
   private

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_10_152225) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_11_132115) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -835,7 +835,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_152225) do
     t.text "comment", size: :long
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
-    t.boolean "confirmed", default: false
     t.datetime "confirmed_at"
     t.datetime "created_at", precision: nil
     t.datetime "current_sign_in_at", precision: nil

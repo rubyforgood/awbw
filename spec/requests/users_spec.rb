@@ -8,7 +8,8 @@ RSpec.describe "/users", type: :request do
     {
       email: "jane.doe@example.com",
       password: "Password123!",
-      password_confirmation: "Password123!"
+      password_confirmation: "Password123!",
+      confirmed_at: Time.current
     }
   end
 
@@ -220,6 +221,7 @@ RSpec.describe "/users", type: :request do
           patch user_url(user), params: { user: new_attributes }
           user.reload
           expect(user.email).to include("rosa")
+          expect(user.unconfirmed_email).to include("rosa")
         end
 
         it "redirects to index" do

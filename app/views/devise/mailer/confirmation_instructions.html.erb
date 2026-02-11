@@ -1,28 +1,51 @@
-<h1>Confirm your email address</h1>
+<h1>Welcome!</h1>
 
-<p>
-  Hello <strong><%= @email %></strong>,
-</p>
+<div style="text-align: left;">
+  <p>
+    Hello <strong><%= @user.devise_email_name %></strong>,
+  </p>
 
-<p>
-  Welcome! Please confirm your account email by clicking the button below.
-</p>
+  <p>
+    Welcome! You've been invited to join the
+    <strong><%= @organization_name %></strong> portal.
+  </p>
+</div>
 
-<p>
-  <a
-    href="<%= confirmation_url(@resource, confirmation_token: @token) %>"
-    class="button"
-    target="_blank"
-  >
-    Confirm my account
-  </a>
-</p>
+<div style="
+background-color:#f3f4f6;
+  border-radius:6px;
+  padding:12px;
+  margin:16px 0;
+">
+  <p>
+    To get started and set your password, click the button below:
+  </p>
 
-<p>
-  If you did not create this account, you can safely ignore this email.
-</p>
+  <p>
+    <%= link_to "Set your password",
+                user_confirmation_url(confirmation_token: @token),
+                target: "_blank",
+                style: "display:inline-block;
+                        padding:10px 16px;
+                        background:#2563eb;
+                        color:#ffffff;
+                        text-decoration:none;
+                        border-radius:6px;
+                        font-weight:bold;" %>
+  </p>
+</div>
 
-<p>
-  If you have any concerns, please visit
-  <%= link_to "our contact page", contact_us_url %>.
-</p>
+<div style="text-align: left;">
+  <p>
+    This invitation link will expire in 30 days and can only be used once.
+  </p>
+
+  <p>
+    If you have any questions, please visit
+    <%= link_to "our contact page", contact_us_url %> to connect with staff.
+  </p>
+</div>
+
+<% content_for :fallback_url do %>
+  <%= user_confirmation_url(confirmation_token: @token) %>
+<% end %>

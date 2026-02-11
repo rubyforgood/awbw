@@ -6,9 +6,10 @@ class UsersController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(User.includes(:person))
+    base_scope = authorized_scope(User.includes(:avatar_attachment => :blob,
+                                                person: { avatar_attachment: :blob }))
     filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
-    @users_count = filtered.size
+    @users_count = filtered.count
     @users = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
@@ -31,6 +32,12 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
     authorize! @user
+
+    # do NOT have Devise send confirmation email - we'll handle that manually after creation via send_welcome_instructions
+    @user.skip_confirmation_notification!
+
+    # Generate welcome instructions token so that the welcome email set password and confirm email in one step
+    @user.set_welcome_instructions_token!
 
     # Optional: assign random password if none provided
     @user.password ||= SecureRandom.hex(8)
@@ -174,16 +181,16 @@ class UsersController < ApplicationController
   # ---------------------------------------------------------
   # SEND INVITATION
   # ---------------------------------------------------------
-
   def send_welcome_instructions
     authorize! @user, to: :send_welcome_instructions?
 
-    @user.generate_welcome_instructions_token!
+    @user.set_welcome_instructions_token!
+    @user.save!
     @user.update(welcome_instructions_sent_at: Time.current)
+    @user.send_confirmation_instructions
 
-    DeviseMailer.welcome_instructions(@user, @user.welcome_instructions_token).deliver_now
-
-    redirect_back_or_to users_path, notice: "Invitation sent to #{@user.email}."
+    redirect_back_or_to users_path,
+                        notice: "Invitation sent to #{@user.email}."
   end
 
   # =========================================================

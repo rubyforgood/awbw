@@ -1,0 +1,28 @@
+<h1>Confirm your email address</h1>
+
+<p>
+  Hello <strong><%= @email %></strong>,
+</p>
+
+<p>
+  Welcome! Please confirm your account email by clicking the button below.
+</p>
+
+<p>
+  <a
+    href="<%= confirmation_url(@resource, confirmation_token: @token) %>"
+    class="button"
+    target="_blank"
+  >
+    Confirm my account
+  </a>
+</p>
+
+<p>
+  If you did not create this account, you can safely ignore this email.
+</p>
+
+<p>
+  If you have any concerns, please visit
+  <%= link_to "our contact page", contact_us_url %>.
+</p>
