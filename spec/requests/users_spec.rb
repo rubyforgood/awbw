@@ -169,9 +169,9 @@ RSpec.describe "/users", type: :request do
           }.to change(User, :count).by(1)
         end
 
-        it "redirects to index" do
+        it "redirects to index with search params" do
           post users_url, params: { user: valid_attributes }
-          expect(response).to redirect_to(users_url)
+          expect(response).to redirect_to(users_url(search: valid_attributes[:email]))
         end
       end
 
