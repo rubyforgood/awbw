@@ -9,7 +9,6 @@ RSpec.describe Resource, type: :model do
     let(:other_resource) { create(:resource, title: "Other Resource") }
 
     it "can mention both workshops and resources" do
-      # Add mention to resource's body field with content
       rich_text = resource.rhino_body
       rich_text.update!(body: "<p>See @workshop[#{workshop.id}] and @resource[#{other_resource.id}]</p>")
 
@@ -33,7 +32,6 @@ RSpec.describe Resource, type: :model do
     end
 
     it "handles single field model correctly" do
-      # Resource only has one rich text field
       fields = Resource.mentionable_rich_text_fields
       expect(fields).to eq([ :rhino_body ])
     end
