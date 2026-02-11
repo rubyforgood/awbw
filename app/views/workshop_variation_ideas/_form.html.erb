@@ -75,7 +75,7 @@
                       label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
         <% else %>
           <%= f.hidden_field :organization_id,
-                             value: f.object.organization_id || current_user.person.organization_people.first&.organization_id %>
+                             value: f.object.organization_id || current_user.person.primary_organization&.id %>
         <% end %>
       </div>
     </div>

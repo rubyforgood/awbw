@@ -147,7 +147,7 @@
               <input type="hidden" name="contact_us[first_name]" value="<%= @user.first_name %>">
               <input type="hidden" name="contact_us[last_name]" value="<%= @user.last_name %>">
               <input type="hidden" name="contact_us[from]" value="<%= @user.email %>">
-              <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.organizations&.first&.name || '' %>">
+              <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.primary_organization&.name || '' %>">
             <% end %>
             <!-- Subject -->
             <div>

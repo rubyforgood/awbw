@@ -114,4 +114,11 @@ class Person < ApplicationRecord
   def has_liasion_position_for?(organization_id)
     !organization_people.where(organization_id: organization_id, position: 1).first.nil?
   end
+
+  def primary_organization
+    organization_people
+      .active
+      .order(updated_at: :desc)
+      .first&.organization
+  end
 end
