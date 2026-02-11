@@ -14,8 +14,11 @@
           <div class="space-y-6">
             <div class="mt-4"><%= render "form", community_news: @community_news %></div>
 
-            <%= turbo_frame_tag "editor_assets_lazy", src: edit_community_news_path(@community_news) do %>
-              <%= render "shared/loading" %>
+
+            <% if params[:admin] == 'true' %>
+              <%= turbo_frame_tag "editor_assets_lazy", src: edit_community_news_path(@community_news) do %>
+                <%= render "shared/loading" %>
+              <% end %>
             <% end %>
           </div>
         </div>

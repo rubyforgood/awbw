@@ -1,6 +1,7 @@
 class WorkshopMentionsController < ApplicationController
+  skip_verify_authorized
   def index
-    authorize! :workshop_mentions, to: :index?
+    # authorize! :workshop_mentions, to: :index?
     @workshops = Workshop.where(id: params[:query])
     respond_to do |format|
       format.json
