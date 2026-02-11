@@ -1,75 +1,87 @@
 <div class="flex items-center justify-center">
+
   <div class="w-full max-w-md bg-white rounded-2xl shadow-lg mt-8 p-8">
-    <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Welcome!</h2>
-    
-    <div class="mb-6 text-center">
-      <p class="text-gray-700">
-        Your email has been confirmed. Set a password to complete your account setup.
-      </p>
+    <%= render "layouts/mailer/logo" %>
+    <div class="text-center">
+      Welcome, <%= @user.first_name %>!
+
+      <h2 class="text-2xl font-semibold text-center text-gray-800 m-6">
+        Set a password to complete your account setup.
+      </h2>
     </div>
 
-    <%= form_with url: user_welcome_update_path(@user.welcome_instructions_token), method: :patch, scope: :user, html: { class: "space-y-4" } do |f| %>
-
+    <%= simple_form_for(@user, url: user_welcome_update_path(@user.welcome_instructions_token),
+                        scope: :user, html: { class: "space-y-4" }, data: { turbo_method: :patch, turbo: false }) do |f| %>
       <% if @user.errors.any? %>
-        <div class="alert alert-danger">
-          <h4><%= pluralize(@user.errors.count, "error") %> prohibited this from being saved:</h4>
-          <ul>
-            <% @user.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
-        </div>
+        <%= render 'shared/errors', resource: @user %>
       <% end %>
 
       <!-- NEW PASSWORD -->
-      <div class="form-group password-container" data-controller="password-toggle">
-        <%= f.label :password, "New password", class: "form-label" %>
-        <%= f.password_field :password,
-                            required: true,
-                            autofocus: true,
-                            autocomplete: "new-password",
-                            autocorrect: "off",
-                            autocapitalize: "off",
-                            spellcheck: "false",
-                            class: "form-control form-input password-field",
-                            data: { password_toggle_target: "input" } %>
-        <button
-          type="button"
-          class="toggle-password"
-          data-action="password-toggle#toggle"
-          aria-label="Toggle password visibility">
-          <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
-        </button>
+      <div class="flex flex-col mt-6 pt-6">
+        <div class="relative" data-controller="password-toggle">
+          <%= f.input :password,
+                      as: :password,
+                      label: "New password",
+                      required: true,
+                      autocomplete: "new-password",
+                      autocorrect: "off",
+                      autocapitalize: "off",
+                      spellcheck: "false",
+                      input_html: {
+                        id: "change-password-new-password",
+                        class: "rounded-md border-gray-300 shadow-sm
+                          focus:ring-blue-500 focus:border-blue-500
+                          p-2 pr-10 w-full",
+                        data: { password_toggle_target: "input" }
+                      } %>
+
+          <button
+            type="button"
+            class="toggle-password absolute right-3 top-9 text-gray-500 hover:text-gray-700"
+            data-action="password-toggle#toggle"
+            aria-label="Toggle password visibility">
+            <i class="fa fa-eye" data-password-toggle-target="icon"></i>
+          </button>
+        </div>
       </div>
 
       <!-- CONFIRM PASSWORD -->
-      <div class="form-group password-container" data-controller="password-toggle">
-        <%= f.label :password_confirmation, "Confirm new password", class: "form-label" %>
-        <%= f.password_field :password_confirmation,
-                            required: true,
-                            autocomplete: "new-password",
-                            autocorrect: "off",
-                            autocapitalize: "off",
-                            spellcheck: "false",
-                            class: "form-control form-input password-field",
-                            data: { password_toggle_target: "input" } %>
+      <div class="flex flex-col relative" data-controller="password-toggle">
+        <%= f.input :password_confirmation,
+                    as: :password,
+                    label: "New password confirmation",
+                    autocomplete: "new-password",
+                    autocorrect: "off",
+                    autocapitalize: "off",
+                    spellcheck: "false",
+                    required: true,
+                    input_html: {
+                      id: "change-password-new-password-confirmation",
+                      class: "rounded-md border-gray-300 shadow-sm
+                focus:ring-blue-500 focus:border-blue-500
+                p-2 pr-10",
+                      data: { password_toggle_target: "input" }
+                    } %>
+
         <button
           type="button"
           class="toggle-password"
           data-action="password-toggle#toggle"
           aria-label="Toggle password visibility">
-          <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
+          <i class="fa fa-eye" data-password-toggle-target="icon"></i>
         </button>
       </div>
 
-      <div class="action-buttons mt-8 flex justify-center gap-3">
-        <%= f.submit "Set password", class: "btn btn-primary" %>
+      <% if User.devise_modules.include?(:rememberable) %>
+        <%= f.input :remember_me, as: :boolean, label: "Remember me" %>
+      <% end %>
+      <div class="text-center mt-6">
+        <%= f.button :submit, "Set password", class: "btn btn-primary" %>
       </div>
 
     <% end %>
-
-    <div class="mt-6 text-center text-sm">
-      <%= link_to "Skip and log in later", new_user_session_path, class: "text-blue-600 hover:underline" %>
+    <div class="mt-6 text-center">
+      <%= link_to "Skip and log in later", root_path, class: "text-blue-600 hover:underline" %>
     </div>
   </div>
 </div>
