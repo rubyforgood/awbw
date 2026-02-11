@@ -4,7 +4,7 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def detail(length: nil)
-    text = user.organization_users.active.map { |pu| "#{pu.title.presence || pu.position}, #{pu.organization.name}" }.join(", ") if user
+    text = organization_people.active.map { |op| "#{op.title.presence || op.position}, #{op.organization.name}" }.join(", ")
     length ? text&.truncate(length) : text
   end
 

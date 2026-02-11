@@ -91,7 +91,7 @@ class PeopleController < ApplicationController
     set_user
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
     if @person.user
-      @person.user.organization_users.first || @person.user.organization_users.build
+      @person.user.person.organization_people.first || @person.user.person.organization_people.build
     end
 
     @all_sectors = Sector.published.order(:name)
@@ -194,7 +194,7 @@ class PeopleController < ApplicationController
         :state2,
         :zip2,
         :notes,
-        organization_users_attributes: [
+        organization_people_attributes: [
           :id,
           :organization_id,
           :position,

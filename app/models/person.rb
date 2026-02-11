@@ -5,6 +5,10 @@ class Person < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
 
   has_one :user, inverse_of: :person, dependent: :nullify
+  has_many :organization_people, dependent: :destroy
+  has_many :organizations, through: :organization_people
+  has_many :communal_reports, through: :organizations, source: :reports
+  has_many :windows_types, through: :organizations
 
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -42,6 +46,8 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
   accepts_nested_attributes_for :user, update_only: true
+  accepts_nested_attributes_for :organization_people, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["organization_id"].blank? || attrs["title"].blank? }
 
   # Search Cop
   include SearchCop
@@ -58,7 +64,7 @@ class Person < ApplicationRecord
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
   scope :organization_name, ->(organization_name) {
     return all if organization_name.blank?
-    left_joins(user: { organization_users: :organization })
+    left_joins(organization_people: :organization)
       .where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
       .distinct }
 
@@ -103,5 +109,9 @@ class Person < ApplicationRecord
     return first_phone.value if first_phone.present?
 
     nil
+  end
+
+  def has_liasion_position_for?(organization_id)
+    !organization_people.where(organization_id: organization_id, position: 1).first.nil?
   end
 end

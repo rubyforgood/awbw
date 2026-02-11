@@ -18,8 +18,7 @@ RSpec.describe User do
     it { should have_many(:bookmarked_workshops).through(:bookmarks).source(:bookmarkable) }
     it { should have_many(:bookmarked_resources).through(:bookmarks).source(:bookmarkable) }
     it { should have_many(:bookmarked_events).through(:bookmarks).source(:bookmarkable) }
-    it { should have_many(:organization_users).dependent(:destroy) }
-    it { should have_many(:organizations).through(:organization_users) }
+
     it { should have_many(:windows_types).through(:organizations) }
     it { should have_many(:resources) }
     it { should have_many(:user_forms).dependent(:destroy) }
@@ -33,7 +32,6 @@ RSpec.describe User do
 
     # Nested Attributes
     it { should accept_nested_attributes_for(:user_forms) }
-    it { should accept_nested_attributes_for(:organization_users).allow_destroy(true) }
   end
 
   describe "validations" do

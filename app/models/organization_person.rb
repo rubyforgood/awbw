@@ -1,6 +1,6 @@
-class OrganizationUser < ApplicationRecord
+class OrganizationPerson < ApplicationRecord
   belongs_to :organization
-  belongs_to :user
+  belongs_to :person
 
   # Validations
   validates_presence_of :organization_id
@@ -12,6 +12,6 @@ class OrganizationUser < ApplicationRecord
 
   # Methods
   def name
-    "#{user.name}" if user
+    "#{person.name}" if person
   end
 end
