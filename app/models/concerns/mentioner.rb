@@ -28,12 +28,10 @@ module Mentioner
 
         result[mentionable_type] ||= []
 
-        # Find actual record if it exists and add to the appropriate group
         begin
           mentionable = mentionable_type.constantize.find(mentionable_id)
           result[mentionable_type] << mentionable unless result[mentionable_type].include?(mentionable)
         rescue ActiveRecord::RecordNotFound, NameError
-          # Skip if record not found or model doesn't exist
           next
         end
       end
