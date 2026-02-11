@@ -2,7 +2,6 @@ module Mentioner
   extend ActiveSupport::Concern
 
   included do
-    # This will be called when the module is included in a model
   end
 
   class_methods do
