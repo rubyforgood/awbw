@@ -88,10 +88,10 @@ class OrganizationsController < ApplicationController
     @people_array = Person.includes(:user)
                           .joins(:user)
                           .order(:first_name, :last_name)
-                          .map { |f| [ f.name, f.user.id ] }
+                          .map { |f| [ f.name, f.id ] }
     @organization.organization_people = @organization.organization_people
                                      .includes(:organization)
-                                     .sort_by { |ou| ou.user.person&.name.to_s.downcase }
+                                     .sort_by { |op| op.person&.name.to_s.downcase }
   end
 
   def set_index_variables
