@@ -19,7 +19,12 @@ class Organization < ApplicationRecord
   has_many :sectors, through: :sectorable_items
 
   # Asset associations
-  has_one_attached :logo
+  has_one_attached :logo, dependent: :purge do |attachable|
+    attachable.variant :thumbnail,
+      resize_to_limit: [ 256, 256 ],
+      format: :webp,
+      saver: { quality: 80 }
+  end
 
   # Validations
   validates :logo,
