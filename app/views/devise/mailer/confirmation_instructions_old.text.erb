@@ -5,7 +5,7 @@ Hello <%= @email %>,
 
 Welcome! Please confirm your account email by visiting the link below:
 
-<%= confirmation_url(@resource, confirmation_token: @token) %>
+<%= user_confirmation_path!(@resource, confirmation_token: @token) %>
 
 If you did not create this account, you can safely ignore this email.
 
