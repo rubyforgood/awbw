@@ -31,7 +31,7 @@ class EventsController < ApplicationController
 
   def create
     authorize!
-    @event = Event.new(event_params).decorate
+    @event = Event.new(event_params)
     @event.created_by ||= current_user
 
     success = false
@@ -51,6 +51,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if success
+        format.html { redirect_to events_path, notice: "Event was successfully created." }
         format.json { render :show, status: :created, location: @event }
       else
         set_form_variables

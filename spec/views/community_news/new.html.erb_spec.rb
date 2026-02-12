@@ -5,6 +5,8 @@ RSpec.describe "community_news/new", type: :view do
 
   before(:each) do
     sign_in admin
+    assign(:sectors, [])
+    assign(:categories_grouped, [])
     allow(view).to receive(:current_user).and_return(admin)
 
     assign(:community_news, CommunityNews.new(

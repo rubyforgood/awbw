@@ -14,12 +14,8 @@ class StoriesController < ApplicationController
       filtered = base_scope.search_by_params(params)
                            .order(created_at: :desc)
       @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
+      @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
 
-      @count_display = if filtered.count == base_scope.count
-        base_scope.count
-      else
-        "#{filtered.count}/#{base_scope.count}"
-      end
       render :index_lazy
     else
       render :index
@@ -116,11 +112,6 @@ class StoriesController < ApplicationController
   def create
     @story = Story.new(story_params)
     authorize! @story
-
-    if @story.save
-      if params[:promote_idea_assets] == "true"
-        @story.attach_assets_from_idea!
-      end
 
     success = false
 
