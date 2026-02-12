@@ -234,6 +234,7 @@ class WorkshopsController < ApplicationController
     # Convert checkbox values into sectorable_items updates
     selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
     workshop.sectors = Sector.where(id: selected_sector_ids)
+    workshop.save!
   end
 
   def log_workshop_error(action, error)
