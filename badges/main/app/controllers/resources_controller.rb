@@ -50,11 +50,16 @@ class ResourcesController < ApplicationController
   end
 
   def show
-    @resource = Resource.find(resource_id_param).decorate
+    @resource = Resource.includes(
+      :user,
+      :bookmarks,
+      primary_asset:  :file_attachment,
+      downloadable_asset:  :file_attachment,
+      gallery_assets: :file_attachment,
+    ).find(resource_id_param).decorate
     authorize! @resource
     track_view(@resource)
     @mentions = @resource.all_mentions_grouped
-    load_forms
   end
 
   def create
