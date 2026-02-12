@@ -11,8 +11,8 @@ RSpec.describe "workshops/edit", type: :view do
     assign(:potential_series_workshops, [])
     assign(:windows_types, [])
     assign(:workshop_ideas, [])
-    assign(:categories_grouped, {})
     assign(:sectors, [])
+    assign(:categories_grouped, [])
   end
 
   context "when user is an admin" do
