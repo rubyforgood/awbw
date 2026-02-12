@@ -185,7 +185,6 @@ class UsersController < ApplicationController
     authorize! @user, to: :send_welcome_instructions?
 
     @user.set_welcome_instructions_token!
-    @user.save!
     @user.update(welcome_instructions_sent_at: Time.current)
     @user.send_confirmation_instructions
 
