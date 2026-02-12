@@ -121,6 +121,7 @@ class EventsController < ApplicationController
 
     selected_sector_ids = Array(params[:event][:sector_ids]).reject(&:blank?).map(&:to_i)
     event.sectors = Sector.where(id: selected_sector_ids)
+    event.save!
   end
 
   def set_event

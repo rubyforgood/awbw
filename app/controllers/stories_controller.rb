@@ -200,6 +200,7 @@ class StoriesController < ApplicationController
 
     selected_sector_ids = Array(params[:story][:sector_ids]).reject(&:blank?).map(&:to_i)
     story.sectors = Sector.where(id: selected_sector_ids)
+    story.save!
   end
 
 

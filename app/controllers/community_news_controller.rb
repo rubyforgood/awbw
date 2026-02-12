@@ -130,6 +130,7 @@ class CommunityNewsController < ApplicationController
 
     selected_sector_ids = Array(params[:community_news][:sector_ids]).reject(&:blank?).map(&:to_i)
     community_news.sectors = Sector.where(id: selected_sector_ids)
+    community_news.save!
   end
 
   private

@@ -172,6 +172,7 @@ class ResourcesController < ApplicationController
 
     selected_sector_ids = Array(params[:resource][:sector_ids]).reject(&:blank?).map(&:to_i)
     resource.sectors = Sector.where(id: selected_sector_ids)
+    resource.save!
   end
 
   def process_search
