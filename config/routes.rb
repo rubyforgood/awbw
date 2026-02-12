@@ -22,6 +22,9 @@ Rails.application.routes.draw do
              controllers: { registrations: "registrations",
                             confirmations: "confirmations",
                             passwords: "passwords" }
+  devise_scope :user do
+    get "/confirm/:confirmation_token", to: "confirmations#show", as: :confirm
+  end
   get "users/change_password", to: "users#change_password", as: "change_password"
   post "users/update_password", to: "users#update_password", as: "update_password"
   get "welcome/:welcome_instructions_token", to: "welcome#show", as: "user_welcome"

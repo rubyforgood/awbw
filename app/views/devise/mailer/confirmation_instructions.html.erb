@@ -23,7 +23,7 @@ background-color:#f3f4f6;
 
   <p>
     <%= link_to "Set your password",
-                user_confirmation_url(confirmation_token: @token),
+                confirm_url(confirmation_token: @token),
                 target: "_blank",
                 style: "display:inline-block;
                         padding:10px 16px;
@@ -47,5 +47,5 @@ background-color:#f3f4f6;
 </div>
 
 <% content_for :fallback_url do %>
-  <%= user_confirmation_url(confirmation_token: @token) %>
+  <%= confirm_url(confirmation_token: @token) %>
 <% end %>
