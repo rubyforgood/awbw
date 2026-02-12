@@ -82,6 +82,10 @@ class Organization < ApplicationRecord
     leader.user == user
   end
 
+  def city_state
+    "#{organization_locality}, #{addresses.active.first&.state}"
+  end
+
   def type_name
     "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end
