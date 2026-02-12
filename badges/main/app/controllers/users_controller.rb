@@ -42,7 +42,7 @@ class UsersController < ApplicationController
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
-      redirect_to users_path, notice: "User was successfully created."
+      redirect_to users_path(search: @user.email), notice: "User was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content

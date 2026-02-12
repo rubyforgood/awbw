@@ -5,13 +5,27 @@ class OrganizationUsersController < ApplicationController
     authorize! @organization_user, to: :destroy?
     organization_user = OrganizationUser.find(params[:id])
     user = organization_user.user
+    destroyed = organization_user.destroy
 
-    if organization_user.destroy
-      flash[:notice] = "Organization user has been deleted."
+    if destroyed
+      flash.now[:notice] = "Person has been removed from the organization."
     else
-      flash[:alert] = "Unable to delete organization user.  Please contact AWBW."
+      flash.now[:alert] = "Unable to remove organization user. Please contact AWBW."
     end
-    redirect_to generate_facilitator_user_path(user)
+
+    respond_to do |format|
+      format.turbo_stream do
+        if destroyed
+          render :destroy
+        else
+          render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"),
+                 status: :unprocessable_entity
+        end
+      end
+      format.html do
+        redirect_to generate_facilitator_user_path(user)
+      end
+    end
   end
 
   private

@@ -1,0 +1,177 @@
+<nav class="relative bg-white print:hidden">
+  <div class="px-2 sm:px-6 lg:px-8">
+    <!-- Row 1: Logo and Main Navigation -->
+    <div class="nav-row relative flex items-center justify-center border-b-4 border-purple-700 py-3">
+      <div class="hidden lg:flex space-x-6 items-center">
+        <div class="flex shrink-0 items-center">
+          <%= link_to share_portal_stories_path, class: "relative group" do %>
+            <%= image_tag("logo-with-tagline-436x80.jpg", class: "h-8 sm:h-8 w-auto block") %>
+          <% end %>
+        </div>
+        <div class="relative group">
+          <%= link_to "Who We Are", "#", class: "font-telefon text-gray-700 hover:text-purple-700 text-md font-medium transition-colors" %>
+          <!-- Dropdown -->
+          <div class="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+            <div class="py-1">
+              <%= link_to "Our Story", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              <%= link_to "Our Team", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              <%= link_to "Contact Us", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+            </div>
+          </div>
+        </div>
+        <div class="relative group">
+          <%= link_to "What We Do", "#", class: "font-telefon text-gray-700 hover:text-purple-700 text-md font-medium transition-colors" %>
+          <!-- Dropdown -->
+          <div class="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+            <div class="py-1">
+              <%= link_to "Workshops", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              <%= link_to "Training", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              <%= link_to "Research", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+            </div>
+          </div>
+        </div>
+        <div class="relative group">
+          <%= link_to "Ways to Help", "#", class: "font-telefon text-gray-700 hover:text-purple-700 text-md font-medium transition-colors" %>
+          <!-- Dropdown -->
+          <div class="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+            <div class="py-1">
+              <%= link_to "Donate", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              <%= link_to "Volunteer", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              <%= link_to "Partner", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+            </div>
+          </div>
+        </div>
+        <div class="relative group">
+          <%= link_to "Our Next Chapter", "#", class: "font-telefon text-gray-700 hover:text-purple-700 text-md font-medium transition-colors" %>
+          <!-- Dropdown -->
+          <div class="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+            <div class="py-1">
+              <%= link_to "Vision", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              <%= link_to "Goals", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              <%= link_to "Updates", "#", class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-4 absolute right-2 sm:right-6 lg:right-8">
+        <%= link_to "Donate", "#", class: "hidden md:inline-flex px-6 py-2 bg-gray-800 text-white text-sm font-medium hover:bg-gray-900 transition-colors" %>
+        
+        <!-- Lock Icon -->
+        <button class="hidden md:inline-flex text-gray-700 hover:text-purple-700 transition-colors" aria-label="Login">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </button>
+        
+        <!-- Search Icon -->
+        <button class="hidden md:inline-flex text-gray-700 hover:text-purple-700 transition-colors" aria-label="Search">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+        
+        <!-- Exit Icon -->
+        <button class="hidden md:inline-flex text-gray-700 hover:text-purple-700 transition-colors" aria-label="Exit">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
+        
+        <!-- Mobile menu button -->
+        <div class="lg:hidden">
+          <button
+            type="button"
+            class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-2 focus:ring-2 focus:ring-purple-700"
+            data-action="click->toggle#toggle"
+            data-toggle-target="menu"
+          >
+            <span class="sr-only">Open main menu</span>
+            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Focus Area Navigation -->
+    <div class="nav-row">
+      <div class="hidden lg:flex items-center justify-center py-3 space-x-6">
+        <%= link_to "Home", share_portal_stories_path, class: "font-telefon text-[#5B2C8A] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        <%= link_to "Domestic Violence", share_portal_stories_path(focus: "domestic_violence"), class: "font-telefon text-red-700 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        <%= link_to "Self-Care & Personal Growth", share_portal_stories_path(focus: "self_care"), class: "font-telefon text-[#1F6F8B] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        <%= link_to "Social Justice", share_portal_stories_path(focus: "social_justice"), class: "font-telefon text-green-700 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        <%= link_to "Facilitator Spotlights", share_portal_stories_path(focus: "facilitator_spotlights"), class: "font-telefon text-[#8B004B] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+        <%= link_to "Additional Focus Areas", "#", class: "font-telefon text-[#F28C00] hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+      </div>
+    </div>
+
+    <!-- Row 3: Participant Type Navigation and Search - Centered Below Row 2 -->
+    <div class="nav-row border-b-4 border-purple-700 ">
+      <div class="hidden lg:flex flex-col items-center justify-center py-3 space-y-3">
+        <div class="flex items-center space-x-6">
+          <%= link_to "Children", share_portal_stories_path(focus: "children"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Teens", share_portal_stories_path(focus: "teens"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Adults", share_portal_stories_path(focus: "adults"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Families", share_portal_stories_path(focus: "families"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Community", share_portal_stories_path(focus: "community"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Self", share_portal_stories_path(focus: "self"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <%= link_to "Colleagues", share_portal_stories_path(focus: "colleagues"), class: "font-telefon text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium transition-all" %>
+          <div>
+            <form action="<%= share_portal_stories_path %>" method="get" class="relative">
+              <input
+                type="search"
+                name="q"
+                placeholder="Search keywords to find more stories..."
+                class="w-80 px-4 py-2 rounded-md border border-gray-300 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+                value="<%= params[:q] %>"/>
+              <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Search Box - Centered Below -->
+
+      </div>
+    </div>
+
+    <!-- Mobile menu, hidden by default -->
+    <div class="lg:hidden hidden nav-row border-b-4 border-purple-700 " data-toggle-target="menu">
+      <div class="space-y-1 pb-3 pt-2">
+        <%= link_to "Home", share_portal_stories_path, class: "block px-3 py-2 text-gray-800 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Domestic Violence", share_portal_stories_path(focus: "domestic_violence"), class: "block px-3 py-2 text-red-700 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Self-Care & Personal Growth", share_portal_stories_path(focus: "self_care"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Social Justice", share_portal_stories_path(focus: "social_justice"), class: "block px-3 py-2 text-green-700 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Facilitator Spotlights", share_portal_stories_path(focus: "facilitator_spotlights"), class: "block px-3 py-2 text-purple-700 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        
+        <div class="border-t border-gray-200 my-2"></div>
+        
+        <%= link_to "Children", share_portal_stories_path(focus: "children"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Teens", share_portal_stories_path(focus: "teens"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Adults", share_portal_stories_path(focus: "adults"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Families", share_portal_stories_path(focus: "families"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Community", share_portal_stories_path(focus: "community"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Self", share_portal_stories_path(focus: "self"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        <%= link_to "Colleagues", share_portal_stories_path(focus: "colleagues"), class: "block px-3 py-2 text-gray-600 hover:bg-gray-100 text-base font-medium rounded-md" %>
+        
+        <!-- Mobile Search -->
+        <div class="px-3 py-2">
+          <form action="<%= share_portal_stories_path %>" method="get">
+            <input
+              type="search"
+              name="q"
+              placeholder="Search stories..."
+              class="w-full px-4 py-2 rounded-md border border-gray-300 text-gray-900 text-sm"
+              value="<%= params[:q] %>"
+            />
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

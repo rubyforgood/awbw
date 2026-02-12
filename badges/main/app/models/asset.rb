@@ -45,7 +45,7 @@ class Asset < ApplicationRecord
   has_one_attached :file, dependent: :purge do |attachable|
     attachable.variant :thumbnail,
       resize_to_limit: [ 256, 256 ],
-      format: :jpeg,
+      format: :webp,
       saver: { quality: 80 }
   end
   validate :file_type

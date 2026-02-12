@@ -1,6 +1,7 @@
 class RichTextAssetMentionsController < ApplicationController
+  skip_verify_authorized
   def index
-    authorize!
+    # authorize!
     record = GlobalID::Locator.locate_signed(params[:sgid])
 
     unless record

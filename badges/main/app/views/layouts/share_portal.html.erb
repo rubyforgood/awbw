@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Story Share - AWBW</title>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+    <%= javascript_include_tag "activestorage" %>
+    <%= csrf_meta_tags %>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="shortcut icon" type="image/png" href="<%= asset_path("favicon.png") %>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <%= vite_stylesheet_tag "application.css" %>
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag "application" %>
+
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+      }
+      .font-telefon {
+        font-family: 'Telefon Bold', sans-serif;
+      }
+      
+      /* Hide secondary nav rows on scroll */
+      .nav-row {
+        max-height: 200px;
+        overflow: visible;
+        transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+      }
+      
+      .scrolled .nav-row:not(:first-child) {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+      }
+    </style>
+  </head>
+
+  <body class="stories share_portal flex flex-col min-h-screen bg-white">
+    <div class="flex-grow" id="main">
+      <div class="sticky top-0 left-0 w-full z-50 print:hidden" id="share-portal-header">
+        <!-- Story Share Portal Navbar -->
+        <%= render "shared/share_portal_navbar" %>
+      </div>
+
+      <div class="not-signed-in-user flex flex-col">
+        <%= render "shared/flash_messages" %>
+        <%= yield %>
+      </div>
+    </div>
+
+    <div class="site-footer print:hidden"><%= render "shared/footer" %></div>
+    <%= render "shared/footer_nav" %>
+
+    <script>
+      // Hide navigation rows on scroll
+      const header = document.getElementById('share-portal-header');
+      
+      window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 100) {
+          header.classList.add('scrolled');
+        } else {
+          header.classList.remove('scrolled');
+        }
+      });
+    </script>
+  </body>
+</html>

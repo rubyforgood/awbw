@@ -89,9 +89,12 @@ class OrganizationsController < ApplicationController
                           .joins(:user)
                           .order(:first_name, :last_name)
                           .map { |f| [ f.name, f.user.id ] }
-    @organization.organization_users = @organization.organization_users
-                                     .includes(:organization)
-                                     .sort_by { |ou| ou.user.person&.name.to_s.downcase }
+
+    if @organization.persisted? && @organization.errors.empty?
+      @organization.organization_users = @organization.organization_users
+                                               .includes(:organization)
+                                               .sort_by { |ou| ou.user.person&.name.to_s.downcase }
+    end
   end
 
   def set_index_variables
