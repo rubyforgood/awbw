@@ -16,7 +16,7 @@
                   as: :text,
                   input_html: {
                     rows: 1,
-                    value: f.object&.title || f.object&.position,
+                    value: f.object&.title || f.object&.position || "FACILITATOR",
                   } %>
     </div>
     <div class="flex items-center justify-between py-3 px-6 gap-6 col-span-2">
