@@ -191,15 +191,15 @@ class PeopleController < ApplicationController
         :city2,
         :state2,
         :zip2,
-        :notes,
-        organization_people_attributes: [
-          :id,
-          :organization_id,
-          :position,
-          :title,
-          :inactive,
-          :_destroy
-        ]
+        :notes
+      ],
+      organization_people_attributes: [
+        :id,
+        :organization_id,
+        :position,
+        :title,
+        :inactive,
+        :_destroy
       ],
     )
   end
