@@ -9,6 +9,7 @@
 <% display_open_pdf_link ||= false %>
 <% idx ||= 0 %>
 <% item_type ||= "PrimaryAsset" %>
+<% extra_image_classes ||= "" %>
 
 <% width ||= "32" %>
 <% height ||= width %>
@@ -48,20 +49,20 @@
   sizes = {
     hero: {
       wrapper: "mb-8",
-      image:   "w-full rounded-lg shadow-sm border border-gray-200",
+      image:   "hero-size w-full rounded-lg shadow-sm border border-gray-200 #{extra_image_classes}",
       preview: [1200, 1200]
     },
 
     gallery: {
       wrapper: "flex grow",
-      image:   "#{width_class} #{height_class} object-cover rounded border border-gray-300
-                shadow-sm hover:opacity-90 transition-opacity",
+      image:   "gallery-size #{width_class} #{height_class} object-cover rounded border border-gray-300
+                shadow-sm hover:opacity-90 transition-opacity #{extra_image_classes}",
       preview: [300, 300]
     },
 
     index: {
-      wrapper: "#{width_class} #{height_class} shrink-0 overflow-hidden rounded border border-gray-300",
-      image:   "w-full h-full object-cover"
+      wrapper: "index-size #{width_class} #{height_class} shrink-0 overflow-hidden rounded border border-gray-300",
+      image:   "w-full h-full object-cover #{extra_image_classes}"
     }
   }.fetch(variant)
 

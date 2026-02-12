@@ -5,6 +5,12 @@ class ApplicationController < ActionController::Base
   before_action :set_current_user # for AhoyTrackable in models
   before_action :preload_current_user_associations
 
+  before_action do
+    if current_user && current_user.super_user
+      Rack::MiniProfiler.authorize_request
+    end
+  end
+
   verify_authorized unless: :devise_controller?
 
   after_action :flush_lifecycle_events

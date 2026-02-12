@@ -1,5 +1,5 @@
 <% if current_user&.super_user? %>
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start mb-4">
+  <div class="nested-fields grid grid-cols-1 md:grid-cols-4 gap-4 items-start mb-4"<% if f.object.persisted? %> id="<%= dom_id(f.object) %>"<% end %>>
 
     <div>
       <%= f.input :user_id,
@@ -18,7 +18,7 @@
                   as: :text,
                   input_html: {
                     rows: 1,
-                    value: f.object&.title || f.object&.position,
+                    value: f.object&.title || f.object&.position || "FACILITATOR",
                   } %>
     </div>
 
@@ -32,9 +32,20 @@
                     input_html: { class: "h-4 w-4 text-blue-600 border-gray-300 rounded" } %>
       </div>
 
-      <%= link_to_remove_association "✖ Remove",
-                                     f,
-                                     class: "btn btn-danger-outline whitespace-nowrap" if f.object&.persisted? %>
+      <% if f.object.persisted? %>
+        <%= link_to "✖ Remove",
+                    organization_user_path(f.object),
+                    data: {
+                      turbo_method: :delete,
+                      turbo_confirm: "Remove this person from the organization?",
+                      turbo_stream: true
+                    },
+                    class: "btn btn-danger-outline whitespace-nowrap" %>
+      <% else %>
+        <%= link_to_remove_association "✖ Remove",
+                                       f,
+                                       class: "btn btn-danger-outline whitespace-nowrap" %>
+      <% end %>
     </div>
   </div>
 <% else %>

@@ -53,6 +53,7 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(resource_id_param).decorate
     authorize! @resource
     track_view(@resource)
+    @mentions = @resource.all_mentions_grouped
     load_forms
   end
 

@@ -105,7 +105,14 @@ Rails.application.routes.draw do
   end
   resources :sectors
   resources :story_ideas
-  resources :stories
+  resources :stories do
+    collection do
+      get :share_portal
+    end
+    member do
+      get :show_share_portal
+    end
+  end
   resources :tutorials
   resources :user_forms
   resources :windows_types
