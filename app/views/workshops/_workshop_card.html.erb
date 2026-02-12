@@ -5,7 +5,6 @@
   <div class="absolute bottom-3 right-3 z-30">
     <%= render "bookmarks/editable_bookmark_icon", resource: workshop.object %>
   </div>
-
   <% cache workshop do %>
     <!-- FULLY CLICKABLE CARD CONTENT -->
     <%= link_to workshop_path(workshop), data: { turbo_frame: "_top" }, class: "block h-full" do %>
@@ -15,16 +14,14 @@
                width: "full", height: "24",
                link: false,
                link_to_object: false,
-               file: workshop.display_image %>
-
+               file: workshop.display_image,
+               variant: :gallery %>
       <!-- Content section -->
       <div class="p-4">
         <!-- add bottom padding so text never overlaps the bookmark -->
         <div class="text-xs text-gray-500 mb-2 flex justify-between"><span><%= workshop.windows_type&.short_name %></span><span><%= workshop.date %></span></div>
-
         <div class="flex flex-col gap-2">
           <span class="text-lg font-semibold text-gray-800"><%= workshop.title %></span>
-
           <p class="text-gray-600 text-sm"><%= workshop.title.length > 25 ?
                 workshop.formatted_objective.truncate(75) :
                 workshop.formatted_objective %></p>

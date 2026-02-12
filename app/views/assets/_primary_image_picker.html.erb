@@ -11,6 +11,6 @@
 
     <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
 
-    <button data-action="asset-picker#openFileDialog" type="button" class="bg-white text-gray-700 rounded-full p-2 shadow hover:bg-gray-100 transition flex items-center"><i class="fa-solid fa-camera"></i><span class="pl-2">Change photo</span></button>
+    <button data-action="asset-picker#openFileDialog" type="button" class="hidden md:flex bg-white text-gray-700 rounded-full p-2 shadow hover:bg-gray-100 transition items-center"><i class="fa-solid fa-camera"></i><span class="pl-2 text-nowrap">Change photo</span></button>
   <% end %>
 <% end %>

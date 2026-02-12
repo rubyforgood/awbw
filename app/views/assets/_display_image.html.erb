@@ -2,7 +2,6 @@
 <% item ||= nil %>
 <% field_name ||= :primary_asset %>
 <% file ||= item&.file || resource&.try(field_name)&.file || file %>
-
 <% variant ||= :gallery %>
 <% link_to_object ||= false %>
 <% link ||= link_to_object %>
@@ -10,10 +9,8 @@
 <% idx ||= 0 %>
 <% item_type ||= "PrimaryAsset" %>
 <% extra_image_classes ||= "" %>
-
 <% width ||= "32" %>
 <% height ||= width %>
-
 <%
   # --------------------------------------------------
   # Normalize file input
@@ -49,8 +46,7 @@
   sizes = {
     hero: {
       wrapper: "mb-8",
-      image:   "hero-size w-full rounded-lg shadow-sm border border-gray-200 #{extra_image_classes}",
-      preview: [1200, 1200]
+      image:   "hero-size w-full rounded-lg shadow-sm border border-gray-200 #{extra_image_classes}"
     },
 
     gallery: {
@@ -62,7 +58,8 @@
 
     index: {
       wrapper: "index-size #{width_class} #{height_class} shrink-0 overflow-hidden rounded border border-gray-300",
-      image:   "w-full h-full object-cover #{extra_image_classes}"
+      image:   "w-full h-full object-cover #{extra_image_classes}",
+      preview: [300, 300]
     }
   }.fetch(variant)
 
@@ -80,59 +77,77 @@
       asset_path(asset_fallback)
     end
 %>
-
 <%#
   --------------------------------------------------
   # Inner content (NO LINKS HERE)
   # --------------------------------------------------
 %>
-
 <% inner = capture do %>
   <div class="<%= variant %>-item <%= resource&.class&.table_name %>-<%= idx %> <%= sizes[:wrapper] %>">
     <% if active_storage_file %>
       <% if active_storage_file.previewable? %>
-        <%= image_tag(
-              active_storage_file.preview(resize_to_limit: sizes[:preview]),
+        <%# Use preview for PDFs in hero, thumbnail variant for small images, full preview for larger images %>
+        <% if active_storage_file.content_type == "application/pdf" %>
+          <% if variant == :hero %>
+            <% image_to_render = active_storage_file.preview(resize_to_limit: [1200, 1200]) %>
+          <% else %>
+            <% image_to_render = active_storage_file.preview(resize_to_limit: sizes[:preview]) %>
+          <% end %>
+        <% elsif (variant == :index || variant == :gallery || (width.to_i > 0 && width.to_i <= 32 && height.to_i <= 32)) && 
+             active_storage_file.variable? %>
+        <% image_to_render = active_storage_file.variant(:thumbnail) %>
+      <% else %>
+        <% image_to_render = active_storage_file.preview(resize_to_limit: sizes[:preview]) %>
+      <% end %>
+      <%= image_tag(
+              image_to_render,
               class: "#{sizes[:image]} hover:opacity-95 transition-opacity",
               alt: "#{item_type} preview #{idx + 1} (#{active_storage_file.blob.filename})"
             ) %>
-      <% elsif active_storage_file.content_type == "application/pdf" %>
-        <div class="flex items-center gap-3 p-4 border rounded-lg bg-gray-50">
-          <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
-          <span class="font-medium underline hover:no-underline"><%= active_storage_file.blob.filename %></span>
-        </div>
-      <% else %>
-        <%= image_tag(
-              active_storage_file,
+    <% elsif active_storage_file.content_type == "application/pdf" && variant != :hero %>
+      <div class="flex items-center gap-3 p-4 border rounded-lg bg-gray-50">
+        <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
+        <span class="font-medium underline hover:no-underline"><%= active_storage_file.blob.filename %></span>
+      </div>
+    <% else %>
+      <%# Use thumbnail variant for index, gallery and small sizes (only for variable files), full size for hero, original for larger ones %>
+      <% if variant == :hero %>
+        <% image_to_render = active_storage_file %>
+      <% elsif (variant == :index || variant == :gallery || (width.to_i <= 32 && height.to_i <= 32)) && 
+             active_storage_file.variable? %>
+      <% image_to_render = active_storage_file.variant(:thumbnail) %>
+    <% else %>
+      <% image_to_render = active_storage_file %>
+    <% end %>
+    <%= image_tag(
+              image_to_render,
               class: "#{sizes[:image]} hover:opacity-95 transition-opacity",
               alt: "#{item_type} image #{idx + 1} (#{active_storage_file.blob.filename})"
             ) %>
-      <% end %>
-    <% elsif icon_display %>
-      <div class="<%= sizes[:image] %> hover:opacity-95 transition-opacity">
-        <%= render "assets/display_icon",
+  <% end %>
+<% elsif icon_display %>
+  <div class="<%= sizes[:image] %> hover:opacity-95 transition-opacity">
+    <%= render "assets/display_icon",
                    resource: resource,
                    width: 18,
                    height: 18,
                    variant: variant %>
-      </div>
-    <% else %>
-      <%# ---- Asset fallback (string filename) ---- %>
-      <%= image_tag(
+  </div>
+<% else %>
+  <%# ---- Asset fallback (string filename) ---- %>
+  <%= image_tag(
             asset_fallback,
             class: sizes[:image],
             alt: "#{item_type} fallback image #{idx + 1}"
           ) %>
-    <% end %>
-  </div>
 <% end %>
-
+</div>
+<% end %>
 <%#
   --------------------------------------------------
   # Optional link wrapper
   # --------------------------------------------------
 %>
-
 <% if link && link_href.present? %>
   <% link_options =
       if link_to_object
@@ -146,14 +161,14 @@
   <% if active_storage_file&.previewable? &&
         display_open_pdf_link &&
         active_storage_file.content_type == "application/pdf" %>
-    <div class="mt-2 text-sm text-gray-600">
-      <%= link_to "Open PDF",
+  <div class="mt-2 text-sm text-gray-600">
+    <%= link_to "Open PDF",
                   rails_blob_path(file, disposition: :inline),
                   target: "_blank",
                   rel: "noopener",
                   class: "underline hover:no-underline" %>
-    </div>
-  <% end %>
+  </div>
+<% end %>
 <% else %>
   <%= inner %>
 <% end %>

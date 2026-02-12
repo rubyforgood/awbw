@@ -3,7 +3,6 @@
   <div class="absolute top-3 right-3 z-30">
     <%= render "bookmarks/editable_bookmark_icon", resource: resource.object %>
   </div>
-
   <!-- CARD -->
   <div
     class="
@@ -30,20 +29,18 @@
           <div class="absolute inset-0 flex items-center justify-center text-gray-700 resource-icon">
             <%= render "resources/resource_icon", kind: resource.kind %>
           </div>
-
           <%= render "assets/display_image",
                      resource: resource.object,
                      width: "32", height: "32",
                      link: false,
                      link_to_object: false,
-                     file: resource.display_image %>
+                     file: resource.display_image,
+                     variant: :gallery %>
         <% end %>
       </div>
-
       <!-- TYPE -->
       <span class="mt-2 text-xs font-medium text-gray-500 uppercase tracking-wide"><%= resource.kind_display %></span>
     </div>
-
     <!-- RIGHT SIDE -->
     <div class="flex-1 min-w-0 pl-4 pr-10 pb-12 mt-2 relative">
       <div class="mt-3 mb-2">
@@ -54,7 +51,6 @@
           <%= title_with_badges(resource, show_hidden_badge: current_user&.super_user?).html_safe %>
         <% end %>
       </div>
-
       <!-- ACTION BUTTONS -->
       <div class="absolute bottom-3 right-3 flex items-center space-x-2 z-30">
         <% if resource.downloadable_asset&.file&.attached? %>
@@ -65,7 +61,6 @@
                 class: "btn btn-utility"
               ) %>
         <% end %>
-
         <% if controller_name == "resources" &&  allowed_to?(:edit?, resource) %>
           <%= link_to(
                 content_tag(:span, "", class: "far fa-edit"),

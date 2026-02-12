@@ -4,7 +4,7 @@
   <div class="<%= resource.class.table_name %>-gallery text-center mb-4">
     <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-4xl">
       <% gallery_assets.each_with_index do |gallery_assets, idx| %>
-        <%= render "assets/display_image", item: gallery_assets, idx: idx %>
+        <%= render "assets/display_image", item: gallery_assets, idx: idx, variant: :gallery %>
       <% end %>
     </div>
   </div>
