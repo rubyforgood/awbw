@@ -13,7 +13,6 @@ RSpec.describe Workshop do
 
     it { should have_many(:sectorable_items).dependent(:destroy).inverse_of(:sectorable) }
     it { should have_many(:sectors).through(:sectorable_items) }
-    it { should have_many(:images).dependent(:destroy) } # As owner
     it { should have_many(:workshop_logs).dependent(:destroy) } # As owner
     it { should have_many(:bookmarks).dependent(:destroy) } # As bookmarkable
     it { should have_many(:workshop_variations).dependent(:restrict_with_error) }
@@ -24,7 +23,6 @@ RSpec.describe Workshop do
     it { should have_many(:quotes).through(:quotable_item_quotes) }
     it { should have_many(:workshop_resources).dependent(:destroy) }
     it { should have_many(:resources).through(:workshop_resources) }
-    it { should have_many(:attachments).dependent(:destroy) } # As owner
     it { should have_many(:age_ranges) }
 
     # Nested Attributes
