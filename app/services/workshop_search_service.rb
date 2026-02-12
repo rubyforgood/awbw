@@ -5,6 +5,8 @@ class WorkshopSearchService
   def initialize(params = {}, user: nil)
     @params = params
     @user = user
+    # Note: This reads the super_user attribute for scoping data visibility
+    # Authorization decisions are made by controllers using ActionPolicy
     @admin = user&.super_user?
     @sort = default_sort
     @workshops =

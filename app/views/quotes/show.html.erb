@@ -13,7 +13,7 @@
         <%= link_to "Dashboard", root_path,
                     class: "btn btn-secondary-outline" %>
 
-        <% if current_user&.super_user? %>
+        <% if admin? %>
           <%= link_to "Edit", edit_quote_path(@quote),
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>

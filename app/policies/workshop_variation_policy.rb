@@ -12,7 +12,7 @@ class WorkshopVariationPolicy < ApplicationPolicy
   end
 
   def update?
-    admin?
+    admin? || owner?
   end
 
   def destroy?

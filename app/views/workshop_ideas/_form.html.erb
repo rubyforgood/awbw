@@ -18,7 +18,7 @@
         <% end %>
         and should not be edited here.
       </div>
-    <% elsif current_user&.super_user? && f.object.persisted? %>
+    <% elsif admin? && f.object.persisted? %>
       <div class="admin-only bg-blue-100 m-3 p-3">
         <%= link_to "Promote to Workshop", new_workshop_path(workshop_idea_id: @workshop_idea.id),
                     class: "btn btn-secondary-outline",
@@ -61,7 +61,7 @@
       </div>
     </div>
 
-    <% if current_user&.super_user? %>
+    <% if admin? %>
       <div class="bg-white rounded pb-6">
         <div class="admin-only bg-blue-100 flex gap-x-2 items-center p-3">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -387,7 +387,7 @@
         <%= link_to "Delete", workshop_idea, method: :delete, class: "btn btn-danger-outline",
                     data: { confirm: "Are you sure you want to delete?" } %>
       <% end %>
-      <%= link_to "Cancel", (current_user&.super_user? ? workshops_path : root_path), class: "btn btn-secondary-outline" %>
+      <%= link_to "Cancel", (admin? ? workshops_path : root_path), class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   <% end %>

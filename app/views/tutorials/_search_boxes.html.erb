@@ -16,7 +16,7 @@
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
-    <% if current_user&.super_user? %>
+    <% if admin? %>
       <div class="admin-only bg-blue-100">
         <%= f.label :published, "Published",
                     class: "block text-sm font-medium text-gray-700" %>

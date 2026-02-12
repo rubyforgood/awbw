@@ -18,21 +18,21 @@
     class="absolute right-0 mt-2 w-56 rounded-md bg-white py-1 shadow-lg outline outline-black/5 transition hidden"
     id="avatar-dropdown"
     data-dropdown-target="content">
-    <% if current_user&.super_user? %>
+    <% if admin? %>
       <%= link_to admin_path,
                   class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
         <i class="fas fa-cog"></i>
         <span>Admin</span>
       <% end %>
     <% end %>
-    <% if current_user&.super_user %>
+    <% if admin? %>
       <%= link_to (current_user.person ? person_path(current_user.person) : generate_person_user_path(current_user)),
                   class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
         <i class="fas fa-user"></i>
         <span>My profile</span>
       <% end %>
     <% end %>
-    <% if current_user&.super_user? && current_user.person&.organization_people&.any? %>
+    <% if admin? && current_user.person&.organization_people&.any? %>
       <% current_user.person.organization_people.each do |organization_person| %>
         <%= link_to organization_path(organization_person.organization),
                     class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>

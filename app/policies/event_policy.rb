@@ -15,6 +15,17 @@ class EventPolicy < ApplicationPolicy
     authenticated? && record.published?
   end
 
+  def update?
+    admin? || owner?
+  end
+
+  private
+
+  def owner?
+    return false unless authenticated?
+    record.created_by == user
+  end
+
   relation_scope do |relation|
     next relation if admin?
     if authenticated? # logged in users can see events they are registered for even if registration is closed

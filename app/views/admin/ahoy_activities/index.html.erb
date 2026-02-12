@@ -29,7 +29,7 @@
             </div>
 
             <!-- User Filter -->
-            <% if current_user&.super_user? %>
+            <% if admin? %>
               <div>
                 <label class="block text-sm font-medium text-gray-600 mb-1">
                   User
