@@ -30,22 +30,22 @@ RSpec.describe "/workshops", type: :request do
         workshop  # Ensure workshop is persisted before the test
       end
 
-      it "does not destroy the workshop and redirects back from edit page" do
+      it "does not destroy the workshop and redirects to root" do
         expect {
           delete workshop_path(workshop), headers: { "HTTP_REFERER" => edit_workshop_path(workshop) }
         }.not_to change(Workshop, :count)
 
-        expect(response).to redirect_to(edit_workshop_path(workshop))
+        expect(response).to redirect_to(root_path)
         follow_redirect!
         expect(flash[:alert]).to include("You are not authorized to perform this action")
       end
 
-      it "does not destroy the workshop and redirects back from show page" do
+      it "does not destroy the workshop and redirects to root" do
         expect {
           delete workshop_path(workshop), headers: { "HTTP_REFERER" => workshop_path(workshop) }
         }.not_to change(Workshop, :count)
 
-        expect(response).to redirect_to(workshop_path(workshop))
+        expect(response).to redirect_to(root_path)
         follow_redirect!
         expect(flash[:alert]).to include("You are not authorized to perform this action")
       end

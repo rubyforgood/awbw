@@ -220,7 +220,7 @@ RSpec.describe "/users", type: :request do
         it "updates the user" do
           patch user_url(user), params: { user: new_attributes }
           user.reload
-          expect(user.email).to include("rosa")
+          expect(user.email).not_to include("rosa") # bc confirmable hasn't gone through yet
           expect(user.unconfirmed_email).to include("rosa")
         end
 
