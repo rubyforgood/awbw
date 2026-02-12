@@ -1,12 +1,13 @@
 class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
-  devise :database_authenticatable, :recoverable,
+  devise :database_authenticatable, :recoverable, :confirmable,
     :rememberable, :trackable, :validatable
 
-  after_create :set_default_values
-  after_update :track_email_change
+  after_update :track_welcome_instructions
+  after_update :track_welcome_completion, if: :welcome_token_cleared?
   after_update :track_login_event
+  after_update :track_email_change
 
   before_destroy :track_account_deleted
   before_destroy :reassign_reports_and_logs_to_orphaned_user
@@ -175,6 +176,34 @@ class User < ApplicationRecord
     []
   end
 
+  def set_welcome_instructions_token!
+    loop do
+      self.welcome_instructions_token = Devise.friendly_token
+      break unless self.class.exists?(welcome_instructions_token: welcome_instructions_token)
+    end
+
+    self.welcome_instructions_created_at = Time.current
+    save!
+  end
+
+  def clear_welcome_instructions_token!
+    update_columns(
+      welcome_instructions_token: nil,
+      welcome_instructions_created_at: nil,
+      welcome_instructions_sent_at: nil
+    )
+  end
+
+  def welcome_instructions_token_valid?
+    welcome_instructions_token.present? && welcome_instructions_created_at.present? &&
+      welcome_instructions_created_at > 30.days.ago
+  end
+
+  def track_auth_event(name, properties = {})
+    payload = { name: name, properties: properties.merge(user_id: id) }
+    Analytics::LifecycleBuffer.push(payload)
+  end
+
   private
 
   def time_zone_must_be_valid
@@ -190,11 +219,6 @@ class User < ApplicationRecord
     errors.add(:person_id, "cannot be removed once set")
   end
 
-  def set_default_values
-    self.inactive = false if inactive.nil?
-    self.confirmed = true if confirmed.nil?
-  end
-
   def reassign_reports_and_logs_to_orphaned_user
     orphaned_user = User.find_by(email: "orphaned_reports@awbw.org")
     return unless orphaned_user
@@ -208,7 +232,7 @@ class User < ApplicationRecord
 
   def after_confirmation
     super
-    track_auth_event("auth.account_confirmed")
+    track_auth_event("auth.email_confirmed")
   end
 
   def after_lock
@@ -221,13 +245,13 @@ class User < ApplicationRecord
     track_auth_event("auth.account_unlocked")
   end
 
-  def track_account_deleted
-    track_auth_event("auth.account_deleted")
+  def track_welcome_instructions
+    return unless saved_change_to_welcome_instructions_sent_at?
+    track_auth_event("auth.welcome_instructions_sent")
   end
 
-  def track_auth_event(name, properties = {})
-    payload = { name: name, properties: properties.merge(user_id: id) }
-    Analytics::LifecycleBuffer.push(payload)
+  def track_account_deleted
+    track_auth_event("auth.account_deleted")
   end
 
   def track_email_change
@@ -241,5 +265,14 @@ class User < ApplicationRecord
     track_auth_event("auth.login", {
       sign_in_count: sign_in_count
     })
+  end
+
+  def welcome_token_cleared?
+    saved_change_to_welcome_instructions_token? &&
+      welcome_instructions_token.nil?
+  end
+
+  def track_welcome_completion
+    track_auth_event("auth.account_setup_completed")
   end
 end

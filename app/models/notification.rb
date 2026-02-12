@@ -7,6 +7,18 @@ class Notification < ApplicationRecord
   # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols
 
   KINDS = %w[
+    contact_us
+    contact_us_fyi
+
+    welcome_instructions
+    account_confirmation
+    account_confirmation_fyi
+    account_confirmed
+    account_confirmed_fyi
+    account_unlock_fyi
+    reset_password
+    reset_password_fyi
+
     event_registration_confirmation
     event_registration_confirmation_fyi
     idea_submitted
@@ -15,12 +27,6 @@ class Notification < ApplicationRecord
     report_submitted_fyi
     workshop_log_submitted
     workshop_log_submitted_fyi
-    reset_password
-    reset_password_fyi
-    account_confirmation_fyi
-    account_unlock_fyi
-    contact_us
-    contact_us_fyi
   ].freeze
 
   RECIPIENT_ROLES = %w[

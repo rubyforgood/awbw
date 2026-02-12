@@ -6,7 +6,9 @@ FactoryBot.define do
     password { "MyString" }
 
     # CONFIRMABLE
-    confirmed_at { Time.current }
+    confirmed_at { Time.current } # note that new users in db have confirmed_at set to nil,
+    # but for testing convenience we set it to current time here.
+    # Use the :unconfirmed trait to create unconfirmed users.
 
     # LOCKABLE
     locked_at { nil }

@@ -2,9 +2,11 @@ require 'rails_helper'
 
 RSpec.describe "events/new", type: :view do
   let(:event) { Event.new }
+  let(:location) { create(:location, city: "My city") }
 
   before do
     assign(:event, event)
+    assign(:locations, [ location ])
     assign(:sectors, [])
     assign(:categories_grouped, [])
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
