@@ -16,8 +16,10 @@ class OrganizationPolicy < ApplicationPolicy
   private
 
   def member?
-    return false unless user&.person_id
-    record.organization_people.pluck(:person_id).include?(user.person_id)
+    @member ||= begin
+      return false unless user&.person_id
+      record.organization_people.pluck(:person_id).include?(user.person_id)
+    end
   end
 
   # Scoping

@@ -18,9 +18,11 @@ class MonthlyReportPolicy < ApplicationPolicy
   private
 
   def member?
-    return false unless authenticated?
-    return false unless record.organization
-    user.organization_ids.include?(record.organization.id)
+    @member ||= begin
+      return false unless authenticated?
+      return false unless record.organization
+      user.organization_ids.include?(record.organization.id)
+    end
   end
 
   relation_scope do |relation|
