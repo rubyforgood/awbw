@@ -104,7 +104,7 @@ RSpec.describe 'User Invitation Flow (System Test)', type: :request do
       # 1. Show error (422) if token is truly expired and user not confirmed, OR
       # 2. Redirect to sign in (302) if somehow user got confirmed
       # Devise behavior: expired tokens show error page
-      expect(response.status).to be_in([302, 422])
+      expect(response.status).to be_in([ 302, 422 ])
 
       if response.status == 422
         expect(response.body).to include('Confirmation token is invalid')
