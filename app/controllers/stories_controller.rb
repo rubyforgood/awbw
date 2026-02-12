@@ -144,7 +144,7 @@ class StoriesController < ApplicationController
     success = false
 
     Story.transaction do
-      if @story.update(story_params.except(:images))
+      if @story.update(story_params)
         assign_associations(@story)
         success = true
       end

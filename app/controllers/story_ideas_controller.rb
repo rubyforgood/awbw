@@ -59,7 +59,7 @@ class StoryIdeasController < ApplicationController
     @story_idea.updated_by = current_user
     authorize! @story_idea
 
-    if @story_idea.update(story_idea_params.except(:images))
+    if @story_idea.update(story_idea_params)
       flash[:notice] = "StoryIdea was successfully updated."
       if allowed_to?(:index?, StoryIdea)
         redirect_to story_ideas_path, status: :see_other
