@@ -31,7 +31,6 @@ class Resource < ApplicationRecord
 
   # Asset associations
   has_many :attachments, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
-  has_many :images, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
