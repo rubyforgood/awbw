@@ -59,7 +59,13 @@
                     <span class="fa fa-check-circle text-green-500"></span>
                   <% elsif user.welcome_instructions_sent_at.nil? %>
                     <%= link_to "Invite",
-                                send_welcome_instructions_user_path(user),
+                                send_welcome_instructions_user_path(user,
+                                                                    search: params[:search],
+                                                                    super_user: params[:super_user],
+                                                                    inactive: params[:inactive],
+                                                                    page: params[:page],
+                                                                    number_of_items_per_page:
+                                                                      params[:number_of_items_per_page]),
                                 method: :post,
                                 class: "btn btn-secondary-outline",
                                 data: { turbo: false } unless user.welcome_instructions_sent_at.present? %>

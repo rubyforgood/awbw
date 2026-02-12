@@ -4,10 +4,18 @@ class ConfirmationsController < Devise::ConfirmationsController
   def show
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])
 
-    if resource.errors.empty? || resource.confirmed_at.present?
+    if resource.errors.none?
       after_confirmation_success(resource)
+
+    elsif resource.confirmed?
+      redirect_to new_user_session_path,
+                  notice: "Your email is already confirmed. Please sign in."
+
     else
-      respond_with_navigational(resource.errors, status: :unprocessable_content) { render :new }
+      respond_with_navigational(resource.errors, status: :unprocessable_content) do
+        flash.now[:alert] = "Confirmation token is invalid. Please request a new confirmation email."
+        render :new, status: :unprocessable_content
+      end
     end
   end
 
