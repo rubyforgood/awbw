@@ -3,7 +3,8 @@ class ConfirmationsController < Devise::ConfirmationsController
 
   def show
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])
-
+    e = resource.errors.full_messages.join(", ")
+    debugger if e.present?
     if resource.errors.empty? || resource.confirmed_at.present?
       after_confirmation_success(resource)
     else

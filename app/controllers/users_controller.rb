@@ -36,9 +36,6 @@ class UsersController < ApplicationController
     # do NOT have Devise send confirmation email - we'll handle that manually after creation via send_welcome_instructions
     @user.skip_confirmation_notification!
 
-    # Generate welcome instructions token so that the welcome email set password and confirm email in one step
-    @user.set_welcome_instructions_token!
-
     # Optional: assign random password if none provided
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
@@ -48,6 +45,9 @@ class UsersController < ApplicationController
     @user.person = Person.find(person_id) if person_id
 
     if @user.save
+      # Generate welcome instructions token so that the welcome email set password and confirm email in one step
+      @user.set_welcome_instructions_token!
+
       # @user.notifications.create(notification_type: 0)
       redirect_to users_path(search: @user.email), notice: "User was successfully created."
     else
