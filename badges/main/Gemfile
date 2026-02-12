@@ -99,3 +99,5 @@ group :development, :test do
 end
 
 gem "rack-mini-profiler", "~> 4.0"
+
+gem "solid_queue", "~> 1.3"

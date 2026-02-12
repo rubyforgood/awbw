@@ -23,11 +23,14 @@ development:
   primary: &primary_development
     <<: *base
     database: awbw_development
+#  queue:
+#    <<: *primary_development
+#    database: awbw_development_queue
+#    migrations_paths: db/queue_migrate
 #  cache:
 #    <<: *primary_development
 #    database: awbw_development_cache
 #    migrations_paths: db/cache_migrate
-#    url: <%= ENV.fetch("CACHE_DATABASE_URL", nil) %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -43,7 +46,10 @@ staging:
     <<: *primary_staging
     database: awbw_staging_cache
     migrations_paths: db/cache_migrate
-    url: <%= ENV.fetch("CACHE_DATABASE_URL", nil) %>
+  queue:
+    <<: *primary_staging
+    database: awbw_staging_queue
+    migrations_paths: db/queue_migrate
 
 production:
   primary: &primary_production
@@ -52,6 +58,9 @@ production:
     <<: *primary_production
     database: awbw_production_cache
     migrations_paths: db/cache_migrate
-    url: <%= ENV.fetch("CACHE_DATABASE_URL", nil) %>
+  queue:
+    <<: *primary_production
+    database: awbw_production_queue
+    migrations_paths: db/queue_migrate
 
 
