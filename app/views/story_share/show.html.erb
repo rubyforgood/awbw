@@ -35,7 +35,7 @@
 <section class="bg-white py-4 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-right space-x-1">
-      <%= link_to "Story Share", story_share_index_path, class: "btn btn-secondary-outline" %>
+      <%= link_to "All Stories", story_share_index_path, class: "btn btn-secondary-outline" %>
       <%= link_to "Stories", stories_path, class: "btn btn-secondary-outline" %>
       <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
       <% if current_user&.super_user? %>
