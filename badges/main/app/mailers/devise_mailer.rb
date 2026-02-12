@@ -19,6 +19,9 @@ class DeviseMailer < Devise::Mailer
   def confirmation_instructions(record, token, opts = {})
     @record = record
     @token  = token
+    @user = record
+
+    opts[:subject] = "Welcome to the #{@organization_name} portal"
     @mail   = super
   end
 
@@ -51,18 +54,22 @@ class DeviseMailer < Devise::Mailer
 
   def notification_kind_for_devise_action
     {
+      "reset_password"              => "reset_password",
       "reset_password_instructions" => "reset_password",
       "confirmation_instructions"   => "account_confirmation",
-      "unlock_instructions"         => "account_unlock"
+      "unlock_instructions"         => "account_unlock",
+      "welcome_instructions"        => "welcome_invitation"
     }
   end
 
   def create_notification_record
+    return if Rails.env.test?
     return unless @mail && @record
 
     kind = notification_kind_for_devise_action[action_name]
     return unless kind # don't create fyi emails for Devise mailers you don’t care about
 
+    puts "=====DeviseMailer FYI: #{kind}"
     notification = NotificationServices::CreateNotification.call(
       noticeable: @record,
       recipient_role: :person,

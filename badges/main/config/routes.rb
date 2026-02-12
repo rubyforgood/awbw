@@ -20,21 +20,37 @@ Rails.application.routes.draw do
   apipie
   devise_for :users,
              controllers: { registrations: "registrations",
+                            confirmations: "confirmations",
                             passwords: "passwords" }
+  devise_scope :user do
+    get "/confirm/:confirmation_token", to: "confirmations#show", as: :confirm
+  end
   get "users/change_password", to: "users#change_password", as: "change_password"
   post "users/update_password", to: "users#update_password", as: "update_password"
+  get "welcome/:welcome_instructions_token", to: "welcome#show", as: "user_welcome"
+  patch "welcome/:welcome_instructions_token", to: "welcome#update", as: "user_welcome_update"
+  resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
+    member do
+      get :generate_person
+      post :send_reset_password_instructions
+      post :send_welcome_instructions
+      post :toggle_lock_status
+      post :confirm_email
+    end
+  end
 
   post "workshop_logs/validate_new", to: "workshop_logs#validate_new"
 
   get "contact_us", to: "contact_us#index"
   post "contact_us", to: "contact_us#create"
-  get "image_migration_audit", to: "image_migration_audit#index"
 
   get "taggings", to: "taggings#index", as: "taggings"
   get "taggings/matrix", to: "taggings#matrix", as: "taggings_matrix"
   get "tags", to: "tags#index", as: "tags"
   get "tags/sectors", to: "tags#sectors", as: "tags_sectors"
   get "tags/categories", to: "tags#categories", as: "tags_categories"
+
+  get "image_migration_audit", to: "image_migration_audit#index"
 
   namespace :admin do
     get "/",                         to: "home#index" # admin home page
@@ -101,14 +117,6 @@ Rails.application.routes.draw do
     end
   end
   resources :tutorials
-  resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
-    member do
-      get :generate_person
-      post :send_reset_password_instructions
-      post :toggle_lock_status
-      post :confirm_email
-    end
-  end
   resources :user_forms
   resources :windows_types
   resources :workshop_ideas

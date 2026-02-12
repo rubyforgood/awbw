@@ -56,3 +56,4 @@ storage
 
 dist/stats.html
 vendor/bundle/
+/tmp/review_notes.txt

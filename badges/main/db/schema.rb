@@ -51,7 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
     t.datetime "created_at", precision: nil, null: false
     t.string "filename", null: false
     t.string "key", null: false
-    t.text "metadata"
+    t.text "metadata", size: :medium
     t.string "service_name", null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
@@ -268,7 +268,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
 
   create_table "community_news", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "author_id", null: false
-    t.text "body"
+    t.text "body", size: :medium
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.boolean "featured"
@@ -319,7 +319,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
-    t.text "description"
+    t.text "description", size: :medium
     t.datetime "end_date", precision: nil
     t.boolean "featured", default: false, null: false
     t.boolean "inactive", default: true, null: false
@@ -459,9 +459,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.datetime "delivered_at"
-    t.text "email_body_html", size: :medium
-    t.text "email_body_text", size: :medium
-    t.text "email_subject", size: :medium
+    t.text "email_body_html"
+    t.text "email_body_text"
+    t.text "email_subject"
     t.string "kind", null: false
     t.integer "noticeable_id"
     t.string "noticeable_type"
@@ -561,7 +561,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
 
   create_table "people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "best_time_to_call"
-    t.text "bio"
+    t.text "bio", size: :medium
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"
@@ -729,7 +729,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
   end
 
   create_table "stories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body"
+    t.text "body", size: :medium
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.string "external_workshop_title"
@@ -759,7 +759,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
   end
 
   create_table "story_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body"
+    t.text "body", size: :medium
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.string "external_workshop_title"
@@ -837,7 +837,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
     t.text "comment", size: :long
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
-    t.boolean "confirmed", default: true
     t.datetime "confirmed_at"
     t.datetime "created_at", precision: nil
     t.datetime "current_sign_in_at", precision: nil
@@ -872,6 +871,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
     t.string "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", precision: nil
+    t.datetime "welcome_instructions_created_at"
+    t.datetime "welcome_instructions_sent_at"
+    t.string "welcome_instructions_token"
     t.string "zip"
     t.string "zip2"
     t.index ["agency_id"], name: "index_users_on_agency_id"
@@ -880,6 +882,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
     t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
   end
 
   create_table "windows_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -900,36 +903,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
   end
 
   create_table "workshop_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "age_range"
-    t.text "age_range_spanish"
-    t.text "closing"
-    t.text "closing_spanish"
+    t.text "age_range", size: :medium
+    t.text "age_range_spanish", size: :medium
+    t.text "closing", size: :medium
+    t.text "closing_spanish", size: :medium
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
-    t.text "creation"
-    t.text "creation_spanish"
-    t.text "demonstration"
-    t.text "demonstration_spanish"
-    t.text "description"
-    t.text "description_spanish"
-    t.text "instructions"
-    t.text "instructions_spanish"
-    t.text "introduction"
-    t.text "introduction_spanish"
-    t.text "materials"
-    t.text "materials_spanish"
-    t.text "misc_instructions_spanish"
-    t.text "notes"
-    t.text "notes_spanish"
-    t.text "objective"
-    t.text "objective_spanish"
-    t.text "opening_circle"
-    t.text "opening_circle_spanish"
-    t.text "optional_materials"
-    t.text "optional_materials_spanish"
-    t.text "setup"
-    t.text "setup_spanish"
-    t.text "staff_notes"
+    t.text "creation", size: :medium
+    t.text "creation_spanish", size: :medium
+    t.text "demonstration", size: :medium
+    t.text "demonstration_spanish", size: :medium
+    t.text "description", size: :medium
+    t.text "description_spanish", size: :medium
+    t.text "instructions", size: :medium
+    t.text "instructions_spanish", size: :medium
+    t.text "introduction", size: :medium
+    t.text "introduction_spanish", size: :medium
+    t.text "materials", size: :medium
+    t.text "materials_spanish", size: :medium
+    t.text "misc_instructions_spanish", size: :medium
+    t.text "notes", size: :medium
+    t.text "notes_spanish", size: :medium
+    t.text "objective", size: :medium
+    t.text "objective_spanish", size: :medium
+    t.text "opening_circle", size: :medium
+    t.text "opening_circle_spanish", size: :medium
+    t.text "optional_materials", size: :medium
+    t.text "optional_materials_spanish", size: :medium
+    t.text "setup", size: :medium
+    t.text "setup_spanish", size: :medium
+    t.text "staff_notes", size: :medium
     t.integer "time_closing"
     t.integer "time_creation"
     t.integer "time_demonstration"
@@ -939,17 +942,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
     t.integer "time_opening"
     t.integer "time_opening_circle"
     t.integer "time_warm_up"
-    t.text "timeframe"
-    t.text "timeframe_spanish"
-    t.text "tips"
-    t.text "tips_spanish"
+    t.text "timeframe", size: :medium
+    t.text "timeframe_spanish", size: :medium
+    t.text "tips", size: :medium
+    t.text "tips_spanish", size: :medium
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
-    t.text "visualization"
-    t.text "visualization_spanish"
-    t.text "warm_up"
-    t.text "warm_up_spanish"
+    t.text "visualization", size: :medium
+    t.text "visualization_spanish", size: :medium
+    t.text "warm_up", size: :medium
+    t.text "warm_up_spanish", size: :medium
     t.integer "windows_type_id", null: false
     t.index ["created_by_id"], name: "index_workshop_ideas_on_created_by_id"
     t.index ["updated_by_id"], name: "index_workshop_ideas_on_updated_by_id"
@@ -1144,7 +1147,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
   end
 
   add_foreign_key "action_text_mentions", "action_text_rich_texts"
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "banners", "users", column: "created_by_id"
