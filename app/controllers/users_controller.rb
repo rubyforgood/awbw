@@ -185,8 +185,8 @@ class UsersController < ApplicationController
     @user.update(welcome_instructions_sent_at: Time.current)
     @user.send_confirmation_instructions
 
-    redirect_to users_path,
-                        notice: "Invitation sent to #{@user.email}."
+    redirect_to users_path(search: @user.email),
+                notice: "Invitation sent to #{@user.email}."
   end
 
   # =========================================================

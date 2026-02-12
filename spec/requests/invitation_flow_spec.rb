@@ -11,7 +11,7 @@ RSpec.describe "Invitation Flow", type: :request do
   it "allows admin to invite user and user to confirm and set password" do
     # Step 1: Admin sends invitation
     post send_welcome_instructions_user_path(new_user)
-    expect(response).to redirect_to(users_path)
+    expect(response).to redirect_to(users_path(search: new_user.email))
 
     # Verify user has welcome token and confirmation token
     new_user.reload
