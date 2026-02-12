@@ -8,8 +8,7 @@
         <p class="text-gray-700">
           Search by emotional theme, materials needed, ease of set-up, and more.
           <br>
-          We encourage Windows Facilitator creativity and innovation. If you adapt and improve workshops, please
-          <%= link_to "share your ideas with us", new_workshop_variation_idea_path, class: "text-blue-500" %>!
+          We encourage Windows Facilitator creativity and innovation. If you adapt and improve workshops, please <%= link_to "share your ideas with us", new_workshop_variation_idea_path, class: "text-blue-500" %>!
         </p>
       </div>
 
@@ -52,7 +51,7 @@
     <!-- Workshops List -->
     <% result_src = workshops_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag "workshop_results", src: result_src, autoscroll: "start" do %>
+    <%= turbo_frame_tag "workshop_results", src: result_src, autoscroll: "start", data: {turbo: "temporary"} do %>
       <div class="mt-6">
         <div class="space-y-4 animate-pulse">
           <% 3.times do %>

@@ -6,7 +6,7 @@
         <h2 class="text-2xl font-semibold mb-2">Resources</h2>
       </div>
 
-      <div class="text-right text-end">
+      <div class="text-right">
         <% if allowed_to?(:new?, Resource) %>
           <%= link_to "New Resource",
                       new_resource_path,
@@ -24,7 +24,7 @@
     <!-- Results Table -->
     <% result_src = resources_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag :resource_results, src: result_src, autoscroll: "start" do %>
+    <%= turbo_frame_tag :resource_results, src: result_src, autoscroll: "start", data: {turbo: "temporary"} do %>
       <div class="min-h-screen">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           <% 9.times do %>
