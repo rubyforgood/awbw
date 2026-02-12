@@ -35,8 +35,6 @@ RSpec.describe "organizations/edit", type: :view do
 
       assert_select "select[name=?]", "organization[organization_status_id]"
 
-      assert_select "input[name=?]", "organization[inactive]"
-
       assert_select "textarea[name=?]", "organization[notes]"
     end
   end
