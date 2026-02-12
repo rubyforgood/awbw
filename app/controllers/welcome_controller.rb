@@ -2,19 +2,22 @@ class WelcomeController < ApplicationController
   skip_before_action :authenticate_user!
 
   before_action :find_user_by_welcome_instructions_token
-  # before_action :validate_welcome_instructions_token
+  before_action :validate_welcome_instructions_token
+
+  # Skip authorization check for welcome pages
+  def verify_authorized
+    # Intentionally skip authorization - this is a public page with token validation
+  end
 
   def show
     # users get sent here after visiting confirmations_controller
     # render set password form
-    authorize! @user
   end
 
   def update
     if @user.update(password_params)
-      @user.clear_welcome_instructions_token!
-
       @user.track_auth_event("auth.password_first_set")
+      @user.clear_welcome_instructions_token!
       @user.track_auth_event("auth.account_setup_completed")
 
       sign_in(@user)

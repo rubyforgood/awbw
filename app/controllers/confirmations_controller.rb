@@ -4,9 +4,6 @@ class ConfirmationsController < Devise::ConfirmationsController
   def show
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])
 
-    e = resource.errors.full_messages.to_sentence
-    debugger if e.present?
-
     if resource.errors.empty? || resource.confirmed_at.present?
       after_confirmation_success(resource)
     else
@@ -33,9 +30,6 @@ class ConfirmationsController < Devise::ConfirmationsController
 
   def after_confirmation_success(resource)
     if resource.welcome_instructions_token_valid?
-      @user.set_welcome_instructions_token!
-      @user.save!
-      @user.update(welcome_instructions_sent_at: Time.current)
       redirect_to user_welcome_path(resource.welcome_instructions_token)
     else
       redirect_to new_user_session_path,

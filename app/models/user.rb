@@ -186,6 +186,7 @@ class User < ApplicationRecord
     end
 
     self.welcome_instructions_created_at = Time.current
+    save!
   end
 
   def clear_welcome_instructions_token!
