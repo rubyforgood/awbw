@@ -208,7 +208,7 @@ class UsersController < ApplicationController
 
   def set_form_variables
     set_person
-    @user.organization_users.first || @user.organization_users.build
+    @user.person.organization_people.first || @user.person.organization_people.build if @user.person
     organizations = authorized_scope(Organization.all)
     @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
@@ -231,7 +231,7 @@ class UsersController < ApplicationController
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
       #####
 
-      organization_users_attributes: [ :id, :organization_id, :position, :title, :inactive, :_destroy ],
+      organization_people_attributes: [ :id, :organization_id, :position, :title, :inactive, :_destroy ],
     )
   end
 end

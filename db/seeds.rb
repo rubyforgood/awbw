@@ -46,7 +46,7 @@ FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_c
 FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).first_or_create!(id: 5)
 
 puts "Creating OrganizationStatuses…"
-OrganizationStatus::PROJECT_STATUSES.each_with_index do |status, idx|
+OrganizationStatus::ORGANIZATION_STATUSES.each_with_index do |status, idx|
   OrganizationStatus.where(name: status).first_or_create!(id: idx + 1)
 end
 

@@ -2,9 +2,7 @@
   <%= simple_form_for(workshop_variation_idea, html: { multipart: true }) do |f| %>
     <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
     <%= f.hidden_field :updated_by_id, value: current_user&.id %>
-
     <% promoted_to_variation = f.object.workshop_variations.any? %>
-
     <% if promoted_to_variation %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
       <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
@@ -13,7 +11,6 @@
       <%= f.hidden_field :body, value: f.object.body %>
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
       <%= f.hidden_field :permission_given, value: f.object.permission_given %>
-
       <div class="admin-only bg-yellow-100 m-3 p-3">
         This workshop variation idea has been promoted to a
         <% f.object.workshop_variations.each do |workshop_variation| %>
@@ -23,9 +20,7 @@
         and should not be edited here.
       </div>
     <% end %>
-
     <%= render 'shared/errors', resource: workshop_variation_idea if workshop_variation_idea.errors.any? %>
-
     <!-- Row 1 -->
     <div class="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
       <div>
@@ -63,7 +58,7 @@
                     } %>
       </div>
       <div>
-        <% if current_user.organization_users.count != 1 %>
+        <% if current_user.person&.organization_people&.count != 1 %>
           <%= f.input :organization_id,
                       as: :select,
                       collection: @organizations,
@@ -80,11 +75,10 @@
                       label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
         <% else %>
           <%= f.hidden_field :organization_id,
-                             value: f.object.organization_id || current_user.organization_users.first&.organization_id %>
+                             value: f.object.organization_id || current_user.person.primary_organization&.id %>
         <% end %>
       </div>
     </div>
-
     <div class="mt-3 mb-6">
       <%= f.input :body,
                   as: :text,
@@ -95,7 +89,6 @@
                   input_html: { rows: 10,
                                 class: ("readonly" if promoted_to_variation) } %>
     </div>
-
     <div class="flex my-6 gap-4">
       <%= f.input :publish_preferences,
                   as: :select,
@@ -103,7 +96,6 @@
                   collection: StoryIdea::PUBLISH_PREFERENCES,
                   include_blank: "Select a preference",
                   selected: f.object.publish_preferences %>
-
       <%= f.input :youtube_url,
                   as: :text,
                   label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
@@ -113,7 +105,6 @@
                                 class: ("readonly" if promoted_to_variation)
                   } %>
     </div>
-
     <div class="my-12">
       <%= f.input :permission_given,
                   as: :boolean,
@@ -128,14 +119,12 @@
                     class: ("readonly" if promoted_to_variation)
                   } %>
     </div>
-
     <% if current_user&.super_user? || @user %>
       <div class="flex flex-col md:flex-row md:space-x-4">
         <div class="flex-1 mb-4 md:mb-0">
           <% if promoted_to_variation %>
             <div class="flex items-center space-x-2">
               <label class="text-gray-700"> Promoted to Story </label>
-
               <% f.object. workshop_variations.each do |workshop_variation| %>
                 <%= link_to workshop_variation.title, workshop_variation_path(workshop_variation), class: "btn btn-secondary-outline" %>
               <% end %>
@@ -150,9 +139,7 @@
         </div>
       </div>
     <% end %>
-
     <%= render "shared/form_image_fields", f: f, include_primary_asset: true unless promoted_to_variation %>
-
     <div class="action-buttons mt-8 flex justify-center gap-3 pt-6">
       <% if f.object.persisted? && allowed_to?(:destroy?, f.object) && f.object. workshop_variations.none? && !promoted_to_variation %>
         <span class="admin-only bg-blue-100 p-3">

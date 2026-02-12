@@ -1,14 +1,14 @@
 require 'rails_helper'
 
-RSpec.describe OrganizationUser do
+RSpec.describe OrganizationPerson do
   describe 'associations' do
     it { should belong_to(:organization) }
-    it { should belong_to(:user) }
+    it { should belong_to(:person) }
   end
 
   describe 'validations' do
     subject do
-      build(:organization_user, organization: create(:organization), user: create(:user))
+      build(:organization_person, organization: create(:organization), person: create(:person))
     end
     it { should validate_presence_of(:organization_id) }
   end
@@ -19,7 +19,7 @@ RSpec.describe OrganizationUser do
 
   it 'is valid with valid attributes' do
     # Note: Factory needs associations uncommented for create
-    # expect(build(:organization_user)).to be_valid
-    # pending("Requires functional organization/user factories and associations uncommented")
+    # expect(build(:organization_person)).to be_valid
+    # pending("Requires functional organization/person factories and associations uncommented")
   end
 end

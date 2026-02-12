@@ -31,8 +31,10 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  around_action :set_time_zone_from_user
+
   def set_time_zone_from_user
-    zone = ActiveSupport::TimeZone[current_user&.time_zone]
+    zone = ActiveSupport::TimeZone[current_user&.time_zone || "UTC"]
     if zone
       Time.use_zone(zone) { yield }
     else
@@ -69,7 +71,7 @@ class ApplicationController < ActionController::Base
 
   def preload_current_user_associations
     return unless current_user
-    current_user.organization_users.includes(:organization).load
+    current_user.person.organization_people.includes(:organization).load if current_user.person
   end
 
   def set_current_user

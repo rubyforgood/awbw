@@ -51,7 +51,22 @@ class CommunityNewsController < ApplicationController
     @community_news = CommunityNews.new(community_news_params)
     authorize! @community_news
 
-    if @community_news.save
+    success = false
+
+    CommunityNews.transaction do
+      if @community_news.save
+        assign_associations(@community_news)
+        if params.dig(:library_asset, :new_assets).present?
+          update_asset_owner(@community_news)
+        end
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      Rails.logger.error "Community news create failed: #{e.class} - #{e.message}"
+      raise ActiveRecord::Rollback
+    end
+
+    if success
       redirect_to community_news_index_path,
                   notice: "Community news was successfully created."
     else
@@ -63,7 +78,19 @@ class CommunityNewsController < ApplicationController
 
   def update
     authorize! @community_news
-    if @community_news.update(community_news_params)
+    success = false
+
+    CommunityNews.transaction do
+      if @community_news.update(community_news_params)
+        assign_associations(@community_news)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      Rails.logger.error "Community news update failed: #{e.class} - #{e.message}"
+      raise ActiveRecord::Rollback
+    end
+
+    if success
       redirect_to community_news_index_path,
                   notice: "Community news was successfully updated.", status: :see_other
     else
@@ -84,8 +111,26 @@ class CommunityNewsController < ApplicationController
     @authors = User.active.or(User.where(id: @community_news.author_id))
                    .includes(:person)
                    .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
+    @categories_grouped =
+      Category
+        .includes(:category_type)
+        .published
+        .order(:position, :name)
+        .group_by(&:category_type)
+        .select { |type, _| type.nil? || type.published? }
+        .sort_by { |type, _| type&.name.to_s.downcase }
+    @sectors = Sector.published.order(:name)
     @community_news.build_primary_asset if @community_news.primary_asset.blank?
     @community_news.gallery_assets.build
+  end
+
+  def assign_associations(community_news)
+    selected_category_ids = Array(params[:community_news][:category_ids]).reject(&:blank?).map(&:to_i)
+    community_news.categories = Category.where(id: selected_category_ids)
+
+    selected_sector_ids = Array(params[:community_news][:sector_ids]).reject(&:blank?).map(&:to_i)
+    community_news.sectors = Sector.where(id: selected_sector_ids)
+    community_news.save!
   end
 
   private
@@ -101,6 +146,8 @@ class CommunityNewsController < ApplicationController
       :reference_url, :youtube_url,
       :organization_id,
       :author_id, :created_by_id, :updated_by_id,
+      category_ids: [],
+      sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ]
     )

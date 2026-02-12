@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_11_132115) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -485,27 +485,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_132115) do
     t.index ["published"], name: "index_organization_obligations_on_published"
   end
 
+  create_table "organization_people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "filemaker_code"
+    t.boolean "inactive", default: false, null: false
+    t.integer "organization_agency_id"
+    t.integer "organization_id"
+    t.bigint "person_id"
+    t.integer "position"
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["organization_agency_id"], name: "index_organization_people_on_organization_agency_id"
+    t.index ["organization_id"], name: "index_organization_people_on_organization_id"
+    t.index ["person_id"], name: "index_organization_people_on_person_id"
+    t.index ["user_id"], name: "index_organization_people_on_user_id"
+  end
+
   create_table "organization_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.string "name"
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["published"], name: "index_organization_statuses_on_published"
-  end
-
-  create_table "organization_users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.string "filemaker_code"
-    t.boolean "inactive", default: false, null: false
-    t.integer "organization_agency_id"
-    t.integer "organization_id"
-    t.integer "position"
-    t.string "title"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "user_id"
-    t.index ["organization_agency_id"], name: "index_organization_users_on_organization_agency_id"
-    t.index ["organization_id"], name: "index_organization_users_on_organization_id"
-    t.index ["user_id"], name: "index_organization_users_on_user_id"
   end
 
   create_table "organizations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1168,13 +1170,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_132115) do
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_fields", "forms"
   add_foreign_key "forms", "form_builders"
-  add_foreign_key "monthly_reports", "organization_users"
+  add_foreign_key "monthly_reports", "organization_people", column: "organization_user_id"
   add_foreign_key "monthly_reports", "organizations"
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
-  add_foreign_key "organization_users", "organizations"
-  add_foreign_key "organization_users", "organizations", column: "organization_agency_id"
-  add_foreign_key "organization_users", "users"
+  add_foreign_key "organization_people", "organizations"
+  add_foreign_key "organization_people", "organizations", column: "organization_agency_id"
+  add_foreign_key "organization_people", "users"
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"

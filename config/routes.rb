@@ -81,7 +81,7 @@ Rails.application.routes.draw do
   end
   resources :organizations
   resources :organization_statuses
-  resources :organization_users
+  resources :organization_people
   resources :quotes
 
   resources :monthly_reports

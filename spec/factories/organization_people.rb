@@ -1,7 +1,7 @@
 FactoryBot.define do
-  factory :organization_user do
+  factory :organization_person do
     association :organization
-    association :user
+    association :person
 
     position { :default }
   end
