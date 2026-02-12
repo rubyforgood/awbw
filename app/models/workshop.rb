@@ -57,7 +57,6 @@ class Workshop < ApplicationRecord
   # Images
   has_one_attached :thumbnail # old paperclip -- TODO convert these to AvatarImage records
   has_one_attached :header # old paperclip -- TODO convert these to MainImage records
-  has_many :attachments, as: :owner, dependent: :destroy # old paperclip -- TODO convert these to GalleryImage records
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },

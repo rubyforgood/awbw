@@ -30,7 +30,6 @@ class Resource < ApplicationRecord
   has_many :sectors, through: :sectorable_items, source: :sector
 
   # Asset associations
-  has_many :attachments, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
