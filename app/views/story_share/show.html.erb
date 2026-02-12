@@ -1,0 +1,164 @@
+</div><!-- Break out of layout container -->
+
+<!-- Hero Section with Story Image -->
+<section class="bg-white mt-12 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="relative rounded-lg overflow-hidden shadow-lg">
+      <div class="aspect-[16/6] bg-gray-200">
+        <%= render "assets/display_image",
+                   resource: @story,
+                   variant: :hero %>
+      </div>
+      
+      <!-- Blue Sector Box on Top Left -->
+      <div class="absolute top-6 left-6 bg-blue-600 text-white text-xs font-semibold uppercase px-4 py-2 z-10">
+        <%= @story.sectors.first&.name || "Story" %>
+      </div>
+      
+      <!-- Black semi-transparent overlay bar at bottom with title -->
+      <div class="absolute bottom-0 left-0 right-0 bg-black/50 p-8 text-white">
+        <h1 class="font-telefon text-3xl mb-2">
+          <%= @story.title %>
+        </h1>
+        <p class="text-sm opacity-90">
+          <%= @story.organization_name %>
+          <% if @story.organization.city_state.present? %>
+            - <%= @story.organization.city_state %>
+          <% end %>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Utility Buttons Section -->
+<section class="bg-white py-4 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-right space-x-1">
+      <%= link_to "Story Share", story_share_index_path, class: "btn btn-secondary-outline" %>
+      <%= link_to "Stories", stories_path, class: "btn btn-secondary-outline" %>
+      <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+      <% if current_user&.super_user? %>
+        <%= link_to "Edit", edit_story_path(@story),
+                    class: "btn btn-secondary-outline admin-only bg-blue-100" %>
+      <% end %>
+      <span class="inline-block text-sm">
+        <%= render "bookmarks/editable_bookmark_button", resource: @story %>
+      </span>
+      <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
+    </div>
+  </div>
+</section>
+
+<!-- Story Content Section -->
+<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Story Metadata -->
+    <div class="text-sm text-gray-600 space-y-1 mb-8">
+      <p>
+        <strong>Story by:</strong>
+        <% author_credit = @story.story_idea&.author_credit || @story.created_by.full_name %>
+        <%= author_credit %>
+      </p>
+      <p>
+        <strong>Organization Name:</strong>
+        <%= @story.organization_name %>
+      </p>
+      <% if @story.workshop_title.present? %>
+        <p>
+          <strong>Workshop:</strong>
+          <%= @story.workshop_title %>
+        </p>
+      <% end %>
+    </div>
+
+    <!-- Story Body Text -->
+    <div class="prose prose-lg max-w-none text-gray-700 mb-10">
+      <%= @story.rhino_body %>
+    </div>
+
+    <!-- Additional Story Assets (if any beyond hero) -->
+    <% if @story.assets.count > 1 %>
+      <div class="mb-10">
+        <%= render "assets/display_assets", resource: @story %>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<!-- What Others Are Reading -->
+<section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="font-telefon text-3xl text-black mb-8">What Others Are Reading</h2>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+      <% 
+        # Define color mapping for different categories with translucent overlays
+        category_colors = {
+          "Self-Care & Personal Growth" => "bg-blue-600/70",
+          "Schools & Universities" => "bg-purple-600/70",
+          "Grief & Loss" => "bg-purple-600/70",
+          "Community Engagement" => "bg-teal-600/70",
+          "Domestic Violence" => "bg-pink-600/70",
+          "Social Justice" => "bg-green-600/70",
+          "Veterans & Military" => "bg-orange-600/70",
+          "Sexual Assault" => "bg-lime-600/70",
+          "Substance Abuse" => "bg-teal-600/70",
+          "Story" => "bg-purple-600/70",
+          "Facilitator Spotlights" => "bg-purple-600/70"
+        }
+        
+        # Default color for categories not in the mapping
+        default_color = "bg-gray-600/70"
+      %>
+      
+      <% @popular_stories.first(4).each do |story| %>
+        <% 
+          # Get the first sector name or use a default
+          sector_name = story.sectors.first&.name || "Story"
+          bg_color = category_colors[sector_name] || default_color
+        %>
+        
+        <%= link_to story_share_path(story), class: "group block relative aspect-[3/4] overflow-hidden hover:opacity-90 transition-opacity" do %>
+          <!-- Background image -->
+          <div class="absolute inset-0 bg-gray-200">
+            <%= render "assets/display_image",
+                       resource: story,
+                       variant: :hero,
+                       height: 12
+            %>
+          </div>
+          
+          <!-- Colored translucent overlay -->
+          <div class="absolute inset-0 <%= bg_color %>"></div>
+          
+          <!-- Centered content -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+            <!-- Square sector box -->
+            <div class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase px-4 py-3 mb-4 w-32 h-12 flex items-center justify-center border border-white/30">
+              <%= sector_name %>
+            </div>
+            <!-- Title below -->
+            <h3 class="font-telefon text-white text-base leading-tight">
+              <%= story.title %>
+            </h3>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<!-- Get Involved CTA -->
+<section class="bg-white py-16 -mx-2 sm:-mx-6 lg:-mx-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="font-telefon text-4xl text-black mb-8">Get involved!</h2>
+    
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <%= link_to "Attend Our Training", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-purple-700 hover:bg-purple-800 transition-colors" %>
+      <%= link_to "Support Our Program", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-purple-700 hover:bg-purple-800 transition-colors" %>
+    </div>
+  </div>
+</section>
+
+<div><!-- Restore layout container -->
