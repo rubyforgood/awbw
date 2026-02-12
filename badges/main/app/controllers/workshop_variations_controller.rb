@@ -92,6 +92,7 @@ class WorkshopVariationsController < ApplicationController
   #   # Convert checkbox values into sectorable_items updates
   #   selected_sector_ids = Array(params[:workshop_variation][:sector_ids]).reject(&:blank?).map(&:to_i)
   #   workshop_variation.sectors = Sector.where(id: selected_sector_ids)
+  # workshop.save!
   # end
 
   def set_form_variables
