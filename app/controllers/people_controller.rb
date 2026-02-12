@@ -90,9 +90,7 @@ class PeopleController < ApplicationController
   def set_form_variables
     set_user
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
-    if @person.user
-      @person.user.organization_users.first || @person.user.organization_users.build
-    end
+    @person.organization_people.first || @person.organization_people.build
 
     @all_sectors = Sector.published.order(:name)
     @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
@@ -193,15 +191,15 @@ class PeopleController < ApplicationController
         :city2,
         :state2,
         :zip2,
-        :notes,
-        organization_users_attributes: [
-          :id,
-          :organization_id,
-          :position,
-          :title,
-          :inactive,
-          :_destroy
-        ]
+        :notes
+      ],
+      organization_people_attributes: [
+        :id,
+        :organization_id,
+        :position,
+        :title,
+        :inactive,
+        :_destroy
       ],
     )
   end

@@ -1,7 +1,5 @@
 <h2 class="normal"><%= @form_builder.name %></h2>
-
-<%= render "form", report: @report, form_fields: @form_builder.form_fields, agencies: current_user.organizations %>
-
+<%= render "form", report: @report, form_fields: @form_builder.form_fields, agencies: current_user.person&.organizations || [] %>
 <script type="text/javascript">
   $(function() {
     var date;

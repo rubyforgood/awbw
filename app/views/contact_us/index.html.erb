@@ -1,31 +1,24 @@
 <div class="bg-gradient-to-b from-gray-50 to-white min-h-screen py-12">
   <div class="max-w-5xl mx-auto px-4 space-y-10" id="contact-us-container">
-
     <!-- Contact Info Card -->
     <div class="bg-white/95 backdrop-blur-sm border border-gray-200/70 rounded-2xl shadow-lg p-8">
-
       <!-- Header -->
       <header class="space-y-4">
         <h2 class="text-3xl font-bold tracking-tight text-gray-900">
           Contact Us
         </h2>
-
         <p class="text-lg text-gray-600 leading-relaxed max-w-2xl">
           Questions? Comments? Concerns? We'd love to hear from you.
         </p>
-
         <div class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-4">
           <strong>Please note:</strong> We are a training organization. If you are a survivor and in need of support,
           call <strong>211</strong>, which connects people with social service organizations.
         </div>
       </header>
-
       <!-- Contact Details -->
       <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-10 text-gray-800">
-
         <!-- Left Column -->
         <div class="space-y-6">
-
           <div>
             <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">
               Email
@@ -34,7 +27,6 @@
                         subject: "Website question",
                         class: "text-blue-600 hover:text-blue-800 font-medium" %>
           </div>
-
           <div>
             <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">
               Phone
@@ -43,42 +35,35 @@
                         "tel:310-396-0317",
                         class: "text-blue-600 hover:text-blue-800 font-medium" %>
           </div>
-
           <div>
             <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">
               Social Media
             </div>
-
             <div class="flex flex-wrap items-center gap-3">
-
               <!-- LinkedIn -->
               <%= link_to "https://www.linkedin.com/company/a-window-between-worlds",
                           target: "_blank", rel: "noopener noreferrer",
                           class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#0A66C2] transition" do %>
                 <i class="fab fa-linkedin-in text-gray-600 group-hover:text-white text-lg"></i>
               <% end %>
-
               <!-- Instagram -->
               <%= link_to "https://www.instagram.com/awbworg",
                           target: "_blank", rel: "noopener noreferrer",
                           class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-gradient-to-tr hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF] transition" do %>
                 <i class="fab fa-instagram text-gray-600 group-hover:text-white text-lg"></i>
               <% end %>
-
               <!-- Facebook -->
               <%= link_to "https://www.facebook.com/awbworg",
                           target: "_blank", rel: "noopener noreferrer",
                           class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#1877F2] transition" do %>
                 <i class="fab fa-facebook-f text-gray-600 group-hover:text-white text-lg"></i>
               <% end %>
-
               <!-- Twitter -->
               <%= link_to "https://www.twitter.com/awbworg",
                           target: "_blank", rel: "noopener noreferrer",
                           class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#1DA1F2] transition" do %>
                 <i class="fab fa-twitter text-gray-600 group-hover:text-white text-lg"></i>
               <% end %>
-
               <!-- YouTube -->
               <%= link_to "https://www.youtube.com/@awbworg",
                           target: "_blank", rel: "noopener noreferrer",
@@ -88,7 +73,6 @@
             </div>
           </div>
         </div>
-
         <!-- Right Column -->
         <div class="space-y-4">
           <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">
@@ -102,19 +86,15 @@
           </div>
         </div>
       </div>
-
       <!-- Divider -->
       <div class="mt-12 pt-12 border-t border-gray-200">
-
         <% if current_user && @user %>
           <div class="text-lg font-medium text-gray-800 mb-6">
             Hello, <%= @user.first_name %>! We're glad to hear from you.
           </div>
         <% end %>
-
         <!-- Contact Form -->
         <div id="contact-form" class="space-y-8">
-
           <div class="space-y-2">
             <h3 class="text-2xl font-semibold text-gray-900">
               Send us a message
@@ -123,14 +103,11 @@
               Please complete the form below and our team will respond as soon as possible.
             </p>
           </div>
-
           <%= form_tag("/contact_us", method: "POST", class: "space-y-8") do %>
             <input type="hidden" name="contact_us[q]" value="general">
-
             <% unless current_user %>
               <!-- Name Row -->
               <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">
                     First Name *
@@ -140,7 +117,6 @@
                          required
                          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
                 </div>
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">
                     Last Name
@@ -149,7 +125,6 @@
                          name="contact_us[last_name]"
                          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
                 </div>
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">
                     Email *
@@ -159,7 +134,6 @@
                          required
                          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
                 </div>
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">
                     Agency / Organization
@@ -168,15 +142,13 @@
                          name="contact_us[agency]"
                          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
                 </div>
-
               </div>
             <% else %>
               <input type="hidden" name="contact_us[first_name]" value="<%= @user.first_name %>">
               <input type="hidden" name="contact_us[last_name]" value="<%= @user.last_name %>">
               <input type="hidden" name="contact_us[from]" value="<%= @user.email %>">
-              <input type="hidden" name="contact_us[agency]" value="<%= @user.organizations.first&.name || '' %>">
+              <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.primary_organization&.name || '' %>">
             <% end %>
-
             <!-- Subject -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -187,7 +159,6 @@
                      required
                      class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
             </div>
-
             <!-- Message -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -198,7 +169,6 @@
                         rows="6"
                         class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition resize-none"></textarea>
             </div>
-
             <!-- Submit -->
             <div class="flex justify-end">
               <button type="submit"

@@ -1,4 +1,4 @@
-class OrganizationUserPolicy < ApplicationPolicy
+class OrganizationPersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   def destroy?
