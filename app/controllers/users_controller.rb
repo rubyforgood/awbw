@@ -45,9 +45,6 @@ class UsersController < ApplicationController
     @user.person = Person.find(person_id) if person_id
 
     if @user.save
-      # Generate welcome instructions token so that the welcome email set password and confirm email in one step
-      @user.set_welcome_instructions_token!
-
       # @user.notifications.create(notification_type: 0)
       redirect_to users_path(search: @user.email), notice: "User was successfully created."
     else
