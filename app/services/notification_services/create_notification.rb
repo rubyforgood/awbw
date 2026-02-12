@@ -9,7 +9,6 @@ module NotificationServices
       deliver: true,
       persist_delivered_email: true
     )
-
       # create the notification record
       notification = Notification.create!(
         noticeable: noticeable,

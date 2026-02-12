@@ -6,7 +6,7 @@ class UsersController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(User.includes(:avatar_attachment => :blob,
+    base_scope = authorized_scope(User.includes(avatar_attachment: :blob,
                                                 person: { avatar_attachment: :blob }))
     filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
     @users_count = filtered.count
