@@ -120,8 +120,14 @@
                 <span class="text-gray-500 italic">None selected.</span>
               <% end %>
             </p>
+             <div class="mt-4">
+  <%= link_to "Populations served",
+              populations_served_organization_path(@organization),
+              class: "inline-block px-4 py-2 bg-gray-100 border border-gray-300 rounded shadow-sm text-gray-800 hover:bg-gray-200 transition" %>
+</div>
           </div>
         <% end %>
+
 
         <!-- Contact info -->
         <div>
