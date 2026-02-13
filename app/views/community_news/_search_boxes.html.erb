@@ -35,7 +35,7 @@
 
         <%= select_tag :published,
                        options_for_select(
-                         [["All", ""], ["Published", "true"], ["Hidden", "false"]],
+                         [["All", ""], ["Published", "true"], ["Unpublished", "false"]],
                          params[:published]
                        ),
                        class: "border border-gray-300 rounded-lg px-3 py-2 text-gray-700 w-full",
