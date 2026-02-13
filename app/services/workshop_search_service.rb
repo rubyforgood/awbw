@@ -1,20 +1,17 @@
 class WorkshopSearchService
-  attr_reader :params, :user, :admin
+  attr_reader :params, :user
   attr_accessor :workshops, :sort
 
-  def initialize(params = {}, user: nil)
+  def initialize(params = {}, user: nil, base_scope: authorized_scope(Workshop))
     @params = params
-    @user = user
     # Note: This reads the super_user attribute for scoping data visibility
     # Authorization decisions are made by controllers using ActionPolicy
     @admin = user&.super_user?
     @sort = default_sort
-    @workshops =
-      if @sort == "popularity"
-        Workshop.with_bookmarks_count
-      else
-        Workshop.all
-      end
+    @workshops = base_scope
+    if @sort == "popularity"
+      @workshops = @workshops.with_bookmarks_count
+    end
   end
 
   # Main entry point
@@ -61,24 +58,20 @@ class WorkshopSearchService
   end
 
   def filter_by_published_status
-    if admin
-      pub   = params.key?(:published)   ? ActiveModel::Type::Boolean.new.cast(params[:published])   : nil
-      unpub = params.key?(:unpublished) ? ActiveModel::Type::Boolean.new.cast(params[:unpublished]) : nil
+    return unless @admin
 
-      case [ pub, unpub ]
-      when [ true, nil ], [ true, false ]
-        @workshops = @workshops.published(true)     # ONLY published
-      when [ nil, true ], [ false, true ]
-        @workshops = @workshops.published(false)    # ONLY unpublished
-      when [ false, false ]
-        @workshops = @workshops.none                # NONE
-      else # incl [ nil, nil ] && [ true, true ]
-        @workshops                                  # ALL
-      end
-    elsif user
-      @workshops = @workshops.published
-    else
-      @workshops = @workshops.publicly_visible
+    pub   = params.key?(:published)   ? ActiveModel::Type::Boolean.new.cast(params[:published])   : nil
+    unpub = params.key?(:unpublished) ? ActiveModel::Type::Boolean.new.cast(params[:unpublished]) : nil
+
+    case [ pub, unpub ]
+    when [ true, nil ], [ true, false ]
+      @workshops = @workshops.published(true)     # ONLY published
+    when [ nil, true ], [ false, true ]
+      @workshops = @workshops.published(false)    # ONLY unpublished
+    when [ false, false ]
+      @workshops = @workshops.none                # NONE
+    else # incl [ nil, nil ] && [ true, true ]
+      @workshops                                  # ALL
     end
   end
 
