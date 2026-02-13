@@ -185,13 +185,13 @@
             </div>
           <% end %>
           <hr class="my-8 border-gray-200">
-          <% if allowed_to?(:show_logs?, @organization) %>
+          <% if allowed_to?(:show_workshop_logs?, @organization) %>
             <div class="organization-only bg-green-100">
               <!-- Workshop logs -->
-              <% if true || @organization.profile_show_workshop_logs? %>
+              <% if @organization.profile_show_workshop_logs? %>
                 <div class="mt-6 p-3">
                   <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Logs submitted</h2>
-                  <% if false && @organization.workshop_logs.any? %>
+                  <% if @organization.workshop_logs.any? %>
                     <% @organization.workshop_logs.order(date: :desc, created_at: :desc).each do |workshop_log| %>
                       <%= link_to workshop_log.full_name,
                               workshop_log_path(workshop_log), class: "btn btn-secondary-outline" %>
