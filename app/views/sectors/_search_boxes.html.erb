@@ -22,7 +22,7 @@
                   class: "block text-sm font-medium text-gray-700" %>
 
       <%= f.select :published,
-                   options_for_select([["All", ""], ["Published", "true"], ["Hidden", "false"]], params[:published]),
+                   options_for_select([["All", ""], %w[Published true], %w[Unpublished false]], params[:published]),
                    {},
                    class: "mt-1 block w-full rounded-md border border-gray-300 p-2",
                    onchange: "this.form.requestSubmit()" %>
