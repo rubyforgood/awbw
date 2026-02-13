@@ -150,7 +150,17 @@
                       data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
         </span>
       <% end %>
-      <%= link_to "Cancel", root_path, class: "btn btn-secondary-outline ms-2" %>
+      <% cancel_path =
+           if params[:workshop_id].present? && @workshop
+             workshop_path(@workshop, anchor: "workshop-variations")
+           elsif (allowed_to?(:index?, WorkshopVariationIdea))
+             workshop_variation_ideas_path
+           else
+             root_path
+           end %>
+      <%= link_to "Cancel",
+                  cancel_path,
+                  class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary", disabled: promoted_to_variation %>
     </div>
   <% end %>
