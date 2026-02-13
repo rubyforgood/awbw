@@ -9,14 +9,15 @@ class Organization < ApplicationRecord
   has_many :organization_people, dependent: :restrict_with_error
   has_many :people, through: :organization_people
   has_many :users, through: :people
-  has_many :reports, through: :users
-  has_many :workshop_logs, through: :users
+  has_many :reports
+  has_many :workshop_logs
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
+  has_many :workshops, through: :users
 
   # Asset associations
   has_one_attached :logo
@@ -75,6 +76,13 @@ class Organization < ApplicationRecord
     organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations
+  end
+
+  def all_workshop_logs
+    direct = WorkshopLog.where(organization_id: id)
+    legacy = WorkshopLog.where(organization_id: nil)
+                        .where(user_id: users.select(:id))
+    direct.or(legacy).distinct
   end
 
   # Methods

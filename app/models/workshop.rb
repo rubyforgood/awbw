@@ -50,9 +50,11 @@ class Workshop < ApplicationRecord
            source: :category # needs to be after has_many :categorizable_items
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
+  has_many :organizations, through: :user
   has_many :quotes, through: :quotable_item_quotes
   has_many :resources, through: :workshop_resources, source: :resource
   has_many :sectors, through: :sectorable_items
+
 
   # Images
   has_one_attached :thumbnail # old paperclip -- TODO convert these to AvatarImage records
