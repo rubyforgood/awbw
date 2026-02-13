@@ -1,6 +1,6 @@
 class OrganizationsController < ApplicationController
   include AhoyTracking
-  before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served]
+  before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
   def index
     authorize!
@@ -99,16 +99,16 @@ class OrganizationsController < ApplicationController
   end
 
   def populations_served
-  authorize! @organization
+    authorize! @organization
 
-  people = @organization.users.includes(:person).map(&:person).compact
+    people = @organization.users.includes(:person).map(&:person).compact
 
-  sector_counts = Hash.new(0)
-  people.each do |person|
-    primary_sector = person.sectors.first
-    sector_counts[primary_sector] += 1 if primary_sector
-  end
-  @sectors_by_people = sector_counts.sort_by { |_sector, count| -count }
+    sector_counts = Hash.new(0)
+    people.each do |person|
+      primary_sector = person.sectors.first
+      sector_counts[primary_sector] += 1 if primary_sector
+    end
+    @sectors_by_people = sector_counts.sort_by { |_sector, count| -count }
 end
 
   private
