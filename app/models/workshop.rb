@@ -138,7 +138,7 @@ class Workshop < ApplicationRecord
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :legacy, -> { where(legacy: true) }
   scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
-  scope :order_by_date, ->(sort_order = "asc") {
+  scope :order_by_date, ->(sort_order = "asc") do
     order(Arel.sql(<<~SQL.squish))
     COALESCE(
       STR_TO_DATE(
@@ -148,14 +148,14 @@ class Workshop < ApplicationRecord
       DATE(workshops.created_at)
     ) #{sort_order == "asc" ? "ASC" : "DESC"}
     SQL
-  }
+  end
   scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
-  scope :with_bookmarks_count, -> {
+  scope :with_bookmarks_count, -> do
     left_joins(:bookmarks)
       .select("workshops.*, COUNT(bookmarks.id) AS bookmarks_count")
       .group("workshops.id")
-  }
+  end
 
   # Search Cop
   include SearchCop

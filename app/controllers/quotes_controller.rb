@@ -58,8 +58,7 @@ class QuotesController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    workshops = allowed_to?(:index?, Admin::Home) ? Workshop.all : Workshop.active
-    @workshops = workshops.order(:title)
+    @workshops = authorized_scope(Workshop.all).order(:title)
   end
 
   private

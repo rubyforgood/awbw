@@ -15,6 +15,10 @@ class EventPolicy < ApplicationPolicy
     authenticated? && record.published?
   end
 
+  def edit?
+    admin? || owner?
+  end
+
   def update?
     admin? || owner?
   end

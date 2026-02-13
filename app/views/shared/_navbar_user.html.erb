@@ -34,14 +34,20 @@
         <span>My profile</span>
       <% end %>
     <% end %>
-    <% if admin? && current_user.person&.organization_people&.any? %>
-      <% current_user.person.organization_people.each do |organization_person| %>
-        <%= link_to organization_path(organization_person.organization),
-                    class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
-          <i class="fas fa-users"></i>
-          <span>
-            My team<%= " (" + organization_person.organization.name.truncate(12) + ")" if current_user.person.organization_people.many? %>
-          </span>
+
+    <% if person&.organization_people&.any? %>
+      <% person.organization_people.each do |organization_person| %>
+        <% if allowed_to?(:show?, organization_person.organization) %>
+          <%= link_to organization_path(organization_person.organization),
+                      class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 space-x-2" do %>
+            <i class="fas fa-users"></i>
+            <span>
+              My team
+              <% if person.organization_people.many? %>
+                (<%= organization_person.organization.name.truncate(12) %>)
+              <% end %>
+            </span>
+          <% end %>
         <% end %>
       <% end %>
     <% end %>

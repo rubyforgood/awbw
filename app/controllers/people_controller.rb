@@ -95,12 +95,7 @@ class PeopleController < ApplicationController
     @all_sectors = Sector.published.order(:name)
     @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
 
-    organizations = if allowed_to?(:index?, Admin::Home)
-      Organization.active
-    else
-      current_user.organizations
-    end
-    @organizations_array = organizations.order(:name).pluck(:name, :id)
+    @organizations_array = authorized_scope(Organization.all).order(:name).pluck(:name, :id)
   end
 
 

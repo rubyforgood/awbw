@@ -9,9 +9,26 @@ class OrganizationPolicy < ApplicationPolicy
     admin? || (authenticated? && record.published?)
   end
 
-  def show_logs?
+  def show_workshop_logs?
     admin? || member?
   end
+
+
+  # Scoping
+  # See https://actionpolicy.evilmartians.io/#/scoping
+
+  relation_scope do |relation|
+    next relation if admin?
+    relation.published
+  end
+
+  # scope_for :affiliated, :relation do |relation|
+  #   return relation if admin?
+  #   return relation.none unless user&.person_id
+  #
+  #   relation.joins(:organization_people)
+  #           .where(organization_people: { person_id: user.person_id })
+  # end
 
   private
 
@@ -20,13 +37,5 @@ class OrganizationPolicy < ApplicationPolicy
       return false unless user&.person_id
       record.organization_people.exists?(person_id: user.person_id)
     end
-  end
-
-  # Scoping
-  # See https://actionpolicy.evilmartians.io/#/scoping
-
-  relation_scope do |relation|
-    next relation if admin?
-    relation.published
   end
 end
