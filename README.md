@@ -12,6 +12,8 @@ This is a Rails 8.1.0 application built with:
 - **Authentication**: Devise for user authentication with API token support
 - **Frontend**: Tailwind for styling
 - **Database**: MySQL with ActiveRecord ORM
+- **Cache**: [solid_cache](https://github.com/rails/solid_cache)
+- **Background Jobs**: [solid_queue](https://github.com/rails/solid_queue)
 - **File Uploads**: ActiveStorage with DigitalOcean Spaces storage
 - **Email**: ActionMailer for transactional emails (*TODO* Need to configure smtp creds)
 - **API**: JSON API with JWT authentication
