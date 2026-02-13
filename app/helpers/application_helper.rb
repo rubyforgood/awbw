@@ -1,9 +1,4 @@
 module ApplicationHelper
-  # Check if current user is an admin via ActionPolicy
-  def admin?
-    allowed_to?(:index?, Admin::Home)
-  end
-
   def search_page(params)
     params[:search] ? params[:search][:page] : 1
   end

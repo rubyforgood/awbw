@@ -73,12 +73,6 @@ class User < ApplicationRecord
     results
   end
 
-  # Convenience method for checking admin status
-  def admin?
-    super_user
-  end
-
-
   def active_for_authentication?
     super && !inactive?
   end

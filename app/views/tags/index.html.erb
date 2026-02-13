@@ -26,7 +26,7 @@
             </p>
           </div>
 
-          <% if admin? %>
+          <% if allowed_to?(:index?, Sector) %>
             <div class="flex-shrink-0">
               <%= link_to "Manage service populations",
                           sectors_path,
@@ -52,7 +52,7 @@
             </p>
           </div>
 
-          <% if admin? %>
+          <% if allowed_to?(:index?, Category) %>
             <div class="flex-shrink-0">
               <%= link_to "Manage categories",
                           categories_path,
