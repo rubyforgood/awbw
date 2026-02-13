@@ -17,6 +17,7 @@ RSpec.describe "faqs/index", type: :view do
 
     before do
       allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
       assign(:faqs, paginate_faqs([ faq1, faq2, unpublished_faq ]))
       render
     end

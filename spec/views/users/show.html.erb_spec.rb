@@ -24,6 +24,7 @@ RSpec.describe "users/show", type: :view do
 
     before do
       allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
       render
     end
 
@@ -82,6 +83,7 @@ RSpec.describe "users/show", type: :view do
 
     before do
       allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
       render
     end
 

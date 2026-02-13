@@ -1,4 +1,5 @@
 class WorkshopVariationIdeasController < ApplicationController
+  include AhoyTracking
   before_action :set_workshop_variation_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -19,7 +20,7 @@ class WorkshopVariationIdeasController < ApplicationController
     @bookmark = current_user.bookmarks.find_by(bookmarkable: @workshop)
     @new_bookmark = @workshop.bookmarks.build
     @quotes = @workshop.quotes
-    @workshop_variation_ideas = @workshop.workshop_variation_ideas
+    @workshop_variation_ideas = WorkshopVariationIdea.where(workshop: @workshop)
     @sectors = @workshop.sectors
   end
 
