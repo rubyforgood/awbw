@@ -136,7 +136,7 @@ Rails.application.routes.draw do
   end
   resources :story_ideas
   resources :stories
-  resources :story_share, only: [ :index, :show ]
+  resources :story_shares, only: [ :index, :show ]
   resources :tutorials
   resources :user_forms
   resources :windows_types

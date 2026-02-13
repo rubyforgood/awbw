@@ -1,0 +1,33 @@
+<div class="grid md:grid-cols-2 gap-12 items-start">
+
+  <!-- LEFT CONTENT -->
+  <div>
+    <h2 class="font-telefon text-2xl font-bold text-gray-900">
+      <%= story.title %>
+    </h2>
+
+    <p class="mt-2 text-sm text-gray-500">
+      <%= story.organization&.name %>
+      <% if story.organization&.location.present? %>
+        &nbsp;–&nbsp;<%= story.organization.location %>
+      <% end %>
+    </p>
+
+    <p class="mt-6 text-gray-700 leading-relaxed">
+      <%= truncate(strip_tags(story.body.to_s), length: 280) %>
+    </p>
+
+    <div class="mt-6">
+      <%= link_to "Read More",
+                  story_share_path(story),
+                  class: "inline-block bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded transition" %>
+    </div>
+  </div>
+
+  <!-- RIGHT IMAGE -->
+  <div class="md:justify-self-end">
+    <%= image_tag story.display_image,
+                  class: "w-50 h-30 max-w-md rounded shadow-lg object-cover" %>
+  </div>
+
+</div>

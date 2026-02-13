@@ -47,7 +47,7 @@ RSpec.describe "/story_share", type: :request do
 
     describe "GET /index" do
       it "returns success" do
-        get story_share_index_path
+        get story_shares_path
         expect(response).to have_http_status(:ok)
       end
     end
@@ -68,7 +68,7 @@ RSpec.describe "/story_share", type: :request do
 
     describe "GET /index" do
       it "returns success" do
-        get story_share_index_path
+        get story_shares_path
         expect(response).to have_http_status(:ok)
       end
     end
@@ -92,7 +92,7 @@ RSpec.describe "/story_share", type: :request do
   describe "as guest" do
     describe "GET /index" do
       it "returns success" do
-        get story_share_index_path
+        get story_shares_path
         expect(response).to have_http_status(:ok)
       end
     end
