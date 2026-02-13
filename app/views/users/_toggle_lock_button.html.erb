@@ -1,5 +1,5 @@
 <div id="toggle_lock_button">
-  <% if user.persisted? && admin? %>
+  <% if user.persisted? %>
     <button type="button"
             data-controller="toggle-lock"
             data-toggle-lock-user-id-value="<%= user.id %>"

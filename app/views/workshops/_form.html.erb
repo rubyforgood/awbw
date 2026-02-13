@@ -422,7 +422,8 @@
         <%= link_to "Delete", @workshop, method: :delete, class: "btn btn-danger-outline",
                     data: { confirm: "Are you sure you want to delete?" } %>
       <% end %>
-      <%= link_to "Cancel", (admin? ? workshops_path : root_path),
+      <%= link_to "Cancel",
+                  (allowed_to?(:edit?, @workshop) ? workshops_path : root_path),
                   class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>

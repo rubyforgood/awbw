@@ -64,7 +64,7 @@
                             wrapper_html: { class: "w-full" },
                             label_html: { id: "email_label" } %>
                 <div id="confirm_email_button">
-                  <% if @user.persisted? && @user.confirmed_at.nil? && admin? %>
+                  <% if @user.persisted? && @user.confirmed_at.nil? %>
                     <div class="mt-2">
                       <button type="button"
                               data-controller="confirm-email"
