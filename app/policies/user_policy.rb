@@ -7,7 +7,7 @@ class UserPolicy < ApplicationPolicy
   def create? = admin?
   def edit? = admin?
   def update? = admin?
-  def destroy? = admin?
+  def destroy? = record.persisted? && admin?
   def toggle_lock_status? = admin?
   def confirm_email? = admin?
   def send_welcome_instructions? = admin?

@@ -10,7 +10,7 @@ class WorkshopPolicy < ApplicationPolicy
   end
 
   def destroy?
-    admin?
+    record.persisted? && admin?
   end
 
   # Scoping

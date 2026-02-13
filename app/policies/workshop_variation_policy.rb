@@ -16,7 +16,7 @@ class WorkshopVariationPolicy < ApplicationPolicy
   end
 
   def destroy?
-    admin?
+    record.persisted? && admin?
   end
 
   relation_scope do |relation|

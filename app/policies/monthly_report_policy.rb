@@ -12,7 +12,7 @@ class MonthlyReportPolicy < ApplicationPolicy
   end
 
   def destroy?
-    admin? || owner? || member?
+    record.persisted? && (admin? || owner? || member?)
   end
 
   private

@@ -5,7 +5,7 @@ class EventRegistrationPolicy < ApplicationPolicy
 
   def index?   = admin?
   def create? = admin? || owner?
-  def destroy?   = admin? || owner?
+  def destroy? = record.persisted? && (admin? || owner?)
 
 
   relation_scope do |relation|
