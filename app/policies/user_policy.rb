@@ -24,5 +24,4 @@ class UserPolicy < ApplicationPolicy
   def self?
     user == record
   end
-
 end
