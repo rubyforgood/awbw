@@ -29,22 +29,20 @@
             </div>
 
             <!-- User Filter -->
-            <% if admin? %>
-              <div>
-                <label class="block text-sm font-medium text-gray-600 mb-1">
-                  User
-                </label>
-                <%= select_tag :user_id,
-                               options_from_collection_for_select(
-                                 User.order(:first_name, :last_name),
-                                 :id,
-                                 :full_name,
-                                 params[:user_id]
-                               ),
-                               include_blank: "All Users",
-                               class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-              </div>
-            <% end %>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                User
+              </label>
+              <%= select_tag :user_id,
+                             options_from_collection_for_select(
+                               User.order(:first_name, :last_name),
+                               :id,
+                               :full_name,
+                               params[:user_id]
+                             ),
+                             include_blank: "All Users",
+                             class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+            </div>
 
             <!-- Date From -->
             <div>
