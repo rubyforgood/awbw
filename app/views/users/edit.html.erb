@@ -3,7 +3,9 @@
     <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @user.class.model_name.human %></h1>
+          <h1 class="text-2xl font-semibold text-gray-900">
+            Edit <%= @user.class.model_name.human %>
+          </h1>
           <%= render "lock_status_indicator", user: @user %>
         </div>
         <div class="flex space-x-2">
@@ -11,11 +13,20 @@
                         send_reset_password_instructions_user_path(@user),
                         method: :post,
                         class: "btn btn-secondary-outline" %>
+          <% unless @user.confirmed_at.present? %>
+            <%= button_to "Resend Invite",
+                          send_welcome_instructions_user_path(@user),
+                          method: :post,
+                          class: "btn btn-secondary-outline" %>
+          <% end %>
           <% if current_user == @user %>
             <%= link_to "Change password",
                         change_password_path,
                         class: "btn btn-secondary-outline" %>
           <% end %>
+          <%= link_to "Users",
+                      users_path,
+                      class: "btn btn-secondary-outline" %>
           <%= link_to "Person",
                       person_path(@user.person),
                       class: "btn btn-secondary-outline" if @user.person %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -323,6 +323,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
     t.datetime "end_date", precision: nil
     t.boolean "featured", default: false, null: false
     t.boolean "inactive", default: true, null: false
+    t.integer "location_id"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
@@ -330,7 +331,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
+    t.string "videoconference_url"
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
+    t.index ["location_id"], name: "index_events_on_location_id"
     t.index ["published"], name: "index_events_on_published"
   end
 
@@ -463,11 +466,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
     t.integer "noticeable_id"
     t.string "noticeable_type"
     t.integer "notification_type"
+    t.integer "parent_notification_id"
     t.string "recipient_email", null: false
     t.string "recipient_role", null: false
+    t.integer "root_notification_id"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
+    t.index ["parent_notification_id"], name: "index_notifications_on_parent_notification_id"
+    t.index ["root_notification_id"], name: "index_notifications_on_root_notification_id"
   end
 
   create_table "organization_obligations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -478,27 +485,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
     t.index ["published"], name: "index_organization_obligations_on_published"
   end
 
+  create_table "organization_people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "filemaker_code"
+    t.boolean "inactive", default: false, null: false
+    t.integer "organization_agency_id"
+    t.integer "organization_id"
+    t.bigint "person_id"
+    t.integer "position"
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["organization_agency_id"], name: "index_organization_people_on_organization_agency_id"
+    t.index ["organization_id"], name: "index_organization_people_on_organization_id"
+    t.index ["person_id"], name: "index_organization_people_on_person_id"
+    t.index ["user_id"], name: "index_organization_people_on_user_id"
+  end
+
   create_table "organization_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.string "name"
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["published"], name: "index_organization_statuses_on_published"
-  end
-
-  create_table "organization_users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.string "filemaker_code"
-    t.boolean "inactive", default: false, null: false
-    t.integer "organization_agency_id"
-    t.integer "organization_id"
-    t.integer "position"
-    t.string "title"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "user_id"
-    t.index ["organization_agency_id"], name: "index_organization_users_on_organization_agency_id"
-    t.index ["organization_id"], name: "index_organization_users_on_organization_id"
-    t.index ["user_id"], name: "index_organization_users_on_user_id"
   end
 
   create_table "organizations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -647,6 +656,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
     t.integer "children_ongoing", default: 0
     t.datetime "created_at", precision: nil, null: false
     t.date "date"
+    t.string "external_workshop_title"
     t.string "form_file_content_type"
     t.string "form_file_file_name"
     t.integer "form_file_file_size"
@@ -827,7 +837,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
     t.text "comment", size: :long
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
-    t.boolean "confirmed", default: true
     t.datetime "confirmed_at"
     t.datetime "created_at", precision: nil
     t.datetime "current_sign_in_at", precision: nil
@@ -862,6 +871,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
     t.string "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", precision: nil
+    t.datetime "welcome_instructions_created_at"
+    t.datetime "welcome_instructions_sent_at"
+    t.string "welcome_instructions_token"
     t.string "zip"
     t.string "zip2"
     t.index ["agency_id"], name: "index_users_on_agency_id"
@@ -870,6 +882,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
     t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
   end
 
   create_table "windows_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1149,17 +1162,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_033804) do
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "users", column: "registrant_id"
+  add_foreign_key "events", "locations"
   add_foreign_key "events", "users", column: "created_by_id"
   add_foreign_key "form_builders", "windows_types"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_fields", "forms"
   add_foreign_key "forms", "form_builders"
-  add_foreign_key "monthly_reports", "organization_users"
+  add_foreign_key "monthly_reports", "organization_people", column: "organization_user_id"
   add_foreign_key "monthly_reports", "organizations"
-  add_foreign_key "organization_users", "organizations"
-  add_foreign_key "organization_users", "organizations", column: "organization_agency_id"
-  add_foreign_key "organization_users", "users"
+  add_foreign_key "notifications", "notifications", column: "parent_notification_id"
+  add_foreign_key "notifications", "notifications", column: "root_notification_id"
+  add_foreign_key "organization_people", "organizations"
+  add_foreign_key "organization_people", "organizations", column: "organization_agency_id"
+  add_foreign_key "organization_people", "users"
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"

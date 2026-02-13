@@ -39,13 +39,13 @@ class Asset < ApplicationRecord
     end
   end
 
-  belongs_to :owner, polymorphic: true, optional: true
+  belongs_to :owner, polymorphic: true, optional: true, touch: true
   belongs_to :report, optional: true
 
   has_one_attached :file, dependent: :purge do |attachable|
     attachable.variant :thumbnail,
       resize_to_limit: [ 256, 256 ],
-      format: :jpeg,
+      format: :webp,
       saver: { quality: 80 }
   end
   validate :file_type

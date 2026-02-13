@@ -200,7 +200,7 @@ class WorkshopLogsController < ApplicationController
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
       :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :user_id, :organization_id, :date,
-      :workshop_name, :workshop_id, :windows_type_id, :other_description, # :user,
+      :workshop_name, :workshop_id, :windows_type_id, :other_description, :external_workshop_title, # :user,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
         quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],

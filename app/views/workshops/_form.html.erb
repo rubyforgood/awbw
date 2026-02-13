@@ -5,8 +5,6 @@
       <%= render 'shared/errors', resource: @workshop %>
     <% end %>
 
-    <%= tag.div class: "unpersisted_resource_asset_params" %>
-
     <!-- Row 1 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <div>
@@ -418,6 +416,7 @@
       </div>
     </div>
 
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
         <%= link_to "Delete", @workshop, method: :delete, class: "btn btn-danger-outline",
@@ -447,5 +446,3 @@
     <% end %>
   <% end %>
 </div>
-
-<div class="my-4"><%= render "assets/form", owner: @workshop %></div>

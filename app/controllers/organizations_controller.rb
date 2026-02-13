@@ -88,10 +88,13 @@ class OrganizationsController < ApplicationController
     @people_array = Person.includes(:user)
                           .joins(:user)
                           .order(:first_name, :last_name)
-                          .map { |f| [ f.name, f.user.id ] }
-    @organization.organization_users = @organization.organization_users
-                                     .includes(:organization)
-                                     .sort_by { |ou| ou.user.person&.name.to_s.downcase }
+                          .map { |f| [ f.name, f.id ] }
+
+    if @organization.persisted? && @organization.errors.empty?
+      @organization.organization_people = @organization.organization_people
+                                       .includes(:organization)
+                                       .sort_by { |op| op.person&.name.to_s.downcase }
+    end
   end
 
   def set_index_variables
@@ -128,9 +131,9 @@ end
         :sector_id,
         :_destroy
       ],
-      organization_users_attributes: [
+      organization_people_attributes: [
         :id,
-        :user_id,
+        :person_id,
         :inactive,
         :title,
         :_destroy

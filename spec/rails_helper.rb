@@ -42,7 +42,13 @@ rescue ActiveRecord::PendingMigrationError => e
   puts e.to_s.strip
   exit 1
 end
+
+ActiveJob::Base.queue_adapter = :test
+
 RSpec.configure do |config|
+  # Gives travel method for time helpers
+  config.include ActiveSupport::Testing::TimeHelpers
+
   # Include pagination helper globally
   config.include PaginationHelpers
 

@@ -23,6 +23,8 @@ RSpec.describe "community_news/edit", type: :view do
     sign_in admin
     allow(view).to receive(:current_user).and_return(admin)
     assign(:community_news, community_news)
+    assign(:sectors, [])
+    assign(:categories_grouped, [])
   end
 
   it "renders the edit community_news form" do

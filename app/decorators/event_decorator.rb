@@ -9,9 +9,6 @@ class EventDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
-  def location # TODO - add location to events
-  end
-
   def calendar_links
     start_time   = object.start_date.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.strftime("%Y%m%dT%H%M%SZ")
@@ -50,15 +47,17 @@ class EventDecorator < ApplicationDecorator
 
     h.safe_join(
       [
-        h.link_to("Google", google_link, class: "text-blue-600 hover:underline text-xs"),
+        h.link_to("Google", google_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
         h.content_tag(:span, "•", class: "text-gray-300"),
-        h.link_to("Apple", apple_link, class: "text-blue-600 hover:underline text-xs", download: "#{object.title.parameterize}.ics"),
+        h.link_to("Apple", apple_link, class: "text-blue-600 hover:underline text-xs",
+                  target: "_blank",
+                  download: "#{object.title.parameterize}.ics"),
         h.content_tag(:span, "•", class: "text-gray-300"),
-        h.link_to("Outlook", outlook_link, class: "text-blue-600 hover:underline text-xs"),
+        h.link_to("Outlook", outlook_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
         h.content_tag(:span, "•", class: "text-gray-300"),
-        h.link_to("Office 365", office365_link, class: "text-blue-600 hover:underline text-xs"),
+        h.link_to("Office 365", office365_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
         h.content_tag(:span, "•", class: "text-gray-300"),
-        h.link_to("Yahoo", yahoo_link, class: "text-blue-600 hover:underline text-xs")
+        h.link_to("Yahoo", yahoo_link, class: "text-blue-600 hover:underline text-xs", target: "_blank")
       ],
       " "
     )

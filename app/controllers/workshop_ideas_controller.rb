@@ -1,5 +1,4 @@
 class WorkshopIdeasController < ApplicationController
-  include AssetUpdatable
   before_action :set_workshop_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -32,10 +31,6 @@ class WorkshopIdeasController < ApplicationController
         recipient_role: :admin,
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0)
-
-      if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@workshop_idea)
-      end
 
       flash[:notice] = "Workshop idea was successfully created."
       if allowed_to?(:index?, WorkshopIdea)
@@ -85,6 +80,8 @@ class WorkshopIdeasController < ApplicationController
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
         .sort_by { |type, _| type&.name.to_s.downcase }
+    @workshop_idea.build_primary_asset if @workshop_idea.primary_asset.blank?
+    @workshop_idea.gallery_assets.build
   end
 
   private
@@ -154,6 +151,9 @@ class WorkshopIdeasController < ApplicationController
       :rhino_misc1_spanish,
       :rhino_misc2_spanish,
       :rhino_extra_field_spanish,
+
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
 
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,

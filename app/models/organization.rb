@@ -6,8 +6,9 @@ class Organization < ApplicationRecord
   belongs_to :windows_type, optional: true
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :organization_users, dependent: :restrict_with_error
-  has_many :users, through: :organization_users
+  has_many :organization_people, dependent: :restrict_with_error
+  has_many :people, through: :organization_people
+  has_many :users, through: :people
   has_many :reports, through: :users
   has_many :workshop_logs, through: :users
 
@@ -18,7 +19,12 @@ class Organization < ApplicationRecord
   has_many :sectors, through: :sectorable_items
 
   # Asset associations
-  has_one_attached :logo
+  has_one_attached :logo, dependent: :purge do |attachable|
+    attachable.variant :thumbnail,
+      resize_to_limit: [ 256, 256 ],
+      format: :webp,
+      saver: { quality: 80 }
+  end
 
   # Validations
   validates :logo,
@@ -30,7 +36,7 @@ class Organization < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :organization_users, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :organization_people, allow_destroy: true, reject_if: :all_blank
 
   # SearchCop
   include SearchCop
@@ -82,6 +88,10 @@ class Organization < ApplicationRecord
     leader.user == user
   end
 
+  def city_state
+    "#{organization_locality}, #{addresses.active.first&.state}"
+  end
+
   def type_name
     "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end
@@ -105,6 +115,6 @@ class Organization < ApplicationRecord
   private
 
   def leader
-    organization_users.find_by(position: 2)
+    organization_people.find_by(position: 2)
   end
 end

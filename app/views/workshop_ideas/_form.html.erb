@@ -5,8 +5,6 @@
       <%= render 'shared/errors', resource: @workshop_idea %>
     <% end %>
 
-    <%= tag.div class: "unpersisted_resource_asset_params" %>
-
     <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
     <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
@@ -382,6 +380,8 @@
       </div>
     </div>
 
+
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
         <%= link_to "Delete", workshop_idea, method: :delete, class: "btn btn-danger-outline",
@@ -392,5 +392,4 @@
     </div>
   <% end %>
 
-  <div class="my-4"><%= render "assets/form", owner: @workshop_idea %></div>
 </div>

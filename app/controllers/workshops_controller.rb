@@ -1,5 +1,5 @@
 class WorkshopsController < ApplicationController
-  include AssetUpdatable, AhoyTracking
+  include AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
@@ -15,7 +15,7 @@ class WorkshopsController < ApplicationController
       track_index_intent(Workshop, search_service.workshops, params)
 
       @workshops = authorized_scope(search_service.workshops
-                                                  .includes(:categories, :windows_type, :user, :images, :bookmarks,
+                                                  .includes(:categories, :windows_type, :user, :bookmarks,
                                                             user: [ :person ], primary_asset: [ :file_attachment ]))
                                                   .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
@@ -96,8 +96,6 @@ class WorkshopsController < ApplicationController
         assign_associations(@workshop)
         if params[:promote_idea_assets] == "true"
           @workshop.attach_assets_from_idea!
-        elsif params.dig(:library_asset, :new_assets).present?
-          update_asset_owner(@workshop)
         end
         success = true
       end
@@ -200,7 +198,8 @@ class WorkshopsController < ApplicationController
     @quotes = Quote.where(workshop_id: @workshop.id).published
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
     @workshop_variations = @workshop.workshop_variations.published
-    @sectors = @workshop.sectorable_items.published.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
+    @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
+    @mentions = @workshop.all_mentions_grouped
   end
 
 
@@ -222,6 +221,9 @@ class WorkshopsController < ApplicationController
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)
+
+    @workshop.build_primary_asset if @workshop.primary_asset.blank?
+    @workshop.gallery_assets.build
   end
 
   def assign_associations(workshop)
@@ -232,6 +234,7 @@ class WorkshopsController < ApplicationController
     # Convert checkbox values into sectorable_items updates
     selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
     workshop.sectors = Sector.where(id: selected_sector_ids)
+    workshop.save!
   end
 
   def log_workshop_error(action, error)
@@ -313,6 +316,8 @@ class WorkshopsController < ApplicationController
 
       category_ids: [],
       sector_ids: [],
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ]

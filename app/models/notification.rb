@@ -1,9 +1,24 @@
 class Notification < ApplicationRecord
-  belongs_to :noticeable, polymorphic: true
+  belongs_to :noticeable, polymorphic: true, optional: true
+  belongs_to :parent_notification, class_name: "Notification", optional: true
+  belongs_to :root_notification, class_name: "Notification", optional: true
+  has_many :child_notifications, class_name: "Notification", foreign_key: :parent_notification_id, dependent: :nullify
 
   # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols
 
   KINDS = %w[
+    contact_us
+    contact_us_fyi
+
+    welcome_instructions
+    account_confirmation
+    account_confirmation_fyi
+    account_confirmed
+    account_confirmed_fyi
+    account_unlock_fyi
+    reset_password
+    reset_password_fyi
+
     event_registration_confirmation
     event_registration_confirmation_fyi
     idea_submitted
@@ -12,10 +27,6 @@ class Notification < ApplicationRecord
     report_submitted_fyi
     workshop_log_submitted
     workshop_log_submitted_fyi
-    reset_password
-    reset_password_fyi
-    account_confirmation_fyi
-    account_unlock_fyi
   ].freeze
 
   RECIPIENT_ROLES = %w[
@@ -50,5 +61,42 @@ class Notification < ApplicationRecord
 
   def delivered?
     delivered_at.present?
+  end
+
+  def resend_count
+    # If this notification has a root, use that; otherwise, this IS the root
+    root_id = root_notification_id || id
+
+    # Memoize to avoid repeated queries
+    @resend_count ||= Notification.where(root_notification_id: root_id)
+                                   .where.not(id: root_id)
+                                   .count
+  end
+
+  def resend?
+    parent_notification_id.present?
+  end
+
+  def original_notification
+    root_notification || self
+  end
+
+  # Get the resend number (position in the chain from root)
+  # Returns 1 for the first resend, 2 for the second, etc.
+  def resend_number
+    return nil unless resend?
+
+    # Memoize to avoid repeated queries
+    @resend_number ||= begin
+      # Get all resent notifications in the chain ordered by creation time
+      # (excludes the root notification itself)
+      root_id = root_notification_id
+      all_resends = Notification.where(root_notification_id: root_id)
+                                .order(:created_at)
+                                .pluck(:id)
+
+      # Find this notification's position (1-indexed)
+      all_resends.index(id) + 1
+    end
   end
 end

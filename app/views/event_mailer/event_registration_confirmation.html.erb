@@ -32,7 +32,16 @@
         <tr>
           <td style="padding:6px 0;">
             <span style="padding-bottom: 12px"><strong>Location</strong></span><br>
-            <%= @event.location %>
+            <%= @event.location.name %>
+          </td>
+        </tr>
+      <% end %>
+
+      <% if @event.videoconference_url.present? %>
+        <tr>
+          <td style="padding:6px 0;">
+            <span style="padding-bottom: 12px"><strong>Videoconference URL</strong></span><br>
+            <a href="<%= @event.videoconference_url %>"><%= @event.videoconference_url %></a>
           </td>
         </tr>
       <% end %>

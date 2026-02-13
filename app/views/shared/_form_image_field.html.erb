@@ -65,7 +65,7 @@
         <div class="relative w-32 h-32">
           <img id="<%= image_dom_id %>"
                data-file-preview-target="preview"
-               class="hidden w-32 h-32 object-cover border border-gray-300 shadow-sm" />
+               class="hidden w-32 h-32 object-cover border border-gray-300 shadow-sm">
 
           <div data-file-preview-target="placeholder"
                class="absolute inset-0 flex items-center justify-center
@@ -97,6 +97,7 @@
                              action: "change->file-preview#update"
                            },
                            multiple: multiple,
+                           direct_upload: true,
                            class: "absolute inset-0 w-full h-full opacity-0 cursor-pointer" %>
 
           <button type="button"

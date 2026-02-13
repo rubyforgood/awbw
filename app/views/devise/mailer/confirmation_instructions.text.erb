@@ -1,13 +1,14 @@
-Confirm your email address
+Welcome!
 ==========================
 
-Hello <%= @email %>,
+Hello <%= @user.devise_email_name %>,
 
-Welcome! Please confirm your account email by visiting the link below:
+Welcome! You've been invited to join the <%= @organization_name %> portal.
 
-<%= confirmation_url(@resource, confirmation_token: @token) %>
+Set your password:
+<%= confirm_url(confirmation_token: @token) %>
 
-If you did not create this account, you can safely ignore this email.
+This invitation link will expire in 30 days and can only be used once.
 
-If you have any concerns regarding this email, please visit our contact page to connect with staff:
+If you have any questions regarding this invitation, please visit our contact page to connect with staff:
 <%= contact_us_url %>

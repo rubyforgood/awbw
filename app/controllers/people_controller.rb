@@ -5,9 +5,15 @@ class PeopleController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(Person.includes(:user, :avatar_attachment, :sectorable_items,
-                                                       user: [ :avatar_attachment, :organizations ])
-                                             .references(:user))
+    base_scope = authorized_scope(Person.includes(
+      :user,
+      :avatar_attachment,
+      :sectorable_items,
+      :organization_people,
+      user: [ :avatar_attachment, :organizations ],
+      sectorable_items: :sector,
+      organization_people: :organization
+    ).references(:user))
     filtered = base_scope.search_by_params(params.to_unsafe_h)
                          .order(:first_name, :last_name)
     @count_display = filtered.size
@@ -28,6 +34,14 @@ class PeopleController < ApplicationController
   end
 
   def edit
+    @person = Person.includes(
+      :user,
+      :avatar_attachment,
+      :contact_methods,
+      :addresses,
+      :organization_people,
+      :sectorable_items
+    ).find(params[:id]).decorate
     authorize! @person
     set_form_variables
   end
@@ -90,9 +104,7 @@ class PeopleController < ApplicationController
   def set_form_variables
     set_user
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
-    if @person.user
-      @person.user.organization_users.first || @person.user.organization_users.build
-    end
+    @person.organization_people.first || @person.organization_people.build
 
     @all_sectors = Sector.published.order(:name)
     @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
@@ -193,15 +205,15 @@ class PeopleController < ApplicationController
         :city2,
         :state2,
         :zip2,
-        :notes,
-        organization_users_attributes: [
-          :id,
-          :organization_id,
-          :position,
-          :title,
-          :inactive,
-          :_destroy
-        ]
+        :notes
+      ],
+      organization_people_attributes: [
+        :id,
+        :organization_id,
+        :position,
+        :title,
+        :inactive,
+        :_destroy
       ],
     )
   end

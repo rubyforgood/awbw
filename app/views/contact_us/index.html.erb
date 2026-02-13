@@ -1,204 +1,180 @@
-<div class="max-w-5xl mx-auto px-4 py-8 space-y-8" id="contact-us-container">
-
-  <!-- Contact Info Card -->
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-    <h2 class="text-2xl font-semibold text-gray-900 mb-3">Contact us</h2>
-    <div class="text-gray-700 mt-3">
-      Questions? Comments? Concerns? We’d love to hear from you!
-    </div>
-    <div class="text-gray-500 italic mt-3">
-      Please note -- we are a training organization. If you are a survivor and in need of support,
-      <br> please call 211, which connects people with social service organizations.
-    </div>
-    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-800">
-      <!-- Left column -->
-      <div class="space-y-3">
-        <div class="font-semibold text-gray-900">
-          Email:
-          <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-                      subject: "Website question",
-                      class: "text-blue-500 hover:text-blue-700" %>
+<div class="bg-gradient-to-b from-gray-50 to-white min-h-screen py-12">
+  <div class="max-w-5xl mx-auto px-4 space-y-10" id="contact-us-container">
+    <!-- Contact Info Card -->
+    <div class="bg-white/95 backdrop-blur-sm border border-gray-200/70 rounded-2xl shadow-lg p-8">
+      <!-- Header -->
+      <header class="space-y-4">
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900">
+          Contact Us
+        </h2>
+        <p class="text-lg text-gray-600 leading-relaxed max-w-2xl">
+          Questions? Comments? Concerns? We'd love to hear from you.
+        </p>
+        <div class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <strong>Please note:</strong> We are a training organization. If you are a survivor and in need of support,
+          call <strong>211</strong>, which connects people with social service organizations.
         </div>
-
-        <div class="font-semibold text-gray-900">
-          Phone:
-          <%= link_to "310-396-0317",
-                      "tel:310-396-0317",
-                      class: "text-blue-500 hover:text-blue-700" %>
-        </div>
-
-        <div class="font-semibold text-gray-900">
-          Fax:
-          <%= link_to "310-396-9698",
-                      "tel:310-396-9698",
-                      class: "text-blue-500 hover:text-blue-700" %>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-3">
-          <span class="font-semibold text-gray-900">Social media:</span>
-
-          <!-- LinkedIn -->
-          <%= link_to "https://www.linkedin.com/company/a-window-between-worlds",
-                      target: "_blank", rel: "noopener noreferrer",
-                      class: "group inline-flex items-center justify-center w-10 h-10
-              rounded-md bg-gray-100 hover:bg-[#0A66C2] transition-colors duration-200" do %>
-            <i class="fab fa-linkedin-in text-gray-600 group-hover:text-white text-lg inline-block"></i>
-          <% end %>
-
-          <!-- Instagram -->
-          <%= link_to "https://www.instagram.com/awbworg",
-                      target: "_blank", rel: "noopener noreferrer",
-                      class: "group inline-flex items-center justify-center w-10 h-10
-              rounded-md bg-gray-100 hover:bg-gradient-to-tr hover:from-[#F58529]
-              hover:via-[#DD2A7B] hover:to-[#8134AF] transition-all duration-300" do %>
-            <i class="fab fa-instagram text-gray-600 group-hover:text-white text-lg inline-block"></i>
-          <% end %>
-
-          <!-- Facebook -->
-          <%= link_to "https://www.facebook.com/awbworg",
-                      target: "_blank", rel: "noopener noreferrer",
-                      class: "group inline-flex items-center justify-center w-10 h-10
-              rounded-md bg-gray-100 hover:bg-[#1877F2] transition-colors duration-200" do %>
-            <i class="fab fa-facebook-f text-gray-600 group-hover:text-white text-lg inline-block"></i>
-          <% end %>
-
-          <!-- Twitter -->
-          <%= link_to "https://www.twitter.com/awbworg",
-                      target: "_blank", rel: "noopener noreferrer",
-                      class: "group inline-flex items-center justify-center w-10 h-10
-              rounded-md bg-gray-100 hover:bg-[#1DA1F2] transition-colors duration-200" do %>
-            <i class="fab fa-twitter text-gray-600 group-hover:text-white text-lg inline-block"></i>
-          <% end %>
-
-          <!-- YouTube -->
-          <%= link_to "https://www.youtube.com/@awbworg",
-                      target: "_blank", rel: "noopener noreferrer",
-                      class: "group inline-flex items-center justify-center w-10 h-10
-                    rounded-md bg-gray-100 hover:bg-[#FF0000]
-                    text-gray-600 hover:text-white
-                    transition-colors duration-200" do %>
-            <i class="fa-brands fa-youtube text-lg transition-colors duration-200"></i>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Right column -->
-      <div class="space-y-1">
-        <div class="font-semibold text-gray-900">Mailing Address:</div>
-        <div>
-          Attn: Zachery Scott, Executive Director<br>
-          A Window Between Worlds<br>
-          1029 1/2 W 24th Street<br>
-          Los Angeles, CA 90007
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-6 text-gray-800">
-      <div>
-        <div class="font-semibold text-gray-900 mb-3">
-          Form Submission:
-          <span class="font-normal text-sm text-gray-900 mb-3">
-            Which program is your question about?
-          </span>
-        </div>
-        <!-- Select Program Buttons -->
-        <div class="">
-          <div class="flex flex-wrap gap-3 justify-start">
-            <%= link_to "?q=adult#contact-form",
-                        class: "px-5 py-2.5 rounded-full text-white text-sm font-medium transition
-                           #{params[:q] == 'adult' ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}" do %>
-              Adult Program
-            <% end %>
-
-            <%= link_to "?q=children#contact-form",
-                        class: "px-5 py-2.5 rounded-full text-white text-sm font-medium transition
-                           #{params[:q] == 'children' ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}" do %>
-              Children's Program
-            <% end %>
-
-            <%= link_to "?q=general#contact-form",
-                        class: "px-5 py-2.5 rounded-full text-white text-sm font-medium transition
-                           #{params[:q] == 'general' ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}" do %>
-              General Questions
-            <% end %>
+      </header>
+      <!-- Contact Details -->
+      <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-10 text-gray-800">
+        <!-- Left Column -->
+        <div class="space-y-6">
+          <div>
+            <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Email
+            </div>
+            <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+                        subject: "Website question",
+                        class: "text-blue-600 hover:text-blue-800 font-medium" %>
           </div>
-
-          <% if params[:q].present? %>
-            <!-- Prompt -->
-            <div id="contact-form" class="mt-6 border-t border-gray-200 pt-6">
-              <p class="text-gray-700 mb-4">
-                Great — you selected the
-                <strong><%= params[:q] == "children" ? "Children's" : params[:q].humanize %></strong> program.
-                Please complete the short form below and our team will respond as soon as possible.
-              </p>
-
-              <!-- Contact Form -->
-              <%= form_tag("/contact_us", method: "POST", class: "space-y-6") do %>
-                <input type="hidden" name="contact_us[q]" value="<%= params[:q] %>">
-
-                <!-- Name Row -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                    <input type="text"
-                           name="contact_us[first_name]"
-                           required
-                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
-                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                    <input type="text"
-                           name="contact_us[last_name]"
-                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
-                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                    <input type="email"
-                           name="contact_us[from]"
-                           required
-                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
-                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Agency / Organization *</label>
-                    <input type="text"
-                           name="contact_us[agency]"
-                           required
-                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
-                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
-                  </div>
-                </div>
-
-                <!-- Subject -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Subject Line *</label>
-                  <input type="text"
-                         name="contact_us[subject]"
-                         required
-                         class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
-                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none">
-                </div>
-
-                <!-- Message -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Your Message *</label>
-                  <textarea name="contact_us[message]"
-                            required
-                            rows="5"
-                            class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"></textarea>
-                </div>
-
-                <!-- Submit -->
-                <div class="flex justify-end">
-                  <input type="submit"
-                         value="Submit"
-                         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow-sm transition">
-                </div>
+          <div>
+            <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Phone
+            </div>
+            <%= link_to "310-396-0317",
+                        "tel:310-396-0317",
+                        class: "text-blue-600 hover:text-blue-800 font-medium" %>
+          </div>
+          <div>
+            <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">
+              Social Media
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- LinkedIn -->
+              <%= link_to "https://www.linkedin.com/company/a-window-between-worlds",
+                          target: "_blank", rel: "noopener noreferrer",
+                          class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#0A66C2] transition" do %>
+                <i class="fab fa-linkedin-in text-gray-600 group-hover:text-white text-lg"></i>
               <% end %>
+              <!-- Instagram -->
+              <%= link_to "https://www.instagram.com/awbworg",
+                          target: "_blank", rel: "noopener noreferrer",
+                          class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-gradient-to-tr hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF] transition" do %>
+                <i class="fab fa-instagram text-gray-600 group-hover:text-white text-lg"></i>
+              <% end %>
+              <!-- Facebook -->
+              <%= link_to "https://www.facebook.com/awbworg",
+                          target: "_blank", rel: "noopener noreferrer",
+                          class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#1877F2] transition" do %>
+                <i class="fab fa-facebook-f text-gray-600 group-hover:text-white text-lg"></i>
+              <% end %>
+              <!-- Twitter -->
+              <%= link_to "https://www.twitter.com/awbworg",
+                          target: "_blank", rel: "noopener noreferrer",
+                          class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#1DA1F2] transition" do %>
+                <i class="fab fa-twitter text-gray-600 group-hover:text-white text-lg"></i>
+              <% end %>
+              <!-- YouTube -->
+              <%= link_to "https://www.youtube.com/@awbworg",
+                          target: "_blank", rel: "noopener noreferrer",
+                          class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#FF0000] transition" do %>
+                <i class="fa-brands fa-youtube text-gray-600 group-hover:text-white text-lg"></i>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <!-- Right Column -->
+        <div class="space-y-4">
+          <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            Mailing Address
+          </div>
+          <div class="text-gray-700 leading-relaxed">
+            Attn: Zachery Scott, Executive Director<br>
+            A Window Between Worlds<br>
+            1029 1/2 W 24th Street<br>
+            Los Angeles, CA 90007
+          </div>
+        </div>
+      </div>
+      <!-- Divider -->
+      <div class="mt-12 pt-12 border-t border-gray-200">
+        <% if current_user && @user %>
+          <div class="text-lg font-medium text-gray-800 mb-6">
+            Hello, <%= @user.first_name %>! We're glad to hear from you.
+          </div>
+        <% end %>
+        <!-- Contact Form -->
+        <div id="contact-form" class="space-y-8">
+          <div class="space-y-2">
+            <h3 class="text-2xl font-semibold text-gray-900">
+              Send us a message
+            </h3>
+            <p class="text-gray-600">
+              Please complete the form below and our team will respond as soon as possible.
+            </p>
+          </div>
+          <%= form_tag("/contact_us", method: "POST", class: "space-y-8") do %>
+            <input type="hidden" name="contact_us[q]" value="general">
+            <% unless current_user %>
+              <!-- Name Row -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    First Name *
+                  </label>
+                  <input type="text"
+                         name="contact_us[first_name]"
+                         required
+                         class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name
+                  </label>
+                  <input type="text"
+                         name="contact_us[last_name]"
+                         class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Email *
+                  </label>
+                  <input type="email"
+                         name="contact_us[from]"
+                         required
+                         class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Agency / Organization
+                  </label>
+                  <input type="text"
+                         name="contact_us[agency]"
+                         class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
+                </div>
+              </div>
+            <% else %>
+              <input type="hidden" name="contact_us[first_name]" value="<%= @user.first_name %>">
+              <input type="hidden" name="contact_us[last_name]" value="<%= @user.last_name %>">
+              <input type="hidden" name="contact_us[from]" value="<%= @user.email %>">
+              <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.primary_organization&.name || '' %>">
+            <% end %>
+            <!-- Subject -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Subject Line *
+              </label>
+              <input type="text"
+                     name="contact_us[subject]"
+                     required
+                     class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
+            </div>
+            <!-- Message -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Your Message *
+              </label>
+              <textarea name="contact_us[message]"
+                        required
+                        rows="6"
+                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition resize-none"></textarea>
+            </div>
+            <!-- Submit -->
+            <div class="flex justify-end">
+              <button type="submit"
+                      class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-2.5 text-white font-medium shadow-sm hover:bg-blue-700 hover:shadow-md transition">
+                Submit
+              </button>
             </div>
           <% end %>
         </div>
@@ -206,15 +182,3 @@
     </div>
   </div>
 </div>
-
-<script>
-    document.addEventListener("turbo:load", () => {
-        const hash = window.location.hash;
-        if (hash === "#contact-form") {
-            const target = document.querySelector(hash);
-            if (target) {
-                target.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-        }
-    });
-</script>

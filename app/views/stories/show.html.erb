@@ -50,7 +50,15 @@
           <% end %>
         </div>
 
-        <%= render "assets/display_assets", resource: @story %>
+        <div class="flex justify-end">
+          <%= render "assets/primary_image_picker", owner: @story %>
+        </div>
+        <div id="upload-progress" class="mt-2 h-1 w-full bg-gray-200 rounded overflow-hidden hidden">
+          <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>
+        </div>
+        <div id="hero-image">
+          <%= render "assets/display_assets", resource: @story %>
+        </div>
 
         <!-- Story Body Text -->
         <div class="prose prose-lg max-w-none text-gray-700 mb-10">

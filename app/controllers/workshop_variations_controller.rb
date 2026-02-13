@@ -1,5 +1,5 @@
 class WorkshopVariationsController < ApplicationController
-  include AssetUpdatable, AhoyTracking
+  include AhoyTracking
   def index
     authorize!
 
@@ -30,12 +30,6 @@ class WorkshopVariationsController < ApplicationController
         # assign_associations(@workshop_variation)
         if params[:promote_idea_assets] == "true"
           @workshop_variation.attach_assets_from_idea!
-        elsif params.dig(:library_asset, :new_assets).present?
-          update_asset_owner(@workshop_variation)
-        end
-
-        if params.dig(:library_asset, :new_assets).present?
-          update_asset_owner(@workshop_variation)
         end
 
         success = true
@@ -98,6 +92,7 @@ class WorkshopVariationsController < ApplicationController
   #   # Convert checkbox values into sectorable_items updates
   #   selected_sector_ids = Array(params[:workshop_variation][:sector_ids]).reject(&:blank?).map(&:to_i)
   #   workshop_variation.sectors = Sector.where(id: selected_sector_ids)
+  # workshop.save!
   # end
 
   def set_form_variables

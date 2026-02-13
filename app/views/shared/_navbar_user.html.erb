@@ -12,7 +12,6 @@
     <%= image_tag image,
                   id: "avatar-image",
                   class: "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10 img-circle avatar" %>
-
   </button>
   <!-- Dropdown menu -->
   <div
@@ -26,7 +25,6 @@
         <span>Admin</span>
       <% end %>
     <% end %>
-
     <% if current_user&.super_user %>
       <%= link_to (current_user.person ? person_path(current_user.person) : generate_person_user_path(current_user)),
                   class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
@@ -34,37 +32,32 @@
         <span>My profile</span>
       <% end %>
     <% end %>
-
-    <% if current_user&.super_user? && current_user.organization_users.any? %>
-      <% current_user.organization_users.each do |organization_user| %>
-        <%= link_to organization_path(organization_user.organization),
+    <% if current_user&.super_user? && current_user.person&.organization_people&.any? %>
+      <% current_user.person.organization_people.each do |organization_person| %>
+        <%= link_to organization_path(organization_person.organization),
                     class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
           <i class="fas fa-users"></i>
           <span>
-            My team<%= " (" + organization_user.organization.name.truncate(12) + ")" if current_user.organization_users.many? %>
+            My team<%= " (" + organization_person.organization.name.truncate(12) + ")" if current_user.person.organization_people.many? %>
           </span>
         <% end %>
       <% end %>
     <% end %>
-
     <%= link_to personal_bookmarks_path,
                 class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
       <i class="fas fa-bookmark"></i>
       <span>My bookmarks</span>
     <% end %>
-
     <%= link_to workshop_logs_path(user_id: current_user.id),
                 class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
       <i class="fas fa-clipboard-list"></i>
       <span>My workshop logs</span>
     <% end %>
-
     <%= link_to change_password_path,
                 class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
       <i class="fas fa-key"></i>
       <span>Change password</span>
     <% end %>
-
     <%= link_to destroy_user_session_path,
                 method: :delete,
                 data: { turbo_method: :delete },

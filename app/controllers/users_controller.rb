@@ -1,14 +1,15 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy,
                                    :generate_person, :toggle_lock_status, :confirm_email,
-                                   :send_reset_password_instructions ]
+                                   :send_welcome_instructions, :send_reset_password_instructions ]
 
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(User.includes(:person))
+    base_scope = authorized_scope(User.includes(avatar_attachment: :blob,
+                                                person: { avatar_attachment: :blob }))
     filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
-    @users_count = filtered.size
+    @users_count = filtered.count
     @users = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
@@ -32,6 +33,9 @@ class UsersController < ApplicationController
     @user = User.new(user_params)
     authorize! @user
 
+    # do NOT have Devise send confirmation email - we'll handle that manually after creation via send_welcome_instructions
+    @user.skip_confirmation_notification!
+
     # Optional: assign random password if none provided
     @user.password ||= SecureRandom.hex(8)
     @user.password_confirmation ||= @user.password
@@ -42,7 +46,7 @@ class UsersController < ApplicationController
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
-      redirect_to users_path, notice: "User was successfully created."
+      redirect_to users_path(search: @user.email), notice: "User was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -171,6 +175,24 @@ class UsersController < ApplicationController
     end
   end
 
+  # ---------------------------------------------------------
+  # SEND INVITATION
+  # ---------------------------------------------------------
+  def send_welcome_instructions
+    authorize! @user, to: :send_welcome_instructions?
+
+    @user.set_welcome_instructions_token!
+    @user.update(welcome_instructions_sent_at: Time.current)
+    @user.send_confirmation_instructions
+
+    redirect_to users_path(search: params[:search],
+                           super_user: params[:super_user],
+                           inactive: params[:inactive],
+                           page: params[:page],
+                           number_of_items_per_page: params[:number_of_items_per_page]),
+                notice: "Invitation sent to #{@user.email}."
+  end
+
   # =========================================================
   # PRIVATE
   # =========================================================
@@ -187,7 +209,7 @@ class UsersController < ApplicationController
 
   def set_form_variables
     set_person
-    @user.organization_users.first || @user.organization_users.build
+    @user.person.organization_people.first || @user.person.organization_people.build if @user.person
     organizations = authorized_scope(Organization.all)
     @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
@@ -202,7 +224,7 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :email, :confirmed, :comment, :person_id, :inactive, :primary_address, :time_zone, :super_user,
+      :email, :comment, :person_id, :inactive, :primary_address, :time_zone, :super_user,
 
       ##### legacy to remove later
       :agency_id, :legacy, :legacy_id, :subscribecode, :avatar, :first_name, :last_name, # legacy to remove later
@@ -210,7 +232,7 @@ class UsersController < ApplicationController
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
       #####
 
-      organization_users_attributes: [ :id, :organization_id, :position, :title, :inactive, :_destroy ],
+      organization_people_attributes: [ :id, :organization_id, :position, :title, :inactive, :_destroy ],
     )
   end
 end

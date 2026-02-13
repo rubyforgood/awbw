@@ -9,6 +9,10 @@ class NotificationPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def resend?
+    admin?
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
 

@@ -21,6 +21,9 @@ application.register("password-toggle", PasswordToggleController)
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)
 
+import SearchableSelectController from "./searchable_select_controller"
+application.register("searchable-select", SearchableSelectController)
+
 import ShareUrlController from "./share_url_controller"
 application.register("share-url", ShareUrlController)
 
@@ -53,3 +56,6 @@ application.register("print-options", PrintOptionsController)
 
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
+
+import AssetPickerController from "./asset_picker_controller"
+application.register("asset-picker", AssetPickerController)

@@ -6,7 +6,8 @@ class WorkshopIdeaPolicy < ApplicationPolicy
   end
 
   def new?
-    authenticated?
+    # authenticated?
+    admin? # Temp block until stakeholders are ready
   end
 
   def create?

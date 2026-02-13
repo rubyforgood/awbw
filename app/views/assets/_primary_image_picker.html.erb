@@ -1,0 +1,16 @@
+<%# add targets for upload-progress upload-progress-bar and hero-image to the view %>
+<% if allowed_to?(:manage?, owner) %>
+  <%= form_with(model: PrimaryAsset.new, url: primary_assets_path, 
+                                       data: {controller: "asset-picker"},
+                                       html: { id: "primary-asset-form" }) do |f| %>
+    <%= f.file_field :file, class: "hidden",
+                          accept: "image/*",
+                          direct_upload: true,
+                          data: { asset_picker_target: "file",
+                                  action: "change->asset-picker#fileSelected" } %>
+
+    <%= hidden_field_tag :owner_sgid, owner.to_sgid.to_s, autocomplete: "off" %>
+
+    <button data-action="asset-picker#openFileDialog" type="button" class="hidden md:flex bg-white text-gray-700 rounded-full p-2 shadow hover:bg-gray-100 transition items-center"><i class="fa-solid fa-camera"></i><span class="pl-2 text-nowrap">Change photo</span></button>
+  <% end %>
+<% end %>

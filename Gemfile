@@ -66,6 +66,8 @@ gem "action_policy", "~> 0.7.6"
 
 gem "active_storage_validations", "~> 3.0"
 
+gem "solid_cache"
+
 group :development do
   gem "rubocop-rails-omakase", require: false
 end
@@ -95,3 +97,7 @@ group :development, :test do
   gem "debug", "~> 1.11"
   gem "bullet"
 end
+
+gem "rack-mini-profiler", "~> 4.0"
+
+gem "solid_queue", "~> 1.3"

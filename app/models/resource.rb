@@ -2,6 +2,12 @@ class Resource < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
+  include Mentioner
+
+  # Define rich text fields for mentions functionality
+  def self.mentionable_rich_text_fields
+    [ :rhino_body ]
+  end
 
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
@@ -24,8 +30,6 @@ class Resource < ApplicationRecord
   has_many :sectors, through: :sectorable_items, source: :sector
 
   # Asset associations
-  has_many :attachments, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
-  has_many :images, as: :owner, dependent: :destroy # TODO - convert to GalleryImages
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
@@ -52,6 +56,7 @@ class Resource < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
+  accepts_nested_attributes_for :downloadable_asset, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :form, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :categorizable_items,
@@ -61,14 +66,15 @@ class Resource < ApplicationRecord
                                  allow_destroy: true,
                                  reject_if: proc { |resource| Resource.reject?(resource) }
 
-  # Search Cop
+  # Search Cop — only attributes on resources table so MATCH() uses the FULLTEXT index (title, author, body).
+  # No join to action_text_rich_texts; that would require MATCH across two tables, which MySQL cannot index.
   include SearchCop
   search_scope :search do
     attributes :title, :author, :body
 
-    scope { join_rich_texts }
-    attributes action_text_body: "action_text_rich_texts.plain_text_body"
-    options :action_text_body, type: :text, default: true, default_operator: :or
+    # scope { join_rich_texts }
+    # attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    # options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   # Scopes

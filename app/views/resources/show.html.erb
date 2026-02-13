@@ -17,14 +17,12 @@
         <span class="inline-block text-md">
           <%= print_button(@resource, printable_type: "Resource", button_text: "Print page") %>
         </span>
-
         <%= link_to ("<span title='Download #{@resource.kind}'>" +
           " Download <span class='fa fa-download'></span></span>").html_safe,
                     resource_download_path(@resource),
                     class: "btn btn-utility",
                     data: {turbo: false} if @resource.downloadable_asset&.file&.attached? %>
       </div>
-
       <!-- Resource Card -->
       <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
         <!-- Title -->
@@ -32,13 +30,11 @@
           <%= title_with_badges(@resource, font_size: "text-3xl") %>
           <%= "(#{@resource.windows_type&.short_name})" if @resource.windows_type %>
         </div>
-
         <!-- Author and Date -->
         <div class="flex flex-col gap-1">
           <% unless @resource.toolkit_and_form? %>
             <div class="flex items-center text-gray-600 text-sm gap-2">
               <span><%= @resource.author %></span>
-
               <% unless @resource.story? %>
                 <span class="<%= "border-l border-gray-400 pl-2" if @resource.author.present? %>">
                   <%= @resource.display_date %>
@@ -47,13 +43,21 @@
             </div>
           <% end %>
         </div>
-
+        <div class="flex justify-end">
+          <%= render "assets/primary_image_picker", owner: @resource %>
+        </div>
+        <div id="upload-progress" class="mt-2 h-1 w-full bg-gray-200 rounded overflow-hidden hidden">
+          <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>
+        </div>
         <!-- Assets -->
-        <%= render "assets/display_assets", resource: @resource, file: @resource.display_image, variant: :hero %>
-
+        <div id="hero-image">
+          <%= render "assets/display_assets", resource: @resource, file: @resource.display_image, variant: :hero %>
+        </div>
         <!-- Main Text -->
         <%= @resource.rhino_body %>
       </div>
+      <!-- Mentions -->
+      <%= render "show_mentions" %>
     </div>
   </div>
 </div>

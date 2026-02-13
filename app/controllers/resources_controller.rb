@@ -1,25 +1,25 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable, AssetUpdatable, AhoyTracking
+  include ExternallyRedirectable, AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
     authorize!
 
-    per_page = params[:number_of_items_per_page].presence || 18
-    base_scope = authorized_scope(Resource.includes(:bookmarks, primary_asset: :file_attachment,
-                                                    downloadable_asset: :file_attachment)
-                                          .where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
-    filtered = base_scope.search_by_params(params).by_featured_first
-
-    @resources = filtered.paginate(page: params[:page], per_page: per_page)
-
-    total_count    = base_scope.size
-    filtered_count = filtered.size
-    @count_display = filtered_count == total_count ? total_count : "#{filtered_count}/#{total_count}"
-
-    track_index_intent(Resource, @resources, params)
-
     if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 18
+      base_scope = authorized_scope(Resource.includes(:bookmarks, primary_asset: :file_attachment,
+                                                      downloadable_asset: :file_attachment)
+                                            .where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
+      filtered = base_scope.search_by_params(params).by_featured_first
+
+      @resources = filtered.paginate(page: params[:page], per_page: per_page)
+
+      total_count    = base_scope.size
+      filtered_count = filtered.size
+      @count_display = filtered_count == total_count ? total_count : "#{filtered_count}/#{total_count}"
+
+      track_index_intent(Resource, @resources, params)
+
       render :resource_results
     else
       render :index
@@ -50,21 +50,35 @@ class ResourcesController < ApplicationController
   end
 
   def show
-    @resource = Resource.find(resource_id_param).decorate
+    @resource = Resource.includes(
+      :user,
+      :bookmarks,
+      primary_asset:  :file_attachment,
+      downloadable_asset:  :file_attachment,
+      gallery_assets: :file_attachment,
+    ).find(resource_id_param).decorate
     authorize! @resource
     track_view(@resource)
-    load_forms
+    @mentions = @resource.all_mentions_grouped
   end
 
   def create
     authorize!
     @resource = current_user.resources.build(resource_params)
 
-    if @resource.save
-      if params.dig(:library_asset, :new_assets).present?
-        update_asset_owner(@resource)
-      end
+    success = false
 
+    Resource.transaction do
+      if @resource.save
+        assign_associations(@resource)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      Rails.logger.error "Resource create failed: #{e.class} - #{e.message}"
+      raise ActiveRecord::Rollback
+    end
+
+    if success
       redirect_to resources_path
     else
       @resource = @resource.decorate
@@ -78,7 +92,19 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:id])
     authorize! @resource
     @resource.user ||= current_user
-    if @resource.update(resource_params)
+    success = false
+
+    Resource.transaction do
+      if @resource.update(resource_params)
+        assign_associations(@resource)
+        success = true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      Rails.logger.error "Resource update failed: #{e.class} - #{e.message}"
+      raise ActiveRecord::Rollback
+    end
+
+    if success
       flash[:notice] = "Resource updated."
       redirect_to resources_path
     else
@@ -126,11 +152,32 @@ class ResourcesController < ApplicationController
   private
 
   def set_form_variables
+    @resource.build_primary_asset if @resource.primary_asset.blank?
+    @resource.build_downloadable_asset if @resource.downloadable_asset.blank?
+    @resource.gallery_assets.build
     @windows_types = WindowsType.all
     @authors = User.active.or(User.where(id: @resource.user_id))
                    .includes(:person)
                    .order("people.first_name, people.last_name")
                    .map { |u| [ u.full_name, u.id ] }
+    @categories_grouped =
+      Category
+        .includes(:category_type)
+        .published
+        .order(:position, :name)
+        .group_by(&:category_type)
+        .select { |type, _| type.nil? || type.published? }
+        .sort_by { |type, _| type&.name.to_s.downcase }
+    @sectors = Sector.published.order(:name)
+  end
+
+  def assign_associations(resource)
+    selected_category_ids = Array(params[:resource][:category_ids]).reject(&:blank?).map(&:to_i)
+    resource.categories = Category.where(id: selected_category_ids)
+
+    selected_sector_ids = Array(params[:resource][:sector_ids]).reject(&:blank?).map(&:to_i)
+    resource.sectors = Sector.where(id: selected_sector_ids)
+    resource.save!
   end
 
   def process_search
@@ -145,8 +192,12 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
+      :user_id,
       :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured, :url,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
+      primary_asset_attributes: [ :id, :file, :_destroy ],
+      downloadable_asset_attributes: [ :id, :file, :_destroy ],
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
       categorizable_items_attributes: [ :id, :category_id, :_destroy ], category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ], sector_ids: []
     )

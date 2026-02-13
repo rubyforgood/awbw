@@ -159,6 +159,7 @@ class WorkshopLogCreationWizardController < ApplicationController
                                  :successes, :challenges, :differences, :date,
                                  :suggestions, :questions, :lead_similar, :organization_id,
                                  :num_participants_on_going, :num_participants_first_time,
+                                 :external_workshop_title,
                                  report_form_field_answers_attributes:
                                   [ :form_field_id, :answer_option_id, :answer, :_create ]
                                 ],
