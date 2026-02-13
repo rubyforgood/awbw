@@ -141,7 +141,7 @@
     <% end %>
     <%= render "shared/form_image_fields", f: f, include_primary_asset: true unless promoted_to_variation %>
     <div class="action-buttons mt-8 flex justify-center gap-3 pt-6">
-      <% if f.object.persisted? && allowed_to?(:destroy?, f.object) && f.object. workshop_variations.none? && !promoted_to_variation %>
+      <% if allowed_to?(:destroy?, f.object) && f.object. workshop_variations.none? && !promoted_to_variation %>
         <span class="admin-only bg-blue-100 p-3">
           <%= link_to "Promote to Workshop Variation",
                       new_workshop_variation_path(workshop_variation_idea_id: f.object.id),
