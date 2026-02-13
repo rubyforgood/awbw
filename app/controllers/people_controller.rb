@@ -95,9 +95,8 @@ class PeopleController < ApplicationController
     @all_sectors = Sector.published.order(:name)
     @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
 
-    @organizations_array = authorized_scope(Organization.all).order(:name).pluck(:name, :id)
+    @organizations_array = authorized_scope(Organization.all, as: :affiliated).order(:name).pluck(:name, :id)
   end
-
 
   # Only allow a list of trusted parameters through.
   def person_params

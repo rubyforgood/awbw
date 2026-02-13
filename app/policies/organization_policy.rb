@@ -22,13 +22,13 @@ class OrganizationPolicy < ApplicationPolicy
     relation.published
   end
 
-  # scope_for :affiliated, :relation do |relation|
-  #   return relation if admin?
-  #   return relation.none unless user&.person_id
-  #
-  #   relation.joins(:organization_people)
-  #           .where(organization_people: { person_id: user.person_id })
-  # end
+  relation_scope(:affiliated) do |relation|
+    next relation.active if admin?
+    next relation.none unless user&.person_id
+
+    relation.joins(:organization_people)
+            .where(organization_people: { person_id: user.person_id })
+  end
 
   private
 
