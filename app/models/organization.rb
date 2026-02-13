@@ -78,7 +78,7 @@ class Organization < ApplicationRecord
     organizations
   end
 
-  def all_workshop_logs
+  def affiliated_workshop_logs
     direct = WorkshopLog.where(organization_id: id)
     legacy = WorkshopLog.where(organization_id: nil)
                         .where(user_id: users.select(:id))

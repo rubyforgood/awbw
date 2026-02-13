@@ -191,7 +191,7 @@
               <% if true %><%# TODO - check via @organization.profile_show_workshop_logs?  %>
                 <div class="mt-6 p-3">
                   <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Logs submitted</h2>
-                  <% organization_workshop_logs = @organization.all_workshop_logs %>
+                  <% organization_workshop_logs = @organization.affiliated_workshop_logs %>
                   <%= render "workshop_logs/index",
                              workshop_logs: organization_workshop_logs.paginate(page: params[:page] || 1,
                                                                                  per_page: params[:per_page] || 10),
