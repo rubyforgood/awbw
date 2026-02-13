@@ -1,4 +1,4 @@
-<% if admin? %>
+<% if allowed_to?(:manage?, Person) %>
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start mb-4">
     <div>
       <%= f.input :organization_id,

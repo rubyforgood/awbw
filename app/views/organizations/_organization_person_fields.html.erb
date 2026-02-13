@@ -1,4 +1,4 @@
-<% if admin? %>
+<% if allowed_to?(:manage?, Organization) %>
   <div class="nested-fields grid grid-cols-1 md:grid-cols-4 gap-4 items-start mb-4"<% if f.object.persisted? %> id="<%= dom_id(f.object) %>"<% end %>>
     <div>
       <%= f.input :person_id,

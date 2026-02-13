@@ -39,5 +39,5 @@
              label_method: :short_name,
              param_name: :windows_types %>
 
-  <%= render "inactive_fields" if admin? %>
+  <%= render "inactive_fields" if allowed_to?(:manage?, Workshop) %>
 </div>

@@ -18,7 +18,7 @@
         <% end %>
         and should not be edited here.
       </div>
-    <% elsif admin? && f.object.persisted? %>
+    <% elsif allowed_to?(:manage?, WorkshopIdea) && f.object.persisted? %>
       <div class="admin-only bg-blue-100 m-3 p-3">
         <%= link_to "Promote to Workshop", new_workshop_path(workshop_idea_id: @workshop_idea.id),
                     class: "btn btn-secondary-outline",
@@ -61,7 +61,7 @@
       </div>
     </div>
 
-    <% if admin? %>
+    <% if allowed_to?(:manage?, WorkshopIdea) %>
       <div class="bg-white rounded pb-6">
         <div class="admin-only bg-blue-100 flex gap-x-2 items-center p-3">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

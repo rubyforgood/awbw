@@ -119,7 +119,7 @@
                     class: ("readonly" if promoted_to_variation)
                   } %>
     </div>
-    <% if admin? || @user %>
+    <% if allowed_to?(:manage?, WorkshopVariationIdea) || @user %>
       <div class="flex flex-col md:flex-row md:space-x-4">
         <div class="flex-1 mb-4 md:mb-0">
           <% if promoted_to_variation %>
@@ -129,7 +129,7 @@
                 <%= link_to workshop_variation.title, workshop_variation_path(workshop_variation), class: "btn btn-secondary-outline" %>
               <% end %>
             </div>
-          <% elsif admin? && f.object.persisted? %>
+          <% elsif allowed_to?(:manage?, WorkshopVariationIdea) && f.object.persisted? %>
             <div class="admin-only bg-blue-100 p-3">
               <%= link_to "Promote to Workshop Variation",
                           new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),

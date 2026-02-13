@@ -10,7 +10,7 @@
                           class: "btn btn-secondary-outline" %>
             <% end %>
           <% else %>
-            <% if admin? && @workshop_variation_idea.persisted? %>
+            <% if allowed_to?(:destroy?, @workshop_variation_idea) && @workshop_variation_idea.persisted? %>
               <%= link_to "Promote to Workshop Variation", 
                           new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),
                           class: "admin-only bg-blue-100 btn btn-secondary-outline ms-2" %>

@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <% if admin? %>
+    <% if allowed_to?(:manage?, Faq) %>
       <!-- Inactive -->
       <div class="admin-only bg-blue-100">
         <div class="w-full md:w-48 mb-3 md:mb-0">
