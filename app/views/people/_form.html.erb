@@ -66,7 +66,7 @@
 
             <p class="text-sm text-gray-500 mt-1">
               Only
-              <% if allowed_to?(:edit?, User) && f.object.user&.persisted? %>
+              <% if allowed_to?(:edit?, f.object.user) %>
                 <%= link_to "editable by admins",
                             edit_user_path(f.object.user),
                             class: "underline" %>

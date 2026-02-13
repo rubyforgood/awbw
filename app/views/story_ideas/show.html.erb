@@ -13,7 +13,7 @@
             <%= link_to("StoryIdeas", story_ideas_path, class: "btn btn-secondary-outline") %>
           <% end %>
           <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
-          <% if allowed_to?(:edit?, StoryIdea) %>
+          <% if allowed_to?(:edit?, @story_idea) %>
             <%= link_to("Edit", edit_story_idea_path(@story_idea), class: "btn btn-primary-outline") %>
           <% end %>
         </div>

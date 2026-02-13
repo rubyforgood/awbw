@@ -31,11 +31,12 @@
 
               <!-- TITLE + BADGES -->
               <span class="inline-flex items-center gap-2">
-                <%= link_to title_with_badges(news, show_hidden_badge: admin?).html_safe,
-                              community_news_path(news),
-                              data: { turbo_prefetch: false, turbo_frame: "_top" },
-                              target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
-                              class: "font-bold hover:text-indigo-800 hover:underline" %>
+                <%= link_to title_with_badges(news,
+                                              show_hidden_badge: allowed_to?(:edit?, news)).html_safe,
+                            community_news_path(news),
+                            data: { turbo_prefetch: false, turbo_frame: "_top" },
+                            target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
+                            class: "font-bold hover:text-indigo-800 hover:underline" %>
               </span>
             </td>
 
@@ -47,7 +48,7 @@
 
             <td class="px-6 py-4 text-right">
               <div class="inline-flex gap-2">
-                <% if allowed_to?(:edit?, CommunityNews) %>
+                <% if allowed_to?(:edit?, news) %>
                   <%= link_to "Edit",
                               edit_community_news_path(news),
                               data: {turbo_frame: "_top"},
