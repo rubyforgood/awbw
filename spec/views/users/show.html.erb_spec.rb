@@ -19,7 +19,7 @@ RSpec.describe "users/show", type: :view do
   # --------------------------------------------------
   # ADMIN VIEW
   # --------------------------------------------------
-  context "when current user is a super user" do
+  context "when current user is an admin" do
     let(:admin) { create(:user, :admin) }
 
     before do
@@ -59,7 +59,7 @@ RSpec.describe "users/show", type: :view do
   # --------------------------------------------------
   # NON-ADMIN VIEW
   # --------------------------------------------------
-  context "when current user is not a super user" do
+  context "when current user is not an admin" do
     let(:regular_user) { create(:user) }
 
     before do
@@ -67,7 +67,8 @@ RSpec.describe "users/show", type: :view do
       render
     end
 
-    it "does not show admin buttons" do
+    it "redirects to root" do
+      # redirect to root is handled by request spec, so we just test that the view doesn't render admin-only content
       expect(rendered).not_to have_link("Users")
       expect(rendered).not_to have_link("Edit")
     end

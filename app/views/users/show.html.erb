@@ -4,11 +4,15 @@
 
       <!-- Top buttons -->
       <div class="flex justify-end mb-6">
-        <%= link_to "Users", users_path, class: "btn btn-secondary-outline mr-2" %>
+        <% if allowed_to?(:index?, User) %>
+          <%= link_to "Users", users_path, class: "btn btn-secondary-outline mr-2" %>
+        <% end %>
         <%= link_to "Person profile",
                     person_path(@user.person),
                     class: "btn btn-secondary-outline mr-2" if @user.person %>
-        <%= link_to "Edit", edit_user_path(@user), class: "btn btn-primary-outline" %>
+        <% if allowed_to?(:edit?, @user) %>
+          <%= link_to "Edit", edit_user_path(@user), class: "btn btn-primary-outline" %>
+        <% end %>
       </div>
 
       <!-- Main two-column layout -->
