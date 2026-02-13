@@ -25,7 +25,9 @@
         <%= link_to "Delete", @event_registration, method: :delete, class: "btn btn-danger-outline",
                     data: { turbo: false, confirm: "Are you sure you want to delete?" } %>
       <% end %>
-      <%= link_to "Cancel", stories_path, class: "btn btn-secondary-outline" %>
+      <%= link_to "Cancel",
+                  (allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path),
+                  class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   </div>

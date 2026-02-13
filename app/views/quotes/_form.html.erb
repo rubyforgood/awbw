@@ -73,7 +73,9 @@
         <%= link_to "Delete", @quote, method: :delete, class: "btn btn-danger-outline",
                     data: { confirm: "Are you sure you want to delete?" } %>
       <% end %>
-      <%= link_to "Cancel", quotes_path, class: "btn btn-secondary-outline ms-2" %>
+      <%= link_to "Cancel",
+                  (allowed_to?(:index?, Quote) ? quotes_path : root_path),
+                  class: "btn btn-secondary-outline ms-2" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   </div>

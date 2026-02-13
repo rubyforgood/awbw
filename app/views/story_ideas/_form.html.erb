@@ -144,7 +144,9 @@
                       data: { confirm: "Are you sure you want to delete?" } %>
         </span>
       <% end %>
-      <%= link_to "Cancel", story_ideas_path, class: "btn btn-secondary-outline ms-2" %>
+      <%= link_to "Cancel",
+                  (allowed_to?(:index?, StoryIdea) ? story_ideas_path : root_path),
+                  class: "btn btn-secondary-outline ms-2" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   <% end %>
