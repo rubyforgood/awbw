@@ -143,6 +143,13 @@
       </div>
     <% end %>
 
+    <%= f.input :email,
+                label: "Email",
+                as: :email,
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                } %>
+
     <%= f.input :website_url,
                 label: "Website URL",
                 as: :string,
