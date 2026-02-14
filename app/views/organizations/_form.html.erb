@@ -156,6 +156,11 @@
                 input_html: {
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
+    <% if f.object.website_url.present? && (URI.parse(f.object.website_url) rescue nil).nil? %>
+      <div class="text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-sm">
+        Current website URL is not a valid URL. Please update it.
+      </div>
+    <% end %>
 
     <% if allowed_to?(:manage?, Organization) %>
       <div class="admin-only bg-blue-100"><%= f.input :internal_id,

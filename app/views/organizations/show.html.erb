@@ -56,11 +56,20 @@
             <% end %>
           <% end %>
           <% if @organization.profile_show_website? && @organization.website_url.present? %>
-            <span class="text-gray-600">
-              🌎 <%= link_to @organization.website_url, URI.parse(@organization.website_url).to_s,
-                            target: "_blank", rel: "noopener noreferrer",
-                            class: "text-blue-600 hover:underline" %>
-            </span>
+            <% safe_url = URI.parse(@organization.website_url).to_s rescue nil %>
+            <% if safe_url.present? %>
+              <span class="text-gray-600">
+                🌎 <%= link_to @organization.website_url, safe_url,
+                              target: "_blank", rel: "noopener noreferrer",
+                              class: "text-blue-600 hover:underline" %>
+              </span>
+            <% elsif allowed_to?(:edit?, @organization) %>
+              <span class="admin-only bg-blue-100 p-3">
+                <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">
+                  Bad URL: "<%= link_to @organization.website_url, edit_organization_path(@organization) %>"
+                </span>
+              </span>
+            <% end %>
           <% end %>
         </div>
         <!-- Badges -->
