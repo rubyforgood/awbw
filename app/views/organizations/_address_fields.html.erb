@@ -125,7 +125,7 @@
   </div>
 
   <!-- Remove button -->
-  <%= link_to_remove_association "✖ Remove",
+  <%= link_to_remove_association "Remove",
                                  f,
-                                 class: "btn btn-danger-outline whitespace-nowrap" if f.object.persisted? %>
+                                 class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
 </div>
