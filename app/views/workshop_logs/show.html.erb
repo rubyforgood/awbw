@@ -9,7 +9,7 @@
         </h1>
 
         <div class="flex gap-2">
-          <% if allowed_to?(:index?, @workshop_log) %>
+          <% if allowed_to?(:index?, WorkshopLog) %>
             <%= link_to "Back to Logs", workshop_logs_path, class: "btn btn-secondary-outline" %>
           <% end %>
           <% if allowed_to?(:edit?, @workshop_log) %>
