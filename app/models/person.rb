@@ -55,7 +55,7 @@ class Person < ApplicationRecord
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
   accepts_nested_attributes_for :user, update_only: true
   accepts_nested_attributes_for :organization_people, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["organization_id"].blank? || attrs["title"].blank? }
+    reject_if: proc { |attrs| attrs["organization_id"].blank? }
 
   # Search Cop
   include SearchCop
