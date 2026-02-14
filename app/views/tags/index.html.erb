@@ -8,7 +8,7 @@
           Tags
         </h1>
         <p class="text-gray-600 max-w-2xl">
-          Explore content by service population or thematic category.
+          Explore content by sector or thematic category.
         </p>
       </div>
     </div>
@@ -28,7 +28,7 @@
 
           <% if allowed_to?(:index?, Sector) %>
             <div class="flex-shrink-0">
-              <%= link_to "Manage service populations",
+              <%= link_to "Manage sectors",
                           sectors_path,
                           class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
             </div>
