@@ -4,6 +4,6 @@ class SectorDecorator < ApplicationDecorator
   end
 
   def detail(length: nil)
-    "Service population: #{name}"
+    "Sector: #{name}"
   end
 end
