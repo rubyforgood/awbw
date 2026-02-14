@@ -33,6 +33,7 @@
 
           <tbody class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
+            <% cache [organization, @affiliated_since[organization.id], @active_people_counts[organization.id], current_user.super_user?] do %>
             <tr class="hover:bg-gray-50 transition">
               <td class="px-4 py-2">
                 <% status_label = organization.published? ? nil : organization.organization_status&.name %>
@@ -75,6 +76,7 @@
                 </td>
               <% end %>
             </tr>
+            <% end %>
           <% end %>
           </tbody>
         </table>

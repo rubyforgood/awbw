@@ -3,7 +3,7 @@ class Address < ApplicationRecord
                 "Central CA", "Orange County", "Outside CA", "Outside USA", "Unknown" ]
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", "unknown" ].freeze
 
-  belongs_to :addressable, polymorphic: true
+  belongs_to :addressable, polymorphic: true, touch: true
 
   validates :locality, presence: true
   validates :city, presence: true
