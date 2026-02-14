@@ -40,7 +40,9 @@ class Organization < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
-  accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs["sector_id"].blank? }
+  after_save :remove_duplicate_sectorable_items
   accepts_nested_attributes_for :organization_people, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
 
@@ -139,5 +141,11 @@ class Organization < ApplicationRecord
 
   def leader
     organization_people.find_by(position: 2)
+  end
+
+  def remove_duplicate_sectorable_items
+    sectorable_items
+      .group_by(&:sector_id)
+      .each_value { |dupes| dupes.drop(1).each(&:destroy) }
   end
 end
