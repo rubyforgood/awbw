@@ -115,21 +115,20 @@
         <div>
           <% if @organization.profile_show_email? || @organization.profile_show_phone? %>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h2>
-            <% if @organization.profile_show_email? %>
-              <p class="text-gray-700 mb-1">
-                📧 <%#= mail_to @organization.email, @organization.email,
-                              class: "text-blue-600 hover:underline" %>
-              </p>
-            <% end %>
-            <% if @organization.profile_show_phone? && @organization.phone.present? %>
-              <p class="text-gray-700 mb-1">
-                📞 <%#= link_to @organization.phone, "tel:#{@organization.phone}",
-                              class: "text-blue-600 hover:underline" %>
-              </p>
+            <%# Email: Organization has no email column yet — uncomment when added %>
+            <% if @organization.profile_show_phone? %>
+              <% phone = @organization.addresses.active.filter_map(&:phone).first %>
+              <% if phone.present? %>
+                <p class="text-gray-700 mb-1">
+                  📞 <%= link_to phone, "tel:#{phone}",
+                                class: "text-blue-600 hover:underline" %>
+                </p>
+              <% end %>
             <% end %>
             <% if @organization.profile_show_website? && @organization.website_url.present? %>
               <p class="text-gray-700 mb-1">
-                🌎 <%#= link_to @organization.website_url,
+                🌎 <%= link_to @organization.website_url, @organization.website_url,
+                              target: "_blank", rel: "noopener",
                               class: "text-blue-600 hover:underline" %>
               </p>
             <% end %>
