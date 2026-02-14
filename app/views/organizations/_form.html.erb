@@ -8,7 +8,8 @@
     <div>
       <!-- Organization Name + Hidden -->
       <div class="mb-6">
-        <div class="md:col-span-2"><%= f.input :name,
+        <div class="md:col-span-2">
+          <%= f.input :name,
                       label: "Organization Name",
                       as: :text,
                       required: true,
@@ -17,7 +18,8 @@
                         rows: 1,
                         class: "w-full rounded-md border-gray-300 shadow-sm
                           focus:border-blue-500 focus:ring focus:ring-blue-200"
-                      } %></div>
+                      } %>
+        </div>
       </div>
 
       <!-- Sectors & Windows Type -->
@@ -27,22 +29,20 @@
             Sectors
           </div>
 
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-            <div class="flex flex-wrap items-center gap-4 p-3">
-              <%= f.simple_fields_for :sectorable_items do |sfi| %>
-                <%= render "sectorable_item_fields", f: sfi %>
-              <% end %>
+          <div class="flex flex-wrap items-center gap-2">
+            <%= f.simple_fields_for :sectorable_items do |sfi| %>
+              <%= render "sectorable_item_fields", f: sfi %>
+            <% end %>
 
-              <%= link_to_add_association "➕ Add Sector",
-                                        f,
-                                        :sectorable_items,
-                                        render_options: {
-                                          locals: {
-                                            collection: Sector.published.where.not(name: f.object.sector_list)
-                                          }
-                                        },
-                                      class: "btn btn-secondary-outline" %>
-            </div>
+            <%= link_to_add_association "Add sector",
+                                      f,
+                                      :sectorable_items,
+                                      render_options: {
+                                        locals: {
+                                          collection: Sector.published.where.not(name: f.object.sector_list)
+                                        }
+                                      },
+                                    class: "text-sm text-blue-600 hover:text-blue-800 hover:underline transition" %>
           </div>
         </div>
 

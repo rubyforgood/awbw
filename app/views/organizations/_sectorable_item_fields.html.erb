@@ -1,21 +1,28 @@
 <% collection ||= Sector.published %>
+<% bg_color = DomainTheme.bg_class_for(:sectors) %>
+<% bg_hover_color = "bg-lime-200" %>
 
-<div class="nested-fields flex items-center space-x-2 <%= DomainTheme.bg_class_for(:sectors) %> border border-purple-200
-                rounded-full px-3 mb-4 shadow-sm text-sm text-purple-700 hover:bg-purple-100 transition">
-  <!-- Select dropdown (optional – could be hidden if sector is already chosen) -->
-  <%= f.input :sector_id,
-              as: :select,
-              label: false,
-              collection: collection.order(:name).pluck(:name, :id),
-              selected: f.object&.sector_id,
-              include_blank: true,
-              wrapper: false,
-              input_html: {
-                class: "bg-transparent border-none focus:ring-0 text-sm text-blue-800 cursor-pointer"
-              } %>
-  <!-- Remove button -->
+<div class="nested-fields inline-flex items-center
+            rounded-md border border-gray-300 hover:border-gray-400
+            <%= bg_color %> hover:<%= bg_hover_color %>
+            text-gray-500 px-3 py-1 text-sm font-medium transition">
+  <% if f.object&.sector_id.present? %>
+    <%= f.hidden_field :sector_id %>
+    <span><%= f.object.sector&.name %></span>
+  <% else %>
+    <%= f.input :sector_id,
+                as: :select,
+                label: false,
+                collection: collection.order(:name).pluck(:name, :id),
+                selected: f.object&.sector_id,
+                include_blank: "Select sector…",
+                wrapper: false,
+                input_html: {
+                  class: "bg-transparent border-none focus:ring-0 text-sm text-gray-500 cursor-pointer py-0"
+                } %>
+  <% end %>
   <%= link_to_remove_association "✖",
                                  f,
-                                 class: "text-blue-500 hover:text-blue-700
-                                 font-bold text-xs transition" if f.object&.persisted? %>
+                                 class: "ml-1.5 text-gray-400 hover:text-gray-600
+                                 font-bold text-xs transition" %>
 </div>
