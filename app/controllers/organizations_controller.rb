@@ -86,10 +86,11 @@ class OrganizationsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organization_statuses = OrganizationStatus.all
-    @people_array = Person.includes(:user)
-                          .joins(:user)
+    @sectors_collection = Sector.published.order(:name).pluck(:name, :id)
+    @people_array = Person.joins(:user)
                           .order(:first_name, :last_name)
-                          .map { |f| [ f.name, f.id ] }
+                          .pluck(:first_name, :last_name, :id)
+                          .map { |fn, ln, id| ["#{fn} #{ln}", id] }
 
     if @organization.persisted? && @organization.errors.empty?
       sorted = @organization.organization_people
@@ -112,7 +113,11 @@ class OrganizationsController < ApplicationController
   private
 
   def set_organization
-    @organization = Organization.find(params[:id])
+    @organization = Organization.includes(
+      :organization_status, :windows_type, :addresses,
+      :sectorable_items, :sectors,
+      organization_people: :person
+    ).find(params[:id])
   end
 
   # Strong parameters

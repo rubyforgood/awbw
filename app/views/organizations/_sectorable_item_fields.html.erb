@@ -1,4 +1,4 @@
-<% collection ||= Sector.published %>
+<% collection ||= @sectors_collection || Sector.published.order(:name).pluck(:name, :id) %>
 <% bg_color = DomainTheme.bg_class_for(:sectors) %>
 <% bg_hover_color = "bg-lime-200" %>
 
@@ -13,7 +13,7 @@
     <%= f.input :sector_id,
                 as: :select,
                 label: false,
-                collection: collection.order(:name).pluck(:name, :id),
+                collection: collection,
                 selected: f.object&.sector_id,
                 include_blank: "Select sector…",
                 wrapper: false,

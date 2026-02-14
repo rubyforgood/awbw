@@ -39,7 +39,7 @@
                                       :sectorable_items,
                                       render_options: {
                                         locals: {
-                                          collection: Sector.published.where.not(name: f.object.sector_list)
+                                          collection: @sectors_collection
                                         }
                                       },
                                     class: "text-sm text-gray-400 hover:text-blue-800 underline transition" %>
