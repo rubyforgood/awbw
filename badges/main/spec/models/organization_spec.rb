@@ -14,12 +14,14 @@ RSpec.describe Organization do
   end
 
   describe 'validations' do
-    # Add validation tests if any (e.g., presence of name, associations)
-    subject { build(:organization) } # Requires associations
+    subject { build(:organization) }
     it { should validate_presence_of(:name) }
-    # it { should validate_presence_of(:location) }
-    # it { should validate_presence_of(:windows_type) }
     it { should validate_presence_of(:organization_status_id) }
+
+    it { should allow_value("info@example.com").for(:email) }
+    it { should allow_value("").for(:email) }
+    it { should allow_value(nil).for(:email) }
+    it { should_not allow_value("not-an-email").for(:email).with_message("must be a valid email address") }
   end
 
   it 'is valid with valid attributes' do
