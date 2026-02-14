@@ -3,12 +3,14 @@
     <div class="admin-only bg-blue-100 p-6">
       <div class="<%= DomainTheme.bg_class_for(:organizations) %>
           border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-8">
-        <div class="flex items-center justify-between mb-3">
-          <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
-            Edit <%= @organization.class.model_name.human %>
-          </h1>
-          <%= link_to "View", organization_path(@organization), class: "btn btn-secondary-outline" %>
+        <div class="flex flex-wrap justify-end gap-2 mb-4">
+          <%= link_to "Dashboard", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+          <%= link_to "Organizations", organizations_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+          <%= link_to "Profile", organization_path(@organization), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         </div>
+        <h1 class="text-3xl font-semibold text-gray-900 tracking-tight mb-3">
+          Edit Organization (<%= truncate(@organization.name, length: 30) %>)
+        </h1>
         <div class="space-y-6">
           <div class="bg-white rounded mt-4 p-6">
             <%= render "form" %>
