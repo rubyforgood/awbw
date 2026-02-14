@@ -58,7 +58,7 @@ class OrganizationPerson < ApplicationRecord
     return unless inactive_status
     return if organization.organization_status_id == inactive_status.id
 
-    organization.update!(organization_status: inactive_status)
+    organization.update_column(:organization_status_id, inactive_status.id)
 
     Ahoy::Tracker.new(user: Current.user).track(
       "autochange.organization",
