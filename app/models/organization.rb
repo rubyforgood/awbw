@@ -105,7 +105,12 @@ class Organization < ApplicationRecord
   end
 
   def city_state
-    "#{organization_locality}, #{addresses.active.first&.state}"
+    first_active = if addresses.loaded?
+      addresses.find { |a| !a.inactive? }
+    else
+      addresses.active.first
+    end
+    "#{organization_locality}, #{first_active&.state}"
   end
 
   def type_name
@@ -117,7 +122,11 @@ class Organization < ApplicationRecord
   end
 
   def organization_locality
-    addresses.active.first&.locality
+    if addresses.loaded?
+      addresses.select { |a| !a.inactive? }.first&.locality
+    else
+      addresses.active.first&.locality
+    end
   end
 
   def published? # needed for my_bookmarks
