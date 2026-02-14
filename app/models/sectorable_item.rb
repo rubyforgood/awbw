@@ -4,7 +4,8 @@ class SectorableItem < ApplicationRecord
   has_many :people, through: :sectorable_items, source: :sectorable, source_type: "Person"
 
   # Validations
-  validates_presence_of :sectorable_type, :sectorable_id, :sector_id
+  validates_presence_of :sector_id
+  validates :sector_id, uniqueness: { scope: [:sectorable_type, :sectorable_id], message: "has already been added" }
 
   before_create :skip_if_duplicate
 
