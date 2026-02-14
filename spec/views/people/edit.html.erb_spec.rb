@@ -35,4 +35,32 @@ RSpec.describe "people/edit", type: :view do
   it "has a link to the dashboard" do
     expect(rendered).to have_link('Dashboard', href: root_path)
   end
+
+  context "when person has an associated user" do
+    it "displays the user's email as read-only" do
+      expect(rendered).to have_content(person.user.email)
+      expect(rendered).not_to have_field('Primary email')
+    end
+
+    it "displays the user's email type as read-only" do
+      expect(rendered).to have_content(person.user.email_type)
+    end
+  end
+
+  context "when person does not have an associated user" do
+    let(:person_without_user) { create(:person, user: nil, pronouns: "they/them", email: "test@example.com") }
+
+    before(:each) do
+      assign(:person, person_without_user)
+      render
+    end
+
+    it "displays an editable email field" do
+      expect(rendered).to have_field('Primary email', with: person_without_user.email)
+    end
+
+    it "displays an editable email type field" do
+      expect(rendered).to have_select('Primary email type')
+    end
+  end
 end
