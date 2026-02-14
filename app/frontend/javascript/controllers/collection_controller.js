@@ -55,7 +55,9 @@ export default class extends Controller {
   }
 
   blurOldResults() {
-    const elements = document.querySelectorAll(".blur-on-submit");
+    const frame = this.element.closest("turbo-frame");
+    const scope = frame || document;
+    const elements = scope.querySelectorAll(".blur-on-submit");
 
     elements.forEach((el) => {
       el.classList.add("blur-sm");
