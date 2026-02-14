@@ -19,7 +19,7 @@ class UserPolicy < ApplicationPolicy
     relation.where(id: user.id)
   end
 
-  relation_scope(:active) do |relation|
+  relation_scope(:colleagues) do |relation|
     next relation.active if admin?
     relation.where(id: user.id)
   end

@@ -112,7 +112,7 @@ class WorkshopLogsController < ApplicationController
       Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
     ).sort.reverse
 
-    scoped_users = authorized_scope(User.all, as: :active)
+    scoped_users = authorized_scope(User.all, as: :colleagues)
     @people = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
                                 .includes(:workshop_logs, :person)
                                 .joins(:workshop_logs)
