@@ -15,7 +15,9 @@ class OrganizationPerson < ApplicationRecord
 
   before_save :set_inactive_from_dates
   after_save :deactivate_organization_if_no_active_people
+  after_save :sync_organization_affiliation_dates
   after_destroy :deactivate_organization_if_no_active_people
+  after_destroy :sync_organization_affiliation_dates
 
   # Methods
   def name
@@ -28,6 +30,25 @@ class OrganizationPerson < ApplicationRecord
     return unless end_date_changed? || start_date_changed?
 
     self.inactive = end_date.present? && end_date < Date.current
+  end
+
+  def sync_organization_affiliation_dates
+    org = organization
+    affiliations = org.organization_people.where.not(id: destroyed_by_association ? id : nil)
+
+    earliest_start = affiliations.minimum(:start_date)
+    has_active = affiliations.active.exists?
+
+    updates = {}
+    updates[:start_date] = earliest_start if org.start_date != earliest_start
+    if has_active
+      updates[:end_date] = nil if org.end_date.present?
+    else
+      latest_end = affiliations.maximum(:end_date)
+      updates[:end_date] = latest_end if org.end_date != latest_end
+    end
+
+    org.update_columns(updates) if updates.any?
   end
 
   def deactivate_organization_if_no_active_people

@@ -35,6 +35,7 @@ class Organization < ApplicationRecord
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
   validates :website_url, format: { with: /\Ahttps?:\/\/\S+\z/i, message: "must start with http:// or https://" }, allow_blank: true
+  validate :affiliation_dates_locked, if: -> { organization_people.any? && !Current.user&.super_user? }
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
@@ -125,6 +126,15 @@ class Organization < ApplicationRecord
   end
 
   private
+
+  def affiliation_dates_locked
+    if start_date_changed?
+      errors.add(:start_date, "is managed automatically by affiliations")
+    end
+    if end_date_changed?
+      errors.add(:end_date, "is managed automatically by affiliations")
+    end
+  end
 
   def leader
     organization_people.find_by(position: 2)
