@@ -8,5 +8,5 @@ class PrimaryAssetPolicy < ApplicationPolicy
   def create?  = authenticated?
   def edit?    = admin?
   def update?  = authenticated?
-  def destroy? = admin?
+  def destroy? = record.persisted? && admin?
 end

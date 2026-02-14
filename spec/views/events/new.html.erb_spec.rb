@@ -10,8 +10,7 @@ RSpec.describe "events/new", type: :view do
     assign(:sectors, [])
     assign(:categories_grouped, [])
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
-    allow(view).to receive(:allowed_to?).with(:manage?, event).and_return(true)
-    allow(view).to receive(:allowed_to?).with(:destroy?, event).and_return(true)
+    allow(view).to receive(:allowed_to?).and_return(true)
   end
 
   it "renders the new event heading" do

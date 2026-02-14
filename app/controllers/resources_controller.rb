@@ -10,7 +10,7 @@ class ResourcesController < ApplicationController
       base_scope = authorized_scope(Resource.includes(:bookmarks, primary_asset: :file_attachment,
                                                       downloadable_asset: :file_attachment)
                                             .where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
-      filtered = base_scope.search_by_params(params).by_featured_first
+      filtered = base_scope.search_by_params(params).by_featured_first.order(created_at: :desc)
 
       @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
@@ -192,8 +192,7 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :user_id,
-      :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured, :url,
+      :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       downloadable_asset_attributes: [ :id, :file, :_destroy ],

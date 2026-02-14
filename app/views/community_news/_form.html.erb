@@ -153,11 +153,13 @@
   </div>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
-    <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
-      <%= link_to "Delete", @community_news, method: :delete, class: "btn btn-danger-outline",
-                  data: { confirm: "Are you sure you want to delete?" } %>
+    <% if allowed_to?(:destroy?, f.object) %>
+      <%= link_to "Delete", @community_news, class: "btn btn-danger-outline",
+                  data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
-    <%= link_to "Cancel", community_news_index_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "Cancel",
+                (allowed_to?(:index?, CommunityNews) ? community_news_index_path : root_path),
+                class: "btn btn-secondary-outline" %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 <% end %>

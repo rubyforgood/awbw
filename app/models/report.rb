@@ -69,6 +69,7 @@ class Report < ApplicationRecord
       where("EXTRACT(YEAR FROM COALESCE(reports.date, reports.created_at)) = ?", year.to_i)
     end }
   scope :ordered_by_date, -> { order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")) }
+  scope :workshop_logs, -> { where(type: "WorkshopLog") }
 
   def self.search(params)
     logs = is_a?(ActiveRecord::Relation) ? self : all

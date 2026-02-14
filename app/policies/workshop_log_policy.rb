@@ -14,7 +14,7 @@ class WorkshopLogPolicy < ApplicationPolicy
   end
 
   def update?
-    admin?# || owner?
+    admin? || owner?
   end
 
   def show?

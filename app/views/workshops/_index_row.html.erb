@@ -47,20 +47,19 @@
                     class: "hover:underline block",
                     data: { turbo_frame: "_top", turbo_prefetch: false } do %>
           <%= title_with_badges(workshop,
-                                show_hidden_badge: current_user&.super_user?,
                                 display_windows_type: true).html_safe %>
         <% end %>
 
         <!-- Author + date -->
         <div class="text-sm text-gray-600 leading-tight">
           By:
-          <% if workshop.user %>
+          <% if workshop.user&.person %>
             <%= link_to workshop.author_name,
-                        generate_person_user_path(workshop.user),
+                        person_path(workshop.user.person),
                         class: "hover:underline",
                         data: { turbo: false } %>
           <% else %>
-            <%= workshop.full_name.present? ? workshop.full_name : "Person" %>
+            <%= workshop.full_name.present? ? workshop.full_name : "Facilitator" %>
           <% end %>
           | <%= workshop.date %>
         </div>

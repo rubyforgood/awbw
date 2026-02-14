@@ -1,18 +1,19 @@
 class WorkshopSearchService
+  include ActionPolicy::Behaviour
+  authorize :user
+
   attr_reader :params, :user, :admin
   attr_accessor :workshops, :sort
 
   def initialize(params = {}, user: nil)
     @params = params
     @user = user
-    @admin = user&.super_user?
+    @admin = allowed_to?(:manage?, Workshop)
     @sort = default_sort
-    @workshops =
-      if @sort == "popularity"
-        Workshop.with_bookmarks_count
-      else
-        Workshop.all
-      end
+    @workshops = Workshop.all
+    if @sort == "popularity"
+      @workshops = @workshops.with_bookmarks_count
+    end
   end
 
   # Main entry point

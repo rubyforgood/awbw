@@ -1,4 +1,5 @@
 class WorkshopVariationIdeasController < ApplicationController
+  include AhoyTracking
   before_action :set_workshop_variation_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -13,6 +14,14 @@ class WorkshopVariationIdeasController < ApplicationController
 
   def show
     authorize! @workshop_variation_idea
+    track_view(@workshop_variation_idea)
+
+    @workshop = (@workshop_variation_idea.workshop || Workshop.where(id: params[:workshop_id]).last)&.decorate
+    @bookmark = current_user.bookmarks.find_by(bookmarkable: @workshop)
+    @new_bookmark = @workshop.bookmarks.build
+    @quotes = @workshop.quotes
+    @workshop_variation_ideas = WorkshopVariationIdea.where(workshop: @workshop)
+    @sectors = @workshop.sectors
   end
 
   def new
@@ -69,7 +78,7 @@ class WorkshopVariationIdeasController < ApplicationController
   private
 
   def set_workshop_variation_idea
-    @workshop_variation_idea = WorkshopVariationIdea.find(params[:id])
+    @workshop_variation_idea = WorkshopVariationIdea.find(params[:id]).decorate
   end
 
   def set_form_variables

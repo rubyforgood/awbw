@@ -10,7 +10,7 @@
             <%= User.model_name.human.pluralize %> (<%= @users_count %>)
           </h1>
           <div class="flex gap-2">
-            <% if current_user&.super_user? %>
+            <% if allowed_to?(:new?, User) %>
               <%= link_to "New #{User.model_name.human.downcase}",
                           new_user_path,
                           class: "admin-only bg-blue-100 btn btn-primary-outline" %>
@@ -83,7 +83,7 @@
                   <% end %>
                 </td>
 
-                <!-- Super User -->
+                <!-- Admin -->
                 <td class="px-4 py-2 text-center">
                   <% if user.super_user? %>
                     <span class="fa fa-check-circle text-green-500"></span>
