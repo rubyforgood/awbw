@@ -7,7 +7,7 @@ class UserPolicy < ApplicationPolicy
   def create? = admin?
   def edit? = admin?
   def update? = admin?
-  def destroy? = record.persisted? && admin? && record.person_id.blank?
+  def destroy? = record.persisted? && admin? && record.person_id.blank? && !has_ahoy_records?
   def toggle_lock_status? = admin?
   def confirm_email? = admin?
   def send_welcome_instructions? = admin?
@@ -32,5 +32,10 @@ class UserPolicy < ApplicationPolicy
 
   def self?
     user == record
+  end
+
+  def has_ahoy_records?
+    Ahoy::Visit.where(user_id: record.id).exists? ||
+      Ahoy::Event.where(user_id: record.id).exists?
   end
 end
