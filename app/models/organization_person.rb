@@ -13,6 +13,7 @@ class OrganizationPerson < ApplicationRecord
       .where("end_date IS NULL OR end_date >= ?", Date.current)
   }
 
+  before_validation :skip_if_duplicate, on: :create
   before_save :set_inactive_from_dates
   after_save :deactivate_organization_if_no_active_people
   after_save :sync_organization_affiliation_dates
@@ -25,6 +26,19 @@ class OrganizationPerson < ApplicationRecord
   end
 
   private
+
+  def skip_if_duplicate
+    duplicate = OrganizationPerson.where(
+      organization_id: organization_id,
+      person_id: person_id,
+      start_date: start_date,
+      end_date: end_date,
+      inactive: inactive,
+      title: title.strip
+    ).exists?
+
+    throw(:abort) if duplicate
+  end
 
   def set_inactive_from_dates
     return unless end_date_changed? || start_date_changed?
