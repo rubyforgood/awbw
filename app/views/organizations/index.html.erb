@@ -24,7 +24,7 @@
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Designations</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliated since</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">People</th>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">People (<%= number_with_delimiter(@active_people_count) %>)</th>
             <% if allowed_to?(:manage?, Organization) %>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
             <% end %>
@@ -59,7 +59,7 @@
               </td>
 
               <td class="px-4 py-2 text-center text-sm">
-                <% active_count = organization.organization_people.active.count { |op| !op.inactive? && (op.end_date.nil? || op.end_date >= Date.current) } %>
+                <% active_count = organization.organization_people.active.distinct.count(:person_id) %>
                 <% if active_count > 0 %>
                   <%= link_to active_count, people_path(organization_id: organization.id),
                               class: "text-blue-600 hover:underline font-medium" %>

@@ -8,6 +8,7 @@ class OrganizationsController < ApplicationController
     base_scope = authorized_scope(Organization.includes(:logo_attachment, :windows_type, :organization_status, :organization_people, :sectors))
     filtered = base_scope.search_by_params(params).order(:name)
     @organizations_count = filtered.count
+    @active_people_count = OrganizationPerson.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
     @organizations = filtered.paginate(page: params[:page], per_page: per_page)
     set_index_variables
   end
