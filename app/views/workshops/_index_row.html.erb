@@ -47,7 +47,6 @@
                     class: "hover:underline block",
                     data: { turbo_frame: "_top", turbo_prefetch: false } do %>
           <%= title_with_badges(workshop,
-                                show_hidden_badge: allowed_to?(:edit?, workshop),
                                 display_windows_type: true).html_safe %>
         <% end %>
 
