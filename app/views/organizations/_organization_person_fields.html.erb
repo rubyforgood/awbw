@@ -37,7 +37,7 @@
                   label: "Start",
                   input_html: {
                     type: "date",
-                    value: f.object.start_date&.strftime("%Y-%m-%d"),
+                    value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
                     class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   } %>
     </div>
