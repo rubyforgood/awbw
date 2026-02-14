@@ -186,7 +186,6 @@ class PeopleController < ApplicationController
       :profile_show_workshops,
       :profile_show_workshop_ideas,
       :profile_show_workshop_logs,
-      :published,
       :member_since,
       :linked_in_url,
       :facebook_url,

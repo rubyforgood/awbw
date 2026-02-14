@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(bundle exec rspec:*)",
-      "Bash(bundle exec rails runner:*)"
+      "Bash(bundle exec rails runner:*)",
+      "Bash(RAILS_ENV=test bundle exec rails runner:*)",
+      "Bash(RAILS_ENV=test bundle exec rspec:*)",
+      "Bash(git stash:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git diff:*)"
     ]
   }
 }

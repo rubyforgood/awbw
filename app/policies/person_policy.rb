@@ -6,7 +6,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || owner? || (authenticated? && record.published? && record.profile_is_searchable?)
+    admin? || owner? || (authenticated? && record.profile_is_searchable?)
   end
 
   def edit?
@@ -22,7 +22,7 @@ class PersonPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    relation.searchable # includes `profile_is_searchable`` and `published``
+    relation.searchable.with_active_affiliations
   end
 
   private

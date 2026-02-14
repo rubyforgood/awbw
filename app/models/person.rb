@@ -90,6 +90,10 @@ class Person < ApplicationRecord
     results
   end
 
+  def published?
+    profile_is_searchable? && organization_people.active.exists?
+  end
+
   def sector_list
     sectors.pluck(:name)
   end

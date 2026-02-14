@@ -17,9 +17,53 @@ RSpec.describe OrganizationPerson do
     it { should define_enum_for(:position).with_values(default: 0, liaison: 1, leader: 2, assistant: 3) }
   end
 
-  it 'is valid with valid attributes' do
-    # Note: Factory needs associations uncommented for create
-    # expect(build(:organization_person)).to be_valid
-    # pending("Requires functional organization/person factories and associations uncommented")
+  describe '.active' do
+    let!(:active_op) { create(:organization_person, inactive: false, end_date: nil) }
+    let!(:active_with_future_end) { create(:organization_person, inactive: false, end_date: 1.month.from_now) }
+    let!(:inactive_by_flag) { create(:organization_person, inactive: true, end_date: nil) }
+    let!(:inactive_by_end_date) { create(:organization_person, inactive: false, end_date: 1.day.ago) }
+
+    it 'includes records with inactive: false and no end date' do
+      expect(described_class.active).to include(active_op)
+    end
+
+    it 'includes records with inactive: false and future end date' do
+      expect(described_class.active).to include(active_with_future_end)
+    end
+
+    it 'excludes records with inactive: true' do
+      expect(described_class.active).not_to include(inactive_by_flag)
+    end
+
+    it 'excludes records with past end date' do
+      expect(described_class.active).not_to include(inactive_by_end_date)
+    end
+  end
+
+  describe '#set_inactive_from_dates' do
+    let(:op) { create(:organization_person, inactive: false, end_date: nil) }
+
+    it 'sets inactive to true when end_date is set to a past date' do
+      op.update!(end_date: 1.day.ago)
+      expect(op.reload.inactive).to be true
+    end
+
+    it 'sets inactive to false when end_date is set to a future date' do
+      op.update!(inactive: true, end_date: 1.day.ago)
+      op.update!(end_date: 1.month.from_now)
+      expect(op.reload.inactive).to be false
+    end
+
+    it 'sets inactive to false when end_date is cleared' do
+      op.update!(end_date: 1.day.ago)
+      op.update!(end_date: nil)
+      expect(op.reload.inactive).to be false
+    end
+
+    it 'does not change inactive when unrelated fields change' do
+      op.update!(inactive: true)
+      op.update!(title: "New Title")
+      expect(op.reload.inactive).to be true
+    end
   end
 end
