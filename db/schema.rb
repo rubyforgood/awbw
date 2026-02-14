@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_130741) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -487,12 +487,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
 
   create_table "organization_people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
+    t.date "end_date"
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
     t.integer "organization_agency_id"
     t.integer "organization_id"
     t.bigint "person_id"
     t.integer "position"
+    t.date "start_date"
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
@@ -526,6 +528,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
     t.string "name"
     t.text "notes", size: :long
     t.integer "organization_status_id"
+    t.boolean "profile_show_description", default: true, null: false
+    t.boolean "profile_show_email", default: true, null: false
+    t.boolean "profile_show_events_registered", default: true, null: false
+    t.boolean "profile_show_phone", default: true, null: false
+    t.boolean "profile_show_sectors", default: true, null: false
+    t.boolean "profile_show_stories", default: true, null: false
+    t.boolean "profile_show_website", default: true, null: false
+    t.boolean "profile_show_workshop_logs", default: true, null: false
+    t.boolean "profile_show_workshops", default: true, null: false
     t.date "start_date"
     t.datetime "updated_at", precision: nil, null: false
     t.string "website_url"
@@ -562,6 +573,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
   create_table "people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "best_time_to_call"
     t.text "bio", size: :medium
+    t.boolean "blog_contributor", default: false, null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"
@@ -591,16 +603,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_151614) do
     t.boolean "profile_show_story_ideas", default: true, null: false
     t.boolean "profile_show_workshop_ideas", default: true, null: false
     t.boolean "profile_show_workshop_logs", default: true, null: false
+    t.boolean "profile_show_workshop_variation_ideas", default: true, null: false
     t.boolean "profile_show_workshop_variations", default: true, null: false
     t.boolean "profile_show_workshops", default: true, null: false
     t.string "pronouns"
-    t.boolean "published", default: false, null: false
     t.string "twitter_url"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_people_on_created_by_id"
-    t.index ["published"], name: "index_people_on_published"
     t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
   end
 
