@@ -124,43 +124,15 @@ class PeopleController < ApplicationController
   end
 
   def check_duplicates
-    authorize! Person
-    first_name = params[:first_name]
-    last_name = params[:last_name]
-    email = params[:email]
+    authorize!
+    
+    duplicates = find_duplicate_people(
+      params[:first_name],
+      params[:last_name],
+      params[:email]
+    )
 
-    duplicates = []
-
-    # Check for name matches
-    if first_name.present? && last_name.present?
-      name_matches = Person.where(
-        "LOWER(first_name) = ? AND LOWER(last_name) = ?",
-        first_name.downcase,
-        last_name.downcase
-      ).limit(5)
-      duplicates.concat(name_matches.map { |p| { id: p.id, name: p.full_name, email: p.email || p.user&.email } })
-    end
-
-    # Check for email matches
-    if email.present?
-      email_matches = Person.where("LOWER(email) = ?", email.downcase)
-                            .or(Person.where("LOWER(email_2) = ?", email.downcase))
-                            .limit(5)
-      
-      user_email_matches = Person.joins(:user)
-                                 .where("LOWER(users.email) = ?", email.downcase)
-                                 .limit(5)
-      
-      email_matches.each do |p|
-        duplicates << { id: p.id, name: p.full_name, email: p.email || p.user&.email } unless duplicates.any? { |d| d[:id] == p.id }
-      end
-      
-      user_email_matches.each do |p|
-        duplicates << { id: p.id, name: p.full_name, email: p.email || p.user&.email } unless duplicates.any? { |d| d[:id] == p.id }
-      end
-    end
-
-    render json: { duplicates: duplicates.uniq { |d| d[:id] } }
+    render json: { duplicates: duplicates }
   end
 
   private
@@ -201,6 +173,55 @@ class PeopleController < ApplicationController
     @current_sector_ids = @person.sectorable_items.map(&:sector_id)
 
     @organizations_array = authorized_scope(Organization.all, as: :affiliated).order(:name).pluck(:name, :id)
+  end
+
+  def find_duplicate_people(first_name, last_name, email)
+    duplicates = []
+    duplicate_ids = Set.new
+
+    # Check for name matches
+    if first_name.presence && last_name.presence
+      name_matches = Person.where(
+        "LOWER(first_name) = ? AND LOWER(last_name) = ?",
+        first_name.downcase,
+        last_name.downcase
+      ).limit(5)
+      
+      name_matches.each do |person|
+        next if duplicate_ids.include?(person.id)
+        
+        duplicate_ids.add(person.id)
+        duplicates << format_duplicate(person)
+      end
+    end
+
+    # Check for email matches
+    if email.presence
+      email_matches = Person.where("LOWER(email) = ?", email.downcase)
+                            .or(Person.where("LOWER(email_2) = ?", email.downcase))
+                            .limit(5)
+      
+      user_email_matches = Person.joins(:user)
+                                 .where("LOWER(users.email) = ?", email.downcase)
+                                 .limit(5)
+      
+      (email_matches + user_email_matches).each do |person|
+        next if duplicate_ids.include?(person.id)
+        
+        duplicate_ids.add(person.id)
+        duplicates << format_duplicate(person)
+      end
+    end
+
+    duplicates
+  end
+
+  def format_duplicate(person)
+    {
+      id: person.id,
+      name: person.full_name,
+      email: person.email || person.user&.email
+    }
   end
 
   # Only allow a list of trusted parameters through.
