@@ -1,13 +1,14 @@
 class WorkshopSearchService
+  include ActionPolicy::Behaviour
+  authorize :user
+
   attr_reader :params, :user, :admin
   attr_accessor :workshops, :sort
 
   def initialize(params = {}, user: nil)
     @params = params
     @user = user
-    # Note: This reads the super_user attribute for scoping data visibility
-    # Authorization decisions should be made by controllers using ActionPolicy
-    @admin = @user&.super_user?
+    @admin = allowed_to?(:manage?, Workshop)
     @sort = default_sort
     @workshops = Workshop.all
     if @sort == "popularity"
