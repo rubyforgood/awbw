@@ -83,6 +83,7 @@ class Organization < ApplicationRecord
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
+    organizations = organizations.where(organization_status_id: params[:organization_status_id]) if params[:organization_status_id].present?
     organizations
   end
 

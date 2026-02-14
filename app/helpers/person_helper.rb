@@ -1,5 +1,5 @@
 module PersonHelper
-  def person_profile_button(person)
+  def person_profile_button(person, subtitle: nil)
     link_to person_path(person),
             class: "group flex items-center gap-2
                     w-full px-4 py-2
@@ -29,6 +29,15 @@ module PersonHelper
         class: "font-semibold text-gray-900 group-hover:text-white truncate"
       )
 
+      # --- Subtitle (e.g. role title) ---
+      subtitle_tag = if subtitle.present?
+        content_tag(
+          :span,
+          "(#{subtitle})",
+          class: "text-xs text-gray-500 group-hover:text-white truncate"
+        )
+      end
+
       # --- Pronouns ---
       pronouns = if person.pronouns_display.present?
         content_tag(
@@ -40,7 +49,7 @@ module PersonHelper
 
       text_block = content_tag(
         :div,
-        safe_join([ name, pronouns ].compact),
+        safe_join([ name, subtitle_tag, pronouns ].compact),
         class: "flex flex-col leading-tight text-left min-w-0"
       )
 

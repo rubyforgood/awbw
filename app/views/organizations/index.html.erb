@@ -36,7 +36,7 @@
           <% @organizations.each do |organization| %>
             <tr class="hover:bg-gray-50 transition">
               <td class="px-4 py-2">
-                <%= organization_profile_button(organization) %>
+                <%= organization_profile_button(organization, truncate_at: 30) %>
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700">

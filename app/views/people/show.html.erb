@@ -83,7 +83,7 @@
         </div>
       <% end %>
 
-      <div class="space-y-6">
+      <div class="space-y-6 mt-12">
         <!-- Organizations & Service Populations -->
         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 sm:p-5">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -124,7 +124,8 @@
         </div>
         <!-- Bio -->
         <% if @person.profile_show_bio? && @person.bio.present? %>
-          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-5">
+          <div class="<%= DomainTheme.bg_class_for(:person_bio) %>
+            border <%= DomainTheme.border_class_for(:person_bio) %> rounded-xl p-4 sm:p-5">
             <div class="p-3">
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Bio</h2>
               <div class="text-gray-700">
@@ -201,55 +202,57 @@
         <% end %>
         <!-- SUBMITTED SECTION -->
         <% if allowed_to?(:edit?, @person) %>
-                    <div class="person-only <%= DomainTheme.bg_class_for(:user_only) %> border border-green-200 rounded-lg shadow-sm">
-                      <!-- Header -->
-                      <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-green-200">
-                        <h2 class="text-xl font-semibold text-gray-800">
-                          Submitted content
-                        </h2>
-                        <span class="text-sm text-gray-600 italic">Only visible to you</span>
-                      </div>
-                      <!-- Submitted Content -->
-                      <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
-                        <!-- Workshop ideas -->
-                        <% if @person.profile_show_workshop_ideas? %>
-                          <div class="p-3">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop ideas submitted</h2>
-                            <%= turbo_frame_tag "person_workshop_ideas_section", src: person_path(@person, section: "workshop_ideas"), loading: :lazy do %>
-                              <p class="text-gray-500 italic">Loading workshop ideas...</p>
-                            <% end %>
-                          </div>
-                        <% end %>
-                        <!-- Workshop variation ideas -->
-                        <% if @person.profile_show_workshop_variation_ideas? %>
-                          <div class="p-3">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop variation ideas submitted</h2>
-                            <%= turbo_frame_tag "person_workshop_variation_ideas_section", src: person_path(@person, section: "workshop_variation_ideas"), loading: :lazy do %>
-                              <p class="text-gray-500 italic">Loading workshop variation ideas...</p>
-                            <% end %>
-                          </div>
-                        <% end %>
-                        <!-- Story ideas authored -->
-                        <% if @person.profile_show_story_ideas? %>
-                          <div class="p-3">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-3">Story ideas submitted</h2>
-                            <%= turbo_frame_tag "person_story_ideas_section", src: person_path(@person, section: "story_ideas"), loading: :lazy do %>
-                              <p class="text-gray-500 italic">Loading story ideas...</p>
-                            <% end %>
-                          </div>
-                        <% end %>
-                        <!-- Workshop logs -->
-                        <% if @person.profile_show_workshop_logs? %>
-                          <div class="p-3">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop logs submitted</h2>
-                            <%= turbo_frame_tag "person_workshop_logs_section", src: person_path(@person, section: "workshop_logs"), loading: :lazy do %>
-                              <p class="text-gray-500 italic">Loading workshop logs...</p>
-                            <% end %>
-                          </div>
-                        <% end %>
-                      </div>
-                    </div>
+          <div class="user-only <%= DomainTheme.bg_class_for(:user_only) %>
+            border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm">
+            <!-- Header -->
+            <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3
+              border-b <%= DomainTheme.border_class_for(:user_only) %>">
+              <h2 class="text-xl font-semibold text-gray-800">
+                Submitted content
+              </h2>
+              <span class="text-sm text-amber-700 italic">Only visible to you</span>
+            </div>
+            <!-- Submitted Content -->
+            <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
+              <!-- Workshop ideas -->
+              <% if @person.profile_show_workshop_ideas? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop ideas submitted</h2>
+                  <%= turbo_frame_tag "person_workshop_ideas_section", src: person_path(@person, section: "workshop_ideas"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading workshop ideas...</p>
                   <% end %>
+                </div>
+              <% end %>
+              <!-- Workshop variation ideas -->
+              <% if @person.profile_show_workshop_variation_ideas? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop variation ideas submitted</h2>
+                  <%= turbo_frame_tag "person_workshop_variation_ideas_section", src: person_path(@person, section: "workshop_variation_ideas"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading workshop variation ideas...</p>
+                  <% end %>
+                </div>
+              <% end %>
+              <!-- Story ideas authored -->
+              <% if @person.profile_show_story_ideas? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Story ideas submitted</h2>
+                  <%= turbo_frame_tag "person_story_ideas_section", src: person_path(@person, section: "story_ideas"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading story ideas...</p>
+                  <% end %>
+                </div>
+              <% end %>
+              <!-- Workshop logs -->
+              <% if @person.profile_show_workshop_logs? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop logs submitted</h2>
+                  <%= turbo_frame_tag "person_workshop_logs_section", src: person_path(@person, section: "workshop_logs"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading workshop logs...</p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>

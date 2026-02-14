@@ -28,7 +28,8 @@ module DomainTheme
     users:                    :stone,
 
     admin_only:               :blue,
-    user_only:                :green,
+    user_only:                :amber,
+    person_bio:               :purple,
 
     # Badges (non-model-specific)
     legacy_facilitator:       :yellow,
