@@ -1,6 +1,14 @@
 <% workshop_logs ||= @workshop_logs %>
 <% workshop_logs_unpaginated ||= @workshop_logs_unpaginated %>
 <% workshop_logs_count ||= @workshop_logs_count %>
+<% grand_totals = workshop_logs_unpaginated.pick(
+     Arel.sql("COALESCE(SUM(children_ongoing),0)"),
+     Arel.sql("COALESCE(SUM(teens_ongoing),0)"),
+     Arel.sql("COALESCE(SUM(adults_ongoing),0)"),
+     Arel.sql("COALESCE(SUM(children_first_time),0)"),
+     Arel.sql("COALESCE(SUM(teens_first_time),0)"),
+     Arel.sql("COALESCE(SUM(adults_first_time),0)")
+   ) || [0, 0, 0, 0, 0, 0] %>
 
 <div class="min-h-screen py-2">
   <div class="max-w-full mx-auto px-2 sm:px-2 lg:px-2">
@@ -142,30 +150,25 @@
               <% grand_total_text = "Grand Total#{ " (all pages)" if workshop_logs_count > @per_page.to_i }" %>
               <td colspan="3" class="text-right pr-2 text-sm font-semibold"><%= grand_total_text %>:</td>
               <td class="text-center font-bold text-xl text-white bg-purple-500">
-                <%= workshop_logs_unpaginated.sum(:children_ongoing) +
-                      workshop_logs_unpaginated.sum(:teens_ongoing) +
-                      workshop_logs_unpaginated.sum(:adults_ongoing) +
-                      workshop_logs_unpaginated.sum(:children_first_time) +
-                      workshop_logs_unpaginated.sum(:teens_first_time) +
-                      workshop_logs_unpaginated.sum(:adults_first_time) %>
+                <%= grand_totals.sum %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-blue-500">
-                <%= workshop_logs_unpaginated.sum(:children_ongoing) %>
+                <%= grand_totals[0] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-blue-500">
-                <%= workshop_logs_unpaginated.sum(:teens_ongoing) %>
+                <%= grand_totals[1] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-blue-500">
-                <%= workshop_logs_unpaginated.sum(:adults_ongoing) %>
+                <%= grand_totals[2] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-green-500">
-                <%= workshop_logs_unpaginated.sum(:children_first_time) %>
+                <%= grand_totals[3] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-green-500">
-                <%= workshop_logs_unpaginated.sum(:teens_first_time) %>
+                <%= grand_totals[4] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-green-500">
-                <%= workshop_logs_unpaginated.sum(:adults_first_time) %>
+                <%= grand_totals[5] %>
               </td>
             </tr>
             </tfoot>

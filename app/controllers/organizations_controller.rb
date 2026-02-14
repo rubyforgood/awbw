@@ -41,15 +41,13 @@ class OrganizationsController < ApplicationController
     @workshop_logs_unpaginated = workshop_logs
     @workshop_logs_count = @workshop_logs_unpaginated.size
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
+    logged_workshop_ids = workshop_logs.where.not(workshop_id: nil).distinct.pluck(:workshop_id)
     @workshops = Workshop.includes(:windows_type)
-                         .published
-                         .references(:windows_type)
+                         .where(id: logged_workshop_ids)
                          .order("workshops.title ASC, windows_types.name ASC")
-    user_ids = @workshop_logs_unpaginated.select(:user_id)
-    @people = User.active
-                  .or(User.where(id: user_ids))
+    logged_user_ids = workshop_logs.where.not(user_id: nil).distinct.pluck(:user_id)
+    @people = User.where(id: logged_user_ids)
                   .includes(:person)
-                  .distinct
                   .order("people.first_name, people.last_name")
   end
 
@@ -124,7 +122,7 @@ class OrganizationsController < ApplicationController
   def set_organization
     @organization = Organization.includes(
       :organization_status, :windows_type, :addresses,
-      :sectorable_items, :sectors,
+      { sectorable_items: :sector },
       organization_people: :person
     ).find(params[:id])
   end

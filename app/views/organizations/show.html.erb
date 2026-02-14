@@ -28,7 +28,11 @@
         <h1 class="text-3xl font-bold text-gray-900">
           <%= @organization.name %>
         </h1>
-        <% address = @organization.addresses.active.first %>
+        <% address = if @organization.addresses.loaded?
+                       @organization.addresses.find { |a| !a.inactive? }
+                     else
+                       @organization.addresses.active.first
+                     end %>
         <% if address %>
           <p class="mt-1 text-gray-500 text-sm">
             <%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
@@ -48,7 +52,11 @@
             </span>
           <% end %>
           <% if @organization.profile_show_phone? %>
-            <% phone = @organization.addresses.active.filter_map(&:phone).first %>
+            <% phone = if @organization.addresses.loaded?
+                         @organization.addresses.reject(&:inactive?).filter_map(&:phone).first
+                       else
+                         @organization.addresses.active.filter_map(&:phone).first
+                       end %>
             <% if phone.present? %>
               <span class="text-gray-600">
                 📞 <%= link_to phone, "tel:#{phone}", class: "text-blue-600 hover:underline" %>
@@ -91,7 +99,9 @@
         <!-- Organization affiliations -->
         <div class="md:col-span-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
           <h2 class="text-lg font-semibold text-gray-800 mb-3">Windows facilitators</h2>
-          <% active_ops = @organization.organization_people.active.includes(:person).select { |op| op.person.present? } %>
+          <% active_ops = @organization.organization_people.select { |op|
+               !op.inactive? && (op.end_date.nil? || op.end_date >= Date.current) && op.person.present?
+             } %>
           <% if active_ops.any? %>
             <div class="flex flex-wrap gap-2">
               <% active_ops.each do |pu| %>
@@ -112,7 +122,7 @@
             <p>
               <% if @organization.sectorable_items.any? %>
                 <div class="flex flex-wrap gap-2">
-                  <% @organization.sectorable_items.joins(:sector).order("sectors.name").map do |si| %>
+                  <% @organization.sectorable_items.sort_by { |si| si.sector&.name.to_s }.each do |si| %>
                     <%= render "sectors/tagging_label",
                                sector: si.sector,
                                display_leader: true,
