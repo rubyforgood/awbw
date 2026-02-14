@@ -177,7 +177,9 @@
                                     :sectorable_items,
                                     partial: "shared/sectorable_item_fields",
                                     render_options: {
-                                      locals: { collection: @sectors_collection, show_is_leader: true } },
+                                      locals: { collection: (@sectors_collection || [])
+                                        .reject { |_, id| (@current_sector_ids || []).include?(id) },
+                                      show_is_leader: true } },
                                     class: "text-sm text-gray-400 hover:text-blue-800 underline transition" %>
     </div>
   </div>

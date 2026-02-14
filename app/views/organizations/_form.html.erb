@@ -40,7 +40,8 @@
                                       partial: "shared/sectorable_item_fields",
                                       render_options: {
                                         locals: {
-                                          collection: @sectors_collection
+                                          collection: (@sectors_collection || [])
+                                            .reject { |_, id| (@current_sector_ids || []).include?(id) }
                                         }
                                       },
                                     class: "text-sm text-gray-400 hover:text-blue-800 underline transition" %>
