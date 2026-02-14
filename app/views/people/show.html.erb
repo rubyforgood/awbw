@@ -138,9 +138,9 @@
         <% if @person.profile_show_workshops? ||
               @person.profile_show_workshop_variations? ||
               @person.profile_show_stories?  %>
-          <div class="person-only bg-indigo-50 border border-gray-200 rounded-lg shadow-sm">
+          <div class="person-only <%= DomainTheme.bg_class_for(:workshops) %> border <%= DomainTheme.border_class_for(:workshops) %> rounded-lg shadow-sm">
             <!-- Header -->
-            <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-gray-200">
+            <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b <%= DomainTheme.border_class_for(:workshops) %>">
               <h2 class="text-xl font-semibold text-gray-800">
                 Published content
               </h2>
