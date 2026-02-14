@@ -82,12 +82,6 @@ Rails.application.routes.draw do
       post :resend
     end
   end
-  resources :organizations
-  resources :notifications, only: [ :index, :show ] do
-    member do
-      post :resend
-    end
-  end
   resources :organizations do
    member do
      get :populations_served
