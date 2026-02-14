@@ -30,11 +30,10 @@
           </thead>
           <tbody class="divide-y divide-gray-200">
             <% @people.each do |person| %>
+              <% cache [person, current_user.super_user?] do %>
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2">
-                  <% cache [person, "profile_button"] do %>
-                    <%= person_profile_button(person) %>
-                  <% end %>
+                  <%= person_profile_button(person) %>
                 </td>
                 <td class="px-4 py-2 text-center text-sm text-gray-800">
                   <%= person.member_since&.year %>
@@ -92,6 +91,7 @@
                   </td>
                 <% end %>
               </tr>
+              <% end %>
             <% end %>
           </tbody>
         </table>

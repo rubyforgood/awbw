@@ -1,6 +1,6 @@
 class OrganizationPerson < ApplicationRecord
   belongs_to :organization
-  belongs_to :person
+  belongs_to :person, touch: true
 
   # Validations
   validates_presence_of :organization_id
