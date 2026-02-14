@@ -16,10 +16,9 @@
       <!-- Optional filters -->
       <%= render "search_boxes" %>
 
-      <!-- Organizations table -->
-      <div class="rounded-xl bg-white p-6">
+      <div class="rounded bg-white p-6">
         <div class="overflow-x-auto">
-        <table class="min-w-full border border-gray-200 rounded-lg divide-y divide-gray-200">
+        <table class="min-w-full border border-gray-200 rounded divide-y divide-gray-200">
           <thead class="bg-gray-100">
           <tr>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
@@ -27,8 +26,9 @@
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Locality</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliation dates</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Active?</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+            <% if allowed_to?(:edit?, Organization) %>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+            <% end %>
           </tr>
           </thead>
 
@@ -67,22 +67,12 @@
                   </span>
               </td>
 
-              <td class="px-4 py-2 text-center">
-                <% if organization.inactive? %>
-                  <span class="text-red-500 fa fa-ban"></span>
-                <% else %>
-                  <span class="text-green-200 font-semibold fa fa-check-circle"></span>
-                <% end %>
-              </td>
-
-              <td class="px-4 py-2 text-center whitespace-nowrap">
-                <% if allowed_to?(:edit?, organization) %>
+              <% if allowed_to?(:edit?, organization) %>
+                <td class="px-4 py-2 text-center whitespace-nowrap">
                   <%= link_to "Edit", edit_organization_path(organization),
-                              class: "admin-only bg-blue-100 btn btn-secondary-outline text-xs px-2 py-1" %>
-                <% end %>
-                <%= link_to "Profile", organization_path(organization),
-                            class: "btn btn-secondary-outline text-xs px-2 py-1" %>
-              </td>
+                              class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                </td>
+              <% end %>
             </tr>
           <% end %>
           </tbody>

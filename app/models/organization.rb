@@ -50,7 +50,7 @@ class Organization < ApplicationRecord
 
   # Scopes
   # See TagFilterable, Trendable, WindowsTypeFilterable
-  scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
+  scope :active, -> { joins(:organization_status).where(organization_statuses: { name: "Active" }) }
   scope :address, ->(address) do
     return all if address.blank?
     exact = address.to_s
@@ -73,7 +73,7 @@ class Organization < ApplicationRecord
   end
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
-  scope :published, ->(published = nil) { published ? active(published) : active }
+  scope :published, -> { active }
 
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
@@ -117,7 +117,7 @@ class Organization < ApplicationRecord
   end
 
   def published? # needed for my_bookmarks
-    !inactive
+    organization_status&.name == "Active"
   end
 
   def sector_list

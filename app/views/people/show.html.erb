@@ -3,6 +3,14 @@
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-4 sm:p-8 relative">
       <!-- Header actions -->
       <div class="flex flex-wrap justify-end gap-2 mb-4">
+        <% unless @person.user %>
+          <div class="admin-only bg-blue-100 p-2">
+            No user!
+            <%= link_to "Create user",
+                        new_user_path(person_id: @person.id),
+                        class: "btn btn-warning px-2 py-1" %>
+          </div>
+        <% end %>
         <%= link_to "People", people_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <%= link_to "Dashboard", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% if allowed_to?(:edit?, @person) %>
@@ -73,15 +81,6 @@
           <% end %>
         </div>
       </div>
-      <% unless @person.user %>
-        <div>
-          Not associated with a user!
-          <br>
-          <%= link_to "Create user",
-                      new_user_path(person_id: @person.id),
-                      class: "btn btn-primary" %>
-        </div>
-      <% end %>
 
       <div class="space-y-6 mt-12">
         <!-- Organizations & Service Populations -->

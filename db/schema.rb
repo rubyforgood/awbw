@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_155633) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_172442) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -520,7 +520,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_155633) do
     t.string "email"
     t.date "end_date"
     t.string "filemaker_code"
-    t.boolean "inactive", default: false
     t.string "internal_id"
     t.boolean "legacy", default: false
     t.integer "legacy_id"
