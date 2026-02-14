@@ -22,8 +22,7 @@
         <table class="min-w-full border border-gray-200 rounded-lg divide-y divide-gray-200">
           <thead class="bg-gray-100">
           <tr>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Logo</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Windows type</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Locality</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliation dates</th>
@@ -36,26 +35,8 @@
           <tbody class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
             <tr class="hover:bg-gray-50 transition">
-              <td class="px-4 py-2 text-center">
-                <%= link_to organization_path(organization) do %>
-                  <% if organization.logo.attached? %>
-                    <%= image_tag(
-                          organization.logo,
-                          class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm mx-auto"
-                        ) %>
-                  <% else %>
-                    <%= link_to organization_path(organization) do %>
-                      <svg class="w-10 h-10 text-gray-400 bg-gray-200 rounded-full"
-                           fill="currentColor"
-                           viewBox="0 0 20 18"
-                           aria-hidden="true"></svg>
-                    <% end %>
-                  <% end %>
-                <% end %>
-              </td>
-
-              <td class="px-4 py-2 font-semibold">
-                <%= link_to organization.name, organization_path(organization), class: "hover:underline" %>
+              <td class="px-4 py-2">
+                <%= organization_profile_button(organization) %>
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700">

@@ -242,7 +242,7 @@
                                         class: "btn btn-secondary-outline" %></div>
         </div>
       <% else %>
-        <% f.object.user && f.object.user.person.organization_people.each do |pu| %>
+        <% f.object.user&.person&.organization_people&.each do |pu| %>
           <div class="ps-6 mb-2">
             <li><%= pu.title || pu.position %> - <%= person_profile_button(pu.user.person) if pu.persisted? && pu.user.person %></li>
           </div>

@@ -42,23 +42,39 @@
                 </td>
                 <!-- Sectors -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <div class="flex flex-wrap gap-2">
-                    <% person.sectorable_items.each do |si| %>
-                      <% si_name = "#{ si.sector.name }#{ " (#{"leader"})" if si.is_leader? }" %>
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs
-                  font-medium bg-gray-400 text-white whitespace-nowrap">
-                        <%= link_to si_name, taggings_path(sector_names_all: si.sector.name) %>
-                      </span>
-                    <% end %>
-                  </div>
+                  <% sectors = person.sectorable_items.to_a %>
+                  <% if sectors.any? %>
+                    <div class="flex flex-wrap gap-2">
+                      <% sectors.first(3).each do |si| %>
+                        <% si_name = "#{ si.sector.name }#{ " (#{"leader"})" if si.is_leader? }" %>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs
+                    font-medium bg-gray-400 text-white whitespace-nowrap">
+                          <%= link_to si_name, taggings_path(sector_names_all: si.sector.name) %>
+                        </span>
+                      <% end %>
+                      <% if sectors.size > 3 %>
+                        <%= link_to "+#{sectors.size - 3}", person_path(person),
+                            class: "inline-block px-2 py-1 rounded-full text-xs font-medium text-gray-500 hover:text-gray-700" %>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span>--</span>
+                  <% end %>
                 </td>
                 <!-- Organizations -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% if person.user&.person&.organizations&.any? %>
-                    <% user_organization_names = person.user.person.organizations.map(&:name).join(", ") %>
-                    <span title="<%= user_organization_names %>">
-                      <%= truncate(user_organization_names, length: 120) %>
-                    </span>
+                  <% orgs = person.organizations.to_a %>
+                  <% if orgs.any? %>
+                    <div class="flex flex-wrap gap-2">
+                      <% orgs.first(3).each do |org| %>
+                        <%= link_to org.name, organization_path(org),
+                            class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:organizations, intensity: 100)} #{DomainTheme.text_class_for(:organizations)} #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)}" %>
+                      <% end %>
+                      <% if orgs.size > 3 %>
+                        <%= link_to "+#{orgs.size - 3}", person_path(person),
+                            class: "inline-block px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700" %>
+                      <% end %>
+                    </div>
                   <% else %>
                     <span>--</span>
                   <% end %>

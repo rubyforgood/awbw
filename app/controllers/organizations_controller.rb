@@ -91,11 +91,14 @@ class OrganizationsController < ApplicationController
                           .map { |f| [ f.name, f.id ] }
 
     if @organization.persisted? && @organization.errors.empty?
-      @organization.organization_people = @organization.organization_people
-                                       .includes(:organization)
-                                       .sort_by { |op|
-                                         [op.inactive? ? 1 : 0, op.end_date || Date.new(9999), op.start_date || Date.new(9999), op.person&.name.to_s.downcase]
-                                       }
+      sorted = @organization.organization_people
+                             .includes(:person)
+                             .to_a
+                             .sort_by { |op|
+                               expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
+                               [expired ? 1 : 0, op.person&.first_name.to_s.downcase, op.person&.last_name.to_s.downcase]
+                             }
+      @organization.organization_people.proxy_association.target.replace(sorted)
     end
   end
 

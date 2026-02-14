@@ -141,13 +141,17 @@ class PeopleController < ApplicationController
   def set_form_variables
     set_user
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
-    @person.organization_people.first || @person.organization_people.build
     if @person.persisted? && @person.errors.empty?
-      @person.organization_people = @person.organization_people
-                                     .sort_by { |op|
-                                       [op.inactive? ? 1 : 0, op.end_date || Date.new(9999), op.start_date || Date.new(9999), op.organization&.name.to_s.downcase]
-                                     }
+      sorted = @person.organization_people
+                      .includes(:organization)
+                      .to_a
+                      .sort_by { |op|
+                        expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
+                        [expired ? 1 : 0, op.start_date || Date.new(9999), op.organization&.name.to_s.downcase]
+                      }
+      @person.organization_people.proxy_association.target.replace(sorted)
     end
+    @person.organization_people.build if @person.organization_people.empty?
 
     @all_sectors = Sector.published.order(:name)
     @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
