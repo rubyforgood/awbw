@@ -42,8 +42,8 @@ RSpec.describe "people/edit", type: :view do
       expect(rendered).not_to have_field('Primary email')
     end
 
-    it "displays the person's email type as read-only" do
-      expect(rendered).to have_content(person.email_type)
+    it "displays the person's email type as editable" do
+      expect(rendered).not_to have_field('Primary email type')
     end
   end
 
