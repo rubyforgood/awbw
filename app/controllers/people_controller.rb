@@ -73,8 +73,8 @@ class PeopleController < ApplicationController
       :avatar_attachment,
       :contact_methods,
       :addresses,
-      :organization_people,
-      :sectorable_items
+      :sectorable_items,
+      organization_people: :organization
     ).find(params[:id]).decorate
     authorize! @person
     set_form_variables
@@ -139,9 +139,9 @@ class PeopleController < ApplicationController
     set_user
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
     if @person.persisted? && @person.errors.empty?
-      sorted = @person.organization_people
-                      .includes(:organization)
-                      .to_a
+      org_people = @person.organization_people
+      org_people = org_people.includes(:organization) unless org_people.loaded?
+      sorted = org_people.to_a
                       .sort_by { |op|
                         expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
                         [ expired ? 1 : 0,
@@ -153,7 +153,8 @@ class PeopleController < ApplicationController
     @person.organization_people.build if @person.organization_people.empty?
 
     @all_sectors = Sector.published.order(:name)
-    @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
+    @sectors_collection = @all_sectors.pluck(:name, :id)
+    @current_sector_ids = @person.sectorable_items.map(&:sector_id)
 
     @organizations_array = authorized_scope(Organization.all, as: :affiliated).order(:name).pluck(:name, :id)
   end
