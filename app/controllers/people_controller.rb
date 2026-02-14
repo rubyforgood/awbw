@@ -147,7 +147,9 @@ class PeopleController < ApplicationController
                       .to_a
                       .sort_by { |op|
                         expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
-                        [expired ? 1 : 0, op.start_date || Date.new(9999), op.organization&.name.to_s.downcase]
+                        [ expired ? 1 : 0,
+                          op.start_date || Date.new(9999),
+                          op.organization&.name.to_s.downcase ]
                       }
       @person.organization_people.proxy_association.target.replace(sorted)
     end
