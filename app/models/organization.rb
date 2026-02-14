@@ -34,6 +34,7 @@ class Organization < ApplicationRecord
   validates :name, presence: true
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validates :website_url, format: { with: /\Ahttps?:\/\//i, message: "must start with http:// or https://" }, allow_blank: true
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
