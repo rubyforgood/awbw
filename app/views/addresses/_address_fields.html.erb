@@ -67,7 +67,7 @@
   </div>
 
   <!-- ADDRESS BLOCK -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-red-500">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <%= f.input :street_address,
                 label: "Street Address",
                 input_html: {
@@ -119,10 +119,8 @@
                 } %>
   </div>
 
-  <div class="text-right text-end">
-    <!-- Remove button -->
-    <%= link_to_remove_association "✖ Delete address",
-                                   f,
-                                   class: "btn btn-danger-outline whitespace-nowrap" if f.object.persisted? %>
-  </div>
+  <!-- Remove button -->
+  <%= link_to_remove_association "Remove",
+                                 f,
+                                 class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
 </div>

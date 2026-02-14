@@ -48,7 +48,8 @@ class Person < ApplicationRecord
   # TODO: add validation on phone number type
 
   # Nested attributes
-  accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :addresses, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }

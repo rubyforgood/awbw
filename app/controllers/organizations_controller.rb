@@ -100,9 +100,9 @@ class OrganizationsController < ApplicationController
                           .map { |fn, ln, id| ["#{fn} #{ln}", id] }
 
     if @organization.persisted? && @organization.errors.empty?
-      sorted = @organization.organization_people
-                             .includes(:person)
-                             .to_a
+      org_people = @organization.organization_people
+      org_people = org_people.includes(:person) unless org_people.loaded?
+      sorted = org_people.to_a
                              .sort_by { |op|
                                expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
                                [ expired ? 1 : 0,

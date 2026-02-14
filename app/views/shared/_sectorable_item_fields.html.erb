@@ -1,5 +1,34 @@
-<%= f.check_box :_create %>
-<%= f.hidden_field :sector_id %>
-<% name = f.object.sector.name %>
-<% name.upcase! if name.downcase == 'lgbtqia' %>
-<%= f.label name, name, class: 'inline-block' %> 
+<% collection ||= @sectors_collection || Sector.published.order(:name).pluck(:name, :id) %>
+<% show_is_leader = local_assigns.fetch(:show_is_leader, false) %>
+
+<div class="nested-fields inline-flex items-center
+            rounded-md border border-gray-300 hover:border-gray-400
+            <%= DomainTheme.bg_class_for(:sectors) %> hover:bg-lime-200
+            text-gray-500 px-3 py-1 text-sm font-medium transition">
+  <% if f.object&.sector_id.present? %>
+    <%= f.hidden_field :sector_id %>
+    <span><%= f.object.sector&.name %></span>
+  <% else %>
+    <%= f.input :sector_id,
+                as: :select,
+                label: false,
+                collection: collection,
+                selected: f.object&.sector_id,
+                include_blank: "Select sector…",
+                wrapper: false,
+                input_html: {
+                  class: "bg-transparent border-none focus:ring-0 text-sm text-gray-500 cursor-pointer py-0"
+                } %>
+  <% end %>
+  <% if show_is_leader && allowed_to?(:manage?, Person) %>
+    <span class="admin-only bg-blue-100 inline-flex items-center gap-1 p-1">
+      <%= f.check_box :is_leader,
+                      class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
+      <span class="text-sm font-medium text-gray-700">Leader</span>
+    </span>
+  <% end %>
+  <%= link_to_remove_association "✖",
+                                 f,
+                                 class: "ml-1.5 text-gray-400 hover:text-gray-600
+                                 font-bold text-xs transition" %>
+</div>

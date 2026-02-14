@@ -6,7 +6,7 @@ class SectorableItem < ApplicationRecord
   # Validations
   validates_presence_of :sectorable_type, :sectorable_id, :sector_id
 
-  before_validation :skip_if_duplicate, on: :create
+  before_create :skip_if_duplicate
 
   # Methods
   def title

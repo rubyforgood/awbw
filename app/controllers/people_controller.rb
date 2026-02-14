@@ -77,7 +77,7 @@ class PeopleController < ApplicationController
       :avatar_attachment,
       :contact_methods,
       :addresses,
-      :sectorable_items,
+      { sectorable_items: :sector },
       organization_people: :organization
     ).find(params[:id]).decorate
     authorize! @person
