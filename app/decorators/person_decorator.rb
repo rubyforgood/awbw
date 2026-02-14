@@ -32,15 +32,27 @@ class PersonDecorator < ApplicationDecorator
   def badges
     years = member_since ? (Time.zone.now.year - member_since.year) : 0
     badges = []
-    badges << [ "Legacy Facilitator (10+ years)", "yellow" ] if years >= 10
-    badges << [ "Seasoned Facilitator (3-10 years)", DomainTheme.bg_class_for(:people) ] if member_since.present? && years >= 3
-    badges << [ "New Facilitator (<3 years)", "green" ] if member_since.present? && years < 3
-    badges << [ "Spotlighted Facilitator", "gray" ] if stories_as_spotlighted_facilitator
-    badges << [ "Events Attended", DomainTheme.bg_class_for(:events) ] if user && user.events.any?
-    badges << [ "Workshop Author", DomainTheme.bg_class_for(:workshops) ] if user && user.workshops.any? # indigo
-    badges << [ "Story Author", DomainTheme.bg_class_for(:stories) ] if user && user.stories_as_creator.any? # pink
-    badges << [ "Sector Leader", DomainTheme.bg_class_for(:sectors) ] if sectorable_items.where(is_leader: true).any?
-    badges << [ "Blog Contributor", "orange" ] if true # || user.respond_to?(:blogs) && user.blogs.any? # red
+    badges << badge("Legacy Facilitator (10+ years)", :legacy_facilitator) if true || years >= 10
+    badges << badge("Seasoned Facilitator (3-10 years)", :seasoned_facilitator) if true || member_since.present? && years >= 3
+    badges << badge("New Facilitator (<3 years)", :new_facilitator) if true || member_since.present? && years < 3
+    badges << badge("Spotlighted Facilitator", :spotlighted_facilitator) if true || stories_as_spotlighted_facilitator
+    badges << badge("Events Attended", :events) if true || user&.events.any?
+    badges << badge("Workshop Author", :workshops) if true || user&.workshops.any?
+    badges << badge("Workshop Variation Author", :workshop_variations) if true || user&.workshop_variations_as_creator.any?
+    badges << badge("Story Author", :stories) if true || user&.stories_as_creator.any?
+    badges << badge("Sector Leader", :sectors) if true || sectorable_items.where(is_leader: true).any?
+    badges << badge("Blog Contributor", :blog_contributor) if true || blog_contributor?
     badges
+  end
+
+  private
+
+  def badge(label, key)
+    {
+      label: label,
+      bg: DomainTheme.bg_class_for(key, intensity: 100),
+      text: DomainTheme.text_class_for(key),
+      border: DomainTheme.border_class_for(key)
+    }
   end
 end

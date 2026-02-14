@@ -3,11 +3,11 @@
     <div class="admin-only bg-blue-100 p-6">
       <div class="<%= DomainTheme.bg_class_for(:people) %>
           border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-8">
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
             Edit <%= @person.class.model_name.human %>
           </h1>
-          <div class="flex space-x-2">
+          <div class="flex flex-wrap gap-2">
             <% if allowed_to?(:edit?, @person) %>
               <%= link_to "Change password",
                           change_password_path,

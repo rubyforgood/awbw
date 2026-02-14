@@ -28,7 +28,14 @@ module DomainTheme
     users:                    :stone,
 
     admin_only:               :blue,
-    user_only:                :green
+    user_only:                :green,
+
+    # Badges (non-model-specific)
+    legacy_facilitator:       :yellow,
+    seasoned_facilitator:     :sky,
+    new_facilitator:          :green,
+    spotlighted_facilitator:  :gray,
+    blog_contributor:         :orange
   }
 
   def self.color_for(key)
@@ -40,5 +47,13 @@ module DomainTheme
     prefix = hover ? "hover:bg" : "bg"
     intensity = hover ? (intensity == 50 ? 100 : intensity + 100) : intensity
     "#{prefix}-#{color}-#{intensity}"
+  end
+
+  def self.text_class_for(key, intensity: 800)
+    "text-#{color_for(key)}-#{intensity}"
+  end
+
+  def self.border_class_for(key, intensity: 300)
+    "border-#{color_for(key)}-#{intensity}"
   end
 end

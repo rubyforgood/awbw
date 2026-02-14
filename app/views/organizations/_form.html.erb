@@ -227,11 +227,14 @@
 
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Organization) %>
-        <div class="admin-only bg-blue-100 p-3">
+        <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
           <%= f.fields_for :organization_people do |organization_person_form| %>
-            <%= render "organization_person_fields",
-                       f: organization_person_form %>
+            <div data-paginated-fields-target="item">
+              <%= render "organization_person_fields",
+                         f: organization_person_form %>
+            </div>
           <% end %>
+          <div data-paginated-fields-target="nav"></div>
 
           <div class="admin-only bg-blue-100 p-3 mt-6"><%= link_to_add_association "➕ Add Role",
                                         f,
