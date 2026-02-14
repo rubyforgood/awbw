@@ -192,8 +192,7 @@ class ResourcesController < ApplicationController
 
   def resource_params
     params.require(:resource).permit(
-      :user_id,
-      :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured, :url,
+      :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       downloadable_asset_attributes: [ :id, :file, :_destroy ],
