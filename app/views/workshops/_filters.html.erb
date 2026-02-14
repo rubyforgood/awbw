@@ -28,7 +28,7 @@
 
   <%= render "dropdown_filter",
              dom_id_prefix: "sectors",
-             label_text: "Service Population",
+             label_text: "Sector",
              items: @sectors.reject { |sector| sector.name == "Other" },
              param_name: :sectors %>
 

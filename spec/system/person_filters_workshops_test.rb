@@ -42,7 +42,7 @@ RSpec.describe 'People can filter workshops using metadata' do
         expect(page).to have_content('oh hello!')
         expect(page).to have_content('The best workshop on mars')
         expect(page).to have_content('Windows Type')
-        expect(page).to have_content('Service Population')
+        expect(page).to have_content('Sector')
         expect(page).not_to have_content('Publish status')
       end
 

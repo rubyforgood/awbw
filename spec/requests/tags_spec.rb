@@ -17,10 +17,10 @@ RSpec.describe "Tags index", type: :request do
       get tags_path
     end
 
-    it "renders Service Populations and Categories skeleton" do
+    it "renders Sectors and Categories skeleton" do
       get tags_path
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Service Populations")
+      expect(response.body).to include("Sectors")
       expect(response.body).to include("Categories")
     end
 
@@ -69,10 +69,10 @@ RSpec.describe "Tags index", type: :request do
       get tags_path
     end
 
-    it "renders Service Populations and Categories skeleton" do
+    it "renders Sectors and Categories skeleton" do
       get tags_path
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Service Populations")
+      expect(response.body).to include("Sectors")
       expect(response.body).to include("Categories")
     end
 
