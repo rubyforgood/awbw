@@ -80,6 +80,13 @@
   }
 }
 
+/* Optional fields get a subtle gray background */
+.optional input,
+.optional select,
+.optional textarea {
+  @apply bg-gray-100;
+}
+
 .readonly {
   @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300;
 }
