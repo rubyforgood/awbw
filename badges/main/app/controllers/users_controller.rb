@@ -99,8 +99,16 @@ class UsersController < ApplicationController
       bypass_sign_in(@user)
       redirect_to root_path, notice: "Your Password was updated."
     else
-      flash[:alert] = @user.errors.full_messages.join(", ")
-      render :change_password
+      respond_to do |format|
+        format.html { render :change_password }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            "password-errors",
+            partial: "users/password_errors",
+            locals: { user: @user }
+          )
+        end
+      end
     end
   end
 

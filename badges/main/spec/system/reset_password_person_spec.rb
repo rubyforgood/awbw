@@ -36,9 +36,8 @@ RSpec.describe 'Reset password (person)', type: :system do
       expect(page).to have_current_path(change_password_path)
 
       # Click "Log out and reset it." and accept the confirm dialog
-      accept_confirm do
-        click_link 'Log out and reset it.'
-      end
+      click_link 'Log out and reset it.'
+      page.accept_alert "This will log you out and send you to the password reset page. Continue?"
 
       # Confirm we are on the password reset page
       expect(page).to have_current_path(new_user_password_path)

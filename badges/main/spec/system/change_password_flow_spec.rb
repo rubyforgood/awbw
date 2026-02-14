@@ -10,9 +10,8 @@ RSpec.describe 'Change Password Flow', type: :system do
     visit change_password_path
 
     # Click the "Log out and reset it" link
-    accept_confirm do
-      click_link 'Log out and reset it.'
-    end
+    click_link 'Log out and reset it.'
+    page.accept_alert "This will log you out and send you to the password reset page. Continue?"
 
     # Verify redirection to the password reset page
     expect(page).to have_current_path(new_user_password_path)
