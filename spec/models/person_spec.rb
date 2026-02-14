@@ -8,6 +8,15 @@ RSpec.describe Person, type: :model do
   describe "validations" do
     it { should validate_presence_of(:first_name) }
     it { should validate_presence_of(:last_name) }
+
+    it { should allow_value("test@example.com").for(:email) }
+    it { should allow_value("").for(:email) }
+    it { should allow_value(nil).for(:email) }
+    it { should_not allow_value("not-an-email").for(:email).with_message("must be a valid email address") }
+
+    it { should allow_value("test@example.com").for(:email_2) }
+    it { should allow_value("").for(:email_2) }
+    it { should_not allow_value("not-an-email").for(:email_2).with_message("must be a valid email address") }
   end
 
   describe "#name" do
