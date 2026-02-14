@@ -67,9 +67,9 @@
         <div class="flex flex-col mx-3 ">
           <span class="admin-only bg-blue-100">
             <%= link_to faq,
-          method: :delete,
           data: {
-            confirm: "Confirm: Delete FAQ?",
+            turbo_method: :delete,
+            turbo_confirm: "Confirm: Delete FAQ?",
           } do %>
 
               <button class="p-1 rounded-md hover:bg-danger transition">

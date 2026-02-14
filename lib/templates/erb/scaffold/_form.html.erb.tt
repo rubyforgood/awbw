@@ -17,8 +17,8 @@
     <!-- Form Actions -->
     <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
       <%% if @<%= singular_table_name %>.persisted? && current_user&.super_user? %>
-        <%%= link_to "Delete", @<%= singular_table_name %>, method: :delete,
-                            class: "btn btn-danger-outline", data: { confirm: "Are you sure?" } %>
+        <%%= link_to "Delete", @<%= singular_table_name %>,
+                            class: "btn btn-danger-outline", data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %>
       <%% end %>
       <%%= link_to "Cancel", <%= plural_table_name %>_path, class: "btn btn-secondary-outline" %>
       <%%= f.button :submit,
