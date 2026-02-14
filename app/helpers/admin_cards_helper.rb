@@ -49,7 +49,7 @@ module AdminCardsHelper
                  params: { published: true }),
       model_card(:sectors, icon: "🏭",
                  intensity: 100,
-                 title: "Service populations",
+                 title: "Sectors",
                  params: { published: true }),
       custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       custom_card("Windows types", windows_types_path, icon: "🪟")

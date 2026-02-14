@@ -20,7 +20,7 @@
       </h1>
 
       <p class="text-gray-600 max-w-2xl">
-        Content tagged by service population or thematic category.
+        Content tagged by sector or thematic category.
       </p>
     </div>
 
@@ -48,7 +48,7 @@
     <!-- EMPTY / NO RESULTS STATES -->
     <% if sector_names.blank? && category_full_names.blank? && @category_names_all.blank? %>
       <div class="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-400">
-        Select a service population or explore tags to view related content.
+        Select a sector or explore tags to view related content.
       </div>
 
     <% elsif @grouped_tagged_items.values.all?(&:empty?) %>
