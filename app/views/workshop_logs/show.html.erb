@@ -9,8 +9,10 @@
         </h1>
 
         <div class="flex gap-2">
-          <%= link_to "Back to Logs", workshop_logs_path, class: "btn btn-secondary-outline" %>
-          <% if current_user&.super_user? || log.user == current_user %>
+          <% if allowed_to?(:index?, WorkshopLog) %>
+            <%= link_to "Back to Logs", workshop_logs_path, class: "btn btn-secondary-outline" %>
+          <% end %>
+          <% if allowed_to?(:edit?, @workshop_log) %>
             <%= link_to "Edit Log", edit_workshop_log_path(@workshop_log), class: "btn btn-primary-outline" %>
           <% end %>
         </div>
@@ -19,8 +21,25 @@
       <!-- Workshop Info -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800">
         <div>
-          <p><span class="font-semibold text-gray-700">Person:</span> <%= @workshop_log.user&.name || "—" %></p>
-          <p><span class="font-semibold text-gray-700">Organization:</span> <%= @workshop_log.organization&.name || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Person:</span>
+            <% if @workshop_log.user && allowed_to?(:show?, @workshop_log.user) %>
+              <%= link_to @workshop_log.user.name,
+                          @workshop_log.user.person ? person_path(@workshop_log.user.person) : user_path(@workshop_log.user),
+                          class: "btn btn-secondary-outline" %>
+            <% else %>
+              <%= @workshop_log.user&.name || "-" %>
+            <% end %>
+          </p>
+          <p>
+            <span class="font-semibold text-gray-700">Organization:</span>
+            <% if @workshop_log.organization && allowed_to?(:show?, @workshop_log.organization) %>
+              <%= link_to @workshop_log.organization.name,
+                          organization_path(@workshop_log.organization),
+                          class: "btn btn-secondary-outline" %>
+            <% else %>
+            -
+            <% end %>
+          </p>
           <p><span class="font-semibold text-gray-700">Workshop Type:</span> <%= @workshop_log.workshop&.windows_type&.short_name || "—" %></p>
         </div>
         <div>
@@ -118,7 +137,7 @@
                     <%= link_to quote.detail, quote_path(quote.object), class: "hover:underline" %>
                     <span class="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded-full">
                       <span class="fa fa-eye-slash"></span>
-                      Hidden
+                      Unpublished
                     </span>
                   </div>
                   <div class="text-gray-700 mt-3">

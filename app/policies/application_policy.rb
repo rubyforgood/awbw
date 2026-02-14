@@ -4,10 +4,14 @@ class ApplicationPolicy < ActionPolicy::Base
   authorize :user, optional: true, allow_nil: true
 
   default_rule :manage?
-  alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, :destroy?, to: :manage?
+  alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, to: :manage?
 
   def manage?
     admin?
+  end
+
+  def destroy?
+    record.persisted? && manage?
   end
 
   private

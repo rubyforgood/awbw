@@ -14,7 +14,7 @@
         <div class="flex items-center gap-2">
           <%= link_to("FAQs", faqs_path, class: "btn btn-secondary-outline") %>
           <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
-          <% if current_user&.super_user? %>
+          <% if allowed_to?(:edit?, @faq) %>
             <%= link_to("Edit", edit_faq_path(@faq), class: "btn btn-primary-outline") %>
           <% end %>
         </div>

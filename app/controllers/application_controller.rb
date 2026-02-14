@@ -1,12 +1,10 @@
 class ApplicationController < ActionController::Base
-  prepend ActionPolicy::Draper
-
   before_action :authenticate_user!  # ensures only logged-in users can access pages
   before_action :set_current_user # for AhoyTrackable in models
   before_action :preload_current_user_associations
 
   before_action do
-    if current_user && current_user.super_user
+    if current_user && allowed_to?(:manage?, with: ApplicationPolicy)
       Rack::MiniProfiler.authorize_request
     end
   end

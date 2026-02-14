@@ -5,7 +5,7 @@ class OrganizationObligationPolicy < ApplicationPolicy
   def show?    = admin?
   def create?  = admin?
   def update?  = admin?
-  def destroy? = admin?
+  def destroy? = record.persisted? && admin?
 
 
   # Scoping

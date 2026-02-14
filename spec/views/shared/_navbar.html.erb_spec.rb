@@ -30,6 +30,9 @@ RSpec.describe "shared/_navbar", type: :view do
     before do
       allow(view).to receive(:current_user).and_return(regular_user)
       allow(view).to receive(:user_signed_in?).and_return(true)
+      allow(view).to receive(:allowed_to?).and_return(false)
+      allow(view).to receive(:allowed_to?).with(:personal?, Bookmark).and_return(true)
+      allow(view).to receive(:allowed_to?).with(:index?, WorkshopLog).and_return(true)
       render_nav
     end
 
@@ -54,8 +57,11 @@ RSpec.describe "shared/_navbar", type: :view do
 
   context "when logged in as an admin" do
     before do
+      create(:person, user: admin_user)
+      admin_user.reload
       allow(view).to receive(:current_user).and_return(admin_user)
       allow(view).to receive(:user_signed_in?).and_return(true)
+      allow(view).to receive(:allowed_to?).and_return(true)
       render_nav
     end
 

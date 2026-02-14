@@ -22,7 +22,7 @@ class BookmarkPolicy < ApplicationPolicy
   end
 
   def destroy?
-    admin? || owner?
+    record.persisted? && (admin? || owner?)
   end
 
   # Scoping

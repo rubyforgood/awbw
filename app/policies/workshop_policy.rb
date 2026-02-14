@@ -10,7 +10,7 @@ class WorkshopPolicy < ApplicationPolicy
   end
 
   def destroy?
-    admin?
+    record.persisted? && admin?
   end
 
   # Scoping
@@ -18,10 +18,6 @@ class WorkshopPolicy < ApplicationPolicy
   #
   relation_scope do |relation|
     next relation if admin?
-    if authenticated?
-      relation.published
-    else
-      relation.publicly_visible
-    end
+    authenticated? ? relation.published : relation.publicly_visible
   end
 end

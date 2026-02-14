@@ -42,8 +42,7 @@
                     class: "inline-flex min-w-0 max-w-full text-lg font-semibold
                             text-gray-900 leading-tight hover:underline" do %>
           <%= title_with_badges(record, font_size: title_font_size,
-                                record_title: record_title,
-                                show_hidden_badge: true).html_safe %>
+                                record_title: record_title).html_safe %>
         <% end %>
         <div class="text-gray-400 text-sm mt-1">
           <%= record.created_at.strftime("%b %d, %Y") %>
