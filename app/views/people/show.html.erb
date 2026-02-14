@@ -2,79 +2,75 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-4 sm:p-8 relative">
       <!-- Header actions -->
-      <div class="flex flex-wrap justify-end gap-2 mb-4 md:absolute md:top-4 md:right-4 md:mb-0 md:z-10">
-        <%= link_to "People", people_path, class: "btn btn-secondary-outline" %>
-        <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+      <div class="flex flex-wrap justify-end gap-2 mb-4">
+        <%= link_to "People", people_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <%= link_to "Dashboard", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% if allowed_to?(:edit?, @person) %>
           <%= link_to "Edit", edit_person_path(@person),
-                      class: "btn btn-secondary-outline" %>
+                      class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% end %>
         <span class="inline-block text-sm">
           <%= render "bookmarks/editable_bookmark_button", resource: @person.object %>
         </span>
       </div>
-      <!-- Header: avatar + name + pronouns -->
-      <div class="flex flex-col gap-4 md:flex-row md:items-start md:gap-8 mb-10 md:pt-2">
+      <!-- Header: avatar + name + badges -->
+      <div class="flex flex-col md:flex-row md:items-center gap-6 mb-8">
         <div class="flex-shrink-0 flex justify-center md:justify-start">
           <% if @person.avatar&.attached? %>
             <%= image_tag url_for(@person.avatar),
                           id: "person_#{@person.id}_avatar_image",
-                          class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
+                          class: "w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow" %>
           <% elsif @person.user&.avatar&.attached? %>
             <%= image_tag url_for(@person.user.avatar),
                           id: "person_#{@person.id}_avatar_image",
-                          class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
+                          class: "w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow" %>
           <% else %>
             <%= image_tag "missing.png",
                           id: "person_#{@person.id}_avatar_image",
-                          class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
+                          class: "w-28 h-28 rounded-full object-cover border-2 border-dashed border-gray-300" %>
           <% end %>
         </div>
-        <div class="flex-1 text-center md:text-left mt-4 md:mt-0">
+        <div class="flex-1 text-center md:text-left">
           <h1 class="text-3xl font-bold text-gray-900">
             <%= @person.name %>
             <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
-              <span class="pronouns text-gray-600 font-normal text-sm italic mt-1">(<%= @person.pronouns %>)</span>
+              <span class="text-gray-500 font-normal text-base italic">(<%= @person.pronouns %>)</span>
             <% end %>
           </h1>
           <% if @person.member_since_year.present? && @person.profile_show_member_since? %>
-            <p class="mt-3 text-gray-700 text-sm">
+            <p class="mt-1 text-gray-500 text-sm">
               Facilitator since
-              <span class="member-since-year font-medium"><%= @person.member_since_year %></span>
+              <span class="font-medium"><%= @person.member_since_year %></span>
             </p>
           <% end %>
-          <!-- Optional social links -->
-          <% if @person.profile_show_social_media? %>
-            <div class="mt-4">
-              <%= render "people/social_media_buttons", person: @person %>
-            </div>
-          <% end %>
-          <!-- Contact info -->
-          <% if @person.profile_show_email? || @person.profile_show_phone? %>
-            <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1 text-sm">
-              <% email = @person.user&.email || @person.email %>
-              <% if @person.profile_show_email? && email.present? %>
-                <span class="text-gray-700">
-                  📧 <%= mail_to email, email, class: "text-blue-600 hover:underline" %>
-                </span>
-              <% end %>
-              <% phone = @person.phone_number || @person.user&.phone %>
-              <% if @person.profile_show_phone? && phone.present? %>
-                <span class="text-gray-700">
-                  📞 <%= link_to phone, "tel:#{phone}", class: "text-blue-600 hover:underline" %>
-                </span>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-        <div class="flex-1">
-          <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
-            <% @person.badges.each do |badge| %>
-              <span class="px-3 py-1 border <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:border] %> text-sm font-semibold rounded-full">
-                <%= badge[:label] %>
+          <!-- Contact info + social -->
+          <div class="mt-3 flex flex-wrap justify-center md:justify-start items-center gap-x-4 gap-y-2 text-sm">
+            <% email = @person.user&.email || @person.email %>
+            <% if @person.profile_show_email? && email.present? %>
+              <span class="text-gray-600">
+                📧 <%= mail_to email, email, class: "text-blue-600 hover:underline" %>
               </span>
             <% end %>
+            <% phone = @person.phone_number || @person.user&.phone %>
+            <% if @person.profile_show_phone? && phone.present? %>
+              <span class="text-gray-600">
+                📞 <%= link_to phone, "tel:#{phone}", class: "text-blue-600 hover:underline" %>
+              </span>
+            <% end %>
+            <% if @person.profile_show_social_media? %>
+              <%= render "people/social_media_buttons", person: @person %>
+            <% end %>
           </div>
+          <!-- Badges -->
+          <% if @person.badges.any? %>
+            <div class="mt-3 flex flex-wrap justify-center md:justify-start gap-1.5">
+              <% @person.badges.each do |badge| %>
+                <span class="px-2 py-0.5 border <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:border] %> text-xs font-medium rounded-full">
+                  <%= badge[:label] %>
+                </span>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
       <% unless @person.user %>
