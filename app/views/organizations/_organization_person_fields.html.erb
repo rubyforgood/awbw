@@ -15,6 +15,7 @@
                     collection: @people_array,
                     include_blank: true,
                     selected: f.object&.person_id,
+                    required: true,
                     input_html: {
                       class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                     } %>
