@@ -6,17 +6,14 @@ class PeopleController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(Person.includes(
-      :user,
       :avatar_attachment,
-      :sectorable_items,
-      :organization_people,
-      user: [ :avatar_attachment, :organizations ],
+      :user,
       sectorable_items: :sector,
       organization_people: :organization
     ).references(:user))
     filtered = base_scope.search_by_params(params.to_unsafe_h)
                          .order(:first_name, :last_name)
-    @count_display = filtered.size
+    @count_display = filtered.count
     @people = filtered.paginate(page: params[:page], per_page: per_page)
   end
 
