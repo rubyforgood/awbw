@@ -154,7 +154,7 @@
         <%= render "shared/sectorable_item_fields", f: sfi, show_is_leader: true %>
       <% end %>
 
-      <%= link_to_add_association "Add sector",
+      <%= link_to_add_association "➕ Add Sector",
                                   f,
                                   :sectorable_items,
                                   partial: "shared/sectorable_item_fields",
@@ -162,7 +162,7 @@
                                     locals: { collection: (@sectors_collection || [])
                                       .reject { |_, id| (@current_sector_ids || []).include?(id) },
                                               show_is_leader: true } },
-                                  class: "text-sm text-gray-400 hover:text-blue-800 underline transition" %>
+                                  class: "btn btn-secondary-outline" %>
     </div>
       </div>
     </div>
@@ -174,7 +174,7 @@
       Organizational affiliations<span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
     </div>
 
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:organizations) %> p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Person) %>
         <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
           <%= f.fields_for :organization_people do |organization_person_form| %>
