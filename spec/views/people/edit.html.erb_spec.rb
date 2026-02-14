@@ -28,7 +28,11 @@ RSpec.describe "people/edit", type: :view do
     expect(rendered).to have_link('Profile', href: person_path(person))
   end
 
-  it "has a link back to change password" do
+  it "has a link to the change password page" do
     expect(rendered).to have_link('Change password', href: change_password_path)
+  end
+
+  it "has a link to the dashboard" do
+    expect(rendered).to have_link('Dashboard', href: root_path)
   end
 end
