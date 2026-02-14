@@ -9,7 +9,7 @@
         <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
         <%= link_to "External URL", safe_url(@community_news.reference_url), target: "_blank", rel: "noopener noreferrer",
                     class: "btn btn-secondary-outline" if @community_news.reference_url.present? %>
-        <% if current_user&.super_user? %>
+        <% if allowed_to?(:edit?, @community_news) %>
           <%= link_to "Edit", edit_community_news_path(@community_news),
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
         <% end %>

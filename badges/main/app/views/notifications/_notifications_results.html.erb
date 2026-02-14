@@ -10,7 +10,7 @@
 <% else %>
   <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
     <h2 class="text-gray-600 text-lg mb-2">No notifications yet</h2>
-    <% if current_user&.super_user? %>
+    <% if allowed_to?(:new?, Notification) %>
       <div class="admin-only bg-blue-100 p-3">
         <%= link_to "Create a notification",
                     new_notification_path,

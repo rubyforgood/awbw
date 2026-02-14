@@ -56,7 +56,7 @@
                   input_html: { class: "w-full" } %>
       </div>
 
-      <% if current_user&.super_user? %>
+      <% if allowed_to?(:manage?, WorkshopVariation) %>
         <div class="flex items-start gap-6 admin-only bg-blue-100 p-4 rounded-lg">
           <%= f.input :published, as: :boolean, input_html: { checked: f.object.id ? f.object.published? : false } %>
           <div>
@@ -78,20 +78,22 @@
     </div>
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
-      <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete", @workshop_variation, method: :delete, class: "btn btn-danger-outline",
-                    data: { confirm: "Are you sure you want to delete?" } %>
+      <% if allowed_to?(:destroy?, f.object) %>
+        <%= link_to "Delete", @workshop_variation, class: "btn btn-danger-outline",
+                    data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
 
       <% cancel_path =
-         if params[:workshop_id].present?
+         if params[:workshop_id].present? && @workshop
            workshop_path(@workshop, anchor: "workshop-variations")
-         elsif current_user&.super_user?
-           workshop_variations_path
+         elsif (allowed_to?(:index?, WorkshopVariation))
+          workshop_variations_path
          else
-           root_path
+          root_path
          end %>
-      <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
+      <%= link_to "Cancel",
+                  cancel_path,
+                  class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   <% end %>

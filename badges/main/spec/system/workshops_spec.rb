@@ -62,7 +62,7 @@ RSpec.describe "Workshops", type: :system do
 
   describe 'create workshop' do
     context "When admin is logged in" do
-      it "Super user can create a new workshop", js: true do
+      it "Admin can create a new workshop", js: true do
         user = create(:user, :admin)
         sign_in(user)
         adult_window = create(:windows_type, :adult)
@@ -86,7 +86,7 @@ RSpec.describe "Workshops", type: :system do
 
   describe 'edit workshop' do
     context "When admin is logged in" do
-      it "Super user can edit an existing workshop" do
+      it "Admin can edit an existing workshop" do
         user = create(:user, :admin)
         sign_in(user)
         adult_window = create(:windows_type, :adult)

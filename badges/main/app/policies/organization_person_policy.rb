@@ -2,7 +2,7 @@ class OrganizationPersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   def destroy?
-    admin? # we don't allow users to edit their own
+    record.persisted? && admin? # we don't allow users to edit their own
   end
 
   # Scoping

@@ -12,11 +12,11 @@ class WorkshopVariationPolicy < ApplicationPolicy
   end
 
   def update?
-    admin?
+    admin? || owner?
   end
 
   def destroy?
-    admin?
+    record.persisted? && admin?
   end
 
   relation_scope do |relation|

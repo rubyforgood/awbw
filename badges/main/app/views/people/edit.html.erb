@@ -8,7 +8,7 @@
             Edit <%= @person.class.model_name.human %>
           </h1>
           <div class="flex space-x-2">
-            <% if current_user&.super_user? || current_user == @person.user %>
+            <% if allowed_to?(:edit?, @person) %>
               <%= link_to "Change password",
                           change_password_path,
                           class: "btn btn-secondary-outline" %>

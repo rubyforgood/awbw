@@ -1,6 +1,6 @@
 module TitleDisplayHelper
   def title_with_badges(record, font_size: "text-lg", record_title: nil,
-                        show_hidden_badge: false, display_windows_type: false)
+                        show_hidden_badge: true, display_windows_type: false)
     fragments = []
 
     # --- Hidden badge ---
