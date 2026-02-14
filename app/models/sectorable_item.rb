@@ -5,7 +5,7 @@ class SectorableItem < ApplicationRecord
 
   # Validations
   validates_presence_of :sector_id
-  validates :sector_id, uniqueness: { scope: [:sectorable_type, :sectorable_id], message: "has already been added" }
+  validates :sector_id, uniqueness: { scope: [ :sectorable_type, :sectorable_id ], message: "has already been added" }
 
   before_create :skip_if_duplicate
 

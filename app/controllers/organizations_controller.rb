@@ -98,7 +98,7 @@ class OrganizationsController < ApplicationController
     @people_array = Person.joins(:user)
                           .order(:first_name, :last_name)
                           .pluck(:first_name, :last_name, :id)
-                          .map { |fn, ln, id| ["#{fn} #{ln}", id] }
+                          .map { |fn, ln, id| [ "#{fn} #{ln}", id ] }
 
     if @organization.persisted? && @organization.errors.empty?
       org_people = @organization.organization_people

@@ -17,7 +17,7 @@ class PeopleController < ApplicationController
     @people = filtered.paginate(page: params[:page], per_page: per_page)
     ActiveRecord::Associations::Preloader.new(
       records: @people.map(&:user).compact,
-      associations: [:avatar_attachment]
+      associations: [ :avatar_attachment ]
     ).call
   end
 
