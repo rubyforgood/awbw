@@ -79,6 +79,10 @@ class Person < ApplicationRecord
     left_joins(organization_people: :organization)
       .where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
       .distinct }
+  scope :organization_id, ->(organization_id) {
+    joins(:organization_people)
+      .where(organization_people: { organization_id: organization_id })
+      .distinct }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
@@ -86,6 +90,7 @@ class Person < ApplicationRecord
     results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
+    results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results
   end

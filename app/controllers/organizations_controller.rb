@@ -5,7 +5,7 @@ class OrganizationsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(Organization.includes(:logo_attachment, :windows_type, :organization_status))
+    base_scope = authorized_scope(Organization.includes(:logo_attachment, :windows_type, :organization_status, :organization_people))
     filtered = base_scope.search_by_params(params).order(:name)
     @organizations_count = filtered.count
     @organizations = filtered.paginate(page: params[:page], per_page: per_page)
