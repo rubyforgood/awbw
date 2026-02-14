@@ -12,6 +12,14 @@
                 required: true,
                 collection: Address::CONTACT_TYPES.compact.map { |t| [t.humanize, t] } %>
     <div class="flex items-center">
+      <%= f.input :primary,
+                  as: :boolean,
+                  label: "Primary",
+                  input_html: {
+                    class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                  } %>
+    </div>
+    <div class="flex items-center">
       <%= f.input :inactive,
                   as: :boolean,
                   label: "Inactive",

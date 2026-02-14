@@ -124,7 +124,7 @@ class Person < ApplicationRecord
   end
 
   def phone_number
-    primary_phone = contact_methods.find_by(is_primary: true, inactive: false, kind: :phone)
+    primary_phone = contact_methods.find_by(primary: true, inactive: false, kind: :phone)
     return primary_phone.value if primary_phone.present?
 
     first_phone = contact_methods.where(kind: :phone, inactive: false).first

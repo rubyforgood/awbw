@@ -146,6 +146,7 @@ class OrganizationsController < ApplicationController
         :id,
         :person_id,
         :inactive,
+        :primary_contact,
         :title,
         :start_date,
         :end_date,

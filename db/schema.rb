@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_172442) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -77,6 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_172442) do
     t.integer "la_supervisorial_district"
     t.string "locality"
     t.string "phone"
+    t.boolean "primary", default: false, null: false
     t.string "state", null: false
     t.string "street_address", null: false
     t.datetime "updated_at", null: false
@@ -297,8 +298,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_172442) do
     t.string "contactable_type", null: false
     t.datetime "created_at", null: false
     t.boolean "inactive", default: false, null: false
-    t.boolean "is_primary", default: false, null: false
     t.string "kind", null: false
+    t.boolean "primary", default: false, null: false
     t.datetime "updated_at", null: false
     t.string "value", null: false
     t.index ["address_id"], name: "index_contact_methods_on_address_id"
@@ -494,6 +495,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_172442) do
     t.integer "organization_id"
     t.bigint "person_id"
     t.integer "position"
+    t.boolean "primary_contact", default: false, null: false
     t.date "start_date"
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false

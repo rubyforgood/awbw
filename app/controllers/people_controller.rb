@@ -74,11 +74,11 @@ class PeopleController < ApplicationController
   def edit
     @person = Person.includes(
       :user,
-      :avatar_attachment,
       :contact_methods,
       :addresses,
+      { avatar_attachment: :blob },
       { sectorable_items: :sector },
-      organization_people: :organization
+      organization_people: { organization: :logo_attachment }
     ).find(params[:id]).decorate
     authorize! @person
     set_form_variables
@@ -225,7 +225,7 @@ class PeopleController < ApplicationController
         :contact_type,
         :kind,
         :value,
-        :is_primary,
+        :primary,
         :inactive,
         :_destroy
       ],
@@ -257,6 +257,7 @@ class PeopleController < ApplicationController
         :position,
         :title,
         :inactive,
+        :primary_contact,
         :start_date,
         :end_date,
         :_destroy

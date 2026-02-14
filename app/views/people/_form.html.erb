@@ -101,7 +101,7 @@
 
   <div class="phones">
     <div class="form-group space-y-4">
-      <div class="font-semibold text-gray-700">
+      <div class="font-semibold text-gray-700 mb-2">
         Phones
       </div>
 
@@ -125,7 +125,7 @@
     <div class="flex flex-col md:flex-row gap-4"><%# = f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %></div>
 
     <div class="form-group space-y-4">
-      <div class="font-semibold text-gray-700">
+      <div class="font-semibold text-gray-700 mb-2">
         Addresses
       </div>
 
@@ -142,9 +142,37 @@
     </div>
   </div>
 
-  <!-- Organization Connections (PROJECT_USERS) -->
+  <!-- Sectors -->
   <div class="form-group space-y-4">
-    <div class="font-semibold text-gray-700">Organizational affiliations <span class="text-sm font-normal text-gray-500">(only editable by admins)</span></div>
+    <div class="font-semibold text-gray-700 mb-2">
+      Sectors
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <div class="flex flex-col md:flex-row gap-4 pl-3 pr-3 pb-3">
+        <div class="flex flex-wrap items-center gap-2">
+      <%= f.simple_fields_for :sectorable_items do |sfi| %>
+        <%= render "shared/sectorable_item_fields", f: sfi, show_is_leader: true %>
+      <% end %>
+
+      <%= link_to_add_association "Add sector",
+                                  f,
+                                  :sectorable_items,
+                                  partial: "shared/sectorable_item_fields",
+                                  render_options: {
+                                    locals: { collection: (@sectors_collection || [])
+                                      .reject { |_, id| (@current_sector_ids || []).include?(id) },
+                                              show_is_leader: true } },
+                                  class: "text-sm text-gray-400 hover:text-blue-800 underline transition" %>
+    </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Organization Affiliations -->
+  <div class="form-group space-y-4">
+    <div class="font-semibold text-gray-700 mb-2">
+      Organizational affiliations<span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
+    </div>
 
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Person) %>
@@ -152,17 +180,14 @@
           <%= f.fields_for :organization_people do |organization_person_form| %>
             <div data-paginated-fields-target="item">
               <%= render "organization_person_fields",
-                         f: organization_person_form,
-                         organizations: f.object.organizations,
-                         user: f.object.user %>
+                         f: organization_person_form %>
             </div>
           <% end %>
           <div data-paginated-fields-target="nav"></div>
 
-          <div class="admin-only bg-blue-100 p-3 mt-6"><%= link_to_add_association "➕ Add Role",
+          <div class="admin-only bg-blue-100 p-3 mt-6"><%= link_to_add_association "➕ Add Affiliation",
                                         f,
                                         :organization_people,
-                                        html_options: { locals: { organizations: f.object.organizations } },
                                         class: "btn btn-secondary-outline" %></div>
         </div>
       <% else %>
@@ -175,30 +200,9 @@
     </div>
   </div>
 
-  <div class="form-group space-y-4">
-    <div class="font-semibold text-gray-700">
-      Sectors
-    </div>
-
-    <div class="flex flex-wrap items-center gap-2">
-      <%= f.simple_fields_for :sectorable_items do |sfi| %>
-        <%= render "shared/sectorable_item_fields", f: sfi, show_is_leader: true %>
-      <% end %>
-
-      <%= link_to_add_association "Add sector",
-                                    f,
-                                    :sectorable_items,
-                                    partial: "shared/sectorable_item_fields",
-                                    render_options: {
-                                      locals: { collection: (@sectors_collection || [])
-                                        .reject { |_, id| (@current_sector_ids || []).include?(id) },
-                                      show_is_leader: true } },
-                                    class: "text-sm text-gray-400 hover:text-blue-800 underline transition" %>
-    </div>
-  </div>
-
   <!-- PERSON FIELDS -->
-  <div class="space-y-6"><%= f.input :bio,
+  <div class="space-y-6">
+    <%= f.input :bio,
                 as: :text,
                 input_html: {
                   rows: 2,
@@ -209,7 +213,7 @@
                 hint: "Maximum 250 characters" %></div>
 
   <div class="profile-preferences-section">
-    <div class="font-medium text-gray-700 mb-3 block">
+    <div class="font-medium text-gray-700 mb-2 block">
       Social media links:
     </div>
 
@@ -225,7 +229,7 @@
   </div>
 
   <div class="profile-preferences-section">
-    <div class="font-medium text-gray-700 mb-3 block">
+    <div class="font-medium text-gray-700 mb-2 block">
       Profile display preferences:
     </div>
 
@@ -253,7 +257,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3"><%= f.input :profile_show_email, label: "Show email" %><%= f.input :profile_show_phone, label: "Show phone" %><%= f.input :profile_show_social_media, label: "Show social media" %></div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
-          <%= f.input :profile_show_member_since, label: "Show person since" %>
+          <%= f.input :profile_show_member_since, label: "Show facilitator since" %>
           <%= f.input :profile_show_bio, label: "Show bio" %>
           <%= f.input :profile_show_affiliations, label: "Show affiliations" %>
           <%= f.input :profile_show_sectors, label: "Show sectors" %>
@@ -263,11 +267,15 @@
           <%= f.input :profile_show_workshops, label: "Show workshops" %>
           <%= f.input :profile_show_workshop_variations, label: "Show workshop variations" %>
           <%= f.input :profile_show_stories, label: "Show stories" %>
-          <%= f.input :profile_show_events_registered, label: "Show participation" %>
+          <%= f.input :profile_show_events_registered, label: "Show registrations" %>
         </div>
 
         <!-- Row 5 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3"><%= f.input :profile_show_workshop_ideas, label: "Show workshop ideas" %><%= f.input :profile_show_story_ideas, label: "Show story ideas" %><%= f.input :profile_show_workshop_variation_ideas, label: "Show variation ideas" %><%= f.input :profile_show_workshop_logs, label: "Show workshop logs" %></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+          <%= f.input :profile_show_story_ideas, label: "Show story ideas" %>
+          <%= f.input :profile_show_workshop_ideas, label: "Show workshop ideas" %>
+          <%= f.input :profile_show_workshop_variation_ideas, label: "Show variation ideas" %>
+          <%= f.input :profile_show_workshop_logs, label: "Show workshop logs" %></div>
       </div>
     </div>
   </div>

@@ -240,7 +240,7 @@ class UsersController < ApplicationController
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
       #####
 
-      organization_people_attributes: [ :id, :organization_id, :position, :title, :inactive, :start_date, :end_date, :_destroy ],
+      organization_people_attributes: [ :id, :organization_id, :position, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
     )
   end
 end
