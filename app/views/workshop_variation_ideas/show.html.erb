@@ -13,7 +13,7 @@
             <%= link_to("WorkshopVariationIdeas", workshop_variation_ideas_path, class: "btn btn-secondary-outline") %>
           <% end %>
           <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
-          <% if allowed_to?(:new?, WorkshopVariationIdea) %>
+          <% if allowed_to?(:edit?, @workshop_variation_idea) %>
             <%= link_to("Edit",
                         edit_workshop_variation_idea_path(@workshop_variation_idea),
                         class: "btn btn-primary-outline") %>
