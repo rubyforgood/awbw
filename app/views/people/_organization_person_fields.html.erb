@@ -1,17 +1,24 @@
 <% if allowed_to?(:manage?, Person) %>
-  <div class="nested-fields flex flex-col sm:flex-row gap-4 items-start mb-4 rounded-lg border p-3 <%= f.object.inactive? ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-white border-gray-200' %>"
+  <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
+  <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-end mb-4 rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-white border-gray-200' %>"
        data-controller="inactive-toggle">
-    <div class="w-full sm:flex-1">
-      <%= f.input :organization_id,
-                  as: :select,
-                  label: "Organization",
-                  collection: @organizations_array,
-                  selected: f.object.organization_id,
-                  input_html: {
-                    class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  },
-                  required: true,
-                  error: "Organization can't be blank" %>
+    <div style="width: 350px; min-width: 350px; flex-shrink: 0;">
+      <% if f.object.persisted? && f.object.organization.present? %>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+        <%= organization_profile_button(f.object.organization, truncate_at: 30) %>
+        <%= f.hidden_field :organization_id %>
+      <% else %>
+        <%= f.input :organization_id,
+                    as: :select,
+                    label: "Organization",
+                    collection: @organizations_array,
+                    selected: f.object.organization_id,
+                    input_html: {
+                      class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    },
+                    required: true,
+                    error: "Organization can't be blank" %>
+      <% end %>
     </div>
 
     <div class="w-full sm:flex-1">
@@ -47,7 +54,7 @@
                   } %>
     </div>
 
-    <div class="self-end pb-2">
+    <div class="ml-auto self-end pb-1">
       <%= link_to_remove_association "Remove",
                                      f,
                                      class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
