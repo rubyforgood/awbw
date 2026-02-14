@@ -21,7 +21,11 @@ class UserPolicy < ApplicationPolicy
 
   relation_scope(:colleagues) do |relation|
     next relation.active if admin?
-    relation.where(id: user.id)
+
+    colleague_person_ids = OrganizationPerson.where(
+      organization_id: user.organization_ids
+    ).select(:person_id)
+    relation.where(person_id: colleague_person_ids).or(relation.where(id: user.id))
   end
 
   private
