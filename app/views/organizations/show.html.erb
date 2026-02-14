@@ -66,7 +66,7 @@
             <% elsif allowed_to?(:edit?, @organization) %>
               <span class="admin-only bg-blue-100 p-3">
                 <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">
-                  Bad URL: "<%= link_to @organization.website_url, edit_organization_path(@organization) %>"
+                  Bad URL: "<%= link_to @organization.website_url, edit_organization_path(@organization, anchor: "website-url-field") %>"
                 </span>
               </span>
             <% end %>
