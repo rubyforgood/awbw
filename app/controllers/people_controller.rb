@@ -53,6 +53,9 @@ class PeopleController < ApplicationController
       when "workshop_logs"
         @workshop_logs = @person.user&.workshop_logs&.order(date: :desc, created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
         render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
+      when "organization_people"
+        @organization_people = @person.organization_people.active.includes(:organization).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/organization_people", locals: { person: @person, organization_people: @organization_people }
       end
     end
   end

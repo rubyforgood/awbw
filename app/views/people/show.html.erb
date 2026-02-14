@@ -76,20 +76,8 @@
         <% if @person.profile_show_affiliations? %>
           <div>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Organizational affiliations</h2>
-            <% if @person.organization_people.active.any? %>
-              <ul class="space-y-2">
-                <% @person.organization_people.active.each do |pu| %>
-                  <li>
-                    <% if pu.title.present? || pu.position.present? %>
-                      <span class="text-gray-600"><%= pu.title.presence || pu.position.humanize %> - </span>
-                    <% end %>
-                    <%= link_to pu.organization.name, organization_path(pu.organization),
-                                class: "text-blue-600 hover:underline font-medium" %>
-                  </li>
-                <% end %>
-              </ul>
-            <% else %>
-              <p class="text-gray-500 italic">No affiliations listed.</p>
+            <%= turbo_frame_tag "person_organization_people_section", src: person_path(@person, section: "organization_people"), loading: :lazy do %>
+              <p class="text-gray-500 italic">Loading affiliations...</p>
             <% end %>
           </div>
         <% end %>
