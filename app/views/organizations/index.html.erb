@@ -54,12 +54,12 @@
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
-                <% affiliated_since = organization.organization_people.minimum(:start_date) || organization.start_date %>
+                <% affiliated_since = @affiliated_since[organization.id] || organization.start_date %>
                 <%= affiliated_since&.year %>
               </td>
 
               <td class="px-4 py-2 text-center text-sm">
-                <% active_count = organization.organization_people.active.distinct.count(:person_id) %>
+                <% active_count = @active_people_counts[organization.id] || 0 %>
                 <% if active_count > 0 %>
                   <%= link_to active_count, people_path(organization_id: organization.id),
                               class: "text-blue-600 hover:underline font-medium" %>

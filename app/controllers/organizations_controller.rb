@@ -5,11 +5,20 @@ class OrganizationsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(Organization.includes(:logo_attachment, :windows_type, :organization_status, :organization_people, :sectors))
+    base_scope = authorized_scope(Organization.includes(:logo_attachment, :windows_type, :organization_status, :sectors))
     filtered = base_scope.search_by_params(params).order(:name)
     @organizations_count = filtered.count
     @active_people_count = OrganizationPerson.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
     @organizations = filtered.paginate(page: params[:page], per_page: per_page)
+    org_ids = @organizations.map(&:id)
+    @affiliated_since = OrganizationPerson.where(organization_id: org_ids)
+                                          .group(:organization_id)
+                                          .minimum(:start_date)
+    @active_people_counts = OrganizationPerson.active
+                                              .where(organization_id: org_ids)
+                                              .group(:organization_id)
+                                              .distinct
+                                              .count(:person_id)
     set_index_variables
   end
 
