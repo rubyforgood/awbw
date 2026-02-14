@@ -1,0 +1,17 @@
+<%= turbo_frame_tag "person_workshop_logs_section" do %>
+  <% if workshop_logs.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
+      <% workshop_logs.each do |workshop_log| %>
+        <%= render "show_card",
+                   record_title: "#{workshop_log.workshop&.title ||
+                     "Workshop log #" + workshop_log.id.to_s} - #{workshop_log.windows_type_name}",
+                   record: workshop_log.decorate, title_font_size: "text-sm" %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate workshop_logs, params: { section: "workshop_logs" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No workshops logged yet.</p>
+  <% end %>
+<% end %>

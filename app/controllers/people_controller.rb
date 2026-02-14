@@ -24,6 +24,37 @@ class PeopleController < ApplicationController
     @person = Person.find(params[:id]).decorate
     authorize! @person
     track_view(@person)
+
+    # Handle paginated sections for Turbo Frame requests
+    if turbo_frame_request?
+      per_page = 12
+      section = params[:section]
+
+      case section
+      when "workshops"
+        @workshops = @person.user&.workshops&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshops", locals: { person: @person, workshops: @workshops }
+      when "workshop_variations"
+        @workshop_variations = @person.user&.workshop_variations_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
+      when "stories"
+        story_ids = @person.user&.stories_as_creator&.pluck(:id).to_a + @person.stories_as_spotlighted_facilitator.pluck(:id)
+        @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
+      when "events"
+        @event_registrations = @person.event_registrations.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
+      when "workshop_ideas"
+        @workshop_ideas = @person.user&.workshop_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshop_ideas", locals: { person: @person, workshop_ideas: @workshop_ideas }
+      when "story_ideas"
+        @story_ideas = @person.user&.story_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/story_ideas", locals: { person: @person, story_ideas: @story_ideas }
+      when "workshop_logs"
+        @workshop_logs = @person.user&.workshop_logs&.order(date: :desc, created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
+      end
+    end
   end
 
   def new

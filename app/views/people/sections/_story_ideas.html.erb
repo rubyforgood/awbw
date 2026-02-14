@@ -1,0 +1,16 @@
+<%= turbo_frame_tag "person_story_ideas_section" do %>
+  <% if story_ideas.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6 blur-on-submit">
+      <% story_ideas.each do |story_idea| %>
+        <%= render "show_card",
+                   record_title: story_idea.workshop_title,
+                   record: story_idea.decorate, title_font_size: "text-sm" %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate story_ideas, params: { section: "story_ideas" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No story ideas yet.</p>
+  <% end %>
+<% end %>
