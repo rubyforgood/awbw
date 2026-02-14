@@ -10,11 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-<<<<<<< HEAD
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_155633) do
-=======
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_030339) do
->>>>>>> 74d2fe4cb (WIP: person and organization show/edit)
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_035207) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false

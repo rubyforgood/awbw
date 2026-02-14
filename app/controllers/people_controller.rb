@@ -142,6 +142,12 @@ class PeopleController < ApplicationController
     set_user
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
     @person.organization_people.first || @person.organization_people.build
+    if @person.persisted? && @person.errors.empty?
+      @person.organization_people = @person.organization_people
+                                     .sort_by { |op|
+                                       [op.inactive? ? 1 : 0, op.end_date || Date.new(9999), op.start_date || Date.new(9999), op.organization&.name.to_s.downcase]
+                                     }
+    end
 
     @all_sectors = Sector.published.order(:name)
     @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
@@ -244,6 +250,8 @@ class PeopleController < ApplicationController
         :position,
         :title,
         :inactive,
+        :start_date,
+        :end_date,
         :_destroy
       ],
     )

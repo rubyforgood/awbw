@@ -93,7 +93,9 @@ class OrganizationsController < ApplicationController
     if @organization.persisted? && @organization.errors.empty?
       @organization.organization_people = @organization.organization_people
                                        .includes(:organization)
-                                       .sort_by { |op| op.person&.name.to_s.downcase }
+                                       .sort_by { |op|
+                                         [op.inactive? ? 1 : 0, op.end_date || Date.new(9999), op.start_date || Date.new(9999), op.person&.name.to_s.downcase]
+                                       }
     end
   end
 
@@ -126,6 +128,8 @@ class OrganizationsController < ApplicationController
         :person_id,
         :inactive,
         :title,
+        :start_date,
+        :end_date,
         :_destroy
       ],
       addresses_attributes: [

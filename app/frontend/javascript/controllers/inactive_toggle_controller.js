@@ -2,8 +2,8 @@ import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
   connect() {
-    this.checkbox = this.element.querySelector("input[type='checkbox']");
-    if (this.checkbox) {
+    this.endDateInput = this.element.querySelector("input[type='date'][name*='end_date']");
+    if (this.endDateInput) {
       this.apply();
     }
   }
@@ -13,8 +13,11 @@ export default class extends Controller {
   }
 
   apply() {
-    if (!this.checkbox) return;
-    if (this.checkbox.checked) {
+    if (!this.endDateInput) return;
+    const value = this.endDateInput.value;
+    const isPast = value && new Date(value) < new Date(new Date().toDateString());
+
+    if (isPast) {
       this.element.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
       this.element.classList.remove("bg-white", "border-gray-200");
     } else {
