@@ -39,7 +39,8 @@ class Organization < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :organization_people, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :organization_people, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs["person_id"].blank? }
 
   # SearchCop
   include SearchCop
