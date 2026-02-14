@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "set"
+
 class CategoryDeduper
   attr_reader :logger, :dry_run, :min_usage
 
