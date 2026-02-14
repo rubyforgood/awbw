@@ -47,7 +47,7 @@ export default class extends Controller {
     }
 
     // Only check for new person records (not edits)
-    const personIdField = this.element.querySelector('input[name*="[id]"]');
+    const personIdField = this.element.querySelector('input[name="person[id]"]');
     if (personIdField && personIdField.value) {
       return true;
     }

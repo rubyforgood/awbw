@@ -295,7 +295,11 @@
   </div>
 
   <!-- Duplicate Person Warning Modal -->
-  <div data-duplicate-person-check-target="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div data-duplicate-person-check-target="modal" 
+       role="dialog" 
+       aria-modal="true" 
+       aria-labelledby="duplicate-modal-title"
+       class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
       <div class="mt-3">
         <div class="flex items-center mb-4">
@@ -305,7 +309,7 @@
             </svg>
           </div>
         </div>
-        <h3 class="text-lg leading-6 font-medium text-gray-900 text-center mb-2">
+        <h3 id="duplicate-modal-title" class="text-lg leading-6 font-medium text-gray-900 text-center mb-2">
           Possible Duplicate Person Found
         </h3>
         <div class="mt-2 px-7 py-3">

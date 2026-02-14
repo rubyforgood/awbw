@@ -196,20 +196,19 @@ class PeopleController < ApplicationController
     end
 
     # Check for email matches
-    if email.presence
-      email_matches = Person.where("LOWER(email) = ?", email.downcase)
-                            .or(Person.where("LOWER(email_2) = ?", email.downcase))
-                            .limit(5)
+    if email.presence && duplicates.size < 5
+      # Build a single query with OR conditions for better performance
+      email_query = Person.where("LOWER(email) = ?", email.downcase)
+                          .or(Person.where("LOWER(email_2) = ?", email.downcase))
+                          .or(Person.joins(:user).where("LOWER(users.email) = ?", email.downcase))
+                          .limit(5)
       
-      user_email_matches = Person.joins(:user)
-                                 .where("LOWER(users.email) = ?", email.downcase)
-                                 .limit(5)
-      
-      (email_matches + user_email_matches).each do |person|
+      email_query.each do |person|
         next if duplicate_ids.include?(person.id)
         
         duplicate_ids.add(person.id)
         duplicates << format_duplicate(person)
+        break if duplicates.size >= 5
       end
     end
 
