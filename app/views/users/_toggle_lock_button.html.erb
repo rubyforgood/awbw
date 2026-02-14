@@ -1,10 +1,15 @@
 <div id="toggle_lock_button">
   <% if user.persisted? %>
+    <% btn_classes = if user.locked_at.present?
+                       'bg-orange-600 hover:bg-orange-700 text-white border-orange-600'
+                     else
+                       'btn-secondary-outline'
+                     end %>
     <button type="button"
             data-controller="toggle-lock"
             data-toggle-lock-user-id-value="<%= user.id %>"
             data-action="click->toggle-lock#toggle"
-            class="btn <%= user.locked_at.present? ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' : 'bg-orange-600 hover:bg-orange-700 text-white border-orange-600' %> border font-medium">
+            class="btn <%= btn_classes %> border font-medium">
       <%= user.locked_at.present? ? "Unlock account" : "Lock account" %>
     </button>
   <% end %>
