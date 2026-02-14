@@ -142,5 +142,13 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :dashboard do
+    resources :workshops, only: :index
+    resources :resources, only: :index
+    resources :stories, only: :index
+    resources :community_news, only: :index
+    resources :events, only: :index
+  end
+
   root to: "dashboard#index"
 end

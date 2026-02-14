@@ -21,6 +21,14 @@ class Sector < ApplicationRecord
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
 
+  scope :filter_scope, ->(params) do
+    filtered = self.all
+    filtered = filtered.sector_name(params[:sector_name])
+    filtered = filtered.published if params[:published] == "true"
+    filtered = filtered.where(published: false) if params[:published] == "false"
+    filtered
+  end
+
   private
 
   def expire_sectors_cache
