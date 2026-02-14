@@ -1,5 +1,7 @@
 <%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
-                                          data: { turbo: false } } do |f| %>
+                                          data: { turbo: false,
+                                                  controller: "duplicate-person-check",
+                                                  action: "submit->duplicate-person-check#checkBeforeSubmit" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
 
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
@@ -8,7 +10,7 @@
   <div class="flex flex-col md:flex-row gap-8 items-start">
     <div class="w-full md:w-3/4">
       <div class="space-y-6">
-        <div class="flex flex-col md:flex-row gap-4"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronouns %></div>
+        <div class="flex flex-col md:flex-row gap-4"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name, data: { duplicate_person_check_target: "firstName" } } %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name, data: { duplicate_person_check_target: "lastName" } } %><%= f.input :pronouns %></div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -84,7 +86,7 @@
                       collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
                       selected: f.object.email_type || f.object.user&.email_type %>
         <% else %>
-          <%= f.input :email, label: "Primary email" %>
+          <%= f.input :email, label: "Primary email", input_html: { data: { duplicate_person_check_target: "email" } } %>
           <%= f.input :email_type,
                       label: "Primary email type",
                       as: :select,
@@ -290,5 +292,48 @@
 
     <%= link_to "Cancel", people_path, class: "btn btn-secondary-outline" %>
     <%= f.button :submit, class: "btn btn-primary" %>
+  </div>
+
+  <!-- Duplicate Person Warning Modal -->
+  <div data-duplicate-person-check-target="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center mb-4">
+          <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 text-center mb-2">
+          Possible Duplicate Person Found
+        </h3>
+        <div class="mt-2 px-7 py-3">
+          <p class="text-sm text-gray-500 mb-3">
+            We found existing person(s) in the system with a similar name or email. Please review the list below:
+          </p>
+          <ul data-duplicate-person-check-target="duplicatesList" class="text-sm text-gray-700 mb-4 max-h-60 overflow-y-auto border border-gray-200 rounded p-3">
+            <!-- Duplicates will be inserted here by JavaScript -->
+          </ul>
+          <p class="text-sm text-gray-500">
+            Are you sure you want to create a new person record?
+          </p>
+        </div>
+        <div class="flex gap-3 justify-center px-4 py-3">
+          <button type="button"
+                  data-duplicate-person-check-target="cancelButton"
+                  data-action="click->duplicate-person-check#cancel"
+                  class="btn btn-secondary-outline">
+            Cancel
+          </button>
+          <button type="button"
+                  data-duplicate-person-check-target="proceedButton"
+                  data-action="click->duplicate-person-check#proceedAnyway"
+                  class="btn btn-primary">
+            Create Anyway
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 <% end %>

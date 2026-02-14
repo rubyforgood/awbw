@@ -123,6 +123,46 @@ class PeopleController < ApplicationController
     end
   end
 
+  def check_duplicates
+    authorize! Person
+    first_name = params[:first_name]
+    last_name = params[:last_name]
+    email = params[:email]
+
+    duplicates = []
+
+    # Check for name matches
+    if first_name.present? && last_name.present?
+      name_matches = Person.where(
+        "LOWER(first_name) = ? AND LOWER(last_name) = ?",
+        first_name.downcase,
+        last_name.downcase
+      ).limit(5)
+      duplicates.concat(name_matches.map { |p| { id: p.id, name: p.full_name, email: p.email || p.user&.email } })
+    end
+
+    # Check for email matches
+    if email.present?
+      email_matches = Person.where("LOWER(email) = ?", email.downcase)
+                            .or(Person.where("LOWER(email_2) = ?", email.downcase))
+                            .limit(5)
+      
+      user_email_matches = Person.joins(:user)
+                                 .where("LOWER(users.email) = ?", email.downcase)
+                                 .limit(5)
+      
+      email_matches.each do |p|
+        duplicates << { id: p.id, name: p.full_name, email: p.email || p.user&.email } unless duplicates.any? { |d| d[:id] == p.id }
+      end
+      
+      user_email_matches.each do |p|
+        duplicates << { id: p.id, name: p.full_name, email: p.email || p.user&.email } unless duplicates.any? { |d| d[:id] == p.id }
+      end
+    end
+
+    render json: { duplicates: duplicates.uniq { |d| d[:id] } }
+  end
+
   private
   # Use callbacks to share common setup or constraints between actions.
   def set_person

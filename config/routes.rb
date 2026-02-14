@@ -75,7 +75,11 @@ Rails.application.routes.draw do
   resources :events do
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
   end
-  resources :people
+  resources :people do
+    collection do
+      post :check_duplicates
+    end
+  end
   resources :faqs
   resources :notifications, only: [ :index, :show ] do
     member do
