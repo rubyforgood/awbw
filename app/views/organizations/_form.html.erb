@@ -25,26 +25,30 @@
       <!-- Sectors & Windows Type -->
       <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4 items-start">
         <div class="form-group space-y-4">
-          <div class="font-semibold text-gray-700">
+          <div class="font-semibold text-gray-700 mb-2">
             Sectors
           </div>
 
-          <div class="flex flex-wrap items-center gap-2">
-            <%= f.simple_fields_for :sectorable_items do |sfi| %>
-              <%= render "shared/sectorable_item_fields", f: sfi %>
-            <% end %>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+            <div class="flex flex-wrap items-center gap-4 p-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <%= f.simple_fields_for :sectorable_items do |sfi| %>
+                  <%= render "shared/sectorable_item_fields", f: sfi %>
+                <% end %>
 
-            <%= link_to_add_association "Add sector",
-                                      f,
-                                      :sectorable_items,
-                                      partial: "shared/sectorable_item_fields",
-                                      render_options: {
-                                        locals: {
-                                          collection: (@sectors_collection || [])
-                                            .reject { |_, id| (@current_sector_ids || []).include?(id) }
-                                        }
-                                      },
-                                    class: "text-sm text-gray-400 hover:text-blue-800 underline transition" %>
+                <%= link_to_add_association "➕ Add Sector",
+                                          f,
+                                          :sectorable_items,
+                                          partial: "shared/sectorable_item_fields",
+                                          render_options: {
+                                            locals: {
+                                              collection: (@sectors_collection || [])
+                                                .reject { |_, id| (@current_sector_ids || []).include?(id) }
+                                            }
+                                          },
+                                        class: "btn btn-secondary-outline" %>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -207,7 +211,8 @@
 
   <% if allowed_to?(:manage?, Organization) %>
     <div class="admin-only bg-blue-100">
-      <div class="mb-6"><%= f.input :notes,
+      <div class="mb-6">
+        <%= f.input :notes,
                     as: :text,
                     label: "Internal Notes",
                     input_html: {
@@ -218,7 +223,7 @@
   <% end %>
 
   <div class="form-group space-y-4">
-    <div class="font-semibold text-gray-700">
+    <div class="font-semibold text-gray-700 mb-2">
       Addresses
     </div>
 
@@ -242,11 +247,11 @@
   </div>
 
   <div class="form-group space-y-4">
-    <div class="font-semibold text-gray-700">
+    <div class="font-semibold text-gray-700 mb-2">
       Affiliations
     </div>
 
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Organization) %>
         <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
           <%= f.fields_for :organization_people do |organization_person_form| %>
@@ -273,7 +278,7 @@
   </div>
 
   <div class="profile-preferences-section">
-    <div class="font-medium text-gray-700 mb-3 block">
+    <div class="font-medium text-gray-700 mb-2 block">
       Profile display preferences:
     </div>
 
