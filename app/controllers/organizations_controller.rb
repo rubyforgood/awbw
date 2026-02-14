@@ -155,6 +155,7 @@ class OrganizationsController < ApplicationController
       addresses_attributes: [
         :id,
         :address_type,
+        :primary,
         :inactive,
         :phone,
         :street_address,

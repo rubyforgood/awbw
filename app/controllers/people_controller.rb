@@ -205,6 +205,7 @@ class PeopleController < ApplicationController
       addresses_attributes: [
         :id,
         :address_type,
+        :primary,
         :street_address,
         :city,
         :state,

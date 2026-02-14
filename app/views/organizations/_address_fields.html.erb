@@ -18,6 +18,14 @@
                   class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                 } %>
     <div class="flex items-center">
+      <%= f.input :primary,
+                  as: :boolean,
+                  label: "Primary",
+                  input_html: {
+                    class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                  } %>
+    </div>
+    <div class="flex items-center">
       <%= f.input :inactive,
                   as: :boolean,
                   label: "Inactive",
