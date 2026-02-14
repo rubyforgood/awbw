@@ -241,6 +241,34 @@
     </div>
   </div>
 
+  <div class="profile-preferences-section">
+    <div class="font-medium text-gray-700 mb-3 block">
+      Profile display preferences:
+    </div>
+
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <div class="pl-3 pr-3 pb-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+          <%= f.input :profile_show_email, label: "Show email" %>
+          <%= f.input :profile_show_phone, label: "Show phone" %>
+          <%= f.input :profile_show_website, label: "Show website" %>
+          <%= f.input :profile_show_description, label: "Show description" %>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+          <%= f.input :profile_show_sectors, label: "Show sectors" %>
+          <%= f.input :profile_show_workshops, label: "Show workshops" %>
+          <%= f.input :profile_show_stories, label: "Show stories" %>
+          <%= f.input :profile_show_events_registered, label: "Show events hosted" %>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+          <%= f.input :profile_show_workshop_logs, label: "Show workshop logs" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @organization, method: :delete, class: "btn btn-danger-outline",

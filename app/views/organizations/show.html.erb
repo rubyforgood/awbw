@@ -92,7 +92,7 @@
           <% end %>
         </div>
         <!-- Sectors -->
-        <% if true || @organization.profile_show_sectors? %>
+        <% if @organization.profile_show_sectors? %>
           <div>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Service Populations</h2>
             <p>
@@ -113,21 +113,21 @@
         <% end %>
         <!-- Contact info -->
         <div>
-          <% if true || @organization.profile_show_email? || @organization.profile_show_phone? %>
+          <% if @organization.profile_show_email? || @organization.profile_show_phone? %>
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h2>
-            <% if true || @organization.profile_show_email? %>
+            <% if @organization.profile_show_email? %>
               <p class="text-gray-700 mb-1">
                 📧 <%#= mail_to @organization.email, @organization.email,
                               class: "text-blue-600 hover:underline" %>
               </p>
             <% end %>
-            <% if true || @organization.profile_show_phone? && @organization.phone.present? %>
+            <% if @organization.profile_show_phone? && @organization.phone.present? %>
               <p class="text-gray-700 mb-1">
                 📞 <%#= link_to @organization.phone, "tel:#{@organization.phone}",
                               class: "text-blue-600 hover:underline" %>
               </p>
             <% end %>
-            <% if true || @organization.profile_show_website? && @organization.website_url.present? %>
+            <% if @organization.profile_show_website? && @organization.website_url.present? %>
               <p class="text-gray-700 mb-1">
                 🌎 <%#= link_to @organization.website_url,
                               class: "text-blue-600 hover:underline" %>
@@ -138,13 +138,13 @@
       </div>
       <hr class="my-8 border-gray-200">
       <!-- Workshops authored -->
-      <% if true || @organization.profile_show_description? && @organization.description.present? %>
+      <% if @organization.profile_show_description? && @organization.description.present? %>
         <h2 class="text-lg font-semibold text-gray-800 mb-3">Description</h2>
         <%= sanitize(@organization.description, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
         <hr class="my-8 border-gray-200">
       <% end %>
       <!-- Workshops authored -->
-      <% if true || @organization.profile_show_workshops? %>
+      <% if @organization.profile_show_workshops? %>
         <div>
           <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
           <% if false && @organization.workshops.any? %>
@@ -157,7 +157,7 @@
         </div>
       <% end %>
       <!-- Stories authored -->
-      <% if true || @organization.profile_show_stories? %>
+      <% if @organization.profile_show_stories? %>
         <div class="mt-10">
           <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories</h2>
           <%# stories = @organization.stories_as_creator + @organization.stories_as_spotlighted_organization %>
@@ -171,7 +171,7 @@
           </div>
         <% end %>
         <!-- Events registered -->
-        <% if true || @organization.profile_show_events_registered? %>
+        <% if @organization.profile_show_events_registered? %>
           <div class="mt-10">
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Events hosted</h2>
             <%# if Event.all.any? %>
@@ -188,7 +188,7 @@
           <% if current_user&.super_user? || @organization.organization_people.pluck(:person_id).include?(current_user.person_id) %>
             <div class="organization-only bg-green-100">
               <!-- Workshop logs -->
-              <% if true || @organization.profile_show_workshop_logs? %>
+              <% if @organization.profile_show_workshop_logs? %>
                 <div class="mt-6 p-3">
                   <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Logs submitted</h2>
                   <% if false && @organization.workshop_logs.any? %>
