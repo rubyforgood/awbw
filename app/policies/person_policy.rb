@@ -17,6 +17,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def destroy?
+    admin? && record.persisted? && !has_associated_data?
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
 
@@ -30,5 +34,11 @@ class PersonPolicy < ApplicationPolicy
   def owner?
     return false unless authenticated?
     record.user == user
+  end
+
+  def has_associated_data?
+    record.user.present? ||
+      record.organization_people.exists? ||
+      record.stories_as_spotlighted_facilitator.exists?
   end
 end

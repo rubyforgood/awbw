@@ -38,7 +38,8 @@ class Organization < ApplicationRecord
   validate :affiliation_dates_locked, if: -> { organization_people.any? && !Current.user&.super_user? }
 
   # Nested attributes
-  accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :addresses, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :organization_people, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
