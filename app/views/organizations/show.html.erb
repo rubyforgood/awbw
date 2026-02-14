@@ -1,78 +1,78 @@
 <div class="min-h-screen py-10">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-8">
-      <!-- Header actions -->
-      <div class="flex justify-end mb-6 gap-2">
-        <%= link_to "Organizations", organizations_path, class: "btn btn-secondary-outline" %>
-        <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
-        <% if allowed_to?(:edit?, @organization) %>
-          <%= link_to "Edit", edit_organization_path(@organization),
-                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+    <!-- Header actions -->
+    <div class="flex justify-end mb-6 gap-2">
+      <%= link_to "Organizations", organizations_path, class: "btn btn-secondary-outline" %>
+      <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+      <% if allowed_to?(:edit?, @organization) %>
+        <%= link_to "Edit", edit_organization_path(@organization),
+                    class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+      <% end %>
+      <span class="inline-block text-sm">
+        <%= render "bookmarks/editable_bookmark_button", resource: @organization %>
+      </span>
+    </div>
+    <!-- Header: avatar + name + pronouns -->
+    <div class="flex flex-col md:flex-row md:items-center md:gap-8 mb-10">
+      <div class="flex-shrink-0 flex justify-center md:justify-start">
+        <% if @organization.logo&.attached? %>
+          <%= image_tag url_for(@organization.logo),
+                        class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
+        <% else %>
+          <%= image_tag "missing.png",
+                        class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
         <% end %>
-        <span class="inline-block text-sm">
-          <%= render "bookmarks/editable_bookmark_button", resource: @organization %>
-        </span>
       </div>
-      <!-- Header: avatar + name + pronouns -->
-      <div class="flex flex-col md:flex-row md:items-center md:gap-8 mb-10">
-        <div class="flex-shrink-0 flex justify-center md:justify-start">
-          <% if @organization.logo&.attached? %>
-            <%= image_tag url_for(@organization.logo),
-                          class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
-          <% else %>
-            <%= image_tag "missing.png",
-                          class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
-          <% end %>
-        </div>
-        <div class="flex-1 text-center md:text-left mt-4 md:mt-0">
-          <h1 class="text-3xl font-bold text-gray-900">
-            <%= @organization.name %>
-          </h1>
-          <% @organization.addresses.each do |address| %>
-            <p class="mt-3 text-gray-700 text-sm">
-              <% if address.locality.present? %>
-                <br>
-                Locality:
-                <span class="font-medium"><%= address.locality %></span>
-              <% end %>
-              <% if address.city.present? || address.state.present? %>
-                <br>
-                City/State:
-                <span class="font-medium"><%= address.city %><%= ", " if address.city.present? %>
-                  <%= address.state %>
-                </span>
-              <% end %>
-              <% if address.district.present? %>
-                <br>
-                District:
-                <span class="font-medium"><%= address.district %></span>
-              <% end %>
-            </p>
-          <% end %>
-          <% if @organization.start_date.present? %>
-            <p class="mt-3 text-gray-700 text-sm">
-              Affiliated since
-              <span class="font-medium"><%= @organization.start_date.year %></span>
-            </p>
-          <% end %>
-          <!-- Optional social links -->
-          <div class="mt-4">
-            <%= render "organizations/social_media_buttons", organization: @organization if false %>
-          </div>
-        </div>
-        <div class="flex-1">
-          <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
-            <% @organization.decorate.badges.each do |(label, color)| %>
-              <span class="px-3 py-1 bg-<%= color %>-100 text-<%= color %>-800 text-sm font-semibold rounded-full">
-                <%= label %>
+      <div class="flex-1 text-center md:text-left mt-4 md:mt-0">
+        <h1 class="text-3xl font-bold text-gray-900">
+          <%= @organization.name %>
+        </h1>
+        <% @organization.addresses.each do |address| %>
+          <p class="mt-3 text-gray-700 text-sm">
+            <% if address.locality.present? %>
+              <br>
+              Locality:
+              <span class="font-medium"><%= address.locality %></span>
+            <% end %>
+            <% if address.city.present? || address.state.present? %>
+              <br>
+              City/State:
+              <span class="font-medium"><%= address.city %><%= ", " if address.city.present? %>
+                <%= address.state %>
               </span>
             <% end %>
-          </div>
+            <% if address.district.present? %>
+              <br>
+              District:
+              <span class="font-medium"><%= address.district %></span>
+            <% end %>
+          </p>
+        <% end %>
+        <% if @organization.start_date.present? %>
+          <p class="mt-3 text-gray-700 text-sm">
+            Affiliated since
+            <span class="font-medium"><%= @organization.start_date.year %></span>
+          </p>
+        <% end %>
+        <!-- Optional social links -->
+        <div class="mt-4">
+          <%= render "organizations/social_media_buttons", organization: @organization if false %>
         </div>
       </div>
-      <hr class="my-8 border-gray-200">
-      <!-- Info grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="flex-1">
+        <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
+          <% @organization.decorate.badges.each do |(label, color)| %>
+            <span class="px-3 py-1 bg-<%= color %>-100 text-<%= color %>-800 text-sm font-semibold rounded-full">
+              <%= label %>
+            </span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    <hr class="my-8 border-gray-200">
+    <!-- Info grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Organization affiliations -->
         <div>
           <h2 class="text-lg font-semibold text-gray-800 mb-3">Windows facilitators</h2>
@@ -136,24 +136,15 @@
           <% end %>
         </div>
       </div>
-      <hr class="my-8 border-gray-200">
-<<<<<<< copilot/update-org-model-checkboxes
-      <!-- Workshops authored -->
-      <% if @organization.profile_show_description? && @organization.description.present? %>
-=======
-      <!-- Description -->
-      <% if @organization.description.present? %><%# TODO - check via @organization.profile_show_description? %>
->>>>>>> main
+    <hr class="my-8 border-gray-200">
+    <!-- Workshops authored -->
+    <% if @organization.profile_show_description? && @organization.description.present? %>
         <h2 class="text-lg font-semibold text-gray-800 mb-3">Description</h2>
         <%= sanitize(@organization.description, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
         <hr class="my-8 border-gray-200">
       <% end %>
-      <!-- Workshops authored -->
-<<<<<<< copilot/update-org-model-checkboxes
-      <% if @organization.profile_show_workshops? %>
-=======
-      <% if true %><%# TODO - check via @organization.profile_show_workshops? %>
->>>>>>> main
+    <!-- Workshops authored -->
+    <% if @organization.profile_show_workshops? %>
         <div>
           <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
           <% if @organization.workshops.any? %>
@@ -165,63 +156,51 @@
           <% end %>
         </div>
       <% end %>
-      <!-- Stories authored -->
-<<<<<<< copilot/update-org-model-checkboxes
-      <% if @organization.profile_show_stories? %>
-=======
-      <% if true %><%# TODO - check via @organization.profile_show_stories?%>
->>>>>>> main
-        <div class="mt-10">
-          <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories</h2>
-          <%# stories = @organization.stories_as_creator + @organization.stories_as_spotlighted_organization %>
-          <%# if stories.any? %>
-          <%# stories.each do |story| %>
-            <%#= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
-            <%# end %>
-            <%# else %>
-            <p class="text-gray-500 italic">No stories yet.</p>
-            <%# end %>
-          </div>
-        <% end %>
-        <!-- Events registered -->
-<<<<<<< copilot/update-org-model-checkboxes
-        <% if @organization.profile_show_events_registered? %>
-=======
-        <% if true %><%# TODO - check via @organization.profile_show_events_registered? %>
->>>>>>> main
-          <div class="mt-10">
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Events hosted</h2>
-            <%# if Event.all.any? %>
-            <%# Event.all.each do |event| %>
-              <%# event_name = "#{event.title} - #{event.start_date.strftime("%b %Y") rescue nil}" %>
-              <%#= link_to event_name, event_path(event), class: "btn btn-secondary-outline" %>
-              <%# end %>
-              <%# else %>
-              <p class="text-gray-500 italic">No events recorded.</p>
-              <%# end %>
-            </div>
-          <% end %>
-          <hr class="my-8 border-gray-200">
-          <% if allowed_to?(:show_workshop_logs?, @organization) %>
-            <div class="organization-only bg-green-100">
-              <!-- Workshop logs -->
-<<<<<<< copilot/update-org-model-checkboxes
-              <% if @organization.profile_show_workshop_logs? %>
-=======
-              <% if true %><%# TODO - check via @organization.profile_show_workshop_logs?  %>
->>>>>>> main
-                <div class="mt-6 p-3">
-                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Logs submitted</h2>
-                  <% organization_workshop_logs = @organization.affiliated_workshop_logs %>
-                  <%= render "workshop_logs/index",
-                             workshop_logs: organization_workshop_logs.paginate(page: params[:page] || 1,
-                                                                                 per_page: params[:per_page] || 10),
-                             workshop_logs_unpaginated: organization_workshop_logs,
-                             workshop_logs_count: organization_workshop_logs.count %>
-                </div>
-              <% end %>
+    <!-- Stories authored -->
+    <% if @organization.profile_show_stories? %>
+      <div class="mt-10">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories</h2>
+        <%# stories = @organization.stories_as_creator + @organization.stories_as_spotlighted_organization %>
+        <%# if stories.any? %>
+        <%# stories.each do |story| %>
+          <%#= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
+          <%# end %>
+          <%# else %>
+          <p class="text-gray-500 italic">No stories yet.</p>
+          <%# end %>
+        </div>
+      <% end %>
+      <!-- Events registered -->
+    <% if @organization.profile_show_events_registered? %>
+      <div class="mt-10">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">Events hosted</h2>
+        <%# if Event.all.any? %>
+        <%# Event.all.each do |event| %>
+          <%# event_name = "#{event.title} - #{event.start_date.strftime("%b %Y") rescue nil}" %>
+          <%#= link_to event_name, event_path(event), class: "btn btn-secondary-outline" %>
+          <%# end %>
+          <%# else %>
+          <p class="text-gray-500 italic">No events recorded.</p>
+          <%# end %>
+        </div>
+      <% end %>
+    <hr class="my-8 border-gray-200">
+    <% if allowed_to?(:show_workshop_logs?, @organization) %>
+        <div class="organization-only bg-green-100">
+          <!-- Workshop logs -->
+          <% if @organization.profile_show_workshop_logs? %>
+            <div class="mt-6 p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Logs submitted</h2>
+              <% organization_workshop_logs = @organization.affiliated_workshop_logs %>
+              <%= render "workshop_logs/index",
+                         workshop_logs: organization_workshop_logs.paginate(page: params[:page] || 1,
+                                                                             per_page: params[:per_page] || 10),
+                         workshop_logs_unpaginated: organization_workshop_logs,
+                         workshop_logs_count: organization_workshop_logs.count %>
             </div>
           <% end %>
         </div>
-      </div>
+      <% end %>
     </div>
+  </div>
+</div>
