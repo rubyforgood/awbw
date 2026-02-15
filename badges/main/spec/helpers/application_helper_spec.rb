@@ -59,4 +59,46 @@ RSpec.describe ApplicationHelper, type: :helper do
       end
     end
   end
+
+  describe "#favicon_file" do
+    context "when environment is production" do
+      before do
+        allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("production"))
+      end
+
+      it "returns logo-circle.png" do
+        expect(helper.favicon_file).to eq("logo-circle.png")
+      end
+    end
+
+    context "when environment is staging" do
+      before do
+        allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("staging"))
+      end
+
+      it "returns favicon.png" do
+        expect(helper.favicon_file).to eq("favicon.png")
+      end
+    end
+
+    context "when environment is development" do
+      before do
+        allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("development"))
+      end
+
+      it "returns theme_default.png" do
+        expect(helper.favicon_file).to eq("theme_default.png")
+      end
+    end
+
+    context "when environment is test" do
+      before do
+        allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("test"))
+      end
+
+      it "returns theme_default.png" do
+        expect(helper.favicon_file).to eq("theme_default.png")
+      end
+    end
+  end
 end
