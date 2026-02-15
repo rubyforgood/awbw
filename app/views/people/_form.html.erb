@@ -1,6 +1,7 @@
 <%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
                                           data: { turbo: false } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
+
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
@@ -25,7 +26,7 @@
           </div>
 
           <div>
-            <% if allowed_to?(:manage?, Person) %>
+            <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
               <%= f.input :member_since,
                           as: :date,
                           discard_day: true,
@@ -33,7 +34,7 @@
                           end_year: Time.current.year,
                           prompt: { month: "Select Month", year: "Select Year" },
                           order: [:month, :year],
-                          label: "Facilitator since",
+                          label: "Affiliated since",
                           hint: "Pick January if you only know the year",
                           wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
                           label_html: { class: "w-full" },
@@ -43,8 +44,9 @@
                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                           } %>
             <% else %>
-              <label class="block text-md font-medium text-gray-700 mb-1">Facilitator since</label>
-              <span class="text-gray-900 font-medium"><%= f.object.member_since&.to_date&.strftime("%B %d, %Y") || "—" %></span>
+              <label class="block text-md font-medium text-gray-700 mb-1">Affiliated since</label>
+              <span class="text-gray-900 font-medium"><%= f.object.member_since&.to_date&.strftime("%B %Y") || "—" %></span>
+              <p class="text-xs text-amber-700 mt-1">Auto-managed by affiliations</p>
             <% end %>
           </div>
         </div>
