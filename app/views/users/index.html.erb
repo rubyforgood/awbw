@@ -29,6 +29,7 @@
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/3">Email</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Confirmed</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Inactive</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Locked</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Admin</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
             </tr>
@@ -78,6 +79,15 @@
                 <td class="px-4 py-2 text-center">
                   <% if user.inactive? %>
                     <span class="fa fa-ban text-red-500"></span>
+                  <% else %>
+                    <span>--</span>
+                  <% end %>
+                </td>
+
+                <!-- Locked -->
+                <td class="px-4 py-2 text-center">
+                  <% if user.locked_at.present? %>
+                    <span class="fa fa-lock text-red-500"></span>
                   <% else %>
                     <span>--</span>
                   <% end %>
