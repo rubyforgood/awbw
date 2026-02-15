@@ -163,7 +163,6 @@ class StoriesController < ApplicationController
       :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
-      story_populations: [],
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],

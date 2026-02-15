@@ -81,29 +81,13 @@
     <div class="mt-3 mb-6">
       <%= f.input :body,
                   as: :text,
-                  label: "Share details of your story",
-                  hint: "(HTML allowed)",
+                  label: "Please share details about your participant(s) (while maintaining confidentiality)
+                  and their workshop goals, including what happened during the workshop, and how creating made an impact.
+                  Include direct quotes whenever possible.",
+                  hint: "(For more tips on what makes a powerful story, see the story tips PDF above.)",
                   disabled: promoted_to_story,
                   input_html: { rows: 10,
                                 class: ("readonly" if promoted_to_story) } %>
-    </div>
-
-    <div class="mb-6">
-      <label class="block text-sm font-medium text-gray-700 mb-3">
-        Who is your story about?
-      </label>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <% ["Adults", "Children", "Colleagues", "Community", "Families", "Self", "Teens"].each do |population| %>
-          <div class="flex items-center">
-            <%= check_box_tag "story_idea[story_populations][]", population,
-                              (f.object.story_populations || []).include?(population),
-                              id: "story_idea_story_populations_#{population.downcase}",
-                              disabled: promoted_to_story,
-                              class: "rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50" %>
-            <%= label_tag "story_idea_story_populations_#{population.downcase}", population, class: "ml-2 text-sm text-gray-700" %>
-          </div>
-        <% end %>
-      </div>
     </div>
 
     <div class="flex pt-6 gap-4">

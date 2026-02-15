@@ -108,7 +108,6 @@ class StoryIdeasController < ApplicationController
       :permission_given, :publish_preferences, :promoted_to_story,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
-      story_populations: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       categorizable_items_attributes: [ :id, :category_id, :_destroy ],
