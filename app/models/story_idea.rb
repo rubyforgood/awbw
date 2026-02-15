@@ -23,6 +23,7 @@ class StoryIdea < ApplicationRecord
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
+  has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :stories
   # Asset associations
@@ -33,6 +34,7 @@ class StoryIdea < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
   # has_many through
   has_many :categories, through: :categorizable_items
+  has_many :sectors, through: :sectorable_items
 
   # Validations
   validates :created_by_id, presence: true
@@ -46,7 +48,6 @@ class StoryIdea < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :categorizable_items, allow_destroy: true, reject_if: :all_blank
 
   def name
     "StoryIdea ##{id}"

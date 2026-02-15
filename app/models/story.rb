@@ -37,7 +37,6 @@ class Story < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :categorizable_items, allow_destroy: true, reject_if: :all_blank
 
   # SearchCop
   include SearchCop
@@ -94,6 +93,7 @@ class Story < ApplicationRecord
 
   def attach_assets_from_idea!
     return unless story_idea
+    assets.destroy_all
     story_idea.assets.find_each do |asset|
       new_asset = assets.build(type: asset.type)
       new_asset.file.attach(asset.file.blob)

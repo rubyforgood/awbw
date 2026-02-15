@@ -2,6 +2,8 @@
   <%= simple_form_for(story_idea) do |f| %>
     <%= f.hidden_field :created_by_id, value: f.object.created_by_id || (@user || current_user)&.id %>
     <%= f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
+    <% selected_sector_ids = @preselected_sector_ids || @story_idea.sector_ids %>
+    <% selected_category_ids = @preselected_category_ids || @story_idea.category_ids %>
     <% promoted_to_story = f.object.stories.any? %>
     <% if promoted_to_story %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
@@ -13,6 +15,22 @@
       <%= f.hidden_field :permission_given, value: f.object.permission_given %>
     <% end %>
     <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
+
+    <% if allowed_to?(:manage?, StoryIdea) || @user %>
+      <% if promoted_to_story %>
+        <div class="flex items-center space-x-2 mb-4">
+          <label class="text-gray-700"> Promoted to Story </label>
+          <% f.object.stories.each do |story| %>
+            <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
+          <% end %>
+        </div>
+      <% elsif allowed_to?(:manage?, StoryIdea) && f.object.persisted? %>
+        <div class="admin-only bg-blue-100 p-3 mb-4">
+          <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
+                      class: "btn btn-secondary-outline ms-2" %>
+        </div>
+      <% end %>
+    <% end %>
     <%# = f.object.errors.full_messages %>
     <!-- <div class="mb-3"> -->
     <%#
@@ -90,7 +108,157 @@
                                 class: ("readonly" if promoted_to_story) } %>
     </div>
 
-    <div class="flex pt-6 gap-4">
+    <% if @categories_grouped %>
+      <!-- Full Tags accordion (edit view) -->
+      <div class="space-y-4 mt-8">
+        <div class="tags-section" data-controller="dropdown">
+          <button
+            type="button"
+            id="story_idea_tags_button"
+            class="
+              flex items-center justify-between cursor-pointer w-full
+              bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"story_idea_tags":"hidden"}, {"story_idea_tags_arrow":"rotate-180"}, {"story_idea_tags_button":"rounded-md rounded-t-md"}]'>
+            Tags
+            <svg
+              id="story_idea_tags_arrow"
+              class="w-6 h-6 shrink-0 rotate-180"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          </button>
+
+          <div id="story_idea_tags" class="border border-gray-300 p-4 rounded-b-md">
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+              <h3 class="text-base font-semibold text-gray-800 mb-3">
+                <%= Sector::STORY_DISPLAY_TEXT %>
+              </h3>
+
+              <div class="flex flex-wrap gap-3">
+                <% @sectors.each do |sector| %>
+                  <% id = "story_idea_sector_ids_#{sector.id}" %>
+
+                  <label
+                    for="<%= id %>"
+                    class="
+                      flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
+                      rounded-lg shadow-sm hover:bg-gray-100 transition">
+                    <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
+                    <%= check_box_tag "story_idea[sector_ids][]",
+                                      sector.id,
+                                      selected_sector_ids.include?(sector.id),
+                                      id: id,
+                                      class: "h-4 w-4 text-blue-600 rounded" %>
+
+                    <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+                  </label>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="form-group space-y-6">
+              <% @categories_grouped.each do |type, cats| %>
+                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+                  <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.display_label %></h3>
+
+                  <div class="flex flex-wrap gap-3">
+                    <% cats.each do |category| %>
+                      <% id = "story_idea_category_ids_#{category.id}" %>
+
+                      <label
+                        for="<%= id %>"
+                        class="
+                          flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
+                          border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                        <%= hidden_field_tag "story_idea[category_ids][]", "" %>
+                        <%= check_box_tag "story_idea[category_ids][]",
+                                          category.id,
+                                          selected_category_ids.include?(category.id),
+                                          id: id,
+                                          class: "h-4 w-4 text-blue-600 rounded" %>
+
+                        <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+                      </label>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <!-- Simplified questions (new/public view) -->
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+        <h3 class="text-base font-semibold text-gray-800 mb-3">
+          <%= Sector::STORY_DISPLAY_TEXT %>
+        </h3>
+
+        <div class="flex flex-wrap gap-3">
+          <% @sectors.each do |sector| %>
+            <% id = "story_idea_sector_ids_#{sector.id}" %>
+
+            <label
+              for="<%= id %>"
+              class="
+                flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
+                rounded-lg shadow-sm hover:bg-gray-100 transition">
+              <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
+              <%= check_box_tag "story_idea[sector_ids][]",
+                                sector.id,
+                                selected_sector_ids.include?(sector.id),
+                                id: id,
+                                class: "h-4 w-4 text-blue-600 rounded" %>
+
+              <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @story_population_categories.present? %>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+          <h3 class="text-base font-semibold text-gray-800 mb-3">
+            <%= @story_population_type.display_label %>
+          </h3>
+
+          <div class="flex flex-wrap gap-3">
+            <% @story_population_categories.each do |category| %>
+              <% id = "story_idea_category_ids_#{category.id}" %>
+
+              <label
+                for="<%= id %>"
+                class="
+                  flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
+                  border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                <%= hidden_field_tag "story_idea[category_ids][]", "" %>
+                <%= check_box_tag "story_idea[category_ids][]",
+                                  category.id,
+                                  selected_category_ids.include?(category.id),
+                                  id: id,
+                                  class: "h-4 w-4 text-blue-600 rounded" %>
+
+                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
+    <div id="attachments">
+      <%= render "shared/form_image_fields", f: f, include_primary_asset: true,
+                 primary_title: "Primary attachment", gallery_title: "Additional attachment" %>
+    </div>
+
+    <div id="publish-preferences" class="flex pt-6 gap-4">
       <%= f.input :publish_preferences,
                   as: :select,
                   required: true,
@@ -100,7 +268,7 @@
       <%= f.input :youtube_url,
                   as: :text,
                   label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
-                  hint: "If you already have a video on YouTube you’d like to share",
+                  hint: "If you already have a video on YouTube you'd like to share",
                   disabled: promoted_to_story,
                   input_html: { rows: 1,
                                 class: ("readonly" if promoted_to_story)
@@ -120,26 +288,7 @@
                     class: ("readonly" if promoted_to_story)
                   } %>
     </div>
-    <% if allowed_to?(:manage?, StoryIdea) || @user %>
-      <div class="flex flex-col md:flex-row md:space-x-4">
-        <div class="flex-1 mb-4 md:mb-0">
-          <% if promoted_to_story %>
-            <div class="flex items-center space-x-2">
-              <label class="text-gray-700"> Promoted to Story </label>
-              <% f.object.stories.each do |story| %>
-                <%= link_to story.title, story_path(story), class: "btn btn-secondary-outline" %>
-              <% end %>
-            </div>
-          <% elsif allowed_to?(:manage?, StoryIdea) && f.object.persisted? %>
-            <div class="admin-only bg-blue-100 p-3">
-              <%= link_to "Promote to Story", new_story_path(story_idea_id: @story_idea.id),
-                          class: "btn btn-secondary-outline ms-2" %>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+
     <div class="action-buttons mt-8 flex justify-center gap-3 pt-6">
       <% if allowed_to?(:destroy?, f.object) && f.object.stories.none? %>
         <span class="admin-only bg-blue-100 p-3">
