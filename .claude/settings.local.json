@@ -36,7 +36,8 @@
       "Bash(bin/rails runner:*)",
 
       "Bash(git -C /Users/maebeale/programming/awbw branch --show-current)",
-      "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)"
+      "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)",
+      "Bash(ls:*)"
     ]
   }
 }
