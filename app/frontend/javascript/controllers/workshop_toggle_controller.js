@@ -37,5 +37,11 @@ export default class extends Controller {
     if (select) {
       select.value = "";
     }
+
+    // Clear the external workshop title field
+    const externalField = this.externalFieldTarget.querySelector("input, textarea");
+    if (externalField) {
+      externalField.value = "";
+    }
   }
 }
