@@ -82,7 +82,7 @@
                   <% if user.locked_at.present? %>
                     <span class="fa fa-lock text-red-500"></span>
                   <% end %>
-                  <% if !user.inactive? && user.locked_at.nil? %>
+                  <% unless user.inactive? || user.locked_at.present? %>
                     <span>--</span>
                   <% end %>
                 </td>
