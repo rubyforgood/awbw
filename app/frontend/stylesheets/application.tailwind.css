@@ -160,6 +160,12 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   pointer-events: none;
 }
 
+/* Safari fix: Ensure password field has proper height */
+.password-field {
+  min-height: 2.5rem; /* Matches Tailwind's default input height with p-2 */
+  height: 2.5rem;
+}
+
 /* Truncated comment textareas - compact at rest, expand on hover/focus */
 textarea.comment-truncated {
   overflow: hidden;
