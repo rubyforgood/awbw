@@ -1,0 +1,108 @@
+<% color = DomainTheme.color_for(@dedupe[:domain]) %>
+<div class="min-h-screen">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="admin-only bg-blue-100 p-3">
+      <div class="<%= DomainTheme.bg_class_for(@dedupe[:domain], intensity: 100) %> border border-<%= color %>-200 rounded p-3">
+        <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg p-6">
+
+          <!-- Header -->
+          <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+              Dedupe <%= @dedupe[:model_label_plural] %>
+            </h1>
+            <div class="flex gap-4 mt-4">
+              <%= link_to url_for(action: :dedupe_index),
+                          class: "px-4 py-2 btn btn-secondary-outline" do %>
+                <i class="fa-solid fa-link-slash"></i>
+                Possible dupes
+              <% end %>
+              <%= link_to url_for(action: :index),
+                          class: "px-4 py-2 btn btn-secondary-outline" do %>
+                <i class="fa-solid fa-tags"></i>
+                <%= @dedupe[:model_label_plural] %>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Selection Form -->
+          <%= form_with url: url_for(action: :dedupe_preview), method: :get, data: { turbo: false },
+                        class: "bg-#{color}-100 text-white rounded-lg p-6 space-y-4" do |f| %>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Record to Delete -->
+              <div>
+                <label class="block text-gray-900 font-semibold mb-2">
+                  <%= @dedupe[:model_label] %> to delete
+                </label>
+                <%= f.select @dedupe[:delete_id_param].to_sym,
+                            options_for_select([["-- #{@dedupe[:model_label].downcase} to delete --", ""]] + @records_for_select),
+                            {},
+                            class: "w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-#{color}-500 focus:border-transparent text-gray-900",
+                            required: true %>
+              </div>
+
+              <!-- Record to Keep -->
+              <div>
+                <label class="block text-gray-900 font-semibold mb-2">
+                  <%= @dedupe[:model_label] %> to keep
+                </label>
+                <%= f.select @dedupe[:keep_id_param].to_sym,
+                            options_for_select([["-- #{@dedupe[:model_label].downcase} to keep --", ""]] + @records_for_select),
+                            {},
+                            class: "w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-#{color}-500 focus:border-transparent text-gray-900",
+                            required: true %>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4 justify-center pt-2">
+              <%= f.submit "Preview this dedupe",
+                          class: "px-6 py-2 btn btn-primary font-semibold" %>
+              <%= link_to "Clear",
+                          url_for(action: :dedupe_index),
+                          class: "px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors font-semibold" %>
+            </div>
+          <% end %>
+
+          <!-- Possible Duplicates List -->
+          <% if @possible_duplicates.any? %>
+            <div class="mt-8">
+              <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                Possible Duplicate Groups (<%= @possible_duplicates.count %>)
+              </h2>
+              <div class="space-y-4">
+                <% @possible_duplicates.each do |normalized_name, records| %>
+                  <div class="<%= DomainTheme.bg_class_for(@dedupe[:domain]) %> border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-900 mb-2">
+                      "<%= normalized_name %>" (<%= records.count %> <%= @dedupe[:model_label_plural].downcase %>)
+                    </h3>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                      <% records.each do |record| %>
+                        <li>
+                          <%= record.name %>
+                          <span class="text-gray-500 text-sm">
+                            (ID: <%= record.id %>,
+                            <% if @dedupe[:record_extras] %><%= @dedupe[:record_extras].call(record) %>, <% end %>
+                            <%= record.published? ? 'Published' : 'Unpublished' %>,
+                            <%= record.public_send(@dedupe[:join_association]).count %> taggings)
+                          </span>
+                        </li>
+                      <% end %>
+                    </ul>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <div class="mt-8 text-center py-8 bg-gray-50 rounded-lg">
+              <i class="fa-solid fa-check-circle text-green-500 text-4xl mb-2"></i>
+              <p class="text-gray-600 text-lg">
+                No duplicate <%= @dedupe[:model_label_plural].downcase %> found!
+              </p>
+            </div>
+          <% end %>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
