@@ -182,7 +182,12 @@ module Dedupable
     db_columns = join_class.column_names.to_set
     other_fk_cols = join_class.reflect_on_all_associations(:belongs_to).flat_map do |bt|
       next [] if bt.foreign_key.to_s == fk
-      cols = bt.polymorphic? ? [bt.foreign_type.to_s, bt.foreign_key.to_s] : [bt.foreign_key.to_s]
+      cols =
+        if bt.polymorphic?
+          [ bt.foreign_type.to_s, bt.foreign_key.to_s ]
+        else
+          [ bt.foreign_key.to_s ]
+        end
       cols.select { |c| db_columns.include?(c) }
     end
 
