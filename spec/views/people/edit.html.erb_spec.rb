@@ -39,11 +39,11 @@ RSpec.describe "people/edit", type: :view do
   context "when person has an associated user" do
     it "displays the user's email as read-only" do
       expect(rendered).to have_content(person.user.email)
-      expect(rendered).not_to have_field('Primary email')
+      expect(rendered).not_to have_field('person_email')
     end
 
-    it "displays the person's email type as editable" do
-      expect(rendered).not_to have_field('Primary email type')
+    it "displays an editable email type field" do
+      expect(rendered).to have_select('Primary email type')
     end
   end
 
