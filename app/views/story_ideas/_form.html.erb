@@ -183,6 +183,9 @@
         </button>
 
         <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
+          <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
+          <%= hidden_field_tag "story_idea[category_ids][]", "" %>
+
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
             <!-- Header -->
             <h3 class="text-base font-semibold text-gray-800 mb-3">
@@ -191,7 +194,6 @@
 
             <!-- Checkbox List -->
             <div class="flex flex-wrap gap-3">
-              <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
               <% @sectors.each do |sector| %>
                 <% id = "story_idea_sector_ids_#{sector.id}" %>
 
@@ -214,7 +216,6 @@
           </div>
 
           <div class="form-group space-y-6">
-            <%= hidden_field_tag "story_idea[category_ids][]", "" %>
             <% @categories_grouped.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                 <!-- Header -->
