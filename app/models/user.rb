@@ -66,6 +66,9 @@ class User < ApplicationRecord
   end
 
   scope :active, -> { where(inactive: false) }
+  scope :ordered_by_name, -> {
+    left_joins(:person).order(Arel.sql("COALESCE(people.first_name, users.first_name), COALESCE(people.last_name, users.last_name)"))
+  }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all

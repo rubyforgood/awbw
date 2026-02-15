@@ -87,9 +87,9 @@ class StoryIdeasController < ApplicationController
     @windows_types = WindowsType.all
     @workshops = Workshop.order(:title)
 
-    @users = User.active.left_joins(:person)
+    @users = User.active
     @users = @users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
-    @users = @users.distinct.order(Arel.sql("COALESCE(people.first_name, users.first_name), COALESCE(people.last_name, users.last_name)"))
+    @users = @users.distinct.ordered_by_name
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
     @story_idea.gallery_assets.build
   end
