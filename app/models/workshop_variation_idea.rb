@@ -21,6 +21,10 @@ class WorkshopVariationIdea < ApplicationRecord
   validates :updated_by_id, presence: true
   validates :organization_id, presence: true
   validates :workshop_id, presence: true
+  validates :windows_type_id, presence: true
+  validates :body, presence: true
+  validates :publish_preferences, presence: true
+  validates :permission_given, acceptance: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
