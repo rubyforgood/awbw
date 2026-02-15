@@ -1,3 +1,10 @@
+<!-- Workshop Description -->
+<% if content_has_value?(workshop.rhino_extra_field) %>
+  <div class="bg-white border border-gray-200 rounded-xl shadow p-6 mb-6">
+    <div class="text-sm"><%= workshop.rhino_extra_field %></div>
+  </div>
+<% end %>
+
 <div class="w-full aspect-[3/2] sm:aspect-[21/9] lg:aspect-[24/9] overflow-hidden rounded-xl print:hidden">
   <!-- Background image -->
   <div id="hero-image"><%= render "assets/display_image",

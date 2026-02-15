@@ -90,10 +90,6 @@
     <div class="mt-4 ml-2 default-link">
       <!-- English / Details -->
       <div id="english-content" data-tabs-target="tabContent">
-        <% if content_has_value?(workshop.rhino_extra_field) %>
-          <div class="text-sm mb-4"><%= workshop.rhino_extra_field %></div>
-        <% end %>
-
         <% workshop_sections = { "Objective" => workshop.rhino_objective,
                                  "Age range" => workshop.age_range,
                                  "Materials" => workshop.rhino_materials,
