@@ -140,6 +140,122 @@ RSpec.describe User do
     end
   end
 
-  # Add tests for other methods like #active_for_authentication? etc.
-  # Test callbacks like :set_default_values, :before_destroy
+  describe "person association" do
+    it "can be created without a person" do
+      user = create(:user)
+      expect(user.person).to be_nil
+    end
+
+    it "can be linked to a person" do
+      person = create(:person)
+      expect(person.user).to eq(person.user)
+      expect(person.user.person).to eq(person)
+    end
+
+    it "delegates organizations through person" do
+      person = create(:person, :with_organization)
+      expect(person.user.organizations).to eq(person.organizations)
+    end
+  end
+
+  describe "#person_id_must_be_present_if_previously_set" do
+    it "prevents removing person_id once set" do
+      person = create(:person)
+      user = person.user
+      user.person_id = nil
+      expect(user).not_to be_valid
+      expect(user.errors[:person_id]).to include("cannot be removed once set")
+    end
+
+    it "allows saving when person_id remains set" do
+      person = create(:person)
+      user = person.user
+      user.first_name = "Updated"
+      expect(user).to be_valid
+    end
+
+    it "allows user without person_id to remain without one" do
+      user = create(:user)
+      user.first_name = "Updated"
+      expect(user).to be_valid
+    end
+  end
+
+  describe "validates_associated :person" do
+    it "is invalid when associated person is invalid" do
+      person = create(:person)
+      user = person.user
+      person.first_name = nil # Person requires first_name
+      expect(user).not_to be_valid
+    end
+  end
+
+  describe "#full_name" do
+    context "when user has a person" do
+      it "returns the person's full name" do
+        person = create(:person, first_name: "Jane", last_name: "Doe")
+        expect(person.user.full_name).to eq("Jane Doe")
+      end
+    end
+
+    context "when user has no person but has first_name" do
+      it "returns user's own full name" do
+        user = create(:user, first_name: "Bob", last_name: "Smith")
+        expect(user.full_name).to eq("Bob Smith")
+      end
+    end
+
+    context "when user has no person and no first_name" do
+      it "returns the email" do
+        user = create(:user, first_name: nil)
+        expect(user.full_name).to eq(user.email)
+      end
+    end
+  end
+
+  describe "#name" do
+    it "returns first and last name when present" do
+      user = build(:user, first_name: "Bob", last_name: "Smith")
+      expect(user.name).to eq("Bob Smith")
+    end
+
+    it "returns email when first_name is nil" do
+      user = build(:user, first_name: nil)
+      expect(user.name).to eq(user.email)
+    end
+
+    it "returns email when first_name is empty" do
+      user = build(:user, first_name: "")
+      expect(user.name).to eq(user.email)
+    end
+  end
+
+  describe "#active_for_authentication?" do
+    it "returns true when not inactive" do
+      user = create(:user, inactive: false)
+      expect(user.active_for_authentication?).to be true
+    end
+
+    it "returns false when inactive" do
+      user = create(:user, inactive: true)
+      expect(user.active_for_authentication?).to be false
+    end
+  end
+
+  describe "#devise_email_name" do
+    it "returns person first_name when person exists" do
+      person = create(:person, first_name: "Jane")
+      expect(person.user.devise_email_name).to eq("Jane")
+    end
+
+    it "returns user first_name when no person" do
+      user = create(:user, first_name: "Bob")
+      expect(user.devise_email_name).to eq("Bob")
+    end
+
+    it "returns email when no name available" do
+      user = create(:user, first_name: nil)
+      expect(user.devise_email_name).to eq(user.email)
+    end
+  end
 end

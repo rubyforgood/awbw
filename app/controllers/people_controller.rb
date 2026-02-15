@@ -89,6 +89,22 @@ class PeopleController < ApplicationController
     authorize! @person
     @person.user ||= (User.find(params[:person][:user_attributes][:id]) if params[:person][:user_attributes])
 
+    unless params[:skip_duplicate_check].present?
+      duplicates = find_duplicate_people(
+        @person.first_name,
+        @person.last_name,
+        @person.email
+      )
+      if duplicates.any?
+        redirect_to check_duplicates_people_path(
+          first_name: @person.first_name,
+          last_name: @person.last_name,
+          email: @person.email
+        )
+        return
+      end
+    end
+
     respond_to do |format|
       if @person.save
         format.html { redirect_to @person, notice: "Person was successfully created." }
@@ -125,14 +141,12 @@ class PeopleController < ApplicationController
 
   def check_duplicates
     authorize!
-    
-    duplicates = find_duplicate_people(
-      params[:first_name],
-      params[:last_name],
-      params[:email]
-    )
 
-    render json: { duplicates: duplicates }
+    @first_name = params[:first_name]
+    @last_name = params[:last_name]
+    @email = params[:email]
+    @duplicates = find_duplicate_people(@first_name, @last_name, @email)
+    @blocked = @duplicates.any? { |d| d[:blocked] }
   end
 
   private
@@ -179,47 +193,83 @@ class PeopleController < ApplicationController
     duplicates = []
     duplicate_ids = Set.new
 
-    # Check for name matches
+    # Check for name matches (exact + nickname variants)
     if first_name.presence && last_name.presence
-      name_matches = Person.where(
-        "LOWER(first_name) = ? AND LOWER(last_name) = ?",
-        first_name.downcase,
-        last_name.downcase
-      ).limit(5)
-      
+      first_variants = NicknameMap.variants_for(first_name)
+
+      name_matches = Person.includes(:user)
+                           .where("LOWER(last_name) = ?", last_name.downcase)
+                           .where("LOWER(first_name) IN (?)", first_variants)
+                           .limit(10)
+
       name_matches.each do |person|
         next if duplicate_ids.include?(person.id)
-        
+
         duplicate_ids.add(person.id)
-        duplicates << format_duplicate(person)
+        exact_name = person.first_name.downcase == first_name.downcase
+        duplicates << format_duplicate(person, exact: exact_name, entered_email: email)
       end
     end
 
-    # Check for email matches
-    if email.presence && duplicates.size < 5
-      # Build a single query with OR conditions for better performance
-      email_query = Person.where("LOWER(email) = ?", email.downcase)
-                          .or(Person.where("LOWER(email_2) = ?", email.downcase))
-                          .or(Person.joins(:user).where("LOWER(users.email) = ?", email.downcase))
-                          .limit(5)
-      
+    # Check for email matches (skip example.com)
+    # Only match person.email when person has no user (otherwise it's a stale copy of user.email)
+    if email.presence && !email.downcase.end_with?("@example.com") && duplicates.size < 10
+      email_lower = email.downcase
+      email_query = Person.includes(:user)
+                          .left_joins(:user)
+                          .where(
+                            "(users.id IS NULL AND LOWER(people.email) = :email) OR LOWER(people.email_2) = :email OR LOWER(users.email) = :email",
+                            email: email_lower
+                          )
+                          .limit(10)
+
       email_query.each do |person|
         next if duplicate_ids.include?(person.id)
-        
+
         duplicate_ids.add(person.id)
-        duplicates << format_duplicate(person)
-        break if duplicates.size >= 5
+        name_matches = first_name.present? && last_name.present? &&
+          person.first_name&.downcase == first_name.downcase &&
+          person.last_name&.downcase == last_name.downcase
+        duplicates << format_duplicate(person, exact: name_matches, entered_email: email)
+        break if duplicates.size >= 10
       end
     end
 
-    duplicates
+    sort_order = { "exact" => 0, "approximate" => 1, "email" => 2, "nickname" => 3 }
+    duplicates.sort_by { |d| [ d[:blocked] ? -1 : 0, sort_order[d[:match_type]] || 4 ] }
   end
 
-  def format_duplicate(person)
+  def format_duplicate(person, exact: true, entered_email: nil)
+    labeled_emails = []
+    # Skip person.email when person has a user (it's a stale copy of user.email)
+    labeled_emails << { label: "Email", value: person.email } if person.email.present? && person.user.blank?
+    labeled_emails << { label: "Secondary email", value: person.email_2 } if person.email_2.present?
+    labeled_emails << { label: "User email", value: person.user.email } if person.user&.email.present?
+    emails = labeled_emails.map { |e| e[:value] }.uniq
+    any_email_match = entered_email.present? &&
+      emails.any? { |e| e.downcase == entered_email.downcase }
+    primary_email_match = exact && entered_email.present? &&
+      person.email.present? && person.email.downcase == entered_email.downcase
+    secondary_email_match = exact && any_email_match && !primary_email_match
+
+    match_type = if primary_email_match
+      "exact"
+    elsif secondary_email_match
+      "approximate"
+    elsif !exact && any_email_match
+      "email"
+    elsif exact
+      "exact"
+    else
+      "nickname"
+    end
+
     {
       id: person.id,
       name: person.full_name,
-      email: person.email || person.user&.email
+      labeled_emails: labeled_emails,
+      match_type: match_type,
+      blocked: primary_email_match
     }
   end
 

@@ -30,6 +30,9 @@ Rails.application.routes.draw do
   get "welcome/:welcome_instructions_token", to: "welcome#show", as: "user_welcome"
   patch "welcome/:welcome_instructions_token", to: "welcome#update", as: "user_welcome_update"
   resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
+    collection do
+      get :check_duplicates
+    end
     member do
       get :generate_person
       post :send_reset_password_instructions
@@ -77,7 +80,7 @@ Rails.application.routes.draw do
   end
   resources :people do
     collection do
-      post :check_duplicates
+      get :check_duplicates
     end
   end
   resources :faqs

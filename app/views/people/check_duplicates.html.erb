@@ -1,0 +1,100 @@
+<div class="min-h-screen py-10">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 sm:p-8">
+      <div class="flex items-center mb-6">
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+          <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <h1 class="ml-4 text-xl font-semibold text-gray-900">Possible Duplicate Person</h1>
+      </div>
+
+      <p class="text-sm text-gray-600 mb-2">
+        Checking:
+        <span class="font-medium text-gray-900"><%= @first_name %> <%= @last_name %></span>
+        <% if @email.present? %>
+          <span class="text-gray-500">(<%= @email %>)</span>
+        <% end %>
+      </p>
+
+      <p class="text-sm text-gray-500 mb-4">
+        We found existing people in the system with a similar name or email.
+      </p>
+
+      <p class="text-sm text-gray-500 mt-4 mb-2">
+        Please review the list below:
+      </p>
+
+      <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg mb-6">
+        <% @duplicates.each do |dup| %>
+          <li class="px-4 py-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              <%= link_to dup[:name],
+                          person_path(dup[:id]),
+                          target: "_blank",
+                          class: "text-blue-600 hover:text-blue-800 underline font-medium" %>
+
+              <% if dup[:blocked] %>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">exact match</span>
+              <% elsif dup[:match_type] == "approximate" %>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">approximate match</span>
+              <% elsif dup[:match_type] == "email" %>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">email match</span>
+              <% elsif dup[:match_type] == "nickname" %>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-700">nickname match</span>
+              <% end %>
+            </div>
+
+            <div class="text-gray-500 text-xs mt-0.5">
+              <% if dup[:labeled_emails].present? %>
+                <% dup[:labeled_emails].each_with_index do |entry, i| %>
+                  <span class="text-gray-400"><%= entry[:label] %>:</span> <%= entry[:value] %><%= ", " unless i == dup[:labeled_emails].size - 1 %>
+                <% end %>
+              <% else %>
+                No email
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+
+      <% if @blocked %>
+        <p class="text-sm text-red-600 font-medium">
+          A person with this exact name and primary email already exists.
+        </p>
+        <p class="text-sm text-red-600 font-medium mb-6">
+          Please edit the existing record instead.
+        </p>
+      <% elsif @duplicates.any? { |d| d[:match_type] == "approximate" } %>
+        <p class="text-sm text-orange-600 font-medium mb-6">
+          A person with this name has a matching secondary or user email.
+        </p>
+      <% end %>
+
+      <% if @email.present? && @duplicates.any? { |d| d[:labeled_emails]&.any? { |e| e[:value]&.downcase == @email.downcase } } %>
+        <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
+          Multiple people can share the same email address, but each user account requires a unique email.
+          If you plan to create a user account for this person, they will need a different email than the one shown above.
+        </p>
+      <% end %>
+
+      <div class="flex gap-3 justify-center">
+        <%= link_to "Go Back", "javascript:history.back()", class: "btn btn-secondary-outline" %>
+
+        <% unless @blocked %>
+          <%= form_with url: people_path, method: :post, data: { turbo: false } do %>
+            <input type="hidden" name="person[first_name]" value="<%= @first_name %>">
+            <input type="hidden" name="person[last_name]" value="<%= @last_name %>">
+            <input type="hidden" name="person[email]" value="<%= @email %>">
+            <input type="hidden" name="person[created_by_id]" value="<%= current_user.id %>">
+            <input type="hidden" name="person[updated_by_id]" value="<%= current_user.id %>">
+            <input type="hidden" name="skip_duplicate_check" value="1">
+            <button type="submit" class="btn btn-primary">Create Anyway</button>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
