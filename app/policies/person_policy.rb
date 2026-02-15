@@ -38,7 +38,7 @@ class PersonPolicy < ApplicationPolicy
 
   def has_associated_data?
     record.user.present? ||
-      record.organization_people.exists? ||
+      record.affiliations.exists? ||
       record.stories_as_spotlighted_facilitator.exists?
   end
 end

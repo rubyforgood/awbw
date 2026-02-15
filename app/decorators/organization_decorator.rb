@@ -13,7 +13,7 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   def badges
-    earliest = organization_people.minimum(:start_date) || start_date
+    earliest = affiliations.minimum(:start_date) || start_date
     years = earliest ? (Time.zone.now.year - earliest.year) : nil
     badges = []
     badges << badge("Legacy Organization (10+ years)", :legacy_facilitator) if years && years >= 10

@@ -8,13 +8,13 @@ class OrganizationsController < ApplicationController
     base_scope = authorized_scope(Organization.includes(:windows_type, :organization_status, :sectors, :addresses, logo_attachment: :blob))
     filtered = base_scope.search_by_params(params).order(:name)
     @organizations_count = filtered.count
-    @active_people_count = OrganizationPerson.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
+    @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
     @organizations = filtered.paginate(page: params[:page], per_page: per_page)
     org_ids = @organizations.map(&:id)
-    @affiliated_since = OrganizationPerson.where(organization_id: org_ids)
+    @affiliated_since = Affiliation.where(organization_id: org_ids)
                                           .group(:organization_id)
                                           .minimum(:start_date)
-    @active_people_counts = OrganizationPerson.active
+    @active_people_counts = Affiliation.active
                                               .where(organization_id: org_ids)
                                               .group(:organization_id)
                                               .distinct

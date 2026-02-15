@@ -5,8 +5,8 @@ RSpec.describe Person, type: :model do
     it { should have_one(:user) }
     it { should belong_to(:created_by).class_name("User") }
     it { should belong_to(:updated_by).class_name("User") }
-    it { should have_many(:organization_people).dependent(:destroy) }
-    it { should have_many(:organizations).through(:organization_people) }
+    it { should have_many(:affiliations).dependent(:destroy) }
+    it { should have_many(:organizations).through(:affiliations) }
     it { should have_many(:addresses) }
     it { should have_many(:contact_methods) }
     it { should have_many(:sectorable_items) }
