@@ -22,7 +22,8 @@
       "Bash(git apply:*)",
       "Bash(git checkout:*)",
       "Bash(mysql -u root:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(bundle exec brakeman:*)"
     ]
   }
 }
