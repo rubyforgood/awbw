@@ -187,6 +187,32 @@ RSpec.describe WorkshopSearchService, type: :service do
           expect(workshops).to include(workshop_with_ampersand)
         end
 
+        it "finds workshops with ampersands when searching with 'and'" do
+          service = WorkshopSearchService.new({ title: 'Arts and Crafts' }, user: user).call
+          expect(service.workshops).to include(workshop_with_ampersand)
+        end
+
+        it "finds workshops with 'and' when searching with ampersand" do
+          workshop = create(:workshop, :published, title: "Arts and Crafts", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Arts & Crafts' }, user: user).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with 'w/' when searching with 'with'" do
+          workshop = create(:workshop, :published, title: "Painting w/ Kids", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Painting with Kids' }, user: user).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with 'with' when searching with 'w/'" do
+          workshop = create(:workshop, :published, title: "Painting with Kids", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Painting w/ Kids' }, user: user).call
+          expect(service.workshops).to include(workshop)
+        end
+
         it "finds workshops with periods when searching without periods" do
           service = WorkshopSearchService.new({ title: 'Dr Workshop' }, user: user).call
           workshops = service.workshops
