@@ -96,11 +96,13 @@ class OrganizationsController < ApplicationController
     @sectors_collection = Sector.published.order(:name).pluck(:name, :id)
     @current_sector_ids = @organization.sectorable_items.map(&:sector_id)
     # Build array of [display_name, id] for person selection dropdown
-    # Email priority matches Person#preferred_email: user.email > person.email > person.email_2
-    @people_array = Person.left_joins(:user)
+    # Uses Person#preferred_email for consistent email priority
+    @people_array = Person.includes(:user)
                           .order(:first_name, :last_name)
-                          .pluck(:first_name, :last_name, :id, Arel.sql("COALESCE(users.email, people.email, people.email_2)"))
-                          .map { |fn, ln, id, email| [ "#{fn} #{ln}#{" (#{email})" if email.present?}", id ] }
+                          .map { |person| 
+                            email = person.preferred_email
+                            [ "#{person.first_name} #{person.last_name}#{" (#{email})" if email.present?}", person.id ] 
+                          }
 
     if @organization.persisted? && @organization.errors.empty?
       org_people = @organization.organization_people
