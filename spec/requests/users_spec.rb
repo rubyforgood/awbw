@@ -42,7 +42,7 @@ RSpec.describe "/users", type: :request do
         expect(response).to be_successful
       end
 
-      it "displays locked status for locked users" do
+      it "displays lock icon for locked users" do
         create(:user, locked_at: Time.current)
 
         get users_url
