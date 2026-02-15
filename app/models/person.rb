@@ -30,6 +30,8 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
+  before_validation :strip_whitespace
+
   # Validations
   validates :avatar,
             content_type: %w[image/png image/jpeg image/webp],
@@ -150,6 +152,13 @@ class Person < ApplicationRecord
   end
 
   private
+
+  def strip_whitespace
+    self.first_name = first_name&.strip
+    self.last_name = last_name&.strip
+    self.email = email&.strip
+    self.email_2 = email_2&.strip
+  end
 
   def unique_name_and_email_combination
     return unless first_name.present? && last_name.present?

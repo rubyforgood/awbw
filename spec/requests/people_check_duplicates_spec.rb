@@ -27,6 +27,12 @@ RSpec.describe "/people/check_duplicates", type: :request do
         expect(response.body).to include("Jane Doe")
       end
 
+      it "shows the name match badge" do
+        get check_duplicates_people_path, params: { first_name: "Jane", last_name: "Doe", email: "" }
+
+        expect(response.body).to include("name match")
+      end
+
       it "shows the Create Anyway button" do
         get check_duplicates_people_path, params: { first_name: "Jane", last_name: "Doe", email: "" }
 
@@ -41,15 +47,15 @@ RSpec.describe "/people/check_duplicates", type: :request do
         create(:person, first_name: "Robert", last_name: "Smith", email: "robert@example.com")
       end
 
-      it "shows the nickname match badge" do
+      it "shows the similar name badge" do
         get check_duplicates_people_path, params: { first_name: "Bob", last_name: "Smith", email: "" }
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Robert Smith")
-        expect(response.body).to include("nickname match")
+        expect(response.body).to include("similar name")
       end
 
-      it "sorts exact matches before nickname matches" do
+      it "sorts name matches before similar names" do
         create(:person, first_name: "Bob", last_name: "Smith", email: "bob@example.com")
 
         get check_duplicates_people_path, params: { first_name: "Bob", last_name: "Smith", email: "" }
@@ -58,8 +64,68 @@ RSpec.describe "/people/check_duplicates", type: :request do
         # Both appear
         expect(response.body).to include("Bob Smith")
         expect(response.body).to include("Robert Smith")
-        # Exact match (Bob) appears before nickname match (Robert) in the list
+        # Name match (Bob) appears before similar name (Robert) in the list
         expect(response.body.index("Bob Smith")).to be < response.body.index("Robert Smith")
+      end
+    end
+
+    # --- Period and space normalization ---
+
+    context "when names contain periods or extra spaces" do
+      it "matches first name with periods to stored name without" do
+        get check_duplicates_people_path, params: { first_name: "J.R.", last_name: "Doe", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        # existing_person is "Jane Doe" — "J.R." normalizes to "jr", no match expected
+        expect(response.body).not_to include("Jane Doe")
+      end
+
+      it "matches stored name with periods to entered name without" do
+        create(:person, first_name: "J.R.", last_name: "Smith")
+
+        get check_duplicates_people_path, params: { first_name: "JR", last_name: "Smith", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("J.R. Smith")
+        expect(response.body).to include("name match")
+      end
+
+      it "matches entered name with periods to stored name without" do
+        create(:person, first_name: "JR", last_name: "Smith")
+
+        get check_duplicates_people_path, params: { first_name: "J.R.", last_name: "Smith", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("JR Smith")
+        expect(response.body).to include("name match")
+      end
+
+      it "matches last name with extra spaces" do
+        create(:person, first_name: "Mary", last_name: "De La Cruz")
+
+        get check_duplicates_people_path, params: { first_name: "Mary", last_name: "DeLaCruz", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Mary De La Cruz")
+        expect(response.body).to include("name match")
+      end
+
+      it "matches first name with trailing spaces" do
+        get check_duplicates_people_path, params: { first_name: " Jane ", last_name: "Doe", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Jane Doe")
+        expect(response.body).to include("name match")
+      end
+
+      it "matches nickname variants through periods" do
+        create(:person, first_name: "Robert", last_name: "Jones")
+
+        get check_duplicates_people_path, params: { first_name: "Rob.", last_name: "Jones", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Robert Jones")
+        expect(response.body).to include("similar name")
       end
     end
 
@@ -85,10 +151,10 @@ RSpec.describe "/people/check_duplicates", type: :request do
       end
     end
 
-    # --- Approximate match (exact name + secondary/user email) ---
+    # --- Name + email match (exact name + secondary/user email) ---
 
-    context "when exact name and secondary email match (approximate)" do
-      it "shows the approximate match badge and warning" do
+    context "when exact name and secondary email match" do
+      it "shows both name match and email match badges" do
         existing_person.update!(email_2: "jane.secondary@testmail.org")
 
         get check_duplicates_people_path, params: {
@@ -96,7 +162,18 @@ RSpec.describe "/people/check_duplicates", type: :request do
         }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("approximate match")
+        expect(response.body).to include("name match")
+        expect(response.body).to include("email match")
+      end
+
+      it "shows the secondary email warning" do
+        existing_person.update!(email_2: "jane.secondary@testmail.org")
+
+        get check_duplicates_people_path, params: {
+          first_name: "Jane", last_name: "Doe", email: "jane.secondary@testmail.org"
+        }
+
+        expect(response).to have_http_status(:ok)
         expect(response.body).to include("matching secondary or user email")
       end
     end

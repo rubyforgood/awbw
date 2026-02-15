@@ -4,6 +4,7 @@ module NicknameMap
   GROUPS = [
     # Nicknames and alternate spellings
     %w[abraham abe],
+    %w[abbey abby abbie],
     %w[adelaida adela ada],
     %w[adolfo fito],
     %w[albert al bert],
@@ -16,8 +17,8 @@ module NicknameMap
     %w[alfonso poncho],
     %w[alfred al fred],
     %w[alfredo fredo],
-    %w[alice ali alyce],
-    %w[allison ali allie alison alyson],
+    %w[alice ali allie alyce],
+    %w[allison ali allie alison alyson allyson],
     %w[amanda mandy],
     %w[amparo amparito],
     %w[anastasia ana stacy],
@@ -307,9 +308,15 @@ module NicknameMap
     map.transform_values(&:to_a).freeze
   end
 
+  # Strips whitespace and removes periods for consistent matching.
+  # e.g. normalize("J.R.") => "jr", normalize(" Jane ") => "jane"
+  def self.normalize(name)
+    name.to_s.downcase.gsub(/[\s.]/, "")
+  end
+
   # Returns an array of name variants (including the input itself).
   # e.g. variants_for("Bob") => ["robert", "rob", "bob", "bobby", "robbie"]
   def self.variants_for(name)
-    LOOKUP.fetch(name.to_s.downcase, [ name.to_s.downcase ])
+    LOOKUP.fetch(normalize(name), [ normalize(name) ])
   end
 end

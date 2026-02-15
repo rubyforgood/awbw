@@ -194,19 +194,22 @@ class PeopleController < ApplicationController
     duplicate_ids = Set.new
 
     # Check for name matches (exact + nickname variants)
+    # Normalize removes periods and extra whitespace: "J. R." -> "jr"
     if first_name.presence && last_name.presence
       first_variants = NicknameMap.variants_for(first_name)
+      normalized_last = NicknameMap.normalize(last_name)
+      normalized_first = NicknameMap.normalize(first_name)
 
       name_matches = Person.includes(:user)
-                           .where("LOWER(last_name) = ?", last_name.downcase)
-                           .where("LOWER(first_name) IN (?)", first_variants)
+                           .where("REPLACE(REPLACE(LOWER(last_name), '.', ''), ' ', '') = ?", normalized_last)
+                           .where("REPLACE(REPLACE(LOWER(first_name), '.', ''), ' ', '') IN (?)", first_variants)
                            .limit(10)
 
       name_matches.each do |person|
         next if duplicate_ids.include?(person.id)
 
         duplicate_ids.add(person.id)
-        exact_name = person.first_name.downcase == first_name.downcase
+        exact_name = NicknameMap.normalize(person.first_name) == normalized_first
         duplicates << format_duplicate(person, exact: exact_name, entered_email: email)
       end
     end
@@ -228,14 +231,14 @@ class PeopleController < ApplicationController
 
         duplicate_ids.add(person.id)
         name_matches = first_name.present? && last_name.present? &&
-          person.first_name&.downcase == first_name.downcase &&
-          person.last_name&.downcase == last_name.downcase
+          NicknameMap.normalize(person.first_name) == NicknameMap.normalize(first_name) &&
+          NicknameMap.normalize(person.last_name) == NicknameMap.normalize(last_name)
         duplicates << format_duplicate(person, exact: name_matches, entered_email: email)
         break if duplicates.size >= 10
       end
     end
 
-    sort_order = { "exact" => 0, "approximate" => 1, "email" => 2, "nickname" => 3 }
+    sort_order = { "exact" => 0, "name" => 1, "approximate" => 2, "email" => 3, "nickname" => 4 }
     duplicates.sort_by { |d| [ d[:blocked] ? -1 : 0, sort_order[d[:match_type]] || 4 ] }
   end
 
@@ -259,7 +262,7 @@ class PeopleController < ApplicationController
     elsif !exact && any_email_match
       "email"
     elsif exact
-      "exact"
+      "name"
     else
       "nickname"
     end
@@ -269,6 +272,7 @@ class PeopleController < ApplicationController
       name: person.full_name,
       labeled_emails: labeled_emails,
       match_type: match_type,
+      name_match: exact,
       blocked: primary_email_match
     }
   end

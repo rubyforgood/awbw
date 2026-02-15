@@ -34,6 +34,21 @@ RSpec.describe User do
     it { should accept_nested_attributes_for(:user_forms) }
   end
 
+  describe "strip_whitespace" do
+    it "strips leading and trailing whitespace from names and email" do
+      user = create(:user, first_name: "  Jane  ", last_name: "  Doe  ", email: "  jane@test.org  ")
+      expect(user.first_name).to eq("Jane")
+      expect(user.last_name).to eq("Doe")
+      expect(user.email).to eq("jane@test.org")
+    end
+
+    it "handles nil name values" do
+      user = create(:user, first_name: nil, last_name: nil, email: "nil-names@test.org")
+      expect(user.first_name).to be_nil
+      expect(user.last_name).to be_nil
+    end
+  end
+
   describe "validations" do
     # Devise validations (presence tested manually below, uniqueness tested with subject)
     subject { create(:user) } # Use create for uniqueness tests

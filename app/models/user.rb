@@ -49,6 +49,8 @@ class User < ApplicationRecord
   accepts_nested_attributes_for :user_forms
 
 
+  before_validation :strip_whitespace
+
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }
   validate :time_zone_must_be_valid, if: :time_zone_changed?
@@ -198,6 +200,12 @@ class User < ApplicationRecord
   end
 
   private
+
+  def strip_whitespace
+    self.first_name = first_name&.strip
+    self.last_name = last_name&.strip
+    self.email = email&.strip
+  end
 
   def time_zone_must_be_valid
     return if ActiveSupport::TimeZone[time_zone]

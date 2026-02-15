@@ -12,6 +12,28 @@ RSpec.describe Person, type: :model do
     it { should have_many(:sectorable_items) }
   end
 
+  describe "strip_whitespace" do
+    let(:admin) { create(:user, :admin) }
+
+    it "strips leading and trailing whitespace from names and emails" do
+      person = create(:person, first_name: "  Jane  ", last_name: "  Doe  ",
+                       email: "  jane@test.org  ", email_2: "  jane2@test.org  ",
+                       created_by: admin, updated_by: admin)
+      expect(person.first_name).to eq("Jane")
+      expect(person.last_name).to eq("Doe")
+      expect(person.email).to eq("jane@test.org")
+      expect(person.email_2).to eq("jane2@test.org")
+    end
+
+    it "handles nil values" do
+      person = create(:person, first_name: "Jane", last_name: "Doe",
+                       email: nil, email_2: nil,
+                       created_by: admin, updated_by: admin)
+      expect(person.email).to be_nil
+      expect(person.email_2).to be_nil
+    end
+  end
+
   describe "validations" do
     it { should validate_presence_of(:first_name) }
     it { should validate_presence_of(:last_name) }
