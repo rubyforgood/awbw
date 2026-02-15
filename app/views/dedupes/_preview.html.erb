@@ -128,9 +128,11 @@
                               .select { |a| a.class_name == "ActionText::RichText" }
                               .map { |a| a.name.to_s.sub(/^rich_text_/, "") } %>
     <% rt_attrs.each do |rt_attr| %>
-      <% delete_body = record_to_delete.public_send(rt_attr)&.to_plain_text.presence %>
-      <% keep_body = record_to_keep.public_send(rt_attr)&.to_plain_text.presence %>
-      <% next if delete_body.blank? && keep_body.blank? %>
+      <% delete_rt = record_to_delete.public_send(rt_attr) %>
+      <% keep_rt = record_to_keep.public_send(rt_attr) %>
+      <% next if delete_rt.blank? && keep_rt.blank? %>
+      <% delete_body = delete_rt&.body&.to_s.presence %>
+      <% keep_body = keep_rt&.body&.to_s.presence %>
       <% is_different = delete_body != keep_body %>
 
       <!-- Left: read-only -->
@@ -142,8 +144,8 @@
             <span class="ml-1 text-xs font-semibold text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded">DIFFERENT</span>
           <% end %>
         </div>
-        <% if delete_body.present? %>
-          <p class="mt-1 text-gray-900 whitespace-pre-wrap"><%= delete_body %></p>
+        <% if delete_rt.present? %>
+          <div class="mt-1 text-gray-900"><%= delete_rt %></div>
         <% end %>
       </div>
 
