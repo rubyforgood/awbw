@@ -33,7 +33,8 @@
               <% cache [person, current_user.super_user?] do %>
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2">
-                  <%= person_profile_button(person) %>
+                  <% email = person.user&.email.presence || person.email.presence || person.email_2.presence %>
+                  <%= person_profile_button(person, subtitle: email) %>
                 </td>
                 <td class="px-4 py-2 text-center text-sm text-gray-800">
                   <%= person.member_since&.year %>

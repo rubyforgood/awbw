@@ -97,8 +97,8 @@ class OrganizationsController < ApplicationController
     @current_sector_ids = @organization.sectorable_items.map(&:sector_id)
     @people_array = Person.joins(:user)
                           .order(:first_name, :last_name)
-                          .pluck(:first_name, :last_name, :id)
-                          .map { |fn, ln, id| [ "#{fn} #{ln}", id ] }
+                          .pluck(:first_name, :last_name, :id, Arel.sql("COALESCE(users.email, people.email, people.email_2)"))
+                          .map { |fn, ln, id, email| [ "#{fn} #{ln}#{" (#{email})" if email.present?}", id ] }
 
     if @organization.persisted? && @organization.errors.empty?
       org_people = @organization.organization_people
