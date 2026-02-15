@@ -39,16 +39,16 @@ audit: true
 # time_zone: "Pacific Time (US & Canada)"
 
 # class name of the user model
-# user_class: User
+user_class: User
 
 # method name for the current user
-# user_method: current_user
+user_method: current_user
 
 # method name for the display name
-# user_name: name
+user_name: email
 
 # custom before_action to use for auth
-# before_action_method: require_admin
+before_action_method: require_blazer_access
 
 # email to send checks from
 # from_email: blazer@example.org
