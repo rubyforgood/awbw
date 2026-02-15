@@ -1,4 +1,4 @@
-unless Rails.env.test?
+unless Rails.env.local?
   require "opentelemetry/sdk"
   require "opentelemetry/exporter/otlp"
   require "opentelemetry/instrumentation/all"
