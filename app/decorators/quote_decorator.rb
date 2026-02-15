@@ -9,7 +9,7 @@ class QuoteDecorator < ApplicationDecorator
   end
 
   def created_by # TODO - add to model and quote creation
-    object.quotable_item_quotes.last&.quotable&.decorate&.created_by
+    object.quotable&.decorate&.created_by
   end
 
   def quote

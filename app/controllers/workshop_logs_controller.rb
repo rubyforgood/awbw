@@ -143,17 +143,8 @@ class WorkshopLogsController < ApplicationController
                           .order(title: :asc)
 
     # Build one blank quote if none exists
-    @workshop_log.quotable_item_quotes.each do |qiq|
-      qiq.build_quote unless qiq.quote
-      qiq.quotable = @workshop_log
-    end
-
-    # Always build at least one new blank quotable_item_quote
-    if @workshop_log.quotable_item_quotes.empty?
-      qiq = @workshop_log.quotable_item_quotes.build
-      qiq.build_quote
-      qiq.quotable = @workshop_log
-    end
+    # Always build at least one new blank quote
+    @workshop_log.quotes.build if @workshop_log.quotes.empty?
 
     # @sectors = Sector.published.map{ |si| [ si.id, si.name ] }
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
@@ -199,12 +190,7 @@ class WorkshopLogsController < ApplicationController
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
       :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :user_id, :organization_id, :date,
       :workshop_name, :workshop_id, :windows_type_id, :other_description, :external_workshop_title, # :user,
-      quotable_item_quotes_attributes: [
-        :id, :quotable_type, :quotable_id, :_destroy,
-        quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
-      all_quotable_item_quotes_attributes: [
-        :id, :quotable_type, :quotable_id, :_destroy,
-        quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
+      quotes_attributes: [ :id, :quote, :age, :speaker_name, :workshop_id, :_destroy ],
       report_form_field_answers_attributes: [ :id, :form_field_id, :answer_option_id,
                                              :answer, :report_id, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ])

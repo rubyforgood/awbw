@@ -31,8 +31,7 @@ class Report < ApplicationRecord
   accepts_nested_attributes_for :media_files, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :all_quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :quotes, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :report_form_field_answers,
                                 reject_if: proc { |object|
                                   object["_create"].to_i == 0 && object["answer"].nil? }

@@ -4,10 +4,8 @@ RSpec.describe Quote do
   # pending "add some examples to (or delete) #{__FILE__}"
 
   describe 'associations' do
-    # it { should have_many(:quotable_item_quotes) } # Model missing has_many
-    # Through associations can sometimes be tricky, test if needed
-    # it { should have_many(:reports).through(:quotable_item_quotes).source(:quotable).source_type('Report') }
-    # it { should have_many(:workshops).through(:quotable_item_quotes).source(:quotable).source_type('Workshop') }
+    it { should belong_to(:quotable).optional }
+    it { should belong_to(:workshop).optional }
   end
 
   describe 'validations' do

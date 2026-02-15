@@ -11,8 +11,7 @@ RSpec.describe Report do
     it { should have_many(:gallery_assets) }
     it { should have_many(:form_fields).through(:form) }
     it { should have_many(:report_form_field_answers).dependent(:destroy) }
-    it { should have_many(:quotable_item_quotes).dependent(:nullify) }
-    it { should have_many(:quotes).through(:all_quotable_item_quotes).dependent(:nullify) }
+    it { should have_many(:quotes).dependent(:destroy) }
     it { should have_many(:notifications).dependent(:destroy) }
     it { should have_many(:sectorable_items).dependent(:destroy) }
     it { should have_many(:sectors).through(:sectorable_items).dependent(:destroy) }
@@ -20,7 +19,7 @@ RSpec.describe Report do
 
     it { should accept_nested_attributes_for(:media_files) }
     it { should accept_nested_attributes_for(:report_form_field_answers) }
-    it { should accept_nested_attributes_for(:quotable_item_quotes) }
+    it { should accept_nested_attributes_for(:quotes) }
   end
 
   describe "validations" do

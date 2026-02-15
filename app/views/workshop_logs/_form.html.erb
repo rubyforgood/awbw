@@ -99,10 +99,10 @@
       What did your participants share about their experience? Please write quotes in first person.
     </p>
     <div id="quotes" class="space-y-3">
-      <%= f.simple_fields_for :all_quotable_item_quotes do |qiq_form| %>
-        <%= render 'quotable_item_quote_fields', f: qiq_form %>
+      <%= f.simple_fields_for :quotes do |quote_form| %>
+        <%= render 'quote_fields', f: quote_form %>
       <% end %>
-      <%= link_to_add_association "Add Quote", f, :quotable_item_quotes, class: "text-blue-600 hover:underline text-sm" %>
+      <%= link_to_add_association "Add Quote", f, :quotes, class: "text-blue-600 hover:underline text-sm" %>
     </div>
     <!-- Upload Section -->
     <%= render "shared/form_image_fields", f: f, include_primary_asset: false,

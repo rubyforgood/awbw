@@ -72,11 +72,11 @@
             <% end %>
 
             <div>
-              <% @quote.quotable_item_quotes.each do |qiq| %>
+              <% if @quote.quotable %>
                 <div>
-                  <h3 class="text-sm font-medium text-gray-500"><%= qiq.quotable.class %></h3>
-                  <%= link_to qiq.quotable.title,
-                              polymorphic_path(qiq.quotable),
+                  <h3 class="text-sm font-medium text-gray-500"><%= @quote.quotable.class %></h3>
+                  <%= link_to @quote.quotable.title,
+                              polymorphic_path(@quote.quotable),
                               class: "btn btn-secondary-outline" %>
                 </div>
               <% end %>
