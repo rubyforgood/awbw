@@ -20,7 +20,9 @@
       "Bash(bundle exec rubocop:*)",
       "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)",
       "Bash(git apply:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(mysql -u root:*)",
+      "Bash(chmod:*)"
     ]
   }
 }
