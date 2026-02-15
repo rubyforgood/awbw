@@ -115,6 +115,19 @@ RSpec.describe "/story_ideas", type: :request do
         }.to change(StoryIdea, :count).by(1)
       end
 
+      it "creates a StoryIdea with external_workshop_title when workshop_id is 'new'" do
+        attrs = valid_attributes.merge(
+          workshop_id: "new",
+          external_workshop_title: "My Custom Workshop"
+        )
+
+        post story_ideas_url, params: { story_idea: attrs }
+
+        story_idea = StoryIdea.last
+        expect(story_idea.workshop_id).to be_nil
+        expect(story_idea.external_workshop_title).to eq("My Custom Workshop")
+      end
+
       it "redirects to root after create" do
         post story_ideas_url, params: { story_idea: valid_attributes }
         expect(response).to redirect_to(root_path)
