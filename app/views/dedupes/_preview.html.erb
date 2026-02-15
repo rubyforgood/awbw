@@ -1,0 +1,155 @@
+<%# Shared dedupe preview partial
+  Required locals:
+    domain:             Symbol (:categories or :sectors)
+    record_to_delete:   The record that will be deleted
+    record_to_keep:     The record that will be kept
+    delete_items:       Associated items of the record to delete
+    keep_items:         Associated items of the record to keep
+    item_type_col:      Polymorphic type column (e.g. :categorizable_type)
+    item_id_col:        Polymorphic id column (e.g. :categorizable_id)
+    model_label:        Human label (e.g. "Category")
+    keep_param_key:     Param key for keep fields (e.g. :category_to_keep)
+    form_builder:       The parent form builder (f)
+    belongs_to_options: Hash of { column_name => collection } for select fields
+%>
+
+<%
+  color = DomainTheme.color_for(domain)
+  model_class = record_to_delete.class
+  skip_columns = %w[id created_at updated_at legacy_id]
+  columns = model_class.columns.reject { |c| skip_columns.include?(c.name) }
+
+  # Resolve belongs_to associations for _id columns
+  bt_associations = model_class.reflect_on_all_associations(:belongs_to).index_by { |a| a.foreign_key.to_s }
+  belongs_to_options ||= {}
+  assoc_name = item_type_col.to_s.sub(/_type$/, '').to_sym
+%>
+
+<!-- Side-by-side Comparison -->
+<div class="grid grid-cols-2 gap-x-6 mb-6"
+     data-controller="autosave"
+     data-autosave-url-value="<%= url_for(action: :dedupe_update_keep) %>"
+     data-autosave-id-value="<%= record_to_keep.id %>"
+     data-action="change->autosave#save">
+
+  <!-- Headers -->
+  <div class="border border-<%= color %>-200 rounded-t-xl bg-<%= color %>-50 px-5 py-3 flex items-center gap-2">
+    <i class="fa-solid fa-trash-can text-red-400"></i>
+    <span class="text-lg font-bold text-gray-900"><%= model_label %> to delete: <strong><%= record_to_delete.name %></strong></span>
+  </div>
+  <div class="border border-<%= color %>-200 rounded-t-xl bg-<%= color %>-50 px-5 py-3 flex items-center gap-2">
+    <i class="fa-solid fa-check-circle text-green-500"></i>
+    <span class="text-lg font-bold text-gray-900"><%= model_label %> to keep: <strong><%= record_to_keep.name %></strong></span>
+  </div>
+
+  <!-- ID row -->
+  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+    <span class="text-gray-400 text-sm">ID</span>
+    <span class="ml-2 text-gray-900"><%= record_to_delete.id %></span>
+  </div>
+  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+    <span class="text-gray-400 text-sm">ID</span>
+    <span class="ml-2 text-gray-900"><%= record_to_keep.id %></span>
+  </div>
+
+  <!-- Dynamic field rows -->
+  <%= form_builder.fields_for keep_param_key, record_to_keep do |keep_f| %>
+    <% columns.each do |col| %>
+      <% delete_val = record_to_delete.public_send(col.name) %>
+      <% keep_val = record_to_keep.public_send(col.name) %>
+      <% col_assoc = bt_associations[col.name] %>
+      <%
+        if col_assoc
+          label = col.name.sub(/_id$/, '').titleize
+          display_val = record_to_delete.public_send(col_assoc.name)&.try(:name) || '(none)'
+        elsif col.type == :boolean
+          label = col.name.titleize
+          display_val = delete_val ? 'Yes' : 'No'
+        elsif col.type == :datetime
+          label = col.name.titleize
+          display_val = delete_val&.strftime("%Y-%m-%d %H:%M") || 'N/A'
+        else
+          label = col.name.titleize
+          display_val = delete_val
+        end
+        is_different = delete_val != keep_val
+      %>
+
+      <!-- Left: read-only -->
+      <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center flex-wrap gap-x-1">
+        <span class="text-gray-400 text-sm"><%= label %></span>
+        <span class="ml-2 text-gray-900 <%= 'font-semibold' if col.name == 'name' %>"><%= display_val %></span>
+        <% if is_different %>
+          <span class="ml-1 text-xs font-semibold text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded">DIFFERENT</span>
+        <% end %>
+      </div>
+
+      <!-- Right: editable -->
+      <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center flex-wrap gap-x-1">
+        <% if col.type == :boolean %>
+          <label class="inline-flex items-center gap-2">
+            <%= keep_f.check_box col.name.to_sym, class: "rounded border-gray-200 text-#{color}-600 focus:ring-#{color}-500" %>
+            <span class="text-gray-400 text-sm"><%= label %></span>
+          </label>
+        <% elsif col_assoc && belongs_to_options[col.name].present? %>
+          <label class="text-gray-400 text-sm"><%= label %></label>
+          <%= keep_f.collection_select col.name.to_sym, belongs_to_options[col.name], :id, :name, {}, class: "ml-2 px-2 py-1 border border-gray-200 rounded text-gray-900 focus:ring-2 focus:ring-#{color}-500 focus:border-transparent" %>
+        <% elsif col.type == :integer %>
+          <label class="text-gray-400 text-sm"><%= label %></label>
+          <%= keep_f.number_field col.name.to_sym, class: "ml-2 w-20 px-2 py-1 border border-gray-200 rounded text-gray-900 focus:ring-2 focus:ring-#{color}-500 focus:border-transparent" %>
+        <% else %>
+          <label class="text-gray-400 text-sm"><%= label %></label>
+          <%= keep_f.text_field col.name.to_sym, class: "ml-2 px-2 py-1 border border-gray-200 rounded text-gray-900 #{col.name == 'name' ? 'font-semibold' : ''} focus:ring-2 focus:ring-#{color}-500 focus:border-transparent" %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <!-- Created row -->
+  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+    <span class="text-gray-400 text-sm">Created</span>
+    <span class="ml-2 text-gray-900"><%= record_to_delete.created_at&.strftime("%Y-%m-%d %H:%M") || 'N/A' %></span>
+  </div>
+  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+    <span class="text-gray-400 text-sm">Created</span>
+    <span class="ml-2 text-gray-900"><%= record_to_keep.created_at&.strftime("%Y-%m-%d %H:%M") || 'N/A' %></span>
+  </div>
+
+  <!-- Associated Records row -->
+  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+    <span class="text-gray-400 text-sm">Associated Records</span>
+    <span class="ml-2 text-gray-900 font-semibold"><%= delete_items.count %></span>
+  </div>
+  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+    <span class="text-gray-400 text-sm">Associated Records</span>
+    <span class="ml-2 text-gray-900 font-semibold"><%= keep_items.count %></span>
+  </div>
+
+  <!-- Tagged Items row -->
+  <div class="border-x border-b border-<%= color %>-200 rounded-b-xl bg-white px-5 py-3">
+    <% if delete_items.any? %>
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged Items</h3>
+      <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto">
+        <% delete_items.sort_by { |item| [item.public_send(item_type_col), (item.public_send(assoc_name).try(:name) || item.public_send(assoc_name).try(:title) || "").to_s.downcase] }.each do |item| %>
+          <li class="pl-2">
+            &bull; <%= item.public_send(item_type_col) %>:
+            <%= item.public_send(assoc_name).try(:name) || item.public_send(assoc_name).try(:title) || "ID #{item.public_send(item_id_col)}" %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+  <div class="border-x border-b border-<%= color %>-200 rounded-b-xl bg-white px-5 py-3">
+    <% if keep_items.any? %>
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged Items</h3>
+      <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto">
+        <% keep_items.sort_by { |item| [item.public_send(item_type_col), (item.public_send(assoc_name).try(:name) || item.public_send(assoc_name).try(:title) || "").to_s.downcase] }.each do |item| %>
+          <li class="pl-2">
+            &bull; <%= item.public_send(item_type_col) %>:
+            <%= item.public_send(assoc_name).try(:name) || item.public_send(assoc_name).try(:title) || "ID #{item.public_send(item_id_col)}" %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+</div>
