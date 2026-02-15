@@ -56,10 +56,17 @@ RSpec.describe "events/_form timezone handling", type: :view do
     it "handles nil registration_close_date gracefully" do
       assign(:event, event.decorate)
       
+      allow(Time).to receive(:zone).and_return(ActiveSupport::TimeZone["Pacific Time (US & Canada)"])
+      
       render
       
-      # Should render the input field but with empty value
+      # Should render all datetime input fields
+      expect(rendered).to have_selector("input[name='event[start_date]']")
+      expect(rendered).to have_selector("input[name='event[end_date]']")
       expect(rendered).to have_selector("input[name='event[registration_close_date]']")
+      
+      # registration_close_date should have empty value when nil
+      expect(rendered).to have_selector("input[name='event[registration_close_date]'][value='']")
     end
   end
 end
