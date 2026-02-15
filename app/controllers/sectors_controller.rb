@@ -65,9 +65,7 @@ class SectorsController < ApplicationController
   def dedupe_config
     {
       model_class: Sector,
-      domain: :sectors,
-      join_association: :sectorable_items,
-      join_includes: :sectorable
+      domain: :sectors
     }
   end
 

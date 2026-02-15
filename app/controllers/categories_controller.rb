@@ -87,8 +87,6 @@ class CategoriesController < ApplicationController
     {
       model_class: Category,
       domain: :categories,
-      join_association: :categorizable_items,
-      join_includes: :categorizable,
       belongs_to_options: -> { { "category_type_id" => CategoryType.order(:name) } },
       record_extras: ->(record) { "Type: #{record.category_type&.name || 'None'}" }
     }

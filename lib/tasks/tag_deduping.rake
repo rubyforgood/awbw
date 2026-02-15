@@ -1,5 +1,4 @@
-# lib/tasks/sector_dedupe.rake
-require "set"
+# lib/tasks/tag_deduping.rake
 
 namespace :tags do
   desc "Deduplicate sectors by normalized name and reassign sectorable_items"
@@ -10,7 +9,7 @@ namespace :tags do
     logger = Logger.new($stdout)
     logger.level = Logger::INFO
 
-    SectorDeduper.new(logger: logger, dry_run: dry_run, min_usage: min_usage).call
+    ModelDeduper.new(model_class: Sector, logger: logger, dry_run: dry_run, min_usage: min_usage).call
   end
 
   desc "Deduplicate categories by normalized name and reassign categorizable_items"
@@ -21,7 +20,7 @@ namespace :tags do
     logger = Logger.new($stdout)
     logger.level = Logger::INFO
 
-    CategoryDeduper.new(logger: logger, dry_run: dry_run, min_usage: min_usage).call
+    ModelDeduper.new(model_class: Category, logger: logger, dry_run: dry_run, min_usage: min_usage).call
   end
 
   desc "Delete duplicate sectorable_items and categorizable_items"
