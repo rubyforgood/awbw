@@ -15,7 +15,8 @@ export default class extends Controller {
     
     // Manually add each form field to URLSearchParams for Safari compatibility
     for (const [key, value] of formData.entries()) {
-      if (value) {
+      // Include all values except empty strings to keep URLs clean
+      if (value !== '') {
         params.append(key, value);
       }
     }
