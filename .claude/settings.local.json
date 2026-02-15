@@ -12,6 +12,7 @@
       "Bash(bundle exec rubocop:*)",
 
       "Bash(RAILS_ENV=test bin/rails:*)",
+      "Bash(RAILS_ENV=test bin/rails db:migrate:*)",
       "Bash(RAILS_ENV=test bundle exec rails runner:*)",
       "Bash(RAILS_ENV=test bundle exec rspec:*)",
 
@@ -27,6 +28,7 @@
       "Bash(git rebase:*)",
       "Bash(git reset:*)",
       "Bash(git stash:*)",
+      "Bash(git status:*)",
 
       "Bash(bin/rails generate:*)",
       "Bash(bin/rails db:migrate:*)",
