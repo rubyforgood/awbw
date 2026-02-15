@@ -134,7 +134,7 @@ class StoryIdeasController < ApplicationController
           .order(:position, :name)
           .group_by(&:category_type)
           .select { |type, _| type.nil? || type.published? }
-          .sort_by { |type, _| [type&.story_specific? ? 0 : 1, type&.name.to_s.downcase] }
+          .sort_by { |type, _| [ type&.story_specific? ? 0 : 1, type&.name.to_s.downcase ] }
     end
 >>>>>>> ac3201a15 (Story and StoryIdea display and promotion process wip)
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?

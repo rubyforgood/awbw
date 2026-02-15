@@ -138,7 +138,7 @@ class StoriesController < ApplicationController
         .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
-        .sort_by { |type, _| [type&.story_specific? ? 0 : 1, type&.name.to_s.downcase] }
+        .sort_by { |type, _| [ type&.story_specific? ? 0 : 1, type&.name.to_s.downcase ] }
     @sectors = Sector.published.order(:name)
     submitted_sector_ids = Array(params.dig(:story, :sector_ids)).reject(&:blank?)
     submitted_category_ids = Array(params.dig(:story, :category_ids)).reject(&:blank?)
