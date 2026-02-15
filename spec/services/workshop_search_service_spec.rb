@@ -130,5 +130,126 @@ RSpec.describe WorkshopSearchService, type: :service do
         expect(service.sort).to eq('created')
       end
     end
+
+    context "punctuation-ignoring search" do
+      let!(:workshop_with_hyphen) do
+        create(:workshop, title: "Hello - Goodbye", year: 2025, month: 3)
+      end
+      let!(:workshop_without_hyphen) do
+        create(:workshop, title: "Hello Goodbye", year: 2025, month: 4)
+      end
+      let!(:workshop_with_ampersand) do
+        create(:workshop, title: "Arts & Crafts", year: 2025, month: 5)
+      end
+      let!(:workshop_with_period) do
+        create(:workshop, title: "Dr. Workshop", year: 2025, month: 6)
+      end
+      let!(:workshop_with_em_dash) do
+        create(:workshop, title: "Hello—Goodbye", year: 2025, month: 7)
+      end
+      let!(:workshop_with_en_dash) do
+        create(:workshop, title: "Hello–Goodbye", year: 2025, month: 8)
+      end
+      let!(:workshop_with_quotes) do
+        create(:workshop, title: "The 'Best' Workshop", year: 2025, month: 9)
+      end
+
+      context "title search" do
+        it "finds workshops with hyphens when searching without hyphens" do
+          service = WorkshopSearchService.new({ title: 'Hello Goodbye' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_hyphen)
+          expect(workshops).to include(workshop_without_hyphen)
+        end
+
+        it "finds workshops without hyphens when searching with hyphens" do
+          service = WorkshopSearchService.new({ title: 'Hello - Goodbye' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_hyphen)
+          expect(workshops).to include(workshop_without_hyphen)
+        end
+
+        it "finds workshops with multiple hyphens when searching with different hyphen patterns" do
+          workshop_multi_hyphen = create(:workshop, title: "Hello -- Goodbye", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Hello Goodbye' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_multi_hyphen)
+        end
+
+        it "finds workshops with ampersands when searching without ampersands" do
+          service = WorkshopSearchService.new({ title: 'Arts Crafts' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_ampersand)
+        end
+
+        it "finds workshops with periods when searching without periods" do
+          service = WorkshopSearchService.new({ title: 'Dr Workshop' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_period)
+        end
+
+        it "finds workshops with em dashes when searching without them" do
+          service = WorkshopSearchService.new({ title: 'HelloGoodbye' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_em_dash)
+        end
+
+        it "finds workshops with en dashes when searching without them" do
+          service = WorkshopSearchService.new({ title: 'HelloGoodbye' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_en_dash)
+        end
+
+        it "finds workshops with quotes when searching without quotes" do
+          service = WorkshopSearchService.new({ title: 'The Best Workshop' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_quotes)
+        end
+      end
+
+      context "query search" do
+        let!(:workshop_with_hyphen_content) do
+          create(:workshop, title: "Test Workshop", objective: "Learn about self-care", year: 2025, month: 11)
+        end
+        let!(:workshop_without_hyphen_content) do
+          create(:workshop, title: "Another Workshop", objective: "Learn about selfcare", year: 2025, month: 12)
+        end
+        let!(:workshop_with_ampersand_content) do
+          create(:workshop, title: "Third Workshop", objective: "Arts & crafts therapy", year: 2026, month: 1)
+        end
+
+        it "finds workshops with hyphens in content when searching without hyphens" do
+          service = WorkshopSearchService.new({ query: 'selfcare' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_hyphen_content)
+          expect(workshops).to include(workshop_without_hyphen_content)
+        end
+
+        it "finds workshops without hyphens in content when searching with hyphens" do
+          service = WorkshopSearchService.new({ query: 'self-care' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_hyphen_content)
+          expect(workshops).to include(workshop_without_hyphen_content)
+        end
+
+        it "finds workshops with ampersands in content when searching without ampersands" do
+          service = WorkshopSearchService.new({ query: 'Arts crafts' }).call
+          workshops = service.workshops
+
+          expect(workshops).to include(workshop_with_ampersand_content)
+        end
+      end
+    end
   end
 end

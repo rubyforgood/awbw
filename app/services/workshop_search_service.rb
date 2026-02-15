@@ -1,5 +1,6 @@
 class WorkshopSearchService
   include ActionPolicy::Behaviour
+  include PunctuationStrippable
   authorize :user
 
   attr_reader :params, :user, :admin
@@ -133,16 +134,31 @@ class WorkshopSearchService
   def filter_by_query
     return unless params[:query].present?
 
-    results = @workshops.search(params[:query]) # Use the SearchCop search scope directly on the relation
+    # Strip punctuation from query: hyphens, ampersands, periods, em/en dashes, quotes
+    sanitized_query = self.class.strip_punctuation(params[:query]).strip
+    sanitized_query = ActiveRecord::Base.sanitize_sql_like(sanitized_query)
+    return if sanitized_query.blank?
 
-    # If SearchCop returned an Array (e.g., because of scoring), convert back to Relation
-    if results.is_a?(Array)
-      ordered_ids = results.map(&:id)
-      @workshops = Workshop.where(id: ordered_ids)
-                           .order(Arel.sql("FIELD(id, #{ordered_ids.join(',')})"))
-    else
-      @workshops = results
-    end
+    # Build a custom SQL query that strips same punctuation from all searchable fields
+    searchable_fields = [
+      :title, :full_name,
+      :objective, :materials, :setup, :introduction,
+      :demonstration, :opening_circle, :warm_up,
+      :creation, :closing, :notes, :tips, :misc1, :misc2,
+      :objective_spanish, :materials_spanish, :setup_spanish, :introduction_spanish,
+      :demonstration_spanish, :opening_circle_spanish, :warm_up_spanish,
+      :creation_spanish, :closing_spanish, :notes_spanish, :tips_spanish, :misc1_spanish, :misc2_spanish
+    ]
+
+    # Create WHERE conditions that strip punctuation from both field and search term
+    conditions = searchable_fields.map do |field|
+      "#{self.class.strip_punctuation_sql("workshops.#{field}")} LIKE ?"
+    end.join(" OR ")
+
+    # Use the same sanitized query for all fields
+    query_params = Array.new(searchable_fields.length, "%#{sanitized_query}%")
+
+    @workshops = @workshops.where(conditions, *query_params)
   end
 
   # --- Search methods ---
