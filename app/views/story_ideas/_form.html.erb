@@ -183,7 +183,38 @@
         </button>
 
         <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+            <!-- Header -->
+            <h3 class="text-base font-semibold text-gray-800 mb-3">
+              Sectors
+            </h3>
+
+            <!-- Checkbox List -->
+            <div class="flex flex-wrap gap-3">
+              <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
+              <% @sectors.each do |sector| %>
+                <% id = "story_idea_sector_ids_#{sector.id}" %>
+
+                <label
+                  for="<%= id %>"
+                  class="
+                    flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
+                    rounded-lg shadow-sm hover:bg-gray-100 transition">
+                  <%= check_box_tag "story_idea[sector_ids][]",
+                                    sector.id,
+                                    @story_idea.sector_ids.include?(sector.id),
+                                    id: id,
+                                    disabled: promoted_to_story,
+                                    class: "h-4 w-4 text-blue-600 rounded" %>
+
+                  <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+                </label>
+              <% end %>
+            </div>
+          </div>
+
           <div class="form-group space-y-6">
+            <%= hidden_field_tag "story_idea[category_ids][]", "" %>
             <% @categories_grouped.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                 <!-- Header -->
@@ -199,7 +230,6 @@
                       class="
                         flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
                         border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                      <%= hidden_field_tag "story_idea[category_ids][]", "" %>
                       <!-- To ensure unchecked boxes are submitted -->
                       <%= check_box_tag "story_idea[category_ids][]",
                                         category.id,

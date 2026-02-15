@@ -102,19 +102,23 @@ class StoryIdeasController < ApplicationController
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
         .sort_by { |type, _| type&.name.to_s.downcase }
+    @sectors = Sector.published.order(:name)
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
     @story_idea.gallery_assets.build
-  end
-
-  def assign_categories(story_idea)
-    selected_category_ids = Array(params[:story_idea][:category_ids]).reject(&:blank?).map(&:to_i)
-    story_idea.categories = Category.where(id: selected_category_ids)
   end
 
   private
 
   def set_story_idea
     @story_idea = StoryIdea.find(params[:id])
+  end
+
+  def assign_categories(story_idea)
+    selected_category_ids = Array(params[:story_idea][:category_ids]).reject(&:blank?).map(&:to_i)
+    story_idea.categories = Category.where(id: selected_category_ids)
+
+    selected_sector_ids = Array(params[:story_idea][:sector_ids]).reject(&:blank?).map(&:to_i)
+    story_idea.sectors = Sector.where(id: selected_sector_ids)
   end
 
   def story_idea_params
@@ -125,9 +129,9 @@ class StoryIdeasController < ApplicationController
       :created_by_id, :updated_by_id,
       story_populations: [],
       category_ids: [],
+      sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ],
-      categorizable_items_attributes: [ :id, :category_id, :_destroy ]
+      gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
   end
 end
