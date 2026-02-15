@@ -14,7 +14,8 @@
       "Bash(for i in 1 2 3)",
       "Bash(do bundle exec rspec spec/system/stories_spec.rb:71 --format progress)",
       "Bash(done)",
-      "Bash(bin/rails runner:*)"
+      "Bash(bin/rails runner:*)",
+      "Bash(git -C /Users/maebeale/programming/awbw branch --show-current)"
     ]
   }
 }
