@@ -83,3 +83,4 @@ class StoryIdea < ApplicationRecord
     end
   end
 end
+

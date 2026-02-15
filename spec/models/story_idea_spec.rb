@@ -3,6 +3,40 @@ require "rails_helper"
 RSpec.describe StoryIdea, type: :model do
   it_behaves_like "author_creditable", factory: :story_idea
 
+  describe "validations" do
+    context "workshop selection" do
+      it "is valid with a workshop_id" do
+        story_idea = create(:story_idea, external_workshop_title: nil)
+        expect(story_idea).to be_persisted
+        expect(story_idea.workshop).to be_present
+      end
+
+      it "is valid with external_workshop_title and no workshop" do
+        story_idea = create(:story_idea,
+                          workshop: nil,
+                          external_workshop_title: "My External Workshop")
+        expect(story_idea).to be_persisted
+        expect(story_idea.external_workshop_title).to eq("My External Workshop")
+      end
+
+      it "is invalid without workshop_id or external_workshop_title" do
+        story_idea = build(:story_idea,
+                          workshop: nil,
+                          external_workshop_title: nil)
+        expect(story_idea).not_to be_valid
+        expect(story_idea.errors[:base]).to include("Please select a workshop or enter an external workshop title")
+      end
+
+      it "is valid with both workshop_id and external_workshop_title" do
+        story_idea = create(:story_idea,
+                          external_workshop_title: "My External Workshop")
+        expect(story_idea).to be_persisted
+        expect(story_idea.workshop).to be_present
+        expect(story_idea.external_workshop_title).to eq("My External Workshop")
+      end
+    end
+  end
+
   describe "#workshop_title" do
     it "returns workshop title when only workshop is present" do
       workshop = create(:workshop, title: "Healing Art")
@@ -46,23 +80,23 @@ RSpec.describe StoryIdea, type: :model do
     end
   end
 
-  describe '.search_by_params' do
-    let!(:idea_alpha) { create(:story_idea, title: 'Art Healing Journey') }
-    let!(:idea_beta) { create(:story_idea, title: 'Community Impact Report') }
+  describe ".search_by_params" do
+    let!(:idea_alpha) { create(:story_idea, title: "Art Healing Journey") }
+    let!(:idea_beta) { create(:story_idea, title: "Community Impact Report") }
 
-    it 'returns all when no params' do
+    it "returns all when no params" do
       results = StoryIdea.search_by_params({})
       expect(results).to include(idea_alpha, idea_beta)
     end
 
-    it 'filters by query matching title' do
-      results = StoryIdea.search_by_params(query: 'Art Healing')
+    it "filters by query matching title" do
+      results = StoryIdea.search_by_params(query: "Art Healing")
       expect(results).to include(idea_alpha)
       expect(results).not_to include(idea_beta)
     end
 
-    it 'returns empty for non-matching query' do
-      results = StoryIdea.search_by_params(query: 'nonexistent')
+    it "returns empty for non-matching query" do
+      results = StoryIdea.search_by_params(query: "nonexistent")
       expect(results).not_to include(idea_alpha, idea_beta)
     end
 
