@@ -62,7 +62,7 @@
                       prompt: "Select a Workshop",
                       required: false,
                       disabled: promoted_to_story,
-                      selected: (params[:workshop_id].presence || f.object.workshop_id) unless f.object.workshop_id.nil? && f.object.external_workshop_title.present?,
+                      selected: (f.object.workshop_id.nil? && f.object.external_workshop_title.present? ? nil : (params[:workshop_id].presence || f.object.workshop_id)),
                       input_html: { value: params[:workshop_id].presence || f.object.workshop_id,
                                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
                                     focus:border-blue-500 #{ 'readonly' if promoted_to_story }",
@@ -91,6 +91,10 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+            <% end %>
+          </div>
+        </div>
+      </div>
             <% end %>
           </div>
         </div>

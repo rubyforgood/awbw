@@ -168,12 +168,12 @@ class StoryIdeasController < ApplicationController
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
-    
+
     # Clear workshop_id if "new" was selected (triggers external_workshop_title)
     if permitted_params[:workshop_id] == "new"
       permitted_params[:workshop_id] = nil
     end
-    
+
     permitted_params
   end
 end
