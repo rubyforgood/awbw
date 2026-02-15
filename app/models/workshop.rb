@@ -141,12 +141,14 @@ class Workshop < ApplicationRecord
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :legacy, -> { where(legacy: true) }
   scope :title, ->(title) {
-    # Strip punctuation from input: hyphens, ampersands, periods, em/en dashes, quotes
-    sanitized_input = strip_punctuation(title)
-    sanitized_input = ActiveRecord::Base.sanitize_sql_like(sanitized_input)
+    spaced = ActiveRecord::Base.sanitize_sql_like(strip_punctuation_spaced(title))
+    spaceless = ActiveRecord::Base.sanitize_sql_like(strip_punctuation_spaceless(title))
 
-    # Strip same punctuation from database field
-    where("#{strip_punctuation_sql('workshops.title')} LIKE ?", "%#{sanitized_input}%")
+    where(
+      "(#{strip_punctuation_sql_spaced('workshops.title')} LIKE :spaced)" \
+      " OR (#{strip_punctuation_sql_spaceless('workshops.title')} LIKE :spaceless)",
+      spaced: "%#{spaced}%", spaceless: "%#{spaceless}%"
+    )
   }
   scope :order_by_date, ->(sort_order = "asc") do
     order(Arel.sql(<<~SQL.squish))

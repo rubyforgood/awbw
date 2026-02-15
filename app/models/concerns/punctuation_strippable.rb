@@ -3,48 +3,56 @@
 module PunctuationStrippable
   extend ActiveSupport::Concern
 
+  PUNCTUATION_CHARS_SQL = [
+    "'-'",      # hyphen
+    "'&'",      # ampersand
+    "'.'",      # period
+    "0xE28094", # em dash —
+    "0xE28093", # en dash –
+    "'\"'",     # double quote "
+    "\"'\"",    # single quote '
+    "0xE28098", # left single curly quote '
+    "0xE28099", # right single curly quote '
+    "0xE2809C", # left double curly quote "
+    "0xE2809D", # right double curly quote "
+    "'/'",      # slash
+    "':'",      # colon
+    "'+'",      # plus
+    "'!'",      # exclamation
+    "CHAR(63)", # question mark ?
+    "','",      # comma
+    "'('",      # open paren
+    "')'",      # close paren
+    "0xE280A6"  # ellipsis …
+  ].freeze
+
+  PUNCTUATION_REGEX = /[-&.—–'"''""\/:+!?,()…]/
+
   module ClassMethods
-    # Returns a SQL fragment that strips punctuation from a field
-    # Removes: hyphens, ampersands, periods, em/en dashes, quotes, slashes,
-    # colons, plus signs, exclamation/question marks, commas, parentheses, ellipsis
-    def strip_punctuation_sql(field_name)
-      # Each pair is [SQL character expression, replacement]
-      # Use hex literals for Unicode and characters that conflict with SQL/AR syntax
-      chars = [
-        "'-'",      # hyphen
-        "'&'",      # ampersand
-        "'.'",      # period
-        "0xE28094", # em dash —
-        "0xE28093", # en dash –
-        "'\"'",     # double quote "
-        "\"'\"",    # single quote '
-        "0xE28098", # left single curly quote '
-        "0xE28099", # right single curly quote '
-        "0xE2809C", # left double curly quote "
-        "0xE2809D", # right double curly quote "
-        "'/'",      # slash
-        "':'",      # colon
-        "'+'",      # plus
-        "'!'",      # exclamation
-        "CHAR(63)", # question mark ?
-        "','",      # comma
-        "'('",      # open paren
-        "')'",      # close paren
-        "0xE280A6"  # ellipsis …
-      ]
-
+    # "spaced" — punctuation → space, collapse multiple spaces.
+    # Matches "self care" to "self-care".
+    def strip_punctuation_sql_spaced(field_name)
       result = field_name
-      chars.each { |c| result = "REPLACE(#{result}, #{c}, '')" }
-
-      # Collapse multiple spaces into one (3 passes handles up to 8 consecutive spaces)
+      PUNCTUATION_CHARS_SQL.each { |c| result = "REPLACE(#{result}, #{c}, ' ')" }
       3.times { result = "REPLACE(#{result}, '  ', ' ')" }
       result
     end
 
-    # Strips punctuation from a string using Ruby
-    # Removes the same characters as strip_punctuation_sql
-    def strip_punctuation(text)
-      text.to_s.gsub(/[-&.—–'"''""\/:+!?,()…]/, "").gsub(/\s+/, " ")
+    # "spaceless" — punctuation AND spaces → removed entirely.
+    # Matches "selfcare" to "self-care" and to "self care".
+    def strip_punctuation_sql_spaceless(field_name)
+      result = field_name
+      PUNCTUATION_CHARS_SQL.each { |c| result = "REPLACE(#{result}, #{c}, '')" }
+      result = "REPLACE(#{result}, ' ', '')"
+      result
+    end
+
+    def strip_punctuation_spaced(text)
+      text.to_s.gsub(PUNCTUATION_REGEX, " ").gsub(/\s+/, " ")
+    end
+
+    def strip_punctuation_spaceless(text)
+      text.to_s.gsub(PUNCTUATION_REGEX, "").gsub(/\s+/, "")
     end
   end
 end
