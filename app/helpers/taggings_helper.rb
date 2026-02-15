@@ -21,7 +21,9 @@ module TaggingsHelper
     all_tags = []
     
     if resource.respond_to?(:sectors) && resource.sectors.any?
-      all_tags += resource.sectors.map(&:name)
+      all_tags += resource.sectors
+        .sort_by { |s| s.name.to_s.downcase }
+        .map(&:name)
     end
     
     if resource.respond_to?(:categories) && resource.categories.any?
