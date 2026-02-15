@@ -37,12 +37,12 @@ RSpec.describe Comment, type: :model do
     end
   end
 
-  describe 'default scope' do
+  describe 'scopes' do
     let!(:user) { create(:user) }
     let!(:old_comment) { create(:comment, commentable: user, body: "Old comment", created_at: 2.days.ago) }
     let!(:new_comment) { create(:comment, commentable: user, body: "New comment", created_at: 1.day.ago) }
 
-    it 'orders comments by created_at descending' do
+    it 'orders comments by created_at descending with newest_first scope' do
       expect(user.comments.first).to eq(new_comment)
       expect(user.comments.last).to eq(old_comment)
     end

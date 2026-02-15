@@ -2,7 +2,7 @@ class CommentsController < ApplicationController
   before_action :set_commentable
 
   def index
-    @comments = @commentable.comments.paginate(page: params[:page], per_page: 10)
+    @comments = @commentable.comments.newest_first.paginate(page: params[:page], per_page: 10)
 
     respond_to do |format|
       format.html { render partial: "comments/list", locals: { commentable: @commentable, comments: @comments } }
@@ -13,7 +13,7 @@ class CommentsController < ApplicationController
     @comment = @commentable.comments.build(comment_params)
 
     if @comment.save
-      @comments = @commentable.comments.paginate(page: 1, per_page: 10)
+      @comments = @commentable.comments.newest_first.paginate(page: 1, per_page: 10)
       respond_to do |format|
         format.turbo_stream
         format.html { redirect_back fallback_location: root_path, notice: "Comment created successfully." }
@@ -33,6 +33,8 @@ class CommentsController < ApplicationController
       @commentable = Person.find(params[:person_id])
     elsif params[:user_id]
       @commentable = User.find(params[:user_id])
+    else
+      redirect_to root_path, alert: "Invalid commentable resource"
     end
   end
 

@@ -3,5 +3,5 @@ class Comment < ApplicationRecord
 
   validates :body, presence: true
 
-  default_scope { order(created_at: :desc) }
+  scope :newest_first, -> { order(created_at: :desc) }
 end
