@@ -14,11 +14,15 @@
       "Bash(for i in 1 2 3)",
       "Bash(do bundle exec rspec spec/system/stories_spec.rb:71 --format progress)",
       "Bash(done)",
+<<<<<<< HEAD
       "Bash(bin/rails runner:*)",
       "Bash(git -C /Users/maebeale/programming/awbw branch --show-current)",
       "Bash(bundle exec rails routes:*)",
       "Bash(bundle exec rubocop:*)",
       "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)"
+=======
+      "Bash(bin/rails runner:*)"
+>>>>>>> 0d011e81f (Edit person and org index, edit, show UX (#982))
     ]
   }
 }
