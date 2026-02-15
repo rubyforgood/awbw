@@ -47,8 +47,9 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).not_to include("twitter.com")
       end
 
-      it "shows thank you message when form was submitted" do
-        get contact_us_path, flash: { form_submitted: true }
+      it "shows thank you message after form submission" do
+        post contact_us_path, params: valid_params
+        follow_redirect!
         expect(response.body).to include("Thank you for contacting us!")
         expect(response.body).to include("Your message has been received")
       end
