@@ -51,7 +51,7 @@
       Bookmarked by community
       <%= bookmark.bookmarkable.bookmarks_count %> times
     </div>
-    
+
     <!-- Tags count with hover (for workshops) -->
     <% if bookmark.bookmarkable_type == "Workshop" %>
       <% all_tags = collect_all_tags(bookmarkable) %>

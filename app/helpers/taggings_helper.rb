@@ -19,19 +19,19 @@ module TaggingsHelper
   # Returns an array of tag names sorted appropriately
   def collect_all_tags(resource)
     all_tags = []
-    
+
     if resource.respond_to?(:sectors) && resource.sectors.any?
       all_tags += resource.sectors
         .sort_by { |s| s.name.to_s.downcase }
         .map(&:name)
     end
-    
+
     if resource.respond_to?(:categories) && resource.categories.any?
       all_tags += resource.categories
         .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
         .map(&:name)
     end
-    
+
     all_tags
   end
 end
