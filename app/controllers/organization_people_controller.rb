@@ -16,7 +16,7 @@ class OrganizationPeopleController < ApplicationController
     respond_to do |format|
       format.turbo_stream do
         if destroyed
-          render :destroy
+          render turbo_stream: turbo_stream.remove("organization_person_#{organization_person.id}")
         else
           render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"),
                  status: :unprocessable_entity

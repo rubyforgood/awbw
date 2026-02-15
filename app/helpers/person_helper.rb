@@ -1,10 +1,15 @@
 module PersonHelper
-  def person_profile_button(person)
+  def person_profile_button(person, truncate_at: nil, subtitle: nil)
+    bg = DomainTheme.bg_class_for(:people, intensity: 100)
+    hover_bg = DomainTheme.bg_class_for(:people, intensity: 100, hover: true)
+    text = DomainTheme.text_class_for(:people)
+    border = DomainTheme.border_class_for(:people)
+
     link_to person_path(person),
-            class: "group flex items-center gap-2
+            class: "group relative flex items-center gap-2
                     w-full px-4 py-2
-                    border border-primary text-primary rounded-lg
-                    hover:bg-primary hover:text-white transition-colors duration-200
+                    border #{border} #{bg} #{hover_bg} rounded-lg
+                    transition-colors duration-200
                     font-medium shadow-sm leading-none
                     overflow-hidden" do
       person = person.decorate
@@ -17,30 +22,30 @@ module PersonHelper
         image_tag url_for(person.user.avatar),
                   class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
       else
-        image_tag "missing.png",
-                  class: "w-10 h-10 rounded-full object-cover border border-dashed border-gray-300 flex-shrink-0"
+        content_tag(:span, person.name.to_s.first.to_s.upcase,
+                    class: "w-10 h-10 rounded-full flex items-center justify-center
+                            bg-sky-200 text-sky-700 font-bold text-lg
+                            border border-sky-300 shadow-sm flex-shrink-0")
       end
 
-      # --- Name: stays one line & truncates ---
+      display_name = truncate_at ? truncate(person.name.to_s, length: truncate_at) : person.name.to_s
+
       name = content_tag(
         :span,
-        person.name.to_s,
+        display_name,
         title: person.name.to_s,
-        class: "font-semibold text-gray-900 group-hover:text-white truncate"
+        class: "font-semibold #{text} truncate"
       )
 
-      # --- Pronouns ---
-      pronouns = if person.pronouns_display.present?
-        content_tag(
-          :span,
-          person.pronouns_display,
-          class: "text-xs text-gray-500 italic group-hover:text-white truncate"
-        )
+      subtitle_tag = if subtitle.present?
+        content_tag(:span, subtitle, class: "text-xs text-gray-500 font-normal truncate")
+      else
+        "".html_safe
       end
 
       text_block = content_tag(
         :div,
-        safe_join([ name, pronouns ].compact),
+        name + subtitle_tag,
         class: "flex flex-col leading-tight text-left min-w-0"
       )
 

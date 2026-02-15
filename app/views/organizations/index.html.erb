@@ -16,93 +16,67 @@
       <!-- Optional filters -->
       <%= render "search_boxes" %>
 
-      <!-- Organizations table -->
-      <div class="rounded-xl bg-white p-6">
+      <div class="rounded bg-white p-6">
         <div class="overflow-x-auto">
-        <table class="min-w-full border border-gray-200 rounded-lg divide-y divide-gray-200">
+        <table class="min-w-full border border-gray-200 rounded divide-y divide-gray-200">
           <thead class="bg-gray-100">
           <tr>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Logo</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Windows type</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Locality</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliation dates</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Active?</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Designations</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliated since</th>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">People (<%= number_with_delimiter(@active_people_count) %>)</th>
+            <% if allowed_to?(:manage?, Organization) %>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+            <% end %>
           </tr>
           </thead>
 
           <tbody class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
+            <% cache [organization, @affiliated_since[organization.id], @active_people_counts[organization.id], current_user.super_user?] do %>
             <tr class="hover:bg-gray-50 transition">
-              <td class="px-4 py-2 text-center">
-                <%= link_to organization_path(organization) do %>
-                  <% if organization.logo.attached? %>
-                    <%= image_tag(
-                          organization.logo,
-                          class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm mx-auto"
-                        ) %>
-                  <% else %>
-                    <%= link_to organization_path(organization) do %>
-                      <svg class="w-10 h-10 text-gray-400 bg-gray-200 rounded-full"
-                           fill="currentColor"
-                           viewBox="0 0 20 18"
-                           aria-hidden="true"></svg>
-                    <% end %>
-                  <% end %>
-                <% end %>
-              </td>
-
-              <td class="px-4 py-2 font-semibold">
-                <%= link_to organization.name, organization_path(organization), class: "hover:underline" %>
-              </td>
-
-              <td class="px-4 py-2 text-sm text-gray-700">
-                <%= organization.windows_type&.short_name&.titleize %>
-              </td>
-
-              <td class="px-4 py-2 text-sm text-gray-700">
-                <%= organization.addresses.active.map(&:locality).join("<br>") %>
-              </td>
-
-              <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
-                <% if organization.start_date || organization.end_date %>
-                  <%= organization.start_date&.strftime("%b %Y") %> –
-                  <%= organization.end_date&.strftime("%b %Y") || "Present" %>
-                <% end %>
+              <td class="px-4 py-2">
+                <% status_label = organization.published? ? nil : organization.organization_status&.name %>
+                <%= organization_profile_button(organization, truncate_at: 30, subtitle: organization.organization_locality, label: status_label) %>
               </td>
 
               <td class="px-4 py-2 text-sm">
-                  <span class="inline-block px-2 py-1 rounded text-xs font-semibold
-                                <%= case organization.organization_status&.name
-                                    when "Active" then 'bg-green-100 text-green-800'
-                                    when "Completed" then 'bg-blue-100 text-blue-800'
-                                    when "Draft" then 'bg-yellow-100 text-yellow-800'
-                                    when nil then ''
-                                    else 'bg-gray-100 text-gray-800'
-                                    end %>">
-                    <%= organization.organization_status&.name %>
-                  </span>
+                <div class="flex flex-wrap items-center gap-1">
+                  <% if organization.windows_type %>
+                    <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                      <%= organization.windows_type.short_name.titleize %>
+                    </span>
+                  <% end %>
+
+                  <% organization.sectors.each do |sector| %>
+                    <%= render "sectors/tagging_label", sector: sector %>
+                  <% end %>
+                </div>
               </td>
 
-              <td class="px-4 py-2 text-center">
-                <% if organization.inactive? %>
-                  <span class="text-red-500 fa fa-ban"></span>
+              <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
+                <% affiliated_since = @affiliated_since[organization.id] || organization.start_date %>
+                <%= affiliated_since&.year %>
+              </td>
+
+              <td class="px-4 py-2 text-center text-sm">
+                <% active_count = @active_people_counts[organization.id] || 0 %>
+                <% if active_count > 0 %>
+                  <%= link_to active_count, people_path(organization_id: organization.id),
+                              class: "text-blue-600 hover:underline font-medium" %>
                 <% else %>
-                  <span class="text-green-200 font-semibold fa fa-check-circle"></span>
+                  <span class="text-gray-400">0</span>
                 <% end %>
               </td>
 
-              <td class="px-4 py-2 text-center whitespace-nowrap">
-                <% if allowed_to?(:edit?, organization) %>
+              <% if allowed_to?(:edit?, organization) %>
+                <td class="px-4 py-2 text-center whitespace-nowrap">
                   <%= link_to "Edit", edit_organization_path(organization),
-                              class: "admin-only bg-blue-100 btn btn-secondary-outline text-xs px-2 py-1" %>
-                <% end %>
-                <%= link_to "Profile", organization_path(organization),
-                            class: "btn btn-secondary-outline text-xs px-2 py-1" %>
-              </td>
+                              class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                </td>
+              <% end %>
             </tr>
+            <% end %>
           <% end %>
           </tbody>
         </table>

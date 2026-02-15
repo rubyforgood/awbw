@@ -14,7 +14,6 @@ RSpec.describe "organizations/edit", type: :view do
       location: nil,
       name: "MyString",
       description: "MyString",
-      inactive: false,
       notes: "MyText"
     )
   }

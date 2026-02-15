@@ -6,24 +6,62 @@ class PeopleController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(Person.includes(
-      :user,
       :avatar_attachment,
-      :sectorable_items,
-      :organization_people,
-      user: [ :avatar_attachment, :organizations ],
+      :user,
       sectorable_items: :sector,
       organization_people: :organization
     ).references(:user))
     filtered = base_scope.search_by_params(params.to_unsafe_h)
                          .order(:first_name, :last_name)
-    @count_display = filtered.size
+    @count_display = filtered.count
     @people = filtered.paginate(page: params[:page], per_page: per_page)
+    ActiveRecord::Associations::Preloader.new(
+      records: @people.map(&:user).compact,
+      associations: [ :avatar_attachment ]
+    ).call
   end
 
   def show
     @person = Person.find(params[:id]).decorate
     authorize! @person
     track_view(@person)
+
+    # Handle paginated sections for Turbo Frame requests
+    if turbo_frame_request?
+      per_page = params[:section] == "stories" ? 8 : 9
+      section = params[:section]
+
+      case section
+      when "workshops"
+        @workshops = @person.user&.workshops&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshops", locals: { person: @person, workshops: @workshops }
+      when "workshop_variations"
+        @workshop_variations = @person.user&.workshop_variations_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
+      when "stories"
+        story_ids = @person.user&.stories_as_creator&.pluck(:id).to_a + @person.stories_as_spotlighted_facilitator.pluck(:id)
+        @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
+      when "events"
+        @event_registrations = @person.event_registrations.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
+      when "workshop_ideas"
+        @workshop_ideas = @person.user&.workshop_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshop_ideas", locals: { person: @person, workshop_ideas: @workshop_ideas }
+      when "story_ideas"
+        @story_ideas = @person.user&.story_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/story_ideas", locals: { person: @person, story_ideas: @story_ideas }
+      when "workshop_logs"
+        @workshop_logs = @person.user&.workshop_logs&.order(date: :desc, created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
+      when "workshop_variation_ideas"
+        @workshop_variation_ideas = @person.user&.workshop_variation_ideas_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
+      when "organization_people"
+        @organization_people = @person.organization_people.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/organization_people", locals: { person: @person, organization_people: @organization_people }
+      end
+    end
   end
 
   def new
@@ -36,11 +74,11 @@ class PeopleController < ApplicationController
   def edit
     @person = Person.includes(
       :user,
-      :avatar_attachment,
       :contact_methods,
       :addresses,
-      :organization_people,
-      :sectorable_items
+      { avatar_attachment: :blob },
+      { sectorable_items: :sector },
+      organization_people: { organization: :logo_attachment }
     ).find(params[:id]).decorate
     authorize! @person
     set_form_variables
@@ -104,10 +142,23 @@ class PeopleController < ApplicationController
   def set_form_variables
     set_user
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
-    @person.organization_people.first || @person.organization_people.build
+    if @person.persisted? && @person.errors.empty?
+      org_people = @person.organization_people
+      org_people = org_people.includes(:organization) unless org_people.loaded?
+      sorted = org_people.to_a
+                      .sort_by { |op|
+                        expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
+                        [ expired ? 1 : 0,
+                          op.start_date || Date.new(9999),
+                          op.organization&.name.to_s.downcase ]
+                      }
+      @person.organization_people.proxy_association.target.replace(sorted)
+    end
+    @person.organization_people.build if @person.organization_people.empty?
 
     @all_sectors = Sector.published.order(:name)
-    @current_sector_ids = @person.sectorable_items.pluck(:sector_id)
+    @sectors_collection = @all_sectors.pluck(:name, :id)
+    @current_sector_ids = @person.sectorable_items.map(&:sector_id)
 
     @organizations_array = authorized_scope(Organization.all, as: :affiliated).order(:name).pluck(:name, :id)
   end
@@ -143,7 +194,6 @@ class PeopleController < ApplicationController
       :profile_show_workshops,
       :profile_show_workshop_ideas,
       :profile_show_workshop_logs,
-      :published,
       :member_since,
       :linked_in_url,
       :facebook_url,
@@ -155,6 +205,7 @@ class PeopleController < ApplicationController
       addresses_attributes: [
         :id,
         :address_type,
+        :primary,
         :street_address,
         :city,
         :state,
@@ -175,7 +226,7 @@ class PeopleController < ApplicationController
         :contact_type,
         :kind,
         :value,
-        :is_primary,
+        :primary,
         :inactive,
         :_destroy
       ],
@@ -207,6 +258,9 @@ class PeopleController < ApplicationController
         :position,
         :title,
         :inactive,
+        :primary_contact,
+        :start_date,
+        :end_date,
         :_destroy
       ],
     )

@@ -1,316 +1,256 @@
 <div class="min-h-screen py-10">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-8">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-4 sm:p-8 relative">
       <!-- Header actions -->
-      <div class="flex justify-end mb-6 gap-2">
-        <%= link_to "People", people_path, class: "btn btn-secondary-outline" %>
-        <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+      <div class="flex flex-wrap justify-end gap-2 mb-4">
+        <% unless @person.user %>
+          <div class="admin-only bg-blue-100 p-2">
+            No user!
+            <%= link_to "Create user",
+                        new_user_path(person_id: @person.id),
+                        class: "btn btn-warning px-2 py-1" %>
+          </div>
+        <% end %>
+        <%= link_to "Dashboard", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <%= link_to "People", people_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% if allowed_to?(:edit?, @person) %>
           <%= link_to "Edit", edit_person_path(@person),
-                      class: "btn btn-secondary-outline" %>
+                      class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% end %>
         <span class="inline-block text-sm">
           <%= render "bookmarks/editable_bookmark_button", resource: @person.object %>
         </span>
       </div>
-      <!-- Header: avatar + name + pronouns -->
-      <div class="flex flex-col md:flex-row md:items-center md:gap-8 mb-10">
+      <!-- Header: avatar + name + badges -->
+      <div class="flex flex-col md:flex-row md:items-center gap-6 mb-8">
         <div class="flex-shrink-0 flex justify-center md:justify-start">
           <% if @person.avatar&.attached? %>
             <%= image_tag url_for(@person.avatar),
                           id: "person_#{@person.id}_avatar_image",
-                          class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
+                          class: "w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow" %>
           <% elsif @person.user&.avatar&.attached? %>
             <%= image_tag url_for(@person.user.avatar),
                           id: "person_#{@person.id}_avatar_image",
-                          class: "w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm" %>
+                          class: "w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow" %>
           <% else %>
             <%= image_tag "missing.png",
                           id: "person_#{@person.id}_avatar_image",
-                          class: "w-32 h-32 rounded-full object-cover border border-dashed border-gray-300" %>
+                          class: "w-28 h-28 rounded-full object-cover border-2 border-dashed border-gray-300" %>
           <% end %>
         </div>
-        <div class="flex-1 text-center md:text-left mt-4 md:mt-0">
+        <div class="flex-1 text-center md:text-left">
           <h1 class="text-3xl font-bold text-gray-900">
             <%= @person.name %>
             <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
-              <span class="text-gray-600 font-normal text-sm italic mt-1">(<%= @person.pronouns %>)</span>
+              <span class="text-gray-500 font-normal text-base italic">(<%= @person.pronouns %>)</span>
             <% end %>
           </h1>
           <% if @person.member_since_year.present? && @person.profile_show_member_since? %>
-            <p class="mt-3 text-gray-700 text-sm">
+            <p class="mt-1 text-gray-500 text-sm">
               Facilitator since
               <span class="font-medium"><%= @person.member_since_year %></span>
             </p>
           <% end %>
-          <!-- Optional social links -->
-          <% if @person.profile_show_social_media? %>
-            <div class="mt-4">
-              <%= render "people/social_media_buttons", person: @person %>
-            </div>
-          <% end %>
-        </div>
-        <div class="flex-1">
-          <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
-            <% @person.badges.each do |(label, color)| %>
-              <span class="px-3 py-1 bg-<%= color %>-100 text-<%= color %>-800 text-sm font-semibold rounded-full">
-                <%= label %>
-              </span>
-            <% end %>
-          </div>
-        </div>
-      </div>
-      <% unless @person.user %>
-        <div>
-          Not associated with a user!
-          <br>
-          <%= link_to "Create user",
-                      new_user_path(person_id: @person.id),
-                      class: "btn btn-primary" %>
-        </div>
-      <% end %>
-      <hr class="my-8 border-gray-200">
-      <!-- Info grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Organization affiliations -->
-        <% if @person.profile_show_affiliations? %>
-          <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Organizational affiliations</h2>
-            <% if @person.organization_people.active.any? %>
-              <ul class="space-y-2">
-                <% @person.organization_people.active.each do |pu| %>
-                  <li>
-                    <% if pu.title.present? || pu.position.present? %>
-                      <span class="text-gray-600"><%= pu.title.presence || pu.position.humanize %> - </span>
-                    <% end %>
-                    <%= link_to pu.organization.name, organization_path(pu.organization),
-                                class: "text-blue-600 hover:underline font-medium" %>
-                  </li>
-                <% end %>
-              </ul>
-            <% else %>
-              <p class="text-gray-500 italic">No affiliations listed.</p>
-            <% end %>
-          </div>
-        <% end %>
-        <!-- Sectors -->
-        <% if @person.profile_show_sectors? %>
-          <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
-            <p>
-              <% if @person.sectorable_items.any? %>
-                <div class="flex flex-wrap gap-2">
-                  <% @person
-                     .sectorable_items
-                     .includes(:sector)
-                     .order("sectors.name")
-                     .each do |si| %>
-                    <%= render "sectors/tagging_label",
-                             sector: si.sector,
-                             display_leader: true,
-                             is_leader: si.is_leader %>
-                  <% end %>
-                </div>
-              <% else %>
-                <span class="text-gray-500 italic">None selected.</span>
-              <% end %>
-            </p>
-          </div>
-        <% end %>
-        <!-- Contact info -->
-        <div>
-          <% if @person.profile_show_email? || @person.profile_show_phone? %>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h2>
+          <!-- Contact info + social -->
+          <div class="mt-3 flex flex-wrap justify-center md:justify-start items-center gap-x-4 gap-y-2 text-sm">
             <% email = @person.user&.email || @person.email %>
             <% if @person.profile_show_email? && email.present? %>
-              <p class="text-gray-700 mb-1">
+              <span class="text-gray-600">
                 📧 <%= mail_to email, email, class: "text-blue-600 hover:underline" %>
-              </p>
+              </span>
             <% end %>
             <% phone = @person.phone_number || @person.user&.phone %>
             <% if @person.profile_show_phone? && phone.present? %>
-              <p class="text-gray-700 mb-1">
-                📞 <%= link_to phone, "tel:#{phone}",
-                              class: "text-blue-600 hover:underline" %>
-              </p>
+              <span class="text-gray-600">
+                📞 <%= link_to phone, "tel:#{phone}", class: "text-blue-600 hover:underline" %>
+              </span>
             <% end %>
-          <% end %>
-        </div>
-      </div>
-      <hr class="my-8 border-gray-200">
-      <!-- Workshops authored -->
-      <% if @person.profile_show_bio? && @person.bio.present? %>
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Bio</h2>
-        <%= sanitize(@person.bio, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
-        <hr class="my-8 border-gray-200">
-      <% end %>
-      <!-- AUTHORED SECTION -->
-      <% if @person.profile_show_workshops? ||
-        @person.profile_show_workshop_variations? ||
-        @person.profile_show_stories?  %>
-      <div class="person-only bg-indigo-50 border border-gray-200 rounded-lg shadow-sm mb-6">
-        <!-- Header -->
-        <div class="section-header flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-800">
-            Published content
-          </h2>
-        </div>
-        <!-- Contributed Content -->
-        <div class="section-content px-4 py-6 space-y-10">
-          <!-- Workshops authored -->
-          <% if @person.profile_show_workshops? %>
-            <div>
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
-              <% if @person.user && @person.user.workshops.any? %>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <% @person.user.workshops.order(created_at: :desc).each do |workshop| %>
-                    <%= render "show_card", record: workshop.decorate, title_font_size: "text-sm" %>
-                  <% end %>
-                </div>
-              <% else %>
-                <p class="text-gray-500 italic">No workshops authored yet.</p>
-              <% end %>
-            </div>
-          <% end %>
-          <!-- Workshop variations  -->
-          <% if @person.profile_show_workshop_variations? %>
-            <div class="mt-10">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop variations authored</h2>
-              <% if @person.user && @person.user.workshop_variations_as_creator.any? %>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <% @person.user.workshop_variations_as_creator.order(created_at: :desc).each do |workshop_variation| %>
-                    <%= render "show_card",
-                               record_title: "#{workshop_variation.name}<br>" +
-                                 "<span class='text-xs text-gray-500'>WORKSHOP: #{workshop_variation.workshop.name}<span>",
-                               record: workshop_variation.decorate, title_font_size: "text-sm" %>
-                  <% end %>
-                </div>
-              <% else %>
-                <p class="text-gray-500 italic">No workshop variations submitted yet.</p>
-              <% end %>
-            </div>
-          <% end %>
-          <!-- Stories authored -->
-          <% if @person.profile_show_stories? %>
-            <div class="mt-10">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories authored/featured</h2>
-              <% stories = Story.where(id: @person.user&.stories_as_creator&.pluck(:id).to_a +
-                @person.stories_as_spotlighted_facilitator.pluck(:id)) %>
-              <% if stories.any? %>
-                <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6">
-                  <% stories.order(created_at: :desc).each do |story| %>
-                    <%= render "show_card", record: story.decorate, title_font_size: "text-sm" %>
-                  <% end %>
-                </div>
-              <% else %>
-                <p class="text-gray-500 italic">No stories yet.</p>
+            <% if @person.profile_show_social_media? %>
+              <%= render "people/social_media_buttons", person: @person %>
+            <% end %>
+          </div>
+          <!-- Badges -->
+          <% if @person.badges.any? %>
+            <div class="mt-3 flex flex-wrap justify-center md:justify-start gap-1.5">
+              <% @person.badges.each do |badge| %>
+                <span class="px-2 py-0.5 border <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:border] %> text-xs font-medium rounded-full">
+                  <%= badge[:label] %>
+                </span>
               <% end %>
             </div>
           <% end %>
         </div>
       </div>
-    <% end %>
-    <!-- PARTICIPATION SECTION -->
-    <% if @person.profile_show_events_registered? %>
-      <div class="person-only bg-blue-50 border border-blue-200 rounded-lg shadow-sm mb-6">
-        <!-- Header -->
-        <div class="section-header flex items-center justify-between px-4 py-3 border-b border-blue-200">
-          <h2 class="text-xl font-semibold text-gray-800">
-            Participation history
-          </h2>
+
+      <div class="space-y-6 mt-12">
+        <!-- Organizations & Service Populations -->
+        <div>
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+            <!-- Organization affiliations -->
+            <% if @person.profile_show_affiliations? %>
+              <div class="md:col-span-3 p-3">
+                <h2 class="text-lg font-semibold text-gray-800 mb-3">Affiliations</h2>
+                <%= turbo_frame_tag "person_organization_people_section", src: person_path(@person, section: "organization_people"), loading: :lazy do %>
+                  <p class="text-gray-500 italic">Loading affiliations...</p>
+                <% end %>
+              </div>
+            <% end %>
+            <!-- Sectors -->
+            <% if @person.profile_show_sectors? %>
+              <div class="md:col-span-2 p-3">
+                <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+                <% if @person.sectorable_items.any? %>
+                  <div class="flex flex-wrap gap-2">
+                    <% @person
+                         .sectorable_items
+                         .includes(:sector)
+                         .order("sectors.name")
+                         .each do |si| %>
+                      <%= render "sectors/tagging_label",
+                                 sector: si.sector,
+                                 display_leader: true,
+                                 is_leader: si.is_leader %>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <p class="text-gray-500 italic">None selected.</p>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
         </div>
-        <!-- Events registered -->
-        <div class="section-content px-4 py-6 space-y-10">
-          <% if @person.profile_show_events_registered? %>
+        <!-- Bio -->
+        <% if @person.profile_show_bio? && @person.bio.present? %>
+          <div class="<%= DomainTheme.bg_class_for(:person_bio) %>
+            border <%= DomainTheme.border_class_for(:person_bio) %> rounded-xl p-4 sm:p-5">
             <div class="p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events registered</h2>
-              <% if @person.event_registrations.any? %>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <% @person.event_registrations.includes(:event).order("events.start_date DESC").each do |event_registration| %>
-                    <%= render "show_card",
-                               bookmarkable: event_registration.event,
-                               record_title: "#{event_registration.event.title}<br>" +
-                                 "<span class='text-xs text-gray-500'>TIME: " +
-                                 "#{event_registration.event.decorate.times}<span>",
-                               record: event_registration.decorate, title_font_size: "text-sm" %>
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Bio</h2>
+              <div class="text-gray-700">
+                <%= sanitize(@person.bio, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- AUTHORED SECTION -->
+        <% if @person.profile_show_workshops? ||
+              @person.profile_show_workshop_variations? ||
+              @person.profile_show_stories?  %>
+          <div class="person-only <%= DomainTheme.bg_class_for(:workshops) %> border <%= DomainTheme.border_class_for(:workshops) %> rounded-lg shadow-sm">
+            <!-- Header -->
+            <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b <%= DomainTheme.border_class_for(:workshops) %>">
+              <h2 class="text-xl font-semibold text-gray-800">
+                Published content
+              </h2>
+            </div>
+            <!-- Contributed Content -->
+            <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
+              <!-- Workshops authored -->
+              <% if @person.profile_show_workshops? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
+                  <%= turbo_frame_tag "person_workshops_section", src: person_path(@person, section: "workshops"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading workshops...</p>
                   <% end %>
                 </div>
-              <% else %>
-                <p class="text-gray-500 italic">No events recorded.</p>
+              <% end %>
+              <!-- Workshop variations  -->
+              <% if @person.profile_show_workshop_variations? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop variations authored</h2>
+                  <%= turbo_frame_tag "person_workshop_variations_section", src: person_path(@person, section: "workshop_variations"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading workshop variations...</p>
+                  <% end %>
+                </div>
+              <% end %>
+              <!-- Stories authored -->
+              <% if @person.profile_show_stories? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories authored/featured</h2>
+                  <%= turbo_frame_tag "person_stories_section", src: person_path(@person, section: "stories"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading stories...</p>
+                  <% end %>
+                </div>
               <% end %>
             </div>
-          <% end %>
-        </div>
+          </div>
+        <% end %>
+        <!-- PARTICIPATION SECTION -->
+        <% if @person.profile_show_events_registered? %>
+          <div class="person-only bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+            <!-- Header -->
+            <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-blue-200">
+              <h2 class="text-xl font-semibold text-gray-800">
+                Participation history
+              </h2>
+            </div>
+            <!-- Events registered -->
+            <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
+              <% if @person.profile_show_events_registered? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Events registered</h2>
+                  <%= turbo_frame_tag "person_events_section", src: person_path(@person, section: "events"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading events...</p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        <!-- SUBMITTED SECTION -->
+        <% if allowed_to?(:edit?, @person) %>
+          <div class="user-only <%= DomainTheme.bg_class_for(:user_only) %>
+            border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm">
+            <!-- Header -->
+            <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3
+              border-b <%= DomainTheme.border_class_for(:user_only) %>">
+              <h2 class="text-xl font-semibold text-gray-800">
+                Submitted content
+              </h2>
+              <span class="text-sm text-amber-700 italic">Only visible to you</span>
+            </div>
+            <!-- Submitted Content -->
+            <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
+              <!-- Workshop ideas -->
+              <% if @person.profile_show_workshop_ideas? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop ideas submitted</h2>
+                  <%= turbo_frame_tag "person_workshop_ideas_section", src: person_path(@person, section: "workshop_ideas"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading workshop ideas...</p>
+                  <% end %>
+                </div>
+              <% end %>
+              <!-- Workshop variation ideas -->
+              <% if @person.profile_show_workshop_variation_ideas? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop variation ideas submitted</h2>
+                  <%= turbo_frame_tag "person_workshop_variation_ideas_section", src: person_path(@person, section: "workshop_variation_ideas"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading workshop variation ideas...</p>
+                  <% end %>
+                </div>
+              <% end %>
+              <!-- Story ideas authored -->
+              <% if @person.profile_show_story_ideas? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Story ideas submitted</h2>
+                  <%= turbo_frame_tag "person_story_ideas_section", src: person_path(@person, section: "story_ideas"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading story ideas...</p>
+                  <% end %>
+                </div>
+              <% end %>
+              <!-- Workshop logs -->
+              <% if @person.profile_show_workshop_logs? %>
+                <div class="p-3">
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop logs submitted</h2>
+                  <%= turbo_frame_tag "person_workshop_logs_section", src: person_path(@person, section: "workshop_logs"), loading: :lazy do %>
+                    <p class="text-gray-500 italic">Loading workshop logs...</p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
-    <% end %>
-    <!-- SUBMITTED SECTION -->
-    <% if allowed_to?(:edit?, @person) %>
-      <div class="person-only <%= DomainTheme.bg_class_for(:user_only) %> border border-green-200 rounded-lg shadow-sm">
-        <!-- Header -->
-        <div class="section-header flex items-center justify-between px-4 py-3 border-b border-green-200">
-          <h2 class="text-xl font-semibold text-gray-800">
-            Submitted content
-          </h2>
-          <span class="text-sm text-gray-600 italic">
-            Only visible to you
-          </span>
-        </div>
-        <!-- Submitted Content -->
-        <div class="section-content px-4 py-6 space-y-10">
-          <!-- Workshop ideas -->
-          <% if @person.profile_show_workshop_ideas? %>
-            <div class="p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop ideas submitted</h2>
-              <% if @person.user && @person.user.workshop_ideas_as_creator.any? %>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <% @person.user.workshop_ideas_as_creator.order(created_at: :desc).each do |idea| %>
-                    <%= render "show_card",
-                                 record: idea.decorate, title_font_size: "text-sm" %>
-                  <% end %>
-                </div>
-              <% else %>
-                <p class="text-gray-500 italic">No ideas submitted yet.</p>
-              <% end %>
-            </div>
-          <% end %>
-          <!-- Story ideas authored -->
-          <% if @person.profile_show_story_ideas? %>
-            <div class="mt-6 p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Story ideas submitted</h2>
-              <% if @person.user && @person.user.story_ideas_as_creator.any? %>
-                <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6">
-                  <% @person.user.story_ideas_as_creator.order(created_at: :desc).each do |story_idea| %>
-                    <%= render "show_card",
-                                 record_title: story_idea.workshop_title,
-                                 record: story_idea.decorate, title_font_size: "text-sm" %>
-                  <% end %>
-                </div>
-              <% else %>
-                <p class="text-gray-500 italic">No story ideas yet.</p>
-              <% end %>
-            </div>
-          <% end %>
-          <!-- Workshop logs -->
-          <% if @person.profile_show_workshop_logs? %>
-            <div class="mt-6 p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop logs submitted</h2>
-              <% if @person.user && @person.user.workshop_logs.any? %>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <% @person.user.workshop_logs.order(date: :desc, created_at: :desc).each do |workshop_log| %>
-                    <%= render "show_card",
-                               record_title: "#{workshop_log.workshop&.title ||
-                                 "Workshop log #" + workshop_log.id.to_s} - #{workshop_log.windows_type_name}",
-                               record: workshop_log.decorate, title_font_size: "text-sm" %>
-                  <% end %>
-                </div>
-              <% else %>
-                <p class="text-gray-500 italic">No workshops logged yet.</p>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
+    </div>
   </div>
-</div>
 </div>

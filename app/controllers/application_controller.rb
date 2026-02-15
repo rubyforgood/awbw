@@ -68,8 +68,12 @@ class ApplicationController < ActionController::Base
   end
 
   def preload_current_user_associations
-    return unless current_user
-    current_user.person.organization_people.includes(:organization).load if current_user.person
+    return unless current_user&.person
+    @current_user_active_org_people = current_user.person
+                                                  .organization_people
+                                                  .active
+                                                  .includes(:organization)
+                                                  .load
   end
 
   def set_current_user
