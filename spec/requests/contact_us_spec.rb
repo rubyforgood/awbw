@@ -47,8 +47,8 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).not_to include("twitter.com")
       end
 
-      it "shows thank you message when submitted parameter is true" do
-        get contact_us_path(submitted: true)
+      it "shows thank you message when form was submitted" do
+        get contact_us_path, flash: { form_submitted: true }
         expect(response.body).to include("Thank you for contacting us!")
         expect(response.body).to include("Your message has been received")
       end
@@ -99,7 +99,8 @@ RSpec.describe "ContactUs", type: :request do
         }.to change(Notification, :count).by(2)
         # .and have_enqueued_job.on_queue("mailers")
 
-        expect(response).to redirect_to(contact_us_path(submitted: true))
+        expect(response).to redirect_to(contact_us_path)
+        expect(flash[:form_submitted]).to eq(true)
       end
 
       it "creates a contact_us notification for the submitter" do
@@ -144,7 +145,8 @@ RSpec.describe "ContactUs", type: :request do
         }.to change(Notification, :count).by(2)
         # .and have_enqueued_job.on_queue("mailers")
 
-        expect(response).to redirect_to(contact_us_path(submitted: true))
+        expect(response).to redirect_to(contact_us_path)
+        expect(flash[:form_submitted]).to eq(true)
       end
 
       it "creates a contact_us notification for the logged in user" do
