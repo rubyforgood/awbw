@@ -61,6 +61,8 @@ module Dedupable
     end
 
     head :ok
+  rescue ActionPolicy::Unauthorized
+    raise
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
@@ -96,6 +98,8 @@ module Dedupable
     label = mc.model_name.human.pluralize
     redirect_to url_for(action: :index),
       notice: "#{label} merged successfully. '#{record_to_delete.name}' was merged into '#{record_to_keep.name}'."
+  rescue ActionPolicy::Unauthorized
+    raise
   rescue StandardError => e
     redirect_to url_for(action: :dedupe_index),
       alert: "Error merging: #{e.message}"
