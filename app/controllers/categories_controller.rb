@@ -1,6 +1,5 @@
 class CategoriesController < ApplicationController
-  include AhoyTracking
-  include Dedupable
+  include AhoyTracking, Dedupable
   before_action :set_category, only: [ :show, :edit, :update, :destroy ]
 
   def index

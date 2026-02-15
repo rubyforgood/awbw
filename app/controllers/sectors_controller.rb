@@ -1,6 +1,5 @@
 class SectorsController < ApplicationController
-  include AhoyTracking
-  include Dedupable
+  include AhoyTracking, Dedupable
   before_action :set_sector, only: [ :show, :edit, :update, :destroy ]
 
   def index
