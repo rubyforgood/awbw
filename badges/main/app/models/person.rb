@@ -30,6 +30,8 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
+  before_validation :strip_whitespace
+
   # Validations
   validates :avatar,
             content_type: %w[image/png image/jpeg image/webp],
@@ -39,6 +41,7 @@ class Person < ApplicationRecord
   validates :last_name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
   validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validate :unique_name_and_email_combination
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
@@ -146,5 +149,36 @@ class Person < ApplicationRecord
       .active
       .order(updated_at: :desc)
       .first&.organization
+  end
+
+  private
+
+  def strip_whitespace
+    self.first_name = first_name&.strip
+    self.last_name = last_name&.strip
+    self.email = email&.strip
+    self.email_2 = email_2&.strip
+  end
+
+  def unique_name_and_email_combination
+    return unless first_name.present? && last_name.present?
+
+    scope = Person.where(
+      "LOWER(first_name) = ? AND LOWER(last_name) = ?",
+      first_name.downcase,
+      last_name.downcase
+    )
+
+    if email.present?
+      scope = scope.where("LOWER(email) = ?", email.downcase)
+    else
+      scope = scope.where(email: [ nil, "" ])
+    end
+
+    scope = scope.where.not(id: id) if persisted?
+
+    if scope.exists?
+      errors.add(:base, "A person named #{first_name} #{last_name} with this email already exists")
+    end
   end
 end
