@@ -11,11 +11,11 @@ class InstallBlazer < ActiveRecord::Migration[8.1]
     end
 
     create_table :blazer_audits do |t|
-      t.references :user, foreign_key: true
+      t.references :user, foreign_key: { to_table: :users }
       t.references :query, foreign_key: { to_table: :blazer_queries }
       t.text :statement
       t.string :data_source
-      t.datetime :created_at
+      t.timestamp :created_at, null: false
     end
 
     create_table :blazer_dashboards do |t|
