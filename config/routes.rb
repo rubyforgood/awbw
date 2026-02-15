@@ -96,7 +96,11 @@ Rails.application.routes.draw do
       post :resend
     end
   end
-  resources :organizations
+  resources :organizations do
+   member do
+     get :populations_served
+   end
+ end
   resources :organization_statuses
   resources :organization_people
   resources :quotes

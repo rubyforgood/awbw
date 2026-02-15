@@ -148,6 +148,11 @@
             <% else %>
               <p class="text-gray-500 italic">None selected.</p>
             <% end %>
+            <div class="mt-4">
+              <%= link_to "Sector Distribution",
+                          populations_served_organization_path(@organization),
+                          class: "inline-block px-4 py-2 bg-gray-100 border border-gray-300 rounded shadow-sm text-gray-800 hover:bg-gray-200 transition" %>
+            </div>
           </div>
         <% end %>
       </div>
