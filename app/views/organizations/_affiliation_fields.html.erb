@@ -64,7 +64,7 @@
     <div class="w-full text-right">
       <% if f.object.persisted? %>
         <%= link_to "Remove",
-                    organization_person_path(f.object),
+                    affiliation_path(f.object),
                     data: {
                       turbo_method: :delete,
                       turbo_confirm: "Remove this person from the organization?",
