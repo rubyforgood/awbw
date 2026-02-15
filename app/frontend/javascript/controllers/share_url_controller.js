@@ -10,8 +10,17 @@ export default class extends Controller {
 
     // Build URL from form data
     const form = this.element;
-    const params = new URLSearchParams(new FormData(form)).toString();
-    const shareUrl = `${form.action}?${params}`;
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    
+    // Manually add each form field to URLSearchParams for Safari compatibility
+    for (const [key, value] of formData.entries()) {
+      if (value) {
+        params.append(key, value);
+      }
+    }
+    
+    const shareUrl = `${form.action}?${params.toString()}`;
 
    this.outputTarget.value = shareUrl;
    this.outputTarget.classList.remove("hidden")
