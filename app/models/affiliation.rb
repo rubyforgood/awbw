@@ -4,6 +4,7 @@ class Affiliation < ApplicationRecord
 
   # Validations
   validates_presence_of :organization_id
+  validates_presence_of :person_id
 
   # Enum
   enum :position, { default: 0, liaison: 1, leader: 2, assistant: 3 }
