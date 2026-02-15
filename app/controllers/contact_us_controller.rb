@@ -4,6 +4,7 @@ class ContactUsController < ApplicationController
   def index
     authorize! :contact_us, to: :index?
     @user = current_user if user_signed_in?
+    @form_submitted = params[:submitted] == "true"
   end
 
   def create
@@ -32,8 +33,7 @@ class ContactUsController < ApplicationController
       noticeable: user
     )
 
-    flash[:notice] = "Your message was sent!"
-    redirect_to contact_us_path
+    redirect_to contact_us_path(submitted: true)
   end
 
   private
