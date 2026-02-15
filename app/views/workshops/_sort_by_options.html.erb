@@ -8,6 +8,14 @@
 
 <div class="flex items-center gap-1">
   <label class="flex items-center gap-1 cursor-pointer">
+    <%= radio_button_tag :sort, "most_recent",
+                         @sort == "most_recent" %>
+    <span class="text-sm">Most recent</span>
+  </label>
+</div>
+
+<div class="flex items-center gap-1">
+  <label class="flex items-center gap-1 cursor-pointer">
     <%= radio_button_tag :sort, "title",
                          @sort == "title" %>
     <span class="text-sm">Title</span>
