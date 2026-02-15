@@ -68,18 +68,18 @@ class WorkshopIdeasController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @age_ranges = Category.includes(:category_type).where("category_types.name = 'AgeRange'").pluck(:name)
+    @age_ranges = Category.joins(:category_type).where(category_types: { name: "AgeRange" }).pluck(:name)
     @potential_series_workshops = Workshop.published.order(:title)
     @sectors = Sector.published
     @windows_types = WindowsType.all
     @categories_grouped =
       Category
-        .includes(:category_type)
+        .joins(:category_type)
+        .where(category_types: { published: true })
         .published
         .order(:position, :name)
         .group_by(&:category_type)
-        .select { |type, _| type.nil? || type.published? }
-        .sort_by { |type, _| type&.name.to_s.downcase }
+        .sort_by { |type, _| type.name.downcase }
     @workshop_idea.build_primary_asset if @workshop_idea.primary_asset.blank?
     @workshop_idea.gallery_assets.build
   end
