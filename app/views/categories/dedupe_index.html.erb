@@ -1,0 +1,104 @@
+<div class="min-h-screen">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="admin-only bg-blue-100 rounded p-6">
+      <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg p-6">
+        
+        <!-- Header -->
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Dedupe Categories
+          </h1>
+          <div class="flex gap-4 mt-4">
+            <%= link_to dedupe_index_categories_path, 
+                        class: "px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors inline-flex items-center gap-2" do %>
+              <i class="fa-solid fa-link-slash"></i>
+              Possible dupes
+            <% end %>
+            <%= link_to categories_path, 
+                        class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors inline-flex items-center gap-2" do %>
+              <i class="fa-solid fa-tags"></i>
+              Categories
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Selection Form -->
+        <%= form_with url: dedupe_preview_categories_path, method: :post, local: true, class: "bg-purple-600 text-white rounded-lg p-6 space-y-4" do |f| %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Category to Delete -->
+            <div>
+              <label class="block text-white font-semibold mb-2">
+                Category to delete
+              </label>
+              <%= f.select :category_to_delete_id, 
+                          options_for_select([["-- category to delete --", ""]] + @categories_for_select),
+                          {},
+                          class: "w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900",
+                          required: true %>
+            </div>
+
+            <!-- Category to Keep -->
+            <div>
+              <label class="block text-white font-semibold mb-2">
+                Category to keep
+              </label>
+              <%= f.select :category_to_keep_id, 
+                          options_for_select([["-- category to keep --", ""]] + @categories_for_select),
+                          {},
+                          class: "w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900",
+                          required: true %>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-4 justify-center pt-2">
+            <%= f.submit "Preview this dedupe", 
+                        class: "px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors font-semibold" %>
+            <%= link_to "Clear", 
+                        dedupe_index_categories_path, 
+                        class: "px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors font-semibold" %>
+          </div>
+        <% end %>
+
+        <!-- Possible Duplicates List -->
+        <% if @possible_duplicates.any? %>
+          <div class="mt-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+              Possible Duplicate Groups (<%= @possible_duplicates.count %>)
+            </h2>
+            <div class="space-y-4">
+              <% @possible_duplicates.each do |normalized_name, categories| %>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h3 class="font-semibold text-gray-900 mb-2">
+                    "<%= normalized_name %>" (<%= categories.count %> categories)
+                  </h3>
+                  <ul class="list-disc list-inside space-y-1 text-gray-700">
+                    <% categories.each do |category| %>
+                      <li>
+                        <%= category.name %>
+                        <span class="text-gray-500 text-sm">
+                          (ID: <%= category.id %>, 
+                          Type: <%= category.category_type&.name || 'None' %>, 
+                          <%= category.published? ? 'Published' : 'Unpublished' %>,
+                          <%= category.categorizable_items.count %> taggings)
+                        </span>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% else %>
+          <div class="mt-8 text-center py-8 bg-gray-50 rounded-lg">
+            <i class="fa-solid fa-check-circle text-green-500 text-4xl mb-2"></i>
+            <p class="text-gray-600 text-lg">
+              No duplicate categories found!
+            </p>
+          </div>
+        <% end %>
+
+      </div>
+    </div>
+  </div>
+</div>

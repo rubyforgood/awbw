@@ -72,7 +72,13 @@ Rails.application.routes.draw do
       get :personal
     end
   end
-  resources :categories
+  resources :categories do
+    collection do
+      get :dedupe_index
+      post :dedupe_preview
+      post :dedupe_execute
+    end
+  end
   resources :community_news
   resources :event_registrations
   resources :events do
@@ -113,7 +119,13 @@ Rails.application.routes.draw do
       post :search
     end
   end
-  resources :sectors
+  resources :sectors do
+    collection do
+      get :dedupe_index
+      post :dedupe_preview
+      post :dedupe_execute
+    end
+  end
   resources :story_ideas
   resources :stories do
     collection do

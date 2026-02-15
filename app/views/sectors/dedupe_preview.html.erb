@@ -1,0 +1,165 @@
+<div class="min-h-screen">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="admin-only bg-blue-100 rounded p-6">
+      <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg p-6">
+        
+        <!-- Header -->
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Preview Sector Deduplication
+          </h1>
+          <p class="text-gray-600">
+            Review the differences before merging. The sector on the left will be DELETED and its associations will be moved to the sector on the right.
+          </p>
+          <%= link_to "← Back to Dedupe", dedupe_index_sectors_path, class: "inline-block mt-4 text-purple-600 hover:text-purple-800" %>
+        </div>
+
+        <!-- Side-by-side Comparison -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          
+          <!-- Sector to Delete (Left) -->
+          <div class="border-2 border-red-300 rounded-lg p-4 bg-red-50">
+            <div class="flex items-center gap-2 mb-4">
+              <i class="fa-solid fa-trash-can text-red-600"></i>
+              <h2 class="text-xl font-bold text-red-800">
+                Sector to DELETE
+              </h2>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4 space-y-3">
+              <div class="border-b pb-2">
+                <span class="text-gray-600 text-sm font-semibold">ID:</span>
+                <span class="ml-2 text-gray-900"><%= @sector_to_delete.id %></span>
+              </div>
+              
+              <div class="border-b pb-2">
+                <span class="text-gray-600 text-sm font-semibold">Name:</span>
+                <span class="ml-2 text-gray-900 font-bold"><%= @sector_to_delete.name %></span>
+              </div>
+              
+              <div class="border-b pb-2">
+                <span class="text-gray-600 text-sm font-semibold">Published:</span>
+                <span class="ml-2 <%= @sector_to_delete.published == @sector_to_keep.published ? 'text-gray-900' : 'text-yellow-600 font-bold bg-yellow-100 px-2 py-1 rounded' %>">
+                  <%= @sector_to_delete.published? ? 'Yes' : 'No' %>
+                  <% if @sector_to_delete.published != @sector_to_keep.published %>
+                    <span class="text-xs">DIFFERENT</span>
+                  <% end %>
+                </span>
+              </div>
+              
+              <div class="border-b pb-2">
+                <span class="text-gray-600 text-sm font-semibold">Created:</span>
+                <span class="ml-2 text-gray-900"><%= @sector_to_delete.created_at&.strftime("%Y-%m-%d %H:%M") || 'N/A' %></span>
+              </div>
+              
+              <div>
+                <span class="text-gray-600 text-sm font-semibold">Associated Records:</span>
+                <span class="ml-2 text-gray-900 font-bold"><%= @delete_sectorable_items.count %></span>
+              </div>
+              
+              <% if @delete_sectorable_items.any? %>
+                <div class="mt-4">
+                  <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged Items:</h3>
+                  <ul class="text-sm text-gray-600 space-y-1 max-h-40 overflow-y-auto">
+                    <% @delete_sectorable_items.each do |item| %>
+                      <li class="pl-2">
+                        • <%= item.sectorable_type %>: 
+                        <%= item.sectorable.try(:name) || item.sectorable.try(:title) || "ID #{item.sectorable_id}" %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Sector to Keep (Right) -->
+          <div class="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+            <div class="flex items-center gap-2 mb-4">
+              <i class="fa-solid fa-check-circle text-green-600"></i>
+              <h2 class="text-xl font-bold text-green-800">
+                Sector to KEEP
+              </h2>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4 space-y-3">
+              <div class="border-b pb-2">
+                <span class="text-gray-600 text-sm font-semibold">ID:</span>
+                <span class="ml-2 text-gray-900"><%= @sector_to_keep.id %></span>
+              </div>
+              
+              <div class="border-b pb-2">
+                <span class="text-gray-600 text-sm font-semibold">Name:</span>
+                <span class="ml-2 text-gray-900 font-bold"><%= @sector_to_keep.name %></span>
+              </div>
+              
+              <div class="border-b pb-2">
+                <span class="text-gray-600 text-sm font-semibold">Published:</span>
+                <span class="ml-2 text-gray-900">
+                  <%= @sector_to_keep.published? ? 'Yes' : 'No' %>
+                </span>
+              </div>
+              
+              <div class="border-b pb-2">
+                <span class="text-gray-600 text-sm font-semibold">Created:</span>
+                <span class="ml-2 text-gray-900"><%= @sector_to_keep.created_at&.strftime("%Y-%m-%d %H:%M") || 'N/A' %></span>
+              </div>
+              
+              <div>
+                <span class="text-gray-600 text-sm font-semibold">Associated Records:</span>
+                <span class="ml-2 text-gray-900 font-bold"><%= @keep_sectorable_items.count %></span>
+              </div>
+              
+              <% if @keep_sectorable_items.any? %>
+                <div class="mt-4">
+                  <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged Items:</h3>
+                  <ul class="text-sm text-gray-600 space-y-1 max-h-40 overflow-y-auto">
+                    <% @keep_sectorable_items.each do |item| %>
+                      <li class="pl-2">
+                        • <%= item.sectorable_type %>: 
+                        <%= item.sectorable.try(:name) || item.sectorable.try(:title) || "ID #{item.sectorable_id}" %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warning and Action -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <i class="fa-solid fa-exclamation-triangle text-yellow-400"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-yellow-700">
+                <strong>Warning:</strong> This action cannot be undone. 
+                The sector "<%= @sector_to_delete.name %>" (ID: <%= @sector_to_delete.id %>) will be permanently deleted, 
+                and all its <%= @delete_sectorable_items.count %> associations will be moved to 
+                "<%= @sector_to_keep.name %>" (ID: <%= @sector_to_keep.id %>).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Execute Form -->
+        <%= form_with url: dedupe_execute_sectors_path, method: :post, local: true, 
+                      data: { turbo_confirm: "Are you sure you want to merge these sectors? This action cannot be undone!" },
+                      class: "flex gap-4 justify-center" do |f| %>
+          <%= f.hidden_field :sector_to_delete_id, value: @sector_to_delete.id %>
+          <%= f.hidden_field :sector_to_keep_id, value: @sector_to_keep.id %>
+          
+          <%= f.submit "Execute Merge", 
+                      class: "px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-lg" %>
+          
+          <%= link_to "Cancel", 
+                      dedupe_index_sectors_path, 
+                      class: "px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-semibold text-lg" %>
+        <% end %>
+
+      </div>
+    </div>
+  </div>
+</div>
