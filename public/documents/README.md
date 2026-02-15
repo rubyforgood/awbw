@@ -2,9 +2,19 @@
 
 This directory contains downloadable resources for the application.
 
-## Setup Instructions
+## Automatic Setup
 
-After cloning the repository, download the following files:
+Run the seed resources rake task to automatically download all required files:
+
+```bash
+bundle exec rake seed:resources
+```
+
+This task is also automatically run when you execute `bin/rails db:seed`.
+
+## Manual Setup
+
+If automatic download fails or you prefer manual download:
 
 ### 1. Tips for Sharing Impactful Stories PDF
 
