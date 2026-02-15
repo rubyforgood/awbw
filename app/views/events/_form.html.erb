@@ -87,7 +87,7 @@
                        type: "datetime-local",
                        class:
                          "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.start_date&.strftime("%Y-%m-%dT%H:%M"),
+                       value: @event.start_date&.in_time_zone(current_user&.time_zone || "UTC")&.strftime("%Y-%m-%dT%H:%M"),
                        required: true %>
 
           <% if f.object.errors[:start_date].any? %>
@@ -103,7 +103,7 @@
                        type: "datetime-local",
                        class:
                          "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.end_date&.strftime("%Y-%m-%dT%H:%M"),
+                       value: @event.end_date&.in_time_zone(current_user&.time_zone || "UTC")&.strftime("%Y-%m-%dT%H:%M"),
                        required: true %>
 
           <% if f.object.errors[:end_date].any? %>
@@ -121,7 +121,7 @@
                        type: "datetime-local",
                        class:
                          "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
+                       value: @event.registration_close_date&.in_time_zone(current_user&.time_zone || "UTC")&.strftime("%Y-%m-%dT%H:%M") %>
 
           <% if f.object.errors[:registration_close_date].any? %>
             <p class="text-red-500 text-sm mt-1">
@@ -193,6 +193,7 @@
 
     </div>
 
+<<<<<<< HEAD
     <%# RIGHT: Autoshow display options %>
     <div class="bg-white border border-gray-200 rounded-md p-4">
       <h3 class="text-base font-semibold text-gray-800 mb-3">Display options</h3>
@@ -214,6 +215,41 @@
         <%= f.input :autoshow_registration, as: :boolean, label: "Registration button <span class='text-gray-400 font-normal'>Register + calendar links</span>".html_safe %>
       </div>
     </div>
+=======
+    <div>
+      <%= f.label :end_date, "End time", required: true, class: "block font-medium mb-1" %>
+
+      <%= f.text_field :end_date,
+                   type: "datetime-local",
+                   class:
+                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   value: @event.end_date&.in_time_zone(Time.zone)&.strftime("%Y-%m-%dT%H:%M"),
+                   required: true %>
+
+      <% if f.object.errors[:end_date].any? %>
+        <p class="text-red-500 text-sm mt-1">End date
+          <%= f.object.errors[:end_date].join(", ") %></p>
+      <% end %>
+    </div>
+
+    <div>
+      <%= f.label :registration_close_date,
+              "Registration close time",
+              class: "block font-medium mb-1" %>
+
+      <%= f.text_field :registration_close_date,
+                   type: "datetime-local",
+                   class:
+                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                   value: @event.registration_close_date&.in_time_zone(Time.zone)&.strftime("%Y-%m-%dT%H:%M") %>
+
+      <% if f.object.errors[:registration_close_date].any? %>
+        <p class="text-red-500 text-sm mt-1">
+          Registration close date
+          <%= f.object.errors[:registration_close_date].join(", ") %>
+        </p>
+      <% end %>
+>>>>>>> 7023e241b (Fix timezone handling in event form datetime-local fields)
     </div>
   </div>
 
