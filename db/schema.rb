@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_205007) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -215,6 +215,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.index ["bookmarkable_type", "bookmarkable_id"], name: "index_bookmarks_on_bookmarkable"
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
@@ -244,9 +245,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
 
   create_table "category_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
+    t.string "display_text"
     t.string "legacy_id"
     t.string "name"
     t.boolean "published", default: false
+    t.boolean "story_specific", default: false
     t.datetime "updated_at", precision: nil, null: false
   end
 
@@ -476,6 +479,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["published"], name: "index_organization_obligations_on_published"
+  end
+
+  create_table "organization_people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.date "end_date"
+    t.string "filemaker_code"
+    t.boolean "inactive", default: false, null: false
+    t.integer "organization_agency_id"
+    t.integer "organization_id", null: false
+    t.integer "person_id", null: false
+    t.integer "position"
+    t.boolean "primary_contact", default: false, null: false
+    t.date "start_date"
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["organization_agency_id"], name: "index_organization_people_on_organization_agency_id"
+    t.index ["organization_id"], name: "index_organization_people_on_organization_id"
+    t.index ["person_id"], name: "index_organization_people_on_person_id"
+    t.index ["user_id"], name: "index_organization_people_on_user_id"
   end
 
   create_table "organization_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1161,6 +1184,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_130731) do
   add_foreign_key "organization_users", "organizations"
   add_foreign_key "organization_users", "organizations", column: "organization_agency_id"
   add_foreign_key "organization_users", "users"
+  add_foreign_key "notifications", "notifications", column: "parent_notification_id"
+  add_foreign_key "notifications", "notifications", column: "root_notification_id"
+  add_foreign_key "organization_people", "organizations"
+  add_foreign_key "organization_people", "organizations", column: "organization_agency_id"
+  add_foreign_key "organization_people", "people"
+  add_foreign_key "organization_people", "users"
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"
