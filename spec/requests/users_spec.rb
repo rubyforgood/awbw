@@ -43,8 +43,7 @@ RSpec.describe "/users", type: :request do
       end
 
       it "displays locked status for locked users" do
-        locked_user = create(:user, locked_at: Time.current)
-        unlocked_user = create(:user, locked_at: nil)
+        create(:user, locked_at: Time.current)
 
         get users_url
         expect(response.body).to include('fa-lock')
