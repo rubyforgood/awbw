@@ -121,13 +121,6 @@ class ResourcesController < ApplicationController
     redirect_to resources_path, notice: "Resource was successfully destroyed."
   end
 
-  def search
-    authorize!
-    process_search
-    @sortable_fields = Resource::PUBLISHED_KINDS
-    render :index
-  end
-
   def download
     @resource = Resource.find(params[:resource_id])
     authorize! @resource
@@ -180,12 +173,6 @@ class ResourcesController < ApplicationController
     resource.save!
   end
 
-  def process_search
-    @params = search_params
-    @query = search_params[:query]
-    @resources = Search.new.search(search_params, current_user).paginate(page: params[:search][:page])
-  end
-
   def resource_id_param
     params[:id]
   end
@@ -210,9 +197,5 @@ class ResourcesController < ApplicationController
         @user_form.report_form_field_answers.build(form_field: field)
       end
     end
-  end
-
-  def search_params
-    params[:search]
   end
 end
