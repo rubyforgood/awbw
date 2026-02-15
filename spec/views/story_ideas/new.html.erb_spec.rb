@@ -10,6 +10,9 @@ RSpec.describe "story_ideas/new", type: :view do
     assign(:workshops, [])
     assign(:organizations, [])
     assign(:users, [])
+    assign(:sectors, [])
+    assign(:story_population_categories, [])
+    assign(:story_population_type, nil)
   end
 
   context "when current_user is a regular user" do
