@@ -6,7 +6,7 @@
   model = resource.respond_to?(:object) ? resource.object : resource
   created_by_user = resource.try(:created_by) || resource.try(:user)
   updated_by_user = resource.try(:updated_by) || resource.try(:user)
-  
+
   # Check if there's a user association for models without explicit created_by
   resource_user = resource.try(:user) if created_by_user.nil? && updated_by_user.nil?
 %>
@@ -24,14 +24,14 @@
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
-                      class: "ml-1 text-indigo-600 hover:underline", 
+                      class: "ml-1 text-indigo-600 hover:underline",
                       title: "View creation event in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
           <% end %>
         <% end %>
       </div>
     <% end %>
-    
+
     <% if resource.updated_at.present? && resource.updated_at != resource.created_at %>
       <div>
         <span class="font-medium">Last updated:</span>
@@ -43,7 +43,7 @@
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
-                      class: "ml-1 text-indigo-600 hover:underline", 
+                      class: "ml-1 text-indigo-600 hover:underline",
                       title: "View update events in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
           <% end %>
