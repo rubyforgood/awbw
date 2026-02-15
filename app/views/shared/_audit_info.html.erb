@@ -16,7 +16,7 @@
     <% if resource.created_at.present? %>
       <div>
         <span class="font-medium">Created:</span>
-        <%= resource.created_at.strftime("%b %d, %Y at %l:%M %p") %>
+        <%= resource.created_at.strftime("%b %d, %Y at %-l:%M %p") %>
         <% if created_by_user %>
           by <%= link_to created_by_user.full_name, user_path(created_by_user), class: "text-indigo-600 hover:underline" %>
         <% elsif resource_user %>
@@ -35,7 +35,7 @@
     <% if resource.updated_at.present? && resource.updated_at != resource.created_at %>
       <div>
         <span class="font-medium">Last updated:</span>
-        <%= resource.updated_at.strftime("%b %d, %Y at %l:%M %p") %>
+        <%= resource.updated_at.strftime("%b %d, %Y at %-l:%M %p") %>
         <% if updated_by_user %>
           by <%= link_to updated_by_user.full_name, user_path(updated_by_user), class: "text-indigo-600 hover:underline" %>
         <% elsif resource_user %>

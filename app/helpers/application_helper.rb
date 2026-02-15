@@ -169,17 +169,4 @@ module ApplicationHelper
     ]
     ActiveSupport::TimeZone.us_zones.select { |z| zone_names.include?(z.name) }.sort_by { |z| zone_names.index(z.name) }.map { |z| [ z.to_s, z.name ] }
   end
-
-  # Generate URL to Ahoy events filtered to a specific resource
-  def ahoy_events_url_for(resource)
-    return unless resource&.persisted?
-
-    # Build query parameters for filtering Ahoy events to this resource
-    # The Ahoy events controller uses properties->resource_type and properties->resource_id
-    # We'll filter by resource class name and ID
-    admin_activities_events_path(
-      resource_type: resource.class.name,
-      resource_id: resource.id
-    )
-  end
 end
