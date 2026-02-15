@@ -170,5 +170,5 @@ category_type_categories.each do |category_type_name, category_name, legacy_id|
   end
 end
 
-puts "Downloading seed resources (PDFs, images)…"
+puts "Downloading seed resources (PDFs, images)..."
 Rake::Task['seed:resources'].invoke

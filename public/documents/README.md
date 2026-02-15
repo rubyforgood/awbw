@@ -18,7 +18,7 @@ If automatic download fails or you prefer manual download:
 
 ### 1. Tips for Sharing Impactful Stories PDF
 
-Download from cloudinary and place in this directory:
+Download from Cloudinary and place in this directory:
 
 ```bash
 curl -L "https://res.cloudinary.com/a-window-between-worlds/image/upload/v1750730476/Tips_for_Sharing_Impactful_Stories_lkuime.pdf" -o public/documents/tips_for_sharing_impactful_stories.pdf
