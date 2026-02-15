@@ -5,8 +5,16 @@ class StoryPolicy < ApplicationPolicy
     true
   end
 
+  def share_portal?
+    true
+  end
+
   def show?
     admin? || record.publicly_visible? || (authenticated? && record.published?)
+  end
+
+  def show_share_portal?
+    show?
   end
 
   # Scoping
