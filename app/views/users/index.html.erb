@@ -46,7 +46,7 @@
                   <% else %>
                     <%= link_to "Create person",
                                 new_person_path(user_id: user.id),
-                                class: "btn btn-secondary-outline" %>
+                                class: "btn btn-warning" %>
                   <% end %>
                 </td>
 
@@ -94,8 +94,8 @@
 
                 <!-- Actions -->
                 <td class="px-4 py-2 flex justify-right gap-2">
-                  <%= link_to 'Edit', edit_user_path(user), class: "btn btn-secondary-outline" %>
-                  <%= link_to 'Stats', user_path(user), class: "btn btn-secondary-outline" %>
+                  <%= link_to "Edit", edit_user_path(user), class: "btn btn-secondary-outline" %>
+                  <%= link_to "Details", user_path(user), class: "btn btn-secondary-outline" %>
                 </td>
               </tr>
             <% end %>

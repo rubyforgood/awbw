@@ -4,12 +4,21 @@
 
       <!-- Top buttons -->
       <div class="flex justify-end mb-6">
+        <% if @user.person %>
+          <%= link_to "Person profile",
+                      person_path(@user.person),
+                      class: "btn btn-secondary-outline mr-2" %>
+        <% else %>
+          <div class="admin-only bg-blue-100 p-2 mr-2">
+            No person!
+            <%= link_to "Create person",
+                        new_person_path(user_id: @user.id),
+                        class: "btn btn-warning px-2 py-1" %>
+          </div>
+        <% end %>
         <% if allowed_to?(:index?, User) %>
           <%= link_to "Users", users_path, class: "btn btn-secondary-outline mr-2" %>
         <% end %>
-        <%= link_to "Person profile",
-                    person_path(@user.person),
-                    class: "btn btn-secondary-outline mr-2" if @user.person %>
         <% if allowed_to?(:edit?, @user) %>
           <%= link_to "Edit", edit_user_path(@user), class: "btn btn-primary-outline" %>
         <% end %>
@@ -53,17 +62,6 @@
             </div>
           </dl>
         </div>
-
-        <div>
-          <% unless @user.person %>
-            Not associated with a person!
-            <br>
-            <%= link_to "Create person",
-                        new_person_path(user_id: @user.id),
-                        class: "btn btn-primary" if @user.persisted? %>
-          <% end %>
-        </div>
-
       </div>
 
       <!-- Devise / Account Details -->
