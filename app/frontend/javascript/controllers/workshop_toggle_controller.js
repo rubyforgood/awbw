@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus";
 // Connects to data-controller="workshop-toggle"
 // Handles toggling between workshop dropdown and external title field
 export default class extends Controller {
-  static targets = ["dropdown", "externalField", "closeButton"];
+  static targets = ["dropdown", "externalField"];
 
   connect() {
     this.checkInitialState();
@@ -31,7 +31,7 @@ export default class extends Controller {
   showDropdown() {
     this.externalFieldTarget.classList.add("hidden");
     this.dropdownTarget.classList.remove("hidden");
-    
+
     // Clear the selection back to prompt
     const select = this.dropdownTarget.querySelector("select");
     if (select) {

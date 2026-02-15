@@ -44,6 +44,15 @@ class StoryIdea < ApplicationRecord
   validates :body, presence: true
   validates :permission_given, presence: true
   validates :publish_preferences, presence: true
+  validate :workshop_or_external_title_present
+
+  private
+
+  def workshop_or_external_title_present
+    if workshop_id.blank? && external_workshop_title.blank?
+      errors.add(:base, "Please select a workshop or enter an external workshop title")
+    end
+  end
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank

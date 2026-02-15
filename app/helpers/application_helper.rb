@@ -169,4 +169,13 @@ module ApplicationHelper
     ]
     ActiveSupport::TimeZone.us_zones.select { |z| zone_names.include?(z.name) }.sort_by { |z| zone_names.index(z.name) }.map { |z| [ z.to_s, z.name ] }
   end
+
+  def workshop_selected_value(story_idea, params)
+    # If editing and has external title but no workshop, don't select anything
+    return nil if story_idea.workshop_id.nil? && story_idea.external_workshop_title.present?
+
+    # Otherwise use param or object value
+    params[:workshop_id].presence || story_idea.workshop_id
+  end
 end
+
