@@ -1,0 +1,14 @@
+<%= turbo_frame_tag "person_workshops_section" do %>
+  <% if workshops.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
+      <% workshops.each do |workshop| %>
+        <%= render "show_card", record: workshop.decorate, title_font_size: "text-sm" %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate workshops, params: { section: "workshops" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No workshops authored yet.</p>
+  <% end %>
+<% end %>

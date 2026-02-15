@@ -1,4 +1,5 @@
 class CategoriesController < ApplicationController
+  include AhoyTracking, Dedupable
   before_action :set_category, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -80,6 +81,15 @@ class CategoriesController < ApplicationController
   end
 
   private
+
+  def dedupe_config
+    {
+      model_class: Category,
+      domain: :categories,
+      belongs_to_options: -> { { "category_type_id" => CategoryType.order(:name) } },
+      record_extras: ->(record) { "Type: #{record.category_type&.name || 'None'}" }
+    }
+  end
 
   def set_category
     @category = Category.find(params[:id])

@@ -28,7 +28,7 @@
 
   <%= render "dropdown_filter",
              dom_id_prefix: "sectors",
-             label_text: "Service Population",
+             label_text: "Sector",
              items: @sectors.reject { |sector| sector.name == "Other" },
              param_name: :sectors %>
 
@@ -39,5 +39,5 @@
              label_method: :short_name,
              param_name: :windows_types %>
 
-  <%= render "inactive_fields" if current_user&.super_user? %>
+  <%= render "inactive_fields" if allowed_to?(:manage?, Workshop) %>
 </div>

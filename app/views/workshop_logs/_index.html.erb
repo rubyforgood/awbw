@@ -1,3 +1,15 @@
+<% workshop_logs ||= @workshop_logs %>
+<% workshop_logs_unpaginated ||= @workshop_logs_unpaginated %>
+<% workshop_logs_count ||= @workshop_logs_count %>
+<% grand_totals = workshop_logs_unpaginated.pick(
+     Arel.sql("COALESCE(SUM(children_ongoing),0)"),
+     Arel.sql("COALESCE(SUM(teens_ongoing),0)"),
+     Arel.sql("COALESCE(SUM(adults_ongoing),0)"),
+     Arel.sql("COALESCE(SUM(children_first_time),0)"),
+     Arel.sql("COALESCE(SUM(teens_first_time),0)"),
+     Arel.sql("COALESCE(SUM(adults_first_time),0)")
+   ) || [0, 0, 0, 0, 0, 0] %>
+
 <div class="min-h-screen py-2">
   <div class="max-w-full mx-auto px-2 sm:px-2 lg:px-2">
     <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl
@@ -6,7 +18,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
           <h1 class="text-2xl font-semibold text-gray-900">
-            <%= WorkshopLog.model_name.human.pluralize %> (<%= number_with_delimiter(@workshop_logs_count) %>)
+            <%= WorkshopLog.model_name.human.pluralize %> (<%= number_with_delimiter(workshop_logs_count) %>)
           </h1>
           <div class="flex gap-2">
             <%= link_to "New #{WorkshopLog.model_name.human.downcase}",
@@ -61,7 +73,7 @@
                 adults_first_time: 0
               } %>
 
-              <% @workshop_logs.each do |log| %>
+              <% workshop_logs.each do |log| %>
                 <% page_totals[:children_ongoing]  += log.children_ongoing.to_i %>
                 <% page_totals[:teens_ongoing]     += log.teens_ongoing.to_i %>
                 <% page_totals[:adults_ongoing]    += log.adults_ongoing.to_i %>
@@ -99,14 +111,16 @@
                   <td class="text-center bg-green-100"><%= display_count(log.adults_first_time) %></td>
 
                   <td class="text-center whitespace-nowrap">
-                    <% if current_user&.super_user? || log.user == current_user %>
+                    <% if allowed_to?(:edit?, log) %>
                       <%= link_to "Edit",
                                   edit_workshop_log_path(log),
                                   class: "btn btn-secondary-outline text-xs px-2 py-1" %>
                     <% end %>
-                    <%= link_to "View",
-                                workshop_log_path(log),
-                                class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+                    <% if allowed_to?(:show?, log) %>
+                      <%= link_to "View",
+                                  workshop_log_path(log),
+                                  class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+                    <% end %>
                   </td>
                 </tr>
               <% end %>
@@ -114,7 +128,7 @@
             </tbody>
 
             <tfoot>
-            <% if @workshop_logs_count > @per_page.to_i %>
+            <% if workshop_logs_count > @per_page.to_i %>
               <!-- Subtotal for this page -->
               <tr class="font-semibold text-sm bg-gray-50 border-t border-gray-300">
                 <td colspan="3" class="text-right pr-2 text-sm font-semibold text-gray-700">Subtotal (this page):</td>
@@ -133,33 +147,28 @@
             <% end %>
             <!-- Grant total -->
             <tr class="bold small">
-              <% grand_total_text = "Grand Total#{ " (all pages)" if @workshop_logs_count > @per_page.to_i }" %>
+              <% grand_total_text = "Grand Total#{ " (all pages)" if workshop_logs_count > @per_page.to_i }" %>
               <td colspan="3" class="text-right pr-2 text-sm font-semibold"><%= grand_total_text %>:</td>
               <td class="text-center font-bold text-xl text-white bg-purple-500">
-                <%= @workshop_logs_unpaginated.sum(:children_ongoing) +
-                      @workshop_logs_unpaginated.sum(:teens_ongoing) +
-                      @workshop_logs_unpaginated.sum(:adults_ongoing) +
-                      @workshop_logs_unpaginated.sum(:children_first_time) +
-                      @workshop_logs_unpaginated.sum(:teens_first_time) +
-                      @workshop_logs_unpaginated.sum(:adults_first_time) %>
+                <%= grand_totals.sum %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-blue-500">
-                <%= @workshop_logs_unpaginated.sum(:children_ongoing) %>
+                <%= grand_totals[0] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-blue-500">
-                <%= @workshop_logs_unpaginated.sum(:teens_ongoing) %>
+                <%= grand_totals[1] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-blue-500">
-                <%= @workshop_logs_unpaginated.sum(:adults_ongoing) %>
+                <%= grand_totals[2] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-green-500">
-                <%= @workshop_logs_unpaginated.sum(:children_first_time) %>
+                <%= grand_totals[3] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-green-500">
-                <%= @workshop_logs_unpaginated.sum(:teens_first_time) %>
+                <%= grand_totals[4] %>
               </td>
               <td class="text-center font-bold text-xl text-white bg-green-500">
-                <%= @workshop_logs_unpaginated.sum(:adults_first_time) %>
+                <%= grand_totals[5] %>
               </td>
             </tr>
             </tfoot>
@@ -167,7 +176,7 @@
         </div>
 
         <!-- Empty state -->
-        <% unless @workshop_logs.any? %>
+        <% unless workshop_logs.any? %>
           <p class="text-gray-500 text-center py-6">
             No <%= WorkshopLog.model_name.human.pluralize %> found.
           </p>
@@ -176,7 +185,7 @@
         <!-- Pagination -->
         <div class="mt-6 flex justify-center">
           <div class="pagination">
-            <%= tailwind_paginate @workshop_logs %>
+            <%= tailwind_paginate workshop_logs %>
           </div>
         </div>
 

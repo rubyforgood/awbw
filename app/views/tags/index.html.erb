@@ -8,27 +8,27 @@
           Tags
         </h1>
         <p class="text-gray-600 max-w-2xl">
-          Explore content by service population or thematic category.
+          Explore content by sector or thematic category.
         </p>
       </div>
     </div>
 
     <div class="space-y-6">
-      <!-- SERVICE POPULATIONS -->
+      <!-- SECTORS -->
       <section class="bg-lime-100 border border-lime-200 rounded-xl p-6">
         <div class="flex items-start justify-between gap-6 mb-5">
           <div>
             <h2 class="text-lg font-semibold text-slate-900">
-              Service Populations
+              Sectors
             </h2>
             <p class="text-sm text-slate-600">
               Who this content is intended to support
             </p>
           </div>
 
-          <% if current_user&.super_user? %>
+          <% if allowed_to?(:index?, Sector) %>
             <div class="flex-shrink-0">
-              <%= link_to "Manage service populations",
+              <%= link_to "Manage sectors",
                           sectors_path,
                           class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
             </div>
@@ -52,7 +52,7 @@
             </p>
           </div>
 
-          <% if current_user&.super_user? %>
+          <% if allowed_to?(:index?, Category) %>
             <div class="flex-shrink-0">
               <%= link_to "Manage categories",
                           categories_path,

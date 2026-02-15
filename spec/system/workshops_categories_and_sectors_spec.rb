@@ -37,10 +37,9 @@ RSpec.describe "Workshop categories & sectors", type: :system do
       find("#workshop_sector_ids_#{sector_x.id}",     visible: :all).check
       find("#workshop_sector_ids_#{sector_y.id}",     visible: :all).check
 
-      pre_workshop_count = Workshop.count
       click_button "Submit"
-      post_workshop_count = Workshop.count
-      expect(post_workshop_count).to eq(pre_workshop_count + 1)
+      expect(page).to have_content("Workshop created successfully")
+      expect(Workshop.count).to eq(1)
 
       workshop = Workshop.last
 

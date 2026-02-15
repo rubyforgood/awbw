@@ -14,7 +14,6 @@ RSpec.describe "/organizations", type: :request do
       start_date: Date.today - 6.months,
       end_date: Date.today + 6.months,
       organization_status_id: organization_status.id,
-      inactive: false,
       notes: "Runs bi-weekly at community centers."
     }
   end
@@ -96,8 +95,7 @@ RSpec.describe "/organizations", type: :request do
       let(:new_attributes) do
         {
           name: "Updated Healing Organization",
-          description: "Updated description for testing.",
-          inactive: true
+          description: "Updated description for testing."
         }
       end
 
@@ -107,7 +105,6 @@ RSpec.describe "/organizations", type: :request do
         organization.reload
         expect(organization.name).to eq("Updated Healing Organization")
         expect(organization.description).to eq("Updated description for testing.")
-        expect(organization.inactive).to be(true)
       end
 
       it "redirects to the organizations index" do

@@ -7,7 +7,7 @@
             <h1 class="text-3xl font-bold text-gray-900 my-2">Admin Home</h1>
           </div>
 
-          <div class="flex gap-6">
+          <div class="flex flex-col gap-6 md:flex-row">
             <!-- Column 1 -->
             <div class="flex flex-col gap-4 flex-1">
               Admin-generated
@@ -54,12 +54,14 @@
 
           <div class="mt-20">
             Base data
-            <div class="flex gap-6 mt-3">
+           <div class="flex flex-wrap gap-6 mt-3">
               <% @reference_cards.each do |card| %>
                 <a href="<%= card[:path] %>"
-                   class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
-                          <%= card[:bg_color] %> <%= card[:text_color] %>
-                          <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
+                 class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+                  <%= card[:bg_color] %> <%= card[:text_color] %>
+                  <%= card[:hover_bg_color] %>
+                  transition-colors transition-shadow duration-300 p-4
+                  w-full sm:w-1/2 lg:w-1/3">
 
                   <div class="text-5xl text-gray-700 flex-shrink-0">
                     <%= card[:icon] %>

@@ -7,11 +7,16 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
           <h1 class="text-2xl font-semibold text-gray-900">
-            Service populations (<%= @count_display %>)
+            Sectors (<%= @count_display %>)
           </h1>
-          <%= link_to "New #{Sector.model_name.human.downcase}",
-                      new_sector_path,
-                      class: "btn btn-primary-outline" %>
+          <div class="flex gap-2">
+            <%= link_to "Dedupe",
+                        dedupe_index_sectors_path,
+                        class: "btn btn-secondary-outline" %>
+            <%= link_to "New #{Sector.model_name.human.downcase}",
+                        new_sector_path,
+                        class: "btn btn-primary-outline" %>
+          </div>
         </div>
 
         <%= render "search_boxes" %>

@@ -12,6 +12,7 @@ RSpec.describe "stories/new", type: :view do
     assign(:sectors, [])
     assign(:categories_grouped, [])
     allow(view).to receive(:current_user).and_return(user)
+    allow(view).to receive(:allowed_to?).and_return(false)
   end
 
   it "renders new story form" do

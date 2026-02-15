@@ -22,7 +22,7 @@ class StoryIdeaPolicy < ApplicationPolicy
   end
 
   def destroy?
-    admin?
+    record.persisted? && admin?
   end
 
   private

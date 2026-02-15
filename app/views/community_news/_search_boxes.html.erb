@@ -26,7 +26,7 @@
                                  focus:ring-blue-500 focus:border-blue-500" %>
     </div>
 
-    <% if current_user&.super_user? %>
+    <% if allowed_to?(:manage?, CommunityNews) %>
       <!-- PUBLISHED -->
       <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
         <label for="published" class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">
@@ -35,7 +35,7 @@
 
         <%= select_tag :published,
                        options_for_select(
-                         [["All", ""], ["Published", "true"], ["Hidden", "false"]],
+                         [["All", ""], ["Published", "true"], ["Unpublished", "false"]],
                          params[:published]
                        ),
                        class: "border border-gray-300 rounded-lg px-3 py-2 text-gray-700 w-full",

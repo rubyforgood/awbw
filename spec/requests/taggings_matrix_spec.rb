@@ -31,13 +31,13 @@ RSpec.describe "Taggings matrix", type: :request do
       get taggings_matrix_path
 
       expect(response.body).to include("Tagging counts")
-      expect(response.body).to include("Total tagged items by service population and category")
+      expect(response.body).to include("Total tagged items by sector and category")
     end
 
     it "renders sector and category sections" do
       get taggings_matrix_path
 
-      expect(response.body).to include("Service populations")
+      expect(response.body).to include("Sectors")
       expect(response.body).to include("Categories")
     end
 

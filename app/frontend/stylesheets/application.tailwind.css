@@ -28,7 +28,9 @@
 }
 
 /* Used to generate classes from `domain_theme.rb`*/
-@source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,green}-{50,{100..900..100},950}");
+@source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray}-{50,{100..900..100},950}");
+@source inline("border-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray}-{200,300}");
+@source inline("text-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray}-{50,{100..900..100},950}");
 
 /* ✅ Safelist dynamically generated colors */
 @layer utilities {
@@ -76,6 +78,13 @@
   .default-link a {
     @apply underline text-blue-600 hover:text-blue-800;
   }
+}
+
+/* Optional fields get a subtle gray background */
+.optional input,
+.optional select,
+.optional textarea {
+  @apply bg-gray-100;
 }
 
 .readonly {

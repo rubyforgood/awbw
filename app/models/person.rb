@@ -1,5 +1,5 @@
 class Person < ApplicationRecord
-  include Publishable, TagFilterable, Trendable, WindowsTypeFilterable
+  include TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -30,6 +30,8 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
+  before_validation :strip_whitespace
+
   # Validations
   validates :avatar,
             content_type: %w[image/png image/jpeg image/webp],
@@ -37,6 +39,9 @@ class Person < ApplicationRecord
             unless: -> { Rails.env.test? }
   validates :first_name, presence: true
   validates :last_name, presence: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validate :unique_name_and_email_combination
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
@@ -46,13 +51,14 @@ class Person < ApplicationRecord
   # TODO: add validation on phone number type
 
   # Nested attributes
-  accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :addresses, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
   accepts_nested_attributes_for :user, update_only: true
   accepts_nested_attributes_for :organization_people, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["organization_id"].blank? || attrs["title"].blank? }
+    reject_if: proc { |attrs| attrs["organization_id"].blank? }
 
   # Search Cop
   include SearchCop
@@ -65,12 +71,21 @@ class Person < ApplicationRecord
     attributes contact_methods_phone: "contact_methods.value"
   end
 
-  scope :published, -> { where(published: true).searchable } # overrides Publishable
+  scope :published, -> { searchable.with_active_affiliations }
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
+  scope :with_active_affiliations, -> {
+    joins(:organization_people)
+      .merge(OrganizationPerson.active)
+      .distinct
+  }
   scope :organization_name, ->(organization_name) {
     return all if organization_name.blank?
     left_joins(organization_people: :organization)
       .where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
+      .distinct }
+  scope :organization_id, ->(organization_id) {
+    joins(:organization_people)
+      .where(organization_people: { organization_id: organization_id })
       .distinct }
 
   def self.search_by_params(params)
@@ -79,8 +94,13 @@ class Person < ApplicationRecord
     results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
+    results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results
+  end
+
+  def published?
+    profile_is_searchable? && organization_people.active.exists?
   end
 
   def sector_list
@@ -107,7 +127,7 @@ class Person < ApplicationRecord
   end
 
   def phone_number
-    primary_phone = contact_methods.find_by(is_primary: true, inactive: false, kind: :phone)
+    primary_phone = contact_methods.find_by(primary: true, inactive: false, kind: :phone)
     return primary_phone.value if primary_phone.present?
 
     first_phone = contact_methods.where(kind: :phone, inactive: false).first
@@ -120,10 +140,45 @@ class Person < ApplicationRecord
     !organization_people.where(organization_id: organization_id, position: 1).first.nil?
   end
 
+  def published?
+    profile_is_searchable? && organization_people.active.exists?
+  end
+
   def primary_organization
     organization_people
       .active
       .order(updated_at: :desc)
       .first&.organization
+  end
+
+  private
+
+  def strip_whitespace
+    self.first_name = first_name&.strip
+    self.last_name = last_name&.strip
+    self.email = email&.strip
+    self.email_2 = email_2&.strip
+  end
+
+  def unique_name_and_email_combination
+    return unless first_name.present? && last_name.present?
+
+    scope = Person.where(
+      "LOWER(first_name) = ? AND LOWER(last_name) = ?",
+      first_name.downcase,
+      last_name.downcase
+    )
+
+    if email.present?
+      scope = scope.where("LOWER(email) = ?", email.downcase)
+    else
+      scope = scope.where(email: [ nil, "" ])
+    end
+
+    scope = scope.where.not(id: id) if persisted?
+
+    if scope.exists?
+      errors.add(:base, "A person named #{first_name} #{last_name} with this email already exists")
+    end
   end
 end

@@ -1,7 +1,28 @@
 class Sector < ApplicationRecord
   include NameFilterable, Publishable
-  SECTOR_TYPES = [ "Veterans & Military", "Sexual Assault", "Substance Abuse", "LGBTQIA",
-                  "Child Abuse", "Education/Schools", "Domestic Violence", "Other" ]
+  SECTOR_TYPES = [
+    "Child Abuse",
+    "Community Oppression/Violence",
+    "Criminal/Legal",
+    "Disability",
+    "Domestic Violence",
+    "Education/Schools",
+    "Foster Care/Adoption",
+    "Homeless",
+    "Human Trafficking",
+    "Immigration",
+    "Incarceration",
+    "Indigenous/Tribal Nation",
+    "LGBTQIA+",
+    "Mental Health",
+    "Reproductive",
+    "Restorative/Transformative Justice",
+    "Sexual Assault",
+    "Student",
+    "Substance Use",
+    "Veterans & Military",
+    "Other"
+  ]
 
   has_many :sectorable_items, dependent: :destroy
   has_many :workshops, through: :sectorable_items,

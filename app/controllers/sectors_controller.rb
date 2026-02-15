@@ -1,4 +1,5 @@
 class SectorsController < ApplicationController
+  include AhoyTracking, Dedupable
   before_action :set_sector, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -59,6 +60,13 @@ class SectorsController < ApplicationController
   end
 
   private
+
+  def dedupe_config
+    {
+      model_class: Sector,
+      domain: :sectors
+    }
+  end
 
   def set_sector
     @sector = Sector.find(params[:id])

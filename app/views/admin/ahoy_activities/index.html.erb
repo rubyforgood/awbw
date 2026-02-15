@@ -29,22 +29,20 @@
             </div>
 
             <!-- User Filter -->
-            <% if current_user&.super_user? %>
-              <div>
-                <label class="block text-sm font-medium text-gray-600 mb-1">
-                  User
-                </label>
-                <%= select_tag :user_id,
-                               options_from_collection_for_select(
-                                 User.order(:first_name, :last_name),
-                                 :id,
-                                 :full_name,
-                                 params[:user_id]
-                               ),
-                               include_blank: "All Users",
-                               class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
-              </div>
-            <% end %>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                User
+              </label>
+              <%= select_tag :user_id,
+                             options_from_collection_for_select(
+                               User.order(:first_name, :last_name),
+                               :id,
+                               :full_name,
+                               params[:user_id]
+                             ),
+                             include_blank: "All Users",
+                             class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+            </div>
 
             <!-- Date From -->
             <div>
@@ -131,8 +129,19 @@
                 <%= event.visit_id %>
               </td>
 
-              <td class="px-4 py-3 text-gray-500 max-w-xs truncate">
-                <%= event.properties.to_json %>
+              <td class="px-4 py-3 text-gray-500 relative group">
+                <% if event.properties.present? && event.properties.any? %>
+                  <span class="cursor-default text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded">
+                    <%= event.properties.size %> <%= "prop".pluralize(event.properties.size) %>
+                  </span>
+                  <div class="hidden group-hover:block absolute z-50 left-0 top-full mt-1 bg-gray-900 text-gray-100 text-xs rounded-lg shadow-lg p-3 max-w-sm whitespace-pre-wrap">
+                    <% event.properties.each do |key, value| %>
+                      <div class="mb-1 last:mb-0"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value.is_a?(Hash) ? value.to_json : value %></div>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <span class="text-gray-300 italic">none</span>
+                <% end %>
               </td>
             </tr>
           <% end %>

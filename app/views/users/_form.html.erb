@@ -42,19 +42,9 @@
                 </p>
               </div>
             </div>
-          <% else %>
-            <% if @user.persisted? %>
-              <div>
-                Not associated with a person!
-                <br>
-                <%= link_to "Create person",
-                            new_person_path(user_id: @user.id),
-                            class: "btn btn-primary"%>
-              </div>
-            <% end %>
           <% end %>
           <div class="md:flex-grow md:basis-1/3" id="email_field_wrapper">
-            <% if current_user&.super_user? %>
+            <% if allowed_to?(:manage?, User) %>
               <div class="w-full">
                 <%= f.input :email,
                             label: @user.persisted? ? email_label_with_confirmation_icon(@user) : "Email",
@@ -63,18 +53,23 @@
                                           class: "w-full" },
                             wrapper_html: { class: "w-full" },
                             label_html: { id: "email_label" } %>
+              </div>
+              <div class="flex items-left">
                 <div id="confirm_email_button">
-                  <% if @user.persisted? && @user.confirmed_at.nil? && current_user&.super_user? %>
-                    <div class="mt-2">
+                  <% if @user.persisted? && @user.confirmed_at.nil? %>
+                    <div class="me-2 pe-2">
                       <button type="button"
                               data-controller="confirm-email"
                               data-confirm-email-user-id-value="<%= @user.id %>"
                               data-action="click->confirm-email#confirm"
-                        class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white border-blue-600">
+                              class="btn bg-orange-600 hover:bg-orange-700 text-white border-orange-600 border font-medium">
                         Manually confirm email
                       </button>
                     </div>
                   <% end %>
+                </div>
+                <div class="ms-2 ps-2">
+                  <%= render "toggle_lock_button", user: @user %>
                 </div>
               </div>
             <% else %>
@@ -95,18 +90,18 @@
             <% end %>
           </div>
           <div>
-            <% if current_user&.super_user? %>
+            <% if allowed_to?(:manage?, User) %>
               <div class="w-full p-3">
                 <div class="flex flex-col md:flex-row gap-4">
                   <%= f.input :inactive %>
-                  <%= f.input :super_user, label: "Admin?" %>
+                  <%= f.input :super_user, label: "Admin" %>
                 </div>
               </div>
             <% end %>
           </div>
         </div>
         <!-- Notes -->
-        <% if current_user&.super_user? %>
+        <% if allowed_to?(:manage?, User) %>
           <div class="comments-section">
             <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
 
@@ -133,17 +128,10 @@
                 wrapper_html: { class: "w-full max-w-md" } %>
   </div>
 
-  <% if current_user&.super_user? %>
-    <div class="p-3">
-      <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
-    </div>
-  <% end %>
-
   <div class="action-buttons mt-8 flex justify-center gap-3">
-    <%= render "toggle_lock_button", user: @user %>
-    <% if f.object.persisted? && allowed_to?(:destroy?, f.object) %>
-      <%= link_to "Delete", @user, method: :delete, class: "btn btn-danger-outline",
-                  data: { confirm: "Are you sure you want to delete?" } %>
+    <% if allowed_to?(:destroy?, f.object) %>
+      <%= link_to "Delete", @user, class: "btn btn-danger-outline",
+                  data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
     <%= link_to "Cancel", users_path, class: "btn btn-secondary-outline" %>
     <%= f.button :submit, class: "btn btn-primary" %>

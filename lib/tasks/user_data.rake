@@ -22,7 +22,7 @@ namespace :user_data do
         person.contact_methods.create!(
           kind: :phone,
           value: user.phone,
-          is_primary: true
+          primary: true
         ) if user.phone.present?
       end
       unless person.addresses.exists?
@@ -32,7 +32,7 @@ namespace :user_data do
           state: user.state.presence || "unknown",
           locality: (user.state != "CA" && user.state != "" ? "Outside CA" : "Unknown"),
           zip_code: user.zip,
-          # is_primary: true
+          # primary: true
         ) if user.address.present? || user.city.present? || user.state.present? || user.zip.present?
       end
 

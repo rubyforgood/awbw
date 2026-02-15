@@ -9,14 +9,15 @@ class Organization < ApplicationRecord
   has_many :organization_people, dependent: :restrict_with_error
   has_many :people, through: :organization_people
   has_many :users, through: :people
-  has_many :reports, through: :users
-  has_many :workshop_logs, through: :users
+  has_many :reports
+  has_many :workshop_logs
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
+  has_many :workshops, through: :users
 
   # Asset associations
   has_one_attached :logo, dependent: :purge do |attachable|
@@ -32,11 +33,18 @@ class Organization < ApplicationRecord
             size: { less_than: 5.megabytes }
   validates :name, presence: true
   validates :organization_status_id, presence: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validates :website_url, format: { with: /\Ahttps?:\/\/\S+\z/i, message: "must start with http:// or https://" }, allow_blank: true
+  validate :affiliation_dates_locked, if: -> { organization_people.any? && !Current.user&.super_user? }
 
   # Nested attributes
-  accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :sectorable_items, allow_destroy: true, reject_if: :all_blank
-  accepts_nested_attributes_for :organization_people, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :addresses, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
+  accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs["sector_id"].blank? }
+  after_save :remove_duplicate_sectorable_items
+  accepts_nested_attributes_for :organization_people, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs["person_id"].blank? }
 
   # SearchCop
   include SearchCop
@@ -46,7 +54,7 @@ class Organization < ApplicationRecord
 
   # Scopes
   # See TagFilterable, Trendable, WindowsTypeFilterable
-  scope :active, ->(active = nil) { active ? where(inactive: !active) : where(inactive: false) }
+  scope :active, -> { joins(:organization_status).where(organization_statuses: { name: "Active" }) }
   scope :address, ->(address) do
     return all if address.blank?
     exact = address.to_s
@@ -69,7 +77,7 @@ class Organization < ApplicationRecord
   end
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
-  scope :published, ->(published = nil) { published ? active(published) : active }
+  scope :published, -> { active }
 
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
@@ -79,7 +87,15 @@ class Organization < ApplicationRecord
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
+    organizations = organizations.where(organization_status_id: params[:organization_status_id]) if params[:organization_status_id].present?
     organizations
+  end
+
+  def affiliated_workshop_logs
+    direct = WorkshopLog.where(organization_id: id)
+    legacy = WorkshopLog.where(organization_id: nil)
+                        .where(user_id: users.select(:id))
+    direct.or(legacy).distinct
   end
 
   # Methods
@@ -89,7 +105,12 @@ class Organization < ApplicationRecord
   end
 
   def city_state
-    "#{organization_locality}, #{addresses.active.first&.state}"
+    first_active = if addresses.loaded?
+      addresses.find { |a| !a.inactive? }
+    else
+      addresses.active.first
+    end
+    "#{organization_locality}, #{first_active&.state}"
   end
 
   def type_name
@@ -101,11 +122,15 @@ class Organization < ApplicationRecord
   end
 
   def organization_locality
-    addresses.active.first&.locality
+    if addresses.loaded?
+      addresses.select { |a| !a.inactive? }.first&.locality
+    else
+      addresses.active.first&.locality
+    end
   end
 
   def published? # needed for my_bookmarks
-    !inactive
+    organization_status&.name == "Active"
   end
 
   def sector_list
@@ -114,7 +139,22 @@ class Organization < ApplicationRecord
 
   private
 
+  def affiliation_dates_locked
+    if start_date_changed?
+      errors.add(:start_date, "is managed automatically by affiliations")
+    end
+    if end_date_changed?
+      errors.add(:end_date, "is managed automatically by affiliations")
+    end
+  end
+
   def leader
     organization_people.find_by(position: 2)
+  end
+
+  def remove_duplicate_sectorable_items
+    sectorable_items
+      .group_by(&:sector_id)
+      .each_value { |dupes| dupes.drop(1).each(&:destroy) }
   end
 end

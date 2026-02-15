@@ -1,18 +1,20 @@
 class WorkshopSearchService
+  include ActionPolicy::Behaviour
+  include PunctuationStrippable
+  authorize :user
+
   attr_reader :params, :user, :admin
   attr_accessor :workshops, :sort
 
   def initialize(params = {}, user: nil)
     @params = params
     @user = user
-    @admin = user&.super_user?
+    @admin = allowed_to?(:manage?, Workshop)
     @sort = default_sort
-    @workshops =
-      if @sort == "popularity"
-        Workshop.with_bookmarks_count
-      else
-        Workshop.all
-      end
+    @workshops = Workshop.all
+    if @sort == "popularity"
+      @workshops = @workshops.with_bookmarks_count
+    end
   end
 
   # Main entry point
@@ -126,22 +128,34 @@ class WorkshopSearchService
 
   def filter_by_title
     return unless params[:title].present?
-    @workshops = @workshops.search("title:#{params[:title]}")
+    @workshops = @workshops.title(params[:title])
   end
 
   def filter_by_query
     return unless params[:query].present?
 
-    results = @workshops.search(params[:query]) # Use the SearchCop search scope directly on the relation
+    spaced = ActiveRecord::Base.sanitize_sql_like(
+      self.class.strip_punctuation_spaced(params[:query]).strip
+    )
+    spaceless = ActiveRecord::Base.sanitize_sql_like(
+      self.class.strip_punctuation_spaceless(params[:query]).strip
+    )
+    return if spaced.blank?
 
-    # If SearchCop returned an Array (e.g., because of scoring), convert back to Relation
-    if results.is_a?(Array)
-      ordered_ids = results.map(&:id)
-      @workshops = Workshop.where(id: ordered_ids)
-                           .order(Arel.sql("FIELD(id, #{ordered_ids.join(',')})"))
-    else
-      @workshops = results
-    end
+    # Match against spaced variant (punctuation → space) and spaceless variant (punctuation + spaces removed)
+    fields = %w[workshops.title workshops.full_name action_text_rich_texts.plain_text_body]
+    conditions = fields.flat_map do |field|
+      [
+        "#{self.class.strip_punctuation_sql_spaced(field)} LIKE :spaced",
+        "#{self.class.strip_punctuation_sql_spaceless(field)} LIKE :spaceless"
+      ]
+    end.join(" OR ")
+
+    @workshops = @workshops
+      .joins("LEFT JOIN action_text_rich_texts ON action_text_rich_texts.record_id = workshops.id " \
+             "AND action_text_rich_texts.record_type = 'Workshop'")
+      .where(conditions, spaced: "%#{spaced}%", spaceless: "%#{spaceless}%")
+      .distinct
   end
 
   # --- Search methods ---
@@ -150,13 +164,17 @@ class WorkshopSearchService
     return workshops if author_name.blank?
 
     sanitized = author_name.strip.gsub(/\s+/, "")
-    workshops.left_outer_joins(:user)
+    workshops.left_outer_joins(user: :person)
              .where(
                "LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
                 OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
                 OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
                 OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name",
+                OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name
+                OR LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
+                OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
+                OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
+                OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name",
                name: "%#{sanitized}%"
              )
   end

@@ -20,7 +20,7 @@ Submitted on
   <% end %>
 
   <% if @noticeable.respond_to?(:windows_type) && @noticeable.windows_type.present? %>
-    Service population: <%= @noticeable.windows_type.short_name %>
+    Sector: <%= @noticeable.windows_type.short_name %>
   <% end %>
 
   <% if @answers.present? %>

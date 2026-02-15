@@ -18,11 +18,15 @@ class BookmarkPolicy < ApplicationPolicy
   end
 
   def update?
-    admin? || owner?
+    if record
+      admin? || owner?
+    else
+      authenticated?
+    end
   end
 
   def destroy?
-    admin? || owner?
+    record.persisted? && (admin? || owner?)
   end
 
   # Scoping

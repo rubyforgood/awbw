@@ -14,7 +14,6 @@ RSpec.describe "organizations/edit", type: :view do
       location: nil,
       name: "MyString",
       description: "MyString",
-      inactive: false,
       notes: "MyText"
     )
   }
@@ -22,6 +21,7 @@ RSpec.describe "organizations/edit", type: :view do
   before(:each) do
     assign(:organization, organization)
     allow(view).to receive(:current_user).and_return(admin)
+    allow(view).to receive(:allowed_to?).and_return(true)
     render
   end
 

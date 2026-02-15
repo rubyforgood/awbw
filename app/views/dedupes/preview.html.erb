@@ -1,0 +1,81 @@
+<% color = DomainTheme.color_for(@dedupe[:domain]) %>
+<div class="min-h-screen">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="admin-only bg-blue-100 rounded p-6">
+      <div class="<%= DomainTheme.bg_class_for(@dedupe[:domain], intensity: 100) %> border border-<%= color %>-200 rounded p-6">
+      <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg p-6">
+
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+              Preview <%= @dedupe[:model_label] %> Deduplication
+            </h1>
+            <p class="text-gray-500 mt-6">
+              Review the differences before merging.
+            </p>
+            <p class="text-gray-500 mt-1">
+              The <%= @dedupe[:model_label].downcase %> on the left will be deleted and its associations reassigned to the right.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <%= link_to url_for(action: :dedupe_preview, @dedupe[:delete_id_param] => @record_to_keep.id, @dedupe[:keep_id_param] => @record_to_delete.id),
+                        class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors inline-flex items-center gap-2 text-sm font-medium" do %>
+              <i class="fa-solid fa-arrows-rotate"></i> Swap
+            <% end %>
+            <%= link_to url_for(action: :dedupe_index),
+                        class: "px-4 py-2 bg-#{color}-600 text-white rounded hover:bg-#{color}-700 transition-colors inline-flex items-center gap-2 text-sm font-medium" do %>
+              <i class="fa-solid fa-arrow-left"></i> Back to Dedupe
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Execute Form wraps comparison + warning + buttons -->
+        <%= form_with url: url_for(action: :dedupe_execute), method: :post,
+                      data: { turbo: false,
+                              turbo_confirm: "Are you sure you want to merge these #{@dedupe[:model_label_plural].downcase}? This action cannot be undone!" } do |f| %>
+          <%= f.hidden_field @dedupe[:delete_id_param].to_sym, value: @record_to_delete.id %>
+          <%= f.hidden_field @dedupe[:keep_id_param].to_sym, value: @record_to_keep.id %>
+
+          <%= render "dedupes/preview",
+                     domain: @dedupe[:domain],
+                     record_to_delete: @record_to_delete,
+                     record_to_keep: @record_to_keep,
+                     delete_items: @delete_items,
+                     keep_items: @keep_items,
+                     item_type_col: @dedupe[:item_type_col],
+                     item_id_col: @dedupe[:item_id_col],
+                     model_label: @dedupe[:model_label],
+                     keep_param_key: @dedupe[:keep_param_key],
+                     form_builder: f,
+                     belongs_to_options: @dedupe[:belongs_to_options] %>
+
+          <!-- Warning -->
+          <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-triangle-exclamation text-red-400 mt-0.5"></i>
+              <p class="text-sm text-red-700">
+                <strong class="text-red-900">Danger:</strong> This action cannot be undone.
+                "<%= @record_to_delete.name %>" (ID: <%= @record_to_delete.id %>) will be permanently deleted
+                and its <%= @delete_items.count %> associations moved to
+                "<%= @record_to_keep.name %>" (ID: <%= @record_to_keep.id %>).
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-4 justify-center">
+            <%= f.submit "Execute Merge",
+                        class: "px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold" %>
+
+            <%= link_to "Cancel",
+                        url_for(action: :dedupe_index),
+                        class: "px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold" %>
+          </div>
+        <% end %>
+
+      </div>
+    </div>
+    </div>
+  </div>
+</div>

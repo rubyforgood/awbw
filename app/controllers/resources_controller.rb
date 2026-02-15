@@ -10,7 +10,7 @@ class ResourcesController < ApplicationController
       base_scope = authorized_scope(Resource.includes(:bookmarks, primary_asset: :file_attachment,
                                                       downloadable_asset: :file_attachment)
                                             .where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
-      filtered = base_scope.search_by_params(params).by_featured_first
+      filtered = base_scope.search_by_params(params).by_featured_first.order(created_at: :desc)
 
       @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
@@ -121,13 +121,6 @@ class ResourcesController < ApplicationController
     redirect_to resources_path, notice: "Resource was successfully destroyed."
   end
 
-  def search
-    authorize!
-    process_search
-    @sortable_fields = Resource::PUBLISHED_KINDS
-    render :index
-  end
-
   def download
     @resource = Resource.find(params[:resource_id])
     authorize! @resource
@@ -180,20 +173,13 @@ class ResourcesController < ApplicationController
     resource.save!
   end
 
-  def process_search
-    @params = search_params
-    @query = search_params[:query]
-    @resources = Search.new.search(search_params, current_user).paginate(page: params[:search][:page])
-  end
-
   def resource_id_param
     params[:id]
   end
 
   def resource_params
     params.require(:resource).permit(
-      :user_id,
-      :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured, :url,
+      :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured,
       :agency, :author, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       downloadable_asset_attributes: [ :id, :file, :_destroy ],
@@ -211,9 +197,5 @@ class ResourcesController < ApplicationController
         @user_form.report_form_field_answers.build(form_field: field)
       end
     end
-  end
-
-  def search_params
-    params[:search]
   end
 end

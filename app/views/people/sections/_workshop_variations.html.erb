@@ -1,0 +1,17 @@
+<%= turbo_frame_tag "person_workshop_variations_section" do %>
+  <% if workshop_variations.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
+      <% workshop_variations.each do |workshop_variation| %>
+        <%= render "show_card",
+                   record_title: "#{workshop_variation.name}<br>" +
+                     "<span class='text-xs text-gray-500'>WORKSHOP: #{workshop_variation.workshop.name}<span>",
+                   record: workshop_variation.decorate, title_font_size: "text-sm" %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate workshop_variations, params: { section: "workshop_variations" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No workshop variations submitted yet.</p>
+  <% end %>
+<% end %>

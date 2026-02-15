@@ -30,6 +30,9 @@ Rails.application.routes.draw do
   get "welcome/:welcome_instructions_token", to: "welcome#show", as: "user_welcome"
   patch "welcome/:welcome_instructions_token", to: "welcome#update", as: "user_welcome_update"
   resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
+    collection do
+      get :check_duplicates
+    end
     member do
       get :generate_person
       post :send_reset_password_instructions
@@ -69,13 +72,24 @@ Rails.application.routes.draw do
       get :personal
     end
   end
-  resources :categories
+  resources :categories do
+    collection do
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_execute
+      patch :dedupe_update_keep
+    end
+  end
   resources :community_news
   resources :event_registrations
   resources :events do
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
   end
-  resources :people
+  resources :people do
+    collection do
+      get :check_duplicates
+    end
+  end
   resources :faqs
   resources :notifications, only: [ :index, :show ] do
     member do
@@ -106,11 +120,15 @@ Rails.application.routes.draw do
 
   resources :resources do
     get :download
+  end
+  resources :sectors do
     collection do
-      post :search
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_execute
+      patch :dedupe_update_keep
     end
   end
-  resources :sectors
   resources :story_ideas
   resources :stories do
     collection do
@@ -128,11 +146,7 @@ Rails.application.routes.draw do
   resources :workshop_log_creation_wizard
   resources :workshop_variation_ideas
   resources :workshop_variations
-  resources :workshops do
-    collection do
-      post :search
-    end
-  end
+  resources :workshops
 
   resources :workshop_mentions, only: [ :index ]
   resources :resource_mentions, only: [ :index ]
