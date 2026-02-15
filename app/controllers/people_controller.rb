@@ -89,6 +89,22 @@ class PeopleController < ApplicationController
     authorize! @person
     @person.user ||= (User.find(params[:person][:user_attributes][:id]) if params[:person][:user_attributes])
 
+    unless params[:skip_duplicate_check].present?
+      duplicates = find_duplicate_people(
+        @person.first_name,
+        @person.last_name,
+        @person.email
+      )
+      if duplicates.any?
+        redirect_to check_duplicates_people_path(
+          first_name: @person.first_name,
+          last_name: @person.last_name,
+          email: @person.email
+        )
+        return
+      end
+    end
+
     respond_to do |format|
       if @person.save
         format.html { redirect_to @person, notice: "Person was successfully created." }
@@ -121,6 +137,16 @@ class PeopleController < ApplicationController
     respond_to do |format|
       format.html { redirect_to people_path, status: :see_other, notice: "Person was successfully destroyed." }
     end
+  end
+
+  def check_duplicates
+    authorize!
+
+    @first_name = params[:first_name]
+    @last_name = params[:last_name]
+    @email = params[:email]
+    @duplicates = find_duplicate_people(@first_name, @last_name, @email)
+    @blocked = @duplicates.any? { |d| d[:blocked] }
   end
 
   private
@@ -161,6 +187,94 @@ class PeopleController < ApplicationController
     @current_sector_ids = @person.sectorable_items.map(&:sector_id)
 
     @organizations_array = authorized_scope(Organization.all, as: :affiliated).order(:name).pluck(:name, :id)
+  end
+
+  def find_duplicate_people(first_name, last_name, email)
+    duplicates = []
+    duplicate_ids = Set.new
+
+    # Check for name matches (exact + nickname variants)
+    # Normalize removes periods and extra whitespace: "J. R." -> "jr"
+    if first_name.presence && last_name.presence
+      first_variants = NicknameMap.variants_for(first_name)
+      normalized_last = NicknameMap.normalize(last_name)
+      normalized_first = NicknameMap.normalize(first_name)
+
+      name_matches = Person.includes(:user)
+                           .where("REPLACE(REPLACE(LOWER(last_name), '.', ''), ' ', '') = ?", normalized_last)
+                           .where("REPLACE(REPLACE(LOWER(first_name), '.', ''), ' ', '') IN (?)", first_variants)
+                           .limit(10)
+
+      name_matches.each do |person|
+        next if duplicate_ids.include?(person.id)
+
+        duplicate_ids.add(person.id)
+        exact_name = NicknameMap.normalize(person.first_name) == normalized_first
+        duplicates << format_duplicate(person, exact: exact_name, entered_email: email)
+      end
+    end
+
+    # Check for email matches (skip example.com)
+    # Only match person.email when person has no user (otherwise it's a stale copy of user.email)
+    if email.presence && !email.downcase.end_with?("@example.com") && duplicates.size < 10
+      email_lower = email.downcase
+      email_query = Person.includes(:user)
+                          .left_joins(:user)
+                          .where(
+                            "(users.id IS NULL AND LOWER(people.email) = :email) OR LOWER(people.email_2) = :email OR LOWER(users.email) = :email",
+                            email: email_lower
+                          )
+                          .limit(10)
+
+      email_query.each do |person|
+        next if duplicate_ids.include?(person.id)
+
+        duplicate_ids.add(person.id)
+        name_matches = first_name.present? && last_name.present? &&
+          NicknameMap.normalize(person.first_name) == NicknameMap.normalize(first_name) &&
+          NicknameMap.normalize(person.last_name) == NicknameMap.normalize(last_name)
+        duplicates << format_duplicate(person, exact: name_matches, entered_email: email)
+        break if duplicates.size >= 10
+      end
+    end
+
+    sort_order = { "exact" => 0, "name" => 1, "approximate" => 2, "email" => 3, "nickname" => 4 }
+    duplicates.sort_by { |d| [ d[:blocked] ? -1 : 0, sort_order[d[:match_type]] || 4 ] }
+  end
+
+  def format_duplicate(person, exact: true, entered_email: nil)
+    labeled_emails = []
+    # Skip person.email when person has a user (it's a stale copy of user.email)
+    labeled_emails << { label: "Email", value: person.email } if person.email.present? && person.user.blank?
+    labeled_emails << { label: "Secondary email", value: person.email_2 } if person.email_2.present?
+    labeled_emails << { label: "User email", value: person.user.email } if person.user&.email.present?
+    emails = labeled_emails.map { |e| e[:value] }.uniq
+    any_email_match = entered_email.present? &&
+      emails.any? { |e| e.downcase == entered_email.downcase }
+    primary_email_match = exact && entered_email.present? &&
+      person.email.present? && person.email.downcase == entered_email.downcase
+    secondary_email_match = exact && any_email_match && !primary_email_match
+
+    match_type = if primary_email_match
+      "exact"
+    elsif secondary_email_match
+      "approximate"
+    elsif !exact && any_email_match
+      "email"
+    elsif exact
+      "name"
+    else
+      "nickname"
+    end
+
+    {
+      id: person.id,
+      name: person.full_name,
+      labeled_emails: labeled_emails,
+      match_type: match_type,
+      name_match: exact,
+      blocked: primary_email_match
+    }
   end
 
   # Only allow a list of trusted parameters through.

@@ -33,6 +33,18 @@ class UsersController < ApplicationController
     @user = User.new(user_params)
     authorize! @user
 
+    # Check for duplicate email before saving
+    unless params[:skip_duplicate_check].present?
+      email = @user.email
+      if email.present? && !email.downcase.end_with?("@example.com")
+        duplicates = find_duplicate_users(email)
+        if duplicates.any?
+          redirect_to check_duplicates_users_path(email: email, person_id: params[:person_id].presence || params.dig(:user, :person_id).presence)
+          return
+        end
+      end
+    end
+
     # do NOT have Devise send confirmation email - we'll handle that manually after creation via send_welcome_instructions
     @user.skip_confirmation_notification!
 
@@ -51,6 +63,15 @@ class UsersController < ApplicationController
       set_form_variables
       render :new, status: :unprocessable_content
     end
+  end
+
+  def check_duplicates
+    authorize!
+
+    @email = params[:email]
+    @person_id = params[:person_id]
+    @duplicates = find_duplicate_users(@email)
+    @blocked = @duplicates.any? { |d| d[:blocked] }
   end
 
   def update
@@ -228,6 +249,41 @@ class UsersController < ApplicationController
 
   def password_params
     params.require(:user).permit(:current_password, :password, :password_confirmation)
+  end
+
+  def find_duplicate_users(email)
+    return [] if email.blank?
+
+    email_lower = email.downcase
+    duplicates = []
+
+    # Check existing users with same email
+    User.where("LOWER(email) = ?", email_lower).limit(10).each do |user|
+      duplicates << {
+        id: user.id,
+        name: user.person&.full_name || "#{user.first_name} #{user.last_name}".strip,
+        email: user.email,
+        type: "user",
+        blocked: true
+      }
+    end
+
+    # Check people with matching email (who may not have a user yet)
+    Person.includes(:user)
+          .left_joins(:user)
+          .where("LOWER(people.email) = :email OR LOWER(people.email_2) = :email", email: email_lower)
+          .where(users: { id: nil })
+          .limit(10).each do |person|
+      duplicates << {
+        id: person.id,
+        name: person.full_name,
+        email: person.email || person.email_2,
+        type: "person",
+        blocked: false
+      }
+    end
+
+    duplicates
   end
 
   def user_params
