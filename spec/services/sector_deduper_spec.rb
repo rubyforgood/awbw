@@ -9,6 +9,13 @@ RSpec.describe SectorDeduper do
   let(:dry_run) { true }
   let(:min_usage) { 0 }
 
+  # Helper to create duplicate sectors that bypass uniqueness validation
+  def create_sector(name:, **attrs)
+    s = build(:sector, name: name, **attrs)
+    s.save!(validate: false)
+    s
+  end
+
   describe "#call" do
     context "when there are no duplicate sectors" do
       before do
@@ -28,8 +35,8 @@ RSpec.describe SectorDeduper do
     end
 
     context "when there are duplicate sectors with different case" do
-      let!(:sector1) { create(:sector, name: "Test Sector", published: true, created_at: 1.day.ago) }
-      let!(:sector2) { create(:sector, name: "test sector", published: false, created_at: Time.current) }
+      let!(:sector1) { create_sector(name: "Test Sector", published: true, created_at: 1.day.ago) }
+      let!(:sector2) { create_sector(name: "test sector", published: false, created_at: Time.current) }
       let!(:workshop) { create(:workshop) }
 
       before do
@@ -74,8 +81,8 @@ RSpec.describe SectorDeduper do
     end
 
     context "when duplicate sectors have different usage counts" do
-      let!(:sector_high_usage) { create(:sector, name: "Popular", published: false, created_at: Time.current) }
-      let!(:sector_low_usage) { create(:sector, name: "popular", published: false, created_at: 1.day.ago) }
+      let!(:sector_high_usage) { create_sector(name: "Popular", published: false, created_at: Time.current) }
+      let!(:sector_low_usage) { create_sector(name: "popular", published: false, created_at: 1.day.ago) }
       let!(:workshop1) { create(:workshop) }
       let!(:workshop2) { create(:workshop) }
       let!(:workshop3) { create(:workshop) }
@@ -107,8 +114,8 @@ RSpec.describe SectorDeduper do
 
     context "when both duplicate sectors have the same tagging" do
       let(:dry_run) { false }
-      let!(:sector1) { create(:sector, name: "Shared", published: true) }
-      let!(:sector2) { create(:sector, name: "shared", published: false) }
+      let!(:sector1) { create_sector(name: "Shared", published: true) }
+      let!(:sector2) { create_sector(name: "shared", published: false) }
       let!(:workshop) { create(:workshop) }
 
       before do
@@ -133,10 +140,10 @@ RSpec.describe SectorDeduper do
 
     context "with min_usage threshold" do
       let(:min_usage) { 2 }
-      let!(:sector_used) { create(:sector, name: "Used", published: true) }
-      let!(:sector_used_dupe) { create(:sector, name: "used", published: false) }
-      let!(:sector_unused) { create(:sector, name: "Unused", published: true) }
-      let!(:sector_unused_dupe) { create(:sector, name: "unused", published: false) }
+      let!(:sector_used) { create_sector(name: "Used", published: true) }
+      let!(:sector_used_dupe) { create_sector(name: "used", published: false) }
+      let!(:sector_unused) { create_sector(name: "Unused", published: true) }
+      let!(:sector_unused_dupe) { create_sector(name: "unused", published: false) }
 
       before do
         create(:sectorable_item, sector: sector_used, sectorable: create(:workshop))
@@ -152,9 +159,9 @@ RSpec.describe SectorDeduper do
 
     context "when there are more than two duplicates" do
       let(:dry_run) { false }
-      let!(:sector1) { create(:sector, name: "Multi", published: true, created_at: 3.days.ago) }
-      let!(:sector2) { create(:sector, name: "multi", published: false, created_at: 2.days.ago) }
-      let!(:sector3) { create(:sector, name: "MULTI", published: false, created_at: 1.day.ago) }
+      let!(:sector1) { create_sector(name: "Multi", published: true, created_at: 3.days.ago) }
+      let!(:sector2) { create_sector(name: "multi", published: false, created_at: 2.days.ago) }
+      let!(:sector3) { create_sector(name: "MULTI", published: false, created_at: 1.day.ago) }
 
       it "merges all duplicates into one primary" do
         expect { service.call }.to change { Sector.count }.by(-2)

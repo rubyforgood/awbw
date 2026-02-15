@@ -1,4 +1,6 @@
 class CategoriesController < ApplicationController
+  include AhoyTracking
+  include Dedupable
   before_action :set_category, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -70,41 +72,6 @@ class CategoriesController < ApplicationController
     redirect_to categories_path, notice: "Category was successfully destroyed."
   end
 
-  def dedupe_index
-    authorize!
-    @possible_duplicates = find_possible_duplicates
-    @categories_for_select = Category.order(:name).map { |c| [ c.name, c.id ] }
-  end
-
-  def dedupe_preview
-    authorize!
-    @category_to_delete = Category.find(params[:category_to_delete_id])
-    @category_to_keep = Category.find(params[:category_to_keep_id])
-    
-    # Get associated records for comparison
-    @delete_categorizable_items = @category_to_delete.categorizable_items.includes(:categorizable)
-    @keep_categorizable_items = @category_to_keep.categorizable_items.includes(:categorizable)
-    
-    render :dedupe_preview
-  end
-
-  def dedupe_execute
-    authorize!
-    category_to_delete_id = params[:category_to_delete_id]
-    category_to_keep_id = params[:category_to_keep_id]
-    
-    category_to_delete = Category.find(category_to_delete_id)
-    category_to_keep = Category.find(category_to_keep_id)
-    
-    # Use the deduper service to perform the merge
-    deduper = CategoryDeduper.new(logger: Rails.logger, dry_run: false, min_usage: 0)
-    deduper.merge_categories(category_to_keep, category_to_delete)
-    
-    redirect_to categories_path, notice: "Categories merged successfully. '#{category_to_delete.name}' was merged into '#{category_to_keep.name}'."
-  rescue StandardError => e
-    redirect_to dedupe_index_categories_path, alert: "Error merging categories: #{e.message}"
-  end
-
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @category_types = CategoryType.order(:name)
@@ -116,10 +83,15 @@ class CategoriesController < ApplicationController
 
   private
 
-  def find_possible_duplicates
-    # Group categories by normalized name to find duplicates
-    groups = Category.all.group_by { |c| c.name.to_s.strip.downcase }
-    groups.select { |_name, categories| categories.size > 1 }
+  def dedupe_config
+    {
+      model_class: Category,
+      domain: :categories,
+      join_association: :categorizable_items,
+      join_includes: :categorizable,
+      belongs_to_options: -> { { "category_type_id" => CategoryType.order(:name) } },
+      record_extras: ->(record) { "Type: #{record.category_type&.name || 'None'}" }
+    }
   end
 
   def set_category

@@ -75,8 +75,9 @@ Rails.application.routes.draw do
   resources :categories do
     collection do
       get :dedupe_index
-      post :dedupe_preview
+      get :dedupe_preview
       post :dedupe_execute
+      patch :dedupe_update_keep
     end
   end
   resources :community_news
@@ -122,8 +123,9 @@ Rails.application.routes.draw do
   resources :sectors do
     collection do
       get :dedupe_index
-      post :dedupe_preview
+      get :dedupe_preview
       post :dedupe_execute
+      patch :dedupe_update_keep
     end
   end
   resources :story_ideas

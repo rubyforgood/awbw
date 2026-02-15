@@ -66,3 +66,5 @@ application.register("inactive-toggle", InactiveToggleController)
 import PaginatedFieldsController from "./paginated_fields_controller"
 application.register("paginated-fields", PaginatedFieldsController)
 
+import AutosaveController from "./autosave_controller"
+application.register("autosave", AutosaveController)

@@ -9,6 +9,13 @@ RSpec.describe CategoryDeduper do
   let(:dry_run) { true }
   let(:min_usage) { 0 }
 
+  # Helper to create duplicate categories that bypass uniqueness validation
+  def create_category(name:, **attrs)
+    cat = build(:category, name: name, **attrs)
+    cat.save!(validate: false)
+    cat
+  end
+
   describe "#call" do
     context "when there are no duplicate categories" do
       before do
@@ -28,8 +35,8 @@ RSpec.describe CategoryDeduper do
     end
 
     context "when there are duplicate categories with different case" do
-      let!(:category1) { create(:category, name: "Test Category", published: true, created_at: 1.day.ago) }
-      let!(:category2) { create(:category, name: "test category", published: false, created_at: Time.current) }
+      let!(:category1) { create_category(name: "Test Category", published: true, created_at: 1.day.ago) }
+      let!(:category2) { create_category(name: "test category", published: false, created_at: Time.current) }
       let!(:workshop) { create(:workshop) }
 
       before do
@@ -74,8 +81,8 @@ RSpec.describe CategoryDeduper do
     end
 
     context "when duplicate categories have different usage counts" do
-      let!(:category_high_usage) { create(:category, name: "Popular", published: false, created_at: Time.current) }
-      let!(:category_low_usage) { create(:category, name: "popular", published: false, created_at: 1.day.ago) }
+      let!(:category_high_usage) { create_category(name: "Popular", published: false, created_at: Time.current) }
+      let!(:category_low_usage) { create_category(name: "popular", published: false, created_at: 1.day.ago) }
       let!(:workshop1) { create(:workshop) }
       let!(:workshop2) { create(:workshop) }
       let!(:workshop3) { create(:workshop) }
@@ -107,8 +114,8 @@ RSpec.describe CategoryDeduper do
 
     context "when both duplicate categories have the same tagging" do
       let(:dry_run) { false }
-      let!(:category1) { create(:category, name: "Shared", published: true) }
-      let!(:category2) { create(:category, name: "shared", published: false) }
+      let!(:category1) { create_category(name: "Shared", published: true) }
+      let!(:category2) { create_category(name: "shared", published: false) }
       let!(:workshop) { create(:workshop) }
 
       before do
@@ -133,10 +140,10 @@ RSpec.describe CategoryDeduper do
 
     context "with min_usage threshold" do
       let(:min_usage) { 2 }
-      let!(:category_used) { create(:category, name: "Used", published: true) }
-      let!(:category_used_dupe) { create(:category, name: "used", published: false) }
-      let!(:category_unused) { create(:category, name: "Unused", published: true) }
-      let!(:category_unused_dupe) { create(:category, name: "unused", published: false) }
+      let!(:category_used) { create_category(name: "Used", published: true) }
+      let!(:category_used_dupe) { create_category(name: "used", published: false) }
+      let!(:category_unused) { create_category(name: "Unused", published: true) }
+      let!(:category_unused_dupe) { create_category(name: "unused", published: false) }
 
       before do
         create(:categorizable_item, category: category_used, categorizable: create(:workshop))
@@ -152,9 +159,9 @@ RSpec.describe CategoryDeduper do
 
     context "when there are more than two duplicates" do
       let(:dry_run) { false }
-      let!(:category1) { create(:category, name: "Multi", published: true, created_at: 3.days.ago) }
-      let!(:category2) { create(:category, name: "multi", published: false, created_at: 2.days.ago) }
-      let!(:category3) { create(:category, name: "MULTI", published: false, created_at: 1.day.ago) }
+      let!(:category1) { create_category(name: "Multi", published: true, created_at: 3.days.ago) }
+      let!(:category2) { create_category(name: "multi", published: false, created_at: 2.days.ago) }
+      let!(:category3) { create_category(name: "MULTI", published: false, created_at: 1.day.ago) }
 
       it "merges all duplicates into one primary" do
         expect { service.call }.to change { Category.count }.by(-2)

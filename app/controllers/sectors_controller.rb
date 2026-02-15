@@ -1,4 +1,6 @@
 class SectorsController < ApplicationController
+  include AhoyTracking
+  include Dedupable
   before_action :set_sector, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -54,51 +56,19 @@ class SectorsController < ApplicationController
     redirect_to sectors_path, notice: "Sector was successfully destroyed."
   end
 
-  def dedupe_index
-    authorize!
-    @possible_duplicates = find_possible_duplicates
-    @sectors_for_select = Sector.order(:name).map { |s| [ s.name, s.id ] }
-  end
-
-  def dedupe_preview
-    authorize!
-    @sector_to_delete = Sector.find(params[:sector_to_delete_id])
-    @sector_to_keep = Sector.find(params[:sector_to_keep_id])
-    
-    # Get associated records for comparison
-    @delete_sectorable_items = @sector_to_delete.sectorable_items.includes(:sectorable)
-    @keep_sectorable_items = @sector_to_keep.sectorable_items.includes(:sectorable)
-    
-    render :dedupe_preview
-  end
-
-  def dedupe_execute
-    authorize!
-    sector_to_delete_id = params[:sector_to_delete_id]
-    sector_to_keep_id = params[:sector_to_keep_id]
-    
-    sector_to_delete = Sector.find(sector_to_delete_id)
-    sector_to_keep = Sector.find(sector_to_keep_id)
-    
-    # Use the deduper service to perform the merge
-    deduper = SectorDeduper.new(logger: Rails.logger, dry_run: false, min_usage: 0)
-    deduper.merge_sectors(sector_to_keep, sector_to_delete)
-    
-    redirect_to sectors_path, notice: "Sectors merged successfully. '#{sector_to_delete.name}' was merged into '#{sector_to_keep.name}'."
-  rescue StandardError => e
-    redirect_to dedupe_index_sectors_path, alert: "Error merging sectors: #{e.message}"
-  end
-
   # Optional hooks for setting variables for forms or index
   def set_form_variables
   end
 
   private
 
-  def find_possible_duplicates
-    # Group sectors by normalized name to find duplicates
-    groups = Sector.all.group_by { |s| s.name.to_s.strip.downcase }
-    groups.select { |_name, sectors| sectors.size > 1 }
+  def dedupe_config
+    {
+      model_class: Sector,
+      domain: :sectors,
+      join_association: :sectorable_items,
+      join_includes: :sectorable
+    }
   end
 
   def set_sector
