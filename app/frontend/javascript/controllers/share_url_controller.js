@@ -24,7 +24,7 @@ export default class extends Controller {
     const shareUrl = `${form.action}?${params.toString()}`;
 
    this.outputTarget.value = shareUrl;
-   this.outputTarget.classList.remove("hidden")
+   this.outputTarget.classList.remove("hidden");
     
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert("Search URL copied to clipboard!");
