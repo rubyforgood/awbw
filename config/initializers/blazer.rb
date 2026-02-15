@@ -3,6 +3,7 @@
 Rails.application.config.to_prepare do
   Blazer::BaseController.class_eval do
     before_action :authenticate_user!
+    before_action :require_blazer_access
 
     private
 
