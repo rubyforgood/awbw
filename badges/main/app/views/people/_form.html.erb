@@ -65,7 +65,7 @@
         <% if f.object.user %>
           <div>
             <label class="block text-md font-medium text-gray-700 mb-1">Primary email</label>
-            <span class="text-gray-900 font-medium"><%= f.object.user&.email || f.object.email %></span>
+            <span class="text-gray-900 font-medium"><%= f.object.user&.email %></span>
 
             <p class="text-sm text-gray-500 mt-1">
               Only
@@ -78,18 +78,15 @@
               <% end %>
             </p>
           </div>
-          <%= f.input :email_type,
-                      label: "Primary email type",
-                      as: :select,
-                      collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                      selected: f.object.email_type || f.object.user&.email_type %>
         <% else %>
           <%= f.input :email, label: "Primary email" %>
-          <%= f.input :email_type,
-                      label: "Primary email type",
-                      as: :select,
-                      collection: Person::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
         <% end %>
+
+        <%= f.input :email_type,
+                    label: "Primary email type",
+                    as: :select,
+                    collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                    selected: f.object.email_type || f.object.user&.email_type %>
 
         <%= f.input :email_2, label: "Secondary email" %>
 
