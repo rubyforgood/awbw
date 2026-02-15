@@ -95,7 +95,7 @@ class OrganizationsController < ApplicationController
     @organization_statuses = OrganizationStatus.all
     @sectors_collection = Sector.published.order(:name).pluck(:name, :id)
     @current_sector_ids = @organization.sectorable_items.map(&:sector_id)
-    @people_array = Person.joins(:user)
+    @people_array = Person.left_joins(:user)
                           .order(:first_name, :last_name)
                           .pluck(:first_name, :last_name, :id, Arel.sql("COALESCE(users.email, people.email, people.email_2)"))
                           .map { |fn, ln, id, email| [ "#{fn} #{ln}#{" (#{email})" if email.present?}", id ] }
