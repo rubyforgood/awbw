@@ -42,6 +42,7 @@ class Person < ApplicationRecord
   validates :last_name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
   validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
+  validate :time_zone_must_be_valid, if: :time_zone_changed?
   validate :unique_name_and_email_combination
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
@@ -156,6 +157,12 @@ class Person < ApplicationRecord
     self.last_name = last_name&.strip
     self.email = email&.strip
     self.email_2 = email_2&.strip
+  end
+
+  def time_zone_must_be_valid
+    return if ActiveSupport::TimeZone[time_zone]
+
+    errors.add(:time_zone, "is not a valid time zone")
   end
 
   def unique_name_and_email_combination

@@ -136,14 +136,30 @@
 
   <!-- Preferences: timezone for event times etc. -->
   <div class="space-y-6 p-3">
-    <%= f.input :time_zone,
-                as: :select,
-                collection: us_time_zone_fundamentals,
-                selected: f.object.time_zone.presence || "Pacific Time (US & Canada)",
-                include_blank: false,
-                hint: "Event times and other dates will be shown in this timezone.",
-                input_html: { class: "w-full" },
-                wrapper_html: { class: "w-full max-w-md" } %>
+    <% if @person %>
+      <div class="w-full max-w-md">
+        <label class="block text-md font-medium text-gray-700 mb-1">
+          Time zone
+        </label>
+        <div class="flex gap-x-2 items-center">
+          <div class="text-gray-900 font-medium mt-2">
+            <%= @person.time_zone || "Pacific Time (US & Canada)" %>
+          </div>
+        </div>
+        <p class="text-sm text-gray-500 mt-3">
+          Edit on <%= link_to "person profile", edit_person_path(@person), class: "underline" %>
+        </p>
+      </div>
+    <% else %>
+      <div class="w-full max-w-md">
+        <label class="block text-md font-medium text-gray-700 mb-1">
+          Time zone
+        </label>
+        <p class="text-sm text-gray-500 mt-1">
+          Not available (no person associated with this user)
+        </p>
+      </div>
+    <% end %>
   </div>
 
   <% if f.object.persisted? %>
