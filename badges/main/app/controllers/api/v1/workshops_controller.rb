@@ -2,7 +2,7 @@ class Api::V1::WorkshopsController < Api::V1::ApiController
   api :GET, "/v1/workshops"
   param :Authorization, String, desc: "API Authorization token returned by successful"\
                                       " user authentication", required: true
-  param :sector, String, desc: "One of #{Sector.all.pluck(:name).join(', ')}"
+  param :sector, String, desc: "A valid sector name"
   desc "Without a Sector parameter, gives a list of workshops grouped by "\
        'Sector, including quotes and images.  Relates to the "Related Workshops" '\
        "view in Sector Impacts"

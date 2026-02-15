@@ -54,13 +54,13 @@ RSpec.describe PersonFromUserService do
 
       expect(contact_methods.size).to eq(2)
 
-      primary_phone = contact_methods.find(&:is_primary)
-      secondary_phone = contact_methods.reject(&:is_primary).first
+      primary_phone = contact_methods.find(&:primary)
+      secondary_phone = contact_methods.reject(&:primary).first
 
       expect(primary_phone).to have_attributes(
                                   kind: "phone",
                                   value: "111-111-1111",
-                                  is_primary: true
+                                  primary: true
                                 )
 
       expect(secondary_phone).to have_attributes(

@@ -59,3 +59,9 @@ application.register("optimistic-bookmark", OptimisticBookmarkController)
 
 import AssetPickerController from "./asset_picker_controller"
 application.register("asset-picker", AssetPickerController)
+
+import InactiveToggleController from "./inactive_toggle_controller"
+application.register("inactive-toggle", InactiveToggleController)
+
+import PaginatedFieldsController from "./paginated_fields_controller"
+application.register("paginated-fields", PaginatedFieldsController)

@@ -38,7 +38,7 @@ class PersonFromUserService
     person.contact_methods.build(
       kind: :phone,
       value: user.phone,
-      is_primary: true
+      primary: true
     ) if user.phone.present?
     person.contact_methods.build(
       kind: :phone,

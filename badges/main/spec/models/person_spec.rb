@@ -57,4 +57,100 @@ RSpec.describe Person, type: :model do
       end
     end
   end
+
+  describe "#published?" do
+    let(:person) { create(:person, profile_is_searchable: true) }
+
+    context "when person is searchable with an active affiliation" do
+      before { create(:organization_person, person: person, inactive: false, end_date: nil) }
+
+      it "returns true" do
+        expect(person.published?).to be true
+      end
+    end
+
+    context "when person is searchable but has no affiliations" do
+      it "returns false" do
+        expect(person.published?).to be false
+      end
+    end
+
+    context "when person is searchable but only has inactive affiliations" do
+      before { create(:organization_person, person: person, inactive: true, end_date: nil) }
+
+      it "returns false" do
+        expect(person.published?).to be false
+      end
+    end
+
+    context "when person is searchable but affiliation has past end date" do
+      before { create(:organization_person, person: person, inactive: false, end_date: 1.day.ago) }
+
+      it "returns false" do
+        expect(person.published?).to be false
+      end
+    end
+
+    context "when person is not searchable" do
+      let(:person) { create(:person, profile_is_searchable: false) }
+      before { create(:organization_person, person: person, inactive: false) }
+
+      it "returns false" do
+        expect(person.published?).to be false
+      end
+    end
+  end
+
+  describe ".with_active_affiliations" do
+    let!(:person_with_active) { create(:person) }
+    let!(:person_with_inactive) { create(:person) }
+    let!(:person_without) { create(:person) }
+
+    before do
+      create(:organization_person, person: person_with_active, inactive: false, end_date: nil)
+      create(:organization_person, person: person_with_inactive, inactive: true, end_date: nil)
+    end
+
+    it "includes people with active affiliations" do
+      expect(Person.with_active_affiliations).to include(person_with_active)
+    end
+
+    it "excludes people with only inactive affiliations" do
+      expect(Person.with_active_affiliations).not_to include(person_with_inactive)
+    end
+
+    it "excludes people with no affiliations" do
+      expect(Person.with_active_affiliations).not_to include(person_without)
+    end
+  end
+
+  describe ".published" do
+    let!(:searchable_with_active) do
+      person = create(:person, profile_is_searchable: true)
+      create(:organization_person, person: person, inactive: false, end_date: nil)
+      person
+    end
+
+    let!(:searchable_without_active) do
+      create(:person, profile_is_searchable: true)
+    end
+
+    let!(:not_searchable_with_active) do
+      person = create(:person, profile_is_searchable: false)
+      create(:organization_person, person: person, inactive: false, end_date: nil)
+      person
+    end
+
+    it "includes searchable people with active affiliations" do
+      expect(Person.published).to include(searchable_with_active)
+    end
+
+    it "excludes searchable people without active affiliations" do
+      expect(Person.published).not_to include(searchable_without_active)
+    end
+
+    it "excludes non-searchable people even with active affiliations" do
+      expect(Person.published).not_to include(not_searchable_with_active)
+    end
+  end
 end

@@ -1,0 +1,15 @@
+<%= turbo_frame_tag "person_workshop_ideas_section" do %>
+  <% if workshop_ideas.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
+      <% workshop_ideas.each do |idea| %>
+        <%= render "show_card",
+                   record: idea.decorate, title_font_size: "text-sm" %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate workshop_ideas, params: { section: "workshop_ideas" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No ideas submitted yet.</p>
+  <% end %>
+<% end %>

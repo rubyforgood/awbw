@@ -2,7 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(bundle exec rspec:*)",
-      "Bash(bundle exec rails runner:*)"
+      "Bash(bundle exec rails runner:*)",
+      "Bash(RAILS_ENV=test bundle exec rails runner:*)",
+      "Bash(RAILS_ENV=test bundle exec rspec:*)",
+      "Bash(git stash:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git diff:*)",
+      "Bash(bin/rails db:migrate:*)",
+      "Bash(for i in 1 2 3)",
+      "Bash(do bundle exec rspec spec/system/stories_spec.rb:71 --format progress)",
+      "Bash(done)",
+      "Bash(bin/rails runner:*)",
+      "Bash(git -C /Users/maebeale/programming/awbw branch --show-current)"
     ]
   }
 }

@@ -1,0 +1,14 @@
+<%= turbo_frame_tag "person_stories_section" do %>
+  <% if stories.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6 blur-on-submit">
+      <% stories.each do |story| %>
+        <%= render "show_card", record: story.decorate, title_font_size: "text-sm" %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate stories, params: { section: "stories" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No stories yet.</p>
+  <% end %>
+<% end %>

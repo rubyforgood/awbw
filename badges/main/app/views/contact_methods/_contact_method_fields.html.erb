@@ -1,6 +1,6 @@
 <%= f.hidden_field :kind, value: :phone %>
 
-<div class="nested-fields rounded-lg bg-gray-50 border-gray-200 p-6">
+<div class="nested-fields rounded-lg bg-white border border-gray-200 p-6 mb-4">
   <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
     <!-- Contact Type -->
     <div>
@@ -24,7 +24,7 @@
 
     <!-- Primary -->
     <div class="flex items-center h-[42px]">
-      <%= f.input :is_primary,
+      <%= f.input :primary,
                   as: :boolean,
                   wrapper: false,
                   label: false,
@@ -42,9 +42,9 @@
 
     <div class="text-right text-end">
       <!-- Remove button -->
-      <%= link_to_remove_association "✖ Delete phone",
+      <%= link_to_remove_association "Remove",
                                      f,
-                                     class: "btn btn-danger-outline whitespace-nowrap" if f.object.persisted? %>
+                                     class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
     </div>
   </div>
 </div>

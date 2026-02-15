@@ -1,0 +1,19 @@
+<%= turbo_frame_tag "person_events_section" do %>
+  <% if event_registrations.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
+      <% event_registrations.each do |event_registration| %>
+        <%= render "show_card",
+                   bookmarkable: event_registration.event,
+                   record_title: "#{event_registration.event.title}<br>" +
+                     "<span class='text-xs text-gray-500'>TIME: " +
+                     "#{event_registration.event.decorate.times}<span>",
+                   record: event_registration.decorate, title_font_size: "text-sm" %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate event_registrations, params: { section: "events" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No events recorded.</p>
+  <% end %>
+<% end %>

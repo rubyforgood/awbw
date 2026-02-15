@@ -1,4 +1,4 @@
-<div class="nested-fields rounded-lg bg-gray-50 border-gray-200 p-6">
+<div class="nested-fields rounded-lg bg-white border border-gray-200 p-6 mb-4">
   <div class="text-lg font-semibold text-gray-800 mb-4">
     Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
   </div>
@@ -12,9 +12,17 @@
                 required: true,
                 collection: Address::CONTACT_TYPES.compact.map { |t| [t.humanize, t] } %>
     <div class="flex items-center">
+      <%= f.input :primary,
+                  as: :boolean,
+                  label: "Primary",
+                  input_html: {
+                    class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                  } %>
+    </div>
+    <div class="flex items-center">
       <%= f.input :inactive,
                   as: :boolean,
-                  label: "Inactive?",
+                  label: "Inactive",
                   input_html: {
                     class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
                   } %>
@@ -67,7 +75,7 @@
   </div>
 
   <!-- ADDRESS BLOCK -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-red-500">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <%= f.input :street_address,
                 label: "Street Address",
                 input_html: {
@@ -119,10 +127,8 @@
                 } %>
   </div>
 
-  <div class="text-right text-end">
-    <!-- Remove button -->
-    <%= link_to_remove_association "✖ Delete address",
-                                   f,
-                                   class: "btn btn-danger-outline whitespace-nowrap" if f.object.persisted? %>
-  </div>
+  <!-- Remove button -->
+  <%= link_to_remove_association "Remove",
+                                 f,
+                                 class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
 </div>

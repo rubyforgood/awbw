@@ -48,13 +48,14 @@ class Person < ApplicationRecord
   # TODO: add validation on phone number type
 
   # Nested attributes
-  accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :addresses, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
   accepts_nested_attributes_for :user, update_only: true
   accepts_nested_attributes_for :organization_people, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["organization_id"].blank? || attrs["title"].blank? }
+    reject_if: proc { |attrs| attrs["organization_id"].blank? }
 
   # Search Cop
   include SearchCop
@@ -79,6 +80,10 @@ class Person < ApplicationRecord
     left_joins(organization_people: :organization)
       .where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
       .distinct }
+  scope :organization_id, ->(organization_id) {
+    joins(:organization_people)
+      .where(organization_people: { organization_id: organization_id })
+      .distinct }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
@@ -86,8 +91,13 @@ class Person < ApplicationRecord
     results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
+    results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results
+  end
+
+  def published?
+    profile_is_searchable? && organization_people.active.exists?
   end
 
   def sector_list
@@ -114,7 +124,7 @@ class Person < ApplicationRecord
   end
 
   def phone_number
-    primary_phone = contact_methods.find_by(is_primary: true, inactive: false, kind: :phone)
+    primary_phone = contact_methods.find_by(primary: true, inactive: false, kind: :phone)
     return primary_phone.value if primary_phone.present?
 
     first_phone = contact_methods.where(kind: :phone, inactive: false).first
