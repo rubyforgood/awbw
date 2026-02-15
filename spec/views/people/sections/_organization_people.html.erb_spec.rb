@@ -17,7 +17,7 @@ RSpec.describe "people/sections/_organization_people", type: :view do
     op = create(:organization_person, person: person)
     allow(op).to receive(:organization).and_return(nil)
 
-    organization_people = WillPaginate::Collection.create(1, 10, 1) { |pager| pager.replace([op]) }
+    organization_people = WillPaginate::Collection.create(1, 10, 1) { |pager| pager.replace([ op ]) }
 
     expect {
       render partial: "people/sections/organization_people",
