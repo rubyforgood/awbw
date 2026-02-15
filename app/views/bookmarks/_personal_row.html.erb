@@ -51,6 +51,25 @@
       Bookmarked by community
       <%= bookmark.bookmarkable.bookmarks_count %> times
     </div>
+    
+    <!-- Tags count with hover (for workshops) -->
+    <% if bookmark.bookmarkable_type == "Workshop" && bookmarkable.respond_to?(:sectors) && bookmarkable.respond_to?(:categories) %>
+      <% all_tags = [] %>
+      <% all_tags += bookmarkable.sectors.map(&:name) if bookmarkable.sectors.any? %>
+      <% all_tags += bookmarkable.categories.sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }.map(&:name) if bookmarkable.categories.any? %>
+      <% if all_tags.any? %>
+        <div class="text-sm text-gray-600 group relative inline-block">
+          <span class="cursor-help">
+            Tags: <%= all_tags.count %>
+          </span>
+          <div class="hidden group-hover:block absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-10 min-w-[300px] max-w-[500px]">
+            <div class="text-sm text-gray-800">
+              <%= all_tags.join(", ") %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
   </div>
 
  <!-- 3️⃣ Description -->

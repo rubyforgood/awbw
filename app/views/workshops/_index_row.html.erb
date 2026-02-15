@@ -70,6 +70,25 @@
           Bookmarked: <%= workshop.bookmarks_count %> <%= "time".pluralize(workshop.bookmarks_count.to_i) %>
         <% end %>
 
+        <!-- Tags count with hover -->
+        <% unless hide_tags %>
+          <% all_tags = [] %>
+          <% all_tags += workshop.sectors.map(&:name) if workshop.sectors.any? %>
+          <% all_tags += workshop.categories.sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }.map(&:name) if workshop.categories.any? %>
+          <% if all_tags.any? %>
+            <div class="text-sm text-gray-600 leading-tight group relative inline-block">
+              <span class="cursor-help">
+                Tags: <%= all_tags.count %>
+              </span>
+              <div class="hidden group-hover:block absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-10 min-w-[300px] max-w-[500px]">
+                <div class="text-sm text-gray-800">
+                  <%= all_tags.join(", ") %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+
         <!-- Led count -->
         <%#= tag.div id: dom_id(workshop, :led_count),
                     class: "text-sm text-gray-600 leading-tight" do %>
@@ -110,19 +129,7 @@
       </span>
         </p>
 
-        <% unless hide_tags %>
-          <% if workshop.categories.any? %>
-            <% ordered_tags = workshop.categories
-              .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
-              .map(&:name)
-              .to_sentence %>
-            <p class="tags mt-3 italic">
-              Tags:
-              <span title="<%= ordered_tags %>">
-                <%= ordered_tags.truncate(150) %></span>
-            </p>
-          <% end %>
-        <% end %>
+
 
       </div>
     </div>
