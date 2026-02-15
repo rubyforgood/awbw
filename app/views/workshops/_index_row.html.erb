@@ -72,9 +72,7 @@
 
         <!-- Tags count with hover -->
         <% unless hide_tags %>
-          <% all_tags = [] %>
-          <% all_tags += workshop.sectors.map(&:name) if workshop.sectors.any? %>
-          <% all_tags += workshop.categories.sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }.map(&:name) if workshop.categories.any? %>
+          <% all_tags = collect_all_tags(workshop) %>
           <% if all_tags.any? %>
             <div class="text-sm text-gray-600 leading-tight group relative inline-block">
               <span class="cursor-help">
