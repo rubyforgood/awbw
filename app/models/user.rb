@@ -115,6 +115,10 @@ class User < ApplicationRecord
     end
   end
 
+  def full_name_with_email
+    "#{full_name} (#{email})"
+  end
+
   def devise_email_name
     person&.first_name.presence || first_name.presence || email
   end
