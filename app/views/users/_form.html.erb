@@ -42,16 +42,6 @@
                 </p>
               </div>
             </div>
-          <% else %>
-            <% if @user.persisted? %>
-              <div>
-                Not associated with a person!
-                <br>
-                <%= link_to "Create person",
-                            new_person_path(user_id: @user.id),
-                            class: "btn btn-primary"%>
-              </div>
-            <% end %>
           <% end %>
           <div class="md:flex-grow md:basis-1/3" id="email_field_wrapper">
             <% if allowed_to?(:manage?, User) %>
