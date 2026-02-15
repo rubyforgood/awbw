@@ -160,7 +160,7 @@ class Person < ApplicationRecord
   end
 
   def time_zone_must_be_valid
-    return if ActiveSupport::TimeZone[time_zone]
+    return if time_zone.blank? || ActiveSupport::TimeZone[time_zone]
 
     errors.add(:time_zone, "is not a valid time zone")
   end

@@ -3,12 +3,10 @@
 class CopyTimeZoneFromUsersToPeople < ActiveRecord::Migration[8.1]
   def up
     # Copy time_zone from users to people where user has a person
-    execute <<-SQL
-      UPDATE people
-      INNER JOIN users ON users.person_id = people.id
-      SET people.time_zone = users.time_zone
-      WHERE users.time_zone IS NOT NULL
-    SQL
+    # Using ActiveRecord for database compatibility
+    User.where.not(person_id: nil).where.not(time_zone: nil).find_each do |user|
+      Person.where(id: user.person_id).update_all(time_zone: user.time_zone)
+    end
   end
 
   def down
