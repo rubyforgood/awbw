@@ -67,7 +67,7 @@
                       prompt: "Select a Workshop",
                       required: false,
                       disabled: promoted_to_story,
-                      selected: (f.object.workshop_id.nil? && f.object.external_workshop_title.present? ? nil : (params[:workshop_id].presence || f.object.workshop_id)),
+                      selected: workshop_selected_value(f.object, params),
                       input_html: { value: params[:workshop_id].presence || f.object.workshop_id,
                                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
                                     focus:border-blue-500 #{ 'readonly' if promoted_to_story }",
