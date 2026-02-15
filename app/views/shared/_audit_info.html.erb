@@ -1,0 +1,54 @@
+<% 
+  # Partial for displaying created_at and updated_at information on edit pages
+  # Usage: <%= render 'shared/audit_info', resource: @resource %>
+  
+  return unless resource&.persisted?
+  
+  created_by_user = resource.try(:created_by)
+  updated_by_user = resource.try(:updated_by)
+  
+  # Check if there's a user association for models without explicit created_by
+  resource_user = resource.try(:user) if created_by_user.nil? && updated_by_user.nil?
+%>
+
+<div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+  <div class="text-xs text-gray-500 text-right space-y-1">
+    <% if resource.created_at.present? %>
+      <div>
+        <span class="font-medium">Created:</span>
+        <%= resource.created_at.strftime("%b %d, %Y at %l:%M %p") %>
+        <% if created_by_user %>
+          by <%= link_to created_by_user.full_name, user_path(created_by_user), class: "text-indigo-600 hover:underline" %>
+        <% elsif resource_user %>
+          by <%= link_to resource_user.full_name, user_path(resource_user), class: "text-indigo-600 hover:underline" %>
+        <% end %>
+        <% if allowed_to?(:index?, :ahoy_activity) %>
+          <%= link_to admin_activities_events_path(resource_type: resource.class.name, resource_id: resource.id, prefixes: "create"), 
+                      class: "ml-1 text-indigo-600 hover:underline", 
+                      title: "View creation event in Ahoy" do %>
+            <i class="fas fa-chart-line"></i>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+    
+    <% if resource.updated_at.present? && resource.updated_at != resource.created_at %>
+      <div>
+        <span class="font-medium">Last updated:</span>
+        <%= resource.updated_at.strftime("%b %d, %Y at %l:%M %p") %>
+        <% if updated_by_user %>
+          by <%= link_to updated_by_user.full_name, user_path(updated_by_user), class: "text-indigo-600 hover:underline" %>
+        <% elsif resource_user %>
+          by <%= link_to resource_user.full_name, user_path(resource_user), class: "text-indigo-600 hover:underline" %>
+        <% end %>
+        <% if allowed_to?(:index?, :ahoy_activity) %>
+          <%= link_to admin_activities_events_path(resource_type: resource.class.name, resource_id: resource.id, prefixes: "update"), 
+                      class: "ml-1 text-indigo-600 hover:underline", 
+                      title: "View update events in Ahoy" do %>
+            <i class="fas fa-chart-line"></i>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
