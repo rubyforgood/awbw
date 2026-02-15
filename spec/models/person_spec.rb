@@ -47,26 +47,6 @@ RSpec.describe Person, type: :model do
     it { should allow_value("").for(:email_2) }
     it { should_not allow_value("not-an-email").for(:email_2).with_message("must be a valid email address") }
 
-    describe "time_zone validation" do
-      let(:admin) { create(:user, :admin) }
-
-      it "accepts valid time zones" do
-        person = build(:person, time_zone: "Pacific Time (US & Canada)", created_by: admin, updated_by: admin)
-        expect(person).to be_valid
-      end
-
-      it "rejects invalid time zones" do
-        person = build(:person, time_zone: "Invalid/Zone", created_by: admin, updated_by: admin)
-        expect(person).not_to be_valid
-        expect(person.errors[:time_zone]).to include("is not a valid time zone")
-      end
-
-      it "allows nil time zone" do
-        person = build(:person, time_zone: nil, created_by: admin, updated_by: admin)
-        expect(person).to be_valid
-      end
-    end
-
     describe "unique_name_and_email_combination" do
       let(:admin) { create(:user, :admin) }
 

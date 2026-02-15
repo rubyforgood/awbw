@@ -67,6 +67,7 @@ class User < ApplicationRecord
 
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }
+  validate :time_zone_must_be_valid, if: :time_zone_changed?
   validate :person_id_must_be_present_if_previously_set, on: :update
   validates_associated :person, if: -> { person.present? }
 
@@ -204,6 +205,12 @@ class User < ApplicationRecord
     self.first_name = first_name&.strip
     self.last_name = last_name&.strip
     self.email = email&.strip
+  end
+
+  def time_zone_must_be_valid
+    return if ActiveSupport::TimeZone[time_zone]
+
+    errors.add(:time_zone, "is not a valid time zone")
   end
 
   def person_id_must_be_present_if_previously_set

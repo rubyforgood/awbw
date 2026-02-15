@@ -295,7 +295,6 @@ class PeopleController < ApplicationController
       :bio, :notes,
       :display_name_preference,
       :pronouns,
-      :time_zone,
       :profile_show_name_preference,
       :profile_is_searchable,
       :profile_show_pronouns,
@@ -370,7 +369,8 @@ class PeopleController < ApplicationController
         :city2,
         :state2,
         :zip2,
-        :notes
+        :notes,
+        :time_zone
       ],
       affiliations_attributes: [
         :id,

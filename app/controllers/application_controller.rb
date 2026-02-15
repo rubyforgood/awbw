@@ -32,7 +32,7 @@ class ApplicationController < ActionController::Base
   around_action :set_time_zone_from_user
 
   def set_time_zone_from_user
-    zone = ActiveSupport::TimeZone[current_user&.person&.time_zone || "UTC"]
+    zone = ActiveSupport::TimeZone[current_user&.time_zone || "UTC"]
     if zone
       Time.use_zone(zone) { yield }
     else
