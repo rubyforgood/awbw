@@ -27,7 +27,7 @@ class Workshop < ApplicationRecord
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
-  has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
+  has_many :quotes, as: :quotable, dependent: :destroy
   has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :workshop_logs, dependent: :destroy, as: :owner
@@ -51,7 +51,6 @@ class Workshop < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
   has_many :organizations, through: :user
-  has_many :quotes, through: :quotable_item_quotes
   has_many :resources, through: :workshop_resources, source: :resource
   has_many :sectors, through: :sectorable_items
 

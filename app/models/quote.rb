@@ -2,8 +2,8 @@ class Quote < ApplicationRecord
   include Publishable, TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :workshop, optional: true
+  belongs_to :quotable, polymorphic: true, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :quotable_item_quotes, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   # Asset associations
