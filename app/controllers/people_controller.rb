@@ -58,7 +58,7 @@ class PeopleController < ApplicationController
         @workshop_variation_ideas = @person.user&.workshop_variation_ideas_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
         render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
       when "organization_people"
-        @organization_people = @person.organization_people.active.includes(:organization).paginate(page: params[:page], per_page: per_page)
+        @organization_people = @person.organization_people.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/organization_people", locals: { person: @person, organization_people: @organization_people }
       end
     end

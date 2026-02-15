@@ -1,16 +1,10 @@
 <%= turbo_frame_tag "person_organization_people_section" do %>
   <% if organization_people.any? %>
-    <ul class="space-y-2 blur-on-submit">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 blur-on-submit">
       <% organization_people.each do |op| %>
-        <li>
-          <% if op.title.present? || op.position.present? %>
-            <span class="text-gray-600"><%= op.title.presence || op.position.humanize %> - </span>
-          <% end %>
-          <%= link_to op.organization.name, organization_path(op.organization),
-                      class: "text-blue-600 hover:underline font-medium" %>
-        </li>
+        <%= organization_profile_button(op.organization) %>
       <% end %>
-    </ul>
+    </div>
     <div class="mt-6 flex justify-center">
       <%= tailwind_paginate organization_people, params: { section: "organization_people" } %>
     </div>

@@ -27,6 +27,11 @@
       <div class="flex-1 text-center md:text-left">
         <h1 class="text-3xl font-bold text-gray-900">
           <%= @organization.name %>
+          <% if @organization.organization_status.present? && @organization.organization_status.name != "Active" %>
+            <span class="ml-2 text-sm font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-full px-3 py-0.5 align-middle">
+              <%= @organization.organization_status.name %>
+            </span>
+          <% end %>
         </h1>
         <% address = if @organization.addresses.loaded?
                        @organization.addresses.find { |a| !a.inactive? }
@@ -95,7 +100,7 @@
     </div>
     <hr class="my-8 border-gray-200">
     <!-- Info grid -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
         <!-- Organization affiliations -->
         <div class="md:col-span-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
           <h2 class="text-lg font-semibold text-gray-800 mb-2">

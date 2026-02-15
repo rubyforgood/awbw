@@ -84,8 +84,8 @@
 
       <div class="space-y-6 mt-12">
         <!-- Organizations & Service Populations -->
-        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 sm:p-5">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
             <!-- Organization affiliations -->
             <% if @person.profile_show_affiliations? %>
               <div class="md:col-span-3 p-3">
@@ -97,7 +97,7 @@
             <% end %>
             <!-- Sectors -->
             <% if @person.profile_show_sectors? %>
-              <div class="p-3">
+              <div class="md:col-span-2 p-3">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
                 <% if @person.sectorable_items.any? %>
                   <div class="flex flex-wrap gap-2">
@@ -108,8 +108,6 @@
                          .each do |si| %>
                       <%= render "sectors/tagging_label",
                                  sector: si.sector,
-                                 bg_color: "bg-white",
-                                 bg_hover_color: "bg-lime-200",
                                  display_leader: true,
                                  is_leader: si.is_leader %>
                     <% end %>
