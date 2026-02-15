@@ -25,6 +25,12 @@
       </div>
       <!-- Resource Card -->
       <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+        <!-- Main Text / Description -->
+        <% if @resource.rhino_body.present? %>
+          <div class="text-gray-700 mb-4">
+            <%= @resource.rhino_body %>
+          </div>
+        <% end %>
         <!-- Title -->
         <div class="font-semibold text-gray-900 mb-2">
           <%= title_with_badges(@resource, font_size: "text-3xl") %>
@@ -43,8 +49,6 @@
             </div>
           <% end %>
         </div>
-        <!-- Main Text -->
-        <%= @resource.rhino_body %>
         <div class="flex justify-end">
           <%= render "assets/primary_image_picker", owner: @resource %>
         </div>
