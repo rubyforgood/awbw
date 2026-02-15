@@ -4,8 +4,8 @@ class WorkshopsController < ApplicationController
 
   def index
     authorize!
-    @category_types = CategoryType.published.order(:name).decorate
-    @sectors        = Sector.published
+    @category_types = CategoryType.published.where(story_specific: false).order(:name).decorate
+    @sectors        = Sector.published.order(:name)
     @windows_types  = WindowsType.all
 
     if turbo_frame_request?
