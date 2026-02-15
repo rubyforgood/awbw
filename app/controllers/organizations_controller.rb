@@ -101,16 +101,16 @@ class OrganizationsController < ApplicationController
                           .map { |fn, ln, id| [ "#{fn} #{ln}", id ] }
 
     if @organization.persisted? && @organization.errors.empty?
-      org_people = @organization.organization_people
-      org_people = org_people.includes(:person) unless org_people.loaded?
-      sorted = org_people.to_a
-                             .sort_by { |op|
-                               expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
+      affiliations = @organization.affiliations
+      affiliations = affiliations.includes(:person) unless affiliations.loaded?
+      sorted = affiliations.to_a
+                             .sort_by { |affiliation|
+                               expired = affiliation.inactive? || (affiliation.end_date.present? && affiliation.end_date < Date.current)
                                [ expired ? 1 : 0,
-                                 op.person&.first_name.to_s.downcase,
-                                 op.person&.last_name.to_s.downcase ]
+                                 affiliation.person&.first_name.to_s.downcase,
+                                 affiliation.person&.last_name.to_s.downcase ]
                              }
-      @organization.organization_people.proxy_association.target.replace(sorted)
+      @organization.affiliations.proxy_association.target.replace(sorted)
     end
   end
 
@@ -137,7 +137,7 @@ end
     @organization = Organization.includes(
       :organization_status, :windows_type, :addresses,
       { sectorable_items: :sector },
-      organization_people: :person
+      affiliations: :person
     ).find(params[:id])
   end
 
@@ -155,7 +155,7 @@ end
         :sector_id,
         :_destroy
       ],
-      organization_people_attributes: [
+      affiliations_attributes: [
         :id,
         :person_id,
         :inactive,

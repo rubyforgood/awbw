@@ -174,23 +174,23 @@
     <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:organizations) %> p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Person) %>
         <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
-          <%= f.fields_for :organization_people do |organization_person_form| %>
+          <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
-              <%= render "organization_person_fields",
-                         f: organization_person_form %>
+              <%= render "affiliation_fields",
+                         f: affiliation_form %>
             </div>
           <% end %>
           <div data-paginated-fields-target="nav"></div>
 
           <div class="admin-only bg-blue-100 p-3 mt-6"><%= link_to_add_association "➕ Add Affiliation",
                                         f,
-                                        :organization_people,
+                                        :affiliations,
                                         class: "btn btn-secondary-outline" %></div>
         </div>
       <% else %>
-        <% f.object.organization_people.each do |ou| %>
+        <% f.object.affiliations.each do |affiliation| %>
           <div class="ps-6 mb-2">
-            <li><%= ou.title || ou.position %> - <%= ou.persisted? ? (link_to ou.organization&.name, organization_path(ou.organization), class: "underline") : ou.organization&.name %></li>
+            <li><%= affiliation.title || affiliation.position %> - <%= affiliation.persisted? ? (link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline") : affiliation.organization&.name %></li>
           </div>
         <% end %>
       <% end %>

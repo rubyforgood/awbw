@@ -1,4 +1,4 @@
-class OrganizationPerson < ApplicationRecord
+class Affiliation < ApplicationRecord
   belongs_to :organization
   belongs_to :person, touch: true
 
@@ -28,7 +28,7 @@ class OrganizationPerson < ApplicationRecord
   private
 
   def skip_if_duplicate
-    scope = OrganizationPerson.where(
+    scope = Affiliation.where(
       organization_id: organization_id,
       person_id: person_id,
       start_date: start_date,
@@ -49,7 +49,7 @@ class OrganizationPerson < ApplicationRecord
 
   def sync_organization_affiliation_dates
     org = organization
-    affiliations = org.organization_people.where.not(id: destroyed_by_association ? id : nil)
+    affiliations = org.affiliations.where.not(id: destroyed_by_association ? id : nil)
 
     earliest_start = affiliations.minimum(:start_date)
     has_active = affiliations.active.exists?
@@ -67,7 +67,7 @@ class OrganizationPerson < ApplicationRecord
   end
 
   def deactivate_organization_if_no_active_people
-    return if organization.organization_people.active.exists?
+    return if organization.affiliations.active.exists?
 
     inactive_status = OrganizationStatus.find_by(name: "Inactive")
     return unless inactive_status
@@ -81,7 +81,7 @@ class OrganizationPerson < ApplicationRecord
       resource_id: organization.id,
       resource_title: organization.name,
       change: "status_set_to_inactive",
-      reason: "no_active_organization_people"
+      reason: "no_active_affiliations"
     )
   end
 end

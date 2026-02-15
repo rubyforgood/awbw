@@ -9,7 +9,7 @@ class PeopleController < ApplicationController
       :avatar_attachment,
       :user,
       sectorable_items: :sector,
-      organization_people: :organization
+      affiliations: :organization
     ).references(:user))
     filtered = base_scope.search_by_params(params.to_unsafe_h)
                          .order(:first_name, :last_name)
@@ -57,9 +57,9 @@ class PeopleController < ApplicationController
       when "workshop_variation_ideas"
         @workshop_variation_ideas = @person.user&.workshop_variation_ideas_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
         render partial: "people/sections/workshop_variation_ideas", locals: { person: @person, workshop_variation_ideas: @workshop_variation_ideas }
-      when "organization_people"
-        @organization_people = @person.organization_people.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
-        render partial: "people/sections/organization_people", locals: { person: @person, organization_people: @organization_people }
+      when "affiliations"
+        @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/affiliations", locals: { person: @person, affiliations: @affiliations }
       end
     end
   end
@@ -79,7 +79,7 @@ class PeopleController < ApplicationController
       { avatar_attachment: :blob },
       { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
-      organization_people: { organization: :logo_attachment }
+      affiliations: { organization: :logo_attachment }
     ).find(params[:id]).decorate
     authorize! @person
     set_form_variables
@@ -175,18 +175,18 @@ class PeopleController < ApplicationController
     set_user
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
     if @person.persisted? && @person.errors.empty?
-      org_people = @person.organization_people
-      org_people = org_people.includes(:organization) unless org_people.loaded?
-      sorted = org_people.to_a
-                      .sort_by { |op|
-                        expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
+      affiliations = @person.affiliations
+      affiliations = affiliations.includes(:organization) unless affiliations.loaded?
+      sorted = affiliations.to_a
+                      .sort_by { |affiliation|
+                        expired = affiliation.inactive? || (affiliation.end_date.present? && affiliation.end_date < Date.current)
                         [ expired ? 1 : 0,
-                          op.start_date || Date.new(9999),
-                          op.organization&.name.to_s.downcase ]
+                          affiliation.start_date || Date.new(9999),
+                          affiliation.organization&.name.to_s.downcase ]
                       }
-      @person.organization_people.proxy_association.target.replace(sorted)
+      @person.affiliations.proxy_association.target.replace(sorted)
     end
-    @person.organization_people.build if @person.organization_people.empty?
+    @person.affiliations.build if @person.affiliations.empty?
 
     @all_sectors = Sector.published.order(:name)
     @sectors_collection = @all_sectors.pluck(:name, :id)
@@ -372,7 +372,7 @@ class PeopleController < ApplicationController
         :zip2,
         :notes
       ],
-      organization_people_attributes: [
+      affiliations_attributes: [
         :id,
         :organization_id,
         :position,
