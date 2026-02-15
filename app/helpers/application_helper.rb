@@ -177,5 +177,9 @@ module ApplicationHelper
     # Otherwise use param or object value
     params[:workshop_id].presence || story_idea.workshop_id
   end
+
+  def show_external_workshop_field?(story_idea)
+    story_idea.workshop_id.nil? && story_idea.external_workshop_title.present?
+  end
 end
 
