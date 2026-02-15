@@ -177,7 +177,7 @@ class StoriesController < ApplicationController
                             .references(:users)
                             .order(:created_at)
     @windows_types = WindowsType.all
-    @workshops = authorized_scope(Workshop.all).order(:title)
+    @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
     @users = authorized_scope(User.has_access.or(User.where(id: @story.created_by_id)))
                  .includes(:person)
                  .order("people.first_name, people.last_name")
