@@ -90,7 +90,7 @@ class WorkshopVariationIdeasController < ApplicationController
     @windows_types = WindowsType.order(:name)
     @users = User.active.or(User.where(id: @workshop_variation_idea.created_by_id))
                  .distinct
-                 .order(:first_name, :last_name)
+                 .ordered_by_name
   end
 
   def workshop_variation_idea_params
