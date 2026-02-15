@@ -84,9 +84,9 @@
         <% badges = @organization.decorate.badges %>
         <% if badges.any? %>
           <div class="mt-3 flex flex-wrap justify-center md:justify-start gap-1.5">
-            <% badges.each do |(label, color)| %>
-              <span class="px-2 py-0.5 bg-<%= color %>-100 text-<%= color %>-800 text-xs font-medium rounded-full border border-<%= color %>-200">
-                <%= label %>
+            <% badges.each do |badge| %>
+              <span class="px-2 py-0.5 border <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:border] %> text-xs font-medium rounded-full">
+                <%= badge[:label] %>
               </span>
             <% end %>
           </div>
@@ -98,27 +98,31 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
         <!-- Organization affiliations -->
         <div class="md:col-span-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
-          <h2 class="text-lg font-semibold text-gray-800 mb-3">Windows facilitators</h2>
-          <% active_ops = @organization.organization_people.select { |op|
-               !op.inactive? && (op.end_date.nil? || op.end_date >= Date.current) && op.person.present?
-             } %>
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">
+            Affiliations
+          </h2>
+          <% active_ops = @organization.organization_people
+               .select { |op| !op.inactive? && (op.end_date.nil? || op.end_date >= Date.current) && op.person.present? }
+               .sort_by { |op| [op.person.first_name.to_s.downcase, op.person.last_name.to_s.downcase] } %>
           <% if active_ops.any? %>
-            <div class="flex flex-wrap gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               <% active_ops.each do |pu| %>
-                <div data-paginated-fields-target="item" style="width: 250px;">
+                <div data-paginated-fields-target="item">
                   <%= person_profile_button(pu.person, subtitle: pu.title.presence) %>
                 </div>
               <% end %>
             </div>
             <div data-paginated-fields-target="nav" class="mt-3"></div>
           <% else %>
-            <p class="text-gray-500 italic">No facilitators listed.</p>
+            <p class="text-gray-500 italic">No affiliations listed.</p>
           <% end %>
         </div>
         <!-- Sectors -->
         <% if @organization.profile_show_sectors? %>
           <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">
+              Sectors
+            </h2>
             <p>
               <% if @organization.sectorable_items.any? %>
                 <div class="flex flex-wrap gap-2">
@@ -139,14 +143,18 @@
     <hr class="my-8 border-gray-200">
     <!-- Workshops authored -->
     <% if @organization.profile_show_description? && @organization.description.present? %>
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Description</h2>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">
+          Description
+        </h2>
         <%= sanitize(@organization.description, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
         <hr class="my-8 border-gray-200">
       <% end %>
     <!-- Workshops authored -->
     <% if @organization.profile_show_workshops? %>
         <div>
-          <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">
+            Workshops authored
+          </h2>
           <% if @organization.workshops.any? %>
             <% @organization.workshops.each do |workshop| %>
               <%= link_to workshop.name, workshop_path(workshop), class: "btn btn-secondary-outline" %>
@@ -159,7 +167,9 @@
     <!-- Stories authored -->
     <% if @organization.profile_show_stories? %>
       <div class="mt-10">
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories</h2>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">
+          Stories
+        </h2>
         <%# stories = @organization.stories_as_creator + @organization.stories_as_spotlighted_organization %>
         <%# if stories.any? %>
         <%# stories.each do |story| %>
@@ -173,7 +183,9 @@
       <!-- Events registered -->
     <% if @organization.profile_show_events_registered? %>
       <div class="mt-10">
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Events hosted</h2>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">
+          Events hosted
+        </h2>
         <%# if Event.all.any? %>
         <%# Event.all.each do |event| %>
           <%# event_name = "#{event.title} - #{event.start_date.strftime("%b %Y") rescue nil}" %>
@@ -185,20 +197,26 @@
         </div>
       <% end %>
     <hr class="my-8 border-gray-200">
-    <% if allowed_to?(:show_workshop_logs?, @organization) %>
-        <div class="organization-only bg-green-100">
-          <!-- Workshop logs -->
-          <% if @organization.profile_show_workshop_logs? %>
-            <div class="mt-6 p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop Logs submitted</h2>
-              <% organization_workshop_logs = @organization.affiliated_workshop_logs %>
-              <%= render "workshop_logs/index",
-                         workshop_logs: organization_workshop_logs.paginate(page: params[:page] || 1,
-                                                                             per_page: params[:per_page] || 10),
-                         workshop_logs_unpaginated: organization_workshop_logs,
-                         workshop_logs_count: organization_workshop_logs.count %>
-            </div>
-          <% end %>
+    <% if allowed_to?(:show_workshop_logs?, @organization) && @organization.profile_show_workshop_logs? %>
+        <div class="organization-only <%= DomainTheme.bg_class_for(:user_only) %>
+          border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm">
+          <!-- Header -->
+          <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3
+            border-b <%= DomainTheme.border_class_for(:user_only) %>">
+            <h2 class="text-xl font-semibold text-gray-800">
+              Workshop Logs submitted
+            </h2>
+            <span class="text-sm text-amber-700 italic">Only visible to you</span>
+          </div>
+          <!-- Content -->
+          <div class="section-content px-3 sm:px-4 py-4 sm:py-6">
+            <% organization_workshop_logs = @organization.affiliated_workshop_logs %>
+            <%= render "workshop_logs/index",
+                       workshop_logs: organization_workshop_logs.paginate(page: params[:page] || 1,
+                                                                           per_page: params[:per_page] || 10),
+                       workshop_logs_unpaginated: organization_workshop_logs,
+                       workshop_logs_count: organization_workshop_logs.count %>
+          </div>
         </div>
       <% end %>
     </div>

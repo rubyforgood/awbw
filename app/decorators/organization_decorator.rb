@@ -13,17 +13,25 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   def badges
-    years = start_date ? (Time.zone.now.year - start_date.year) : 0
+    earliest = organization_people.minimum(:start_date) || start_date
+    years = earliest ? (Time.zone.now.year - earliest.year) : nil
     badges = []
-    badges << [ "Legacy Organization (10+ years)", "yellow" ] if years >= 10
-    badges << [ "Seasoned Organization (3-10 years)", "gray" ] if start_date.present? && years >= 3
-    badges << [ "New Organization (<3 years)", "green" ] if start_date.present? && years < 3
-    # badges << [ "Story Organization", "gray" ] if stories.any?
-    badges << [ "Events Hosted", "blue" ] if Event.count > 3
-    # badges << ["Workshop Author", "gray"] if true || user.workshops.any? # indigo
-    # badges << ["Story Author", "gray"] if true || user.stories_as_creator.any? # pink
-    # badges << ["Sector Leader", "purple"] if true || sectorable_items.where(is_leader: true).any?
-    badges << [ "Blog Contributor", "gray" ] if true # || user.respond_to?(:blogs) && user.blogs.any? # red
+    badges << badge("Legacy Organization (10+ years)", :legacy_facilitator) if years && years >= 10
+    badges << badge("Seasoned Organization (3-10 years)", :seasoned_facilitator) if years && years.between?(3, 9)
+    badges << badge("New Organization (<3 years)", :new_facilitator) if years && years < 3
+    badges << badge("Workshop Author", :workshops) if workshops.any?
+    badges << badge("Workshop Logs", :workshop_logs) if workshop_logs.any?
     badges
+  end
+
+  private
+
+  def badge(label, key)
+    {
+      label: label,
+      bg: DomainTheme.bg_class_for(key, intensity: 100),
+      text: DomainTheme.text_class_for(key),
+      border: DomainTheme.border_class_for(key)
+    }
   end
 end

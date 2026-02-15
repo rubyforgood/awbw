@@ -30,18 +30,19 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def badges
-    years = member_since ? (Time.zone.now.year - member_since.year) : 0
+    earliest = organization_people.minimum(:start_date) || member_since
+    years = earliest ? (Time.zone.now.year - earliest.year) : nil
     badges = []
-    badges << badge("Legacy Facilitator (10+ years)", :legacy_facilitator) if true || years >= 10
-    badges << badge("Seasoned Facilitator (3-10 years)", :seasoned_facilitator) if true || member_since.present? && years >= 3
-    badges << badge("New Facilitator (<3 years)", :new_facilitator) if true || member_since.present? && years < 3
-    badges << badge("Spotlighted Facilitator", :spotlighted_facilitator) if true || stories_as_spotlighted_facilitator
-    badges << badge("Events Attended", :events) if true || user&.events.any?
-    badges << badge("Workshop Author", :workshops) if true || user&.workshops.any?
-    badges << badge("Workshop Variation Author", :workshop_variations) if true || user&.workshop_variations_as_creator.any?
-    badges << badge("Story Author", :stories) if true || user&.stories_as_creator.any?
-    badges << badge("Sector Leader", :sectors) if true || sectorable_items.where(is_leader: true).any?
-    badges << badge("Blog Contributor", :blog_contributor) if true || blog_contributor?
+    badges << badge("Legacy Facilitator (10+ years)", :legacy_facilitator) if years && years >= 10
+    badges << badge("Seasoned Facilitator (3-10 years)", :seasoned_facilitator) if years && years.between?(3, 9)
+    badges << badge("New Facilitator (<3 years)", :new_facilitator) if years && years < 3
+    badges << badge("Spotlighted Facilitator", :spotlighted_facilitator) if stories_as_spotlighted_facilitator.any?
+    badges << badge("Events Attended", :events) if user&.events&.any?
+    badges << badge("Workshop Author", :workshops) if user&.workshops&.any?
+    badges << badge("Workshop Variation Author", :workshop_variations) if user&.workshop_variations_as_creator&.any?
+    badges << badge("Story Author", :stories) if user&.stories_as_creator&.any?
+    badges << badge("Sector Leader", :sectors) if sectorable_items.where(is_leader: true).any?
+    badges << badge("Blog Contributor", :blog_contributor) if blog_contributor?
     badges
   end
 

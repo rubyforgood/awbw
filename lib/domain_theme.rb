@@ -35,7 +35,7 @@ module DomainTheme
     legacy_facilitator:       :yellow,
     seasoned_facilitator:     :sky,
     new_facilitator:          :green,
-    spotlighted_facilitator:  :gray,
+    spotlighted_facilitator:  :pink,
     blog_contributor:         :orange
   }
 
