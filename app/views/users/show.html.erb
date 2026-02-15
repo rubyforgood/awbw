@@ -10,7 +10,7 @@
                       class: "btn btn-secondary-outline mr-2" %>
         <% else %>
           <div class="admin-only bg-blue-100 p-2 mr-2">
-            No person!
+            Not associated with a person
             <%= link_to "Create person",
                         new_person_path(user_id: @user.id),
                         class: "btn btn-warning px-2 py-1" %>
