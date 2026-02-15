@@ -124,24 +124,20 @@
         </div>
         <!-- Sectors -->
         <% if @organization.profile_show_sectors? %>
-          <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-2">
-              Sectors
-            </h2>
-            <p>
-              <% if @organization.sectorable_items.any? %>
-                <div class="flex flex-wrap gap-2">
-                  <% @organization.sectorable_items.sort_by { |si| si.sector&.name.to_s }.each do |si| %>
-                    <%= render "sectors/tagging_label",
-                               sector: si.sector,
-                               display_leader: true,
-                               is_leader: si.is_leader %>
-                  <% end %>
-                </div>
-              <% else %>
-                <span class="text-gray-500 italic">None selected.</span>
-              <% end %>
-            </p>
+          <div class="md:col-span-2 p-3">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+            <% if @organization.sectorable_items.any? %>
+              <div class="flex flex-wrap gap-2">
+                <% @organization.sectorable_items.sort_by { |si| si.sector&.name.to_s }.each do |si| %>
+                  <%= render "sectors/tagging_label",
+                             sector: si.sector,
+                             display_leader: true,
+                             is_leader: si.is_leader %>
+                <% end %>
+              </div>
+            <% else %>
+              <p class="text-gray-500 italic">None selected.</p>
+            <% end %>
           </div>
         <% end %>
       </div>
