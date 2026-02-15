@@ -214,6 +214,62 @@ RSpec.describe WorkshopSearchService, type: :service do
 
           expect(workshops).to include(workshop_with_quotes)
         end
+
+        it "finds workshops with slashes when searching without slashes" do
+          workshop = create(:workshop, title: "Art/Music", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Art Music' }).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with colons when searching without colons" do
+          workshop = create(:workshop, title: "Introduction: The Basics", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Introduction The Basics' }).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with plus signs when searching without them" do
+          workshop = create(:workshop, title: "Arts + Crafts", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Arts Crafts' }).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with exclamation marks when searching without them" do
+          workshop = create(:workshop, title: "Create!", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Create' }).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with question marks when searching without them" do
+          workshop = create(:workshop, title: "What is Dance?", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'What is Dance' }).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with commas when searching without them" do
+          workshop = create(:workshop, title: "Draw, Paint, Create", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Draw Paint Create' }).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with parentheses when searching without them" do
+          workshop = create(:workshop, title: "Weaving (Advanced)", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'Weaving Advanced' }).call
+          expect(service.workshops).to include(workshop)
+        end
+
+        it "finds workshops with ellipsis when searching without it" do
+          workshop = create(:workshop, title: "Creating…Discovering", year: 2025, month: 10)
+
+          service = WorkshopSearchService.new({ title: 'CreatingDiscovering' }).call
+          expect(service.workshops).to include(workshop)
+        end
       end
 
       context "query search" do
