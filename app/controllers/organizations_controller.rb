@@ -42,7 +42,7 @@ class OrganizationsController < ApplicationController
     @workshop_logs_count = @workshop_logs_unpaginated.size
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
     logged_workshop_ids = workshop_logs.where.not(workshop_id: nil).distinct.pluck(:workshop_id)
-    @workshops = Workshop.includes(:windows_type)
+    @workshops = Workshop.joins(:windows_type)
                          .where(id: logged_workshop_ids)
                          .order("workshops.title ASC, windows_types.name ASC")
     logged_user_ids = workshop_logs.where.not(user_id: nil).distinct.pluck(:user_id)
