@@ -1,0 +1,7 @@
+<%= turbo_stream.replace "comment_form" do %>
+  <%= render "comments/form", commentable: @commentable %>
+<% end %>
+
+<%= turbo_stream.replace "comments_list" do %>
+  <%= render "comments/list", commentable: @commentable, comments: @comments %>
+<% end %>

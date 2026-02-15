@@ -12,6 +12,7 @@ class Person < ApplicationRecord
 
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :comments, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy

@@ -15,6 +15,7 @@ class User < ApplicationRecord
   # Associations
   belongs_to :person, optional: true
   has_many :bookmarks, dependent: :destroy
+  has_many :comments, as: :commentable, dependent: :destroy
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :notifications, as: :noticeable
 
