@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_122713) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -216,6 +216,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.index ["bookmarkable_type", "bookmarkable_id"], name: "index_bookmarks_on_bookmarkable"
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
@@ -245,9 +246,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
 
   create_table "category_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
+    t.string "display_text"
     t.string "legacy_id"
     t.string "name"
     t.boolean "published", default: false
+    t.boolean "story_specific", default: false
     t.datetime "updated_at", precision: nil, null: false
   end
 
