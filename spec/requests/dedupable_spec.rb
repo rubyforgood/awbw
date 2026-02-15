@@ -393,6 +393,14 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response).to have_http_status(:ok)
         expect(keep.reload.title).to eq("Updated Workshop")
       end
+
+      it "updates rich text fields" do
+        patch dedupe_update_keep_workshops_path,
+              params: { id: keep.id, workshop_to_keep: { rhino_objective: "Updated rich text" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(keep.reload.rhino_objective.to_plain_text).to eq("Updated rich text")
+      end
     end
 
     describe "POST dedupe_execute" do
@@ -436,6 +444,43 @@ RSpec.describe "Dedupable concern", type: :request do
           keep.reload
           expect(keep.title).to eq("Keep Workshop")
           expect(keep.objective).to eq("Keep objective")
+        end
+      end
+
+      context "rich text (ActionText) fields" do
+        it "updates keeper rich text when keep params provided" do
+          keep.update!(rhino_objective: "Original rich text")
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id,
+            workshop_to_keep: { rhino_objective: "Merged rich text" }
+          }
+
+          expect(keep.reload.rhino_objective.to_plain_text).to eq("Merged rich text")
+        end
+
+        it "preserves keeper rich text when no keep params provided" do
+          keep.update!(rhino_objective: "Keep rich text")
+          delete_rec.update!(rhino_objective: "Delete rich text")
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(keep.reload.rhino_objective.to_plain_text).to eq("Keep rich text")
+        end
+
+        it "destroys deleted record's rich text on merge" do
+          delete_rec.update!(rhino_objective: "Will be lost")
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(ActionText::RichText.where(record_type: "Workshop", record_id: delete_rec.id)).not_to exist
         end
       end
 

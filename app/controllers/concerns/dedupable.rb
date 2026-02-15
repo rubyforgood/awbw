@@ -76,7 +76,7 @@ module Dedupable
     keep_param_key = "#{mn}_to_keep"
 
     if params[keep_param_key].present?
-      editable = mc.column_names - %w[id created_at updated_at legacy_id]
+      editable = mc.column_names - %w[id created_at updated_at legacy_id] + rich_text_attribute_names(mc)
       non_blank = params.require(keep_param_key).permit(editable).to_h.reject { |_k, v| v.nil? || v == "" }
       record.update!(non_blank) if non_blank.any?
     end
@@ -98,39 +98,40 @@ module Dedupable
     record_to_delete = mc.find(params["#{mn}_to_delete_id"])
     record_to_keep = mc.find(params["#{mn}_to_keep_id"])
 
-    keep_param_key = "#{mn}_to_keep"
-    if params[keep_param_key].present?
-      editable = mc.column_names - %w[id created_at updated_at legacy_id]
-      non_blank = params.require(keep_param_key).permit(editable).to_h.reject { |_k, v| v.nil? || v == "" }
-      record_to_keep.update!(non_blank) if non_blank.any?
-    end
+    delete_name = record_to_delete.public_send(name_col)
+    keep_name = record_to_keep.public_send(name_col)
 
-    if respond_to?(:track_event, true)
-      delete_name = record_to_delete.public_send(name_col)
-      keep_name = record_to_keep.public_send(name_col)
-      track_event("dedupe.#{mn}", {
-        resource_type: mc.name,
-        resource_id: record_to_keep.id,
-        deleted_record: record_to_delete.attributes,
-        kept_record: { id: record_to_keep.id, name: keep_name },
-        associations_moved: record_to_delete.public_send(dedupe_primary_join(mc).first).count
-      })
-    end
-
-    if (extra_assocs = config[:extra_associations])
-      extra_assocs.reject { |ea| ea[:display_only] }.each do |ea|
-        reassign_direct_association(record_to_delete, record_to_keep, ea[:name])
+    ActiveRecord::Base.transaction do
+      keep_param_key = "#{mn}_to_keep"
+      if params[keep_param_key].present?
+        editable = mc.column_names - %w[id created_at updated_at legacy_id] + rich_text_attribute_names(mc)
+        non_blank = params.require(keep_param_key).permit(editable).to_h.reject { |_k, v| v.nil? || v == "" }
+        record_to_keep.update!(non_blank) if non_blank.any?
       end
-      # Clear stale association caches so dependent: :destroy
-      # doesn't cascade-delete already-reassigned records.
-      record_to_delete.reload
+
+      if respond_to?(:track_event, true)
+        track_event("dedupe.#{mn}", {
+          resource_type: mc.name,
+          resource_id: record_to_keep.id,
+          deleted_record: record_to_delete.attributes,
+          kept_record: { id: record_to_keep.id, name: keep_name },
+          associations_moved: record_to_delete.public_send(dedupe_primary_join(mc).first).count
+        })
+      end
+
+      if (extra_assocs = config[:extra_associations])
+        extra_assocs.reject { |ea| ea[:display_only] }.each do |ea|
+          reassign_direct_association(record_to_delete, record_to_keep, ea[:name])
+        end
+        # Clear stale association caches so dependent: :destroy
+        # doesn't cascade-delete already-reassigned records.
+        record_to_delete.reload
+      end
+
+      deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
+      deduper.merge(record_to_keep, record_to_delete)
     end
 
-    deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
-    deduper.merge(record_to_keep, record_to_delete)
-
-    delete_name ||= record_to_delete.public_send(name_col)
-    keep_name ||= record_to_keep.public_send(name_col)
     label = mc.model_name.human.pluralize
     redirect_to url_for(action: :index),
       notice: "#{label} merged successfully. '#{delete_name}' was merged into '#{keep_name}'."
@@ -202,8 +203,22 @@ module Dedupable
         end
       end
 
-      item.update!(fk => to_record.id)
+      begin
+        item.update!(fk => to_record.id)
+      rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+        # Model-level validation (e.g., name uniqueness) prevents the move;
+        # destroy the unmovable record since the keeper has a conflict.
+        item.destroy!
+      end
     end
+  end
+
+  # Returns attribute names for has_rich_text fields (e.g. ["rhino_objective", "rhino_materials"]).
+  # Empty array for models without ActionText.
+  def rich_text_attribute_names(mc)
+    mc.reflect_on_all_associations(:has_one)
+      .select { |a| a.class_name == "ActionText::RichText" }
+      .map { |a| a.name.to_s.sub(/^rich_text_/, "") }
   end
 
   def build_dedupe_vars(config)
