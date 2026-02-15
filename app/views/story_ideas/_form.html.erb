@@ -183,6 +183,7 @@
         </button>
 
         <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
+          <!-- To ensure unchecked boxes are submitted -->
           <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
           <%= hidden_field_tag "story_idea[category_ids][]", "" %>
 
@@ -231,7 +232,6 @@
                       class="
                         flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
                         border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                      <!-- To ensure unchecked boxes are submitted -->
                       <%= check_box_tag "story_idea[category_ids][]",
                                         category.id,
                                         @story_idea.category_ids.include?(category.id),
