@@ -61,6 +61,13 @@ RSpec.describe "/stories", type: :request do
       end
     end
 
+    describe "GET /show_share_portal" do
+      it "can view any story in share portal" do
+        get show_share_portal_story_url(private_story)
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     describe "POST /create" do
       it "creates a story" do
         expect {
@@ -100,6 +107,23 @@ RSpec.describe "/stories", type: :request do
       end
     end
 
+    describe "GET /show_share_portal" do
+      it "can view published story in share portal" do
+        get show_share_portal_story_url(published_story)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "can view publicly visible story in share portal" do
+        get show_share_portal_story_url(public_story)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "cannot view private story in share portal" do
+        get show_share_portal_story_url(private_story)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
     describe "POST /create" do
       it "is unauthorized" do
         post stories_url, params: { story: base_attributes }
@@ -130,6 +154,23 @@ RSpec.describe "/stories", type: :request do
 
       it "cannot view published-only story" do
         get story_url(published_story)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET /show_share_portal" do
+      it "can view publicly visible story in share portal" do
+        get show_share_portal_story_url(public_story)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "cannot view published-only story in share portal" do
+        get show_share_portal_story_url(published_story)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "cannot view private story in share portal" do
+        get show_share_portal_story_url(private_story)
         expect(response).to redirect_to(root_path)
       end
     end
