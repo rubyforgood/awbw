@@ -16,7 +16,9 @@
       "Bash(done)",
       "Bash(bin/rails runner:*)",
       "Bash(git -C /Users/maebeale/programming/awbw branch --show-current)",
-      "Bash(bundle exec rails routes:*)"
+      "Bash(bundle exec rails routes:*)",
+      "Bash(bundle exec rubocop:*)",
+      "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)"
     ]
   }
 }
