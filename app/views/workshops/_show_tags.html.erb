@@ -1,33 +1,55 @@
-<div class="tags-section print:hidden p-2">
+<div class="tags-section print:hidden p-2" data-controller="dropdown">
+  <button
+    type="button"
+    id="workshop_tags_button"
+    class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-600 px-3 py-2 rounded-md transition"
+    data-action="dropdown#toggle"
+    data-dropdown-payload-param='[{"workshop_tags_content":"hidden"}, {"workshop_tags_arrow":"rotate-180"}, {"workshop_tags_button":"rounded-md rounded-t-md"}]'>
+    Tags
+    <svg
+      id="workshop_tags_arrow"
+      class="w-6 h-6 shrink-0"
+      fill="currentColor"
+      viewBox="0 0 20 20"
+      xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill-rule="evenodd"
+        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+        clip-rule="evenodd"
+      ></path>
+    </svg>
+  </button>
 
-  <% if workshop.sectors.published.any? %>
-    <div class="my-6 grid grid-cols-[auto_1fr] gap-x-3 items-start">
-      <span class="text-xs text-gray-700 mt-1">
-        SECTORS:
-      </span>
+  <div id="workshop_tags_content" class="hidden border border-gray-300 p-4 rounded-b-md">
+    <% if workshop.sectors.published.any? %>
+      <div class="my-6 grid grid-cols-[auto_1fr] gap-x-3 items-start">
+        <span class="text-xs text-gray-700 mt-1">
+          SECTORS:
+        </span>
 
-      <div class="flex flex-wrap gap-2">
-        <% workshop.sectors.published.order(:name).each do |sector| %>
-          <%= render "sectors/tagging_label", sector: sector %>
-        <% end %>
+        <div class="flex flex-wrap gap-2">
+          <% workshop.sectors.published.order(:name).each do |sector| %>
+            <%= render "sectors/tagging_label", sector: sector %>
+          <% end %>
+        </div>
       </div>
-    </div>
-  <% end %>
+    <% end %>
 
-  <% categories = workshop.categories.includes(:category_type).published %>
-  <% if categories.any? %>
-    <div class="my-6 grid grid-cols-[auto_1fr] gap-x-3 items-start">
-      <span class="text-xs text-gray-700 mt-1">
-        ADDITIONAL TAGS:
-      </span>
+    <% categories = workshop.categories.includes(:category_type).published %>
+    <% if categories.any? %>
+      <div class="my-6 grid grid-cols-[auto_1fr] gap-x-3 items-start">
+        <span class="text-xs text-gray-700 mt-1">
+          ADDITIONAL TAGS:
+        </span>
 
-      <div class="flex flex-wrap gap-2">
-        <% categories
-             .order(Arel.sql("category_types.name, categories.position, categories.name")).each do |category| %>
-          <%= render "categories/tagging_label", category: category %>
-        <% end %>
+        <div class="flex flex-wrap gap-2">
+          <% categories
+               .order(Arel.sql("category_types.name, categories.position, categories.name")).each do |category| %>
+            <%= render "categories/tagging_label", category: category %>
+          <% end %>
+        </div>
       </div>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 
 </div>
