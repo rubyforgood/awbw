@@ -151,6 +151,10 @@ class Person < ApplicationRecord
       .first&.organization
   end
 
+  def preferred_email
+    user&.email.presence || email.presence || email_2.presence
+  end
+
   private
 
   def strip_whitespace
