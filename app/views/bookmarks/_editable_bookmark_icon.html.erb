@@ -1,6 +1,7 @@
-<% if allowed_to?(:create?, Bookmark) %>
-  <% resource = Draper.undecorate(resource) %>
-  <% user_bookmark = current_user.bookmark_for(resource) %>
+<% resource = Draper.undecorate(resource) %>
+<% user_bookmark = current_user&.bookmark_for(resource) %>
+
+<% if allowed_to?(:update?, user_bookmark, with: BookmarkPolicy) %>
   <% cache [resource, current_user, user_bookmark] do %>
     <%= tag.div id: dom_id(resource, :bookmark_icon),
               data: { controller: "optimistic-bookmark" },
