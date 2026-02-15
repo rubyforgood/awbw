@@ -100,6 +100,58 @@ RSpec.describe AhoyTracking, type: :controller do
     end
   end
 
+  describe "#track_index_intent" do
+    it "handles a plain count (integer)" do
+      scope = double("scope", respond_to?: false)
+      allow(scope).to receive(:respond_to?).with(:total_entries).and_return(false)
+      allow(scope).to receive(:respond_to?).with(:count).and_return(true)
+      allow(scope).to receive(:count).and_return(42)
+
+      expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
+        controller, Workshop, params: anything, result_count: 42
+      )
+
+      controller.send(:track_index_intent, Workshop, scope, {})
+    end
+
+    it "handles a grouped count (hash) from scopes with GROUP BY" do
+      scope = double("scope", respond_to?: false)
+      allow(scope).to receive(:respond_to?).with(:total_entries).and_return(false)
+      allow(scope).to receive(:respond_to?).with(:count).and_return(true)
+      allow(scope).to receive(:count).and_return({ 1 => 3, 2 => 5, 3 => 1 })
+
+      expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
+        controller, Workshop, params: anything, result_count: 3
+      )
+
+      controller.send(:track_index_intent, Workshop, scope, {})
+    end
+
+    it "handles a will_paginate scope" do
+      scope = double("scope")
+      allow(scope).to receive(:respond_to?).with(:total_entries).and_return(true)
+      allow(scope).to receive(:total_entries).and_return(15)
+
+      expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
+        controller, Workshop, params: anything, result_count: 15
+      )
+
+      controller.send(:track_index_intent, Workshop, scope, {})
+    end
+
+    it "returns 0 when scope has no count method" do
+      scope = double("scope")
+      allow(scope).to receive(:respond_to?).with(:total_entries).and_return(false)
+      allow(scope).to receive(:respond_to?).with(:count).and_return(false)
+
+      expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
+        controller, Workshop, params: anything, result_count: 0
+      )
+
+      controller.send(:track_index_intent, Workshop, scope, {})
+    end
+  end
+
   describe "session isolation" do
     xit "tracks different actions separately" do
       get  :index, params: { id: workshop.id }
