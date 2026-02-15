@@ -33,7 +33,8 @@ module Dedupable
     @record_to_delete = mc.find_by(id: params["#{mn}_to_delete_id"])
     @record_to_keep = mc.find_by(id: params["#{mn}_to_keep_id"])
     unless @record_to_delete && @record_to_keep
-      missing = [@record_to_delete ? nil : params["#{mn}_to_delete_id"], @record_to_keep ? nil : params["#{mn}_to_keep_id"]].compact
+      missing = [ @record_to_delete ? nil : params["#{mn}_to_delete_id"],
+                  @record_to_keep ? nil : params["#{mn}_to_keep_id"] ].compact
       return redirect_to url_for(action: :dedupe_index),
         alert: "#{mc.model_name.human} not found (ID: #{missing.join(', ')})."
     end
