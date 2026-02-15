@@ -164,13 +164,17 @@ class WorkshopSearchService
     return workshops if author_name.blank?
 
     sanitized = author_name.strip.gsub(/\s+/, "")
-    workshops.left_outer_joins(:user)
+    workshops.left_outer_joins(user: :person)
              .where(
                "LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
                 OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
                 OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
                 OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name",
+                OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name
+                OR LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
+                OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
+                OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
+                OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name",
                name: "%#{sanitized}%"
              )
   end
