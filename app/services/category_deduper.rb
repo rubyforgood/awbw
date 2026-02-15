@@ -31,6 +31,12 @@ class CategoryDeduper
     logger.info "Category dedupe complete"
   end
 
+  # Public method for manual merging of specific categories
+  def merge_categories(category_to_keep, category_to_delete)
+    usage_by_category_id = CategorizableItem.group(:category_id).count
+    merge_duplicate(category_to_keep, category_to_delete, usage_by_category_id)
+  end
+
   private
 
   def deduplicate_group(normalized_name, categories, usage_by_category_id)

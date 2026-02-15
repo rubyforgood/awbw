@@ -31,6 +31,12 @@ class SectorDeduper
     logger.info "Sector dedupe complete"
   end
 
+  # Public method for manual merging of specific sectors
+  def merge_sectors(sector_to_keep, sector_to_delete)
+    usage_by_sector_id = SectorableItem.group(:sector_id).count
+    merge_duplicate(sector_to_keep, sector_to_delete, usage_by_sector_id)
+  end
+
   private
 
   def deduplicate_group(normalized_name, sectors, usage_by_sector_id)

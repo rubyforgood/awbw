@@ -97,12 +97,8 @@ class CategoriesController < ApplicationController
     category_to_keep = Category.find(category_to_keep_id)
     
     # Use the deduper service to perform the merge
-    logger = Logger.new(StringIO.new)
-    deduper = CategoryDeduper.new(logger: logger, dry_run: false, min_usage: 0)
-    
-    # Manually call merge for these specific categories
-    usage_by_category_id = CategorizableItem.group(:category_id).count
-    deduper.send(:merge_duplicate, category_to_keep, category_to_delete, usage_by_category_id)
+    deduper = CategoryDeduper.new(logger: Rails.logger, dry_run: false, min_usage: 0)
+    deduper.merge_categories(category_to_keep, category_to_delete)
     
     redirect_to categories_path, notice: "Categories merged successfully. '#{category_to_delete.name}' was merged into '#{category_to_keep.name}'."
   rescue StandardError => e

@@ -81,12 +81,8 @@ class SectorsController < ApplicationController
     sector_to_keep = Sector.find(sector_to_keep_id)
     
     # Use the deduper service to perform the merge
-    logger = Logger.new(StringIO.new)
-    deduper = SectorDeduper.new(logger: logger, dry_run: false, min_usage: 0)
-    
-    # Manually call merge for these specific sectors
-    usage_by_sector_id = SectorableItem.group(:sector_id).count
-    deduper.send(:merge_duplicate, sector_to_keep, sector_to_delete, usage_by_sector_id)
+    deduper = SectorDeduper.new(logger: Rails.logger, dry_run: false, min_usage: 0)
+    deduper.merge_sectors(sector_to_keep, sector_to_delete)
     
     redirect_to sectors_path, notice: "Sectors merged successfully. '#{sector_to_delete.name}' was merged into '#{sector_to_keep.name}'."
   rescue StandardError => e
