@@ -45,9 +45,6 @@ function setActiveMenuItem() {
         link = $('.js-resources');
       }
       break;
-    case '/resources/search':
-      link = $('.js-resources');
-      break;
     case '/resources/' + digit(path):
       link = $('.js-resources');
       break;
@@ -59,9 +56,6 @@ function setActiveMenuItem() {
       link = $('.js-search');
       break;
     case '/workshops/' + digit(path):
-      link = $('.js-search');
-      break;
-    case '/workshops/search':
       link = $('.js-search');
       break;
     case '/workshops/new':
