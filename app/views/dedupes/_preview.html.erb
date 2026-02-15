@@ -48,7 +48,7 @@
   </div>
 
   <!-- ID row -->
-  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+  <div class="border-x border-b border-<%= color %>-200 bg-red-50 px-5 py-3 flex items-center">
     <span class="text-gray-400 text-sm">ID</span>
     <span class="ml-2 text-gray-900"><%= record_to_delete.id %></span>
   </div>
@@ -81,7 +81,7 @@
       %>
 
       <!-- Left: read-only -->
-      <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3">
+      <div class="border-x border-b border-<%= color %>-200 bg-red-50 px-5 py-3">
         <div class="flex items-center flex-wrap gap-x-1">
           <span class="text-gray-400 text-sm"><%= label %></span>
           <% if is_different %>
@@ -136,7 +136,7 @@
       <% is_different = delete_body != keep_body %>
 
       <!-- Left: read-only -->
-      <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3">
+      <div class="border-x border-b border-<%= color %>-200 bg-red-50 px-5 py-3">
         <div class="flex items-center flex-wrap gap-x-1">
           <span class="text-gray-400 text-sm"><%= rt_attr.titleize %></span>
           <span class="text-xs text-gray-300">(rich text)</span>
@@ -163,7 +163,7 @@
   <% end %>
 
   <!-- Created row -->
-  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+  <div class="border-x border-b border-<%= color %>-200 bg-red-50 px-5 py-3 flex items-center">
     <span class="text-gray-400 text-sm">Created</span>
     <span class="ml-2 text-gray-900"><%= record_to_delete.created_at&.strftime("%Y-%m-%d %H:%M") || 'N/A' %></span>
   </div>
@@ -173,7 +173,7 @@
   </div>
 
   <!-- Associated Records row -->
-  <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
+  <div class="border-x border-b border-<%= color %>-200 bg-red-50 px-5 py-3 flex items-center">
     <span class="text-gray-400 text-sm">Associated Records</span>
     <span class="ml-2 text-gray-900 font-semibold"><%= delete_items.count + extra_assocs.sum { |ea| ea[:delete_items].count } %></span>
   </div>
@@ -183,7 +183,7 @@
   </div>
 
   <!-- Tagged Items row -->
-  <div class="border-x border-b border-<%= color %>-200 <%= 'rounded-b-xl' if extra_assocs.empty? %> bg-white px-5 py-3">
+  <div class="border-x border-b border-<%= color %>-200 <%= 'rounded-b-xl' if extra_assocs.empty? %> bg-red-50 px-5 py-3">
     <% if delete_items.any? %>
       <h3 class="text-sm font-semibold text-gray-700 mb-2"><%= tagged_items_label %></h3>
       <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto">
@@ -213,7 +213,7 @@
   <!-- Extra Association rows -->
   <% extra_assocs.each_with_index do |ea, idx| %>
     <% is_last = idx == extra_assocs.size - 1 %>
-    <div class="border-x border-b border-<%= color %>-200 <%= 'rounded-b-xl' if is_last %> bg-white px-5 py-3">
+    <div class="border-x border-b border-<%= color %>-200 <%= 'rounded-b-xl' if is_last %> bg-red-50 px-5 py-3">
       <h3 class="text-sm font-semibold text-gray-700 mb-1"><%= ea[:label] %></h3>
       <span class="text-gray-900 font-semibold"><%= ea[:delete_items].count %></span>
       <% if ea[:delete_items].any? %>
