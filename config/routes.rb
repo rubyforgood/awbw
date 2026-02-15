@@ -18,6 +18,7 @@ Rails.application.routes.draw do
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
+  mount Blazer::Engine, at: "blazer"
   devise_for :users,
              controllers: { registrations: "registrations",
                             confirmations: "confirmations",

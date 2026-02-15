@@ -42,6 +42,9 @@ gem "groupdate"
 # Charts and graphs
 gem "chartkick"
 
+# Business intelligence for database queries
+gem "blazer"
+
 # Geocoding for charts and other features
 gem "geocoder"
 
