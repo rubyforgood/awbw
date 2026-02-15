@@ -19,9 +19,12 @@ RSpec.describe "events/_form", type: :view do
     expect(rendered).to have_selector("form")
     expect(rendered).to have_field("event[title]", with: "Original Title")
     expect(rendered).to have_selector("#event_rhino_description[type='hidden']", visible: :all)
-    expect(rendered).to have_selector("input[type='datetime-local'][name='event[start_date]']")
-    expect(rendered).to have_selector("input[type='datetime-local'][name='event[end_date]']")
-    expect(rendered).to have_selector("input[type='datetime-local'][name='event[registration_close_date]']")
+    expect(rendered).to have_selector("input[type='date'][name='event[start_date]']")
+    expect(rendered).to have_selector("input[type='time'][name='start_time']")
+    expect(rendered).to have_selector("input[type='date'][name='event[end_date]']")
+    expect(rendered).to have_selector("input[type='time'][name='end_time']")
+    expect(rendered).to have_selector("input[type='date'][name='event[registration_close_date]']")
+    expect(rendered).to have_selector("input[type='time'][name='registration_close_time']")
     expect(rendered).to have_selector("input[type='checkbox'][name='event[published]']")
   end
 

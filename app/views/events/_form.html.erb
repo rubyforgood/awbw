@@ -43,19 +43,30 @@
     <% end %>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-12">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-12" data-controller="datetime">
     <div>
       <%= f.label :start_date,
               "Start time",
               required: true,
               class: "block font-medium mb-1" %>
 
-      <%= f.text_field :start_date,
-                   type: "datetime-local",
-                   class:
-                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                   value: @event.start_date&.strftime("%Y-%m-%dT%H:%M"),
-                   required: true %>
+      <div class="flex gap-2">
+        <%= f.text_field :start_date,
+                     type: "date",
+                     class:
+                       "flex-1 rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                     value: @event.start_date&.strftime("%Y-%m-%d"),
+                     required: true,
+                     data: { datetime_part: "date", datetime_field: "start_date" } %>
+
+        <%= text_field_tag "start_time",
+                       @event.start_date&.strftime("%H:%M"),
+                       type: "time",
+                       class:
+                         "flex-1 rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       required: true,
+                       data: { datetime_part: "time", datetime_field: "start_date" } %>
+      </div>
 
       <% if f.object.errors[:start_date].any? %>
         <p class="text-red-500 text-sm mt-1">Start date
@@ -66,12 +77,23 @@
     <div>
       <%= f.label :end_date, "End time", required: true, class: "block font-medium mb-1" %>
 
-      <%= f.text_field :end_date,
-                   type: "datetime-local",
-                   class:
-                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                   value: @event.end_date&.strftime("%Y-%m-%dT%H:%M"),
-                   required: true %>
+      <div class="flex gap-2">
+        <%= f.text_field :end_date,
+                     type: "date",
+                     class:
+                       "flex-1 rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                     value: @event.end_date&.strftime("%Y-%m-%d"),
+                     required: true,
+                     data: { datetime_part: "date", datetime_field: "end_date" } %>
+
+        <%= text_field_tag "end_time",
+                       @event.end_date&.strftime("%H:%M"),
+                       type: "time",
+                       class:
+                         "flex-1 rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       required: true,
+                       data: { datetime_part: "time", datetime_field: "end_date" } %>
+      </div>
 
       <% if f.object.errors[:end_date].any? %>
         <p class="text-red-500 text-sm mt-1">End date
@@ -84,11 +106,21 @@
               "Registration close time",
               class: "block font-medium mb-1" %>
 
-      <%= f.text_field :registration_close_date,
-                   type: "datetime-local",
-                   class:
-                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                   value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
+      <div class="flex gap-2">
+        <%= f.text_field :registration_close_date,
+                     type: "date",
+                     class:
+                       "flex-1 rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                     value: @event.registration_close_date&.strftime("%Y-%m-%d"),
+                     data: { datetime_part: "date", datetime_field: "registration_close_date" } %>
+
+        <%= text_field_tag "registration_close_time",
+                       @event.registration_close_date&.strftime("%H:%M"),
+                       type: "time",
+                       class:
+                         "flex-1 rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       data: { datetime_part: "time", datetime_field: "registration_close_date" } %>
+      </div>
 
       <% if f.object.errors[:registration_close_date].any? %>
         <p class="text-red-500 text-sm mt-1">
