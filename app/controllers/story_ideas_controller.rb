@@ -35,8 +35,9 @@ class StoryIdeasController < ApplicationController
     @story_idea.updated_by = current_user
     authorize! @story_idea
 
+    assign_categories(@story_idea)
+
     if @story_idea.save
-      assign_associations(@story_idea)
       NotificationServices::CreateNotification.call(
         noticeable: @story_idea,
         kind: :idea_submitted_fyi,
@@ -60,8 +61,9 @@ class StoryIdeasController < ApplicationController
     @story_idea.updated_by = current_user
     authorize! @story_idea
 
+    assign_categories(@story_idea)
+
     if @story_idea.update(story_idea_params.except(:images))
-      assign_associations(@story_idea)
       flash[:notice] = "StoryIdea was successfully updated."
       if allowed_to?(:index?, StoryIdea)
         redirect_to story_ideas_path, status: :see_other
@@ -104,11 +106,9 @@ class StoryIdeasController < ApplicationController
     @story_idea.gallery_assets.build
   end
 
-  def assign_associations(story_idea)
+  def assign_categories(story_idea)
     selected_category_ids = Array(params[:story_idea][:category_ids]).reject(&:blank?).map(&:to_i)
     story_idea.categories = Category.where(id: selected_category_ids)
-
-    story_idea.save!
   end
 
   private
