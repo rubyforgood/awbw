@@ -14,6 +14,17 @@
     <% end %>
     <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
     <%# = f.object.errors.full_messages %>
+    
+    <!-- Story Tips Section -->
+    <div class="mb-6 mt-4">
+      <div class="inline-flex items-center">
+        <%= link_to "/documents/tips_for_sharing_impactful_stories.pdf", target: "_blank", class: "inline-flex items-center text-blue-600 hover:text-blue-800 font-bold" do %>
+          <%= image_tag "info-icon.png", alt: "Info", class: "w-5 h-5 mr-2" %>
+          <span class="text-base">Download Story Tips PDF</span>
+        <% end %>
+      </div>
+    </div>
+    
     <!-- <div class="mb-3"> -->
     <%#
       = f.input :title,
