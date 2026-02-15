@@ -201,7 +201,7 @@ class WorkshopsController < ApplicationController
         .published
         .order(:position, :name)
         .group_by(&:category_type)
-        .select { |type, _| type.nil? || type.published? }
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)

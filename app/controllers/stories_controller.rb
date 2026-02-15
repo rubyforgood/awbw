@@ -135,7 +135,7 @@ class StoriesController < ApplicationController
         .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
-        .sort_by { |type, _| type&.name.to_s.downcase }
+        .sort_by { |type, _| [type&.story_specific? ? 0 : 1, type&.name.to_s.downcase] }
     @sectors = Sector.published.order(:name)
     @story.build_primary_asset if @story.primary_asset.blank?
     @story.gallery_assets.build
