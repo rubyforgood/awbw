@@ -110,7 +110,9 @@ class StoryIdeasController < ApplicationController
     @organizations = (@user || current_user)&.organizations&.order(:name) || Organization.none
     @windows_types = WindowsType.all
 
-    @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
+    # Create a special "New Workshop" option
+    new_workshop_option = OpenStruct.new(id: "new", type_name: "New Workshop")
+    @workshops = [ new_workshop_option ] + authorized_scope(Workshop.all).includes(:windows_type).order(:title).to_a
 
     users = authorized_scope(User.has_access.includes(:person))
     users = users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
@@ -156,7 +158,7 @@ class StoryIdeasController < ApplicationController
   end
 
   def story_idea_params
-    params.require(:story_idea).permit(
+    permitted_params = params.require(:story_idea).permit(
       :title, :body, :youtube_url,
       :permission_given, :publish_preferences, :promoted_to_story,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
@@ -166,5 +168,12 @@ class StoryIdeasController < ApplicationController
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
+    
+    # Clear workshop_id if "new" was selected (triggers external_workshop_title)
+    if permitted_params[:workshop_id] == "new"
+      permitted_params[:workshop_id] = nil
+    end
+    
+    permitted_params
   end
 end

@@ -51,28 +51,49 @@
                       class: ("readonly" if promoted_to_story)
                     } %>
       </div>
-      <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :workshop_id,
-                    as: :select,
-                    collection: @workshops,
-                    label_method: :type_name,
-                    value_method: :id,
-                    label: "Workshop",
-                    prompt: "Select a Workshop",
-                    required: true,
-                    disabled: promoted_to_story,
-                    selected: params[:workshop_id].presence || f.object.workshop_id,
-                    input_html: { value: params[:workshop_id].presence || f.object.workshop_id,
-                                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
-                                  focus:border-blue-500 #{ 'readonly' if promoted_to_story }" },
-                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
-        <%= f.input :external_workshop_title,
-                    as: :text,
-                    label: "External title (if no workshop above)",
-                    input_html: {
-                      rows: 1,
-                      class: ("readonly" if promoted_to_story)
-                    } %>
+      <div class="flex-1 mb-4 md:mb-0" data-controller="workshop-toggle">
+        <div data-workshop-toggle-target="dropdown">
+          <%= f.input :workshop_id,
+                      as: :select,
+                      collection: @workshops,
+                      label_method: :type_name,
+                      value_method: :id,
+                      label: "Workshop",
+                      prompt: "Select a Workshop",
+                      required: false,
+                      disabled: promoted_to_story,
+                      selected: (params[:workshop_id].presence || f.object.workshop_id) unless f.object.workshop_id.nil? && f.object.external_workshop_title.present?,
+                      input_html: { value: params[:workshop_id].presence || f.object.workshop_id,
+                                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
+                                    focus:border-blue-500 #{ 'readonly' if promoted_to_story }",
+                                    data: { action: "change->workshop-toggle#handleChange" } },
+                      label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+        </div>
+        <div data-workshop-toggle-target="externalField" class="<%= 'hidden' unless f.object.workshop_id.nil? && f.object.external_workshop_title.present? %>">
+          <div class="flex items-start gap-2">
+            <div class="flex-1">
+              <%= f.input :external_workshop_title,
+                          as: :text,
+                          label: "Workshop Title",
+                          wrapper: false,
+                          input_html: {
+                            rows: 1,
+                            class: ("readonly" if promoted_to_story)
+                          },
+                          label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+            </div>
+            <% unless promoted_to_story %>
+              <button type="button" 
+                      class="mt-7 p-2 text-gray-400 hover:text-gray-600"
+                      data-action="click->workshop-toggle#showDropdown"
+                      title="Back to dropdown">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            <% end %>
+          </div>
+        </div>
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <% if current_user.person&.affiliations&.count != 1 %>
