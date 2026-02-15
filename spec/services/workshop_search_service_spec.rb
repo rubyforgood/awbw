@@ -41,21 +41,6 @@ RSpec.describe WorkshopSearchService, type: :service do
       end
     end
 
-    context "sorting by most_recent" do
-      it "orders by created_at desc, then title asc" do
-        service = WorkshopSearchService.new({ sort: 'most_recent' }, user: user).call
-        workshops = service.workshops
-
-        # Assert order by created_at (newest first), ignoring year/month
-        expect(workshops.map { |w| [ w.created_at.to_date, w.title ] }).to eq([
-                                                                               [ 2.days.ago.to_date, "Keyword Match" ],
-                                                                               [ 2.days.ago.to_date, "Public Workshop" ],
-                                                                               [ 3.days.ago.to_date, "B Workshop" ],
-                                                                               [ 5.days.ago.to_date, "A Workshop" ]
-                                                                             ])
-      end
-    end
-
     context "sorting by title" do
       it "orders alphabetically by title" do
         service = WorkshopSearchService.new({ sort: 'title' }, user: user).call

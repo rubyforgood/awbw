@@ -228,8 +228,6 @@ class WorkshopSearchService
         title ASC
       SQL
       )
-    when "most_recent"
-      @workshops = @workshops.order(created_at: :desc, title: :asc)
     when "led"
       @workshops = @workshops.order(led_count: :desc, title: :asc)
     when "popularity"
@@ -252,11 +250,10 @@ class WorkshopSearchService
 
     sort_columns =
       case sort
-      when "created"      then [ :id, :created_at, :year, :month, :title ]
-      when "most_recent"  then [ :id, :created_at, :title ]
-      when "led"          then [ :id, :led_count, :title ]
-      when "popularity"   then [ :id, :bookmarks_count, :title ]
-      when "title"        then [ :id, :title ]
+      when "created"    then [ :id, :created_at, :year, :month, :title ]
+      when "led"        then [ :id, :led_count, :title ]
+      when "popularity" then [ :id, :bookmarks_count, :title ]
+      when "title"      then [ :id, :title ]
       else [ :id, :title ]
       end
 
