@@ -119,23 +119,50 @@ class ModelDeduper
     type_col = join[:polymorphic_type_column]
     id_col = join[:polymorphic_id_column]
 
-    existing_taggings = jc
-      .where(fk => primary.id)
-      .pluck(type_col, id_col)
-      .map { |type, id| "#{type}_#{id}" }
-      .to_set
+    if fk == id_col
+      # Deduplicating the polymorphic side (e.g. Workshop via categorizable_items).
+      # Use non-polymorphic FK columns for duplicate detection.
+      other_fk_cols = jc.reflect_on_all_associations(:belongs_to)
+        .reject(&:polymorphic?)
+        .map { |a| a.foreign_key.to_s }
 
-    items_to_move = jc.where(fk => dupe.id)
-
-    items_to_move.find_each do |item|
-      tagging_key = "#{item.public_send(type_col)}_#{item.public_send(id_col)}"
-
-      if existing_taggings.include?(tagging_key)
-        item.destroy!
-        logger.info "  deleted duplicate #{jc.name} #{item.id} (primary already has it)"
+      existing_keys = if other_fk_cols.any?
+        jc.where(fk => primary.id)
+          .pluck(*other_fk_cols)
+          .map { |vals| Array(vals).join("_") }
+          .to_set
       else
-        item.update!(fk => primary.id)
-        logger.info "  moved #{jc.name} #{item.id} to primary"
+        Set.new
+      end
+
+      jc.where(fk => dupe.id).find_each do |item|
+        key = other_fk_cols.map { |c| item.public_send(c) }.join("_")
+        if other_fk_cols.any? && existing_keys.include?(key)
+          item.destroy!
+          logger.info "  deleted duplicate #{jc.name} #{item.id} (primary already has it)"
+        else
+          item.update!(fk => primary.id)
+          logger.info "  moved #{jc.name} #{item.id} to primary"
+        end
+      end
+    else
+      # Normal case: deduplicating the non-polymorphic side (e.g. Category via categorizable_items).
+      existing_taggings = jc
+        .where(fk => primary.id)
+        .pluck(type_col, id_col)
+        .map { |type, id| "#{type}_#{id}" }
+        .to_set
+
+      jc.where(fk => dupe.id).find_each do |item|
+        tagging_key = "#{item.public_send(type_col)}_#{item.public_send(id_col)}"
+
+        if existing_taggings.include?(tagging_key)
+          item.destroy!
+          logger.info "  deleted duplicate #{jc.name} #{item.id} (primary already has it)"
+        else
+          item.update!(fk => primary.id)
+          logger.info "  moved #{jc.name} #{item.id} to primary"
+        end
       end
     end
 

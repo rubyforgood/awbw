@@ -71,19 +71,25 @@
               </h2>
               <div class="space-y-4">
                 <% @possible_duplicates.each do |normalized_name, records| %>
+                  <% first_two = records.first(2) %>
                   <div class="<%= DomainTheme.bg_class_for(@dedupe[:domain]) %> border border-gray-200 rounded-lg p-4">
-                    <h3 class="font-semibold text-gray-900 mb-2">
-                      "<%= normalized_name %>" (<%= records.count %> <%= @dedupe[:model_label_plural].downcase %>)
+                    <h3 class="font-semibold mb-2">
+                      <%= link_to url_for(action: :dedupe_preview,
+                            @dedupe[:delete_id_param] => first_two.first.id,
+                            @dedupe[:keep_id_param] => first_two.last.id),
+                            class: "text-blue-700 hover:text-blue-900 hover:underline" do %>
+                        "<%= normalized_name %>" (<%= records.count %> <%= @dedupe[:model_label_plural].downcase %>)
+                      <% end %>
                     </h3>
                     <ul class="list-disc list-inside space-y-1 text-gray-700">
                       <% records.each do |record| %>
                         <li>
-                          <%= record.name %>
+                          <%= record.public_send(@dedupe[:name_column]) %>
                           <span class="text-gray-500 text-sm">
                             (ID: <%= record.id %>,
                             <% if @dedupe[:record_extras] %><%= @dedupe[:record_extras].call(record) %>, <% end %>
                             <%= record.published? ? 'Published' : 'Unpublished' %>,
-                            <%= record.public_send(@dedupe[:join_association]).count %> taggings)
+                            <%= @tagging_counts[record.id] || 0 %> taggings)
                           </span>
                         </li>
                       <% end %>

@@ -1,6 +1,6 @@
 <%# Shared dedupe preview partial
   Required locals:
-    domain:             Symbol (:categories or :sectors)
+    domain:             Symbol (:categories, :sectors, or :workshops)
     record_to_delete:   The record that will be deleted
     record_to_keep:     The record that will be kept
     delete_items:       Associated items of the record to delete
@@ -11,11 +11,15 @@
     keep_param_key:     Param key for keep fields (e.g. :category_to_keep)
     form_builder:       The parent form builder (f)
     belongs_to_options: Hash of { column_name => collection } for select fields
+    name_column:        Column used as the display name (default: :name)
+    extra_association_data: Array of { label:, delete_items:, keep_items: } (optional)
 %>
 
 <%
   color = DomainTheme.color_for(domain)
   model_class = record_to_delete.class
+  name_col = (defined?(name_column) && name_column) || :name
+  extra_assocs = (defined?(extra_association_data) && extra_association_data) || []
   skip_columns = %w[id created_at updated_at legacy_id]
   columns = model_class.columns.reject { |c| skip_columns.include?(c.name) }
 
@@ -23,6 +27,7 @@
   bt_associations = model_class.reflect_on_all_associations(:belongs_to).index_by { |a| a.foreign_key.to_s }
   belongs_to_options ||= {}
   assoc_name = item_type_col.to_s.sub(/_type$/, '').to_sym
+  tagged_items_label = delete_items.klass.model_name.human.pluralize
 %>
 
 <!-- Side-by-side Comparison -->
@@ -35,11 +40,11 @@
   <!-- Headers -->
   <div class="border border-<%= color %>-200 rounded-t-xl bg-<%= color %>-50 px-5 py-3 flex items-center gap-2">
     <i class="fa-solid fa-trash-can text-red-400"></i>
-    <span class="text-lg font-bold text-gray-900"><%= model_label %> to delete: <strong><%= record_to_delete.name %></strong></span>
+    <span class="text-lg font-bold text-gray-900"><%= model_label %> to delete: <strong><%= record_to_delete.public_send(name_col) %></strong></span>
   </div>
   <div class="border border-<%= color %>-200 rounded-t-xl bg-<%= color %>-50 px-5 py-3 flex items-center gap-2">
     <i class="fa-solid fa-check-circle text-green-500"></i>
-    <span class="text-lg font-bold text-gray-900"><%= model_label %> to keep: <strong><%= record_to_keep.name %></strong></span>
+    <span class="text-lg font-bold text-gray-900"><%= model_label %> to keep: <strong><%= record_to_keep.public_send(name_col) %></strong></span>
   </div>
 
   <!-- ID row -->
@@ -76,11 +81,17 @@
       %>
 
       <!-- Left: read-only -->
-      <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center flex-wrap gap-x-1">
-        <span class="text-gray-400 text-sm"><%= label %></span>
-        <span class="ml-2 text-gray-900 <%= 'font-semibold' if col.name == 'name' %>"><%= display_val %></span>
-        <% if is_different %>
-          <span class="ml-1 text-xs font-semibold text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded">DIFFERENT</span>
+      <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3">
+        <div class="flex items-center flex-wrap gap-x-1">
+          <span class="text-gray-400 text-sm"><%= label %></span>
+          <% if is_different %>
+            <span class="ml-1 text-xs font-semibold text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded">DIFFERENT</span>
+          <% end %>
+        </div>
+        <% if col.type == :text && display_val.present? %>
+          <p class="mt-1 text-gray-900 whitespace-pre-wrap"><%= display_val %></p>
+        <% else %>
+          <span class="text-gray-900 <%= 'font-semibold' if col.name == name_col.to_s %>"><%= display_val %></span>
         <% end %>
       </div>
 
@@ -97,9 +108,17 @@
         <% elsif col.type == :integer %>
           <label class="text-gray-400 text-sm"><%= label %></label>
           <%= keep_f.number_field col.name.to_sym, class: "ml-2 w-20 px-2 py-1 border border-gray-200 rounded text-gray-900 focus:ring-2 focus:ring-#{color}-500 focus:border-transparent" %>
+        <% elsif col.type == :text %>
+          <div class="w-full">
+            <label class="text-gray-400 text-sm"><%= label %></label>
+            <%= keep_f.text_area col.name.to_sym,
+                rows: 1,
+                class: "mt-1 w-full px-2 py-1 border border-gray-200 rounded text-gray-900 resize-y focus:ring-2 focus:ring-#{color}-500 focus:border-transparent",
+                data: { autosize: true } %>
+          </div>
         <% else %>
           <label class="text-gray-400 text-sm"><%= label %></label>
-          <%= keep_f.text_field col.name.to_sym, class: "ml-2 px-2 py-1 border border-gray-200 rounded text-gray-900 #{col.name == 'name' ? 'font-semibold' : ''} focus:ring-2 focus:ring-#{color}-500 focus:border-transparent" %>
+          <%= keep_f.text_field col.name.to_sym, class: "ml-2 px-2 py-1 border border-gray-200 rounded text-gray-900 #{col.name == name_col.to_s ? 'font-semibold' : ''} focus:ring-2 focus:ring-#{color}-500 focus:border-transparent" %>
         <% end %>
       </div>
     <% end %>
@@ -118,17 +137,17 @@
   <!-- Associated Records row -->
   <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
     <span class="text-gray-400 text-sm">Associated Records</span>
-    <span class="ml-2 text-gray-900 font-semibold"><%= delete_items.count %></span>
+    <span class="ml-2 text-gray-900 font-semibold"><%= delete_items.count + extra_assocs.sum { |ea| ea[:delete_items].count } %></span>
   </div>
   <div class="border-x border-b border-<%= color %>-200 bg-white px-5 py-3 flex items-center">
     <span class="text-gray-400 text-sm">Associated Records</span>
-    <span class="ml-2 text-gray-900 font-semibold"><%= keep_items.count %></span>
+    <span class="ml-2 text-gray-900 font-semibold"><%= keep_items.count + extra_assocs.sum { |ea| ea[:keep_items].count } %></span>
   </div>
 
   <!-- Tagged Items row -->
-  <div class="border-x border-b border-<%= color %>-200 rounded-b-xl bg-white px-5 py-3">
+  <div class="border-x border-b border-<%= color %>-200 <%= 'rounded-b-xl' if extra_assocs.empty? %> bg-white px-5 py-3">
     <% if delete_items.any? %>
-      <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged Items</h3>
+      <h3 class="text-sm font-semibold text-gray-700 mb-2"><%= tagged_items_label %></h3>
       <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto">
         <% delete_items.sort_by { |item| [item.public_send(item_type_col), (item.public_send(assoc_name).try(:name) || item.public_send(assoc_name).try(:title) || "").to_s.downcase] }.each do |item| %>
           <li class="pl-2">
@@ -139,9 +158,9 @@
       </ul>
     <% end %>
   </div>
-  <div class="border-x border-b border-<%= color %>-200 rounded-b-xl bg-white px-5 py-3">
+  <div class="border-x border-b border-<%= color %>-200 <%= 'rounded-b-xl' if extra_assocs.empty? %> bg-white px-5 py-3">
     <% if keep_items.any? %>
-      <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged Items</h3>
+      <h3 class="text-sm font-semibold text-gray-700 mb-2"><%= tagged_items_label %></h3>
       <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto">
         <% keep_items.sort_by { |item| [item.public_send(item_type_col), (item.public_send(assoc_name).try(:name) || item.public_send(assoc_name).try(:title) || "").to_s.downcase] }.each do |item| %>
           <li class="pl-2">
@@ -152,4 +171,49 @@
       </ul>
     <% end %>
   </div>
+
+  <!-- Extra Association rows -->
+  <% extra_assocs.each_with_index do |ea, idx| %>
+    <% is_last = idx == extra_assocs.size - 1 %>
+    <div class="border-x border-b border-<%= color %>-200 <%= 'rounded-b-xl' if is_last %> bg-white px-5 py-3">
+      <h3 class="text-sm font-semibold text-gray-700 mb-1"><%= ea[:label] %></h3>
+      <span class="text-gray-900 font-semibold"><%= ea[:delete_items].count %></span>
+      <% if ea[:delete_items].any? %>
+        <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto mt-1">
+          <% ea[:delete_items].each do |item| %>
+            <li class="pl-2">
+              &bull; <%= item.try(:name) || item.try(:title) || "##{item.id}" %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+    <div class="border-x border-b border-<%= color %>-200 <%= 'rounded-b-xl' if is_last %> bg-white px-5 py-3">
+      <h3 class="text-sm font-semibold text-gray-700 mb-1"><%= ea[:label] %></h3>
+      <span class="text-gray-900 font-semibold"><%= ea[:keep_items].count %></span>
+      <% if ea[:keep_items].any? %>
+        <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto mt-1">
+          <% ea[:keep_items].each do |item| %>
+            <li class="pl-2">
+              &bull; <%= item.try(:name) || item.try(:title) || "##{item.id}" %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
 </div>
+
+<script>
+  (function() {
+    function autosize(ta) {
+      ta.style.height = "auto";
+      ta.style.height = ta.scrollHeight + "px";
+    }
+    document.querySelectorAll("textarea[data-autosize]").forEach(function(ta) {
+      ta.style.overflow = "hidden";
+      autosize(ta);
+      ta.addEventListener("input", function() { autosize(this); });
+    });
+  })();
+</script>

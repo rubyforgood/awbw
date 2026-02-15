@@ -22,6 +22,12 @@ RSpec.describe "Dedupable concern", type: :request do
     record
   end
 
+  def create_workshop(title:, **attrs)
+    record = build(:workshop, title: title, **attrs)
+    record.save!(validate: false)
+    record
+  end
+
   # ============================================================
   # CATEGORIES — full coverage of all 4 dedupe actions
   # ============================================================
@@ -151,12 +157,12 @@ RSpec.describe "Dedupable concern", type: :request do
           expect(keep.reload.published).to be true
         end
 
-        it "returns 422 on failure" do
+        it "ignores blank values and does not overwrite existing data" do
           patch dedupe_update_keep_categories_path,
                 params: { id: keep.id, category_to_keep: { name: "" } }
 
-          expect(response).to have_http_status(:unprocessable_content)
-          expect(response.parsed_body).to have_key("error")
+          expect(response).to have_http_status(:ok)
+          expect(keep.reload.name).to eq("Original")
         end
       end
 
@@ -326,6 +332,237 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(response).to redirect_to(sectors_path)
         expect(SectorableItem.where(sector_id: keep.id).count).to eq(1)
+      end
+    end
+  end
+
+  # ============================================================
+  # WORKSHOPS — verify concern works with name_column: :title
+  # ============================================================
+
+  describe "Workshops" do
+    describe "GET dedupe_index" do
+      before { sign_in admin }
+
+      it "renders successfully" do
+        create_workshop(title: "Dup Workshop")
+        create_workshop(title: "dup workshop")
+
+        get dedupe_index_workshops_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Dup Workshop")
+      end
+    end
+
+    describe "GET dedupe_preview" do
+      before { sign_in admin }
+
+      let!(:keep) { create(:workshop, title: "Keep Workshop", published: true) }
+      let!(:delete_rec) { create_workshop(title: "Delete Workshop", published: false) }
+
+      it "renders the preview page" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Keep Workshop")
+        expect(response.body).to include("Delete Workshop")
+      end
+
+      it "redirects when both IDs are the same" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: keep.id
+        )
+        expect(response).to redirect_to(dedupe_index_workshops_path)
+        follow_redirect!
+        expect(response.body).to include("two different")
+      end
+    end
+
+    describe "PATCH dedupe_update_keep" do
+      before { sign_in admin }
+
+      let!(:keep) { create(:workshop, title: "Original Workshop", published: false) }
+
+      it "updates the record" do
+        patch dedupe_update_keep_workshops_path,
+              params: { id: keep.id, workshop_to_keep: { title: "Updated Workshop" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(keep.reload.title).to eq("Updated Workshop")
+      end
+    end
+
+    describe "POST dedupe_execute" do
+      before { sign_in admin }
+
+      let!(:keep) { create(:workshop, title: "Keep Workshop", published: true, objective: "Keep objective") }
+      let!(:delete_rec) { create_workshop(title: "Dup Workshop", published: false, objective: "Delete objective") }
+
+      it "merges and redirects with success notice" do
+        expect {
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+        }.to change(Workshop, :count).by(-1)
+
+        expect(response).to redirect_to(workshops_path)
+        follow_redirect!
+        expect(response.body).to include("merged successfully")
+      end
+
+      context "record fields" do
+        it "updates keeper fields when keep params provided" do
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id,
+            workshop_to_keep: { title: "Merged Title", objective: "Merged objective" }
+          }
+
+          keep.reload
+          expect(keep.title).to eq("Merged Title")
+          expect(keep.objective).to eq("Merged objective")
+        end
+
+        it "preserves keeper fields when no keep params provided" do
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          keep.reload
+          expect(keep.title).to eq("Keep Workshop")
+          expect(keep.objective).to eq("Keep objective")
+        end
+      end
+
+      context "polymorphic join associations" do
+        it "moves categorizable_items to the keeper" do
+          category = create(:category, category_type: category_type)
+          create(:categorizable_item, category: category, categorizable: delete_rec)
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(CategorizableItem.where(categorizable: keep).count).to eq(1)
+          expect(CategorizableItem.where(categorizable: delete_rec).count).to eq(0)
+        end
+
+        it "moves sectorable_items to the keeper" do
+          sector = create(:sector)
+          create(:sectorable_item, sector: sector, sectorable: delete_rec)
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(SectorableItem.where(sectorable: keep).count).to eq(1)
+          expect(SectorableItem.where(sectorable: delete_rec).count).to eq(0)
+        end
+
+        it "moves categorizable_items even when keeper already has a different category" do
+          cat1 = create(:category, category_type: category_type)
+          cat2 = create(:category, category_type: category_type)
+          create(:categorizable_item, category: cat1, categorizable: keep)
+          create(:categorizable_item, category: cat2, categorizable: delete_rec)
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(CategorizableItem.where(categorizable: keep).count).to eq(2)
+          expect(CategorizableItem.where(categorizable: delete_rec).count).to eq(0)
+        end
+      end
+
+      context "extra associations (direct FK)" do
+        it "reassigns workshop_variations to the keeper" do
+          variation = create(:workshop_variation, workshop: delete_rec)
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(variation.reload.workshop_id).to eq(keep.id)
+        end
+
+        it "reassigns workshop_resources to the keeper" do
+          resource = create(:resource)
+          wr = WorkshopResource.create!(workshop: delete_rec, resource: resource)
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(wr.reload.workshop_id).to eq(keep.id)
+        end
+
+        it "reassigns associated_resources to the keeper" do
+          resource = create(:resource, workshop: delete_rec)
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(resource.reload.workshop_id).to eq(keep.id)
+        end
+
+        it "reassigns workshop_series_children to the keeper" do
+          child_workshop = create(:workshop)
+          membership = WorkshopSeriesMembership.create!(
+            workshop_parent: delete_rec,
+            workshop_child: child_workshop,
+            position: 1
+          )
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(membership.reload.workshop_parent_id).to eq(keep.id)
+        end
+
+        it "reassigns workshop_series_parents to the keeper" do
+          parent_workshop = create(:workshop)
+          membership = WorkshopSeriesMembership.create!(
+            workshop_parent: parent_workshop,
+            workshop_child: delete_rec,
+            position: 1
+          )
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(membership.reload.workshop_child_id).to eq(keep.id)
+        end
+
+        it "reassigns multiple workshop_resources to the keeper" do
+          resource1 = create(:resource)
+          resource2 = create(:resource)
+          wr1 = WorkshopResource.create!(workshop: delete_rec, resource: resource1)
+          wr2 = WorkshopResource.create!(workshop: delete_rec, resource: resource2)
+
+          post dedupe_execute_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+
+          expect(wr1.reload.workshop_id).to eq(keep.id)
+          expect(wr2.reload.workshop_id).to eq(keep.id)
+        end
       end
     end
   end

@@ -1,5 +1,5 @@
 class WorkshopsController < ApplicationController
-  include AhoyTracking
+  include AhoyTracking, Dedupable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
@@ -235,6 +235,29 @@ class WorkshopsController < ApplicationController
     selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
     workshop.sectors = Sector.where(id: selected_sector_ids)
     workshop.save!
+  end
+
+  def dedupe_config
+    {
+      model_class: Workshop,
+      domain: :workshops,
+      name_column: :title,
+      belongs_to_options: -> { { "windows_type_id" => WindowsType.order(:name) } },
+      record_extras: ->(record) { "Type: #{record.windows_type&.name || 'None'}" },
+      extra_associations: [
+        # Polymorphic joins (handled by ModelDeduper during merge, shown here for preview)
+        { name: :sectorable_items, label: "Sector Tags", display_only: true },
+        { name: :quotable_item_quotes, label: "Quote Tags", display_only: true },
+        { name: :bookmarks, label: "Bookmarks", display_only: true },
+        { name: :workshop_logs, label: "Workshop Logs", display_only: true },
+        # Direct FK associations (handled by reassign_direct_association)
+        { name: :associated_resources, label: "Associated Resources" },
+        { name: :workshop_resources, label: "Workshop Resources" },
+        { name: :workshop_series_children, label: "Series Children" },
+        { name: :workshop_series_parents, label: "Series Parents" },
+        { name: :workshop_variations, label: "Workshop Variations" }
+      ]
+    }
   end
 
   def log_workshop_error(action, error)

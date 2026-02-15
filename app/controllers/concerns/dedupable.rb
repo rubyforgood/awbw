@@ -7,10 +7,22 @@ module Dedupable
     authorize!
     config = dedupe_config
     mc = config[:model_class]
+    name_col = config[:name_column] || :name
 
-    groups = mc.all.group_by { |r| r.name.to_s.strip.downcase }
+    # Eager-load belongs_to associations used by record_extras
+    eager = mc.reflect_on_all_associations(:belongs_to).map(&:name)
+    all_records = mc.includes(eager).to_a
+
+    groups = all_records.group_by { |r| r.public_send(name_col).to_s.strip.downcase }
     @possible_duplicates = groups.select { |_name, records| records.size > 1 }
-    @records_for_select = mc.order(:name).map { |r| [ r.name, r.id ] }
+    @records_for_select = all_records.sort_by { |r| r.public_send(name_col).to_s.downcase }.map { |r| [ r.public_send(name_col), r.id ] }
+
+    # Pre-compute tagging counts in a single query
+    join_assoc, _join_incl = dedupe_primary_join(mc)
+    assoc_reflection = mc.reflect_on_association(join_assoc)
+    fk = assoc_reflection.foreign_key
+    @tagging_counts = assoc_reflection.klass.group(fk).count
+
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/index"
@@ -43,6 +55,14 @@ module Dedupable
     @keep_items = @record_to_keep.public_send(join_assoc).includes(join_incl)
     @dedupe = build_dedupe_vars(config)
 
+    @extra_association_data = (config[:extra_associations] || []).map do |ea|
+      {
+        label: ea[:label],
+        delete_items: @record_to_delete.public_send(ea[:name]),
+        keep_items: @record_to_keep.public_send(ea[:name])
+      }
+    end
+
     render "dedupes/preview"
   end
 
@@ -57,7 +77,8 @@ module Dedupable
 
     if params[keep_param_key].present?
       editable = mc.column_names - %w[id created_at updated_at legacy_id]
-      record.update!(params.require(keep_param_key).permit(editable))
+      non_blank = params.require(keep_param_key).permit(editable).to_h.reject { |_k, v| v.nil? || v == "" }
+      record.update!(non_blank) if non_blank.any?
     end
 
     head :ok
@@ -72,6 +93,7 @@ module Dedupable
     config = dedupe_config
     mc = config[:model_class]
     mn = mc.model_name.singular
+    name_col = config[:name_column] || :name
 
     record_to_delete = mc.find(params["#{mn}_to_delete_id"])
     record_to_keep = mc.find(params["#{mn}_to_keep_id"])
@@ -79,25 +101,39 @@ module Dedupable
     keep_param_key = "#{mn}_to_keep"
     if params[keep_param_key].present?
       editable = mc.column_names - %w[id created_at updated_at legacy_id]
-      record_to_keep.update!(params.require(keep_param_key).permit(editable))
+      non_blank = params.require(keep_param_key).permit(editable).to_h.reject { |_k, v| v.nil? || v == "" }
+      record_to_keep.update!(non_blank) if non_blank.any?
     end
 
     if respond_to?(:track_event, true)
+      delete_name = record_to_delete.public_send(name_col)
+      keep_name = record_to_keep.public_send(name_col)
       track_event("dedupe.#{mn}", {
         resource_type: mc.name,
         resource_id: record_to_keep.id,
         deleted_record: record_to_delete.attributes,
-        kept_record: { id: record_to_keep.id, name: record_to_keep.name },
+        kept_record: { id: record_to_keep.id, name: keep_name },
         associations_moved: record_to_delete.public_send(dedupe_primary_join(mc).first).count
       })
+    end
+
+    if (extra_assocs = config[:extra_associations])
+      extra_assocs.reject { |ea| ea[:display_only] }.each do |ea|
+        reassign_direct_association(record_to_delete, record_to_keep, ea[:name])
+      end
+      # Clear stale association caches so dependent: :destroy
+      # doesn't cascade-delete already-reassigned records.
+      record_to_delete.reload
     end
 
     deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
     deduper.merge(record_to_keep, record_to_delete)
 
+    delete_name ||= record_to_delete.public_send(name_col)
+    keep_name ||= record_to_keep.public_send(name_col)
     label = mc.model_name.human.pluralize
     redirect_to url_for(action: :index),
-      notice: "#{label} merged successfully. '#{record_to_delete.name}' was merged into '#{record_to_keep.name}'."
+      notice: "#{label} merged successfully. '#{delete_name}' was merged into '#{keep_name}'."
   rescue ActionPolicy::Unauthorized
     raise
   rescue StandardError => e
@@ -133,14 +169,48 @@ module Dedupable
     [ assoc.name, poly.name ]
   end
 
+  # Reassign a direct FK has_many association from one record to another.
+  # Detects duplicates using other FK columns and destroys them instead of moving.
+  # Also catches DB-level uniqueness violations as a fallback.
+  def reassign_direct_association(from_record, to_record, assoc_name)
+    assoc = from_record.class.reflect_on_association(assoc_name)
+    fk = assoc.foreign_key.to_s
+    join_class = assoc.klass
+
+    # Collect other belongs_to FK columns for duplicate detection,
+    # filtering to only columns that actually exist in the table.
+    db_columns = join_class.column_names.to_set
+    other_fk_cols = join_class.reflect_on_all_associations(:belongs_to).flat_map do |bt|
+      next [] if bt.foreign_key.to_s == fk
+      cols = bt.polymorphic? ? [bt.foreign_type.to_s, bt.foreign_key.to_s] : [bt.foreign_key.to_s]
+      cols.select { |c| db_columns.include?(c) }
+    end
+
+    items = from_record.public_send(assoc_name).to_a
+
+    items.each do |item|
+      if other_fk_cols.any?
+        dedup_attrs = other_fk_cols.each_with_object({}) { |col, h| h[col] = item.public_send(col) }
+        if to_record.public_send(assoc_name).where(dedup_attrs).exists?
+          item.destroy!
+          next
+        end
+      end
+
+      item.update!(fk => to_record.id)
+    end
+  end
+
   def build_dedupe_vars(config)
     mc = config[:model_class]
     mn = mc.model_name.singular
     join_assoc, join_incl = dedupe_primary_join(mc)
     opts = config[:belongs_to_options]
+    name_col = config[:name_column] || :name
 
     {
       domain: config[:domain] || mc.model_name.plural.to_sym,
+      name_column: name_col,
       model_label: mc.model_name.human,
       model_label_plural: mc.model_name.human.pluralize,
       model_name: mn,

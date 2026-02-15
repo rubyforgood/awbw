@@ -148,6 +148,10 @@ Rails.application.routes.draw do
   resources :workshops do
     collection do
       post :search
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_execute
+      patch :dedupe_update_keep
     end
   end
 
