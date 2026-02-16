@@ -56,9 +56,10 @@ class UsersController < ApplicationController
     unless params[:skip_duplicate_check].present?
       email = @user.email
       if email.present? && !email.downcase.end_with?("@example.com")
-        duplicates = find_duplicate_users(email)
+        person_id = params[:person_id].presence || params.dig(:user, :person_id).presence || @user.person_id
+        duplicates = find_duplicate_users(email, exclude_person_id: person_id)
         if duplicates.any?
-          redirect_to check_duplicates_users_path(email: email, person_id: params[:person_id].presence || params.dig(:user, :person_id).presence)
+          redirect_to check_duplicates_users_path(email: email, person_id: person_id)
           return
         end
       end
@@ -91,7 +92,7 @@ class UsersController < ApplicationController
 
     @email = params[:email]
     @person_id = params[:person_id]
-    @duplicates = find_duplicate_users(@email)
+    @duplicates = find_duplicate_users(@email, exclude_person_id: @person_id)
     @blocked = @duplicates.any? { |d| d[:blocked] }
   end
 
@@ -279,14 +280,16 @@ class UsersController < ApplicationController
     params.require(:user).permit(:current_password, :password, :password_confirmation)
   end
 
-  def find_duplicate_users(email)
+  def find_duplicate_users(email, exclude_person_id: nil)
     return [] if email.blank?
 
     email_lower = email.downcase
     duplicates = []
 
     # Check existing users with same email
-    User.where("LOWER(email) = ?", email_lower).includes(:person).limit(10).each do |user|
+    users_scope = User.where("LOWER(email) = ?", email_lower).includes(:person)
+    users_scope = users_scope.where.not(person_id: exclude_person_id) if exclude_person_id
+    users_scope.limit(10).each do |user|
       duplicates << {
         id: user.id,
         name: user.person&.full_name || "#{user.first_name} #{user.last_name}".strip,
@@ -298,10 +301,11 @@ class UsersController < ApplicationController
     end
 
     # Check people with matching email or secondary email
-    already_found_person_ids = duplicates.map { |d| d[:person_id] }.compact
+    exclude_person_ids = duplicates.map { |d| d[:person_id] }.compact
+    exclude_person_ids << exclude_person_id.to_i if exclude_person_id
     people_scope = Person.includes(:user)
           .where("LOWER(people.email) = :email OR LOWER(people.email_2) = :email", email: email_lower)
-    people_scope = people_scope.where.not(id: already_found_person_ids) if already_found_person_ids.any?
+    people_scope = people_scope.where.not(id: exclude_person_ids) if exclude_person_ids.any?
     people_scope.limit(10).each do |person|
       primary_match = person.email&.downcase == email_lower
       duplicates << {
