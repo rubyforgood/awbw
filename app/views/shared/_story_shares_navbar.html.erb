@@ -96,7 +96,7 @@
           <% if current_user %>
             <% path = root_path %>
           <% else %>
-            <% path = root_url(host: ENV.fetch("APP_HOST")) %>
+            <% path = root_url(host: ENV.fetch("APP_HOST", request.host)) %>
           <% end %>
           <%= link_to path, class: "relative group" do %>
             <%= image_tag("logo-with-tagline-436x80.jpg", class: "h-8 sm:h-8 w-auto block") %>
