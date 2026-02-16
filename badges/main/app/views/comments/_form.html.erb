@@ -1,0 +1,9 @@
+<%= simple_form_for @comment || commentable.comments.build, url: polymorphic_path([commentable, :comments]), html: { class: "mb-4" } do |f| %>
+  <%= f.input :body,
+              label: false,
+              as: :text,
+              placeholder: "Add a comment...",
+              input_html: { rows: 2, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" } %>
+
+  <%= f.submit "Add Comment", class: "btn btn-secondary-outline" %>
+<% end %>

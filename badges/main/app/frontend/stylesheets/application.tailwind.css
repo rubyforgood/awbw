@@ -160,6 +160,23 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   pointer-events: none;
 }
 
+/* Truncated comment textareas - compact at rest, expand on hover/focus */
+textarea.comment-truncated {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 2rem;
+  transition: height 0.2s ease, white-space 0s;
+}
+
+textarea.comment-truncated:hover,
+textarea.comment-truncated:focus {
+  white-space: pre-wrap;
+  height: auto;
+  min-height: 4rem;
+  overflow: auto;
+}
+
 /* Swiper equal height slides */
 .swiper-wrapper.flex.items-stretch .swiper-slide {
   height: auto !important;

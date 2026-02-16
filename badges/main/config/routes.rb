@@ -40,6 +40,7 @@ Rails.application.routes.draw do
       post :toggle_lock_status
       post :confirm_email
     end
+    resources :comments, only: [ :index, :create ]
   end
 
   post "workshop_logs/validate_new", to: "workshop_logs#validate_new"
@@ -89,6 +90,7 @@ Rails.application.routes.draw do
     collection do
       get :check_duplicates
     end
+    resources :comments, only: [ :index, :create ]
   end
   resources :faqs
   resources :notifications, only: [ :index, :show ] do
