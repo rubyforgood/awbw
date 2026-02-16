@@ -19,7 +19,8 @@
       "Bash(bundle exec rails routes:*)",
       "Bash(bundle exec rubocop:*)",
       "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)",
-      "Bash(ruby:*)"
+      "Bash(ruby:*)",
+      "Bash(bundle install:*)"
     ]
   }
 }
