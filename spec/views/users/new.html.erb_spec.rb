@@ -17,9 +17,19 @@ RSpec.describe "users/new.html.erb", type: :view do
 
     assert_select "form[action=?][method=?]", users_path, "post" do
       assert_select "input[name=?]", "user[email]"
-      assert_select "textarea[name=?]", "user[comment]"
-      assert_select "input[name=?]", "user[inactive]"
       assert_select "input[name=?]", "user[super_user]"
+    end
+  end
+
+  context "when params[:admin] is present" do
+    before do
+      allow(view).to receive(:params).and_return(ActionController::Parameters.new(admin: "true"))
+    end
+
+    it "renders the legacy comment field" do
+      render
+
+      assert_select "textarea[name=?]", "user[comment]"
     end
   end
 end

@@ -98,6 +98,7 @@
           <tr>
             <th class="px-4 py-3 text-left">Time</th>
             <th class="px-4 py-3 text-left">Event</th>
+            <th class="px-4 py-3 text-left">Resource</th>
             <th class="px-4 py-3 text-left">User</th>
             <th class="px-4 py-3 text-left">Visit ID</th>
             <th class="px-4 py-3 text-left">Properties</th>
@@ -113,6 +114,10 @@
 
               <td class="px-4 py-3 font-medium text-gray-900">
                 <%= event.name %>
+              </td>
+
+              <td class="px-4 py-3 text-gray-500">
+                <%= event.properties["resource_title"].presence || "—" %>
               </td>
 
               <td class="px-4 py-3 text-gray-600">

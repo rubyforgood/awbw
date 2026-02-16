@@ -149,7 +149,7 @@ class ResourcesController < ApplicationController
     @resource.build_downloadable_asset if @resource.downloadable_asset.blank?
     @resource.gallery_assets.build
     @windows_types = WindowsType.all
-    @authors = User.active.or(User.where(id: @resource.user_id))
+    @authors = User.has_access.or(User.where(id: @resource.user_id))
                    .includes(:person)
                    .order("people.first_name, people.last_name")
                    .map { |u| [ u.full_name, u.id ] }

@@ -1,4 +1,4 @@
-<% comment_user = f.object.created_by %>
+<% comment_user = f.object.updated_by || f.object.created_by %>
 <% initials = if comment_user&.person
                 "#{comment_user.person.first_name.first}#{comment_user.person.last_name.first}".upcase
               elsif comment_user

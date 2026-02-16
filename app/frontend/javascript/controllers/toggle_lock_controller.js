@@ -1,44 +1,25 @@
 import { Controller } from "@hotwired/stimulus";
-import { post } from "@rails/request.js";
 
 /*
- * Usage
- * =====
+ * Toggles lock icons and label text when the "Locked" checkbox changes.
  *
- * Add data-controller="toggle-lock" to the button element
- *
- * Add data-toggle-lock-user-id-value="<%= user.id %>" to the button
- *
- * Example:
- * <button type="button"
- *         data-controller="toggle-lock"
- *         data-toggle-lock-user-id-value="<%= user.id %>"
- *         data-action="click->toggle-lock#toggle">
- *   Lock/Unlock account
- * </button>
+ * Targets:
+ *   checkbox  - the <input type="checkbox">
+ *   icon      - lock icon elements (shown when checked, removed when unchecked)
+ *   labelText - the text span toggled between "Lock" / "Locked"
  */
 export default class extends Controller {
-  static values = { 
-    userId: Number
-  };
+  static targets = ["checkbox", "icon", "labelText"];
 
-  get url() {
-    // Construct the URL from the user ID
-    return `/users/${this.userIdValue}/toggle_lock_status`;
-  }
+  toggle() {
+    const locked = this.checkboxTarget.checked;
 
-  async toggle(event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    try {
-      // Use turbo-stream response kind to handle Turbo Stream responses
-      await post(this.url, {
-        responseKind: "turbo-stream"
-      });
-      // Turbo Stream will automatically update the page and show flash messages
-    } catch (error) {
-      console.error("Error toggling lock status:", error);
+    if (this.hasLabelTextTarget) {
+      this.labelTextTarget.textContent = locked ? "Locked" : "Lock";
     }
+
+    this.iconTargets.forEach((el) => {
+      el.style.display = locked ? "" : "none";
+    });
   }
 }

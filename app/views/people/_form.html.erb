@@ -4,6 +4,8 @@
 
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
+  <% user_id = @user&.id || @person&.user&.id %>
+  <%= hidden_field_tag :user_id, user_id if user_id %>
 
   <div class="flex flex-col md:flex-row gap-8 items-start">
     <div class="w-full md:w-3/4">
@@ -281,7 +283,8 @@
       <div class="font-semibold text-gray-700 mb-2">Comments</div>
 
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm"
-           data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
+           data-controller="paginated-fields comment-edit-toggle"
+           data-paginated-fields-per-page-value="5">
         <%= f.simple_fields_for :comments do |cf| %>
           <%= render "comments/comment_fields", f: cf %>
         <% end %>
@@ -291,28 +294,9 @@
         <button type="button"
                 class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
                 style="float:right"
-                onclick="
-                  var section = document.getElementById('comments-section');
-                  var editing = section.dataset.editing !== 'true';
-                  section.dataset.editing = editing;
-                  if (!editing) {
-                    section.querySelectorAll('.nested-fields').forEach(function(item) {
-                      var textarea = item.querySelector('.comment-edit textarea');
-                      var viewBody = item.querySelector('.comment-view .comment-body');
-                      if (textarea && viewBody) {
-                        var text = textarea.value;
-                        viewBody.textContent = text.length > 135 ? text.substring(0, 132) + '...' : text;
-                        viewBody.title = text;
-                      }
-                    });
-                  }
-                  section.querySelectorAll('.comment-view').forEach(function(el) { el.style.display = editing ? 'none' : ''; });
-                  section.querySelectorAll('.comment-edit').forEach(function(el) { el.style.display = editing ? '' : 'none'; });
-                  this.querySelector('.edit-label').style.display = editing ? 'none' : '';
-                  this.querySelector('.view-label').style.display = editing ? '' : 'none';
-                ">
-          <span class="edit-label">Edit Comments</span>
-          <span class="view-label" style="display:none">Done Editing</span>
+                data-action="click->comment-edit-toggle#toggle">
+          <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
+          <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
         </button>
         <%= link_to_add_association "➕ Add Comment",
                                     f,
