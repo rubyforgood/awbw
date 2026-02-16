@@ -31,12 +31,6 @@
     <% end %>
   </div>
 
-  <div class="flex flex-col">
-    <%= render "inline_fields", form: f, attribute: :publicly_visible do %>
-      <%= f.input :publicly_visible %>
-    <% end %>
-  </div>
-
   <div class="flex"><%= f.input :position %></div>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">

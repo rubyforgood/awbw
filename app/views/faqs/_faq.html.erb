@@ -5,12 +5,8 @@
   data-sortable-id="<%= faq.id %>"
 >
 
-  <div>
-    <div
-      class="flex items-center w-full cursor-pointer hover:bg-gray-50 rounded-md transition-colors duration-150 px-2 -mx-2"
-      data-action="click->dropdown#toggle"
-      data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]'
-    >
+  <div class="border-b border-gray-300">
+    <div class="flex items-center w-full">
 
       <% if allowed_to?(:edit?, faq) %>
         <span class="admin-only bg-blue-100">
@@ -58,7 +54,12 @@
           </div>
         </div>
       <% else %>
-        <span class="w-full text-lg py-2 pl-4">
+        <span
+          class="
+            w-full text-lg border-transparent peer-has-hover:border
+            peer-has-hover:border-gray-300 peer-has-hover:shadow-sm
+            peer-has-hover:rounded-md peer-has-hover:p-1">
+
           <%= faq.question %></span>
       <% end %>
 
@@ -90,10 +91,16 @@
         </div>
       <% end %>
 
-      <div class="py-2">
+      <button
+        type="button"
+        class="py-5 font-medium text-left cursor-pointer"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]'
+      >
+
         <svg
           id="<%= dom_id faq, :arrow %>"
-          class="w-6 h-6 shrink-0 transition-transform duration-200"
+          class="w-6 h-6 shrink-0"
           fill="currentColor"
           viewBox="0 0 20 20"
           xmlns="http://www.w3.org/2000/svg"
@@ -104,24 +111,25 @@
             clip-rule="evenodd"
           ></path>
         </svg>
-      </div>
+
+      </button>
     </div>
 
   </div>
 
   <div
     id="<%= dom_id faq, :answer  %>"
-    class="hidden py-4 px-6"
+    class="hidden py-5 border-b border-gray-300"
     data-dropdown-target="content">
     <strong class="sr-only">Answer:</strong>
 
     <%= render "inline_edit", model: faq, attribute: :answer, frame_class: "flex flex-col" do %>
       <% if allowed_to?(:edit?, faq) %>
-        <%= link_to("Edit", edit_faq_path(faq), class: "btn btn-secondary-outline self-end admin-only bg-blue-100", data: { turbo_frame: "_top" }) %>
+        <%= link_to("Edit", edit_faq_path(faq), class: "btn btn-secondary-outline self-end admin-only bg-blue-100") %>
 
       <% end %>
 
-      <div class="prose max-w-none text-gray-600"><%= simple_format(faq.answer) %></div>
+      <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
     <% end %>
   </div>
 
