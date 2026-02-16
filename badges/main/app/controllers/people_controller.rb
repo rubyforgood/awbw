@@ -67,6 +67,7 @@ class PeopleController < ApplicationController
   def new
     set_user
     @person = @user ? PersonFromUserService.new(user: @user).call : Person.new
+    @person.user = @user if @user
     authorize! @person
     set_form_variables
   end
@@ -90,6 +91,9 @@ class PeopleController < ApplicationController
     authorize! @person
     @person.user ||= User.find_by(id: params[:user_id]) if params[:user_id].present?
     @person.user ||= User.find_by(id: params.dig(:person, :user_attributes, :id)) if params.dig(:person, :user_attributes, :id).present?
+    if @person.user && person_params[:user_attributes].present?
+      @person.user.assign_attributes(person_params[:user_attributes].except(:id))
+    end
 
     unless params[:skip_duplicate_check].present?
       duplicates = find_duplicate_people(
@@ -369,7 +373,8 @@ class PeopleController < ApplicationController
         :city2,
         :state2,
         :zip2,
-        :notes
+        :notes,
+        :time_zone
       ],
       affiliations_attributes: [
         :id,
