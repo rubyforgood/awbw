@@ -72,7 +72,7 @@ class WorkshopIdeasController < ApplicationController
     @potential_series_workshops = Workshop.published.includes(:windows_type).order(:title)
     @sectors = Sector.published
     @windows_types = WindowsType.all
-    @authors = User.active.includes(:person).sort_by { |u| u.name.downcase }
+    @authors = User.has_access.includes(:person).sort_by { |u| u.name.downcase }
     @categories_grouped =
       Category
         .includes(:category_type)
