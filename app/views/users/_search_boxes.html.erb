@@ -26,8 +26,8 @@
       <%= label_tag :access, "Access", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag :access,
                      options_for_select([["All", ""],
-                                         ["Has access", "active"],
-                                         ["No access", "no_access"]],
+                                         ["Has access", "true"],
+                                         ["No access", "false"]],
                                         params[:access]),
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10",
