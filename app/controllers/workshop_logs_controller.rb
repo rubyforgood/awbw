@@ -120,6 +120,7 @@ class WorkshopLogsController < ApplicationController
                                 .order("people.first_name, people.last_name")
     @organizations = authorized_scope(Organization.all)
     @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
+                         .includes(:windows_type)
                          .order(:title)
   end
 

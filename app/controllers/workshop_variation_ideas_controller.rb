@@ -85,7 +85,7 @@ class WorkshopVariationIdeasController < ApplicationController
     @workshop_variation_idea.build_primary_asset if @workshop_variation_idea.primary_asset.blank?
     @workshop_variation_idea.gallery_assets.build
 
-    @workshops = Workshop.published.order(:title)
+    @workshops = Workshop.published.includes(:windows_type).order(:title)
     @organizations = authorized_scope(Organization.all).order(:name)
     @windows_types = WindowsType.order(:name)
     @users = User.active.or(User.where(id: @workshop_variation_idea.created_by_id))
