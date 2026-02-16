@@ -85,7 +85,7 @@ class StoryIdeasController < ApplicationController
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @organizations = (@user || current_user)&.organizations&.order(:name) || Organization.none
     @windows_types = WindowsType.all
-    @workshops = Workshop.order(:title)
+    @workshops = Workshop.includes(:windows_type).order(:title)
 
     @users = User.has_access.includes(:person)
     @users = @users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id

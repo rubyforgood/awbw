@@ -229,18 +229,14 @@ RSpec.describe User do
   end
 
   describe "#name" do
-    it "returns first and last name when present" do
-      user = build(:user, first_name: "Bob", last_name: "Smith")
+    it "returns person full_name when person is present" do
+      person = build(:person, first_name: "Bob", last_name: "Smith")
+      user = build(:user, person: person)
       expect(user.name).to eq("Bob Smith")
     end
 
-    it "returns email when first_name is nil" do
-      user = build(:user, first_name: nil)
-      expect(user.name).to eq(user.email)
-    end
-
-    it "returns email when first_name is empty" do
-      user = build(:user, first_name: "")
+    it "returns email when no person" do
+      user = build(:user, person: nil)
       expect(user.name).to eq(user.email)
     end
   end
