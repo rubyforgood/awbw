@@ -202,6 +202,62 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_120927) do
     t.index ["updated_by_id"], name: "index_banners_on_updated_by_id"
   end
 
+  create_table "blazer_audits", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.timestamp "created_at", null: false
+    t.string "data_source"
+    t.bigint "query_id"
+    t.text "statement"
+    t.integer "user_id"
+    t.index ["query_id"], name: "index_blazer_audits_on_query_id"
+    t.index ["user_id"], name: "index_blazer_audits_on_user_id"
+  end
+
+  create_table "blazer_checks", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "check_type"
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.text "emails"
+    t.datetime "last_run_at"
+    t.text "message"
+    t.bigint "query_id"
+    t.string "schedule"
+    t.text "slack_channels"
+    t.string "state"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_checks_on_creator_id"
+    t.index ["query_id"], name: "index_blazer_checks_on_query_id"
+  end
+
+  create_table "blazer_dashboard_queries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "dashboard_id"
+    t.integer "position"
+    t.bigint "query_id"
+    t.datetime "updated_at", null: false
+    t.index ["dashboard_id"], name: "index_blazer_dashboard_queries_on_dashboard_id"
+    t.index ["query_id"], name: "index_blazer_dashboard_queries_on_query_id"
+  end
+
+  create_table "blazer_dashboards", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_dashboards_on_creator_id"
+  end
+
+  create_table "blazer_queries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.string "data_source"
+    t.text "description"
+    t.string "name"
+    t.text "statement"
+    t.string "status"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_queries_on_creator_id"
+  end
+
   create_table "bookmark_annotations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "annotation", size: :long
     t.integer "bookmark_id"
@@ -1185,6 +1241,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_120927) do
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "banners", "users", column: "created_by_id"
   add_foreign_key "banners", "users", column: "updated_by_id"
+  add_foreign_key "blazer_audits", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_audits", "users"
+  add_foreign_key "blazer_checks", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_checks", "users", column: "creator_id"
+  add_foreign_key "blazer_dashboard_queries", "blazer_dashboards", column: "dashboard_id"
+  add_foreign_key "blazer_dashboard_queries", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_dashboards", "users", column: "creator_id"
+  add_foreign_key "blazer_queries", "users", column: "creator_id"
   add_foreign_key "bookmark_annotations", "bookmarks"
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "category_types"
