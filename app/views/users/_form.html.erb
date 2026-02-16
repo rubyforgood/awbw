@@ -93,16 +93,24 @@
                     <%= f.hidden_field :locked, value: "0" %>
                     <%= f.check_box :locked,
                                     { checked: f.object.locked_at.present?,
-                                      data: { action: "change->toggle-lock#toggle",
-                                              "toggle-lock-target": "checkbox" } },
+                                      data: { action: "change->toggle-user-icon#toggleLock",
+                                              "toggle-user-icon-target": "lockCheckbox" } },
                                     "1", "0" %>
-                    <span data-toggle-lock-target="labelText"><%= f.object.locked_at.present? ? "Locked" : "Lock" %></span>
-                    <i class="fa-solid fa-lock text-red-500" data-toggle-lock-target="icon"
+                    <span data-toggle-user-icon-target="lockLabel"><%= f.object.locked_at.present? ? "Locked" : "Lock" %></span>
+                    <i class="fa-solid fa-lock text-red-500" data-toggle-user-icon-target="lockIcon"
                        style="<%= 'display:none' unless f.object.locked_at.present? %>"></i>
                   </label>
-                  <div class="flex items-center gap-2 mt-4">
-                    <%= f.input :super_user, label: "Admin" %>
-                  </div>
+                  <label class="flex items-center gap-1">
+                    <%= f.hidden_field :super_user, value: "0" %>
+                    <%= f.check_box :super_user,
+                                    { checked: f.object.super_user?,
+                                      data: { action: "change->toggle-user-icon#toggleAdmin",
+                                              "toggle-user-icon-target": "adminCheckbox" } },
+                                    "1", "0" %>
+                    <span>Admin</span>
+                    <i class="fa-solid fa-user-shield text-blue-500" data-toggle-user-icon-target="adminIcon"
+                       style="<%= 'display:none' unless f.object.super_user? %>"></i>
+                  </label>
                 </div>
               </div>
             <% end %>
