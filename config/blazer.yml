@@ -2,7 +2,7 @@
 
 data_sources:
   main:
-    url: <%= ENV["BLAZER_DATABASE_URL"] %>
+    url: <%= ENV["BLAZER_DATABASE_URL"].presence || ENV["DATABASE_URL"].presence || "trilogy://root@127.0.0.1/awbw_development" %>
 
     # statement timeout, in seconds
     # none by default
@@ -48,7 +48,7 @@ user_method: current_user
 user_name: email
 
 # custom before_action to use for auth
-before_action_method: require_blazer_access
+# auth handled via Devise route constraint in routes.rb
 
 # email to send checks from
 # from_email: blazer@example.org
