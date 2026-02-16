@@ -77,7 +77,7 @@ class PeopleController < ApplicationController
       :contact_methods,
       :addresses,
       { avatar_attachment: :blob },
-      { comments: :created_by },
+      { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
       organization_people: { organization: :logo_attachment }
     ).find(params[:id]).decorate
@@ -88,7 +88,8 @@ class PeopleController < ApplicationController
   def create
     @person = Person.new(person_params.except(:user_attributes))
     authorize! @person
-    @person.user ||= (User.find(params[:person][:user_attributes][:id]) if params[:person][:user_attributes])
+    @person.user ||= User.find_by(id: params[:user_id]) if params[:user_id].present?
+    @person.user ||= User.find_by(id: params.dig(:person, :user_attributes, :id)) if params.dig(:person, :user_attributes, :id).present?
 
     unless params[:skip_duplicate_check].present?
       duplicates = find_duplicate_people(

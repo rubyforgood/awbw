@@ -9,8 +9,8 @@ RSpec.describe 'Reset password (person)', type: :system do
     sign_in person_user
     # Start on a page where the user nav is visible
     visit root_path
-    # Open user nav dropdown
-    find('#avatar button').click
+    # Open user nav dropdown (wait for avatar to appear after page load)
+    find('#avatar button', wait: 10).click
     # Click "Change password"
     click_link 'Change password'
   end

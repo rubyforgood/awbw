@@ -87,7 +87,7 @@ class StoryIdeasController < ApplicationController
     @windows_types = WindowsType.all
     @workshops = Workshop.includes(:windows_type).order(:title)
 
-    @users = User.active.includes(:person)
+    @users = User.has_access.includes(:person)
     @users = @users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
     @users = @users.distinct.order("people.first_name, people.last_name")
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?

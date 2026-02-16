@@ -74,3 +74,6 @@ application.register("timeframe", TimeframeController)
 
 import ToggleLockController from "./toggle_lock_controller"
 application.register("toggle-lock", ToggleLockController)
+
+import ToggleUserIconController from "./toggle_user_icon_controller"
+application.register("toggle-user-icon", ToggleUserIconController)

@@ -99,7 +99,7 @@ class EventRegistrationsController < ApplicationController
            .or(Event.where(id: @event_registration.event_id))
            .distinct
            .order(start_date: :desc)
-    @registrants = User.active.includes(:person).order("people.first_name, people.last_name")
+    @registrants = User.has_access.includes(:person).order("people.first_name, people.last_name")
   end
 
   private

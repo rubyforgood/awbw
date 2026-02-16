@@ -88,7 +88,7 @@ class WorkshopVariationIdeasController < ApplicationController
     @workshops = Workshop.published.includes(:windows_type).order(:title)
     @organizations = authorized_scope(Organization.all).order(:name)
     @windows_types = WindowsType.order(:name)
-    @users = User.active.or(User.where(id: @workshop_variation_idea.created_by_id))
+    @users = User.has_access.or(User.where(id: @workshop_variation_idea.created_by_id))
                  .order(:first_name, :last_name)
   end
 
