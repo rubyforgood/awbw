@@ -104,7 +104,7 @@
 
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :spotlighted_facilitator_id,
-                  collection: Person.joins(:user).order("users.first_name, users.last_name"),
+                  collection: Person.left_joins(:user).order("users.first_name, users.last_name"),
                   label_method: :full_name,
                   value_method: :id,
                   include_blank: true,
