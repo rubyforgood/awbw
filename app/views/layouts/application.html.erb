@@ -3,8 +3,6 @@
 <html>
   <head>
     <title>AWBW</title>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
-    <%= javascript_include_tag "activestorage" %>
     <%= csrf_meta_tags %>
 
     <meta charset="utf-8">
@@ -39,7 +37,7 @@
         <%= render "shared/banner" %>
       </div>
       <div class="printed-logo hidden print:block">
-        <%= image_tag("awbw-print-logo.png", class: "print:w-36 m-3") %>
+        <%= image_tag("logo-awbw-print.png", class: "print:w-36 m-3") %>
         <hr>
       </div>
       <div>
