@@ -98,7 +98,11 @@ Rails.application.routes.draw do
       post :resend
     end
   end
-  resources :organizations
+  resources :organizations do
+   member do
+     get :populations_served
+   end
+ end
   resources :organization_statuses
   resources :organization_people
   resources :quotes
@@ -118,9 +122,6 @@ Rails.application.routes.draw do
 
   resources :resources do
     get :download
-    collection do
-      post :search
-    end
   end
   resources :sectors do
     collection do
@@ -147,11 +148,7 @@ Rails.application.routes.draw do
   resources :workshop_log_creation_wizard
   resources :workshop_variation_ideas
   resources :workshop_variations
-  resources :workshops do
-    collection do
-      post :search
-    end
-  end
+  resources :workshops
 
   resources :workshop_mentions, only: [ :index ]
   resources :resource_mentions, only: [ :index ]
