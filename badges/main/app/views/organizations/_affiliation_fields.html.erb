@@ -1,0 +1,85 @@
+<% if allowed_to?(:manage?, Organization) %>
+  <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
+  <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-end mb-4 rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-white border-gray-200' %>"
+       <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
+       data-controller="inactive-toggle">
+    <div style="width: 350px; min-width: 350px; flex-shrink: 0;">
+      <% if f.object.persisted? && f.object.person.present? %>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Person</label>
+        <%= person_profile_button(f.object.person, truncate_at: 30) %>
+        <%= f.hidden_field :person_id %>
+      <% else %>
+        <%= f.input :person_id,
+                    as: :select,
+                    label: "Person",
+                    collection: @people_array,
+                    include_blank: true,
+                    selected: f.object&.person_id,
+                    required: true,
+                    input_html: {
+                      class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    } %>
+      <% end %>
+    </div>
+
+    <div class="w-full sm:flex-1">
+      <%= f.input :title,
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    value: f.object&.title || f.object&.position || "FACILITATOR",
+                    style: "height: 42px; min-height: 42px;",
+                  } %>
+    </div>
+
+    <div class="w-full sm:w-auto">
+      <%= f.input :start_date,
+                  as: :string,
+                  label: "Start",
+                  input_html: {
+                    type: "date",
+                    value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
+                    class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  } %>
+    </div>
+
+    <div class="w-full sm:w-auto">
+      <%= f.input :end_date,
+                  as: :string,
+                  label: "End",
+                  input_html: {
+                    type: "date",
+                    value: f.object.end_date&.strftime("%Y-%m-%d"),
+                    class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                    data: { action: "change->inactive-toggle#toggle" }
+                  } %>
+    </div>
+
+    <div class="w-full sm:w-auto pb-3">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Primary</label>
+      <%= f.check_box :primary_contact,
+                      class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
+    </div>
+
+    <div class="w-full text-right">
+      <% if f.object.persisted? %>
+        <%= link_to "Remove",
+                    affiliation_path(f.object),
+                    data: {
+                      turbo_method: :delete,
+                      turbo_confirm: "Remove this person from the organization?",
+                      turbo_stream: true
+                    },
+                    class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
+      <% else %>
+        <%= link_to_remove_association "Remove",
+                                       f,
+                                       class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
+      <% end %>
+    </div>
+  </div>
+<% else %>
+  <div class="ps-6 mb-4">
+    <li><%= f.object.organization&.name %> (<%= f.object.title || f.object.position %>)</li>
+  </div>
+<% end %>

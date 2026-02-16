@@ -4,7 +4,7 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def detail(length: nil)
-    text = organization_people.active.map { |op| "#{op.title.presence || op.position}, #{op.organization.name}" }.join(", ")
+    text = affiliations.active.map { |affiliation| "#{affiliation.title.presence || affiliation.position}, #{affiliation.organization.name}" }.join(", ")
     length ? text&.truncate(length) : text
   end
 
@@ -30,7 +30,7 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def badges
-    earliest = organization_people.minimum(:start_date) || member_since
+    earliest = affiliations.minimum(:start_date) || member_since
     years = earliest ? (Time.zone.now.year - earliest.year) : nil
     badges = []
     badges << badge("Legacy Facilitator (10+ years)", :legacy_facilitator) if years && years >= 10

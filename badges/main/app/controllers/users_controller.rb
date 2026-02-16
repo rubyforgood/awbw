@@ -267,7 +267,7 @@ class UsersController < ApplicationController
 
   def set_form_variables
     set_person
-    @user.person.organization_people.first || @user.person.organization_people.build if @user.person
+    @user.person.affiliations.first || @user.person.affiliations.build if @user.person
     organizations = authorized_scope(Organization.all)
     @organizations_array = organizations.order(:name).pluck(:name, :id)
   end
@@ -333,8 +333,8 @@ class UsersController < ApplicationController
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
       #####
 
-      organization_people_attributes: [ :id, :organization_id, :position, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
       comments_attributes: [ :id, :body ],
+      affiliations_attributes: [ :id, :organization_id, :position, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
     )
   end
 end

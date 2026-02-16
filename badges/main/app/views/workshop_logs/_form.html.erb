@@ -33,7 +33,7 @@
                   label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
       </div>
       <div class="flex-1 mb-4 md:mb-0">
-        <% if current_user.person&.organization_people&.count != 1 %>
+        <% if current_user.person&.affiliations&.count != 1 %>
           <%= f.input :organization_id,
                     as: :select,
                     collection: @organizations,
@@ -47,7 +47,7 @@
                     input_html: { value: params[:organization_id].presence || f.object.organization_id || @organization_id,
                                   class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                     label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
-        <% else current_user.person&.organization_people&.count == 1 %>
+        <% else current_user.person&.affiliations&.count == 1 %>
           <%= f.hidden_field :organization_id,
                            value: f.object.organization_id || current_user.person.primary_organization&.id %>
         <% end %>

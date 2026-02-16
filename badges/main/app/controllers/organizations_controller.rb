@@ -8,13 +8,13 @@ class OrganizationsController < ApplicationController
     base_scope = authorized_scope(Organization.includes(:windows_type, :organization_status, :sectors, :addresses, logo_attachment: :blob))
     filtered = base_scope.search_by_params(params).order(:name)
     @organizations_count = filtered.count
-    @active_people_count = OrganizationPerson.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
+    @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
     @organizations = filtered.paginate(page: params[:page], per_page: per_page)
     org_ids = @organizations.map(&:id)
-    @affiliated_since = OrganizationPerson.where(organization_id: org_ids)
+    @affiliated_since = Affiliation.where(organization_id: org_ids)
                                           .group(:organization_id)
                                           .minimum(:start_date)
-    @active_people_counts = OrganizationPerson.active
+    @active_people_counts = Affiliation.active
                                               .where(organization_id: org_ids)
                                               .group(:organization_id)
                                               .distinct
@@ -101,16 +101,16 @@ class OrganizationsController < ApplicationController
                       .map { |fn, ln, id| [ "#{fn} #{ln}", id ] }
 
     if @organization.persisted? && @organization.errors.empty?
-      org_people = @organization.organization_people
-      org_people = org_people.includes(:person) unless org_people.loaded?
-      sorted = org_people.to_a
-                             .sort_by { |op|
-                               expired = op.inactive? || (op.end_date.present? && op.end_date < Date.current)
+      affiliations = @organization.affiliations
+      affiliations = affiliations.includes(:person) unless affiliations.loaded?
+      sorted = affiliations.to_a
+                             .sort_by { |affiliation|
+                               expired = affiliation.inactive? || (affiliation.end_date.present? && affiliation.end_date < Date.current)
                                [ expired ? 1 : 0,
-                                 op.person&.first_name.to_s.downcase,
-                                 op.person&.last_name.to_s.downcase ]
+                                 affiliation.person&.first_name.to_s.downcase,
+                                 affiliation.person&.last_name.to_s.downcase ]
                              }
-      @organization.organization_people.proxy_association.target.replace(sorted)
+      @organization.affiliations.proxy_association.target.replace(sorted)
     end
   end
 
@@ -137,7 +137,7 @@ end
     @organization = Organization.includes(
       :organization_status, :windows_type, :addresses,
       { sectorable_items: :sector },
-      organization_people: :person
+      affiliations: :person
     ).find(params[:id])
   end
 
@@ -155,7 +155,7 @@ end
         :sector_id,
         :_destroy
       ],
-      organization_people_attributes: [
+      affiliations_attributes: [
         :id,
         :person_id,
         :inactive,

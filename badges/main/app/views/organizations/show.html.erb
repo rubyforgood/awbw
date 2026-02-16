@@ -116,14 +116,14 @@
           <h2 class="text-lg font-semibold text-gray-800 mb-2">
             Affiliations
           </h2>
-          <% active_ops = @organization.organization_people
-               .select { |op| !op.inactive? && (op.end_date.nil? || op.end_date >= Date.current) && op.person.present? }
-               .sort_by { |op| [op.person.first_name.to_s.downcase, op.person.last_name.to_s.downcase] } %>
-          <% if active_ops.any? %>
+          <% active_affiliations = @organization.affiliations
+               .select { |affiliation| !affiliation.inactive? && (affiliation.end_date.nil? || affiliation.end_date >= Date.current) && affiliation.person.present? }
+               .sort_by { |affiliation| [affiliation.person.first_name.to_s.downcase, affiliation.person.last_name.to_s.downcase] } %>
+          <% if active_affiliations.any? %>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              <% active_ops.each do |pu| %>
+              <% active_affiliations.each do |affiliation| %>
                 <div data-paginated-fields-target="item">
-                  <%= person_profile_button(pu.person, subtitle: pu.title.presence) %>
+                  <%= person_profile_button(affiliation.person, subtitle: affiliation.title.presence) %>
                 </div>
               <% end %>
             </div>
