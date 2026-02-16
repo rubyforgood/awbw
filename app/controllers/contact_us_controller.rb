@@ -22,32 +22,30 @@ class ContactUsController < ApplicationController
     user = current_user if user_signed_in?
     noticeable = user&.person || user
 
-    # Send admin notification email
-    admin_mail = ContactUsMailer.hello(params[:contact_us], user).deliver_now
-
-    # Send confirmation email to submitter
+    # Send emails
     confirmation_mail = ContactUsMailer.confirmation(params[:contact_us], user).deliver_now
+    admin_mail = ContactUsMailer.hello(params[:contact_us], user).deliver_now
 
     # Create notification for the submitter
     submitter_email = user&.email || params[:contact_us][:from]
-    submitter_notification = Notification.create!(
-      kind: "contact_us",
+    submitter_notification = NotificationServices::CreateNotification.call(
+      noticeable: noticeable,
       recipient_role: :person,
       recipient_email: submitter_email,
-      email_subject: "Contact form submission received",
+      kind: "contact_us",
       notification_type: "contact_us_confirmation",
-      noticeable: noticeable
+      deliver: false
     )
     NotificationServices::PersistDeliveredEmail.call(notification: submitter_notification, mail: confirmation_mail)
 
     # Create notification for admins
-    admin_notification = Notification.create!(
-      kind: "contact_us_fyi",
+    admin_notification = NotificationServices::CreateNotification.call(
+      noticeable: noticeable,
       recipient_role: :admin,
       recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      email_subject: "Contact form submission: #{params[:contact_us][:subject]}",
+      kind: "contact_us_fyi",
       notification_type: "contact_us_notification",
-      noticeable: noticeable
+      deliver: false
     )
     NotificationServices::PersistDeliveredEmail.call(notification: admin_notification, mail: admin_mail)
 

@@ -23,8 +23,8 @@ module NotificationServices
                           caused_by_event: kind.to_s,
                           actor_user_id: noticeable.try(:created_by_id),
                           recipient_email: recipient_email,
-                          noticeable_type: noticeable.class.name,
-                          noticeable_id: noticeable.id
+                          noticeable_type: noticeable&.class&.name,
+                          noticeable_id: noticeable&.id
                         }.to_json)
 
       # send an email, and then persist it to the notification

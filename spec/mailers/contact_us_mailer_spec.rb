@@ -16,7 +16,7 @@ RSpec.describe ContactUsMailer do
       mail = described_class.hello(contact_params)
 
       expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
-      expect(mail.subject).to eq('Test Subject')
+      expect(mail.subject).to eq('AWBW portal: New contact form submission from John Doe: Test Subject')
       expect(mail.from).to eq([ 'test@example.com' ])
     end
 

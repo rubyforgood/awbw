@@ -6,10 +6,10 @@ class ContactUsMailer < ApplicationMailer
     @mail_to = ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
 
     sender_name = if user.present?
-                     user.full_name
-                   else
-                     "#{contact_us[:first_name]} #{contact_us[:last_name]}".strip
-                   end
+      user.full_name
+    else
+      "#{contact_us[:first_name]} #{contact_us[:last_name]}".strip
+    end
 
     mail(to: @mail_to, subject: "AWBW portal: New contact form submission from #{sender_name}: #{@contact_us[:subject]}", from: @contact_us[:from])
   end

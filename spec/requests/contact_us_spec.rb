@@ -100,7 +100,7 @@ RSpec.describe "ContactUs", type: :request do
         }.to change(Notification, :count).by(2)
         # .and have_enqueued_job.on_queue("mailers")
 
-        expect(response).to redirect_to(contact_us_path)
+        expect(response).to redirect_to(contact_us_path(anchor: "thank-you"))
         expect(flash[:form_submitted]).to eq(true)
       end
 
@@ -146,7 +146,7 @@ RSpec.describe "ContactUs", type: :request do
         }.to change(Notification, :count).by(2)
         # .and have_enqueued_job.on_queue("mailers")
 
-        expect(response).to redirect_to(contact_us_path)
+        expect(response).to redirect_to(contact_us_path(anchor: "thank-you"))
         expect(flash[:form_submitted]).to eq(true)
       end
 
