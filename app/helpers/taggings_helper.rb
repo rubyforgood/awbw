@@ -28,7 +28,7 @@ module TaggingsHelper
 
     if resource.respond_to?(:categories) && resource.categories.any?
       all_tags += resource.categories
-        .sort_by { |c| [c.position.to_i, c.name.to_s.downcase] }
+        .sort_by { |c| [ c.position.to_i, c.name.to_s.downcase ] }
         .map(&:name)
     end
 
