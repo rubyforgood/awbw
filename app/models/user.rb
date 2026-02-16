@@ -76,6 +76,8 @@ class User < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes [ :email, :first_name, :last_name, :phone ]
+    attributes person_email: "person.email"
+    attributes person_email_2: "person.email_2"
     attributes user: "organizations.name"
   end
 
