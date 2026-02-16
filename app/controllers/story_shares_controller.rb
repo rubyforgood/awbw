@@ -24,11 +24,11 @@ class StorySharesController < ApplicationController
 
     sector_names_all_params = params[:sector_names_all]
     @sector_names_all = sector_names_all_params.to_s.split("--") ||
-      ["Domestic Violence",
-       "Social Justice",
-       "Facilitator Spotlights"]
+      [ "Domestic Violence",
+        "Social Justice",
+        "Facilitator Spotlights" ]
     if sector_names_all_params.present? # render sector_index
-      @stories_by_sector = {"Domestic Violence": Story.all.decorate}
+      @stories_by_sector = { "Domestic Violence": Story.all.decorate }
       @featured_story = Story.first.decorate
       stories = Story.includes(:bookmarks, :primary_asset)
                      # .where(id: popular_stories.map(&:id))
@@ -38,7 +38,7 @@ class StorySharesController < ApplicationController
     else
       @featured_story = Story.first.decorate
 
-      @stories_by_sector = {"Domestic Violence": Story.all.decorate}
+      @stories_by_sector = { "Domestic Violence": Story.all.decorate }
       # @sector_names_all.index_with do |sector|
       #   matching = @stories.select do |story|
       #     story.respond_to?(:sector_names_all) &&
