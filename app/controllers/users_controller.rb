@@ -30,6 +30,7 @@ class UsersController < ApplicationController
     @last_lock_event = user_auth_events.where(name: %w[auth.account_locked auth.account_unlocked]).order(time: :desc).first
 
     @account_events = user_auth_events
+      .includes(:user)
       .order(time: :desc)
       .paginate(page: params[:page], per_page: 10)
   end
