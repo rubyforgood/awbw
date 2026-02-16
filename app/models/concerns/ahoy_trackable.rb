@@ -231,10 +231,14 @@ module AhoyTrackable
         next
       end
 
-      ids = public_send(assoc.name).pluck(:id)
-      next if ids.empty?
+      begin
+        ids = public_send(assoc.name).pluck(:id)
+        next if ids.empty?
 
-      records[assoc.name] = ids.map { |id| { record_type: assoc.klass.name, record_id: id } }
+        records[assoc.name] = ids.map { |id| { record_type: assoc.klass.name, record_id: id } }
+      rescue ActiveRecord::StatementInvalid
+        next
+      end
     end
 
     self.class.reflect_on_all_associations(:has_one).each do |assoc|
