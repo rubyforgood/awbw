@@ -60,6 +60,7 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :user, update_only: true
   accepts_nested_attributes_for :organization_people, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
+  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Search Cop
   include SearchCop

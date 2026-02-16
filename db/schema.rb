@@ -216,6 +216,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_063558) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.index ["bookmarkable_type", "bookmarkable_id"], name: "index_bookmarks_on_bookmarkable"
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
@@ -245,9 +246,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_063558) do
 
   create_table "category_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
+    t.string "display_text"
     t.string "legacy_id"
     t.string "name"
     t.boolean "published", default: false
+    t.boolean "story_specific", default: false
     t.datetime "updated_at", precision: nil, null: false
   end
 
@@ -272,9 +275,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_063558) do
     t.bigint "commentable_id", null: false
     t.string "commentable_type", null: false
     t.datetime "created_at", null: false
+    t.integer "created_by_id"
     t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
     t.index ["commentable_type", "commentable_id", "created_at"], name: "idx_on_commentable_type_commentable_id_created_at_89c6e27600"
     t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
+    t.index ["created_by_id"], name: "index_comments_on_created_by_id"
+    t.index ["updated_by_id"], name: "index_comments_on_updated_by_id"
   end
 
   create_table "community_news", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -502,8 +509,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_063558) do
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
     t.integer "organization_agency_id"
-    t.integer "organization_id"
-    t.bigint "person_id"
+    t.integer "organization_id", null: false
+    t.integer "person_id", null: false
     t.integer "position"
     t.boolean "primary_contact", default: false, null: false
     t.date "start_date"
@@ -1177,6 +1184,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_063558) do
   add_foreign_key "bookmark_annotations", "bookmarks"
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "category_types"
+  add_foreign_key "comments", "users", column: "created_by_id"
+  add_foreign_key "comments", "users", column: "updated_by_id"
   add_foreign_key "community_news", "organizations"
   add_foreign_key "community_news", "users", column: "author_id"
   add_foreign_key "community_news", "users", column: "created_by_id"
@@ -1198,6 +1207,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_063558) do
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
   add_foreign_key "organization_people", "organizations"
   add_foreign_key "organization_people", "organizations", column: "organization_agency_id"
+  add_foreign_key "organization_people", "people"
   add_foreign_key "organization_people", "users"
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"

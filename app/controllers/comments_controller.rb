@@ -2,6 +2,7 @@ class CommentsController < ApplicationController
   before_action :set_commentable
 
   def index
+    authorize!
     @comments = @commentable.comments.newest_first.paginate(page: params[:page], per_page: 10)
 
     respond_to do |format|
@@ -10,9 +11,11 @@ class CommentsController < ApplicationController
   end
 
   def create
+    authorize!
     @comment = @commentable.comments.build(comment_params)
 
     if @comment.save
+      @comment = @commentable.comments.build
       @comments = @commentable.comments.newest_first.paginate(page: 1, per_page: 10)
       respond_to do |format|
         format.turbo_stream
@@ -20,7 +23,7 @@ class CommentsController < ApplicationController
       end
     else
       respond_to do |format|
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("comment_form", partial: "comments/form", locals: { commentable: @commentable, comment: @comment }) }
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("comment_form", partial: "comments/form", locals: { commentable: @commentable }) }
         format.html { redirect_back fallback_location: root_path, alert: "Failed to create comment." }
       end
     end

@@ -77,6 +77,7 @@ class PeopleController < ApplicationController
       :contact_methods,
       :addresses,
       { avatar_attachment: :blob },
+      { comments: :created_by },
       { sectorable_items: :sector },
       organization_people: { organization: :logo_attachment }
     ).find(params[:id]).decorate
@@ -122,7 +123,11 @@ class PeopleController < ApplicationController
       @person.avatar.purge
     end
 
-    if @person.update(person_params)
+    @person.assign_attributes(person_params)
+    @person.comments.select(&:new_record?).each { |c| c.created_by = current_user }
+    @person.comments.select(&:changed?).each { |c| c.updated_by = current_user }
+
+    if @person.save
       redirect_to @person, notice: "Person was successfully updated."
     else
       set_form_variables
@@ -377,6 +382,7 @@ class PeopleController < ApplicationController
         :end_date,
         :_destroy
       ],
+      comments_attributes: [ :id, :body ],
     )
   end
 end
