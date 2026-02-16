@@ -107,8 +107,8 @@ class CommunityNewsController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @organizations = Organization.pluck(:name, :id).sort_by(&:first)
-    @authors = User.has_access.or(User.where(id: @community_news.author_id))
+    @organizations = authorized_scope(Organization.all).order(:name).pluck(:name, :id).sort_by(&:first)
+    @authors = authorized_scope(User.has_access.or(User.where(id: @community_news.author_id)))
                    .includes(:person)
                    .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
     @categories_grouped =
