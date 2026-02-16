@@ -13,7 +13,7 @@
           <i class="fa-solid fa-sort cursor-move self-center pr-2" data-sortable-handle=""></i>
         </span>
 
-        <div class="flex flex-row grow sm:items-center">
+        <div class="flex grow sm:items-center">
 
           <span class="admin-only bg-blue-100 ">
             <%= render "inline_edit", model: faq, attribute: :published, form_class: "md:min-w-44" do %>
@@ -34,17 +34,12 @@
 
           <strong class="sr-only">Question:</strong>
 
-          <div class="grow"
-            >
-
+          <div class="grow">
             <%= render "inline_edit", model: faq, attribute: :question, form_class: "sm:pl-0 flex", frame_class: "flex flex-wrap sm:flex-nowrap w-full items-center gap-2" do %>
               <span class="w-full text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300  peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1"
                 data-action="click->dropdown#toggle"
                 data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]' >
-
                 <%= faq.question %></span>
-
-
               <%= link_to edit_faq_path(faq), class: "peer" do %>
                 <span class="admin-only bg-blue-100">
                   <i class="far fa-edit text-primary hover:text-secondary"></i>
@@ -52,13 +47,11 @@
               <% end %>
             <% end %>
           </div>
-
         </div>
       <% else %>
         <span class="w-full text-lg py-2 pl-4"
               data-action="click->dropdown#toggle"
               data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]' >
-
           <%= faq.question %></span>
       <% end %>
 
