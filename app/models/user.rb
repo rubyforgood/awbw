@@ -67,7 +67,7 @@ class User < ApplicationRecord
     attributes user: "organizations.name"
   end
 
-  scope :active, -> { where(inactive: false) }
+  scope :active, -> { where(locked_at: nil, inactive: false) }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
@@ -199,6 +199,15 @@ class User < ApplicationRecord
   def track_auth_event(name, properties = {})
     payload = { name: name, properties: properties.merge(user_id: id) }
     Analytics::LifecycleBuffer.push(payload)
+  end
+
+  def locked
+    locked_at.present?
+  end
+
+  def locked=(value)
+    @locked_will_change = true
+    @locked_value = ActiveModel::Type::Boolean.new.cast(value)
   end
 
   private
