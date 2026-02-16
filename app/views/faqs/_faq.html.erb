@@ -37,10 +37,9 @@
           <div class="grow">
 
             <%= render "inline_edit", model: faq, attribute: :question, form_class: "pl-14 sm:pl-0 flex", frame_class: "flex flex-wrap sm:flex-nowrap grow items-center gap-2" do %>
-              <span
-                class="
-                  text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300
-                  peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1">
+              <span class="text-lg border-transparent peer-has-hover:border peer-has-hover:border-gray-300  peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1"
+                data-action="click->dropdown#toggle"
+                data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]' >
 
                 <%= faq.question %></span>
 
@@ -54,9 +53,9 @@
           </div>
         </div>
       <% else %>
-        <span
-          class="
-            w-full text-lg">
+        <span class="w-full text-lg py-2 pl-4"
+              data-action="click->dropdown#toggle"
+              data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]' >
 
           <%= faq.question %></span>
       <% end %>
@@ -64,11 +63,9 @@
       <% if allowed_to?(:destroy?, faq) %>
         <div class="flex flex-col mx-3 ">
           <span class="admin-only bg-blue-100">
-            <%= link_to faq,
-          data: {
-            turbo_method: :delete,
-            turbo_confirm: "Confirm: Delete FAQ?",
-          } do %>
+            <%= link_to faq, data: {
+                              turbo_method: :delete,
+                              turbo_confirm: "Confirm: Delete FAQ?" } do %>
 
               <button class="p-1 rounded-md hover:bg-danger transition">
                 <svg
@@ -84,8 +81,8 @@
                   />
                 </svg>
               </button>
-            </span>
           <% end %>
+          </span>
         </div>
       <% end %>
 
@@ -99,7 +96,7 @@
         <svg
           id="<%= dom_id faq, :arrow %>"
           class="w-6 h-6 shrink-0"
-          fill="currentColor"
+          fill="curentColor"
           viewBox="0 0 20 20"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -115,8 +112,8 @@
 
 
   <div
-    id="<%= dom_id faq, :answer  %>"
-    class="hidden py-4 px-6"
+    id="<%= dom_id faq, :answer %>"
+    class="hidden pb-4 pt-2 md:px-6"
     data-dropdown-target="content">
     <strong class="sr-only">Answer:</strong>
 
@@ -126,7 +123,7 @@
 
       <% end %>
 
-      <span class="prose max-w-none text-gray-600"><%= simple_format(faq.answer) %></span>
+      <span class="prose max-w-none text-gray-600 px-6"><%= simple_format(faq.answer) %></span>
     <% end %>
   </div>
 
