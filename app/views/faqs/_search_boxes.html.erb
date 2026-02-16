@@ -1,4 +1,4 @@
-<%= form_tag(faqs_path, method: :get, class: "space-y-4") do |f| %>
+<%= form_tag(faqs_path, method: :get, class: "space-y-4", data: { controller: "collection" }) do |f| %>
   <div class="flex flex-col md:flex-row md:items-end md:gap-4 mb-6">
     <!-- Search -->
     <div class="w-full md:flex-1 mb-3 md:mb-0">
@@ -6,8 +6,7 @@
       <div class="relative">
         <%= text_field_tag :query, params[:query],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
+                                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 
         <button type="submit"
                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
@@ -29,8 +28,7 @@
                                              ["Published FAQs", true]],
                                             params[:published]),
                          class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                         onchange: "this.form.submit()" %>
+                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
         </div>
       </div>
     <% end %>
