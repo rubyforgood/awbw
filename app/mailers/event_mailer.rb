@@ -14,7 +14,7 @@ class EventMailer < ApplicationMailer
       to: @user.email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "Event registration confirmed: #{@event.title}"
+      subject: "AWBW portal: Event registration confirmed for #{@event.title}"
     )
   end
 end
