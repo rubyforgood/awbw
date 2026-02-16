@@ -108,7 +108,10 @@ class UsersController < ApplicationController
     @user.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
     if @user.save
-      redirect_to users_path, notice: "User was successfully updated."
+      bypass_sign_in(@user) if @user == current_user
+      notice = "User was successfully updated."
+      notice += " A confirmation email has been sent to #{@user.unconfirmed_email}." if @user.unconfirmed_email.present? && @user.saved_change_to_unconfirmed_email?
+      redirect_to users_path, notice: notice
     else
       flash[:alert] = "Unable to update user."
       set_form_variables
