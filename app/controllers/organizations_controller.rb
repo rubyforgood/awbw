@@ -97,7 +97,7 @@ class OrganizationsController < ApplicationController
     @current_sector_ids = @organization.sectorable_items.map(&:sector_id)
     # Build array of [display_name, id] for person selection dropdown
     # Email priority matches Person#preferred_email: user.email > person.email > person.email_2
-    @people_array = Person.left_joins(:user)
+    @people_array = authorized_scope(Person.joins(:user))
                           .order(:first_name, :last_name)
                           .pluck(
                             :first_name,
