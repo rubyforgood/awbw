@@ -148,8 +148,7 @@ class User < ApplicationRecord
   end
 
   def name
-    return email if !first_name || first_name.empty?
-    "#{first_name} #{last_name}"
+    person ? person.full_name : email
   end
 
   def agency_name
