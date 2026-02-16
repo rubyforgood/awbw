@@ -143,9 +143,9 @@ module ApplicationHelper
 
   def email_confirmation_icon(user)
     if user.confirmed_at.present?
-      content_tag(:span, "confirmed", class: "text-green-600 ml-2 font-medium", title: "Email confirmed")
+      content_tag(:span, "confirmed", class: "text-green-600 font-medium", title: "Email confirmed")
     else
-      content_tag(:span, "unconfirmed", class: "text-red-600 ml-2 font-medium", title: "Email not confirmed")
+      content_tag(:span, "unconfirmed", class: "text-red-600 font-medium", title: "Email not confirmed")
     end
   end
 
