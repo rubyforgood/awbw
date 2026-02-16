@@ -1,44 +1,46 @@
-<!-- Title -->
-<p style="margin-bottom: 6px; text-align: center;">
-  New Contact Us Message
-</p>
-
-<!-- Name -->
-<h1 style="margin: 0; text-align: center;">
-  <% if @user.present? %>
-    <strong><%= @user.full_name %></strong>
-  <% else %>
-    <strong><%= "#{@contact_us[:first_name]} #{@contact_us[:last_name]}" %></strong>
-  <% end %>
-</h1>
-
-<!-- Organization -->
-<p style="margin: 4px 0 8px; text-align: center;">
-  <% if @contact_us[:agency].present? %>
-    <span style="color:#374151; font-size:14px;">
-      <%= @contact_us[:agency] %>
-    </span>
-  <% end %>
-</p>
-
-<!-- Timestamp -->
-<p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280; text-align: center;">
-  Submitted on
-  <%= Time.current
-          .in_time_zone("Pacific Time (US & Canada)")
-          .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
-</p>
-
-<hr style="margin: 24px 0;">
+<h1>New contact form submission</h1>
 
 <div style="text-align: left;">
-  <h2>
-    Message
-  </h2>
+  <p>
+    <% if @user.present? %>
+      <strong><%= @user.full_name %></strong> has submitted a message through the contact form.
+    <% else %>
+      <strong><%= "#{@contact_us[:first_name]} #{@contact_us[:last_name]}" %></strong> has submitted a message through the contact form.
+    <% end %>
+  </p>
+
+  <% if @contact_us[:agency].present? %>
+    <p>
+      <strong>Organization:</strong> <%= @contact_us[:agency] %>
+    </p>
+  <% end %>
 
   <p>
-    <span style="font-weight: normal; color:#6b7280;">
-      <%= @contact_us[:message] %>
-    </span>
+    <strong>Email:</strong> <%= @contact_us[:from] %>
+  </p>
+</div>
+
+<div style="
+  background-color:#f3f4f6;
+  border-radius:6px;
+  padding:12px;
+  margin:16px 0;
+  text-align:left;
+">
+  <p>
+    <strong>Subject:</strong> <%= @contact_us[:subject] %>
+  </p>
+
+  <p>
+    <%= @contact_us[:message] %>
+  </p>
+</div>
+
+<div style="text-align: left;">
+  <p style="font-size: 13px; color: #6b7280;">
+    Submitted on
+    <%= Time.current
+            .in_time_zone("Pacific Time (US & Canada)")
+            .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
   </p>
 </div>

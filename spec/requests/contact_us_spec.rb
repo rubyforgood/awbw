@@ -42,6 +42,18 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).not_to include("Children's Program")
       end
 
+      it "does not show Twitter link" do
+        get contact_us_path
+        expect(response.body).not_to include("twitter.com")
+      end
+
+      it "shows thank you message after form submission" do
+        post contact_us_path, params: valid_params
+        follow_redirect!
+        expect(response.body).to include("Thank you for contacting us!")
+        expect(response.body).to include("Your message has been received")
+      end
+
       it "has proper accessibility attributes" do
         get contact_us_path
         expect(response.body).to satisfy do |html|
@@ -88,8 +100,8 @@ RSpec.describe "ContactUs", type: :request do
         }.to change(Notification, :count).by(2)
         # .and have_enqueued_job.on_queue("mailers")
 
-        expect(response).to redirect_to(contact_us_path)
-        expect(flash[:notice]).to eq("Your message was sent!")
+        expect(response).to redirect_to(contact_us_path(anchor: "thank-you"))
+        expect(flash[:form_submitted]).to eq(true)
       end
 
       it "creates a contact_us notification for the submitter" do
@@ -134,8 +146,8 @@ RSpec.describe "ContactUs", type: :request do
         }.to change(Notification, :count).by(2)
         # .and have_enqueued_job.on_queue("mailers")
 
-        expect(response).to redirect_to(contact_us_path)
-        expect(flash[:notice]).to eq("Your message was sent!")
+        expect(response).to redirect_to(contact_us_path(anchor: "thank-you"))
+        expect(flash[:form_submitted]).to eq(true)
       end
 
       it "creates a contact_us notification for the logged in user" do
