@@ -15,7 +15,7 @@ RSpec.describe "users/edit", type: :view do
 
     assert_select "form[action=?][method=?]", user_path(user), "post" do
       # Inputs
-      %w[ email inactive super_user ].each do |field|
+      %w[ email locked super_user ].each do |field|
         assert_select "input[name=?]", "user[#{field}]"
       end
 
