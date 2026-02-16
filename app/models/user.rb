@@ -149,8 +149,7 @@ class User < ApplicationRecord
   end
 
   def name
-    return email if !first_name || first_name.empty?
-    "#{first_name} #{last_name}"
+    person ? person.full_name : email
   end
 
   def primary_asset # method needed for idea_submitted_fyi mailer
