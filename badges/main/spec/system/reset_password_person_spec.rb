@@ -9,6 +9,8 @@ RSpec.describe 'Reset password (person)', type: :system do
     sign_in person_user
     # Start on a page where the user nav is visible
     visit root_path
+    # Wait for any flash message overlay to disappear before clicking avatar
+    page.has_no_css?('#flash_now', visible: true, wait: 10)
     # Open user nav dropdown (wait for avatar to appear after page load)
     find('#avatar button', wait: 10).click
     # Click "Change password"
