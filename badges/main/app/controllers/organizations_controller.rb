@@ -95,10 +95,10 @@ class OrganizationsController < ApplicationController
     @organization_statuses = OrganizationStatus.all
     @sectors_collection = Sector.published.order(:name).pluck(:name, :id)
     @current_sector_ids = @organization.sectorable_items.map(&:sector_id)
-    @people_array = Person.joins(:user)
-                          .order(:first_name, :last_name)
-                          .pluck(:first_name, :last_name, :id)
-                          .map { |fn, ln, id| [ "#{fn} #{ln}", id ] }
+    @people_array = authorized_scope(Person.joins(:user))
+                      .order(:first_name, :last_name)
+                      .pluck(:first_name, :last_name, :id)
+                      .map { |fn, ln, id| [ "#{fn} #{ln}", id ] }
 
     if @organization.persisted? && @organization.errors.empty?
       org_people = @organization.organization_people

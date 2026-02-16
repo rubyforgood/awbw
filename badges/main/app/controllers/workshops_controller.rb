@@ -185,10 +185,13 @@ class WorkshopsController < ApplicationController
 
 
   def set_form_variables
-    @age_ranges = Category.includes(:category_type).where("category_types.name = 'AgeRange'").pluck(:name)
-    @potential_series_workshops = Workshop.published.includes(:windows_type).where.not(id: @workshop.id).order(:title)
+    @age_ranges = Category.includes(:category_type)
+                          .where("category_types.name = 'AgeRange'").pluck(:name)
+    potential_series = authorized_scope(Workshop.published).includes(:windows_type)
+    potential_series = potential_series.where.not(id: @workshop.id) if @workshop.persisted?
+    @potential_series_workshops = authorized_scope(potential_series).order(:title)
     @windows_types = WindowsType.all
-    @workshop_ideas = WorkshopIdea.order(created_at: :desc)
+    @workshop_ideas = authorized_scope(WorkshopIdea.order(created_at: :desc))
                                   .map { |wi|
                                     [ "#{wi.created_at.strftime("%Y-%m-%d")
                                     } - (#{wi.created_by.full_name}): #{wi.title}", wi.id ] }
