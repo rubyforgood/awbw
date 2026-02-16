@@ -58,7 +58,7 @@
                   <% if user.confirmed_at.present? %>
                     <span class="fa fa-check-circle text-green-500" title="Confirmed <%= l(user.confirmed_at, format: :long) %>"></span>
                   <% elsif user.welcome_instructions_sent_at.present? %>
-                    <% sent_info = "Confirmation sent #{l(user.welcome_instructions_sent_at, format: :long)}"
+                    <% sent_info = "Confirmation instructions sent #{l(user.welcome_instructions_sent_at, format: :long)}"
                        sent_info += " by #{user.updated_by.name}" if user.updated_by.present? %>
                     <i class="fa-solid fa-clock text-warning" title="<%= sent_info %>"></i>
                   <% else %>
@@ -95,7 +95,10 @@
                     %>
                     <i class="fa-solid fa-lock text-red-500" title="<%= lock_info %>"></i>
                   <% end %>
-                  <% if !user.inactive? && !user.locked_at.present? %>
+                  <% if user.confirmed_at.nil? %>
+                    <i class="fa-solid fa-lock text-red-500" title="Unconfirmed — cannot log in"></i>
+                  <% end %>
+                  <% if !user.inactive? && !user.locked_at.present? && user.confirmed_at.present? %>
                     <% created_info = "Created #{l(user.created_at, format: :long)}" if user.created_at.present?
                        created_info += " by #{user.created_by.name}" if user.created_by.present? %>
                     <span class="fa fa-check-circle text-gray-300" title="<%= created_info %>"></span>
@@ -105,7 +108,7 @@
                 <!-- Admin -->
                 <td class="px-4 py-2 text-center">
                   <% if user.super_user? %>
-                    <i class="fa-solid fa-user-shield text-blue-600" title="Admin<%= " — set #{l(user.updated_at, format: :long)}" if user.updated_at.present? %><%= " by #{user.updated_by.name}" if user.updated_by.present? %>"></i>
+                    <i class="fa-solid fa-user-shield text-blue-600" title="<%= "Granted at #{l(user.updated_at, format: :long)}" if user.updated_at.present? %><%= " by #{user.updated_by.name}" if user.updated_by.present? %>"></i>
                   <% else %>
                     <span>--</span>
                   <% end %>
