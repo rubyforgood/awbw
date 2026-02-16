@@ -111,7 +111,7 @@ class BookmarksController < ApplicationController
     @sortable_fields = WindowsType.where("name NOT LIKE ?", "%COMBINED%")
     @windows_types_array = WindowsType::TYPES
     @bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS.map { |type| [ type, type ] }
-    @workshops = Workshop.where("led_count > 0").order(led_count: :desc)
+    @workshops = authorized_scope(Workshop.where("led_count > 0")).order(led_count: :desc)
   end
 
   def load_workshop_data

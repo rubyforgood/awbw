@@ -173,12 +173,12 @@ class StoriesController < ApplicationController
     @story_idea = StoryIdea.find(params[:story_idea_id]) if params[:story_idea_id].present?
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @organizations = (@user || current_user).organizations.order(:name)
-    @story_ideas = StoryIdea.includes(:created_by)
+    @story_ideas = authorized_scope(StoryIdea.includes(:created_by))
                             .references(:users)
                             .order(:created_at)
     @windows_types = WindowsType.all
-    @workshops = Workshop.all.order(:title)
-    @users = User.active.or(User.where(id: @story.created_by_id))
+    @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
+    @users = authorized_scope(User.has_access.or(User.where(id: @story.created_by_id)))
                  .includes(:person)
                  .order("people.first_name, people.last_name")
     @categories_grouped =

@@ -69,7 +69,7 @@
               <%= f.input :created_by_id,
                           as: :select,
                           label: "Author",
-                          collection: User.order(:last_name, :first_name),
+                          collection: @authors,
                           selected: f.object.created_by_id || current_user.id,
                           input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm
                           focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>

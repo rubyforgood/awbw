@@ -173,25 +173,6 @@ class WorkshopsController < ApplicationController
   end
 
 
-  def search
-    @params = params[:search]
-    @query = params[:search][:query] if @params
-    @workshops = Search.new.search(@params, current_user)
-
-    if @workshops.paginate(page: params[:search][:page], per_page: workshops_per_page).empty?
-      @workshops = @workshops.paginate(page: 1, per_page: workshops_per_page)
-    else
-      @workshops = @workshops.paginate(page: params[:search][:page], per_page: workshops_per_page)
-    end
-
-    authorize! @workshops
-
-    load_sortable_fields
-    load_metadata
-
-    render :index
-  end
-
   private
 
   def set_show
@@ -204,10 +185,13 @@ class WorkshopsController < ApplicationController
 
 
   def set_form_variables
-    @age_ranges = Category.includes(:category_type).where("category_types.name = 'AgeRange'").pluck(:name)
-    @potential_series_workshops = Workshop.published.where.not(id: @workshop.id).order(:title)
+    @age_ranges = Category.includes(:category_type)
+                          .where("category_types.name = 'AgeRange'").pluck(:name)
+    potential_series = authorized_scope(Workshop.published).includes(:windows_type)
+    potential_series = potential_series.where.not(id: @workshop.id) if @workshop.persisted?
+    @potential_series_workshops = authorized_scope(potential_series).order(:title)
     @windows_types = WindowsType.all
-    @workshop_ideas = WorkshopIdea.order(created_at: :desc)
+    @workshop_ideas = authorized_scope(WorkshopIdea.order(created_at: :desc))
                                   .map { |wi|
                                     [ "#{wi.created_at.strftime("%Y-%m-%d")
                                     } - (#{wi.created_by.full_name}): #{wi.title}", wi.id ] }
@@ -239,14 +223,6 @@ class WorkshopsController < ApplicationController
 
   def log_workshop_error(action, error)
     Rails.logger.error "Workshop #{action} failed: #{error.class} - #{error.message}\n#{error.backtrace.join("\n")}"
-  end
-
-  def workshops_per_page
-    view_all_workshops? ? @workshops.published.size : 12
-  end
-
-  def view_all_workshops?
-    params[:search][:view_all] == "1"
   end
 
   def workshop_params
@@ -322,13 +298,5 @@ class WorkshopsController < ApplicationController
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ]
     )
-  end
-
-  def load_sortable_fields
-    @sortable_fields = WindowsType.where(short_name: "COMBINED")
-  end
-
-  def load_metadata
-    @metadata = CategoryType.includes(:categories).published.decorate
   end
 end

@@ -85,11 +85,12 @@ class StoryIdeasController < ApplicationController
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @organizations = (@user || current_user)&.organizations&.order(:name) || Organization.none
     @windows_types = WindowsType.all
-    @workshops = Workshop.order(:title)
 
-    @users = User.active.includes(:person)
+    @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
+
+    @users = authorized_scope(User.has_access.includes(:person))
     @users = @users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
-    @users = @users.distinct.order("people.first_name, people.last_name")
+    @users = @users.includes(:person).distinct.order("people.first_name, people.last_name")
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
     @story_idea.gallery_assets.build
   end

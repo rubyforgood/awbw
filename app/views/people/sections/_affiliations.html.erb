@@ -1,0 +1,16 @@
+<%= turbo_frame_tag "person_affiliations_section" do %>
+  <% if affiliations.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 blur-on-submit">
+      <% affiliations.each do |affiliation| %>
+        <% if affiliation.organization %>
+          <%= organization_profile_button(affiliation.organization) %>
+        <% end %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate affiliations, params: { section: "affiliations" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No affiliations listed.</p>
+  <% end %>
+<% end %>

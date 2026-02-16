@@ -25,32 +25,44 @@
           <li class="px-4 py-3">
             <div class="flex items-center gap-2 flex-wrap">
               <% if dup[:type] == "user" %>
-                <%= link_to dup[:name].presence || dup[:email],
-                            user_path(dup[:id]),
-                            target: "_blank",
-                            class: "text-blue-600 hover:text-blue-800 underline font-medium" %>
+              <span class="text-[10px] font-semibold uppercase text-gray-400">USER EMAIL</span>
+                <%= link_to dup[:email], user_path(dup[:id]), target: "_blank",
+                            class: "text-gray-700 hover:text-blue-600 font-medium" %>
                 <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">existing user</span>
               <% else %>
-                <%= link_to dup[:name],
-                            person_path(dup[:id]),
-                            target: "_blank",
-                            class: "text-blue-600 hover:text-blue-800 underline font-medium" %>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">person (no user)</span>
+                <span class="text-[10px] font-semibold uppercase text-gray-400">PERSON <%= dup[:email_field]&.upcase || "PRIMARY" %> EMAIL</span>
+                <%= link_to dup[:email], person_path(dup[:id]), target: "_blank",
+                            class: "text-gray-700 hover:text-blue-600 font-medium" %>
+                <% if dup[:has_user] %>
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">user email: <%= dup[:user_email] %></span>
+                <% else %>
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">no user</span>
+                <% end %>
               <% end %>
             </div>
-            <div class="text-gray-500 text-xs mt-0.5">
-              <%= dup[:email] %>
-            </div>
+            <% if dup[:type] == "user" && dup[:person_id].present? %>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-[10px] font-semibold uppercase text-gray-400 w-12">PERSON</span>
+                <%= link_to dup[:name], person_path(dup[:person_id]), target: "_blank",
+                            class: "text-gray-500 hover:text-blue-600 text-xs" %>
+              </div>
+            <% elsif dup[:type] == "person" %>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-[10px] font-semibold uppercase text-gray-400 w-12">PERSON</span>
+                <%= link_to dup[:name], person_path(dup[:id]), target: "_blank",
+                            class: "text-gray-500 hover:text-blue-600 text-xs" %>
+              </div>
+            <% end %>
           </li>
         <% end %>
       </ul>
 
       <% if @blocked %>
-        <p class="text-sm text-red-600 font-medium">
-          A user with this email already exists.
+        <p class="text-sm text-red-600 font-medium mb-2">
+          An <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">existing user</span> with this email already exists.
         </p>
-        <p class="text-sm text-red-600 font-medium mb-6">
-          Please edit the existing user instead.
+        <p class="text-sm text-gray-500 mb-6">
+          Edit the existing user or change this user's email.
         </p>
       <% end %>
 

@@ -39,17 +39,17 @@
       <% end %>
     <% end %>
 
-    <% active_org_people = @current_user_active_org_people || [] %>
-    <% if active_org_people.any? %>
-      <% active_org_people.each do |organization_person| %>
-        <% if allowed_to?(:show?, organization_person.organization) %>
-          <%= link_to organization_path(organization_person.organization),
+    <% active_affiliations = @current_user_active_affiliations || [] %>
+    <% if active_affiliations.any? %>
+      <% active_affiliations.each do |affiliation| %>
+        <% if allowed_to?(:show?, affiliation.organization) %>
+          <%= link_to organization_path(affiliation.organization),
                       class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 space-x-2" do %>
             <i class="fas fa-users"></i>
             <span>
               My team
-              <% if active_org_people.many? %>
-                (<%= organization_person.organization.name.truncate(12) %>)
+              <% if active_affiliations.many? %>
+                (<%= affiliation.organization.name.truncate(12) %>)
               <% end %>
             </span>
           <% end %>

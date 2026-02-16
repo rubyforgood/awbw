@@ -10,7 +10,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="shortcut icon" type="image/png" href="<%= asset_path("favicon.png") %>">
+    <link rel="shortcut icon" type="image/png" href="<%= asset_path(favicon_file) %>">
 
     <%= vite_stylesheet_tag "application.css" %>
     <%= vite_client_tag %>
@@ -42,20 +42,13 @@
         <%= image_tag("awbw-print-logo.png", class: "print:w-36 m-3") %>
         <hr>
       </div>
-      <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-          <%# TODO handle printable area %>
-          <% if user_signed_in? %>
-            <div class="signed-in-user my-3"><%= render "shared/flash_messages" %><%= yield %></div>
-          <% else %>
-            <div class="not-signed-in-user min-h-screen flex flex-col">
-              <%= render "shared/flash_messages" %>
-              <%= yield %>
-            </div>
-          <% end %>
-        </div>
+      <div>
+        <%= render "shared/flash_messages" %>
+        <%= yield %>
+      </div>
     </div>
 
-    <div class="site-footer print:hidden"><%= render "shared/footer" %></div>
+    <div class="site-footer print:hidden <%= 'mt-12' unless controller_name == 'dashboard' %>"><%= render "shared/footer" %></div>
     <%= render "shared/footer_nav" %>
   </body>
 </html>

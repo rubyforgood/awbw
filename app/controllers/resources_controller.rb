@@ -121,13 +121,6 @@ class ResourcesController < ApplicationController
     redirect_to resources_path, notice: "Resource was successfully destroyed."
   end
 
-  def search
-    authorize!
-    process_search
-    @sortable_fields = Resource::PUBLISHED_KINDS
-    render :index
-  end
-
   def download
     @resource = Resource.find(params[:resource_id])
     authorize! @resource
@@ -156,7 +149,7 @@ class ResourcesController < ApplicationController
     @resource.build_downloadable_asset if @resource.downloadable_asset.blank?
     @resource.gallery_assets.build
     @windows_types = WindowsType.all
-    @authors = User.active.or(User.where(id: @resource.user_id))
+    @authors = authorized_scope(User.has_access.or(User.where(id: @resource.user_id)))
                    .includes(:person)
                    .order("people.first_name, people.last_name")
                    .map { |u| [ u.full_name, u.id ] }
@@ -178,12 +171,6 @@ class ResourcesController < ApplicationController
     selected_sector_ids = Array(params[:resource][:sector_ids]).reject(&:blank?).map(&:to_i)
     resource.sectors = Sector.where(id: selected_sector_ids)
     resource.save!
-  end
-
-  def process_search
-    @params = search_params
-    @query = search_params[:query]
-    @resources = Search.new.search(search_params, current_user).paginate(page: params[:search][:page])
   end
 
   def resource_id_param
@@ -210,9 +197,5 @@ class ResourcesController < ApplicationController
         @user_form.report_form_field_answers.build(form_field: field)
       end
     end
-  end
-
-  def search_params
-    params[:search]
   end
 end

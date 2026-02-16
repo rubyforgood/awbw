@@ -1,5 +1,6 @@
 class Workshop < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include PunctuationStrippable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include ActiveModel::Dirty
@@ -139,7 +140,15 @@ class Workshop < ApplicationRecord
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
   scope :legacy, -> { where(legacy: true) }
-  scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
+  scope :title, ->(title) {
+    spaced = "%#{ActiveRecord::Base.sanitize_sql_like(strip_punctuation_spaced(title))}%"
+    spaceless = "%#{ActiveRecord::Base.sanitize_sql_like(strip_punctuation_spaceless(title))}%"
+
+    spaced_expr = Arel::Nodes::SqlLiteral.new(strip_punctuation_sql_spaced("workshops.title"))
+    spaceless_expr = Arel::Nodes::SqlLiteral.new(strip_punctuation_sql_spaceless("workshops.title"))
+
+    where(spaced_expr.matches(spaced).or(spaceless_expr.matches(spaceless)))
+  }
   scope :order_by_date, ->(sort_order = "asc") do
     order(Arel.sql(<<~SQL.squish))
     COALESCE(
@@ -151,7 +160,6 @@ class Workshop < ApplicationRecord
     ) #{sort_order == "asc" ? "ASC" : "DESC"}
     SQL
   end
-  scope :title, ->(title) { where("workshops.title like ?", "%#{ title }%") }
   scope :windows_type_ids, ->(windows_type_ids) { where(windows_type_id: windows_type_ids) }
   scope :with_bookmarks_count, -> do
     left_joins(:bookmarks)

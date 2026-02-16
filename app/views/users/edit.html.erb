@@ -2,15 +2,31 @@
   <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
     <div class="admin-only bg-blue-100 rounded p-6">
       <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl
-        transition-shadow duration-200 p-6">
+        transition-shadow duration-200 p-6" data-controller="toggle-user-icon">
         <div class="space-y-6">
           <!-- Header -->
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-semibold text-gray-900">
-              Edit <%= @user.class.model_name.human %>
+              Edit <%= @user.class.model_name.human %>: <%= @user.email %>
+              <i class="fa-solid fa-user-shield text-blue-500" data-toggle-user-icon-target="adminIcon"
+                 style="<%= 'display:none' unless @user.super_user? %>"></i>
+              <i class="fa-solid fa-lock text-red-500" data-toggle-user-icon-target="lockIcon"
+                 style="<%= 'display:none' unless @user.locked_at.present? %>"></i>
             </h1>
 
             <div class="flex space-x-2">
+              <% if @user.person %>
+                <%= link_to "Person profile",
+                            person_path(@user.person),
+                            class: "btn btn-secondary-outline mr-2" %>
+              <% else %>
+                <div class="admin-only bg-blue-100 p-2 mr-2">
+                  No person!
+                  <%= link_to "Create person",
+                              new_person_path(user_id: @user.id),
+                              class: "btn btn-warning px-2 py-1" %>
+                </div>
+              <% end %>
               <%= button_to "Reset password",
                             send_reset_password_instructions_user_path(@user),
                             method: :post,
@@ -29,9 +45,6 @@
               <%= link_to "Users",
                           users_path,
                           class: "btn btn-secondary-outline" %>
-              <%= link_to "Person",
-                          person_path(@user.person),
-                          class: "btn btn-secondary-outline" if @user.person %>
               <%= link_to "View",
                           user_path(@user),
                           class: "btn btn-secondary-outline" %>
@@ -39,6 +52,19 @@
           </div>
 
           <div class="border-b border-gray-300 mb-6"></div>
+
+          <% if @user.unconfirmed_email.present? %>
+            <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+                <span class="font-medium text-yellow-800">Email change pending confirmation</span>
+              </div>
+              <p class="text-sm text-yellow-700 mt-1">
+                A confirmation email was sent to <strong><%= @user.unconfirmed_email %></strong>.
+                The current email will remain <strong><%= @user.email %></strong> until confirmed.
+              </p>
+            </div>
+          <% end %>
 
           <div class="space-y-6">
             <div class="mt-4">

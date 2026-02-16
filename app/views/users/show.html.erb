@@ -1,19 +1,42 @@
 <div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="admin-only bg-blue-100 rounded p-6">
+    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
 
       <!-- Top buttons -->
       <div class="flex justify-end mb-6">
+        <% if @user.person %>
+          <%= link_to "Person profile",
+                      person_path(@user.person),
+                      class: "btn btn-secondary-outline mr-2" %>
+        <% else %>
+          <div class="admin-only bg-blue-100 p-2 mr-2">
+            Not associated with a person
+            <%= link_to "Create person",
+                        new_person_path(user_id: @user.id),
+                        class: "btn btn-warning px-2 py-1" %>
+          </div>
+        <% end %>
         <% if allowed_to?(:index?, User) %>
           <%= link_to "Users", users_path, class: "btn btn-secondary-outline mr-2" %>
         <% end %>
-        <%= link_to "Person profile",
-                    person_path(@user.person),
-                    class: "btn btn-secondary-outline mr-2" if @user.person %>
         <% if allowed_to?(:edit?, @user) %>
           <%= link_to "Edit", edit_user_path(@user), class: "btn btn-primary-outline" %>
         <% end %>
       </div>
+
+      <% if @user.unconfirmed_email.present? %>
+        <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+            <span class="font-medium text-yellow-800">Email change pending confirmation</span>
+          </div>
+          <p class="text-sm text-yellow-700 mt-1">
+            A confirmation email was sent to <strong><%= @user.unconfirmed_email %></strong>.
+            The current email will remain <strong><%= @user.email %></strong> until confirmed.
+          </p>
+        </div>
+      <% end %>
 
       <!-- Main two-column layout -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-10">
@@ -22,6 +45,12 @@
         <div class="flex flex-col items-center md:items-start text-center md:text-left">
           <h2 class="font-bold text-3xl text-gray-900 mb-4">
             <%= @user.name %>
+            <% if @user.super_user? %>
+              <i class="fa-solid fa-user-shield text-blue-500"></i>
+            <% end %>
+            <% if @user.locked_at.present? %>
+              <i class="fa-solid fa-lock text-red-500"></i>
+            <% end %>
           </h2>
 
           <% if @user.avatar.attached? %>
@@ -41,29 +70,14 @@
             Identity
           </h4>
 
-          <dl class="space-y-2 text-sm">
-            <div>
-              <dt class="font-medium text-gray-500">Email</dt>
-              <dd class="text-gray-900"><%= @user.email.presence || "—" %></dd>
-            </div>
+          <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+            <dt class="font-medium text-gray-500">Email</dt>
+            <dd class="text-gray-900"><%= @user.email.presence || "—" %></dd>
 
-            <div>
-              <dt class="font-medium text-gray-500">Phone</dt>
-              <dd class="text-gray-900"><%= @user.phone.presence || "—" %></dd>
-            </div>
+            <dt class="font-medium text-gray-500">Phone</dt>
+            <dd class="text-gray-900"><%= @user.phone.presence || "—" %></dd>
           </dl>
         </div>
-
-        <div>
-          <% unless @user.person %>
-            Not associated with a person!
-            <br>
-            <%= link_to "Create person",
-                        new_person_path(user_id: @user.id),
-                        class: "btn btn-primary" if @user.persisted? %>
-          <% end %>
-        </div>
-
       </div>
 
       <!-- Devise / Account Details -->
@@ -75,28 +89,42 @@
             Account status
           </h4>
 
-          <dl class="space-y-2 text-sm">
-            <div>
+          <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+            <% if @user.inactive? %>
               <dt class="font-medium text-gray-500">Active</dt>
-              <dd class="text-gray-900">
-                <%= @user.inactive? ? "No" : "Yes" %>
-              </dd>
-            </div>
+              <dd class="text-red-500">No</dd>
+            <% end %>
 
-            <div>
-              <dt class="font-medium text-gray-500">Admin</dt>
-              <dd class="text-gray-900">
-                <%= @user&.super_user? ? "Yes" : "No" %>
+            <dt class="font-medium text-gray-500">Admin</dt>
+            <dd class="text-gray-900"><%= @user&.super_user? ? "Yes" : "No" %></dd>
+            <% if @last_admin_event %>
+              <dt></dt>
+              <dd class="text-gray-500 text-xs -mt-1">
+                <%= l(@last_admin_event.time, format: :long) %>
+                <% if @last_admin_event.user %>
+                  by <%= @last_admin_event.user.name %>
+                <% end %>
               </dd>
-            </div>
+            <% end %>
 
             <% if @user.respond_to?(:locked_at) %>
-              <div>
-                <dt class="font-medium text-gray-500">Locked</dt>
-                <dd class="text-gray-900">
-                  <%= @user.locked_at.present? ? "Yes" : "No" %>
+              <dt class="font-medium text-gray-500">Locked</dt>
+              <dd class="text-gray-900">
+                <% if @user.locked_at.present? %>
+                  Yes <i class="fa-solid fa-lock text-red-500"></i>
+                <% else %>
+                  No
+                <% end %>
+              </dd>
+              <% if @last_lock_event %>
+                <dt></dt>
+                <dd class="text-gray-500 text-xs -mt-1">
+                  <%= l(@last_lock_event.time, format: :long) %>
+                  <% if @last_lock_event.user %>
+                    by <%= @last_lock_event.user.name %>
+                  <% end %>
                 </dd>
-              </div>
+              <% end %>
             <% end %>
           </dl>
         </div>
@@ -107,30 +135,20 @@
             Authentication
           </h4>
 
-          <dl class="space-y-2 text-sm">
+          <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <% if @user.respond_to?(:sign_in_count) %>
-              <div>
-                <dt class="font-medium text-gray-500">Sign-in count</dt>
-                <dd class="text-gray-900"><%= @user.sign_in_count %></dd>
-              </div>
+              <dt class="font-medium text-gray-500">Sign-in count</dt>
+              <dd class="text-gray-900"><%= @user.sign_in_count %></dd>
             <% end %>
 
             <% if @user.respond_to?(:current_sign_in_at) %>
-              <div>
-                <dt class="font-medium text-gray-500">Current sign-in</dt>
-                <dd class="text-gray-900">
-                  <%= l(@user.current_sign_in_at, format: :long) if @user.current_sign_in_at %>
-                </dd>
-              </div>
+              <dt class="font-medium text-gray-500">Current sign-in</dt>
+              <dd class="text-gray-900"><%= l(@user.current_sign_in_at, format: :long) if @user.current_sign_in_at %></dd>
             <% end %>
 
             <% if @user.respond_to?(:last_sign_in_at) %>
-              <div>
-                <dt class="font-medium text-gray-500">Last sign-in</dt>
-                <dd class="text-gray-900">
-                  <%= l(@user.last_sign_in_at, format: :long) if @user.last_sign_in_at %>
-                </dd>
-              </div>
+              <dt class="font-medium text-gray-500">Last sign-in</dt>
+              <dd class="text-gray-900"><%= l(@user.last_sign_in_at, format: :long) if @user.last_sign_in_at %></dd>
             <% end %>
           </dl>
         </div>
@@ -141,23 +159,100 @@
             Audit
           </h4>
 
-          <dl class="space-y-2 text-sm">
-            <div>
-              <dt class="font-medium text-gray-500">Created at</dt>
-              <dd class="text-gray-900">
-                <%= @user.created_at.present? ? l(@user.created_at, format: :long) : "—" %>
-              </dd>
-            </div>
+          <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+            <dt class="font-medium text-gray-500">Created at</dt>
+            <dd class="text-gray-900"><%= @user.created_at.present? ? l(@user.created_at, format: :long) : "—" %></dd>
 
-            <div>
-              <dt class="font-medium text-gray-500">Updated at</dt>
-              <dd class="text-gray-900"><%= l(@user.updated_at, format: :long) %></dd>
-            </div>
+            <dt class="font-medium text-gray-500">Created by</dt>
+            <dd class="text-gray-900"><%= @user.created_by&.name.presence || "—" %></dd>
+
+            <dt class="font-medium text-gray-500">Updated at</dt>
+            <dd class="text-gray-900"><%= l(@user.updated_at, format: :long) %></dd>
+
+            <dt class="font-medium text-gray-500">Updated by</dt>
+            <dd class="text-gray-900"><%= @user.updated_by&.name.presence || "—" %></dd>
           </dl>
         </div>
 
       </div>
 
+      <!-- Account Activity -->
+      <% if @account_events.any? %>
+        <div class="mt-8">
+          <h4 class="text-sm font-semibold uppercase text-gray-700 mb-3">Account Activity</h4>
+          <table class="w-full border-collapse border border-gray-200 text-sm">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-4 py-2 text-left font-semibold text-gray-700">Event</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-700">Changes</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-700">Time</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-700">By</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% @account_events.each do |event| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-4 py-2 text-gray-900">
+                    <% if event.name.start_with?("auth.") %>
+                      <%= event.name.sub(/\Aauth\./, "").titleize %>
+                    <% else %>
+                      <%= event.name.split(".").first.titleize %>
+                    <% end %>
+                  </td>
+                  <td class="px-4 py-2 text-gray-500 text-xs">
+                    <% changes = event.properties["changes"] %>
+                    <% assoc_changes = event.properties["association_changes"] %>
+                    <% if changes.present? %>
+                      <% changes.each do |attr, vals| %>
+                        <div><span class="font-medium"><%= attr.titleize %></span>: <%= vals["after"] %></div>
+                      <% end %>
+                    <% end %>
+                    <% if assoc_changes.present? %>
+                      <% assoc_changes.each do |assoc_name, records| %>
+                        <% Array(records).each do |record| %>
+                          <div><span class="font-medium"><%= assoc_name.to_s.titleize %></span>: <%= record["action"] %></div>
+                        <% end %>
+                      <% end %>
+                    <% end %>
+                  </td>
+                  <td class="px-4 py-2 text-gray-500"><%= l(event.time, format: :long) %></td>
+                  <td class="px-4 py-2 text-gray-500"><%= event.user&.name.presence || "—" %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+          <div class="mt-4 flex justify-center">
+            <%= tailwind_paginate @account_events %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Comments Section -->
+      <% if @comments.any? %>
+        <div class="mt-8">
+          <h4 class="text-sm font-semibold uppercase text-gray-700 mb-3">Comments</h4>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm space-y-3">
+            <% @comments.each do |comment| %>
+              <div class="grid grid-cols-[auto_auto_1fr] gap-x-3 items-start">
+                <span class="text-xs font-medium text-gray-500 mt-1">
+                  <%= comment.created_by ? "#{comment.created_by.first_name&.first}#{comment.created_by.last_name&.first}".upcase : "—" %>
+                </span>
+                <span class="text-xs text-gray-400 mt-1 whitespace-nowrap">
+                  <%= comment.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
+                </span>
+                <div class="text-sm text-gray-900">
+                  <%= simple_format(comment.body) %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <div class="mt-4 flex justify-center">
+            <%= tailwind_paginate @comments, param_name: :comments_page %>
+          </div>
+        </div>
+      <% end %>
+
+    </div>
     </div>
   </div>
 </div>

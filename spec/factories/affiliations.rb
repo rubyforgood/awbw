@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :organization_person do
+  factory :affiliation do
     association :organization
     association :person
 

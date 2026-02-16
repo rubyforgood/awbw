@@ -21,27 +21,27 @@
       </div>
     </div>
 
-    <!-- Admin -->
+    <!-- Access -->
     <div>
-      <%= label_tag :super_user, "Admin", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= select_tag :super_user,
-                     options_for_select([["All users", ""],
-                                         ["Admins", true],
-                                         ["Regular users", false]],
-                                        params[:super_user]),
+      <%= label_tag :access, "Access", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :access,
+                     options_for_select([["All", ""],
+                                         ["Has access", "true"],
+                                         ["No access", "false"]],
+                                        params[:access]),
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10",
                      onchange: "this.form.submit()" %>
     </div>
 
-    <!-- Inactive -->
+    <!-- Admin -->
     <div>
-      <%= label_tag :inactive, "Inactive", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= select_tag :inactive,
+      <%= label_tag :super_user, "Permission level", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :super_user,
                      options_for_select([["All users", ""],
-                                         ["Inactive users", true],
-                                         ["Active users", false]],
-                                        params[:inactive]),
+                                         ["Admins", true],
+                                         ["Regular users", false]],
+                                        params[:super_user]),
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10",
                      onchange: "this.form.submit()" %>

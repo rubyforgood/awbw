@@ -63,7 +63,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     it "renders the headers" do
       expect(mail.subject).to include("AWBW portal:")
       expect(mail.subject).to include("password reset")
-      expect(mail.subject).to include(notification.noticeable.name)
+      expect(mail.subject).to include(notification.noticeable.full_name)
       expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
       expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
       expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])

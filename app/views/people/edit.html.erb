@@ -3,26 +3,28 @@
 <!--    <div class="admin-only bg-blue-100 p-6">-->
       <div class="<%= DomainTheme.bg_class_for(:people) %>
           border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-8">
-        <div class="flex flex-wrap justify-end gap-2 mb-4">
-          <% unless @person.user %>
-            <div class="admin-only bg-blue-100 p-2">
-              No user!
-              <%= link_to "Create user",
-                          new_user_path(person_id: @person.id),
-                          class: "btn btn-warning px-2 py-1" %>
-            </div>
-          <% end %>
-          <% if @person.user %>
-            <%= link_to "User account", edit_user_path(@person.user), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-          <% end %>
-          <%= link_to "Change password", change_password_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-          <%= link_to "Dashboard", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-          <%= link_to "People", people_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-          <%= link_to "Profile", person_path(@person), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <div class="sticky top-0 z-10 <%= DomainTheme.bg_class_for(:people) %> pb-3">
+          <div class="flex flex-wrap justify-end gap-2 mb-4">
+            <% unless @person.user %>
+              <div class="admin-only bg-blue-100 p-2">
+                No user!
+                <%= link_to "Create user",
+                            new_user_path(person_id: @person.id),
+                            class: "btn btn-warning px-2 py-1" %>
+              </div>
+            <% end %>
+            <% if @person.user %>
+              <%= link_to "User account", edit_user_path(@person.user), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+            <% end %>
+            <%= link_to "Change password", change_password_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+            <%= link_to "Dashboard", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+            <%= link_to "People", people_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+            <%= link_to "Profile", person_path(@person), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+          </div>
+          <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
+            Edit Person: <%= truncate(@person.name, length: 30) %>
+          </h1>
         </div>
-        <h1 class="text-3xl font-semibold text-gray-900 tracking-tight mb-3">
-          Edit Person: <%= truncate(@person.name, length: 30) %>
-        </h1>
         <div class="space-y-6">
           <div class="bg-white rounded mt-4 p-6">
             <%= render "form" %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_16_120927) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -102,6 +102,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.datetime "updated_at", precision: nil
     t.index ["email"], name: "index_admins_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
+  end
+
+  create_table "affiliations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.date "end_date"
+    t.string "filemaker_code"
+    t.boolean "inactive", default: false, null: false
+    t.integer "organization_agency_id"
+    t.integer "organization_id", null: false
+    t.integer "person_id", null: false
+    t.integer "position"
+    t.boolean "primary_contact", default: false, null: false
+    t.date "start_date"
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
+    t.index ["organization_id"], name: "index_affiliations_on_organization_id"
+    t.index ["person_id"], name: "index_affiliations_on_person_id"
+    t.index ["user_id"], name: "index_affiliations_on_user_id"
   end
 
   create_table "age_ranges", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -202,6 +222,62 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.index ["updated_by_id"], name: "index_banners_on_updated_by_id"
   end
 
+  create_table "blazer_audits", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.timestamp "created_at", null: false
+    t.string "data_source"
+    t.bigint "query_id"
+    t.text "statement"
+    t.integer "user_id"
+    t.index ["query_id"], name: "index_blazer_audits_on_query_id"
+    t.index ["user_id"], name: "index_blazer_audits_on_user_id"
+  end
+
+  create_table "blazer_checks", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "check_type"
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.text "emails"
+    t.datetime "last_run_at"
+    t.text "message"
+    t.bigint "query_id"
+    t.string "schedule"
+    t.text "slack_channels"
+    t.string "state"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_checks_on_creator_id"
+    t.index ["query_id"], name: "index_blazer_checks_on_query_id"
+  end
+
+  create_table "blazer_dashboard_queries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "dashboard_id"
+    t.integer "position"
+    t.bigint "query_id"
+    t.datetime "updated_at", null: false
+    t.index ["dashboard_id"], name: "index_blazer_dashboard_queries_on_dashboard_id"
+    t.index ["query_id"], name: "index_blazer_dashboard_queries_on_query_id"
+  end
+
+  create_table "blazer_dashboards", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_dashboards_on_creator_id"
+  end
+
+  create_table "blazer_queries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.string "data_source"
+    t.text "description"
+    t.string "name"
+    t.text "statement"
+    t.string "status"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_queries_on_creator_id"
+  end
+
   create_table "bookmark_annotations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "annotation", size: :long
     t.integer "bookmark_id"
@@ -216,6 +292,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.index ["bookmarkable_type", "bookmarkable_id"], name: "index_bookmarks_on_bookmarkable"
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
@@ -245,9 +322,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
 
   create_table "category_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
+    t.string "display_text"
     t.string "legacy_id"
     t.string "name"
     t.boolean "published", default: false
+    t.boolean "story_specific", default: false
     t.datetime "updated_at", precision: nil, null: false
   end
 
@@ -265,6 +344,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.integer "width"
     t.index ["assetable_type", "assetable_id"], name: "idx_ckeditor_assetable"
     t.index ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type"
+  end
+
+  create_table "comments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "commentable_id", null: false
+    t.string "commentable_type", null: false
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["commentable_type", "commentable_id", "created_at"], name: "idx_on_commentable_type_commentable_id_created_at_89c6e27600"
+    t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
+    t.index ["created_by_id"], name: "index_comments_on_created_by_id"
+    t.index ["updated_by_id"], name: "index_comments_on_updated_by_id"
   end
 
   create_table "community_news", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -484,26 +577,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["published"], name: "index_organization_obligations_on_published"
-  end
-
-  create_table "organization_people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.date "end_date"
-    t.string "filemaker_code"
-    t.boolean "inactive", default: false, null: false
-    t.integer "organization_agency_id"
-    t.integer "organization_id"
-    t.bigint "person_id"
-    t.integer "position"
-    t.boolean "primary_contact", default: false, null: false
-    t.date "start_date"
-    t.string "title"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "user_id"
-    t.index ["organization_agency_id"], name: "index_organization_people_on_organization_agency_id"
-    t.index ["organization_id"], name: "index_organization_people_on_organization_id"
-    t.index ["person_id"], name: "index_organization_people_on_person_id"
-    t.index ["user_id"], name: "index_organization_people_on_user_id"
   end
 
   create_table "organization_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -852,6 +925,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.string "confirmation_token"
     t.datetime "confirmed_at"
     t.datetime "created_at", precision: nil
+    t.integer "created_by_id"
     t.datetime "current_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
     t.string "email", default: "", null: false
@@ -884,6 +958,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.string "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", precision: nil
+    t.integer "updated_by_id"
     t.datetime "welcome_instructions_created_at"
     t.datetime "welcome_instructions_sent_at"
     t.string "welcome_instructions_token"
@@ -891,10 +966,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
     t.string "zip2"
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
+    t.index ["created_by_id"], name: "index_users_on_created_by_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index ["updated_by_id"], name: "index_users_on_updated_by_id"
     t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
   end
 
@@ -1161,12 +1238,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
 
   add_foreign_key "action_text_mentions", "action_text_rich_texts"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "affiliations", "organizations"
+  add_foreign_key "affiliations", "organizations", column: "organization_agency_id"
+  add_foreign_key "affiliations", "people"
+  add_foreign_key "affiliations", "users"
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "banners", "users", column: "created_by_id"
   add_foreign_key "banners", "users", column: "updated_by_id"
+  add_foreign_key "blazer_audits", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_audits", "users"
+  add_foreign_key "blazer_checks", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_checks", "users", column: "creator_id"
+  add_foreign_key "blazer_dashboard_queries", "blazer_dashboards", column: "dashboard_id"
+  add_foreign_key "blazer_dashboard_queries", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_dashboards", "users", column: "creator_id"
+  add_foreign_key "blazer_queries", "users", column: "creator_id"
   add_foreign_key "bookmark_annotations", "bookmarks"
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "category_types"
+  add_foreign_key "comments", "users", column: "created_by_id"
+  add_foreign_key "comments", "users", column: "updated_by_id"
   add_foreign_key "community_news", "organizations"
   add_foreign_key "community_news", "users", column: "author_id"
   add_foreign_key "community_news", "users", column: "created_by_id"
@@ -1182,13 +1273,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_fields", "forms"
   add_foreign_key "forms", "form_builders"
-  add_foreign_key "monthly_reports", "organization_people", column: "organization_user_id"
+  add_foreign_key "monthly_reports", "affiliations", column: "organization_user_id"
   add_foreign_key "monthly_reports", "organizations"
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
-  add_foreign_key "organization_people", "organizations"
-  add_foreign_key "organization_people", "organizations", column: "organization_agency_id"
-  add_foreign_key "organization_people", "users"
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"
@@ -1226,6 +1314,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_230901) do
   add_foreign_key "user_permissions", "users"
   add_foreign_key "users", "organizations", column: "agency_id"
   add_foreign_key "users", "people"
+  add_foreign_key "users", "users", column: "created_by_id"
+  add_foreign_key "users", "users", column: "updated_by_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
   add_foreign_key "workshop_ideas", "users", column: "created_by_id"

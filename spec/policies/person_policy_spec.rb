@@ -101,8 +101,8 @@ RSpec.describe PersonPolicy, type: :policy do
       it "filters to searchable people with active affiliations" do
         scope = policy.apply_scope(Person.all, type: :active_record_relation)
         expect(scope.to_sql).to include('`people`.`profile_is_searchable` = TRUE')
-        expect(scope.to_sql).to include('INNER JOIN `organization_people`')
-        expect(scope.to_sql).to include('`organization_people`.`inactive` = FALSE')
+        expect(scope.to_sql).to include('INNER JOIN `affiliations`')
+        expect(scope.to_sql).to include('`affiliations`.`inactive` = FALSE')
       end
     end
   end

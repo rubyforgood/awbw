@@ -6,6 +6,7 @@ class DeviseMailer < Devise::Mailer
 
   before_action :set_branding
   after_action :create_notification_record
+  after_action :track_devise_email_event
 
   default from: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
   default reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
@@ -13,6 +14,7 @@ class DeviseMailer < Devise::Mailer
   def reset_password_instructions(record, token, opts = {})
     @record = record
     @token  = token
+    opts[:subject] = "AWBW portal: Password reset request for #{record.full_name}"
     @mail   = super
   end
 
@@ -21,13 +23,14 @@ class DeviseMailer < Devise::Mailer
     @token  = token
     @user = record
 
-    opts[:subject] = "Welcome to the #{@organization_name} portal"
+    opts[:subject] = "AWBW portal: Confirmation instructions for #{record.full_name}"
     @mail   = super
   end
 
   def unlock_instructions(record, token, opts = {})
     @record = record
     @token  = token
+    opts[:subject] = "AWBW portal: Unlock instructions for #{record.full_name}"
     @mail   = super
   end
 
@@ -99,5 +102,22 @@ class DeviseMailer < Devise::Mailer
         deliver: true
       )
     end
+  end
+
+  def track_devise_email_event
+    return unless @record.is_a?(User)
+
+    event_name = {
+      "reset_password_instructions" => "auth.reset_password_email_sent",
+      "confirmation_instructions" => "auth.confirmation_email_sent",
+      "unlock_instructions" => "auth.unlock_email_sent"
+    }[action_name]
+    return unless event_name
+
+    Analytics::AhoyTracker.track_auth_event(
+      event_name,
+      { record_id: @record.id, record_type: "User" },
+      user: Current.user
+    )
   end
 end

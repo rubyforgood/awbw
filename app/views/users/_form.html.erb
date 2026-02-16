@@ -1,4 +1,5 @@
-<%= simple_form_for @user, html: { multipart: true, class: "space-y-8" } do |f| %>
+<%= simple_form_for @user, html: { multipart: true, class: "space-y-8",
+                                          data: { controller: "dirty-form" } } do |f| %>
   <%= render "shared/errors", resource: @user if @user.errors.any? %>
   <%= f.hidden_field :person_id, value: @person&.id || f.object.person_id || params[:person_id] %>
 
@@ -12,53 +13,36 @@
           <% if @person %>
             <%= f.hidden_field :first_name, value: @person.first_name %>
             <%= f.hidden_field :last_name, value: @person.last_name %>
-            <div>
-              <div class="w-full">
-                <label class="block text-md font-medium text-gray-700 mb-1">
-                  First name
-                </label>
-                <div class="flex gap-x-2 items-center">
-                  <div class="text-gray-900 font-medium mt-2">
+            <div class="gap-4">
+              <div class="grid grid-cols-2 gap-x-4">
+                <div class="pr-3">
+                  <label class="block text-md font-medium text-gray-700 mb-1">
+                    First name
+                  </label>
+                  <div class="text-gray-900 font-medium mt-3">
                     <%= @person.first_name %>
                   </div>
                 </div>
-                <p class="text-sm text-gray-500 mt-3">
-                  Edit on <%= link_to "person profile", person_path(@person), class: "underline" %>
-                </p>
-              </div>
-            </div>
-            <div>
-              <div class="w-full">
-                <label class="block text-md font-medium text-gray-700 mb-1">
-                  Last name
-                </label>
-                <div class="flex gap-x-2 items-center">
-                  <div class="text-gray-900 font-medium mt-2">
+                <div class="pr-3">
+                  <label class="block text-md font-medium text-gray-700 mb-1">
+                    Last name
+                  </label>
+                  <div class="text-gray-900 font-medium mt-3">
                     <%= @person.last_name %>
                   </div>
                 </div>
-                <p class="text-sm text-gray-500 mt-3">
-                  Edit on <%= link_to "person profile", person_path(@person), class: "underline" %>
-                </p>
+              </div>
+              <div class="text-sm text-gray-500 mt-3">
+                Edit on <%= link_to "person profile", person_path(@person), class: "underline" %>
               </div>
             </div>
-          <% else %>
-            <% if @user.persisted? %>
-              <div>
-                Not associated with a person!
-                <br>
-                <%= link_to "Create person",
-                            new_person_path(user_id: @user.id),
-                            class: "btn btn-primary"%>
-              </div>
-            <% end %>
           <% end %>
-          <div class="md:flex-grow md:basis-1/3" id="email_field_wrapper">
+          <div class="md:flex-grow md:basis-1/3 ps-3" id="email_field_wrapper">
             <% if allowed_to?(:manage?, User) %>
               <div class="w-full">
                 <%= f.input :email,
                             label: @user.persisted? ? email_label_with_confirmation_icon(@user) : "Email",
-                            hint: "Only editable by admins",
+                            hint: @user.persisted? ? "Changing the email will send a confirmation email to the new address" : "Only editable by admins",
                             input_html: { value: f.object.email.presence || @person&.email,
                                           class: "w-full" },
                             wrapper_html: { class: "w-full" },
@@ -72,14 +56,13 @@
                               data-controller="confirm-email"
                               data-confirm-email-user-id-value="<%= @user.id %>"
                               data-action="click->confirm-email#confirm"
-                              class="btn bg-orange-600 hover:bg-orange-700 text-white border-orange-600 border font-medium">
+                              class="btn btn-warning-outline">
                         Manually confirm email
                       </button>
                     </div>
                   <% end %>
                 </div>
                 <div class="ms-2 ps-2">
-                  <%= render "toggle_lock_button", user: @user %>
                 </div>
               </div>
             <% else %>
@@ -102,9 +85,32 @@
           <div>
             <% if allowed_to?(:manage?, User) %>
               <div class="w-full p-3">
-                <div class="flex flex-col md:flex-row gap-4">
-                  <%= f.input :inactive %>
-                  <%= f.input :super_user, label: "Admin" %>
+                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                  <% if params[:admin].present? || f.object.inactive? %>
+                    <%= f.input :inactive %>
+                  <% end %>
+                  <label class="flex items-center gap-1">
+                    <%= f.hidden_field :locked, value: "0" %>
+                    <%= f.check_box :locked,
+                                    { checked: f.object.locked_at.present?,
+                                      data: { action: "change->toggle-user-icon#toggleLock",
+                                              "toggle-user-icon-target": "lockCheckbox" } },
+                                    "1", "0" %>
+                    <span data-toggle-user-icon-target="lockLabel"><%= f.object.locked_at.present? ? "Locked" : "Lock" %></span>
+                    <i class="fa-solid fa-lock text-red-500" data-toggle-user-icon-target="lockIcon"
+                       style="<%= 'display:none' unless f.object.locked_at.present? %>"></i>
+                  </label>
+                  <label class="flex items-center gap-1">
+                    <%= f.hidden_field :super_user, value: "0" %>
+                    <%= f.check_box :super_user,
+                                    { checked: f.object.super_user?,
+                                      data: { action: "change->toggle-user-icon#toggleAdmin",
+                                              "toggle-user-icon-target": "adminCheckbox" } },
+                                    "1", "0" %>
+                    <span>Admin</span>
+                    <i class="fa-solid fa-user-shield text-blue-500" data-toggle-user-icon-target="adminIcon"
+                       style="<%= 'display:none' unless f.object.super_user? %>"></i>
+                  </label>
                 </div>
               </div>
             <% end %>
@@ -113,7 +119,9 @@
         <!-- Notes -->
         <% if allowed_to?(:manage?, User) %>
           <div class="comments-section">
-            <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
+            <% if params[:admin].present? || f.object.comment.present? %>
+              <%= f.input :comment, as: :text, input_html: { rows: 3, class: "w-full" } %>
+            <% end %>
 
             <% if params[:admin] %>
               <div class="bg-red-100">
@@ -138,12 +146,43 @@
                 wrapper_html: { class: "w-full max-w-md" } %>
   </div>
 
+  <% if f.object.persisted? %>
+    <!-- Comments -->
+    <div class="form-group space-y-4" id="comments-section">
+      <div class="font-semibold text-gray-700 mb-2">Comments</div>
+
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm"
+           data-controller="paginated-fields comment-edit-toggle"
+           data-paginated-fields-per-page-value="5">
+        <%= f.simple_fields_for :comments do |cf| %>
+          <%= render "comments/comment_fields", f: cf %>
+        <% end %>
+
+        <div data-paginated-fields-target="nav"></div>
+
+        <button type="button"
+                class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
+                style="float:right"
+                data-action="click->comment-edit-toggle#toggle">
+          <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
+          <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
+        </button>
+        <%= link_to_add_association "➕ Add Comment",
+                                    f,
+                                    :comments,
+                                    partial: "comments/comment_fields",
+                                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  <% end %>
+
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @user, class: "btn btn-danger-outline",
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
-    <%= link_to "Cancel", users_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "Cancel", users_path, class: "btn btn-secondary-outline",
+                data: { action: "click->dirty-form#confirmCancel" } %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 <% end %>

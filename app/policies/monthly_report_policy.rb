@@ -21,7 +21,7 @@ class MonthlyReportPolicy < ApplicationPolicy
     @member ||= begin
       return false unless authenticated?
       return false unless record.organization
-      record.organization.organization_people.exists?(person_id: user.person_id)
+      record.organization.affiliations.exists?(person_id: user.person_id)
     end
   end
 

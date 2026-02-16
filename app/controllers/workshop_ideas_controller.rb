@@ -69,9 +69,10 @@ class WorkshopIdeasController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @age_ranges = Category.includes(:category_type).where("category_types.name = 'AgeRange'").pluck(:name)
-    @potential_series_workshops = Workshop.published.order(:title)
+    @potential_series_workshops = authorized_scope(Workshop.published).includes(:windows_type).order(:title)
     @sectors = Sector.published
     @windows_types = WindowsType.all
+    @authors = User.has_access.includes(:person).sort_by { |u| u.name.downcase }
     @categories_grouped =
       Category
         .includes(:category_type)

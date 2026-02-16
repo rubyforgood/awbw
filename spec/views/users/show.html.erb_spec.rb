@@ -14,6 +14,8 @@ RSpec.describe "users/show", type: :view do
 
   before do
     assign(:user, user)
+    assign(:account_events, Ahoy::Event.none.paginate(page: 1))
+    assign(:comments, user.comments.none.paginate(page: 1))
   end
 
   # --------------------------------------------------
@@ -39,7 +41,6 @@ RSpec.describe "users/show", type: :view do
 
     it "renders account status section" do
       expect(rendered).to include("Account status")
-      expect(rendered).to include("Active")
       expect(rendered).to include("Admin")
     end
 

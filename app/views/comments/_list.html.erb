@@ -1,0 +1,31 @@
+<%= turbo_frame_tag "comments_list" do %>
+  <div class="space-y-3">
+    <% if comments.any? %>
+      <% comments.each do |comment| %>
+        <div class="grid grid-cols-[auto_1fr] gap-x-3 items-start">
+          <span class="text-xs text-gray-400 mt-1 whitespace-nowrap">
+            <%= comment.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
+          </span>
+          <div class="text-sm text-gray-900">
+            <%= simple_format(comment.body) %>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="mt-4">
+        <%= will_paginate comments,
+            param_name: :page,
+            inner_window: 2,
+            outer_window: 0,
+            renderer: WillPaginate::ActionView::LinkRenderer,
+            previous_label: "← Previous",
+            next_label: "Next →",
+            class: "flex justify-center gap-2" %>
+      </div>
+    <% else %>
+      <div class="text-gray-500 text-sm py-4">
+        No comments yet.
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -2,6 +2,7 @@
 
   <div class="space-y-1 px-2 pt-2 pb-3">
     <!-- CURRICULUM -->
+    <% if user_signed_in? || Workshop.publicly_visible.exists? || Resource.publicly_visible.exists? %>
     <div data-controller="dropdown">
       <button
         class="mobile-section flex justify-between w-full"
@@ -31,8 +32,10 @@
         <% end %>
       </div>
     </div>
+    <% end %>
 
     <!-- Community -->
+    <% if user_signed_in? || CommunityNews.publicly_visible.exists? || Story.publicly_visible.exists? || Event.publicly_visible.exists? %>
     <div data-controller="dropdown">
       <button
         class="mobile-section flex justify-between w-full"
@@ -78,6 +81,7 @@
         <% end %>
       </div>
     </div>
+    <% end %>
 
     <!-- Help -->
     <div data-controller="dropdown">
@@ -119,7 +123,8 @@
       </div>
     </div>
 
-    <!-- Help -->
+    <!-- New -->
+    <% if user_signed_in? %>
     <div data-controller="dropdown">
       <button
         class="mobile-section flex justify-between w-full"
@@ -165,6 +170,7 @@
         <% end %>
       </div>
     </div>
+    <% end %>
 
   </div>
 </div>

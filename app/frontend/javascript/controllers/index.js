@@ -15,6 +15,12 @@ application.register("collection", CollectionController)
 import ConfirmEmailController from "./confirm_email_controller"
 application.register("confirm-email", ConfirmEmailController)
 
+import CommentEditToggleController from "./comment_edit_toggle_controller"
+application.register("comment-edit-toggle", CommentEditToggleController)
+
+import DirtyFormController from "./dirty_form_controller"
+application.register("dirty-form", DirtyFormController)
+
 import DismissController from "./dismiss_controller"
 application.register("dismiss", DismissController)
 
@@ -68,3 +74,6 @@ application.register("timeframe", TimeframeController)
 
 import ToggleLockController from "./toggle_lock_controller"
 application.register("toggle-lock", ToggleLockController)
+
+import ToggleUserIconController from "./toggle_user_icon_controller"
+application.register("toggle-user-icon", ToggleUserIconController)

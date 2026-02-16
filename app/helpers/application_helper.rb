@@ -130,11 +130,24 @@ module ApplicationHelper
     ENV["RAILS_ENV"] == "staging" || Rails.env == "staging"
   end
 
-  def email_confirmation_icon(user)
-    if user.confirmed_at.present?
-      content_tag(:span, "confirmed", class: "text-green-600 ml-2 font-medium", title: "Email confirmed")
+  def favicon_file
+    case Rails.env.to_s
+    when "production"
+      "logo-circle.png"
+    when "staging"
+      "favicon.png"
     else
-      content_tag(:span, "unconfirmed", class: "text-red-600 ml-2 font-medium", title: "Email not confirmed")
+      "theme_default.png"
+    end
+  end
+
+  def email_confirmation_icon(user)
+    if user.unconfirmed_email.present?
+      content_tag(:span, "pending confirmation", class: "text-yellow-600 font-medium", title: "Email change pending confirmation")
+    elsif user.confirmed_at.present?
+      content_tag(:span, "confirmed", class: "text-green-600 font-medium", title: "Email confirmed")
+    else
+      content_tag(:span, "unconfirmed", class: "text-red-600 font-medium", title: "Email not confirmed")
     end
   end
 

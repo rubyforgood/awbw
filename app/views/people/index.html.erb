@@ -56,7 +56,7 @@
                 </td>
                 <!-- Organizations -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% orgs = person.organization_people.select { |op| !op.inactive? && (op.end_date.nil? || op.end_date >= Date.current) }.map(&:organization).compact.uniq %>
+                  <% orgs = person.affiliations.select { |affiliation| !affiliation.inactive? && (affiliation.end_date.nil? || affiliation.end_date >= Date.current) }.map(&:organization).compact.uniq %>
                   <% if orgs.any? %>
                     <div class="flex flex-wrap gap-2">
                       <% orgs.first(3).each do |org| %>

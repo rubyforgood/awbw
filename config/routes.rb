@@ -18,6 +18,9 @@ Rails.application.routes.draw do
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   apipie
+  authenticate :user, ->(user) { user.super_user? } do
+    mount Blazer::Engine, at: "blazer"
+  end
   devise_for :users,
              controllers: { registrations: "registrations",
                             confirmations: "confirmations",
@@ -40,6 +43,7 @@ Rails.application.routes.draw do
       post :toggle_lock_status
       post :confirm_email
     end
+    resources :comments, only: [ :index, :create ]
   end
 
   post "workshop_logs/validate_new", to: "workshop_logs#validate_new"
@@ -89,6 +93,7 @@ Rails.application.routes.draw do
     collection do
       get :check_duplicates
     end
+    resources :comments, only: [ :index, :create ]
   end
   resources :faqs
   resources :notifications, only: [ :index, :show ] do
@@ -96,9 +101,13 @@ Rails.application.routes.draw do
       post :resend
     end
   end
-  resources :organizations
+  resources :organizations do
+   member do
+     get :populations_served
+   end
+ end
   resources :organization_statuses
-  resources :organization_people
+  resources :affiliations
   resources :quotes
 
   resources :monthly_reports
@@ -116,9 +125,6 @@ Rails.application.routes.draw do
 
   resources :resources do
     get :download
-    collection do
-      post :search
-    end
   end
   resources :sectors do
     collection do
@@ -145,11 +151,7 @@ Rails.application.routes.draw do
   resources :workshop_log_creation_wizard
   resources :workshop_variation_ideas
   resources :workshop_variations
-  resources :workshops do
-    collection do
-      post :search
-    end
-  end
+  resources :workshops
 
   resources :workshop_mentions, only: [ :index ]
   resources :resource_mentions, only: [ :index ]
