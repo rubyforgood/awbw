@@ -151,7 +151,7 @@ RSpec.describe Person, type: :model do
     let(:person) { create(:person, profile_is_searchable: true) }
 
     context "when person is searchable with an active affiliation" do
-      before { create(:organization_person, person: person, inactive: false, end_date: nil) }
+      before { create(:affiliation, person: person, inactive: false, end_date: nil) }
 
       it "returns true" do
         expect(person.published?).to be true
@@ -165,7 +165,7 @@ RSpec.describe Person, type: :model do
     end
 
     context "when person is searchable but only has inactive affiliations" do
-      before { create(:organization_person, person: person, inactive: true, end_date: nil) }
+      before { create(:affiliation, person: person, inactive: true, end_date: nil) }
 
       it "returns false" do
         expect(person.published?).to be false
@@ -173,7 +173,7 @@ RSpec.describe Person, type: :model do
     end
 
     context "when person is searchable but affiliation has past end date" do
-      before { create(:organization_person, person: person, inactive: false, end_date: 1.day.ago) }
+      before { create(:affiliation, person: person, inactive: false, end_date: 1.day.ago) }
 
       it "returns false" do
         expect(person.published?).to be false
@@ -182,7 +182,7 @@ RSpec.describe Person, type: :model do
 
     context "when person is not searchable" do
       let(:person) { create(:person, profile_is_searchable: false) }
-      before { create(:organization_person, person: person, inactive: false) }
+      before { create(:affiliation, person: person, inactive: false) }
 
       it "returns false" do
         expect(person.published?).to be false
@@ -196,8 +196,8 @@ RSpec.describe Person, type: :model do
     let!(:person_without) { create(:person) }
 
     before do
-      create(:organization_person, person: person_with_active, inactive: false, end_date: nil)
-      create(:organization_person, person: person_with_inactive, inactive: true, end_date: nil)
+      create(:affiliation, person: person_with_active, inactive: false, end_date: nil)
+      create(:affiliation, person: person_with_inactive, inactive: true, end_date: nil)
     end
 
     it "includes people with active affiliations" do
@@ -226,13 +226,13 @@ RSpec.describe Person, type: :model do
     it "returns the most recently updated active organization" do
       org1 = create(:organization)
       org2 = create(:organization)
-      create(:organization_person, person: person, organization: org1, inactive: false, end_date: nil, updated_at: 1.day.ago)
-      create(:organization_person, person: person, organization: org2, inactive: false, end_date: nil, updated_at: Time.current)
+      create(:affiliation, person: person, organization: org1, inactive: false, end_date: nil, updated_at: 1.day.ago)
+      create(:affiliation, person: person, organization: org2, inactive: false, end_date: nil, updated_at: Time.current)
       expect(person.primary_organization).to eq(org2)
     end
 
     it "returns nil when no active affiliations exist" do
-      create(:organization_person, person: person, inactive: true)
+      create(:affiliation, person: person, inactive: true)
       expect(person.primary_organization).to be_nil
     end
 
@@ -258,7 +258,7 @@ RSpec.describe Person, type: :model do
   describe ".published" do
     let!(:searchable_with_active) do
       person = create(:person, profile_is_searchable: true)
-      create(:organization_person, person: person, inactive: false, end_date: nil)
+      create(:affiliation, person: person, inactive: false, end_date: nil)
       person
     end
 
@@ -268,7 +268,7 @@ RSpec.describe Person, type: :model do
 
     let!(:not_searchable_with_active) do
       person = create(:person, profile_is_searchable: false)
-      create(:organization_person, person: person, inactive: false, end_date: nil)
+      create(:affiliation, person: person, inactive: false, end_date: nil)
       person
     end
 
