@@ -286,26 +286,31 @@ class UsersController < ApplicationController
     duplicates = []
 
     # Check existing users with same email
-    User.where("LOWER(email) = ?", email_lower).limit(10).each do |user|
+    User.where("LOWER(email) = ?", email_lower).includes(:person).limit(10).each do |user|
       duplicates << {
         id: user.id,
         name: user.person&.full_name || "#{user.first_name} #{user.last_name}".strip,
+        person_id: user.person_id,
         email: user.email,
         type: "user",
         blocked: true
       }
     end
 
-    # Check people with matching email (who may not have a user yet)
-    Person.includes(:user)
-          .left_joins(:user)
+    # Check people with matching email or secondary email
+    already_found_person_ids = duplicates.map { |d| d[:person_id] }.compact
+    people_scope = Person.includes(:user)
           .where("LOWER(people.email) = :email OR LOWER(people.email_2) = :email", email: email_lower)
-          .where(users: { id: nil })
-          .limit(10).each do |person|
+    people_scope = people_scope.where.not(id: already_found_person_ids) if already_found_person_ids.any?
+    people_scope.limit(10).each do |person|
+      primary_match = person.email&.downcase == email_lower
       duplicates << {
         id: person.id,
         name: person.full_name,
-        email: person.email || person.email_2,
+        email: primary_match ? person.email : person.email_2,
+        email_field: primary_match ? "primary" : "secondary",
+        has_user: person.user.present?,
+        user_email: person.user&.email,
         type: "person",
         blocked: false
       }
