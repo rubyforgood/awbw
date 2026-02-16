@@ -1,6 +1,7 @@
 <div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="admin-only bg-blue-100 rounded p-6">
+    <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
 
       <!-- Top buttons -->
       <div class="flex justify-end mb-6">
@@ -24,6 +25,19 @@
         <% end %>
       </div>
 
+      <% if @user.unconfirmed_email.present? %>
+        <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+            <span class="font-medium text-yellow-800">Email change pending confirmation</span>
+          </div>
+          <p class="text-sm text-yellow-700 mt-1">
+            A confirmation email was sent to <strong><%= @user.unconfirmed_email %></strong>.
+            The current email will remain <strong><%= @user.email %></strong> until confirmed.
+          </p>
+        </div>
+      <% end %>
+
       <!-- Main two-column layout -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-10">
 
@@ -31,6 +45,12 @@
         <div class="flex flex-col items-center md:items-start text-center md:text-left">
           <h2 class="font-bold text-3xl text-gray-900 mb-4">
             <%= @user.name %>
+            <% if @user.super_user? %>
+              <i class="fa-solid fa-user-shield text-blue-500"></i>
+            <% end %>
+            <% if @user.locked_at.present? %>
+              <i class="fa-solid fa-lock text-red-500"></i>
+            <% end %>
           </h2>
 
           <% if @user.avatar.attached? %>
@@ -164,6 +184,7 @@
             <thead class="bg-gray-100">
               <tr>
                 <th class="px-4 py-2 text-left font-semibold text-gray-700">Event</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-700">Changes</th>
                 <th class="px-4 py-2 text-left font-semibold text-gray-700">Time</th>
                 <th class="px-4 py-2 text-left font-semibold text-gray-700">By</th>
               </tr>
@@ -171,7 +192,29 @@
             <tbody class="divide-y divide-gray-200">
               <% @account_events.each do |event| %>
                 <tr class="hover:bg-gray-50">
-                  <td class="px-4 py-2 text-gray-900"><%= event.name.sub(/\A(auth|user)\./, "").titleize %></td>
+                  <td class="px-4 py-2 text-gray-900">
+                    <% if event.name.start_with?("auth.") %>
+                      <%= event.name.sub(/\Aauth\./, "").titleize %>
+                    <% else %>
+                      <%= event.name.split(".").first.titleize %>
+                    <% end %>
+                  </td>
+                  <td class="px-4 py-2 text-gray-500 text-xs">
+                    <% changes = event.properties["changes"] %>
+                    <% assoc_changes = event.properties["association_changes"] %>
+                    <% if changes.present? %>
+                      <% changes.each do |attr, vals| %>
+                        <div><span class="font-medium"><%= attr.titleize %></span>: <%= vals["after"] %></div>
+                      <% end %>
+                    <% end %>
+                    <% if assoc_changes.present? %>
+                      <% assoc_changes.each do |assoc_name, records| %>
+                        <% Array(records).each do |record| %>
+                          <div><span class="font-medium"><%= assoc_name.to_s.titleize %></span>: <%= record["action"] %></div>
+                        <% end %>
+                      <% end %>
+                    <% end %>
+                  </td>
                   <td class="px-4 py-2 text-gray-500"><%= l(event.time, format: :long) %></td>
                   <td class="px-4 py-2 text-gray-500"><%= event.user&.name.presence || "—" %></td>
                 </tr>
@@ -209,6 +252,7 @@
         </div>
       <% end %>
 
+    </div>
     </div>
   </div>
 </div>

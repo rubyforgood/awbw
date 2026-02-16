@@ -84,7 +84,11 @@ class User < ApplicationRecord
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:search]) if params[:search].present?
     results = results.where(super_user: params[:super_user]) if params[:super_user].present?
-    results = results.where(inactive: params[:inactive]) if params[:inactive].present?
+    if params[:access] == "active"
+      results = results.active
+    elsif params[:access] == "no_access"
+      results = results.where("inactive = ? OR locked_at IS NOT NULL", true)
+    end
     results
   end
 
@@ -177,7 +181,10 @@ class User < ApplicationRecord
   end
 
   def track_auth_event(name, properties = {})
-    payload = { name: name, properties: properties.merge(record_id: id, record_type: "User", updated_by_id: updated_by_id) }
+    payload = { name: name, properties: properties.merge(
+      record_id: id, record_type: "User", updated_by_id: updated_by_id,
+      resource_type: "User", resource_id: id, resource_title: "#{self.name} (#{email})"
+    ) }
     Analytics::LifecycleBuffer.push(payload)
   end
 
@@ -249,9 +256,9 @@ class User < ApplicationRecord
   def track_email_change
     if saved_change_to_email?
       from, to = saved_change_to_email
-      track_auth_event("auth.email_changed", { from: from, to: to })
+      track_auth_event("auth.email_changed", { changes: { email: { before: from, after: to } } })
     elsif saved_change_to_unconfirmed_email? && unconfirmed_email.present?
-      track_auth_event("auth.email_update_requested", { from: email, to: unconfirmed_email })
+      track_auth_event("auth.email_update_requested", { changes: { email: { before: email, after: unconfirmed_email } } })
     end
   end
 
@@ -270,9 +277,9 @@ class User < ApplicationRecord
 
     from, to = saved_change_to_super_user
     if super_user?
-      track_auth_event("auth.admin_granted", { from: from, to: to })
+      track_auth_event("auth.admin_granted", { changes: { admin: { before: "revoked", after: "granted" } } })
     else
-      track_auth_event("auth.admin_revoked", { from: from, to: to })
+      track_auth_event("auth.admin_revoked", { changes: { admin: { before: "granted", after: "revoked" } } })
     end
   end
 
