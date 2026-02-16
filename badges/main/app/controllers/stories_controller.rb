@@ -178,7 +178,7 @@ class StoriesController < ApplicationController
                             .order(:created_at)
     @windows_types = WindowsType.all
     @workshops = Workshop.all.order(:title)
-    @users = User.active.or(User.where(id: @story.created_by_id))
+    @users = User.has_access.or(User.where(id: @story.created_by_id))
                  .includes(:person)
                  .order("people.first_name, people.last_name")
     @categories_grouped =

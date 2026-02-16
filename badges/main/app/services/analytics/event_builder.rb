@@ -14,6 +14,10 @@ module Analytics
     end
 
     def self.safe_title(resource)
+      if resource.is_a?(Asset) && resource.file.attached?
+        return resource.file.filename.to_s
+      end
+
       resource.decorate.title
     rescue
       resource.try(:title) || resource.try(:name) || resource.id

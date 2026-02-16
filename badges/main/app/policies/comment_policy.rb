@@ -1,9 +1,9 @@
 class CommentPolicy < ApplicationPolicy
   def index?
-    authenticated?
+    admin?
   end
 
   def create?
-    authenticated?
+    admin?
   end
 end

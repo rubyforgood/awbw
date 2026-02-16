@@ -18,8 +18,8 @@ RSpec.describe "/users/check_duplicates", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("existing user")
-        expect(response.body).to include("A user with this email already exists")
-        expect(response.body).to include("Please edit the existing user instead")
+        expect(response.body).to include("with this email already exists")
+        expect(response.body).to include("Edit the existing user or change this user")
       end
 
       it "hides the Create Anyway button" do
@@ -57,7 +57,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
         get check_duplicates_users_path, params: { email: "solo@testmail.org" }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("person (no user)")
+        expect(response.body).to include("no user")
         expect(response.body).to include("Solo Person")
       end
 
@@ -70,7 +70,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
       it "does not show the block message" do
         get check_duplicates_users_path, params: { email: "solo@testmail.org" }
 
-        expect(response.body).not_to include("A user with this email already exists")
+        expect(response.body).not_to include("with this email already exists")
       end
     end
 
@@ -88,7 +88,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Alt Email")
-        expect(response.body).to include("person (no user)")
+        expect(response.body).to include("no user")
       end
     end
 
@@ -104,7 +104,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
 
         expect(response).to have_http_status(:ok)
         # Should not appear as a person match (person has a user, so person.email is skipped)
-        expect(response.body).not_to include("person (no user)")
+        expect(response.body).not_to include("no user")
       end
     end
 
@@ -126,7 +126,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("existing user")
-        expect(response.body).to include("person (no user)")
+        expect(response.body).to include("no user")
       end
 
       it "is blocked because a user exists" do
@@ -193,7 +193,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
         get check_duplicates_users_path, params: { email: "brand.new@testmail.org" }
 
         expect(response.body).not_to include("existing user")
-        expect(response.body).not_to include("person (no user)")
+        expect(response.body).not_to include("no user")
       end
     end
 
