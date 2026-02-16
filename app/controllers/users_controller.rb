@@ -16,6 +16,22 @@ class UsersController < ApplicationController
   def show
     authorize! @user
     @user = User.find(params[:id]).decorate
+    @comments = @user.comments.includes(:created_by).newest_first.paginate(page: params[:comments_page], per_page: 5)
+
+    user_auth_events = Ahoy::Event
+      .where("name LIKE 'auth.%' OR name LIKE 'update.user'")
+      .where(
+        "(CAST(JSON_EXTRACT(properties, '$.record_id') AS UNSIGNED) = :id AND JSON_UNQUOTE(JSON_EXTRACT(properties, '$.record_type')) = 'User') OR " \
+        "(CAST(JSON_EXTRACT(properties, '$.resource_id') AS UNSIGNED) = :id AND JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_type')) = 'User')",
+        id: @user.id
+      )
+
+    @last_admin_event = user_auth_events.where(name: %w[auth.admin_granted auth.admin_revoked]).order(time: :desc).first
+    @last_lock_event = user_auth_events.where(name: %w[auth.account_locked auth.account_unlocked]).order(time: :desc).first
+
+    @account_events = user_auth_events
+      .order(time: :desc)
+      .paginate(page: params[:page], per_page: 10)
   end
 
   def new
