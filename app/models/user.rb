@@ -4,16 +4,27 @@ class User < ApplicationRecord
   devise :database_authenticatable, :recoverable, :confirmable,
     :rememberable, :trackable, :validatable
 
+  attr_accessor :locked_will_change
+
+  before_save :sync_locked_at_from_locked
+
   after_update :track_welcome_instructions
   after_update :track_welcome_completion, if: :welcome_token_cleared?
   after_update :track_login_event
   after_update :track_email_change
+  after_update :track_lock_change
+  after_update :track_admin_change
+  after_update :track_name_change
+  after_update :track_inactive_change
+  after_update :track_password_reset_sent
 
   before_destroy :track_account_deleted
   before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Associations
   belongs_to :person, optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_many :bookmarks, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
@@ -106,24 +117,6 @@ class User < ApplicationRecord
       windows_type: windows_type).last
   end
 
-  def recent_activity(activity_limit = 10)
-    recent = []
-
-    # recent.concat(events.order(updated_at: :desc).limit(activity_limit))
-    recent.concat(bookmarks.order(updated_at: :desc).limit(activity_limit))
-    recent.concat(workshops.order(updated_at: :desc).limit(activity_limit))
-    recent.concat(workshop_logs.order(updated_at: :desc).limit(activity_limit))
-    recent.concat(workshop_variations_as_creator.order(updated_at: :desc).limit(activity_limit))
-    recent.concat(stories_as_creator.order(updated_at: :desc).limit(activity_limit))
-    # recent.concat(quotes.order(updated_at: :desc).limit(activity_limit))
-    recent.concat(resources.order(updated_at: :desc).limit(activity_limit))
-    recent.concat(reports.where(owner_type: "MonthlyReport").order(updated_at: :desc).limit(activity_limit))
-    recent.concat(reports.where(owner_id: 7).order(updated_at: :desc).limit(activity_limit)) # TODO: remove hard-coded
-
-    # Sort by the most recent timestamp (updated_at preferred, fallback to created_at)
-    recent.sort_by { |item| item.try(:updated_at) || item.created_at }.reverse.first(activity_limit * 8)
-  end
-
   def organization_monthly_workshop_logs(date, *windows_type)
     where = windows_type.map { |wt| "windows_type_id = ?" }
 
@@ -153,23 +146,10 @@ class User < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
-  def agency_name
-    agency ? agency.name : "No agency."
+  def primary_asset # method needed for idea_submitted_fyi mailer
   end
 
-  def has_bookmarkable?(bookmarkable, type: nil)
-    bookmarkable_ids(bookmarkable_type: type || bookmarkable.object.class.name).include?(bookmarkable.id)
-  end
-
-  def bookmarkable_ids(bookmarkable_type:)
-    public_send("bookmarked_#{bookmarkable_type.downcase.pluralize}")
-      .pluck(:id)
-  end
-
-  def primary_asset # method needed for idea_submission_fyi mailer
-  end
-
-  def gallery_assets # method needed for idea_submission_fyi mailer
+  def gallery_assets # method needed for idea_submitted_fyi mailer
     []
   end
 
@@ -197,7 +177,7 @@ class User < ApplicationRecord
   end
 
   def track_auth_event(name, properties = {})
-    payload = { name: name, properties: properties.merge(user_id: id) }
+    payload = { name: name, properties: properties.merge(record_id: id, record_type: "User", updated_by_id: updated_by_id) }
     Analytics::LifecycleBuffer.push(payload)
   end
 
@@ -267,8 +247,33 @@ class User < ApplicationRecord
   end
 
   def track_email_change
-    return unless saved_change_to_email?
-    track_auth_event("auth.email_changed")
+    if saved_change_to_email?
+      from, to = saved_change_to_email
+      track_auth_event("auth.email_changed", { from: from, to: to })
+    elsif saved_change_to_unconfirmed_email? && unconfirmed_email.present?
+      track_auth_event("auth.email_update_requested", { from: email, to: unconfirmed_email })
+    end
+  end
+
+  def track_lock_change
+    return unless saved_change_to_locked_at?
+
+    if locked_at.present?
+      track_auth_event("auth.account_locked", { locked_at: locked_at })
+    else
+      track_auth_event("auth.account_unlocked")
+    end
+  end
+
+  def track_admin_change
+    return unless saved_change_to_super_user?
+
+    from, to = saved_change_to_super_user
+    if super_user?
+      track_auth_event("auth.admin_granted", { from: from, to: to })
+    else
+      track_auth_event("auth.admin_revoked", { from: from, to: to })
+    end
   end
 
   def track_login_event
@@ -286,5 +291,47 @@ class User < ApplicationRecord
 
   def track_welcome_completion
     track_auth_event("auth.account_setup_completed")
+  end
+
+  def track_name_change
+    return unless saved_change_to_first_name? || saved_change_to_last_name?
+    props = {}
+    if saved_change_to_first_name?
+      from, to = saved_change_to_first_name
+      props[:first_name_from] = from
+      props[:first_name_to] = to
+    end
+    if saved_change_to_last_name?
+      from, to = saved_change_to_last_name
+      props[:last_name_from] = from
+      props[:last_name_to] = to
+    end
+    track_auth_event("auth.name_changed", props)
+  end
+
+  def track_inactive_change
+    return unless saved_change_to_inactive?
+
+    if inactive?
+      track_auth_event("auth.account_deactivated")
+    else
+      track_auth_event("auth.account_reactivated")
+    end
+  end
+
+  def track_password_reset_sent
+    return unless saved_change_to_reset_password_sent_at? && reset_password_sent_at.present?
+    track_auth_event("auth.password_reset_sent", { sent_at: reset_password_sent_at })
+  end
+
+  def sync_locked_at_from_locked
+    return unless @locked_will_change
+
+    if @locked_value
+      self.locked_at = Time.current unless locked_at.present?
+    else
+      self.locked_at = nil
+      self.failed_attempts = 0
+    end
   end
 end
