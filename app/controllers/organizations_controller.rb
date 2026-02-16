@@ -106,7 +106,7 @@ class OrganizationsController < ApplicationController
                             Arel.sql("COALESCE(users.email, people.email, people.email_2)")
                           )
                           .map { |fn, ln, id, email|
-                            ["#{fn} #{ln}#{" (#{email})" if email.present?}", id]
+                            [ "#{fn} #{ln}#{" (#{email})" if email.present?}", id ]
                           }
 
     if @organization.persisted? && @organization.errors.empty?
