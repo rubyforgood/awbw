@@ -77,7 +77,7 @@ class PeopleController < ApplicationController
       :contact_methods,
       :addresses,
       { avatar_attachment: :blob },
-      { comments: [:created_by, :updated_by] },
+      { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
       organization_people: { organization: :logo_attachment }
     ).find(params[:id]).decorate

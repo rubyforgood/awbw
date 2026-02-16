@@ -25,7 +25,7 @@ class UsersController < ApplicationController
   end
 
   def edit
-    @user = User.includes(comments: [:created_by, :updated_by]).find(params[:id])
+    @user = User.includes(comments: [ :created_by, :updated_by ]).find(params[:id])
     authorize! @user
     set_form_variables
   end
