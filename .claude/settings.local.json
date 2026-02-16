@@ -6,10 +6,8 @@
       "Bash(bundle exec rails runner:*)",
       "Bash(bundle exec rspec:*)",
       "Bash(bundle exec rubocop:*)",
-
       "Bash(RAILS_ENV=test bundle exec rails runner:*)",
       "Bash(RAILS_ENV=test bundle exec rspec:*)",
-
       "Bash(git add:*)",
       "Bash(git apply:*)",
       "Bash(git checkout:*)",
@@ -19,20 +17,18 @@
       "Bash(git push:*)",
       "Bash(git reset:*)",
       "Bash(git stash:*)",
-
       "Bash(bin/rails db:migrate:*)",
       "Bash(bin/rails runner:*)",
-
       "Bash(chmod:*)",
       "Bash(mysql -u root:*)",
-
       "Bash(git -C /Users/maebeale/programming/awbw branch --show-current)",
-
       "Bash(bundle exec rails routes:*)",
       "Bash(bundle exec rubocop:*)",
       "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)",
-      "Bash(git log:*)"
-
+      "Bash(git log:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rebase:*)",
+      "Bash(grep:*)"
     ]
   }
 }
