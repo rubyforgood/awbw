@@ -5,8 +5,8 @@ class Person < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
 
   has_one :user, inverse_of: :person, dependent: :nullify
-  has_many :organization_people, dependent: :destroy
-  has_many :organizations, through: :organization_people
+  has_many :affiliations, dependent: :destroy
+  has_many :organizations, through: :affiliations
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
 
@@ -58,7 +58,7 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
   accepts_nested_attributes_for :user, update_only: true
-  accepts_nested_attributes_for :organization_people, allow_destroy: true,
+  accepts_nested_attributes_for :affiliations, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
@@ -76,18 +76,18 @@ class Person < ApplicationRecord
   scope :published, -> { searchable.with_active_affiliations }
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
   scope :with_active_affiliations, -> {
-    joins(:organization_people)
-      .merge(OrganizationPerson.active)
+    joins(:affiliations)
+      .merge(Affiliation.active)
       .distinct
   }
   scope :organization_name, ->(organization_name) {
     return all if organization_name.blank?
-    left_joins(organization_people: :organization)
+    left_joins(affiliations: :organization)
       .where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
       .distinct }
   scope :organization_id, ->(organization_id) {
-    joins(:organization_people)
-      .where(organization_people: { organization_id: organization_id })
+    joins(:affiliations)
+      .where(affiliations: { organization_id: organization_id })
       .distinct }
 
   def self.search_by_params(params)
@@ -102,7 +102,7 @@ class Person < ApplicationRecord
   end
 
   def published?
-    profile_is_searchable? && organization_people.active.exists?
+    profile_is_searchable? && affiliations.active.exists?
   end
 
   def sector_list
@@ -139,15 +139,11 @@ class Person < ApplicationRecord
   end
 
   def has_liasion_position_for?(organization_id)
-    !organization_people.where(organization_id: organization_id, position: 1).first.nil?
-  end
-
-  def published?
-    profile_is_searchable? && organization_people.active.exists?
+    !affiliations.where(organization_id: organization_id, position: 1).first.nil?
   end
 
   def primary_organization
-    organization_people
+    affiliations
       .active
       .order(updated_at: :desc)
       .first&.organization

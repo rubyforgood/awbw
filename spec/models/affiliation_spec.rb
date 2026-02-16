@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe OrganizationPerson do
+RSpec.describe Affiliation do
   describe 'associations' do
     it { should belong_to(:organization) }
     it { should belong_to(:person) }
@@ -8,7 +8,7 @@ RSpec.describe OrganizationPerson do
 
   describe 'validations' do
     subject do
-      build(:organization_person, organization: create(:organization), person: create(:person))
+      build(:affiliation, organization: create(:organization), person: create(:person))
     end
     it { should validate_presence_of(:organization_id) }
   end
@@ -18,10 +18,10 @@ RSpec.describe OrganizationPerson do
   end
 
   describe '.active' do
-    let!(:active_op) { create(:organization_person, inactive: false, end_date: nil) }
-    let!(:active_with_future_end) { create(:organization_person, inactive: false, end_date: 1.month.from_now) }
-    let!(:inactive_by_flag) { create(:organization_person, inactive: true, end_date: nil) }
-    let!(:inactive_by_end_date) { create(:organization_person, inactive: false, end_date: 1.day.ago) }
+    let!(:active_op) { create(:affiliation, inactive: false, end_date: nil) }
+    let!(:active_with_future_end) { create(:affiliation, inactive: false, end_date: 1.month.from_now) }
+    let!(:inactive_by_flag) { create(:affiliation, inactive: true, end_date: nil) }
+    let!(:inactive_by_end_date) { create(:affiliation, inactive: false, end_date: 1.day.ago) }
 
     it 'includes records with inactive: false and no end date' do
       expect(described_class.active).to include(active_op)
@@ -41,7 +41,7 @@ RSpec.describe OrganizationPerson do
   end
 
   describe '#set_inactive_from_dates' do
-    let(:op) { create(:organization_person, inactive: false, end_date: nil) }
+    let(:op) { create(:affiliation, inactive: false, end_date: nil) }
 
     it 'sets inactive to true when end_date is set to a past date' do
       op.update!(end_date: 1.day.ago)

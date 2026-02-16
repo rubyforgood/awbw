@@ -6,8 +6,8 @@ class Organization < ApplicationRecord
   belongs_to :windows_type, optional: true
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :organization_people, dependent: :restrict_with_error
-  has_many :people, through: :organization_people
+  has_many :affiliations, dependent: :restrict_with_error
+  has_many :people, through: :affiliations
   has_many :users, through: :people
   has_many :reports
   has_many :workshop_logs
@@ -35,7 +35,7 @@ class Organization < ApplicationRecord
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
   validates :website_url, format: { with: /\Ahttps?:\/\/\S+\z/i, message: "must start with http:// or https://" }, allow_blank: true
-  validate :affiliation_dates_locked, if: -> { organization_people.any? && !Current.user&.super_user? }
+  validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
@@ -43,7 +43,7 @@ class Organization < ApplicationRecord
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
   after_save :remove_duplicate_sectorable_items
-  accepts_nested_attributes_for :organization_people, allow_destroy: true,
+  accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
 
   # SearchCop
@@ -149,7 +149,7 @@ class Organization < ApplicationRecord
   end
 
   def leader
-    organization_people.find_by(position: 2)
+    affiliations.find_by(position: 2)
   end
 
   def remove_duplicate_sectorable_items

@@ -104,6 +104,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_120927) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
+  create_table "affiliations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.date "end_date"
+    t.string "filemaker_code"
+    t.boolean "inactive", default: false, null: false
+    t.integer "organization_agency_id"
+    t.integer "organization_id", null: false
+    t.integer "person_id", null: false
+    t.integer "position"
+    t.boolean "primary_contact", default: false, null: false
+    t.date "start_date"
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
+    t.index ["organization_id"], name: "index_affiliations_on_organization_id"
+    t.index ["person_id"], name: "index_affiliations_on_person_id"
+    t.index ["user_id"], name: "index_affiliations_on_user_id"
+  end
+
   create_table "age_ranges", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.string "name"
@@ -557,26 +577,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_120927) do
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["published"], name: "index_organization_obligations_on_published"
-  end
-
-  create_table "organization_people", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.date "end_date"
-    t.string "filemaker_code"
-    t.boolean "inactive", default: false, null: false
-    t.integer "organization_agency_id"
-    t.integer "organization_id", null: false
-    t.integer "person_id", null: false
-    t.integer "position"
-    t.boolean "primary_contact", default: false, null: false
-    t.date "start_date"
-    t.string "title"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "user_id"
-    t.index ["organization_agency_id"], name: "index_organization_people_on_organization_agency_id"
-    t.index ["organization_id"], name: "index_organization_people_on_organization_id"
-    t.index ["person_id"], name: "index_organization_people_on_person_id"
-    t.index ["user_id"], name: "index_organization_people_on_user_id"
   end
 
   create_table "organization_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1238,6 +1238,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_120927) do
 
   add_foreign_key "action_text_mentions", "action_text_rich_texts"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "affiliations", "organizations"
+  add_foreign_key "affiliations", "organizations", column: "organization_agency_id"
+  add_foreign_key "affiliations", "people"
+  add_foreign_key "affiliations", "users"
   add_foreign_key "age_ranges", "windows_types"
   add_foreign_key "banners", "users", column: "created_by_id"
   add_foreign_key "banners", "users", column: "updated_by_id"
@@ -1269,14 +1273,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_120927) do
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_fields", "forms"
   add_foreign_key "forms", "form_builders"
-  add_foreign_key "monthly_reports", "organization_people", column: "organization_user_id"
+  add_foreign_key "monthly_reports", "affiliations", column: "organization_user_id"
   add_foreign_key "monthly_reports", "organizations"
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
-  add_foreign_key "organization_people", "organizations"
-  add_foreign_key "organization_people", "organizations", column: "organization_agency_id"
-  add_foreign_key "organization_people", "people"
-  add_foreign_key "organization_people", "users"
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"

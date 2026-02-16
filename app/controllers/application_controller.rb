@@ -69,8 +69,8 @@ class ApplicationController < ActionController::Base
 
   def preload_current_user_associations
     return unless current_user&.person
-    @current_user_active_org_people = current_user.person
-                                                  .organization_people
+    @current_user_active_affiliations = current_user.person
+                                                  .affiliations
                                                   .active
                                                   .includes(:organization)
                                                   .load

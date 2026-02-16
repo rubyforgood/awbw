@@ -26,8 +26,8 @@ class OrganizationPolicy < ApplicationPolicy
     next relation.active if admin?
     next relation.none unless user&.person_id
 
-    relation.joins(:organization_people)
-            .where(organization_people: { person_id: user.person_id })
+    relation.joins(:affiliations)
+            .where(affiliations: { person_id: user.person_id })
   end
 
   private
@@ -35,7 +35,7 @@ class OrganizationPolicy < ApplicationPolicy
   def member?
     @member ||= begin
       return false unless user&.person_id
-      record.organization_people.exists?(person_id: user.person_id)
+      record.affiliations.exists?(person_id: user.person_id)
     end
   end
 end

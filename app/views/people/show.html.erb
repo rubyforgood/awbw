@@ -100,7 +100,7 @@
             <% if @person.profile_show_affiliations? %>
               <div class="md:col-span-3 p-3">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3">Affiliations</h2>
-                <%= turbo_frame_tag "person_organization_people_section", src: person_path(@person, section: "organization_people"), loading: :lazy do %>
+                <%= turbo_frame_tag "person_affiliations_section", src: person_path(@person, section: "affiliations"), loading: :lazy do %>
                   <p class="text-gray-500 italic">Loading affiliations...</p>
                 <% end %>
               </div>
