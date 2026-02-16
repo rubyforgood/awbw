@@ -47,9 +47,9 @@
       You bookmarked on
       <%= bookmark.created_at.strftime("%B %d, %Y") %>
     </div>
+    <% tag_list = bookmark.bookmarkable_type == "Workshop" ? collect_all_tags(bookmarkable) : [] %>
     <div class="text-sm text-gray-600">
-      Bookmarked by community
-      <%= bookmark.bookmarkable.bookmarks_count %> times
+      Bookmarked by community <%= bookmark.bookmarkable.bookmarks_count %> times<% if tag_list.any? %>, <span class="group relative inline-block"><span class="cursor-help">Tags: <%= tag_list.count %></span><div class="hidden group-hover:block absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-10 min-w-[300px] max-w-[500px]"><div class="text-sm text-gray-800"><%= tag_list.join(", ") %></div></div></span><% end %>
     </div>
   </div>
 
