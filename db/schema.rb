@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_122713) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_16_120927) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -869,6 +869,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_122713) do
     t.string "confirmation_token"
     t.datetime "confirmed_at"
     t.datetime "created_at", precision: nil
+    t.integer "created_by_id"
     t.datetime "current_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
     t.string "email", default: "", null: false
@@ -901,6 +902,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_122713) do
     t.string "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", precision: nil
+    t.integer "updated_by_id"
     t.datetime "welcome_instructions_created_at"
     t.datetime "welcome_instructions_sent_at"
     t.string "welcome_instructions_token"
@@ -908,10 +910,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_122713) do
     t.string "zip2"
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
+    t.index ["created_by_id"], name: "index_users_on_created_by_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index ["updated_by_id"], name: "index_users_on_updated_by_id"
     t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
   end
 
@@ -1246,6 +1250,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_122713) do
   add_foreign_key "user_permissions", "users"
   add_foreign_key "users", "organizations", column: "agency_id"
   add_foreign_key "users", "people"
+  add_foreign_key "users", "users", column: "created_by_id"
+  add_foreign_key "users", "users", column: "updated_by_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
   add_foreign_key "workshop_ideas", "users", column: "created_by_id"
