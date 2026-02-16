@@ -5,8 +5,8 @@
   data-sortable-id="<%= faq.id %>"
 >
 
-  <div class="border-b border-gray-300">
-    <div class="flex items-center w-full">
+    <div class="flex items-center w-full cursor-pointer hover:bg-gray-50 rounded-md transition-colors duration-150 px-2">
+    
 
       <% if allowed_to?(:edit?, faq) %>
         <span class="admin-only bg-blue-100">
@@ -56,9 +56,7 @@
       <% else %>
         <span
           class="
-            w-full text-lg border-transparent peer-has-hover:border
-            peer-has-hover:border-gray-300 peer-has-hover:shadow-sm
-            peer-has-hover:rounded-md peer-has-hover:p-1">
+            w-full text-lg">
 
           <%= faq.question %></span>
       <% end %>
@@ -115,11 +113,10 @@
       </button>
     </div>
 
-  </div>
 
   <div
     id="<%= dom_id faq, :answer  %>"
-    class="hidden py-5 border-b border-gray-300"
+    class="hidden py-4 px-6"
     data-dropdown-target="content">
     <strong class="sr-only">Answer:</strong>
 
@@ -129,7 +126,7 @@
 
       <% end %>
 
-      <span class="text-gray-600"><%= simple_format(faq.answer) %></span>
+      <span class="prose max-w-none text-gray-600"><%= simple_format(faq.answer) %></span>
     <% end %>
   </div>
 
