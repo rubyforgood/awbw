@@ -1,0 +1,15 @@
+<% unless user_signed_in? %>
+  <div class="bg-white px-8 py-6 mt-6 flex items-center justify-center gap-5">
+    <div class="h-14 w-14 shrink-0 rounded-full overflow-hidden">
+      <%= image_tag "logo-circle.png", class: "h-full w-full object-cover", alt: "AWBW logo" %>
+    </div>
+    <div>
+      <h2 class="text-xl font-semibold text-primary mb-1">Welcome to our Portal!</h2>
+      <p class="text-gray-600">
+        Browse our public content here, or,
+        <%= link_to "log in", new_user_session_path, class: "font-medium text-primary underline hover:text-primary/80" %>
+        to see more.
+      </p>
+    </div>
+  </div>
+<% end %>
