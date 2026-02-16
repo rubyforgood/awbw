@@ -1,5 +1,5 @@
 <%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
-                                          data: { turbo: false } } do |f| %>
+                                          data: { turbo: false, controller: "dirty-form" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
 
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
@@ -147,8 +147,6 @@
       Sectors
     </div>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-      <div class="flex flex-col md:flex-row gap-4 pl-3 pr-3 pb-3">
-        <div class="flex flex-wrap items-center gap-2">
       <%= f.simple_fields_for :sectorable_items do |sfi| %>
         <%= render "shared/sectorable_item_fields", f: sfi, show_is_leader: true %>
       <% end %>
@@ -162,8 +160,6 @@
                                       .reject { |_, id| (@current_sector_ids || []).include?(id) },
                                               show_is_leader: true } },
                                   class: "btn btn-secondary-outline" %>
-    </div>
-      </div>
     </div>
   </div>
 
@@ -279,13 +275,62 @@
     </div>
   </div>
 
+  <% if f.object.persisted? %>
+    <!-- Comments -->
+    <div class="form-group space-y-4" id="comments-section">
+      <div class="font-semibold text-gray-700 mb-2">Comments</div>
+
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm"
+           data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
+        <%= f.simple_fields_for :comments do |cf| %>
+          <%= render "comments/comment_fields", f: cf %>
+        <% end %>
+
+        <div data-paginated-fields-target="nav"></div>
+
+        <button type="button"
+                class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
+                style="float:right"
+                onclick="
+                  var section = document.getElementById('comments-section');
+                  var editing = section.dataset.editing !== 'true';
+                  section.dataset.editing = editing;
+                  if (!editing) {
+                    section.querySelectorAll('.nested-fields').forEach(function(item) {
+                      var textarea = item.querySelector('.comment-edit textarea');
+                      var viewBody = item.querySelector('.comment-view .comment-body');
+                      if (textarea && viewBody) {
+                        var text = textarea.value;
+                        viewBody.textContent = text.length > 135 ? text.substring(0, 132) + '...' : text;
+                        viewBody.title = text;
+                      }
+                    });
+                  }
+                  section.querySelectorAll('.comment-view').forEach(function(el) { el.style.display = editing ? 'none' : ''; });
+                  section.querySelectorAll('.comment-edit').forEach(function(el) { el.style.display = editing ? '' : 'none'; });
+                  this.querySelector('.edit-label').style.display = editing ? 'none' : '';
+                  this.querySelector('.view-label').style.display = editing ? '' : 'none';
+                ">
+          <span class="edit-label">Edit Comments</span>
+          <span class="view-label" style="display:none">Done Editing</span>
+        </button>
+        <%= link_to_add_association "➕ Add Comment",
+                                    f,
+                                    :comments,
+                                    partial: "comments/comment_fields",
+                                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  <% end %>
+
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @person, class: "btn btn-danger-outline",
                   data: { data_method: :delete, data_confirm: "Are you sure you want to delete?" } %>
     <% end %>
 
-    <%= link_to "Cancel", people_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "Cancel", people_path, class: "btn btn-secondary-outline",
+                data: { action: "click->dirty-form#confirmCancel" } %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 <% end %>

@@ -1,0 +1,65 @@
+<% comment_user = f.object.created_by %>
+<% initials = if comment_user&.person
+                "#{comment_user.person.first_name.first}#{comment_user.person.last_name.first}".upcase
+              elsif comment_user
+                comment_user.name.to_s.split.map(&:first).join.upcase.presence
+              end %>
+<% author_name = comment_user&.person&.full_name || comment_user&.name %>
+<% label_colors = [
+  ["bg-blue-100", "text-blue-800"],
+  ["bg-green-100", "text-green-800"],
+  ["bg-purple-100", "text-purple-800"],
+  ["bg-orange-100", "text-orange-800"],
+  ["bg-pink-100", "text-pink-800"],
+  ["bg-indigo-100", "text-indigo-800"],
+  ["bg-yellow-200", "text-yellow-800"],
+  ["bg-red-100", "text-red-800"]
+] %>
+<% user_color = label_colors[(comment_user&.id || 0) % label_colors.length] %>
+<% current_color = label_colors[(current_user&.id || 0) % label_colors.length] %>
+<div class="nested-fields" data-paginated-fields-target="item">
+  <% if f.object.persisted? %>
+    <div class="comment-view grid grid-cols-[auto_1fr] gap-x-3 items-start mb-3">
+      <span class="text-xs text-gray-400 mt-1 whitespace-nowrap">
+        <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
+        <% if initials.present? %>
+          <span class="<%= user_color[0] %> <%= user_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= author_name %>"><%= initials %></span>
+        <% end %>
+      </span>
+      <div class="text-sm text-gray-900 comment-body" title="<%= f.object.body %>">
+        <%= truncate(f.object.body, length: 135) %>
+      </div>
+    </div>
+    <div class="comment-edit grid grid-cols-[auto_1fr] gap-x-3 items-start mb-1" style="display:none">
+      <span class="text-xs text-gray-400 mt-2 whitespace-nowrap">
+        <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
+        <% if initials.present? %>
+          <span class="<%= user_color[0] %> <%= user_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= author_name %>"><%= initials %></span>
+        <% end %>
+      </span>
+      <%= f.input :body,
+                  label: false,
+                  as: :text,
+                  input_html: { rows: 1, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm" } %>
+    </div>
+  <% else %>
+    <% current_initials = if current_user&.person
+                            "#{current_user.person.first_name.first}#{current_user.person.last_name.first}".upcase
+                          elsif current_user
+                            current_user.name.to_s.split.map(&:first).join.upcase
+                          end %>
+    <div class="grid grid-cols-[auto_1fr] gap-x-3 items-start mb-3 px-4">
+      <span class="text-xs text-gray-400 mt-1 whitespace-nowrap">
+        <%= Time.current.strftime("%-m/%-d/%Y %-I:%M %p") %>
+        <% if current_initials.present? %>
+          <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= current_user&.person&.full_name || current_user&.name %>"><%= current_initials %></span>
+        <% end %>
+      </span>
+      <%= f.input :body,
+                  label: false,
+                  as: :text,
+                  placeholder: "Add a comment...",
+                  input_html: { rows: 2, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" } %>
+    </div>
+  <% end %>
+</div>

@@ -12,6 +12,7 @@ class Person < ApplicationRecord
 
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
@@ -59,6 +60,7 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :user, update_only: true
   accepts_nested_attributes_for :organization_people, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
+  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Search Cop
   include SearchCop

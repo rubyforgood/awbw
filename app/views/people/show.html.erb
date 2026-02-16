@@ -260,6 +260,11 @@
             </div>
           </div>
         <% end %>
+
+        <!-- Comments Section -->
+        <div class="p-3">
+          <%= render "comments/section", commentable: @person.object %>
+        </div>
       </div>
       </div>
     </div>
