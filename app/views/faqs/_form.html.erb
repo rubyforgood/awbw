@@ -21,19 +21,13 @@
       <%= f.input_field :answer,
                     class:
                       "w-full grow rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
-                    rows: "6" %>
+                    rows: "8" %>
     <% end %>
   </div>
 
   <div class="flex flex-col">
     <%= render "inline_fields", form: f, attribute: :published do %>
       <%= f.input :published %>
-    <% end %>
-  </div>
-
-  <div class="flex flex-col">
-    <%= render "inline_fields", form: f, attribute: :publicly_visible do %>
-      <%= f.input :publicly_visible %>
     <% end %>
   </div>
 
