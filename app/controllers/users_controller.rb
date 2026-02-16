@@ -25,6 +25,7 @@ class UsersController < ApplicationController
   end
 
   def edit
+    @user = User.includes(comments: [:created_by, :updated_by]).find(params[:id])
     authorize! @user
     set_form_variables
   end
@@ -83,8 +84,11 @@ class UsersController < ApplicationController
       bypass_sign_in(@user)
     end
 
-    if @user.update(user_params.except(:password, :password_confirmation))
-      # @user.notifications.create(notification_type: 1)
+    @user.assign_attributes(user_params.except(:password, :password_confirmation))
+    @user.comments.select(&:new_record?).each { |c| c.created_by = current_user }
+    @user.comments.select(&:changed?).each { |c| c.updated_by = current_user }
+
+    if @user.save
       redirect_to users_path, notice: "User was successfully updated."
     else
       flash[:alert] = "Unable to update user."
@@ -297,6 +301,7 @@ class UsersController < ApplicationController
       #####
 
       organization_people_attributes: [ :id, :organization_id, :position, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
+      comments_attributes: [ :id, :body ],
     )
   end
 end

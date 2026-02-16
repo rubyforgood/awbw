@@ -48,6 +48,7 @@ class User < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :user_forms
+  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
 
   before_validation :strip_whitespace
