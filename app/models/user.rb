@@ -12,6 +12,7 @@ class User < ApplicationRecord
   after_update :track_welcome_completion, if: :welcome_token_cleared?
   after_update :track_login_event
   after_update :track_email_change
+  after_update :sync_email_to_person
   after_update :track_lock_change
   after_update :track_admin_change
   after_update :track_name_change
@@ -329,6 +330,12 @@ class User < ApplicationRecord
   def track_password_reset_sent
     return unless saved_change_to_reset_password_sent_at? && reset_password_sent_at.present?
     track_auth_event("auth.password_reset_sent", { sent_at: reset_password_sent_at })
+  end
+
+  def sync_email_to_person
+    return unless saved_change_to_email? && person.present?
+
+    person.update(email: email)
   end
 
   def sync_locked_at_from_locked
