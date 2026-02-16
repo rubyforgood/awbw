@@ -67,6 +67,7 @@ class PeopleController < ApplicationController
   def new
     set_user
     @person = @user ? PersonFromUserService.new(user: @user).call : Person.new
+    @person.user = @user if @user
     authorize! @person
     set_form_variables
   end
