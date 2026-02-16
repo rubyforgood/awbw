@@ -81,7 +81,7 @@ class User < ApplicationRecord
     attributes user: "organizations.name"
   end
 
-  scope :active, -> { where(locked_at: nil, inactive: false) }
+  scope :active, -> { where(locked_at: nil, inactive: false).where.not(confirmed_at: nil) }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
@@ -90,7 +90,7 @@ class User < ApplicationRecord
     if params[:access] == "active"
       results = results.active
     elsif params[:access] == "no_access"
-      results = results.where("inactive = ? OR locked_at IS NOT NULL", true)
+      results = results.where("inactive = ? OR locked_at IS NOT NULL OR confirmed_at IS NULL", true)
     end
     results
   end
