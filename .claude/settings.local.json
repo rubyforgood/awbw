@@ -27,7 +27,8 @@
       "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)",
       "Bash(git log:*)",
       "Bash(bin/rails generate:*)",
-      "Bash(bin/rails db:schema:dump:*)"
+      "Bash(bin/rails db:schema:dump:*)",
+      "Bash(RAILS_ENV=test bin/rails:*)"
     ]
   }
 }
