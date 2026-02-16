@@ -17,15 +17,6 @@
   --color-transparent: transparent;
 }
 
-/* Font face declarations */
-/* Note: Telefon-Bold.ttf is located in app/assets/fonts/ directory */
-@font-face {
-  font-family: "Telefon Bold";
-  src: url("/assets/Telefon-Bold.ttf") format("truetype");
-  font-weight: bold;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* Used to generate classes from `domain_theme.rb`*/
 @source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray}-{50,{100..900..100},950}");
