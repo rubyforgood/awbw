@@ -13,6 +13,7 @@ class DeviseMailer < Devise::Mailer
   def reset_password_instructions(record, token, opts = {})
     @record = record
     @token  = token
+    opts[:subject] = "AWBW portal: Password reset request for #{record.full_name}"
     @mail   = super
   end
 
@@ -21,13 +22,14 @@ class DeviseMailer < Devise::Mailer
     @token  = token
     @user = record
 
-    opts[:subject] = "Welcome to the #{@organization_name} portal"
+    opts[:subject] = "AWBW portal: Confirmation instructions for #{record.full_name}"
     @mail   = super
   end
 
   def unlock_instructions(record, token, opts = {})
     @record = record
     @token  = token
+    opts[:subject] = "AWBW portal: Unlock instructions for #{record.full_name}"
     @mail   = super
   end
 

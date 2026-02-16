@@ -19,15 +19,15 @@ class NotificationPolicy < ApplicationPolicy
   relation_scope do |relation|
     next relation if admin?
     if authenticated?
-      relation.published
-    else
       relation.where(recipient_email: user.email)
+    else
+      relation.none
     end
   end
 
   private
 
   def owner?
-    record.recipient_email == user.email
+    user.present? && record.recipient_email == user.email
   end
 end

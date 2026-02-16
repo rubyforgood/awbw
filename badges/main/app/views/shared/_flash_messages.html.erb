@@ -7,7 +7,7 @@
 
   <%# === Collect flash messages === %>
   <% flash_notices = flash.to_a.reject do |_, msg| %>
-    <% msg.blank? || msg.is_a?(Array) || msg.is_a?(ActiveRecord::Relation) %>
+    <% !msg.is_a?(String) || msg.blank? %>
   <% end %>
 
   <%# === Discard flash so it doesn’t persist on next request === %>
