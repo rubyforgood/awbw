@@ -105,7 +105,7 @@ RSpec.describe AhoyTracking, type: :controller do
       scope = double("scope", respond_to?: false)
       allow(scope).to receive(:respond_to?).with(:total_entries).and_return(false)
       allow(scope).to receive(:respond_to?).with(:count).and_return(true)
-      allow(scope).to receive(:unscope).with(:select).and_return(scope)
+      allow(scope).to receive(:unscope).with(:select, :order).and_return(scope)
       allow(scope).to receive(:count).and_return(42)
 
       expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
@@ -119,7 +119,7 @@ RSpec.describe AhoyTracking, type: :controller do
       scope = double("scope", respond_to?: false)
       allow(scope).to receive(:respond_to?).with(:total_entries).and_return(false)
       allow(scope).to receive(:respond_to?).with(:count).and_return(true)
-      allow(scope).to receive(:unscope).with(:select).and_return(scope)
+      allow(scope).to receive(:unscope).with(:select, :order).and_return(scope)
       allow(scope).to receive(:count).and_return({ 1 => 3, 2 => 5, 3 => 1 })
 
       expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
@@ -136,6 +136,17 @@ RSpec.describe AhoyTracking, type: :controller do
 
       expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
         controller, Workshop, params: anything, result_count: 15
+      )
+
+      controller.send(:track_index_intent, Workshop, scope, {})
+    end
+
+    it "handles a popularity-sorted scope with virtual bookmarks_count column" do
+      create(:workshop, :published)
+      scope = Workshop.with_bookmarks_count.published.order(bookmarks_count: :desc, title: :asc)
+
+      expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
+        controller, Workshop, params: anything, result_count: 1
       )
 
       controller.send(:track_index_intent, Workshop, scope, {})
