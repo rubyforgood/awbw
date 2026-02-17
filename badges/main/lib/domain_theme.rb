@@ -16,6 +16,7 @@ module DomainTheme
     tags:                     :lime,
     sectors:                  :lime,
     categories:               :lime,
+    category_types:            :lime,
 
     faqs:                     :stone,
 
@@ -24,8 +25,8 @@ module DomainTheme
     story_ideas:              :rose,
     event_registrations:      :blue,
 
-    banners:                  :stone,
-    users:                    :stone,
+    banners:                  :yellow,
+    users:                    :fuchsia,
 
     admin_only:               :blue,
     user_only:                :amber,

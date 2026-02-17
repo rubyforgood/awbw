@@ -76,6 +76,7 @@ Rails.application.routes.draw do
       get :personal
     end
   end
+  resources :category_types
   resources :categories do
     collection do
       get :dedupe_index
