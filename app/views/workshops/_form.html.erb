@@ -21,7 +21,7 @@
       <div>
         <%= f.input :windows_type_id,
                     as: :select,
-                    label: "Workshop type",
+                    label: "Windows audience",
                     required: true,
                     collection: @windows_types, label_method: :short_name, value_method: :id,
                     selected: @workshop.windows_type_id,

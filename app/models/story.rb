@@ -50,8 +50,13 @@ class Story < ApplicationRecord
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
-  scope :story_name, ->(story_name) {
-    story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
+  scope :story_name, ->(story_name) { story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
+  scope :facilitator_spotlights, ->(value = nil) {
+    return where.not(spotlighted_facilitator_id: nil) if value.blank?
+    ActiveModel::Type::Boolean.new.cast(value) ?
+      where.not(spotlighted_facilitator_id: nil) :
+      where(spotlighted_facilitator_id: nil)
+  }
 
   def self.search_by_params(params)
     conditions = {}
@@ -60,6 +65,7 @@ class Story < ApplicationRecord
     conditions[:published] = params[:published] if params[:published].present?
     stories = self.search(conditions)
 
+    stories = stories.facilitator_spotlights(params[:facilitator_spotlights]) if params[:facilitator_spotlights].present?
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories
@@ -79,6 +85,10 @@ class Story < ApplicationRecord
 
   def organization_description
     organization&.organization_description
+  end
+
+  def sector_names_all
+    sectors.pluck(:name)
   end
 
   def attach_assets_from_idea!

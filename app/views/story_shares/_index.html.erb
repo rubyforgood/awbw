@@ -1,5 +1,3 @@
-</div><!-- Break out of layout container -->
-
 <!-- Hero Section -->
 <section class="bg-white mt-12 pt-6 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,7 +20,7 @@
       </p>
     </div>
 
-    </div>
+  </div>
   </div>
 </section>
 
@@ -31,7 +29,7 @@
   <section class="bg-gray-50 py-12 -mx-2 sm:-mx-6 lg:-mx-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="relative rounded-lg overflow-hidden shadow-lg" id="hero-carousel">
-        <%= link_to show_share_portal_story_path(@featured_story), class: "block relative carousel-item active" do %>
+        <%= link_to story_share_path(@featured_story), class: "block relative carousel-item active" do %>
           <div class="h-96 max-h-96 bg-gray-200 overflow-hidden">
             <%= render "assets/display_image",
                        resource: @featured_story,
@@ -70,78 +68,78 @@
       </div>
     </div>
   </section>
-  
+
   <script>
-    // Auto-scrolling carousel
-    (function() {
-      const carousel = document.getElementById('hero-carousel');
-      if (!carousel) return;
-      
-      const items = carousel.querySelectorAll('.carousel-item');
-      let currentIndex = 0;
-      let autoplayInterval;
-      
-      function showItem(index) {
-        items.forEach((item, i) => {
-          if (i === index) {
-            item.classList.add('active');
-          } else {
-            item.classList.remove('active');
+      // Auto-scrolling carousel
+      (function() {
+          const carousel = document.getElementById('hero-carousel');
+          if (!carousel) return;
+
+          const items = carousel.querySelectorAll('.carousel-item');
+          let currentIndex = 0;
+          let autoplayInterval;
+
+          function showItem(index) {
+              items.forEach((item, i) => {
+                  if (i === index) {
+                      item.classList.add('active');
+                  } else {
+                      item.classList.remove('active');
+                  }
+              });
           }
-        });
-      }
-      
-      function nextItem() {
-        currentIndex = (currentIndex + 1) % items.length;
-        showItem(currentIndex);
-      }
-      
-      function prevItem() {
-        currentIndex = (currentIndex - 1 + items.length) % items.length;
-        showItem(currentIndex);
-      }
-      
-      function startAutoplay() {
-        autoplayInterval = setInterval(nextItem, 5000); // Auto-scroll every 5 seconds
-      }
-      
-      function stopAutoplay() {
-        clearInterval(autoplayInterval);
-      }
-      
-      // Button handlers
-      const prevBtn = carousel.querySelector('.carousel-prev');
-      const nextBtn = carousel.querySelector('.carousel-next');
-      
-      if (prevBtn) {
-        prevBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          stopAutoplay();
-          prevItem();
-          startAutoplay();
-        });
-      }
-      
-      if (nextBtn) {
-        nextBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          stopAutoplay();
-          nextItem();
-          startAutoplay();
-        });
-      }
-      
-      // Start autoplay
-      if (items.length > 1) {
-        startAutoplay();
-      }
-      
-      // Pause on hover
-      carousel.addEventListener('mouseenter', stopAutoplay);
-      carousel.addEventListener('mouseleave', () => {
-        if (items.length > 1) startAutoplay();
-      });
-    })();
+
+          function nextItem() {
+              currentIndex = (currentIndex + 1) % items.length;
+              showItem(currentIndex);
+          }
+
+          function prevItem() {
+              currentIndex = (currentIndex - 1 + items.length) % items.length;
+              showItem(currentIndex);
+          }
+
+          function startAutoplay() {
+              autoplayInterval = setInterval(nextItem, 5000); // Auto-scroll every 5 seconds
+          }
+
+          function stopAutoplay() {
+              clearInterval(autoplayInterval);
+          }
+
+          // Button handlers
+          const prevBtn = carousel.querySelector('.carousel-prev');
+          const nextBtn = carousel.querySelector('.carousel-next');
+
+          if (prevBtn) {
+              prevBtn.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  stopAutoplay();
+                  prevItem();
+                  startAutoplay();
+              });
+          }
+
+          if (nextBtn) {
+              nextBtn.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  stopAutoplay();
+                  nextItem();
+                  startAutoplay();
+              });
+          }
+
+          // Start autoplay
+          if (items.length > 1) {
+              startAutoplay();
+          }
+
+          // Pause on hover
+          carousel.addEventListener('mouseenter', stopAutoplay);
+          carousel.addEventListener('mouseleave', () => {
+              if (items.length > 1) startAutoplay();
+          });
+      })();
   </script>
 <% end %>
 
@@ -153,12 +151,12 @@
       <!-- Domestic Violence Section -->
       <div>
         <h2 class="font-telefon text-2xl text-red-700 mb-4">Domestic Violence</h2>
-        
+
         <!-- Featured Story -->
-        <% featured_dv_story = @stories_by_focus["Domestic Violence"]&.first %>
+        <% featured_dv_story = @stories_by_sector["Domestic Violence"]&.first %>
         <% if featured_dv_story %>
           <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-4">
-            <%= link_to show_share_portal_story_path(featured_dv_story), class: "block relative" do %>
+            <%= link_to story_share_path(featured_dv_story), class: "block relative" do %>
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_dv_story,
@@ -184,17 +182,17 @@
 
         <!-- Additional Story Links -->
         <ul class="space-y-2 text-sm">
-          <% additional_stories = @stories_by_focus["Domestic Violence"]&.drop(1)&.first(4) || [] %>
+          <% additional_stories = @stories_by_sector["Domestic Violence"]&.drop(1)&.first(4) || [] %>
           <% additional_stories.each do |story| %>
             <li class="flex items-start">
               <svg class="w-3 h-3 mr-2 mt-1 text-red-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-              <%= link_to story.title, show_share_portal_story_path(story), class: "hover:text-red-700 hover:underline text-gray-800" %>
+              <%= link_to story.title, story_share_path(story), class: "hover:text-red-700 hover:underline text-gray-800" %>
             </li>
           <% end %>
         </ul>
-        
+
         <!-- More Link -->
         <div class="mt-4">
           <%= link_to "More Domestic Violence Stories...", stories_path(sector_names_all: "Domestic Violence"), class: "text-red-700 hover:underline font-medium text-sm inline-flex items-center" %>
@@ -204,12 +202,12 @@
       <!-- Social Justice Section -->
       <div>
         <h2 class="font-telefon text-2xl text-green-700 mb-4">Social Justice</h2>
-        
+
         <!-- Featured Story -->
-        <% featured_sj_story = @stories_by_focus["Social Justice"]&.first %>
+        <% featured_sj_story = @stories_by_sector["Social Justice"]&.first %>
         <% if featured_sj_story %>
           <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-4">
-            <%= link_to show_share_portal_story_path(featured_sj_story), class: "block relative" do %>
+            <%= link_to story_share_path(featured_sj_story), class: "block relative" do %>
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_sj_story,
@@ -235,17 +233,17 @@
 
         <!-- Additional Story Links -->
         <ul class="space-y-2 text-sm">
-          <% additional_stories = @stories_by_focus["Social Justice"]&.drop(1)&.first(4) || [] %>
+          <% additional_stories = @stories_by_sector["Social Justice"]&.drop(1)&.first(4) || [] %>
           <% additional_stories.each do |story| %>
             <li class="flex items-start">
               <svg class="w-3 h-3 mr-2 mt-1 text-green-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-              <%= link_to story.title, show_share_portal_story_path(story), class: "hover:text-green-700 hover:underline text-gray-800" %>
+              <%= link_to story.title, story_share_path(story), class: "hover:text-green-700 hover:underline text-gray-800" %>
             </li>
           <% end %>
         </ul>
-        
+
         <!-- More Link -->
         <div class="mt-4">
           <%= link_to "More Social Justice Stories...", stories_path(sector_names_all: "Social Justice"), class: "text-green-700 hover:underline font-medium text-sm inline-flex items-center" %>
@@ -255,12 +253,12 @@
       <!-- Facilitator Spotlights Section -->
       <div>
         <h2 class="font-telefon text-2xl text-purple-700 mb-4">Facilitator Spotlights</h2>
-        
+
         <!-- Featured Story -->
-        <% featured_fs_story = @stories_by_focus["Facilitator Spotlights"]&.first %>
+        <% featured_fs_story = @stories_by_sector["Facilitator Spotlights"]&.first %>
         <% if featured_fs_story %>
           <article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-4">
-            <%= link_to show_share_portal_story_path(featured_fs_story), class: "block relative" do %>
+            <%= link_to story_share_path(featured_fs_story), class: "block relative" do %>
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_fs_story,
@@ -286,17 +284,17 @@
 
         <!-- Additional Story Links -->
         <ul class="space-y-2 text-sm">
-          <% additional_stories = @stories_by_focus["Facilitator Spotlights"]&.drop(1)&.first(4) || [] %>
+          <% additional_stories = @stories_by_sector["Facilitator Spotlights"]&.drop(1)&.first(4) || [] %>
           <% additional_stories.each do |story| %>
             <li class="flex items-start">
               <svg class="w-3 h-3 mr-2 mt-1 text-purple-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-              <%= link_to story.title, show_share_portal_story_path(story), class: "hover:text-purple-700 hover:underline text-gray-800" %>
+              <%= link_to story.title, story_share_path(story), class: "hover:text-purple-700 hover:underline text-gray-800" %>
             </li>
           <% end %>
         </ul>
-        
+
         <!-- More Link -->
         <div class="mt-4">
           <%= link_to "More Facilitator Spotlights Stories...", stories_path(sector_names_all: "Facilitator Spotlights"), class: "text-purple-700 hover:underline font-medium text-sm inline-flex items-center" %>
@@ -310,9 +308,9 @@
 <section class="bg-white py-12 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <h2 class="font-telefon text-3xl text-black mb-8">What Others Are Reading</h2>
-    
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-      <% 
+      <%
         # Define color mapping for different categories with translucent overlays matching reference photo
         category_colors = {
           "Self-Care & Personal Growth" => { bg: "rgba(77, 139, 172, 0.85)", text: "text-white" },
@@ -327,19 +325,34 @@
           "Substance Abuse" => { bg: "rgba(77, 139, 172, 0.85)", text: "text-white" },
           "Story" => { bg: "rgba(147, 124, 195, 0.85)", text: "text-white" }
         }
-        
+
+
+        # "Self-Care & Personal Growth" => "bg-blue-600/70",
+        # "Schools & Universities" => "bg-purple-600/70",
+        # "Grief & Loss" => "bg-purple-600/70",
+        # "Community Engagement" => "bg-teal-600/70",
+        # "Facilitator Spotlights" => "bg-purple-600/70",
+        # "Domestic Violence" => "bg-pink-600/70",
+        # "Social Justice" => "bg-green-600/70",
+        # "Veterans & Military" => "bg-orange-600/70",
+        # "Sexual Assault" => "bg-lime-600/70",
+        # "Substance Abuse" => "bg-teal-600/70",
+        # "Story" => "bg-purple-600/70",
+        #
+        # }
+
         # Default color for categories not in the mapping
         default_color = { bg: "rgba(128, 128, 128, 0.85)", text: "text-white" }
       %>
-      
+
       <% @popular_stories.first(4).each do |story| %>
-        <% 
+        <%
           # Get the first sector name or use a default
           sector_name = story.sectors.first&.name || "Story"
           color_config = category_colors[sector_name] || default_color
         %>
-        
-        <%= link_to show_share_portal_story_path(story), class: "group block relative aspect-[3/4] overflow-hidden hover:opacity-90 transition-opacity" do %>
+
+        <%= link_to story_share_path(story), class: "group block relative aspect-[3/4] overflow-hidden hover:opacity-90 transition-opacity" do %>
           <!-- Background image -->
           <div class="absolute inset-0 bg-gray-200">
             <%= render "assets/display_image",
@@ -348,10 +361,10 @@
                        height: 12
             %>
           </div>
-          
+
           <!-- Colored translucent overlay -->
           <div class="absolute inset-0" style="background-color: <%= color_config[:bg] %>;"></div>
-          
+
           <!-- Top-aligned content -->
           <div class="absolute inset-0 flex flex-col items-center pt-16 p-6 text-center">
             <!-- Square sector box -->
@@ -373,12 +386,10 @@
 <section class="bg-white py-16 -mx-2 sm:-mx-6 lg:-mx-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
     <h2 class="font-telefon text-4xl text-black mb-8">Get involved!</h2>
-    
+
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
       <%= link_to "Attend Our Training", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-purple-700 hover:bg-purple-800 transition-colors" %>
       <%= link_to "Support Our Program", "#", class: "inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium text-white bg-purple-700 hover:bg-purple-800 transition-colors" %>
     </div>
   </div>
 </section>
-
-<div><!-- Restore layout container -->

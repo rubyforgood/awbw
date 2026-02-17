@@ -1,0 +1,11 @@
+</div><!-- Break out of layout container -->
+
+<% if @sector_names_all.present? %>
+  <%= render "sector_index" %>
+<% else %>
+  <%= render "index" %>
+<% end %>
+
+
+
+<div><!-- Restore layout container -->
