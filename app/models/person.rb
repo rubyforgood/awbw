@@ -71,6 +71,18 @@ class Person < ApplicationRecord
     attributes user_email:      "user.email"
     attributes user_phone:      "user.phone"
     attributes contact_methods_phone: "contact_methods.value"
+    attributes address_street: "addresses.street_address"
+    attributes address_city:   "addresses.city"
+    attributes address_state:  "addresses.state"
+    attributes address_zip:    "addresses.zip_code"
+    attributes address_phone:  "addresses.phone"
+
+    attributes all: [ :first_name, :last_name, :email, :email_2,
+                      :user_first_name, :user_last_name, :user_email, :user_phone,
+                      :contact_methods_phone,
+                      :address_street, :address_city, :address_state, :address_zip,
+                      :address_phone ]
+    options :all, type: :text, default: true, default_operator: :or
   end
 
   scope :published, -> { searchable.with_active_affiliations }
