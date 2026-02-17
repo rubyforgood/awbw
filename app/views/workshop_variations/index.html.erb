@@ -13,6 +13,7 @@
           </div>
         </div>
 
+<<<<<<< HEAD
         <%= render "search_boxes" %>
 
         <div class="rounded-xl bg-white p-6">
@@ -20,30 +21,30 @@
             <table class="table table-responsive table-bordered table-curved">
               <thead>
               <tr id="table-thead-tr">
-                <th class="text-left">Name</th>
-                <th class="text-left">Description</th>
-                <th class="text-start text-nowrap">Workshop</th>
-                <th class="text-center">Author</th>
-                <th class="text-center">Updated</th>
-                <th class="text-center">Edit</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Workshop</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Variation name</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Author</th>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Updated</th>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]">Edit</th>
               </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-100">
               <% @workshop_variations.each do |workshop_variation| %>
                 <tr class="hover:bg-gray-50 transition-colors duration-150">
-                  <td class="px-4 py-2 text-sm text-gray-800 font-semibold"><%= workshop_variation.name %></td>
-                  <td class="px-4 py-2 text-sm text-gray-600">
-                    <span title="<%= strip_tags(workshop_variation.body) %>">
-                      <%= truncate(strip_tags(workshop_variation.body), length: 150) %>
-                    </span>
-                  </td>
-                  <td class="px-4 py-2 text-sm text-gray-800">
+                  <td class="px-4 py-2 text-sm text-gray-800" title="<%= strip_tags(workshop_variation.workshop&.name) %>">
                     <% if workshop_variation.workshop %>
-                      <%= link_to truncate(strip_tags(workshop_variation.workshop.name), length: 50),
+                      <%= link_to truncate(strip_tags(workshop_variation.workshop.name), length: 30),
                                   workshop_path(workshop_variation.workshop),
                                   class: "btn btn-secondary-outline" %>
                     <% end %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-800 font-semibold" title="<%= workshop_variation.name %>"><%= truncate(workshop_variation.name, length: 30) %></td>
+                  <td class="px-4 py-2 text-sm text-gray-600">
+                    <span title="<%= strip_tags(workshop_variation.body) %>">
+                      <%= truncate(strip_tags(workshop_variation.body), length: 30) %>
+                    </span>
                   </td>
                   <td class="px-4 py-2 text-sm text-gray-800 text-center">
                     <% if workshop_variation.created_by && workshop_variation.created_by.person %>
