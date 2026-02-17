@@ -209,6 +209,22 @@
                 },
                 hint: "Maximum 250 characters" %></div>
 
+  <!-- Preferences: timezone for event times etc. -->
+  <% if f.object.user %>
+    <%= f.fields_for :user do |user_form| %>
+      <div class="space-y-6 p-3">
+        <%= user_form.input :time_zone,
+                    as: :select,
+                    collection: us_time_zone_fundamentals,
+                    selected: user_form.object.time_zone.presence || "Pacific Time (US & Canada)",
+                    include_blank: false,
+                    hint: "Event times and other dates will be shown in this timezone.",
+                    input_html: { class: "w-full" },
+                    wrapper_html: { class: "w-full max-w-md" } %>
+      </div>
+    <% end %>
+  <% end %>
+
   <div class="profile-preferences-section">
     <div class="font-medium text-gray-700 mb-2 block">
       Social media links:
@@ -310,7 +326,7 @@
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @person, class: "btn btn-danger-outline",
-                  data: { data_method: :delete, data_confirm: "Are you sure you want to delete?" } %>
+                  data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
 
     <%= link_to "Cancel", people_path, class: "btn btn-secondary-outline",

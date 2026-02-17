@@ -19,59 +19,45 @@
       <% end %>
 
       <!-- NEW PASSWORD -->
-      <div class="flex flex-col mt-6 pt-6">
-        <div class="relative" data-controller="password-toggle">
-          <%= f.input :password,
-                      as: :password,
-                      label: "New password",
-                      required: true,
-                      autocomplete: "new-password",
-                      autocorrect: "off",
-                      autocapitalize: "off",
-                      spellcheck: "false",
-                      input_html: {
-                        id: "change-password-new-password",
-                        class: "rounded-md border-gray-300 shadow-sm
-                          focus:ring-blue-500 focus:border-blue-500
-                          p-2 pr-10 w-full",
-                        data: { password_toggle_target: "input" }
-                      } %>
-
-          <button
-            type="button"
-            class="toggle-password absolute right-3 top-9 text-gray-500 hover:text-gray-700"
-            data-action="password-toggle#toggle"
-            aria-label="Toggle password visibility">
+      <div data-controller="password-toggle" class="input password required mt-6 pt-6">
+        <label class="password required" for="change-password-new-password">New password <abbr title="required">*</abbr></label>
+        <div class="relative">
+          <%= f.password_field :password,
+                               id: "change-password-new-password",
+                               class: "w-full form-control form-input password-field pr-10",
+                               required: true,
+                               minlength: 5,
+                               autofocus: true,
+                               autocomplete: "new-password",
+                               autocorrect: "off",
+                               autocapitalize: "off",
+                               spellcheck: "false",
+                               data: { password_toggle_target: "input" } %>
+          <button type="button" class="toggle-password" data-action="password-toggle#toggle" aria-label="Toggle password visibility">
             <i class="fa fa-eye" data-password-toggle-target="icon"></i>
           </button>
         </div>
       </div>
 
       <!-- CONFIRM PASSWORD -->
-      <div class="flex flex-col relative" data-controller="password-toggle">
-        <%= f.input :password_confirmation,
-                    as: :password,
-                    label: "New password confirmation",
-                    autocomplete: "new-password",
-                    autocorrect: "off",
-                    autocapitalize: "off",
-                    spellcheck: "false",
-                    required: true,
-                    input_html: {
-                      id: "change-password-new-password-confirmation",
-                      class: "rounded-md border-gray-300 shadow-sm
-                focus:ring-blue-500 focus:border-blue-500
-                p-2 pr-10",
-                      data: { password_toggle_target: "input" }
-                    } %>
-
-        <button
-          type="button"
-          class="toggle-password"
-          data-action="password-toggle#toggle"
-          aria-label="Toggle password visibility">
-          <i class="fa fa-eye" data-password-toggle-target="icon"></i>
-        </button>
+      <div data-controller="password-toggle" class="input password required">
+        <label class="password required" for="change-password-new-password-confirmation">New password confirmation <abbr title="required">*</abbr></label>
+        <div class="relative">
+          <%= f.password_field :password_confirmation,
+                               id: "change-password-new-password-confirmation",
+                               class: "w-full form-control form-input password-field pr-10",
+                               required: true,
+                               minlength: 5,
+                               autofocus: true,
+                               autocomplete: "new-password",
+                               autocorrect: "off",
+                               autocapitalize: "off",
+                               spellcheck: "false",
+                               data: { password_toggle_target: "input" } %>
+          <button type="button" class="toggle-password" data-action="password-toggle#toggle" aria-label="Toggle password visibility">
+            <i class="fa fa-eye" data-password-toggle-target="icon"></i>
+          </button>
+        </div>
       </div>
 
       <% if User.devise_modules.include?(:rememberable) %>

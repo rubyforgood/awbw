@@ -1,9 +1,15 @@
 {
   "permissions": {
     "allow": [
+
+      "Bash(bundle install:*)"
+      "Bash(done)",
+      "Bash(for i in 1 2 3)",
       "Bash(grep:*)",
       "Bash(chmod:*)",
+      "Bash(ls:*)"
       "Bash(mysql -u root:*)",
+      "Bash(ruby:*)",
 
       "Bash(bundle exec brakeman:*)",
       "Bash(bundle exec rails routes:*)",
@@ -16,13 +22,18 @@
       "Bash(RAILS_ENV=test bundle exec rails runner:*)",
       "Bash(RAILS_ENV=test bundle exec rspec:*)",
 
+      "Bash(bundle exec rspec:*)",
+      "Bash(bundle exec rails runner:*)",
+      "Bash(RAILS_ENV=test bundle exec rails runner:*)",
+      "Bash(RAILS_ENV=test bundle exec rspec:*)",
+      "Bash(git stash:*)",
+
       "Bash(git add:*)",
-      "Bash(git apply:*)",
-      "Bash(git checkout:*)",
       "Bash(git commit:*)",
       "Bash(git diff:*)",
       "Bash(git fetch:*)",
       "Bash(git log:*)",
+      "Bash(git merge:*)"
       "Bash(git pull:*)",
       "Bash(git push:*)",
       "Bash(git rebase:*)",
@@ -36,8 +47,7 @@
       "Bash(bin/rails runner:*)",
 
       "Bash(git -C /Users/maebeale/programming/awbw branch --show-current)",
-      "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)",
-      "Bash(ls:*)"
+      "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)"
     ]
   }
 }

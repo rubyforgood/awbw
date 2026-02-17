@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :workshop_variation_idea do
-    name { "Workshop Variation Idea" }
+    sequence(:name) { |n| "Workshop Variation Idea #{n}" }
     body { "This is a variation idea description" }
     youtube_url { "https://www.youtube.com/watch?v=example" }
     permission_given { true }
