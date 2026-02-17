@@ -106,6 +106,7 @@ Rails.application.routes.draw do
    member do
      get :populations_served
    end
+   resources :comments, only: [ :index, :create ]
  end
   resources :organization_statuses
   resources :affiliations

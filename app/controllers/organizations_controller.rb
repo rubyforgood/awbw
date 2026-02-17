@@ -76,7 +76,11 @@ class OrganizationsController < ApplicationController
 
   def update
     authorize! @organization
-    if @organization.update(organization_params)
+    @organization.assign_attributes(organization_params)
+    @organization.comments.select(&:new_record?).each { |c| c.created_by = current_user }
+    @organization.comments.select(&:changed?).each { |c| c.updated_by = current_user }
+
+    if @organization.save
       redirect_to organizations_path, notice: "Organization was successfully updated.", status: :see_other
     else
       set_form_variables
@@ -145,6 +149,7 @@ end
   def set_organization
     @organization = Organization.includes(
       :organization_status, :windows_type, :addresses,
+      { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
       affiliations: :person
     ).find(params[:id])
@@ -174,6 +179,7 @@ end
         :end_date,
         :_destroy
       ],
+      comments_attributes: [ :id, :body ],
       addresses_attributes: [
         :id,
         :address_type,
