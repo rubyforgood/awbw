@@ -1,3 +1,4 @@
+<% content_for(:page_bg_class, "admin-or-auth") %>
 <br>
 <h2 class='normal'><%= "#{@form_builder.name}" %></h2>
 <%= render "form", form_fields: @form_builder.form_fields, agencies: current_user.person&.organizations || [] %>
