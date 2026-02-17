@@ -11,7 +11,10 @@
     <!-- Form -->
 
     <div class="space-y-6">
-        <div class="mt-4 bg-white rounded p-3"><%= render "form", workshop: @workshop %></div>
+        <div class="mt-4 bg-white rounded p-3">
+          <%= render "form", workshop: @workshop %>
+          <%= render "shared/audit_info", resource: @workshop %>
+        </div>
       <% if params[:admin] == 'true' %>
         <div class="my-4"><%= render "assets/form", owner: @workshop %></div>
         <%= turbo_frame_tag "editor_assets_lazy", src: edit_workshop_path(@workshop) do %>
