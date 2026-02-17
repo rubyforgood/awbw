@@ -62,20 +62,9 @@
     </div>
 
     <div class="w-full text-right">
-      <% if f.object.persisted? %>
-        <%= link_to "Remove",
-                    affiliation_path(f.object),
-                    data: {
-                      turbo_method: :delete,
-                      turbo_confirm: "Remove this person from the organization?",
-                      turbo_stream: true
-                    },
-                    class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
-      <% else %>
-        <%= link_to_remove_association "Remove",
-                                       f,
-                                       class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
-      <% end %>
+      <%= link_to_remove_association "Remove",
+                                     f,
+                                     class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
     </div>
   </div>
 <% else %>

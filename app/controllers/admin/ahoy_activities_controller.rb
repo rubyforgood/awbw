@@ -44,6 +44,15 @@ module Admin
         scope = scope.where(visit_id: params[:visit_id])
       end
 
+      # Filter by resource type and ID
+      if params[:resource_type].present?
+        scope = scope.where(resource_type: params[:resource_type])
+      end
+
+      if params[:resource_id].present?
+        scope = scope.where(resource_id: params[:resource_id])
+      end
+
       @events = scope.paginate(page: page, per_page: per_page)
     end
 

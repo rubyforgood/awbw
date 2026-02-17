@@ -185,6 +185,8 @@ A monthly report has already been submitted for this month. Please contact your 
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   </div>
+  
+  <%= render "shared/audit_info", resource: @report %>
 <% end %>
 
 <script>

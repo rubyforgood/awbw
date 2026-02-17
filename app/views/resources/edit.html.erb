@@ -11,7 +11,10 @@
       </div>
 
       <div class="space-y-6">
-          <div class="mt-4 bg-white rounded p-3"><%= render "form" %></div>
+          <div class="mt-4 bg-white rounded p-3">
+            <%= render "form" %>
+            <%= render "shared/audit_info", resource: @resource %>
+          </div>
 
         <% if params[:admin] == 'true' %>
           <div class="my-4"><%= render "assets/form", owner: @resource %></div>
