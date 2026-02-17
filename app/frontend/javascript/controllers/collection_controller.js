@@ -56,6 +56,7 @@ export default class extends Controller {
 
   clearAndSubmit(event) {
     event.preventDefault();
+
     this.element.querySelectorAll('input[type="text"], input[type="search"]').forEach(input => {
       input.value = '';
     });
@@ -65,6 +66,7 @@ export default class extends Controller {
     this.element.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
       input.checked = false;
     });
+    // this.element.reset();
     this.submitForm();
   }
 
