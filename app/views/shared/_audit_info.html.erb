@@ -1,9 +1,9 @@
-<% 
+<%
   # Partial for displaying created_at and updated_at information on edit pages
-  # Usage: <%= render 'shared/audit_info', resource: @resource %>
- <%
+  # Usage: render "shared/audit_info", resource: @resource
   return unless resource&.persisted?
-  
+
+  model = resource.respond_to?(:object) ? resource.object : resource
   created_by_user = resource.try(:created_by) || resource.try(:user)
   updated_by_user = resource.try(:updated_by) || resource.try(:user)
   
@@ -23,7 +23,7 @@
           by <%= link_to resource_user.full_name, person_path(resource_user.person), class: "text-indigo-600 hover:underline" %>
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-          <%= link_to admin_activities_events_path(resource_type: resource.object.class.name, resource_id: resource.id),
+          <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
                       class: "ml-1 text-indigo-600 hover:underline", 
                       title: "View creation event in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
@@ -42,7 +42,7 @@
           by <%= link_to resource_user.full_name, user_path(resource_user.person), class: "text-indigo-600 hover:underline" %>
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-          <%= link_to admin_activities_events_path(resource_type: resource.object.class.name, resource_id: resource.id),
+          <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
                       class: "ml-1 text-indigo-600 hover:underline", 
                       title: "View update events in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
