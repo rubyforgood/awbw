@@ -169,7 +169,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   pointer-events: none;
 }
 
-<<<<<<< HEAD
 /* Safari fix: Ensure password field has proper height */
 .password-field {
   height: 2.5rem; /* Matches Tailwind's default input height with p-2 */

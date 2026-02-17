@@ -50,7 +50,8 @@
     <!-- Clear filters -->
     <div class="flex sm:justify-end items-end">
       <%= link_to 'Clear filters', users_path,
-                  class: "btn btn-utility-outline" %>
+                  class: "btn btn-utility-outline",
+                  data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
 <% end %>

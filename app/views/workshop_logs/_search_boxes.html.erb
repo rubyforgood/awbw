@@ -58,7 +58,8 @@
     <!-- Clear filters -->
     <div class="w-full md:w-auto">
       <%= link_to "Clear filters", workshop_logs_path,
-                  class: "btn btn-utility-outline w-full md:w-auto" %>
+                  class: "btn btn-utility-outline w-full md:w-auto",
+                  data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
 <% end %>

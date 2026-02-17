@@ -2,12 +2,12 @@
   "permissions": {
     "allow": [
 
-      "Bash(bundle install:*)"
+      "Bash(bundle install:*)",
       "Bash(done)",
       "Bash(for i in 1 2 3)",
       "Bash(grep:*)",
       "Bash(chmod:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
       "Bash(mysql -u root:*)",
       "Bash(ruby:*)",
 
@@ -33,7 +33,7 @@
       "Bash(git diff:*)",
       "Bash(git fetch:*)",
       "Bash(git log:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
       "Bash(git pull:*)",
       "Bash(git push:*)",
       "Bash(git rebase:*)",
