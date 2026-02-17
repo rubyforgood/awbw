@@ -4,8 +4,10 @@ class WorkshopVariationsController < ApplicationController
     authorize!
 
     base_scope = WorkshopVariation.includes(:workshop).joins(:workshop).where(workshops: { published: true })
-    filtered = base_scope.order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
+    filtered = base_scope.search_by_params(params)
+                         .order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
     @workshop_variations = filtered.paginate(page: params[:page], per_page: 25).decorate
+    @workshop_variations_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
   end
 
   def new

@@ -5,11 +5,12 @@ class WorkshopVariationIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    workshop_variation_ideas = WorkshopVariationIdea.includes(:workshop, :created_by, :updated_by)
-    @workshop_variation_ideas_count = workshop_variation_ideas.size
-    @workshop_variation_ideas = workshop_variation_ideas.order(created_at: :desc)
-                                                        .paginate(page: params[:page], per_page: per_page)
-                                                        .decorate
+    base_scope = WorkshopVariationIdea.includes(:workshop, :created_by, :updated_by)
+    filtered = base_scope.search_by_params(params)
+    @workshop_variation_ideas_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+    @workshop_variation_ideas = filtered.order(created_at: :desc)
+                                        .paginate(page: params[:page], per_page: per_page)
+                                        .decorate
   end
 
   def show

@@ -1,4 +1,15 @@
 class StoryIdea < ApplicationRecord
+  include SearchCop
+  search_scope :search do
+    attributes :title, :body
+  end
+
+  def self.search_by_params(params)
+    results = is_a?(ActiveRecord::Relation) ? self : all
+    results = results.search(params[:query]) if params[:query].present?
+    results
+  end
+
   PUBLISH_PREFERENCES = [
     "I would like my full name published with the story",
     "I would like only my first name published",
