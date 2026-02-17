@@ -2,6 +2,18 @@
   <%= render 'shared/errors', resource: @story if @story.errors.any? %>
 
   <% story_idea = @story_idea || f.object.story_idea %>
+  <% selected_sector_ids = @preselected_sector_ids || @story.sector_ids %>
+  <% selected_category_ids = @preselected_category_ids || @story.category_ids %>
+
+  <% if story_idea %>
+    <div class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 mb-6">
+      <i class="fas fa-arrow-up-from-bracket text-blue-600"></i>
+      <span class="text-sm font-medium text-blue-800">
+        Promoted from
+        <%= link_to story_idea.full_name, edit_story_idea_path(story_idea), class: "underline hover:text-blue-600" %>
+      </span>
+    </div>
+  <% end %>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div><%= f.input :title, as: :text,
@@ -68,18 +80,23 @@
 
   <div class="flex flex-col md:flex-row md:space-x-4">
     <div class="flex-1 mb-4 md:mb-0">
+      <% story_idea_label = if f.object.story_idea
+        (link_to "Source story idea",
+                 story_idea_path(f.object.story_idea), class: "hover:underline")
+      else
+        "Source story idea"
+      end %>
       <%= f.input :story_idea_id,
                   collection: @story_ideas, label_method: :full_name,
                   value_method: :id,
                   selected: f.object.story_idea_id || @story_idea&.id,
-                  label: (f.object.story_idea ? (link_to "Story idea",
-                                                         story_idea_path(story_idea), class: "hover:underline") : "Story idea").html_safe,
+                  label: story_idea_label.html_safe,
                   prompt: "Select idea" %>
     </div>
 
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :created_by_id,
-                    collection: @users, label_method: :full_name,
+                    collection: @users, label_method: :full_name_with_email,
                     value_method: :id,
                     selected: f.object.organization_id || @story_idea&.organization_id,
                     label: (f.object.created_by ? (
@@ -92,12 +109,15 @@
         <div class="flex-1 mb-4 md:mb-0">
           Story idea author credit:
           <br>
-          <%= story_idea.author_credit %>
-          <br>
+          <% if story_idea.created_by.person %>
+            <%= person_profile_button(story_idea.created_by.person, display_name: story_idea.author_credit, subtitle: story_idea.created_by.person.full_name) %>
+          <% else %>
+            <%= story_idea.author_credit %>
+          <% end %>
           <br>
           Story idea "publish preferences":
           <br>
-          <div class="italic"><%= story_idea.publish_preferences %></div>
+          <div class="italic"><%= link_to story_idea.publish_preferences, edit_story_idea_path(story_idea, anchor: "publish-preferences"), class: "hover:underline hover:text-blue-600" %></div>
         </div>
       <% end %>
     </div>
@@ -126,7 +146,45 @@
       </div>
     <% end %>
   </div>
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+  <% if story_idea %>
+    <% idea_assets = story_idea.assets.select { |a| a.file.attached? } %>
+    <% if idea_assets.any? %>
+      <% idea_blob_ids = idea_assets.map { |a| a.file.blob_id }.sort %>
+      <% story_blob_ids = f.object.assets.select { |a| a.file.attached? }.map { |a| a.file.blob_id }.sort %>
+      <% assets_already_match = idea_blob_ids == story_blob_ids %>
+      <% unless f.object.persisted? && assets_already_match %>
+        <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 mt-6">
+          <div class="flex items-start space-x-3">
+            <%= label_tag :promote_idea_assets, class: "flex items-start space-x-3 cursor-pointer" do %>
+              <%= check_box_tag :promote_idea_assets, true, f.object.new_record?, class: "mt-1 h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
+              <div class="flex flex-col">
+                <span class="text-gray-900 font-medium">
+                  Check this box to transfer attachments from the story idea.
+                </span>
+                <p class="text-amber-600 text-sm mt-1 font-medium">
+                  <i class="fas fa-triangle-exclamation"></i>
+                  This will replace any existing attachments on this story once you click submit.
+                </p>
+              </div>
+            <% end %>
+          </div>
+
+          <h3 class="text-sm font-semibold text-gray-700 mt-4 mb-2 ml-8"><%= link_to "Story idea attachments:", edit_story_idea_path(story_idea, anchor: "attachments"), class: "underline hover:text-blue-600" %></h3>
+          <div class="flex flex-wrap gap-4 ml-8">
+            <% idea_assets.each do |asset| %>
+              <div class="flex flex-col items-center">
+                <%= render "assets/display_image", resource: story_idea, item: asset, variant: :gallery %>
+                <span class="text-xs text-gray-500 mt-1"><%= asset.type.underscore.humanize %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: true,
+             primary_title: "Primary attachment", gallery_title: "Additional attachment" %>
 
   <!-- Accordions -->
   <div class="space-y-4 mt-8">
@@ -136,13 +194,13 @@
         id="tags_button"
         class="
           flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
         data-action="dropdown#toggle"
         data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
         Tags
         <svg
           id="tags_arrow"
-          class="w-6 h-6 shrink-0"
+          class="w-6 h-6 shrink-0 rotate-180"
           fill="currentColor"
           viewBox="0 0 20 20"
           xmlns="http://www.w3.org/2000/svg">
@@ -154,11 +212,11 @@
         </svg>
       </button>
 
-      <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
+      <div id="tags" class="border border-gray-300 p-4 rounded-b-md">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
           <!-- Header -->
           <h3 class="text-base font-semibold text-gray-800 mb-3">
-            Sectors
+            <%= Sector::STORY_DISPLAY_TEXT %>
           </h3>
 
           <!-- Checkbox List -->
@@ -175,7 +233,7 @@
                 <!-- # To ensure unchecked boxes are submitted -->
                 <%= check_box_tag "story[sector_ids][]",
                                   sector.id,
-                                  @story.sector_ids.include?(sector.id),
+                                  selected_sector_ids.include?(sector.id),
                                   id: id,
                                   class: "h-4 w-4 text-blue-600 rounded" %>
 
@@ -189,7 +247,7 @@
           <% @categories_grouped.each do |type, cats| %>
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
               <!-- Header -->
-              <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.titleize %></h3>
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.display_label %></h3>
 
               <!-- Checkbox List -->
               <div class="flex flex-wrap gap-3">
@@ -205,7 +263,7 @@
                     <!-- # To ensure unchecked boxes are submitted -->
                     <%= check_box_tag "story[category_ids][]",
                                       category.id,
-                                      @story.category_ids.include?(category.id),
+                                      selected_category_ids.include?(category.id),
                                       id: id,
                                       class: "h-4 w-4 text-blue-600 rounded" %>
 
@@ -229,21 +287,4 @@
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
 
-  <% if story_idea %>
-    <div class="mt-6">
-      <%= label_tag :promote_idea_assets, class: "flex items-start space-x-3 cursor-pointer" do %>
-        <%= check_box_tag :promote_idea_assets, true, false, class: "mt-1 h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
-
-        <div class="ml-2 flex flex-col">
-          <span class="text-gray-900 font-medium">
-            If the story idea was submitted with attachments, check this box to transfer them to this new story.
-          </span>
-
-          <p class="text-gray-500 text-sm mt-1">
-            (This will override any attachments uploaded in the form below once you click submit.)
-          </p>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
 <% end %>

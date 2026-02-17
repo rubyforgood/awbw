@@ -23,6 +23,16 @@ module TitleDisplayHelper
       )
     end
 
+    # --- Promoted from story idea badge ---
+    if record.respond_to?(:story_idea) && record.story_idea.present?
+      fragments << content_tag(
+        :span,
+        content_tag(:i, "", class: "fa-solid fa-arrow-up-from-bracket mr-1") + " Promoted",
+        class: "inline-flex items-center px-2 py-0.5 rounded-full
+              text-sm font-medium bg-green-100 text-green-800 whitespace-nowrap"
+      )
+    end
+
     title_content = record_title || record.title.to_s
 
     if display_windows_type && record.respond_to?(:windows_type) && record.windows_type.present?

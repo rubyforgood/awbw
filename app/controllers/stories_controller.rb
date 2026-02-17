@@ -57,7 +57,7 @@ class StoriesController < ApplicationController
   end
 
   def create
-    @story = Story.new(story_params)
+    @story = Story.new(story_params.except(:category_ids, :sector_ids))
     authorize! @story
 
     success = false
@@ -91,8 +91,11 @@ class StoriesController < ApplicationController
     success = false
 
     Story.transaction do
-      if @story.update(story_params.except(:images))
+      if @story.update(story_params.except(:images, :category_ids, :sector_ids))
         assign_associations(@story)
+        if params[:promote_idea_assets] == "true"
+          @story.attach_assets_from_idea!
+        end
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
@@ -135,8 +138,17 @@ class StoriesController < ApplicationController
         .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
-        .sort_by { |type, _| type&.name.to_s.downcase }
+        .sort_by { |type, _| [ type&.story_specific? ? 0 : 1, type&.name.to_s.downcase ] }
     @sectors = Sector.published.order(:name)
+    submitted_sector_ids = Array(params.dig(:story, :sector_ids)).reject(&:blank?)
+    submitted_category_ids = Array(params.dig(:story, :category_ids)).reject(&:blank?)
+    if submitted_sector_ids.any? || submitted_category_ids.any?
+      @preselected_sector_ids = submitted_sector_ids.map(&:to_i)
+      @preselected_category_ids = submitted_category_ids.map(&:to_i)
+    elsif @story_idea
+      @preselected_sector_ids = @story_idea.sector_ids
+      @preselected_category_ids = @story_idea.category_ids
+    end
     @story.build_primary_asset if @story.primary_asset.blank?
     @story.gallery_assets.build
   end
@@ -166,12 +178,13 @@ class StoriesController < ApplicationController
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ]
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
     )
   end
 
   def set_story_attributes_from(idea)
     {
+      story_idea_id: idea.id,
       rhino_body: idea.body,
       organization_id: idea.organization.id,
       workshop_id: idea.workshop_id,
