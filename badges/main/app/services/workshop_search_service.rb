@@ -231,9 +231,7 @@ class WorkshopSearchService
     when "led"
       @workshops = @workshops.order(led_count: :desc, title: :asc)
     when "popularity"
-      @workshops = @workshops.order(
-        Arel.sql("COUNT(bookmarks.id) DESC, workshops.title ASC")
-      )
+      @workshops = @workshops.order(bookmarks_count: :desc, title: :asc)
     when "title"
       @workshops = @workshops.order(Arel.sql(TITLE_SORT_SQL))
     when "keywords"

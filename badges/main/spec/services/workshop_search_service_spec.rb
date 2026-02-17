@@ -100,7 +100,7 @@ RSpec.describe WorkshopSearchService, type: :service do
 
     context "sorting by bookmarks (popularity)" do
       it "orders by bookmarks_count desc, then title asc" do
-        service = WorkshopSearchService.new({ sort: 'bookmarks' }, user: user).call
+        service = WorkshopSearchService.new({ sort: 'popularity' }, user: user).call
         workshops = service.workshops
 
         expect(workshops.map { |w| [ w.bookmarks_count.to_i, w.title ] }).to eq([
