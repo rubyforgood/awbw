@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="bg-white border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
         <h1 class="text-2xl font-semibold text-gray-900 mb-4">Bookmarks (<%= @bookmarks_count %>)</h1>
         <div class="border-b border-gray-300 mb-6"></div>
         <div class="mt-4 pt-4">
@@ -9,8 +9,9 @@
 
           <!-- Bookmarks list -->
           <% if @bookmarks.any? %>
+            <div class="rounded-xl bg-white p-6">
             <div class="overflow-x-auto">
-              <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+              <table class="min-w-full border border-gray-200 rounded-lg shadow-sm">
                 <thead>
                 <tr class="bg-gray-100">
                   <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">ID</th>
@@ -38,6 +39,7 @@
                 <% end %>
                 </tbody>
               </table>
+            </div>
             </div>
 
             <!-- Pagination -->

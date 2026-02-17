@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="bg-white border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:workshop_variations) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -13,7 +13,6 @@
           </div>
         </div>
 
-<<<<<<< HEAD
         <%= render "search_boxes" %>
 
         <div class="rounded-xl bg-white p-6">
@@ -65,6 +64,7 @@
               <% end %>
             </tbody>
           </table>
+        </div>
         </div>
 
         <!-- Empty state -->
