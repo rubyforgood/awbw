@@ -19,6 +19,12 @@
         </button>
       </div>
     <% end %>
+    <!-- Clear filters -->
+    <div class="flex sm:justify-end items-end">
+      <%= link_to 'Clear filters', workshop_ideas_path,
+                  class: "btn btn-utility",
+                  data: { action: "collection#clearAndSubmit" } %>
+    </div>
   </div>
   <!-- Checkboxes -->
   <!--<div-->

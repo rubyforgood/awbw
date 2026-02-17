@@ -54,6 +54,12 @@ export default class extends Controller {
     });
   }
 
+  clearAndSubmit(event) {
+    event.preventDefault();
+    this.element.reset();
+    this.submitForm();
+  }
+
   blurOldResults() {
     const frame = this.element.closest("turbo-frame");
     const scope = frame || document;

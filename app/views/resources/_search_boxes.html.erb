@@ -51,7 +51,7 @@
     <!-- CLEAR FILTERS -->
     <div class="min-w-[120px] pb-3">
       <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">&nbsp;</label>
-      <%= link_to "Clear filters", resources_path, class: "btn btn-utility" %>
+      <%= link_to "Clear filters", resources_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
 

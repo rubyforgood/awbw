@@ -39,6 +39,7 @@
     <% end %>
 
     <%= link_to "Clear filters", organizations_path,
-                class: "btn btn-utility-outline w-full sm:w-auto" %>
+                class: "btn btn-utility-outline w-full sm:w-auto",
+                data: { action: "collection#clearAndSubmit" } %>
   <% end %>
 </div>

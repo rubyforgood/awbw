@@ -45,9 +45,10 @@
 
     <!-- Clear -->
     <div>
-      <%= link_to "Clear",
+      <%= link_to "Clear filters",
                   categories_path,
-                  class: "btn btn-utility-outline whitespace-nowrap" %>
+                  class: "btn btn-utility-outline whitespace-nowrap",
+                  data: { action: "collection#clearAndSubmit" } %>
     </div>
 
   <% end %>
