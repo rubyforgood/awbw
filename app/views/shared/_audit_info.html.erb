@@ -4,8 +4,8 @@
  <%
   return unless resource&.persisted?
   
-  created_by_user = resource.try(:created_by)
-  updated_by_user = resource.try(:updated_by)
+  created_by_user = resource.try(:created_by) || resource.try(:user)
+  updated_by_user = resource.try(:updated_by) || resource.try(:user)
   
   # Check if there's a user association for models without explicit created_by
   resource_user = resource.try(:user) if created_by_user.nil? && updated_by_user.nil?
