@@ -305,6 +305,36 @@
     </div>
   </div>
 
+  <% if f.object.persisted? %>
+    <!-- Comments -->
+    <div class="form-group space-y-4" id="comments-section">
+      <div class="font-semibold text-gray-700 mb-2">Comments</div>
+
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm"
+           data-controller="paginated-fields comment-edit-toggle"
+           data-paginated-fields-per-page-value="5">
+        <%= f.simple_fields_for :comments do |cf| %>
+          <%= render "comments/comment_fields", f: cf %>
+        <% end %>
+
+        <div data-paginated-fields-target="nav"></div>
+
+        <button type="button"
+                class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
+                style="float:right"
+                data-action="click->comment-edit-toggle#toggle">
+          <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
+          <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
+        </button>
+        <%= link_to_add_association "➕ Add Comment",
+                                    f,
+                                    :comments,
+                                    partial: "comments/comment_fields",
+                                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  <% end %>
+
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @organization, class: "btn btn-danger-outline",
