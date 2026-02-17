@@ -12,6 +12,7 @@ RSpec.describe "devise/passwords/edit", type: :view do
     view.define_singleton_method(:resource) { u }
     view.define_singleton_method(:resource_name) { :user }
     view.define_singleton_method(:devise_mapping) { mapping }
+    view.define_singleton_method(:resource_class) { User }
     render
   end
 
