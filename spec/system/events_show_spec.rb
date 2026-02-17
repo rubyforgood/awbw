@@ -132,6 +132,36 @@ RSpec.describe "Event show page", type: :system do
         expect(page).not_to have_button("Register")
       end
     end
+
+    context "event ended" do
+      before do
+        event.update!(end_date: 1.day.ago)
+      end
+
+      it "shows 'Event ended' and hides registration buttons" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_text("Event ended")
+        expect(page).not_to have_button("Register")
+        expect(page).not_to have_button("De-register")
+      end
+    end
+
+    context "unpublished event with future registration date" do
+      before do
+        event.update!(published: false, publicly_visible: false)
+      end
+
+      it "shows 'Not published' instead of 'Registration closed' for admins" do
+        sign_in(admin)
+        visit event_path(event)
+
+        expect(page).to have_text("Not published")
+        expect(page).not_to have_text("Registration closed")
+        expect(page).not_to have_button("Register")
+      end
+    end
   end
 
   # --------------------------------------------------
