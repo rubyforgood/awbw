@@ -1,4 +1,4 @@
-<div class="relative ml-3" id="avatar" data-controller="dropdown">
+<div class="navbar-user-button relative" id="avatar" data-controller="dropdown">
   <% user = current_user %>
   <% person = user&.person %>
   <% avatar_image = person&.avatar&.attached? ? url_for(person.avatar) : "missing.png" %>

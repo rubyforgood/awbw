@@ -1,8 +1,5 @@
-<div class="min-h-screen py-10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<!--    <div class="admin-only bg-blue-100 p-6">-->
-      <div class="<%= DomainTheme.bg_class_for(:people) %>
-          border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-8">
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:people) %> border border-gray-200 rounded-xl shadow p-6">
         <div class="sticky top-0 z-10 <%= DomainTheme.bg_class_for(:people) %> pb-3">
           <div class="flex flex-wrap justify-end gap-2 mb-4">
             <% unless @person.user %>
@@ -30,7 +27,4 @@
             <%= render "form" %>
           </div>
         </div>
-      </div>
-<!--    </div>-->
-  </div>
 </div>

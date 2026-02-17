@@ -1,9 +1,7 @@
 <% quote_url   = quote_url(@quote) %>
 <% quote_title = ERB::Util.url_encode(@quote.title) %>
 
-<div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="p-6">
+<div class="<%= DomainTheme.bg_class_for(:quotes) %> border border-gray-200 rounded-xl shadow p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
         <span class="inline-block text-sm">
@@ -133,6 +131,4 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
 </div>

@@ -1,5 +1,4 @@
-<div class="workshop-variation-detail py-6 min-h-screen">
-  <div class="max-w-5xl mx-auto px-4">
+<div class="<%= DomainTheme.bg_class_for(:workshop_variations) %> border border-gray-200 rounded-xl shadow p-6">
 
     <div class="flex justify-end mb-6">
       <% if allowed_to?(:edit?, @workshop_variation) %>
@@ -67,5 +66,4 @@
       </div>
 
     </div>
-  </div>
 </div>

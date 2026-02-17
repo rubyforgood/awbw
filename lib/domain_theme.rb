@@ -18,7 +18,8 @@ module DomainTheme
     categories:               :lime,
     category_types:            :lime,
 
-    faqs:                     :stone,
+    faqs:                     :pink,
+    tutorials:                :cyan,
 
     workshop_ideas:           :indigo,
     workshop_variation_ideas: :purple,

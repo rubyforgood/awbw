@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:faqs) %> border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+<div class="w-full max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:faqs) %> border border-gray-200 rounded-xl shadow p-6">
   <!-- Header Row -->
   <div class="w-full">
     <div class="flex items-start justify-between mb-4">
@@ -18,20 +18,20 @@
     <!-- Filter form -->
     <div class="mt-4"><%= render "search_boxes" %></div>
 
-    <!-- Divider -->
-    <div class="w-full mt-4"><hr class="border-gray-200"></div>
-
-    <div
-      class="mt-4 bg-white rounded-xl animate-fade p-3"
-      data-controller="sortable"
-      data-sortable-url-value="<%= faq_path(id: ":id") %>"
-      data-testid="faq-list">
-      <% if @faqs.present? %>
-        <%= render partial: "faq", collection: @faqs, as: :faq %>
-        <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @faqs %></div>
-      <% else %>
-        <p class="text-start text-gray-500 mt-6">No FAQs found.</p>
-      <% end %>
+    <!-- Inner White Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 mt-4">
+      <div
+        class="animate-fade"
+        data-controller="sortable"
+        data-sortable-url-value="<%= faq_path(id: ":id") %>"
+        data-testid="faq-list">
+        <% if @faqs.present? %>
+          <%= render partial: "faq", collection: @faqs, as: :faq %>
+          <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @faqs %></div>
+        <% else %>
+          <p class="text-start text-gray-500 mt-6">No FAQs found.</p>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>
