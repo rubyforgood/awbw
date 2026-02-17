@@ -29,7 +29,7 @@ class WorkshopSearchService
 
   # Compute the effective sort
   def default_sort
-    params[:sort].presence || "created"
+    params[:sort].presence || "title"
     # return params[:sort] if params[:sort].present?
     # return 'keywords' if params[:query].present? # only when returning weighted results from # search_by_query
     # 'title'

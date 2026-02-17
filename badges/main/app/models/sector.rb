@@ -24,6 +24,8 @@ class Sector < ApplicationRecord
     "Other"
   ]
 
+  STORY_DISPLAY_TEXT = "Which sectors apply?"
+
   has_many :sectorable_items, dependent: :destroy
   has_many :workshops, through: :sectorable_items,
            source: :sectorable, source_type: "Workshop"

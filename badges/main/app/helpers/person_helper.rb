@@ -1,5 +1,5 @@
 module PersonHelper
-  def person_profile_button(person, truncate_at: nil, subtitle: nil)
+  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil)
     bg = DomainTheme.bg_class_for(:people, intensity: 100)
     hover_bg = DomainTheme.bg_class_for(:people, intensity: 100, hover: true)
     text = DomainTheme.text_class_for(:people)
@@ -28,7 +28,8 @@ module PersonHelper
                             border border-sky-300 shadow-sm flex-shrink-0")
       end
 
-      display_name = truncate_at ? truncate(person.name.to_s, length: truncate_at) : person.name.to_s
+      display_name = display_name || person.name.to_s
+      display_name = truncate(display_name, length: truncate_at) if truncate_at
 
       name = content_tag(
         :span,

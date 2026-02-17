@@ -22,6 +22,8 @@ class StoryIdea < ApplicationRecord
   belongs_to :windows_type
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
+  has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :stories
   # Asset associations
@@ -30,6 +32,9 @@ class StoryIdea < ApplicationRecord
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
+  # has_many through
+  has_many :categories, through: :categorizable_items
+  has_many :sectors, through: :sectorable_items
 
   # Validations
   validates :created_by_id, presence: true

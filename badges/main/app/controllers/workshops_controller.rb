@@ -4,8 +4,8 @@ class WorkshopsController < ApplicationController
 
   def index
     authorize!
-    @category_types = CategoryType.published.order(:name).decorate
-    @sectors        = Sector.published
+    @category_types = CategoryType.published.where(story_specific: false).order(:name).decorate
+    @sectors        = Sector.published.order(:name)
     @windows_types  = WindowsType.all
 
     if turbo_frame_request?
@@ -21,6 +21,7 @@ class WorkshopsController < ApplicationController
 
       render :workshop_results
     else
+      @sort = params[:sort].presence || "title"
       render :index
     end
   end
@@ -201,7 +202,7 @@ class WorkshopsController < ApplicationController
         .published
         .order(:position, :name)
         .group_by(&:category_type)
-        .select { |type, _| type.nil? || type.published? }
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)
