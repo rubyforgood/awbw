@@ -73,6 +73,8 @@ class Person < ApplicationRecord
     attributes contact_methods_phone: "contact_methods.value"
   end
 
+  scope :organization_ids, ->(organization_ids)  { joins(:affiliations)
+                                                     .where(affiliations: { organization_id: organization_ids }) }
   scope :published, -> { searchable.with_active_affiliations }
   scope :searchable, ->(searchable = nil) { searchable ? where(profile_is_searchable: searchable) : where(profile_is_searchable: true) }
   scope :with_active_affiliations, -> {
@@ -126,6 +128,10 @@ class Person < ApplicationRecord
 
   def full_name
     "#{first_name} #{last_name}"
+  end
+
+  def organization_ids
+    organizations.pluck(:id)
   end
 
   def phone_number

@@ -13,6 +13,10 @@ class OrganizationPolicy < ApplicationPolicy
     admin? || member?
   end
 
+  def populations_served?
+    show?
+  end
+
 
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
