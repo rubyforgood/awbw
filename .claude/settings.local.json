@@ -1,13 +1,14 @@
 {
   "permissions": {
     "allow": [
-
-      "Bash(bundle install:*)"
+      "Bash(bundle install:*)",
+      "Bash(do bundle exec rspec spec/system/stories_spec.rb:71 --format progress)",
       "Bash(done)",
       "Bash(for i in 1 2 3)",
       "Bash(grep:*)",
       "Bash(chmod:*)",
-      "Bash(ls:*)"
+      "Bash(find:*)",
+      "Bash(ls:*)",
       "Bash(mysql -u root:*)",
       "Bash(ruby:*)",
 
@@ -22,29 +23,27 @@
       "Bash(RAILS_ENV=test bundle exec rails runner:*)",
       "Bash(RAILS_ENV=test bundle exec rspec:*)",
 
-      "Bash(bundle exec rspec:*)",
-      "Bash(bundle exec rails runner:*)",
-      "Bash(RAILS_ENV=test bundle exec rails runner:*)",
-      "Bash(RAILS_ENV=test bundle exec rspec:*)",
       "Bash(git stash:*)",
-
       "Bash(git add:*)",
+      "Bash(git apply:*)",
+      "Bash(git checkout:*)",
       "Bash(git commit:*)",
       "Bash(git diff:*)",
       "Bash(git fetch:*)",
       "Bash(git log:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
       "Bash(git pull:*)",
       "Bash(git push:*)",
       "Bash(git rebase:*)",
       "Bash(git reset:*)",
-      "Bash(git stash:*)",
       "Bash(git status:*)",
 
       "Bash(bin/rails generate:*)",
       "Bash(bin/rails db:migrate:*)",
       "Bash(bin/rails db:schema:dump:*)",
+      "Bash(bin/rails db:seed:*)",
       "Bash(bin/rails runner:*)",
+      "Bash(bin/rails test:*)",
 
       "Bash(git -C /Users/maebeale/programming/awbw branch --show-current)",
       "Bash(git -C /Users/maebeale/programming/awbw diff --name-only main...HEAD)"
