@@ -41,7 +41,7 @@
         <hr>
       </div>
       <div class="<%= yield(:page_bg_class) if content_for?(:page_bg_class) %> flex-grow">
-        <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 pt-3">
+        <div class="<%= 'mx-auto max-w-7xl px-2 sm:px-6 lg:px-8' unless content_for?(:full_width) %> pt-3">
           <%# TODO handle printable area %>
           <% if user_signed_in? %>
             <div class="signed-in-user my-3"><%= render "shared/flash_messages" %><%= yield %></div>
