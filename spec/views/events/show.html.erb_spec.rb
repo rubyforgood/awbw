@@ -33,7 +33,25 @@ RSpec.describe "events/show", type: :view do
 
     expect(rendered).to have_content("4 pm")
 
-    expect(rendered).to have_content("Registration closed") # 2024 is in the past
+    expect(rendered).to have_content("Not published") # event is unpublished by default
+  end
+
+  context "when published with past registration date" do
+    let(:event) do
+      create(:event, :published,
+             title: "Published Event",
+             rhino_description: "A published event",
+             start_date: DateTime.new(2024, 1, 15, 10, 0),
+             end_date: DateTime.new(2024, 1, 15, 16, 0),
+             registration_close_date: DateTime.new(2024, 1, 10, 23, 59))
+    end
+
+    it "shows registration closed" do
+      render
+
+      expect(rendered).to have_content("Registration closed")
+      expect(rendered).not_to have_content("Not published")
+    end
   end
 
   it "renders action links" do

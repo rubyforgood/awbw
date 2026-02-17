@@ -52,7 +52,7 @@ class Event < ApplicationRecord
   end
 
   def registerable?
-    published && (registration_close_date.nil? || registration_close_date >= Time.current)
+    registration_close_date.nil? || registration_close_date >= Time.current
   end
 
   def time_title

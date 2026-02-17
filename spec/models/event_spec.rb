@@ -8,6 +8,33 @@ RSpec.describe Event, type: :model do
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
   end
 
+  describe "#registerable?" do
+    it "returns true when registration_close_date is in the future" do
+      event = build(:event, published: true, registration_close_date: 5.days.from_now)
+      expect(event.registerable?).to be true
+    end
+
+    it "returns true when registration_close_date is nil" do
+      event = build(:event, published: true, registration_close_date: nil)
+      expect(event.registerable?).to be true
+    end
+
+    it "returns false when registration_close_date is in the past" do
+      event = build(:event, published: true, registration_close_date: 1.day.ago)
+      expect(event.registerable?).to be false
+    end
+
+    it "returns true when unpublished but registration_close_date is in the future" do
+      event = build(:event, published: false, registration_close_date: 5.days.from_now)
+      expect(event.registerable?).to be true
+    end
+
+    it "returns true when unpublished and registration_close_date is nil" do
+      event = build(:event, published: false, registration_close_date: nil)
+      expect(event.registerable?).to be true
+    end
+  end
+
   describe "cost as virtual attribute of cost_cents" do
     let(:event) { create(:event, cost_cents: 5431) }
 
