@@ -1,5 +1,15 @@
 class WorkshopVariation < ApplicationRecord
   include Publishable, Trendable
+  include SearchCop
+  search_scope :search do
+    attributes :name, :body
+  end
+
+  def self.search_by_params(params)
+    results = is_a?(ActiveRecord::Relation) ? self : all
+    results = results.search(params[:query]) if params[:query].present?
+    results
+  end
 
   belongs_to :workshop
   belongs_to :organization, optional: true

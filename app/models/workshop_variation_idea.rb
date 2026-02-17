@@ -1,4 +1,15 @@
 class WorkshopVariationIdea < ApplicationRecord
+  include SearchCop
+  search_scope :search do
+    attributes :name, :body
+  end
+
+  def self.search_by_params(params)
+    results = is_a?(ActiveRecord::Relation) ? self : all
+    results = results.search(params[:query]) if params[:query].present?
+    results
+  end
+
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :workshop
