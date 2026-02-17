@@ -161,18 +161,13 @@
   color: #374151; /* gray-700 */
 }
 
-/* Hide Chrome / Edge / Safari (macOS + iOS) password reveal icon */
-input[type="password"]::-webkit-textfield-decoration-container {
-  visibility: hidden;
-  pointer-events: none;
-  width: 0;
-  height: 0;
+/* Hide Chrome / Edge / Safari built-in password reveal icon (we use our own toggle) */
+input[type="password"]::-ms-reveal {
+  display: none;
 }
 
 input[type="password"]::-webkit-credentials-auto-fill-button {
   display: none !important;
-  visibility: hidden;
-  pointer-events: none;
 }
 
 /* Safari fix: Ensure password field has proper height */
