@@ -1,11 +1,13 @@
 <div class="mb-4">
-  <%= form_with url: organizations_path, method: :get, local: true, class: "flex flex-wrap items-end gap-3" do %>
+  <%= form_with url: organizations_path, method: :get,
+    data: { controller: "collection", turbo_frame: "organization_results" },
+    autocomplete: "off",
+    class: "flex flex-wrap items-end gap-3" do %>
     <div>
       <%= label_tag :query, "Name", class: "text-sm font-medium text-gray-700 mb-1 block" %>
       <%= text_field_tag :query, params[:query],
                          class: "w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                         onkeypress: "if(event.key === 'Enter'){ this.form.requestSubmit(); }" %>
+                                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
     </div>
     <div>
       <%= label_tag :windows_type_name, "Windows type", class: "text-sm font-medium text-gray-700 mb-1 block" %>
@@ -14,15 +16,13 @@
                                         params[:windows_type_name]),
                      include_blank: "All types",
                      class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                     onchange: "this.form.requestSubmit()" %>
+                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
     </div>
     <div>
       <%= label_tag :address, "Address", class: "text-sm font-medium text-gray-700 mb-1 block" %>
       <%= text_field_tag :address, params[:address],
                          class: "w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                         onkeypress: "if(event.key === 'Enter'){ this.form.requestSubmit(); }" %>
+                                       focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
     </div>
 
     <% if allowed_to?(:manage?, Organization) %>
@@ -33,8 +33,7 @@
                                           params[:organization_status_id].to_s),
                        include_blank: "All statuses",
                        class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                       onchange: "this.form.requestSubmit()" %>
+                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
       </div>
     <% end %>
 
