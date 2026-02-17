@@ -9,6 +9,7 @@ class Organization < ApplicationRecord
   has_many :affiliations, dependent: :restrict_with_error
   has_many :people, through: :affiliations
   has_many :users, through: :people
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :reports
   has_many :workshop_logs
 
@@ -45,6 +46,7 @@ class Organization < ApplicationRecord
   after_save :remove_duplicate_sectorable_items
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
+  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # SearchCop
   include SearchCop

@@ -36,6 +36,8 @@ class CommentsController < ApplicationController
       @commentable = Person.find(params[:person_id])
     elsif params[:user_id]
       @commentable = User.find(params[:user_id])
+    elsif params[:organization_id]
+      @commentable = Organization.find(params[:organization_id])
     else
       redirect_to root_path, alert: "Invalid commentable resource"
     end
