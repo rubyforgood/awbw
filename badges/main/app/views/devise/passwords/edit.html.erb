@@ -16,14 +16,14 @@
         <label class="password required" for="user_password">New password <abbr title="required">*</abbr></label>
         <div class="relative">
           <%= f.password_field :password,
-                      class: "w-full form-control form-input password-field pr-10",
-                      required: true,
-                      minlength: 5,
-                      autofocus: true,
-                      autocomplete: "new-password",
-                      autocorrect: "off",
-                      autocapitalize: "off",
-                      spellcheck: "false",
+                               class: "w-full form-control form-input password-field pr-10",
+                               required: true,
+                               minlength: 5,
+                               autofocus: true,
+                               autocomplete: "new-password",
+                               autocorrect: "off",
+                               autocapitalize: "off",
+                               spellcheck: "false",
                       data: { password_toggle_target: "input" } %>
           <button type="button" class="toggle-password" data-action="password-toggle#toggle" aria-label="Toggle password visibility">
             <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
@@ -37,12 +37,14 @@
         <label class="password required" for="user_password_confirmation">Confirm new password <abbr title="required">*</abbr></label>
         <div class="relative">
           <%= f.password_field :password_confirmation,
-                      class: "w-full form-control form-input password-field pr-10",
-                      required: true,
-                      autocomplete: "new-password",
-                      autocorrect: "off",
-                      autocapitalize: "off",
-                      spellcheck: "false",
+                               class: "w-full form-control form-input password-field pr-10",
+                               required: true,
+                               minlength: 5,
+                               autofocus: true,
+                               autocomplete: "new-password",
+                               autocorrect: "off",
+                               autocapitalize: "off",
+                               spellcheck: "false",
                       data: { password_toggle_target: "input" } %>
           <button type="button" class="toggle-password" data-action="password-toggle#toggle" aria-label="Toggle password visibility">
             <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
