@@ -95,7 +95,7 @@ RSpec.describe "Workshops", type: :system do
         visit edit_workshop_path(workshop)
 
         fill_in "workshop_title", with: "A New Title"
-        select adult_window.short_name, from: "Workshop type" # windows_type required
+        select adult_window.short_name, from: "Windows audience" # windows_type required
 
         click_on 'Save changes'
 
