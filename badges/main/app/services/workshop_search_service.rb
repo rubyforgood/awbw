@@ -3,6 +3,8 @@ class WorkshopSearchService
   include PunctuationStrippable
   authorize :user
 
+  TITLE_SORT_SQL = "LOWER(TRIM(#{Workshop.strip_punctuation_sql_spaced('workshops.title')})) ASC".freeze
+
   attr_reader :params, :user, :admin
   attr_accessor :workshops, :sort
 
@@ -233,7 +235,7 @@ class WorkshopSearchService
         Arel.sql("COUNT(bookmarks.id) DESC, workshops.title ASC")
       )
     when "title"
-      @workshops = @workshops.order(title: :asc)
+      @workshops = @workshops.order(Arel.sql(TITLE_SORT_SQL))
     when "keywords"
       # already ordered
     else
