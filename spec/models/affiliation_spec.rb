@@ -11,7 +11,7 @@ RSpec.describe Affiliation do
       build(:affiliation, organization: create(:organization), person: create(:person))
     end
     it { should validate_presence_of(:organization_id) }
-    it { should validate_presence_of(:person_id) }
+    # it { should validate_presence_of(:person_id) } # we needed to not have this to support nested attrs
   end
 
   describe 'enums' do
