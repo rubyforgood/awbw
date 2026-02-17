@@ -16,11 +16,11 @@
                   autofocus: true,
                   required: true,
                   input_html: { class: "w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" } %>
-      <div data-controller="password-toggle" class="input password required">
-        <label class="password required" for="user_password">Password <abbr title="required">*</abbr></label>
+      <div data-controller="password-toggle" class="input password required mb-4">
+        <label class="password required block font-medium mb-1 text-gray-700" for="user_password">Password <abbr title="required">*</abbr></label>
         <div class="relative">
           <%= f.password_field :password,
-                  class: "w-full form-control form-input password-field pr-10",
+                  class: "w-full form-control form-input password-field pr-10 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                   required: true,
                   minlength: 5,
                   autofocus: true,
