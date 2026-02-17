@@ -102,6 +102,13 @@ RSpec.describe Organization do
       results = Organization.address("Los Angeles")
       expect(results).not_to include(org_no_address)
     end
+
+    it 'finds organization by phone number' do
+      org_la.addresses.first.update!(phone: "213-555-1234")
+      results = Organization.address("213-555-1234")
+      expect(results).to include(org_la)
+      expect(results).not_to include(org_ny)
+    end
   end
 
   describe '.search_by_params' do

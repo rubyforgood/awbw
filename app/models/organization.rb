@@ -71,6 +71,7 @@ class Organization < ApplicationRecord
         addresses.country LIKE :wildcard OR
         addresses.district LIKE :wildcard OR
         addresses.locality LIKE :wildcard OR
+        addresses.phone LIKE :wildcard OR
         addresses.zip_code LIKE :wildcard OR
         CAST(addresses.la_city_council_district AS CHAR) LIKE :wildcard OR
         CAST(addresses.la_service_planning_area AS CHAR) LIKE :wildcard OR
