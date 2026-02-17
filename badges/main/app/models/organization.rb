@@ -104,6 +104,10 @@ class Organization < ApplicationRecord
     leader.user == user
   end
 
+  def state
+    addresses.active.first&.state
+  end
+
   def city_state
     first_active = if addresses.loaded?
       addresses.find { |a| !a.inactive? }

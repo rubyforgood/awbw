@@ -136,14 +136,8 @@ Rails.application.routes.draw do
     end
   end
   resources :story_ideas
-  resources :stories do
-    collection do
-      get :share_portal
-    end
-    member do
-      get :show_share_portal
-    end
-  end
+  resources :stories
+  resources :story_shares, only: [ :index, :show ]
   resources :tutorials
   resources :user_forms
   resources :windows_types

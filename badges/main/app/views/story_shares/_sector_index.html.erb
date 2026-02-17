@@ -1,0 +1,75 @@
+<div class="bg-gray-100 min-h-screen py-8">
+  <div class="max-w-6xl mx-auto px-6">
+
+    <!-- Section Title -->
+    <h1 class="text-2xl font-bold text-red-700 mb-6">
+      <%= params[:sector_names_all].to_s.titleize %>
+    </h1>
+
+    <% if @stories_by_sector.first.second.any? %>
+
+      <!-- Featured Story -->
+      <div class="bg-white rounded shadow-md overflow-hidden mb-10">
+        <%= image_tag @featured_story.display_image,
+                      class: "w-full h-96 object-cover" %>
+
+        <div class="bg-gray-700 text-white p-4">
+          <h2 class="font-telefon text-lg font-semibold">
+            <%= @featured_story.title %>
+          </h2>
+          <p class="text-sm opacity-80">
+            <%= @featured_story.organization&.name %> – <%= @featured_story.organization&.state %>
+          </p>
+        </div>
+      </div>
+
+      <!-- Grid of Stories -->
+      <div class="grid md:grid-cols-3 gap-8">
+
+        <% @featured_stories.each do |story| %>
+          <div class="bg-white rounded shadow-md overflow-hidden flex flex-col">
+            <%= image_tag story.display_image,
+                          class: "w-full h-64 object-cover" %>
+
+            <div class="p-4 flex flex-col flex-grow">
+              <h3 class="font-telefon text-md font-semibold mb-1">
+                <%= story.title %>
+              </h3>
+
+              <p class="text-xs text-gray-500 mb-2">
+                <%= story.organization&.name %> – <%= story.organization&.state %>
+              </p>
+
+              <p class="text-sm text-gray-700 line-clamp-3 flex-grow">
+                <%= truncate(strip_tags(story.body.to_s), length: 140) %>
+              </p>
+
+              <div class="mt-4">
+                <%= link_to "Read More",
+                            story_share_path(story),
+                            class: "inline-block bg-gray-700 text-white text-xs px-4 py-2 rounded hover:bg-gray-800 transition" %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+      </div>
+
+      <div class="max-w-6xl mx-auto px-6 py-12 space-y-20">
+        <% @popular_stories.each do |story| %>
+          <%= render "sector_index_row", story: story %>
+        <% end %>
+
+      </div>
+
+
+  <% else %>
+
+      <div class="text-center text-gray-600 py-20">
+        No stories found.
+      </div>
+
+    <% end %>
+
+  </div>
+</div>
