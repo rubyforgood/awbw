@@ -11,6 +11,7 @@ RSpec.describe Affiliation do
       build(:affiliation, organization: create(:organization), person: create(:person))
     end
     it { should validate_presence_of(:organization_id) }
+    it { should belong_to(:person) }
   end
 
   describe 'enums' do
