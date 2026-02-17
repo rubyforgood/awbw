@@ -1,6 +1,7 @@
 <% quote_url   = quote_url(@quote) %>
 <% quote_title = ERB::Util.url_encode(@quote.title) %>
 
+<% content_for(:page_bg_class, "admin-or-owner") %>
 <div class="<%= DomainTheme.bg_class_for(:quotes) %> border border-gray-200 rounded-xl shadow p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
