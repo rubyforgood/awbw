@@ -51,8 +51,12 @@ class Event < ApplicationRecord
     stories
   end
 
+  def ended?
+    end_date < Time.current
+  end
+
   def registerable?
-    registration_close_date.nil? || registration_close_date >= Time.current
+    !ended? && (registration_close_date.nil? || registration_close_date >= Time.current)
   end
 
   def time_title

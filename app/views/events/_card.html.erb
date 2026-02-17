@@ -48,7 +48,14 @@
                     class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
         <% end %>
 
-        <% if event.event_registrations.exists?(registrant_id: current_user.id) %>
+        <% if event.ended? %>
+          <span class="text-sm text-gray-500 italic">Event ended</span>
+          <% if allowed_to?(:manage?, event) %>
+            <%= button_to "Register",
+                        event_registrant_registration_path(event_id: event),
+                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+          <% end %>
+        <% elsif event.event_registrations.exists?(registrant_id: current_user.id) %>
           <%= button_to "De-register",
                       event_registrant_registration_path(event_id: event),
                       method: :delete,
