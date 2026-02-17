@@ -251,6 +251,11 @@ RSpec.describe User do
       user = create(:user, inactive: true)
       expect(user.active_for_authentication?).to be false
     end
+
+    it "returns false when locked" do
+      user = create(:user, locked: true)
+      expect(user.active_for_authentication?).to be false
+    end
   end
 
   describe "#devise_email_name" do
