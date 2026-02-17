@@ -59,23 +59,28 @@ class Organization < ApplicationRecord
   scope :active, -> { joins(:organization_status).where(organization_statuses: { name: "Active" }) }
   scope :address, ->(address) do
     return all if address.blank?
-    exact = address.to_s
-    wildcard = "%#{exact}%"
-    left_joins(:addresses).where(
-      <<~SQL,
-      addresses.street_address LIKE :wildcard OR
-      addresses.city LIKE :wildcard OR
-      addresses.state LIKE :wildcard OR
-      addresses.county LIKE :wildcard OR
-      addresses.country LIKE :wildcard OR
-      addresses.district LIKE :wildcard OR
-      addresses.locality LIKE :wildcard OR
-      addresses.zip_code LIKE :exact OR
-      CAST(addresses.la_city_council_district AS CHAR) = :exact OR
-      CAST(addresses.la_service_planning_area AS CHAR) = :exact OR
-      CAST(addresses.la_supervisorial_district AS CHAR) = :exact
-    SQL
-      wildcard: wildcard, exact: exact)
+    terms = address.to_s.strip.split(/[\s,]+/).reject(&:blank?)
+    return all if terms.empty?
+
+    scope = joins(:addresses)
+    terms.each do |term|
+      wildcard = "%#{sanitize_sql_like(term)}%"
+      scope = scope.where(<<~SQL.squish, wildcard: wildcard)
+        addresses.street_address LIKE :wildcard OR
+        addresses.city LIKE :wildcard OR
+        addresses.state LIKE :wildcard OR
+        addresses.county LIKE :wildcard OR
+        addresses.country LIKE :wildcard OR
+        addresses.district LIKE :wildcard OR
+        addresses.locality LIKE :wildcard OR
+        addresses.phone LIKE :wildcard OR
+        addresses.zip_code LIKE :wildcard OR
+        CAST(addresses.la_city_council_district AS CHAR) LIKE :wildcard OR
+        CAST(addresses.la_service_planning_area AS CHAR) LIKE :wildcard OR
+        CAST(addresses.la_supervisorial_district AS CHAR) LIKE :wildcard
+      SQL
+    end
+    scope.distinct
   end
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
