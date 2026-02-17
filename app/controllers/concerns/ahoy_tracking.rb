@@ -14,7 +14,7 @@ module AhoyTracking
       if scope.respond_to?(:total_entries) # will_paginate
         scope.total_entries
       elsif scope.respond_to?(:count)
-        count = scope.unscope(:select).count
+        count = scope.unscope(:select, :order).count
         count.is_a?(Hash) ? count.size : count
       else
         0
