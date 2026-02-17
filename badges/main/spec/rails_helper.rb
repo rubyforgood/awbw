@@ -90,10 +90,6 @@ RSpec.configure do |config|
 
   # ensure that warden is configured for running in test mode.
 
-  config.before(:each, type: :system) do
-    driven_by(:selenium_chrome_headless)
-  end
-
   config.before(:suite) { Warden.test_mode! }
   config.after { Warden.test_reset! }
 
