@@ -19,12 +19,12 @@
       <% end %>
 
       <!-- NEW PASSWORD -->
-      <div data-controller="password-toggle" class="input password required mt-6 pt-6">
-        <label class="password required" for="change-password-new-password">New password <abbr title="required">*</abbr></label>
+      <div data-controller="password-toggle" class="input password required mb-4 mt-6 pt-6">
+        <label class="password required block font-medium mb-1 text-gray-700" for="change-password-new-password">New password <abbr title="required">*</abbr></label>
         <div class="relative">
           <%= f.password_field :password,
                                id: "change-password-new-password",
-                               class: "w-full form-control form-input password-field pr-10",
+                               class: "w-full form-control form-input password-field pr-10 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                                required: true,
                                minlength: 5,
                                autofocus: true,
@@ -40,12 +40,12 @@
       </div>
 
       <!-- CONFIRM PASSWORD -->
-      <div data-controller="password-toggle" class="input password required">
-        <label class="password required" for="change-password-new-password-confirmation">New password confirmation <abbr title="required">*</abbr></label>
+      <div data-controller="password-toggle" class="input password required mb-4">
+        <label class="password required block font-medium mb-1 text-gray-700" for="change-password-new-password-confirmation">New password confirmation <abbr title="required">*</abbr></label>
         <div class="relative">
           <%= f.password_field :password_confirmation,
                                id: "change-password-new-password-confirmation",
-                               class: "w-full form-control form-input password-field pr-10",
+                               class: "w-full form-control form-input password-field pr-10 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                                required: true,
                                minlength: 5,
                                autofocus: true,
