@@ -18,6 +18,7 @@
           <%= f.password_field :password,
                       class: "w-full form-control form-input password-field pr-10",
                       required: true,
+                      minlength: 5,
                       autofocus: true,
                       autocomplete: "new-password",
                       autocorrect: "off",
@@ -28,6 +29,7 @@
             <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
           </button>
         </div>
+        <p class="text-sm text-gray-500 mt-1">Password must be at least 5 characters long</p>
       </div>
 
       <!-- CONFIRM PASSWORD -->
