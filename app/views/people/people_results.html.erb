@@ -1,0 +1,100 @@
+<%= turbo_frame_tag :people_results do %>
+  <%= turbo_stream.replace("people_count", partial: "people_count") %>
+
+  <div class="rounded-xl bg-white p-6 animate-fade blur-on-submit">
+    <% if @people.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse border border-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Name</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/6">Affiliated since</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Sector(s)</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/3">Affiliation(s)</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Socials</th>
+              <% if allowed_to?(:manage?, Person) %>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% @people.each do |person| %>
+              <% cache [person, current_user.super_user?] do %>
+              <tr class="hover:bg-gray-50 transition-colors duration-150">
+                <td class="px-4 py-2">
+                  <%= person_profile_button(person, subtitle: person.preferred_email, data: { turbo_frame: "_top" }) %>
+                </td>
+                <td class="px-4 py-2 text-center text-sm text-gray-800">
+                  <%= person.member_since&.year %>
+                </td>
+                <!-- Sectors -->
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <% sectors = person.sectorable_items.to_a %>
+                  <% if sectors.any? %>
+                    <div class="flex flex-wrap gap-2">
+                      <% sectors.each do |si| %>
+                        <%= render "sectors/tagging_label",
+                                   sector: si.sector,
+                                   display_leader: true,
+                                   is_leader: si.is_leader %>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span>--</span>
+                  <% end %>
+                </td>
+                <!-- Organizations -->
+                <td class="px-4 py-2 text-sm text-gray-800">
+                  <% orgs = person.affiliations.select { |affiliation| !affiliation.inactive? && (affiliation.end_date.nil? || affiliation.end_date >= Date.current) }.map(&:organization).compact.uniq %>
+                  <% if orgs.any? %>
+                    <div class="flex flex-wrap gap-2">
+                      <% orgs.first(3).each do |org| %>
+                        <%= link_to org.name, organization_path(org),
+                            data: { turbo_frame: "_top" },
+                            class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:organizations, intensity: 100)} #{DomainTheme.text_class_for(:organizations)} #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)}" %>
+                      <% end %>
+                      <% if orgs.size > 3 %>
+                        <%= link_to "+#{orgs.size - 3}", person_path(person),
+                            data: { turbo_frame: "_top" },
+                            class: "inline-block px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700" %>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span>--</span>
+                  <% end %>
+                </td>
+                <!-- Socials -->
+                <td class="px-4 py-2 text-sm text-gray-800 whitespace-nowrap">
+                  <%= render "social_media_buttons", person: person %>
+                </td>
+                <!-- Actions -->
+                <% if allowed_to?(:manage?, Person) %>
+                  <td class="px-4 py-2 justify-center gap-2">
+                    <%= link_to "User", user_path(person.user),
+                            data: { turbo_frame: "_top" },
+                            class: "admin-only bg-blue-100 btn btn-secondary-outline" if person.user %>
+                    <%= link_to "Edit", edit_person_path(person),
+                            data: { turbo_frame: "_top" },
+                            class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                  </td>
+                <% end %>
+              </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-gray-500 text-center py-6">
+        No <%= Person.model_name.human.pluralize %> found.
+      </p>
+    <% end %>
+  </div>
+
+  <!-- Pagination -->
+  <div class="mt-6 flex justify-center">
+    <div class="pagination">
+      <%= tailwind_paginate @people %>
+    </div>
+  </div>
+<% end %>

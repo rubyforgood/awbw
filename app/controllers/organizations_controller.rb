@@ -4,22 +4,29 @@ class OrganizationsController < ApplicationController
 
   def index
     authorize!
-    per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(Organization.includes(:windows_type, :organization_status, :sectors, :addresses, logo_attachment: :blob))
-    filtered = base_scope.search_by_params(params).order(:name)
-    @organizations_count = filtered.count
-    @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
-    @organizations = filtered.paginate(page: params[:page], per_page: per_page)
-    org_ids = @organizations.map(&:id)
-    @affiliated_since = Affiliation.where(organization_id: org_ids)
-                                          .group(:organization_id)
-                                          .minimum(:start_date)
-    @active_people_counts = Affiliation.active
-                                              .where(organization_id: org_ids)
-                                              .group(:organization_id)
-                                              .distinct
-                                              .count(:person_id)
-    set_index_variables
+
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      base_scope = authorized_scope(Organization.includes(:windows_type, :organization_status, :sectors, :addresses, logo_attachment: :blob))
+      filtered = base_scope.search_by_params(params).order(:name)
+      @organizations_count = filtered.count
+      @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
+      @organizations = filtered.paginate(page: params[:page], per_page: per_page)
+      org_ids = @organizations.map(&:id)
+      @affiliated_since = Affiliation.where(organization_id: org_ids)
+                                            .group(:organization_id)
+                                            .minimum(:start_date)
+      @active_people_counts = Affiliation.active
+                                                .where(organization_id: org_ids)
+                                                .group(:organization_id)
+                                                .distinct
+                                                .count(:person_id)
+
+      render :organization_results
+    else
+      set_index_variables
+      render :index
+    end
   end
 
   def show

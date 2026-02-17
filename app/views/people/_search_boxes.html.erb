@@ -1,4 +1,7 @@
-<%= form_tag(people_path, method: :get, class: "space-y-4") do |f| %>
+<%= form_tag(people_path, method: :get,
+  data: { controller: "collection", turbo_frame: "people_results" },
+  autocomplete: "off",
+  class: "space-y-4") do |f| %>
   <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-6">
     <!-- Contact info -->
     <div class="w-full md:flex-1">
@@ -7,11 +10,9 @@
         <%= text_field_tag :contact_info, params[:contact_info],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           placeholder: "",
-                           onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
+                           placeholder: "" %>
         <button type="submit"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
-                onclick="this.closest('form').submit()">
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
           <i class="fa fa-search"></i>
         </button>
       </div>
@@ -24,11 +25,9 @@
         <%= text_field_tag :sector_names_all, params[:sector_names_all],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           placeholder: "",
-                           onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
+                           placeholder: "" %>
         <button type="submit"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
-                onclick="this.closest('form').submit()">
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
           <i class="fa fa-search"></i>
         </button>
       </div>
@@ -41,11 +40,9 @@
         <%= text_field_tag :organization_name, params[:organization_name],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           placeholder: "",
-                           onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
+                           placeholder: "" %>
         <button type="submit"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
-                onclick="this.closest('form').submit()">
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
           <i class="fa fa-search"></i>
         </button>
       </div>
@@ -59,4 +56,3 @@
     </div>
   </div>
 <% end %>
-

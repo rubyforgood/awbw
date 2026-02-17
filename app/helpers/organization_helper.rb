@@ -1,11 +1,12 @@
 module OrganizationHelper
-  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil)
+  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {})
     bg = DomainTheme.bg_class_for(:organizations, intensity: 100)
     hover_bg = DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)
     text = DomainTheme.text_class_for(:organizations)
     border = DomainTheme.border_class_for(:organizations)
 
     link_to organization_path(organization),
+            data: data,
             class: "group relative flex items-center gap-2
                     w-full px-4 py-2
                     border #{border} #{bg} #{hover_bg} rounded-lg

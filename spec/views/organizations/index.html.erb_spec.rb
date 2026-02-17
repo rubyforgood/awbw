@@ -19,10 +19,15 @@ RSpec.describe "organizations/index", type: :view do
     assign(:active_people_count, 0)
     assign(:organizations_count, 2)
     allow(view).to receive(:current_user).and_return(user)
+  end
+
+  it "renders the skeleton loader" do
     render
+    expect(rendered).to have_css("turbo-frame#organization_results")
   end
 
   it "renders a list of organizations" do
+    render template: "organizations/organization_results"
     expect(rendered).to match(organization1.name)
     expect(rendered).to match(organization2.name)
   end
