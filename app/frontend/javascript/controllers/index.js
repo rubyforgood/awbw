@@ -9,6 +9,9 @@ application.register("autosave", AutosaveController)
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
 
+import CocoonController from "./cocoon_controller"
+application.register("cocoon", CocoonController)
+
 import CollectionController from "./collection_controller"
 application.register("collection", CollectionController)
 
