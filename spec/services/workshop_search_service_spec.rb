@@ -49,6 +49,41 @@ RSpec.describe WorkshopSearchService, type: :service do
       end
     end
 
+    context "sorting by title ignores punctuation" do
+      let!(:hyphenated)  { create(:workshop, :published, title: "Self-Care Workshop") }
+      let!(:spaced)      { create(:workshop, :published, title: "Self Care Zen") }
+      let!(:quoted)      { create(:workshop, :published, title: '"I Am" Mandalas') }
+      let!(:numbered)    { create(:workshop, :published, title: "100 New Ideas") }
+      let!(:lowercase)   { create(:workshop, :published, title: "a lowercase title") }
+
+      it "sorts case-insensitively" do
+        service = WorkshopSearchService.new({ sort: "title" }, user: user).call
+        titles = service.workshops.map(&:title)
+
+        lowercase_idx = titles.index("a lowercase title")
+        b_workshop_idx = titles.index("B Workshop")
+        expect(lowercase_idx).to be < b_workshop_idx
+      end
+
+      it "sorts numbers before letters" do
+        service = WorkshopSearchService.new({ sort: "title" }, user: user).call
+        titles = service.workshops.map(&:title)
+
+        numbered_idx = titles.index("100 New Ideas")
+        quoted_idx = titles.index('"I Am" Mandalas')
+        expect(numbered_idx).to be < quoted_idx
+      end
+
+      it "sorts hyphenated and spaced titles adjacently" do
+        service = WorkshopSearchService.new({ sort: "title" }, user: user).call
+        titles = service.workshops.map(&:title)
+
+        care_idx = titles.index("Self-Care Workshop")
+        zen_idx = titles.index("Self Care Zen")
+        expect((care_idx - zen_idx).abs).to eq(1)
+      end
+    end
+
     context "sorting by led" do
       it "orders descending by led_count then title" do
         service = WorkshopSearchService.new({ sort: 'led' }, user: user).call
@@ -125,9 +160,9 @@ RSpec.describe WorkshopSearchService, type: :service do
         expect(service.sort).to eq('keywords')
       end
 
-      it "defaults to created if no query or sort is provided" do
+      it "defaults to title if no query or sort is provided" do
         service = WorkshopSearchService.new({}, user: user).call
-        expect(service.sort).to eq('created')
+        expect(service.sort).to eq('title')
       end
     end
 
