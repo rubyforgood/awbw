@@ -56,7 +56,15 @@ export default class extends Controller {
 
   clearAndSubmit(event) {
     event.preventDefault();
-    this.element.reset();
+    this.element.querySelectorAll('input[type="text"], input[type="search"]').forEach(input => {
+      input.value = '';
+    });
+    this.element.querySelectorAll('select').forEach(select => {
+      select.selectedIndex = 0;
+    });
+    this.element.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+      input.checked = false;
+    });
     this.submitForm();
   }
 
