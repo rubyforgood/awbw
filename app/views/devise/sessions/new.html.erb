@@ -20,9 +20,10 @@
         <label class="password required" for="user_password">Password <abbr title="required">*</abbr></label>
         <div class="relative">
           <%= f.password_field :password,
-                  class: "w-full form-control password-field rounded-md border-gray-300 shadow-sm
-                  focus:ring-blue-500 focus:border-blue-500 px-3 py-2 pr-10",
+                  class: "w-full form-control form-input password-field pr-10",
                   required: true,
+                  minlength: 5,
+                  autofocus: true,
                   autocomplete: "current-password",
                   autocorrect: "off",
                   autocapitalize: "off",

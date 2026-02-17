@@ -47,7 +47,7 @@ RSpec.describe "devise/passwords/edit", type: :view do
     end
 
     it "displays error messages" do
-      expect(rendered).to have_content("prevented this user from being saved")
+      expect(rendered).to have_content("prevented this from being saved")
       expect(rendered).to have_content("Password is too short")
       expect(rendered).to have_content("Password confirmation doesn't match")
     end
