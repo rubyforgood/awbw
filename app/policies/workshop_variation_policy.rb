@@ -4,7 +4,7 @@ class WorkshopVariationPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || (authenticated? && record.published?)
+    admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
   def create?
