@@ -44,14 +44,15 @@ module AdminCardsHelper
   # -----------------------------
   def reference_cards
     [
+      model_card(:category_types, icon: "📂", intensity: 100),
       model_card(:categories, icon: "🗂️",
                  intensity: 100,
                  params: { published: true }),
+      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       model_card(:sectors, icon: "🏭",
                  intensity: 100,
                  title: "Sectors",
                  params: { published: true }),
-      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       custom_card("Windows types", windows_types_path, icon: "🪟")
     ]
   end

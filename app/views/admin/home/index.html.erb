@@ -1,7 +1,7 @@
 <div class="max-w-7xl mx-auto px-6 py-8 space-y-10">
   <div class="admin-only bg-blue-100 rounded p-6">
     <div class="bg-gray-50 rounded p-6">
-      <div class="flex justify-between items-center mb-6">
+      <div class="mb-6">
         <section class="px-8">
           <div class="flex flex-col items-start mb-4">
             <h1 class="text-3xl font-bold text-gray-900 my-2">Admin Home</h1>
@@ -54,21 +54,20 @@
 
           <div class="mt-20">
             Base data
-           <div class="flex flex-wrap gap-6 mt-3">
+           <div class="flex flex-wrap gap-4 mt-3">
               <% @reference_cards.each do |card| %>
                 <a href="<%= card[:path] %>"
-                 class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+                 class="flex items-center gap-3 rounded-lg shadow-lg border border-gray-200
                   <%= card[:bg_color] %> <%= card[:text_color] %>
                   <%= card[:hover_bg_color] %>
-                  transition-colors transition-shadow duration-300 p-4
-                  w-full sm:w-1/2 lg:w-1/3">
+                  transition-colors transition-shadow duration-300 px-4 py-3 flex-1">
 
-                  <div class="text-5xl text-gray-700 flex-shrink-0">
+                  <div class="text-3xl text-gray-700 flex-shrink-0">
                     <%= card[:icon] %>
                   </div>
 
-                  <div class="flex-1">
-                    <h3 class="text-xl font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+                  <div>
+                    <h3 class="text-base font-bold text-gray-800 whitespace-nowrap"><%= card[:title] %></h3>
                   </div>
 
                 </a>
