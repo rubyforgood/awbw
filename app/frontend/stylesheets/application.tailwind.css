@@ -134,10 +134,16 @@
   position: relative;
 }
 
+.password-field {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .toggle-password {
   position: absolute;
   right: 12px;
-  top: 36px; /* aligns with input vertically */
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   padding: 0;
@@ -151,13 +157,22 @@
 
 /* Hide Chrome / Edge / Safari (macOS + iOS) password reveal icon */
 input[type="password"]::-webkit-textfield-decoration-container {
-  display: none;
+  visibility: hidden;
+  pointer-events: none;
+  width: 0;
+  height: 0;
 }
 
 input[type="password"]::-webkit-credentials-auto-fill-button {
   display: none !important;
   visibility: hidden;
   pointer-events: none;
+}
+
+<<<<<<< HEAD
+/* Safari fix: Ensure password field has proper height */
+.password-field {
+  height: 2.5rem; /* Matches Tailwind's default input height with p-2 */
 }
 
 /* Truncated comment textareas - compact at rest, expand on hover/focus */

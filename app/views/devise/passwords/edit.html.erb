@@ -12,50 +12,42 @@
       <%= f.hidden_field :reset_password_token %>
 
       <!-- NEW PASSWORD -->
-      <div class="form-group password-container" data-controller="password-toggle">
-        <%= f.input :password,
-                    as: :password,
-                    label: "New password",
-                    required: true,
-                    autofocus: true,
-                    autocomplete: "new-password",
-                    autocorrect: "off",
-                    autocapitalize: "off",
-                    spellcheck: "false",
-                    input_html: {
-                      class: "form-control form-input password-field",
-                      data: { password_toggle_target: "input" }
-                    } %>
-        <button
-          type="button"
-          class="toggle-password"
-          data-action="password-toggle#toggle"
-          aria-label="Toggle password visibility">
-          <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
-        </button>
+      <div data-controller="password-toggle" class="input password required">
+        <label class="password required" for="user_password">New password <abbr title="required">*</abbr></label>
+        <div class="relative">
+          <%= f.password_field :password,
+                      class: "w-full form-control form-input password-field pr-10",
+                      required: true,
+                      minlength: 5,
+                      autofocus: true,
+                      autocomplete: "new-password",
+                      autocorrect: "off",
+                      autocapitalize: "off",
+                      spellcheck: "false",
+                      data: { password_toggle_target: "input" } %>
+          <button type="button" class="toggle-password" data-action="password-toggle#toggle" aria-label="Toggle password visibility">
+            <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
+          </button>
+        </div>
+        <p class="text-sm text-gray-500 mt-1">Password must be at least 5 characters long</p>
       </div>
 
       <!-- CONFIRM PASSWORD -->
-      <div class="form-group password-container" data-controller="password-toggle">
-        <%= f.input :password_confirmation,
-                    as: :password,
-                    label: "Confirm new password",
-                    required: true,
-                    autocomplete: "new-password",
-                    autocorrect: "off",
-                    autocapitalize: "off",
-                    spellcheck: "false",
-                    input_html: {
-                      class: "form-control form-input password-field",
-                      data: { password_toggle_target: "input" }
-                    } %>
-        <button
-          type="button"
-          class="toggle-password"
-          data-action="password-toggle#toggle"
-          aria-label="Toggle password visibility">
-          <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
-        </button>
+      <div data-controller="password-toggle" class="input password required">
+        <label class="password required" for="user_password_confirmation">Confirm new password <abbr title="required">*</abbr></label>
+        <div class="relative">
+          <%= f.password_field :password_confirmation,
+                      class: "w-full form-control form-input password-field pr-10",
+                      required: true,
+                      autocomplete: "new-password",
+                      autocorrect: "off",
+                      autocapitalize: "off",
+                      spellcheck: "false",
+                      data: { password_toggle_target: "input" } %>
+          <button type="button" class="toggle-password" data-action="password-toggle#toggle" aria-label="Toggle password visibility">
+            <i class="fa-solid fa-eye" data-password-toggle-target="icon"></i>
+          </button>
+        </div>
       </div>
 
       <div class="action-buttons mt-8 flex justify-center gap-3">
