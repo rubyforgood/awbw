@@ -6,10 +6,11 @@ class StoryIdeasController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(StoryIdea.includes(:windows_type, :organization, :workshop, :created_by, :updated_by))
-    @story_ideas = base_scope.order(created_at: :desc)
-                             .paginate(page: params[:page], per_page: per_page)
-                             .decorate
-    @story_ideas_count = base_scope.size
+    filtered = base_scope.search_by_params(params)
+    @story_ideas = filtered.order(created_at: :desc)
+                           .paginate(page: params[:page], per_page: per_page)
+                           .decorate
+    @story_ideas_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
   end
 
   def show
