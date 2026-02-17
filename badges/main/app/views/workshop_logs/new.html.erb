@@ -1,7 +1,4 @@
-<div class="min-h-screen py-10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:workshop_logs, intensity: 200) %>
-      border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-8">
+<div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border border-gray-200 rounded-xl shadow p-6">
 
       <!-- Header -->
       <div class="mb-8 space-y-4">
@@ -21,7 +18,7 @@
         </div>
 
         <!-- Title -->
-        <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
+        <h1 class="text-2xl font-semibold text-gray-900">
           New <%= @workshop_log.class.model_name.human %>
         </h1>
 
@@ -40,6 +37,4 @@
         </div>
       </div>
 
-    </div>
-  </div>
 </div>

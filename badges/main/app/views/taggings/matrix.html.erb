@@ -1,5 +1,5 @@
-<div class="admin-only bg-blue-100 rounded p-6">
-  <div class="tags-matrix max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tags) %> border border-gray-200 rounded-xl shadow p-6">
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="tags-matrix bg-white border border-gray-200 rounded-xl shadow p-6">
     <div class="w-full">
       <div class="mb-10">
         <h1 class="text-3xl font-semibold text-gray-900 mb-2">
@@ -109,5 +109,4 @@
         </div>
       </div>
     </div>
-  </div>
 </div>

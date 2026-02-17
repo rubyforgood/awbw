@@ -1,6 +1,5 @@
-<div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @windows_type.class.model_name.human %></h1>
         <%= link_to "View", windows_type_path(@windows_type),
@@ -12,6 +11,4 @@
           <%= render "form", windows_type: @windows_type %>
         </div>
       </div>
-    </div>
-  </div>
 </div>
