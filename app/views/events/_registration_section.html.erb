@@ -2,19 +2,19 @@
 <%= tag.div id: dom_id(event.object, :registration_section), class: "registration-section flex flex-col gap-4 mb-6" do %>
   <!-- ⭐ BUTTONS -->
   <div class="flex flex-wrap items-center gap-3">
-    <% if event.ended? %>
+    <% if registered %>
+      <%= button_to "De-register",
+                    event_registrant_registration_path(event_id: event),
+                    method: :delete,
+                    data: { turbo_confirm: "Are you sure?" },
+                    class: "btn btn-secondary-outline" %>
+    <% elsif event.ended? %>
       <span class="text-sm text-gray-500 italic">Event ended</span>
       <% if allowed_to?(:manage?, event) %>
         <%= button_to "Register",
                       event_registrant_registration_path(event_id: event),
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
       <% end %>
-    <% elsif registered %>
-      <%= button_to "De-register",
-                    event_registrant_registration_path(event_id: event),
-                    method: :delete,
-                    data: { turbo_confirm: "Are you sure?" },
-                    class: "btn btn-secondary-outline" %>
     <% elsif !event.published? %>
       <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
     <% elsif event.registerable? %>

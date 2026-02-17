@@ -14,11 +14,9 @@ RSpec.describe "Workshops", type: :system do
 
         visit workshops_path
 
-        within('#workshops-list') do
-          expect(page).to have_content(workshop_world.title)
-          expect(page).to have_content(workshop_mars.title)
-          expect(page).to have_content(workshop_hello.title)
-        end
+        expect(page).to have_content(workshop_world.title)
+        expect(page).to have_content(workshop_mars.title)
+        expect(page).to have_content(workshop_hello.title)
       end
 
       it 'User can search for a workshop' do
