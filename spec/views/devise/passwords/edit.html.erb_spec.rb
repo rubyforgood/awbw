@@ -7,18 +7,11 @@ RSpec.describe "devise/passwords/edit", type: :view do
     user.reset_password_token = Devise.friendly_token
     assign(:resource, user)
     assign(:resource_name, :user)
-<<<<<<< HEAD
     u = user
     mapping = Devise.mappings[:user]
     view.define_singleton_method(:resource) { u }
     view.define_singleton_method(:resource_name) { :user }
     view.define_singleton_method(:devise_mapping) { mapping }
-    render
-  end
-
-=======
-    allow(view).to receive(:resource).and_return(user)
-    allow(view).to receive(:resource_name).and_return(:user)
     render
   end
 
@@ -30,7 +23,6 @@ RSpec.describe "devise/passwords/edit", type: :view do
     expect(rendered).to have_css('input[type="password"][minlength="5"]')
   end
 
->>>>>>> 8d996c5fb (Add view specs for password forms)
   it "displays new password field" do
     expect(rendered).to have_field("New password", type: :password)
   end
@@ -43,7 +35,6 @@ RSpec.describe "devise/passwords/edit", type: :view do
     expect(rendered).to have_button("Set password")
   end
 
-<<<<<<< HEAD
   it "displays password requirements hint" do
     expect(rendered).to have_content("Password must be at least 5 characters long")
   end
@@ -52,8 +43,6 @@ RSpec.describe "devise/passwords/edit", type: :view do
     expect(rendered).to have_css('input[type="password"][minlength="5"]')
   end
 
-=======
->>>>>>> 8d996c5fb (Add view specs for password forms)
   context "when user has password errors" do
     before do
       user.errors.add(:password, "is too short (minimum is 5 characters)")
@@ -61,7 +50,6 @@ RSpec.describe "devise/passwords/edit", type: :view do
       render
     end
 
-<<<<<<< HEAD
     it "displays error explanation container" do
       expect(rendered).to have_css('div#error_explanation')
     end
@@ -71,16 +59,9 @@ RSpec.describe "devise/passwords/edit", type: :view do
       expect(rendered).to have_content("Password is too short")
       expect(rendered).to have_content("Password confirmation doesn't match")
     end
-=======
-    it "displays error messages" do
-      expect(rendered).to have_content("prevented this from being saved")
-      expect(rendered).to have_content("Password is too short")
-      expect(rendered).to have_content("Password confirmation doesn't match")
-    end
 
     it "displays error explanation with proper styling" do
       expect(rendered).to have_css('div[role="alert"]#error_explanation')
     end
->>>>>>> 8d996c5fb (Add view specs for password forms)
   end
 end
