@@ -1,8 +1,5 @@
-<div class="min-h-screen py-10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="admin-only bg-blue-100 p-6">
-      <div class="<%= DomainTheme.bg_class_for(:workshops) %>
-          border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-8">
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="bg-white border border-gray-200 rounded-xl shadow p-6">
         <div class="flex items-center justify-between mb-3">
           <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
             New <%= @workshop.class.model_name.human %>
@@ -13,7 +10,4 @@
             <%= render "form" %>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
 </div>

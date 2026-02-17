@@ -1,9 +1,6 @@
 <% color = DomainTheme.color_for(@dedupe[:domain]) %>
-<div class="min-h-screen">
-  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="admin-only bg-blue-100 p-3">
-      <div class="<%= DomainTheme.bg_class_for(@dedupe[:domain], intensity: 100) %> border border-<%= color %>-200 rounded p-3">
-        <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg p-6">
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="bg-white border border-gray-200 rounded-xl shadow p-6">
 
           <!-- Header -->
           <div class="mb-6">
@@ -102,7 +99,4 @@
           <% end %>
 
         </div>
-      </div>
-    </div>
-  </div>
 </div>
