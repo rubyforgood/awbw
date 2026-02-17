@@ -1,22 +1,25 @@
-<div class="rounded-lg border border-gray-200 bg-gray-50 p-6 shadow-sm">
+<% content_for(:page_bg_class, "admin-and-owner") %>
+<div class="<%= DomainTheme.bg_class_for(:organizations) %> border border-gray-200 rounded-xl shadow p-6">
   <h2 class="text-lg font-semibold text-gray-800 mb-4">
      Sector Distribution for <%= @organization.name %>
   </h2>
 
-  <% if @sectors_by_people.any? %>
-    <ul class="space-y-2">
-      <% @sectors_by_people.each do |sector, count| %>
-        <li class="flex items-center justify-between p-2 bg-white rounded border border-gray-100 shadow-sm">
-          <span><%= sector.name %></span>
-         <span class="text-gray-600 font-medium">
-          <%= count %> <%= count == 1 ? "person" : "people" %>
-        </span>
-        </li>
-      <% end %>
-    </ul>
-  <% else %>
-    <p class="text-gray-500 italic">No sectors found for this organization.</p>
-  <% end %>
+  <div class="bt-white rounded">
+    <% if @sectors_by_people.any? %>
+      <ul class="space-y-2">
+        <% @sectors_by_people.each do |sector, count| %>
+          <li class="flex items-center justify-between p-2 bg-white rounded border border-gray-100 shadow-sm">
+            <span><%= sector.name %></span>
+           <span class="text-gray-600 font-medium">
+            <%= count %> <%= count == 1 ? "person" : "people" %>
+          </span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-gray-500 italic">No sectors found for this organization.</p>
+    <% end %>
+  </div>
 
   <div class="mt-6">
     <%= link_to "← Back to Organization", organization_path(@organization),
