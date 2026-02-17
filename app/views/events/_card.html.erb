@@ -55,7 +55,7 @@
                       data: { turbo_confirm: "Are you sure?" },
                       class: "btn btn-secondary-outline" %>
         <% elsif !event.published? %>
-          <span class="text-sm text-gray-500 italic">Not published</span>
+          <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
         <% elsif event.registerable? %>
           <%= button_to "Register",
                       event_registrant_registration_path(event_id: event),
