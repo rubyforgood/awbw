@@ -148,10 +148,10 @@ RSpec.describe "stories/new", type: :view do
         story_idea.categories << category
 
         assign(:story, story)
-        assign(:preselected_sector_ids, [sector.id])
-        assign(:preselected_category_ids, [category.id])
-        assign(:sectors, [sector])
-        assign(:categories_grouped, [[category_type, [category]]])
+        assign(:preselected_sector_ids, [ sector.id ])
+        assign(:preselected_category_ids, [ category.id ])
+        assign(:sectors, [ sector ])
+        assign(:categories_grouped, [ [ category_type, [ category ] ] ])
       end
 
       it "pre-checks sectors from story idea" do
@@ -194,10 +194,10 @@ RSpec.describe "stories/new", type: :view do
 
     before do
       assign(:story, Story.new)
-      assign(:sectors, [sector])
+      assign(:sectors, [ sector ])
       assign(:categories_grouped, [
-        [story_population_type, [population_category]],
-        [general_type, [general_category]]
+         [ story_population_type, [ population_category ] ],
+        [ general_type, [ general_category ] ]
       ])
     end
 
