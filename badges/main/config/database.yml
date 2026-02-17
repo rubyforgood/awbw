@@ -9,7 +9,7 @@ base: &base
   adapter: trilogy
   encoding: utf8mb4              # <-- forces UTF-8 everywhere
   collation: utf8mb4_unicode_ci  # <-- portable across MySQL 5.7/8.0 and MariaDB
-  pool: 5
+  pool: <%= ENV.fetch("DB_POOL", 10) %>
   user: root
   password:
   host: 127.0.0.1
