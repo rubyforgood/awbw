@@ -1,11 +1,12 @@
 module PersonHelper
-  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil)
+  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {})
     bg = DomainTheme.bg_class_for(:people, intensity: 100)
     hover_bg = DomainTheme.bg_class_for(:people, intensity: 100, hover: true)
     text = DomainTheme.text_class_for(:people)
     border = DomainTheme.border_class_for(:people)
 
     link_to person_path(person),
+            data: data,
             class: "group relative flex items-center gap-2
                     w-full px-4 py-2
                     border #{border} #{bg} #{hover_bg} rounded-lg

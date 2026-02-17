@@ -3,7 +3,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 blur-on-submit">
       <% affiliations.each do |affiliation| %>
         <% if affiliation.organization %>
-          <%= organization_profile_button(affiliation.organization) %>
+          <%= organization_profile_button(affiliation.organization, data: { turbo_frame: "_top" }) %>
         <% end %>
       <% end %>
     </div>
