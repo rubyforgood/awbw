@@ -1,4 +1,4 @@
-<% content_for(:page_bg_class, "admin-or-owner") %>
+<% content_for(:page_bg_class, "admin-or-owner-or-member") %>
 <% children_total = @monthly_report.children_ongoing.to_i + @monthly_report.children_first_time.to_i %>
 <% teens_total    = @monthly_report.teens_ongoing.to_i + @monthly_report.teens_first_time.to_i %>
 <% adults_total   = @monthly_report.adults_ongoing.to_i + @monthly_report.adults_first_time.to_i %>
