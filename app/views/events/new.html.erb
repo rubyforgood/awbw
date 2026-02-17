@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="bg-white border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
         <div class="flex items-center justify-between mb-3">
           <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
             New <%= @event.class.model_name.human %>

@@ -1,6 +1,5 @@
-<div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas) %> border border-gray-200 rounded-xl shadow p-6">
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold text-gray-900">Edit Workshop Variation Idea</h1>
         <div class="text-end text-right items-end items-right">
@@ -11,7 +10,7 @@
             <% end %>
           <% else %>
             <% if allowed_to?(:manage?, @workshop_variation_idea) && @workshop_variation_idea.persisted? %>
-              <%= link_to "Promote to Workshop Variation", 
+              <%= link_to "Promote to Workshop Variation",
                           new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),
                           class: "admin-only bg-blue-100 btn btn-secondary-outline ms-2" %>
             <% end %>
@@ -26,6 +25,4 @@
           <%= render "form", workshop_variation_idea: @workshop_variation_idea %>
         </div>
       </div>
-    </div>
-  </div>
 </div>

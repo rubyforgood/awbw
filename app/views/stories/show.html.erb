@@ -1,9 +1,7 @@
 <% story_url   = story_url(@story) %>
 <% story_title = ERB::Util.url_encode(@story.title) %>
 
-<div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="<%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+<div class="<%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
         <%= link_to "External URL", safe_url(@story.external_url), target: "_blank", rel: "noopener noreferrer",
@@ -20,11 +18,11 @@
         <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
       </div>
 
-      <!-- Header Row -->
-      <div class="w-full bg-white rounded-lg shadow-md p-6 space-y-6">
+      <!-- Story Card -->
+      <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
 
         <!-- Title -->
-        <div class="font-bold my-6 text-gray-900 leading-tight">
+        <div class="font-semibold text-gray-900 mb-2">
           <%= title_with_badges(@story, font_size: "text-3xl") %>
         </div>
 
@@ -109,6 +107,4 @@
           toward transformation and healing.
         </div>
       </div>
-    </div>
-  </div>
 </div>

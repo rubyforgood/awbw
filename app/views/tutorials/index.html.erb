@@ -1,4 +1,4 @@
-<div class="<%= controller_name %>-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(controller_name.to_sym) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="w-full max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tutorials) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="w-full">
     <div class="flex items-start justify-between mb-6">
       <div class="pr-6">
@@ -22,23 +22,25 @@
 
     <%= render "search_boxes" rescue nil %>
 
-    <div class="overflow-x-auto">
-      <!-- Tutorials -->
-      <div class="space-y-16">
-        <% if @tutorials.any? %>
-          <% @tutorials.each do |tutorial| %>
-            <%= render "tutorial", tutorial: tutorial %>
-          <% end %>
+    <!-- Inner White Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 mt-4">
+      <div class="overflow-x-auto">
+        <div class="space-y-16">
+          <% if @tutorials.any? %>
+            <% @tutorials.each do |tutorial| %>
+              <%= render "tutorial", tutorial: tutorial %>
+            <% end %>
 
-          <!-- Pagination -->
-          <div class="pagination flex justify-center mt-12">
-            <%= tailwind_paginate @tutorials %>
-          </div>
-        <% else %>
-          <div class="text-gray-500 italic">
-            No tutorials found matching your filters.
-          </div>
-        <% end %>
+            <!-- Pagination -->
+            <div class="pagination flex justify-center mt-12">
+              <%= tailwind_paginate @tutorials %>
+            </div>
+          <% else %>
+            <div class="text-gray-500 italic">
+              No tutorials found matching your filters.
+            </div>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
