@@ -21,6 +21,7 @@ class WorkshopsController < ApplicationController
 
       render :workshop_results
     else
+      @sort = params[:sort].presence || "title"
       render :index
     end
   end
