@@ -44,8 +44,6 @@
     <% end %>
 
     <!-- Clear -->
-    <div><%= link_to "Clear",
-                  community_news_index_path,
-                  class: "btn btn-utility-outline whitespace-nowrap" %></div>
+    <div><%= link_to "Clear filters", community_news_index_path, class: "btn btn-utility-outline whitespace-nowrap", data: { action: "collection#clearAndSubmit" } %></div>
   <% end %>
 </div>

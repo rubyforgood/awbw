@@ -35,7 +35,8 @@
     <!-- Clear filters -->
     <div class="w-full md:w-auto flex justify-end">
       <%= link_to 'Clear filters', event_registrations_path,
-                  class: "btn btn-utility-outline" %>
+                  class: "btn btn-utility-outline",
+                  data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
 <% end %>

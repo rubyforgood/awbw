@@ -8,4 +8,11 @@
       <%= render "sortable_fields", sortable_fields: @sortable_fields %>
     </div>
   </div>
+
+  <!-- Clear filters -->
+  <div class="flex sm:justify-end items-end">
+    <%= link_to 'Clear filters', bookmarks_path,
+                class: "btn btn-utility",
+                data: { action: "collection#clearAndSubmit" } %>
+  </div>
 <% end %>

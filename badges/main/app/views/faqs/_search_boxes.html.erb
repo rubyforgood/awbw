@@ -36,7 +36,8 @@
     <!-- Clear filters -->
     <div class="w-full md:w-auto">
       <%= link_to "Clear filters", faqs_path,
-                  class: "btn btn-utility-outline" %>
+                  class: "btn btn-utility-outline",
+                  data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
 <% end %>

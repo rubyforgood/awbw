@@ -39,6 +39,6 @@
     </div>
 
     <!-- Clear -->
-    <div><%= link_to "Clear", notifications_path, class: "btn btn-utility-outline whitespace-nowrap" %></div>
+    <div><%= link_to "Clear filters", notifications_path, class: "btn btn-utility-outline whitespace-nowrap", data: { action: "collection#clearAndSubmit" } %></div>
   <% end %>
 </div>
