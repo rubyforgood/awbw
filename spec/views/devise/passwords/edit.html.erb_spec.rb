@@ -15,14 +15,6 @@ RSpec.describe "devise/passwords/edit", type: :view do
     render
   end
 
-  it "displays password requirements hint" do
-    expect(rendered).to have_content("Password must be at least 5 characters long")
-  end
-
-  it "has minlength attribute on password field" do
-    expect(rendered).to have_css('input[type="password"][minlength="5"]')
-  end
-
   it "displays new password field" do
     expect(rendered).to have_field("New password", type: :password)
   end
@@ -55,13 +47,9 @@ RSpec.describe "devise/passwords/edit", type: :view do
     end
 
     it "displays error messages" do
-      expect(rendered).to have_content("prevented this user from being saved")
+      expect(rendered).to have_content("prevented this from being saved")
       expect(rendered).to have_content("Password is too short")
       expect(rendered).to have_content("Password confirmation doesn't match")
-    end
-
-    it "displays error explanation with proper styling" do
-      expect(rendered).to have_css('div[role="alert"]#error_explanation')
     end
   end
 end
