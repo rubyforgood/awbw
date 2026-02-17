@@ -27,7 +27,7 @@
 
   <body class="<%= controller.controller_name %> <%= controller.action_name %>
       flex flex-col min-h-screen bg-white">
-    <div class="flex-grow" id="main">
+    <div class="flex-grow flex flex-col" id="main">
       <div class="sticky top-0 left-0 w-full z-50 print:hidden">
         <!-- Navbar -->
         <nav class="<%= navbar_bg_class %> text-white">
@@ -40,9 +40,18 @@
         <%= image_tag("logo-awbw-print.png", class: "print:w-36 m-3") %>
         <hr>
       </div>
-      <div>
-        <%= render "shared/flash_messages" %>
-        <%= yield %>
+      <div class="<%= yield(:page_bg_class) if content_for?(:page_bg_class) %> flex-grow">
+        <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 pt-3">
+          <%# TODO handle printable area %>
+          <% if user_signed_in? %>
+            <div class="signed-in-user my-3"><%= render "shared/flash_messages" %><%= yield %></div>
+          <% else %>
+            <div class="not-signed-in-user min-h-screen flex flex-col">
+              <%= render "shared/flash_messages" %>
+              <%= yield %>
+            </div>
+          <% end %>
+        </div>
       </div>
     </div>
 
