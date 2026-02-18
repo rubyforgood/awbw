@@ -8,7 +8,7 @@
       <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
       <%= f.hidden_field :organization_id, value: f.object.organization_id %>
       <%= f.hidden_field :title, value: f.object.title %>
-      <%= f.hidden_field :body, value: f.object.body %>
+      <%= f.hidden_field :rhino_body, value: f.object.rhino_body %>
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
       <%= f.hidden_field :permission_given, value: f.object.permission_given %>
       <div class="admin-only bg-yellow-100 m-3 p-3">
@@ -79,16 +79,20 @@
         <% end %>
       </div>
     </div>
-    <div class="mt-3 mb-6">
-      <%= f.input :body,
-                  as: :text,
-                  required: true,
-                  label: "Share a little bit about your workshop variation, how you modified the workshop to fit your population/setting/facilitation style, and/or anything about how the workshop was received by participants, things you would do differently next time, etc.",
-                  hint: "(HTML allowed)",
-                  disabled: promoted_to_variation,
-                  input_html: { rows: 10,
-                                class: ("readonly" if promoted_to_variation) } %>
-    </div>
+
+    <% if promoted_to_variation %>
+      <div class="mt-3 mb-6"><%= workshop_variation_idea.rhino_body %></div>
+    <% else %>
+      <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
+        <%= rhino_editor(f, :body,
+                      label: "Share a little bit about your workshop variation, how you modified the workshop to fit your population/setting/facilitation style, and/or anything about how the workshop was received by participants, things you would do differently next time, etc.") %>
+
+        <% if f.object.errors[:rhino_body].present? %>
+          <div class="text-danger mt-1 text-sm">Field <%= f.object.errors[:rhino_body].first %></div>
+        <% end %>
+      </div>
+    <% end %>
+
     <div class="flex my-6 gap-4">
       <%= f.input :publish_preferences,
                   as: :select,
