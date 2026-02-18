@@ -158,7 +158,7 @@
               <% if @person.profile_show_workshops? %>
                 <div class="p-3">
                   <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshops authored</h2>
-                  <%= turbo_frame_tag "person_workshops_section", src: person_path(@person, section: "workshops"), loading: :lazy do %>
+                  <%= turbo_frame_tag "person_workshops_section", src: person_path(@person, section: "workshops"), loading: :lazy  do %>
                     <p class="text-gray-500 italic">Loading workshops...</p>
                   <% end %>
                 </div>
