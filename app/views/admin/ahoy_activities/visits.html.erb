@@ -7,6 +7,8 @@
         </h1>
       </div>
 
+      <%= render "admin/shared/active_filters_subheader" %>
+
       <!-- Filters -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
         <%= form_with url: request.path, method: :get, local: true do %>
@@ -18,7 +20,7 @@
               </label>
               <%= select_tag :user_id,
                              options_from_collection_for_select(
-                               User.order(:first_name, :last_name),
+                               User.where(id: Ahoy::Visit.select(:user_id).distinct).order(:first_name, :last_name),
                                :id,
                                :full_name,
                                params[:user_id]

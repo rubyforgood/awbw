@@ -5,7 +5,6 @@
   <%# end %>
 
   <!-- CURRICULUM -->
-  <% if user_signed_in? || Workshop.publicly_visible.exists? || Resource.publicly_visible.exists? %>
   <div class="relative" data-controller="dropdown">
     <button
       type="button"
@@ -43,10 +42,8 @@
       <% end %>
     </div>
   </div>
-  <% end %>
 
   <!-- COMMUNITY -->
-  <% if user_signed_in? || CommunityNews.publicly_visible.exists? || Story.publicly_visible.exists? || Event.publicly_visible.exists? %>
   <div class="relative" data-controller="dropdown">
     <button
       type="button"
@@ -99,7 +96,6 @@
       <% end %>
     </div>
   </div>
-  <% end %>
 
   <!-- HELP -->
   <div class="relative" data-controller="dropdown">

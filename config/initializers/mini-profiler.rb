@@ -4,6 +4,7 @@ if defined?(Rack::MiniProfiler)
     Rack::MiniProfiler.config.enabled = false
   elsif Rails.env.staging?
     Rack::MiniProfiler.config.enabled = true
+    Rack::MiniProfiler.config.authorization_mode = :allow_all
     Rack::MiniProfiler.config.position = "bottom-left"
     Rack::MiniProfiler.config.enable_hotwire_turbo_drive_support = true
   else
