@@ -180,7 +180,7 @@ end
 
   # Strong parameters
   def organization_params
-    admin_fields = allowed_to?(:manage?, Organization) ? [:notes] : []
+    admin_fields = allowed_to?(:manage?, Organization) ? [ :notes ] : []
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
       :agency_type,  :agency_type_other, :internal_id, :logo, :email, :website_url,
