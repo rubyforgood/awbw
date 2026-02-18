@@ -25,12 +25,52 @@ class PersonDecorator < ApplicationDecorator
     "missing.png"
   end
 
+  def facilitator_since_date
+    facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
+    facilitator_affiliations.minimum(:start_date) || member_since
+  end
+
+  def affiliated_since_date
+    affiliations.minimum(:start_date)
+  end
+
+  def affiliated_end_date
+    return nil if affiliations.active.exists?
+    affiliations.maximum(:end_date)
+  end
+
+  def facilitator_end_date
+    facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
+    return nil if facilitator_affiliations.active.exists?
+    facilitator_affiliations.maximum(:end_date)
+  end
+
   def member_since_year
-    member_since ? member_since.year : nil
+    facilitator_since_date&.year
+  end
+
+  def member_since_earlier_than_facilitator_affiliations?
+    earliest_facilitator = affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
+    member_since.present? && earliest_facilitator.present? && member_since.beginning_of_month < earliest_facilitator.beginning_of_month
+  end
+
+  def member_since_earlier_than_all_affiliations?
+    earliest = affiliations.minimum(:start_date)
+    member_since.present? && earliest.present? && member_since.beginning_of_month < earliest.beginning_of_month
+  end
+
+  def member_since_differs_from_facilitator_affiliations?
+    earliest_facilitator = affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
+    member_since.present? && earliest_facilitator.present? && member_since.beginning_of_month != earliest_facilitator.beginning_of_month
+  end
+
+  def member_since_differs_from_all_affiliations?
+    earliest = affiliations.minimum(:start_date)
+    member_since.present? && earliest.present? && member_since.beginning_of_month != earliest.beginning_of_month
   end
 
   def badges
-    earliest = affiliations.minimum(:start_date) || member_since
+    earliest = facilitator_since_date
     years = earliest ? (Time.zone.now.year - earliest.year) : nil
     badges = []
     badges << badge("Legacy Facilitator (10+ years)", :legacy_facilitator) if years && years >= 10
@@ -43,6 +83,9 @@ class PersonDecorator < ApplicationDecorator
     badges << badge("Story Author", :stories) if user&.stories_as_creator&.any?
     badges << badge("Sector Leader", :sectors) if sectorable_items.where(is_leader: true).any?
     badges << badge("Blog Contributor", :blog_contributor) if blog_contributor?
+    if affiliated_since_date.present? && affiliated_since_date != facilitator_since_date
+      badges << badge("Affiliated since #{affiliated_since_date.strftime('%B %Y')}", :affiliated_person)
+    end
     badges
   end
 
