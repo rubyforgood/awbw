@@ -2,6 +2,7 @@
   <%= simple_form_for(workshop_variation_idea, html: { multipart: true }) do |f| %>
     <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
     <%= f.hidden_field :updated_by_id, value: current_user&.id %>
+    <%= hidden_field_tag :from, params[:from] if params[:from].present? %>
     <% promoted_to_variation = f.object.workshop_variations.any? %>
     <% if promoted_to_variation %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
