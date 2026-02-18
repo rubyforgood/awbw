@@ -10,57 +10,85 @@
         </div>
       </div>
 
+      <%= render "admin/shared/active_filters_subheader" %>
+
       <!-- Filters -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
         <%= form_with url: request.path, method: :get, local: true do %>
 
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="flex flex-wrap lg:flex-nowrap gap-4">
 
             <!-- Event Name -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 Event Name
               </label>
               <%= text_field_tag :name,
                                  params[:name],
                                  placeholder: "e.g. Viewed Workshop",
-                                 class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
             <!-- User Filter -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 User
               </label>
               <%= select_tag :user_id,
                              options_from_collection_for_select(
-                               User.order(:first_name, :last_name),
+                               User.where(id: Ahoy::Visit.select(:user_id).distinct).order(:first_name, :last_name),
                                :id,
                                :full_name,
                                params[:user_id]
                              ),
                              include_blank: "All Users",
-                             class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                             class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+            </div>
+
+            <!-- Audience -->
+            <div class="flex-1 min-w-0">
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                Audience
+              </label>
+              <%= select_tag :audience,
+                             options_for_select(
+                               [["All", "all"], ["Visitors (anon)", "visitors"], ["Users", "users"], ["Admins (staff)", "staff"]],
+                               params[:audience] || "all"
+                             ),
+                             class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+            </div>
+
+            <!-- Time Period -->
+            <div class="flex-1 min-w-0">
+              <label class="block text-sm font-medium text-gray-600 mb-1">
+                Time Period
+              </label>
+              <%= select_tag :time_period,
+                             options_for_select(
+                               [["All time", "all_time"], ["Past day", "past_day"], ["Past week", "past_week"], ["Past month", "past_month"], ["Past year", "past_year"]],
+                               params[:time_period] || "all_time"
+                             ),
+                             class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
             <!-- Date From -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 From
               </label>
               <%= date_field_tag :from,
                                  params[:from],
-                                 class: "w-full border-gray-300 rounded-md shadow-sm" %>
+                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
             </div>
 
             <!-- Date To -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 To
               </label>
               <%= date_field_tag :to,
                                  params[:to],
-                                 class: "w-full border-gray-300 rounded-md shadow-sm" %>
+                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
             </div>
 
           </div>

@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :workshop_variation do
     association :workshop
     sequence(:name) { |n| "Variation #{n}" }
-    body { "<p>Variation details using CKEditor</p>" }
+    rhino_body { "<p>Variation details using CKEditor</p>" }
     sequence(:position) { |n| n }
     published { false }
 

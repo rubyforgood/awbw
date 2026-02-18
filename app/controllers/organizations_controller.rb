@@ -46,15 +46,31 @@ class OrganizationsController < ApplicationController
     @organizations = Organization.where(id: @organization.id)
     @per_page = params[:per_page] || 10
     @workshop_logs_unpaginated = workshop_logs
-    @workshop_logs_count = @workshop_logs_unpaginated.size
+                                 .includes(:user, :workshop, :windows_type)
+                                 .order(date: :desc, created_at: :desc)
+    @workshop_logs_count = @workshop_logs_unpaginated.count
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
+
+    # Pre-compute grand totals to avoid expensive query in view
+    @grand_totals = @workshop_logs_unpaginated.pick(
+      Arel.sql("COALESCE(SUM(children_ongoing),0)"),
+      Arel.sql("COALESCE(SUM(teens_ongoing),0)"),
+      Arel.sql("COALESCE(SUM(adults_ongoing),0)"),
+      Arel.sql("COALESCE(SUM(children_first_time),0)"),
+      Arel.sql("COALESCE(SUM(teens_first_time),0)"),
+      Arel.sql("COALESCE(SUM(adults_first_time),0)")
+    ) || [ 0, 0, 0, 0, 0, 0 ]
+
+    # Cache filter options to avoid duplicate queries
     logged_workshop_ids = workshop_logs.where.not(workshop_id: nil).distinct.pluck(:workshop_id)
     @workshops = Workshop.joins(:windows_type)
                          .where(id: logged_workshop_ids)
+                         .select("workshops.id, workshops.title, windows_types.name")
                          .order("workshops.title ASC, windows_types.name ASC")
     logged_user_ids = workshop_logs.where.not(user_id: nil).distinct.pluck(:user_id)
     @people = User.where(id: logged_user_ids)
                   .includes(:person)
+                  .select("users.id, people.first_name, people.last_name")
                   .order("people.first_name, people.last_name")
   end
 

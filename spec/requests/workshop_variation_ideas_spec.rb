@@ -10,7 +10,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
   let(:valid_attributes) do
     {
       name: "Mindful Art Variation",
-      body: "A variation focusing on mindfulness and relaxation.",
+      rhino_body: "<p>A variation focusing on mindfulness and relaxation.</p>",
       youtube_url: "https://www.youtube.com/watch?v=example",
       permission_given: true,
       publish_preferences: "public",

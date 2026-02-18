@@ -10,7 +10,7 @@
       <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
       <%= f.hidden_field :organization_id, value: f.object.organization_id %>
       <%= f.hidden_field :title, value: f.object.title %>
-      <%= f.hidden_field :body, value: f.object.body %>
+      <%= f.hidden_field :rhino_body, value: f.object.rhino_body %>
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
       <%= f.hidden_field :permission_given, value: f.object.permission_given %>
     <% end %>
@@ -96,17 +96,22 @@
         <% end %>
       </div>
     </div>
-    <div class="mt-3 mb-6">
-      <%= f.input :body,
-                  as: :text,
-                  label: "Please share details about your participant(s) (while maintaining confidentiality)
-                  and their workshop goals, including what happened during the workshop, and how creating made an impact.
-                  Include direct quotes whenever possible.",
-                  hint: "(For more tips on what makes a powerful story, see the story tips PDF above.)",
-                  disabled: promoted_to_story,
-                  input_html: { rows: 10,
-                                class: ("readonly" if promoted_to_story) } %>
-    </div>
+
+    <% if promoted_to_story %>
+      <div class="mt-3 mb-6"><%= story_idea.rhino_body %></div>
+    <% else %>
+      <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
+        <%= rhino_editor(f, :body,
+                      label: "Please share details about your participant(s) (while maintaining confidentiality)
+                      and their workshop goals, including what happened during the workshop, and how creating made an impact.
+                      Include direct quotes whenever possible.",
+                      hint: "(For more tips on what makes a powerful story, see the story tips PDF above.)") %>
+
+        <% if f.object.errors[:rhino_body].present? %>
+          <div class="text-danger mt-1 text-sm">Field <%= f.object.errors[:rhino_body].first %></div>
+        <% end %>
+      </div>
+    <% end %>
 
     <% if @categories_grouped %>
       <!-- Full Tags accordion (edit view) -->

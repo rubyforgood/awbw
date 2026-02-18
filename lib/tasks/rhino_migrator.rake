@@ -23,6 +23,12 @@ namespace :rhino_migrator do
   end
 
   # ---------------------------------------------
+  # ROLLUP TASK
+  # ---------------------------------------------
+  desc "Migrate all configured models into ActionText"
+  task all: [ :workshop_variation, :workshop_variation_idea, :story ]
+
+  # ---------------------------------------------
   # INDIVIDUAL MODEL TASKS
   # ---------------------------------------------
   # Usage:
@@ -30,6 +36,24 @@ namespace :rhino_migrator do
   #   bundle exec rake rhino_migrator:workshop  # single model
   #   bundle exec rake rhino_migrator:all       # all models
   # ---------------------------------------------
+
+  desc "Migrate WorkshopVariation body into ActionText"
+  task workshop_variation: :environment do
+    columns = [ :body ]
+    migrate_model!(WorkshopVariation, columns)
+  end
+
+  desc "Migrate WorkshopVariationIdea body into ActionText"
+  task workshop_variation_idea: :environment do
+    columns = [ :body ]
+    migrate_model!(WorkshopVariationIdea, columns)
+  end
+
+  desc "Migrate Story body into ActionText"
+  task story: :environment do
+    columns = [ :body ]
+    migrate_model!(Story, columns)
+  end
 
   desc "Migrate Resource text into ActionText"
   task resource: :environment do
@@ -77,10 +101,4 @@ namespace :rhino_migrator do
     ]
     migrate_model!(Workshop, columns)
   end
-
-  # ---------------------------------------------
-  # ROLLUP TASK
-  # ---------------------------------------------
-  desc "Migrate all configured models into ActionText"
-  task all: [ :resource, :workshop ]
 end

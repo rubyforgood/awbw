@@ -185,7 +185,7 @@ class StoriesController < ApplicationController
   def set_story_attributes_from(idea)
     {
       story_idea_id: idea.id,
-      rhino_body: idea.body,
+      rhino_body: idea.rhino_body,
       organization_id: idea.organization.id,
       workshop_id: idea.workshop_id,
       external_workshop_title: idea.external_workshop_title,

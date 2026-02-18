@@ -95,7 +95,7 @@ class WorkshopVariationIdeasController < ApplicationController
 
   def workshop_variation_idea_params
     params.require(:workshop_variation_idea).permit(
-      :name, :body, :youtube_url,
+      :name, :rhino_body, :youtube_url,
       :permission_given, :publish_preferences,
       :organization_id, :windows_type_id, :workshop_id, :created_by_id, :updated_by_id,
       primary_asset_attributes: [ :id, :file, :_destroy ],

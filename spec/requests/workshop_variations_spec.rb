@@ -8,7 +8,7 @@ RSpec.describe "/workshop_variations", type: :request do
   let(:valid_attributes) do
     {
       name: "Art Therapy Variation",
-      body: "A therapeutic approach to art-making.",
+      rhino_body: "<p>A therapeutic approach to art-making.</p>",
       youtube_url: "https://www.youtube.com/watch?v=example",
       workshop_id: workshop.id,
       created_by_id: admin.id
@@ -18,7 +18,7 @@ RSpec.describe "/workshop_variations", type: :request do
   let(:invalid_attributes) do
     {
       name: "",
-      body: ""
+      rhino_body: ""
     }
   end
 
@@ -32,7 +32,7 @@ RSpec.describe "/workshop_variations", type: :request do
     let(:workshop_variation_idea) do
       create(:workshop_variation_idea,
              name: "Original Idea Name",
-             body: "Original idea body content",
+             rhino_body: "<p>Original idea body content</p>",
              youtube_url: "https://www.youtube.com/watch?v=idea",
              workshop: workshop)
     end
@@ -46,7 +46,7 @@ RSpec.describe "/workshop_variations", type: :request do
       it "pre-populates the form with workshop_variation_idea data" do
         get new_workshop_variation_path(workshop_variation_idea_id: workshop_variation_idea.id)
         expect(response.body).to include(workshop_variation_idea.name)
-        expect(response.body).to include(workshop_variation_idea.body)
+        expect(response.body).to include("&lt;p&gt;Original idea body content&lt;/p&gt;")
       end
     end
 
@@ -55,9 +55,9 @@ RSpec.describe "/workshop_variations", type: :request do
         expect {
           post workshop_variations_path,
                params: {
-                 workshop_variation: {
-                   name: workshop_variation_idea.name,
-                   body: workshop_variation_idea.body,
+                  workshop_variation: {
+                    name: workshop_variation_idea.name,
+                    rhino_body: workshop_variation_idea.rhino_body.body,
                    youtube_url: workshop_variation_idea.youtube_url,
                    workshop_id: workshop_variation_idea.workshop_id,
                    workshop_variation_idea_id: workshop_variation_idea.id,
@@ -84,8 +84,8 @@ RSpec.describe "/workshop_variations", type: :request do
           post workshop_variations_path,
                params: {
                  workshop_variation: {
-                   name: idea_with_asset.name,
-                   body: idea_with_asset.body,
+                    name: idea_with_asset.name,
+                    rhino_body: idea_with_asset.rhino_body.body,
                    workshop_id: idea_with_asset.workshop_id,
                    workshop_variation_idea_id: idea_with_asset.id,
                    created_by_id: admin.id
@@ -108,8 +108,8 @@ RSpec.describe "/workshop_variations", type: :request do
         post workshop_variations_path,
              params: {
                workshop_variation: {
-                 name: idea_with_asset.name,
-                 body: idea_with_asset.body,
+                  name: idea_with_asset.name,
+                  rhino_body: idea_with_asset.rhino_body.body,
                  workshop_id: idea_with_asset.workshop_id,
                  workshop_variation_idea_id: idea_with_asset.id,
                  created_by_id: admin.id
@@ -126,8 +126,8 @@ RSpec.describe "/workshop_variations", type: :request do
         post workshop_variations_path,
              params: {
                workshop_variation: {
-                 name: workshop_variation_idea.name,
-                 body: workshop_variation_idea.body,
+                  name: workshop_variation_idea.name,
+                  rhino_body: workshop_variation_idea.rhino_body.body,
                  workshop_id: workshop_variation_idea.workshop_id,
                  workshop_variation_idea_id: workshop_variation_idea.id,
                  created_by_id: admin.id

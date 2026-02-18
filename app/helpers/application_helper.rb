@@ -24,18 +24,17 @@ module ApplicationHelper
   end
 
   def display_banner
-    banners = Banner.all
-    return unless banners.any?(&:show)
+    # Cache banners to avoid repeated queries during page render
+    @banners ||= Banner.published.select("id, content").to_a
+    return if @banners.empty?
 
-    safe_content_array = []
-
-    banners.published.each do |banner|
-      safe_content_array << sanitize(
+    safe_content_array = @banners.map { |banner|
+      sanitize(
         banner.content,
         tags: %w[a],
         attributes: %w[href]
       )
-    end
+    }
 
     safe_content = safe_content_array.join("<br>")
 
