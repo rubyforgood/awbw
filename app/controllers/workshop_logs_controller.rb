@@ -114,7 +114,7 @@ class WorkshopLogsController < ApplicationController
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
     @people = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
-                                .includes(:person)
+                                .joins(:person)
                                 .distinct
                                 .select("users.id, people.first_name, people.last_name")
                                 .order("people.first_name, people.last_name")
