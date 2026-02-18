@@ -33,7 +33,6 @@ class WorkshopVariationsController < ApplicationController
         if params[:promote_idea_assets] == "true"
           @workshop_variation.attach_assets_from_idea!
         end
-
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
@@ -43,7 +42,13 @@ class WorkshopVariationsController < ApplicationController
 
     if success
       flash[:notice] = "Workshop Variation has been created."
-      redirect_to workshop_variations_path(sort: "created")
+      if params[:from] == "workshop_show" && @workshop_variation.workshop.present?
+        redirect_to workshop_path(@workshop_variation.workshop, anchor: "variation-#{@workshop_variation.id}") and return
+      elsif allowed_to?(:index?, WorkshopVariation)
+        redirect_to workshop_variations_path(sort: "created") and return
+      else
+        redirect_to root_path and return
+      end
     else
       set_form_variables
       flash.now[:alert] = "Unable to save the workshop variation."
