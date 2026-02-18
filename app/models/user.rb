@@ -101,7 +101,7 @@ class User < ApplicationRecord
 
   def bookmark_for(record)
     if bookmarks.loaded?
-      bookmarks.detect { |b| b.bookmarkable_type == record.class.name && b.bookmarkable_id == record.id }
+      bookmarks.detect { |b| b.bookmarkable_type == record.class.name && b.bookmarkable_id == record.id && !b.destroyed? }
     else
       bookmarks.find_by(bookmarkable: record)
     end
