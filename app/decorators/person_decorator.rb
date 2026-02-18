@@ -51,22 +51,22 @@ class PersonDecorator < ApplicationDecorator
 
   def member_since_earlier_than_facilitator_affiliations?
     earliest_facilitator = affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
-    member_since.present? && earliest_facilitator.present? && member_since < earliest_facilitator
+    member_since.present? && earliest_facilitator.present? && member_since.beginning_of_month < earliest_facilitator.beginning_of_month
   end
 
   def member_since_earlier_than_all_affiliations?
     earliest = affiliations.minimum(:start_date)
-    member_since.present? && earliest.present? && member_since < earliest
+    member_since.present? && earliest.present? && member_since.beginning_of_month < earliest.beginning_of_month
   end
 
   def member_since_differs_from_facilitator_affiliations?
     earliest_facilitator = affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
-    member_since.present? && earliest_facilitator.present? && member_since != earliest_facilitator
+    member_since.present? && earliest_facilitator.present? && member_since.beginning_of_month != earliest_facilitator.beginning_of_month
   end
 
   def member_since_differs_from_all_affiliations?
     earliest = affiliations.minimum(:start_date)
-    member_since.present? && earliest.present? && member_since != earliest
+    member_since.present? && earliest.present? && member_since.beginning_of_month != earliest.beginning_of_month
   end
 
   def badges
