@@ -12,8 +12,6 @@ class ApplicationController < ActionController::Base
   verify_authorized unless: :devise_controller?
 
   after_action :flush_lifecycle_events
-  around_action :set_time_zone_from_user, if: :current_user
-
   rescue_from ActionPolicy::Unauthorized do |exception|
     flash[:alert] = "You are not authorized to perform this action.<br>#{ exception.message if Rails.env.test? }"
     redirect_to root_path
