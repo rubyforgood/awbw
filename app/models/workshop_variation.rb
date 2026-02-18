@@ -11,6 +11,8 @@ class WorkshopVariation < ApplicationRecord
     results
   end
 
+  has_rich_text :rhino_body
+
   belongs_to :workshop
   belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
@@ -18,6 +20,7 @@ class WorkshopVariation < ApplicationRecord
   belongs_to :workshop_variation_idea, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
+
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
@@ -28,7 +31,7 @@ class WorkshopVariation < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
-  validates :body, presence: true
+  validates :rhino_body, presence: true
 
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank

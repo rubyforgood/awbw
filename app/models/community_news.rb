@@ -1,6 +1,8 @@
 class CommunityNews < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
+  has_rich_text :rhino_body
+
   belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :author, class_name: "User", optional: true
@@ -21,8 +23,6 @@ class CommunityNews < ApplicationRecord
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
-
-  has_rich_text :rhino_body
 
   # Validations
   validates :author_id, presence: true
