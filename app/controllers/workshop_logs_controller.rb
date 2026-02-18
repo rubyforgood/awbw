@@ -114,14 +114,24 @@ class WorkshopLogsController < ApplicationController
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
     @people = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
-                                .includes(:workshop_logs, :person)
-                                .joins(:workshop_logs)
+                                .includes(:person)
                                 .distinct
+                                .select("users.id, people.first_name, people.last_name")
                                 .order("people.first_name, people.last_name")
     @organizations = authorized_scope(Organization.all)
     @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
                          .includes(:windows_type)
                          .order(:title)
+
+    # Pre-compute grand totals to avoid expensive query in view
+    @grand_totals = @workshop_logs_unpaginated.pick(
+      Arel.sql("COALESCE(SUM(children_ongoing),0)"),
+      Arel.sql("COALESCE(SUM(teens_ongoing),0)"),
+      Arel.sql("COALESCE(SUM(adults_ongoing),0)"),
+      Arel.sql("COALESCE(SUM(children_first_time),0)"),
+      Arel.sql("COALESCE(SUM(teens_first_time),0)"),
+      Arel.sql("COALESCE(SUM(adults_first_time),0)")
+    ) || [0, 0, 0, 0, 0, 0]
   end
 
   private

@@ -1,7 +1,7 @@
 <% workshop_logs ||= @workshop_logs %>
 <% workshop_logs_unpaginated ||= @workshop_logs_unpaginated %>
 <% workshop_logs_count ||= @workshop_logs_count %>
-<% grand_totals = workshop_logs_unpaginated.pick(
+<% grand_totals = @grand_totals || workshop_logs_unpaginated.pick(
      Arel.sql("COALESCE(SUM(children_ongoing),0)"),
      Arel.sql("COALESCE(SUM(teens_ongoing),0)"),
      Arel.sql("COALESCE(SUM(adults_ongoing),0)"),
