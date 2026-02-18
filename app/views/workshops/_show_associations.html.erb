@@ -11,9 +11,11 @@
             </h2>
           </div>
           <div class="flex gap-2 justify-end">
-            <%= link_to "New variation",
-                        new_workshop_variation_idea_path(from: "workshop_show", workshop_id: workshop.id),
-                        class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+            <% if allowed_to?(:new?, WorkshopVariationIdea) && @workshop.persisted? %>
+              <%= link_to "New variation",
+                          new_workshop_variation_path(from: "workshop_show", workshop_id: workshop.id),
+                          class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+            <% end %>
             <%= link_to "New variation idea",
                         new_workshop_variation_idea_path(from: "workshop_show", workshop_id: workshop.id),
                         class: "btn btn-secondary-outline" %>
