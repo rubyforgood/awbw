@@ -38,8 +38,8 @@
         <%= render "assets/display_assets", resource: @story_idea %>
 
         <!-- Story Body -->
-        <div class="prose prose-lg max-w-none text-gray-700 mb-10">
-          <%= simple_format(@story_idea.body) %>
+        <div class="mb-10">
+          <%= @story_idea.rhino_body %>
         </div>
       </div>
 </div>
