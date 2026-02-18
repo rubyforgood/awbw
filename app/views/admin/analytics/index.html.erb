@@ -1,13 +1,11 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-          Activity counts
-        </h1>
-        
+  <div class="flex justify-between items-center mb-4">
+        <h1 class="text-3xl font-bold text-gray-900">Activities</h1>
+
         <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
           <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
-          <%= f.select :time_period, 
+          <%= f.select :time_period,
                        options_for_select([
                          ['All time', 'all_time'],
                          ['Past day', 'past_day'],
@@ -20,6 +18,8 @@
                        onchange: "this.form.submit()" %>
         <% end %>
       </div>
+
+      <%= render "admin/shared/activities_tabs" %>
 
       <%= render "admin/shared/active_filters_subheader" %>
 

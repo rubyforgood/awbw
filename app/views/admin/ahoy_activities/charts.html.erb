@@ -4,45 +4,43 @@
 
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex items-start justify-between mb-12">
-        <h1 class="text-3xl font-bold text-gray-900">Activity Charts</h1>
-        <div class="flex justify-end">
-        <div class="flex justify-end">
-          <%= form_with url: admin_activities_charts_path, method: :get, local: true,
-                        class: "flex items-center gap-4" do %>
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-3xl font-bold text-gray-900">Activities</h1>
+        <%= form_with url: admin_activities_charts_path, method: :get, local: true,
+                      class: "flex items-center gap-4" do %>
 
-            <label class="text-sm font-medium text-gray-700">Audience:</label>
-            <%= select_tag :audience,
-                           options_for_select(
-                             [
-                               ["All", "all"],
-                               ["Visitors (anon)", "visitors"],
-                               ["Users", "users"],
-                               ["Admins (staff)", "staff"]
-                             ],
-                             params[:audience] || "all"
-                           ),
-                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
-                           onchange: "this.form.submit()" %>
+          <label class="text-sm font-medium text-gray-700">Audience:</label>
+          <%= select_tag :audience,
+                         options_for_select(
+                           [
+                             ["All", "all"],
+                             ["Visitors (anon)", "visitors"],
+                             ["Users", "users"],
+                             ["Admins (staff)", "staff"]
+                           ],
+                           params[:audience] || "all"
+                         ),
+                         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
+                         onchange: "this.form.submit()" %>
 
-            <label class="text-sm font-medium text-gray-700">Time period:</label>
-            <%= select_tag :time_period,
-                           options_for_select(
-                             [
-                               ['All time', 'all_time'],
-                               ['Past day', 'past_day'],
-                               ['Past week', 'past_week'],
-                               ['Past month', 'past_month'],
-                               ['Past year', 'past_year']
-                             ],
-                             params[:time_period] || 'all_time'
-                           ),
-                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
-                           onchange: "this.form.submit()" %>
-          <% end %>
-        </div>
+          <label class="text-sm font-medium text-gray-700">Time period:</label>
+          <%= select_tag :time_period,
+                         options_for_select(
+                           [
+                             ['All time', 'all_time'],
+                             ['Past day', 'past_day'],
+                             ['Past week', 'past_week'],
+                             ['Past month', 'past_month'],
+                             ['Past year', 'past_year']
+                           ],
+                           params[:time_period] || 'all_time'
+                         ),
+                         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
+                         onchange: "this.form.submit()" %>
+        <% end %>
       </div>
-      </div>
+
+      <%= render "admin/shared/activities_tabs" %>
 
       <%= render "admin/shared/active_filters_subheader" %>
 

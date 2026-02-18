@@ -2,13 +2,15 @@
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
 
       <!-- Page Header -->
-      <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-gray-900 mb-6">Activity Logs</h1>
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-3xl font-bold text-gray-900">Activities</h1>
 
         <div class="text-sm text-gray-500">
           <%= @events.count %> events
         </div>
       </div>
+
+      <%= render "admin/shared/activities_tabs" %>
 
       <%= render "admin/shared/active_filters_subheader" %>
 

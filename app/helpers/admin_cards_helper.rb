@@ -24,9 +24,7 @@ module AdminCardsHelper
   # -----------------------------
   def user_content_cards
     [
-      custom_card("Activity charts", admin_activities_charts_path, icon: "📊"),
-      custom_card("Activity counts", admin_activities_counts_path, icon: "🔢"),
-      custom_card("Activity logs", admin_activities_events_path, icon: "🧭"),
+      custom_card("Activities", admin_activities_charts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:event_registrations, icon: "🎟️", intensity: 100),
       model_card(:quotes, icon: "💬", intensity: 100),
