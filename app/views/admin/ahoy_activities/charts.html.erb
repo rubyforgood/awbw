@@ -22,7 +22,7 @@
                              ],
                              params[:audience] || "all"
                            ),
-                           class: "rounded-md border-gray-300 shadow-sm",
+                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
                            onchange: "this.form.submit()" %>
 
             <label class="text-sm font-medium text-gray-700">Time period:</label>
@@ -37,12 +37,14 @@
                              ],
                              params[:time_period] || 'all_time'
                            ),
-                           class: "rounded-md border-gray-300 shadow-sm",
+                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
                            onchange: "this.form.submit()" %>
           <% end %>
         </div>
       </div>
       </div>
+
+      <%= render "admin/shared/active_filters_subheader" %>
 
       <section class="space-y-10">
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">

@@ -7,6 +7,8 @@
         </h1>
       </div>
 
+      <%= render "admin/shared/active_filters_subheader" %>
+
       <!-- Filters -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
         <%= form_with url: request.path, method: :get, local: true do %>

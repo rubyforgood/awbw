@@ -16,10 +16,12 @@
                          ['Past year', 'past_year']
                        ], params[:time_period] || 'all_time'),
                        {},
-                       class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                       class: "px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
                        onchange: "this.form.submit()" %>
         <% end %>
       </div>
+
+      <%= render "admin/shared/active_filters_subheader" %>
 
       <!-- Summary -->
       <section class="mt-6">

@@ -44,6 +44,16 @@ module Admin
         scope = scope.where(visit_id: params[:visit_id])
       end
 
+      # Audience filter
+      case params[:audience]
+      when "visitors"
+        scope = scope.where(user_id: nil)
+      when "users"
+        scope = scope.joins(:user).where(users: { super_user: false })
+      when "staff"
+        scope = scope.joins(:user).where(users: { super_user: true })
+      end
+
       # Filter by resource type and ID
       if params[:resource_type].present?
         scope = scope.where(resource_type: params[:resource_type])
