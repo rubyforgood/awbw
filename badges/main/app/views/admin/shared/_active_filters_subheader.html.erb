@@ -1,0 +1,29 @@
+<%
+  time_label = case params[:time_period]
+               when "past_day"   then "Past day"
+               when "past_week"  then "Past week"
+               when "past_month" then "Past month"
+               when "past_year"  then "Past year"
+               end
+
+  audience_label = case params[:audience]
+                   when "visitors" then "Visitors (anon)"
+                   when "users"    then "Users"
+                   when "staff"    then "Admins (staff)"
+                   end
+%>
+<% if time_label || audience_label %>
+  <div class="flex items-center gap-2 mb-4 text-sm">
+    <span class="text-gray-500">Filtering:</span>
+    <% if time_label %>
+      <span class="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium">
+        <%= time_label %>
+      </span>
+    <% end %>
+    <% if audience_label %>
+      <span class="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium">
+        <%= audience_label %>
+      </span>
+    <% end %>
+  </div>
+<% end %>

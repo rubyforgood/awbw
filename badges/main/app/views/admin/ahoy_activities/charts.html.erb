@@ -22,7 +22,7 @@
                              ],
                              params[:audience] || "all"
                            ),
-                           class: "rounded-md border-gray-300 shadow-sm",
+                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
                            onchange: "this.form.submit()" %>
 
             <label class="text-sm font-medium text-gray-700">Time period:</label>
@@ -37,12 +37,14 @@
                              ],
                              params[:time_period] || 'all_time'
                            ),
-                           class: "rounded-md border-gray-300 shadow-sm",
+                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
                            onchange: "this.form.submit()" %>
           <% end %>
         </div>
       </div>
       </div>
+
+      <%= render "admin/shared/active_filters_subheader" %>
 
       <section class="space-y-10">
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -79,140 +81,38 @@
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: ["filter.workshops", "search.workshops"])
-                    .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.categories')"))
-                    .flat_map { |arr| JSON.parse(arr) rescue [] }
-                    .map { |c| c["type"] }
-                    .compact
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(10)
-                    .to_h,
-                  title: "Workshop Search: Category Types"
-                ) %>
+            <%= bar_chart(@ws_category_types, title: "Workshop Search: Category Types") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: ["filter.workshops", "search.workshops"])
-                    .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.categories')"))
-                    .flat_map { |arr| JSON.parse(arr) rescue [] }
-                    .map { |c| c["name"] }
-                    .compact
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(15)
-                    .to_h,
-                  title: "Workshop Search: Categories"
-                ) %>
+            <%= bar_chart(@ws_category_names, title: "Workshop Search: Categories") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: ["filter.workshops", "search.workshops"])
-                    .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.sectors')"))
-                    .flat_map { |arr| JSON.parse(arr) rescue [] }
-                    .map { |s| s["name"] }
-                    .compact
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(10)
-                    .to_h,
-                  title: "Workshop Search: Sectors"
-                ) %>
+            <%= bar_chart(@ws_sectors, title: "Workshop Search: Sectors") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: "search.workshops")
-                    .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.keywords.title'))"))
-                    .compact
-                    .reject(&:blank?)
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(10)
-                    .to_h,
-                  title: "Workshop Search: Titles"
-                ) %>
+            <%= bar_chart(@ws_search_titles, title: "Workshop Search: Titles") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: "search.workshops")
-                    .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.keywords.author'))"))
-                    .compact
-                    .reject(&:blank?)
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(10)
-                    .to_h,
-                  title: "Workshop Search: Authors"
-                ) %>
+            <%= bar_chart(@ws_search_authors, title: "Workshop Search: Authors") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: "search.workshops")
-                    .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.keywords.full_text'))"))
-                    .compact
-                    .reject(&:blank?)
-                    .map(&:downcase)
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(10)
-                    .to_h,
-                  title: "Workshop Search: Full-Text"
-                ) %>
+            <%= bar_chart(@ws_search_full_text, title: "Workshop Search: Full-Text") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: ["filter.workshops", "search.workshops"])
-                    .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.windows_types')"))
-                    .flat_map { |arr| JSON.parse(arr) rescue [] }
-                    .map { |id| WindowsType.find_by(id: id)&.short_name }
-                    .compact
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(10)
-                    .to_h,
-                  title: "Workshop Search: Windows Types"
-                ) %>
+            <%= bar_chart(@ws_windows_types, title: "Workshop Search: Windows Types") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where("name LIKE 'search_zero.%'")
-                    .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.query'))"))
-                    .compact
-                    .reject(&:blank?)
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(10)
-                    .to_h,
-                  title: "Workshop Search: No Results"
-                ) %>
+            <%= bar_chart(@ws_zero_results, title: "Workshop Search: No Results") %>
           </div>
           <div class="chart-card">
-            <%= column_chart(
-                  {
-                    "Keyword search" => scoped_events.where(name: "search.workshops").count,
-                    "Checkbox filter" => scoped_events.where(name: "filter.workshops").count,
-                    "View" => scoped_events.where(name: "view.workshop").count,
-                    "Print" => scoped_events.where(name: "print.workshop").count,
-                    "Download" => scoped_events.where(name: "download.workshop").count
-                  },
-                  title: "Workshop Discovery Funnel"
-                ) %>
+            <%= column_chart(@ws_funnel, title: "Workshop Discovery Funnel") %>
           </div>
         </div>
       </section>
@@ -220,46 +120,15 @@
       <section class="space-y-10">
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: "search.resources")
-                    .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.keywords.full_text'))"))
-                    .compact
-                    .reject(&:blank?)
-                    .map(&:downcase)
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(12)
-                    .to_h,
-                  title: "Resource Search: Keywords"
-                ) %>
+            <%= bar_chart(@rs_keywords, title: "Resource Search: Keywords") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: "filter.resources")
-                    .pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.filters.kind'))"))
-                    .compact
-                    .reject(&:blank?)
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .to_h,
-                  title: "Resource Search: Kinds"
-                ) %>
+            <%= bar_chart(@rs_kinds, title: "Resource Search: Kinds") %>
           </div>
 
           <div class="chart-card">
-            <%= column_chart(
-                  {
-                    "Keyword search" => scoped_events.where(name: "search.resources").count,
-                    "Kind filter" => scoped_events.where(name: "filter.resources").count,
-                    "View" => scoped_events.where(name: "view.resource").count,
-                    "Print" => scoped_events.where(name: "print.resource").count,
-                    "Download" => scoped_events.where(name: "download.resource").count
-                  },
-                  title: "Resource Discovery Funnel"
-                ) %>
+            <%= column_chart(@rs_funnel, title: "Resource Discovery Funnel") %>
           </div>
         </div>
       </section>
@@ -267,47 +136,15 @@
       <section class="space-y-10">
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: "browse.taggings")
-                    .pluck(Arel.sql("JSON_EXTRACT(properties, '$.sectors')"))
-                    .flat_map { |arr| JSON.parse(arr) rescue [] }
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(15)
-                    .to_h,
-                  title: "Tagging views: Sectors"
-                ) %>
+            <%= bar_chart(@tagging_sectors, title: "Tagging views: Sectors") %>
           </div>
 
           <div class="chart-card">
-            <%= bar_chart(
-                  scoped_events
-                    .where(name: "browse.taggings")
-                    .pluck(Arel.sql("JSON_EXTRACT(properties, '$.categories')"))
-                    .flat_map { |arr| JSON.parse(arr) rescue [] }
-                    .tally
-                    .sort_by { |_k, v| -v }
-                    .first(15)
-                    .to_h,
-                  title: "Tagging views: Categories"
-                ) %>
+            <%= bar_chart(@tagging_categories, title: "Tagging views: Categories") %>
           </div>
 
           <div class="chart-card">
-            <%= column_chart(
-                  {
-                    "Views" => scoped_events.where("name LIKE 'view.%'").count,
-                    "Prints" => scoped_events.where("name LIKE 'print.%'").count,
-                    "Downloads" => scoped_events.where("name LIKE 'download.%'").count,
-                    "Keyword searches" => scoped_events.where("name LIKE 'search.%'").count,
-                    "Checkbox filters" => scoped_events.where("name LIKE 'filter.%'").count,
-                    "Taggings" => scoped_events.where(name: "browse.taggings").count,
-                  },
-                  title: "User Discovery Funnel",
-                  # ytitle: "Number of Events",
-                  # xtitle: "User Actions"
-                ) %>
+            <%= column_chart(@discovery_funnel, title: "User Discovery Funnel") %>
           </div>
 
           <div class="chart-card">
@@ -353,14 +190,7 @@
       <section class="space-y-10">
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
       <div class="chart-card">
-        <%= pie_chart(
-                  {
-                    "Keyword searches" => scoped_events.where(name: "search.workshops").count,
-                    "Checkbox filters"  => scoped_events.where(name: "filter.workshops").count,
-                    "Tagging pages" => scoped_events.where(name: "browse.taggings").count,
-                  },
-                  title: "How Users Discover Content"
-                ) %>
+        <%= pie_chart(@content_discovery, title: "How Users Discover Content") %>
       </div>
 
       <div class="chart-card">

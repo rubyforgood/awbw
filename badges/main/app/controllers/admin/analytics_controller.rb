@@ -34,46 +34,49 @@ module Admin
       @zero_engagement_workshops = zero_engagement_for_model(Workshop, time_scope).limit(10).decorate
       @zero_engagement_resources = zero_engagement_for_model(Resource, time_scope).limit(10).decorate
 
+      # Single query to get all event counts grouped by name
+      all_counts = time_scope.call(Ahoy::Event.all).group(:name).count
+
       @summary = {
         workshops: {
-          views: view_count_for_model(Workshop, time_scope),
-          prints: print_count_for_model(Workshop, time_scope)
+          views: all_counts["view.workshop"] || 0,
+          prints: all_counts["print.workshop"] || 0
         },
         resources: {
-          views: view_count_for_model(Resource, time_scope),
-          prints: print_count_for_model(Resource, time_scope),
-          downloads: download_count_for_model(Resource, time_scope)
+          views: all_counts["view.resource"] || 0,
+          prints: all_counts["print.resource"] || 0,
+          downloads: all_counts["download.resource"] || 0
         },
         community_news: {
-          views: view_count_for_model(CommunityNews, time_scope),
-          prints: print_count_for_model(CommunityNews, time_scope)
+          views: all_counts["view.community_news"] || 0,
+          prints: all_counts["print.community_news"] || 0
         },
         stories: {
-          views: view_count_for_model(Story, time_scope),
-          prints: print_count_for_model(Story, time_scope)
+          views: all_counts["view.story"] || 0,
+          prints: all_counts["print.story"] || 0
         },
         events: {
-          views: view_count_for_model(Event, time_scope),
-          prints: print_count_for_model(Event, time_scope)
+          views: all_counts["view.event"] || 0,
+          prints: all_counts["print.event"] || 0
         },
         workshop_variations: {
-          views: view_count_for_model(WorkshopVariation, time_scope),
-          prints: print_count_for_model(WorkshopVariation, time_scope)
+          views: all_counts["view.workshop_variation"] || 0,
+          prints: all_counts["print.workshop_variation"] || 0
         },
         quotes: {
-          views: view_count_for_model(Quote, time_scope),
-          prints: print_count_for_model(Quote, time_scope)
+          views: all_counts["view.quote"] || 0,
+          prints: all_counts["print.quote"] || 0
         },
         tutorials: {
-          views: view_count_for_model(Tutorial, time_scope),
-          prints: print_count_for_model(Tutorial, time_scope)
+          views: all_counts["view.tutorial"] || 0,
+          prints: all_counts["print.tutorial"] || 0
         },
         organizations: {
-          views: view_count_for_model(Organization, time_scope),
-          prints: print_count_for_model(Organization, time_scope)
+          views: all_counts["view.organization"] || 0,
+          prints: all_counts["print.organization"] || 0
         },
         people: {
-          views: view_count_for_model(Person, time_scope)
+          views: all_counts["view.person"] || 0
         }
       }
     end
@@ -129,86 +132,39 @@ module Admin
     end
 
     def most_viewed_for_model(model_class, time_scope)
-      table_name_singular = model_class.table_name.singularize
-      event_name = "view.#{table_name_singular}"
-      # Get resource IDs with their view counts from Ahoy events
-      # Using JSON_EXTRACT for MySQL - escape the $ in the path
-      resource_ids_with_counts = Ahoy::Event
-        .where(name: event_name)
-        .then { |query| time_scope.call(query) }
-        .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
-        .count
-        .sort_by { |_id, count| -count }
-        .first(10)
-
-      # Fetch the actual records in the same order
-      record_ids = resource_ids_with_counts.map { |id, _count| id.to_i }
-      records = model_class.published.where(id: record_ids)
-      # Create a hash for O(1) lookup of counts
-      counts_by_id = resource_ids_with_counts.to_h { |id, count| [ id.to_i, count ] }
-      # Sort records to match the order from the view counts and attach view_count
-      id_positions = record_ids.each_with_index.to_h
-      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }.map do |record|
-        # Store the count before decoration
-        count = counts_by_id[record.id]
-        record.instance_variable_set(:@view_count, count)
-        record.define_singleton_method(:view_count) { @view_count }
-        record
-      end
+      top_records_by_event(model_class, "view", time_scope, :view_count)
     end
 
     def most_printed_for_model(model_class, time_scope)
-      table_name_singular = model_class.table_name.singularize
-      event_name = "print.#{table_name_singular}"
-      # Get resource IDs with their print counts from Ahoy events
-      resource_ids_with_counts = Ahoy::Event
-                                   .where(name: event_name)
-                                   .then { |query| time_scope.call(query) }
-                                   .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
-                                   .count
-                                   .sort_by { |_id, count| -count }
-                                   .first(10)
-
-      # Fetch the actual records in the same order
-      record_ids = resource_ids_with_counts.map { |id, _count| id.to_i }
-      records = model_class.published.where(id: record_ids)
-      # Create a hash for O(1) lookup of counts
-      counts_by_id = resource_ids_with_counts.to_h { |id, count| [ id.to_i, count ] }
-      # Sort records to match the order from the print counts and attach print_count
-      id_positions = record_ids.each_with_index.to_h
-      records.sort_by { |record| id_positions[record.id] || Float::INFINITY }.map do |record|
-        # Store the count before decoration
-        count = counts_by_id[record.id]
-        record.instance_variable_set(:@print_count, count)
-        record.define_singleton_method(:print_count) { @print_count }
-        record
-      end
+      top_records_by_event(model_class, "print", time_scope, :print_count)
     end
 
     def most_downloaded_for_model(model_class, time_scope)
-      table_name_singular = model_class.table_name.singularize
-      event_name = "download.#{table_name_singular}"
-      # Get resource IDs with their download counts from Ahoy events
-      resource_ids_with_counts = Ahoy::Event
-                                   .where(name: event_name)
-                                   .then { |query| time_scope.call(query) }
-                                   .group(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"))
-                                   .count
-                                   .sort_by { |_id, count| -count }
-                                   .first(10)
+      top_records_by_event(model_class, "download", time_scope, :download_count)
+    end
 
-      # Fetch the actual records in the same order
-      record_ids = resource_ids_with_counts.map { |id, _count| id.to_i }
+    # Pushes ORDER BY / LIMIT into SQL instead of sorting in Ruby
+    def top_records_by_event(model_class, action, time_scope, count_attr, limit = 10)
+      event_name = "#{action}.#{model_class.table_name.singularize}"
+      rid_sql = "JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"
+
+      rows = time_scope.call(Ahoy::Event.where(name: event_name))
+        .select(Arel.sql("#{rid_sql} AS rid, COUNT(*) AS cnt"))
+        .group(Arel.sql(rid_sql))
+        .order(Arel.sql("cnt DESC"))
+        .limit(limit)
+
+      resource_ids_with_counts = rows.map { |r| [ r.rid.to_i, r.cnt ] }
+      record_ids = resource_ids_with_counts.map(&:first)
+      counts_by_id = resource_ids_with_counts.to_h
+
       records = model_class.published.where(id: record_ids)
-      # Create a hash for O(1) lookup of counts
-      counts_by_id = resource_ids_with_counts.to_h { |id, count| [ id.to_i, count ] }
-      # Sort records to match the order from the download counts and attach download_count
       id_positions = record_ids.each_with_index.to_h
+
       records.sort_by { |record| id_positions[record.id] || Float::INFINITY }.map do |record|
-        # Store the count before decoration
         count = counts_by_id[record.id]
-        record.instance_variable_set(:@download_count, count)
-        record.define_singleton_method(:download_count) { @download_count }
+        record.instance_variable_set(:"@#{count_attr}", count)
+        record.define_singleton_method(count_attr) { instance_variable_get(:"@#{count_attr}") }
         record
       end
     end
@@ -228,24 +184,6 @@ module Admin
       time_scope.call(model_class.published)
         .where.not(id: viewed_ids)
         .order(created_at: :desc)
-    end
-
-    def view_count_for_model(model_class, time_scope)
-      table_name_singular = model_class.table_name.singularize
-      event_name = "view.#{table_name_singular}"
-      time_scope.call(Ahoy::Event.where(name: event_name)).count
-    end
-
-    def print_count_for_model(model_class, time_scope)
-      table_name_singular = model_class.table_name.singularize
-      event_name = "print.#{table_name_singular}"
-      time_scope.call(Ahoy::Event.where(name: event_name)).count
-    end
-
-    def download_count_for_model(model_class, time_scope)
-      table_name_singular = model_class.table_name.singularize
-      event_name = "download.#{table_name_singular}"
-      time_scope.call(Ahoy::Event.where(name: event_name)).count
     end
 
     # Helper to decorate records while preserving count methods
