@@ -10,7 +10,7 @@
 
 <% if category %>
   <%= link_to taggings_path(category_names_all: category.name),
-    data: {turbo_frame: "_top"},
+    data: { turbo_frame: "_top", category_name: category.name },
               class: "inline-flex items-center
                       rounded-md
                       border #{ DomainTheme.border_class_for(:categories) } hover:#{ DomainTheme.border_class_for(:categories, intensity: 500) }
