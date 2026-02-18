@@ -5,7 +5,7 @@
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
         <%= link_to "Community news", community_news_index_path, class: "btn btn-secondary-outline" %>
-        <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+        <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
         <%= link_to "External URL", safe_url(@community_news.reference_url), target: "_blank", rel: "noopener noreferrer",
                     class: "btn btn-secondary-outline" if @community_news.reference_url.present? %>
         <% if allowed_to?(:edit?, @community_news) %>
