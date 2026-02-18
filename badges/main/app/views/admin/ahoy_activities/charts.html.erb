@@ -1,75 +1,80 @@
-<style>
-  .chart-card { @apply bg-white rounded-xl shadow p-6; }
-</style>
-
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex items-start justify-between mb-12">
-        <h1 class="text-3xl font-bold text-gray-900">Activity Charts</h1>
-        <div class="flex justify-end">
-        <div class="flex justify-end">
-          <%= form_with url: admin_activities_charts_path, method: :get, local: true,
-                        class: "flex items-center gap-4" do %>
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-semibold text-gray-900">Activities</h1>
+        <%= form_with url: admin_activities_charts_path, method: :get, local: true,
+                      class: "flex items-center gap-4" do %>
 
-            <label class="text-sm font-medium text-gray-700">Audience:</label>
-            <%= select_tag :audience,
-                           options_for_select(
-                             [
-                               ["All", "all"],
-                               ["Visitors (anon)", "visitors"],
-                               ["Users", "users"],
-                               ["Admins (staff)", "staff"]
-                             ],
-                             params[:audience] || "all"
-                           ),
-                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
-                           onchange: "this.form.submit()" %>
+          <label class="text-sm font-medium text-gray-700">Audience:</label>
+          <%= select_tag :audience,
+                         options_for_select(
+                           [
+                             ["All", "all"],
+                             ["Visitors (anon)", "visitors"],
+                             ["Users", "users"],
+                             ["Admins (staff)", "staff"]
+                           ],
+                           params[:audience] || "all"
+                         ),
+                         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
+                         onchange: "this.form.submit()" %>
 
-            <label class="text-sm font-medium text-gray-700">Time period:</label>
-            <%= select_tag :time_period,
-                           options_for_select(
-                             [
-                               ['All time', 'all_time'],
-                               ['Past day', 'past_day'],
-                               ['Past week', 'past_week'],
-                               ['Past month', 'past_month'],
-                               ['Past year', 'past_year']
-                             ],
-                             params[:time_period] || 'all_time'
-                           ),
-                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
-                           onchange: "this.form.submit()" %>
-          <% end %>
-        </div>
+          <label class="text-sm font-medium text-gray-700">Time period:</label>
+          <%= select_tag :time_period,
+                         options_for_select(
+                           [
+                             ['All time', 'all_time'],
+                             ['Past day', 'past_day'],
+                             ['Past week', 'past_week'],
+                             ['Past month', 'past_month'],
+                             ['Past year', 'past_year']
+                           ],
+                           params[:time_period] || 'all_time'
+                         ),
+                         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
+                         onchange: "this.form.submit()" %>
+        <% end %>
       </div>
-      </div>
+
+      <%= render "admin/shared/activities_tabs" %>
 
       <%= render "admin/shared/active_filters_subheader" %>
 
-      <section class="space-y-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Visit patterns</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= column_chart scoped_visits.group_by_hour_of_day(:started_at, format: "%l %P").count,
+                               title: "Average visits by Hour" %>
+            </div>
 
-          <div class="chart-card">
-            <%= column_chart scoped_visits.group_by_hour_of_day(:started_at, format: "%l %P").count,
-                             title: "Average visits by Hour" %>
-          </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= column_chart scoped_visits.group_by_day_of_week(:started_at, format: "%A").count,
+                               title: "Average visits by Weekday" %>
+            </div>
 
-          <div class="chart-card">
-            <%= column_chart scoped_visits.group_by_day_of_week(:started_at, format: "%A").count,
-                             title: "Average visits by Weekday" %>
-          </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart scoped_visits.where.not(city: nil)
+                                         .group(:city)
+                                         .count.sort_by { |_c, v| -v }.first(10).to_h,
+                            title: "Top Cities" %>
+            </div>
 
-          <div class="chart-card">
-            <%= bar_chart scoped_visits.where.not(city: nil)
-                                       .group(:city)
-                                       .count.sort_by { |_c, v| -v }.first(10).to_h,
-                          title: "Top Cities" %>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= column_chart @session_duration_chart, title: "Session Duration" %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center">
+              <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @avg_events_per_visit %></div>
+              <div class="text-sm text-gray-500 mt-2">Avg events per visit</div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="space-y-10">
-        <div class="chart-card xl:col-span-3">
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <%= line_chart scoped_visits.group_by_day(:started_at).count,
                          xtitle: "Date", ytitle: "Visits",
                          height: "300px", width: "100%",
@@ -77,168 +82,239 @@
         </div>
       </section>
 
-      <section class="space-y-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-
-          <div class="chart-card">
-            <%= bar_chart(@ws_category_types, title: "Workshop Search: Category Types") %>
-          </div>
-
-          <div class="chart-card">
-            <%= bar_chart(@ws_category_names, title: "Workshop Search: Categories") %>
-          </div>
-
-          <div class="chart-card">
-            <%= bar_chart(@ws_sectors, title: "Workshop Search: Sectors") %>
-          </div>
-
-          <div class="chart-card">
-            <%= bar_chart(@ws_search_titles, title: "Workshop Search: Titles") %>
-          </div>
-
-          <div class="chart-card">
-            <%= bar_chart(@ws_search_authors, title: "Workshop Search: Authors") %>
-          </div>
-
-          <div class="chart-card">
-            <%= bar_chart(@ws_search_full_text, title: "Workshop Search: Full-Text") %>
-          </div>
-
-          <div class="chart-card">
-            <%= bar_chart(@ws_windows_types, title: "Workshop Search: Windows Types") %>
-          </div>
-
-          <div class="chart-card">
-            <%= bar_chart(@ws_zero_results, title: "Workshop Search: No Results") %>
-          </div>
-          <div class="chart-card">
-            <%= column_chart(@ws_funnel, title: "Workshop Discovery Funnel") %>
-          </div>
-        </div>
-      </section>
-
-      <section class="space-y-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          <div class="chart-card">
-            <%= bar_chart(@rs_keywords, title: "Resource Search: Keywords") %>
-          </div>
-
-          <div class="chart-card">
-            <%= bar_chart(@rs_kinds, title: "Resource Search: Kinds") %>
-          </div>
-
-          <div class="chart-card">
-            <%= column_chart(@rs_funnel, title: "Resource Discovery Funnel") %>
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Time-of-week heatmap</h2>
+          <% days = %w[Sun Mon Tue Wed Thu Fri Sat] %>
+          <% max_val = @heatmap_data.values.max.to_i %>
+          <% max_val = 1 if max_val == 0 %>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs border-collapse">
+              <thead>
+                <tr>
+                  <th class="p-1 text-right text-gray-500"></th>
+                  <% days.each do |d| %>
+                    <th class="p-1 text-center text-gray-500 font-medium"><%= d %></th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody>
+                <% (0..23).each do |hour| %>
+                  <tr>
+                    <td class="p-1 text-right text-gray-500 whitespace-nowrap font-mono"><%= "#{hour}:00" %></td>
+                    <% (1..7).each do |dow| %>
+                      <% val = @heatmap_data[[hour, dow]] || 0 %>
+                      <% opacity = (val.to_f / max_val).round(2) %>
+                      <td class="p-1 text-center rounded-sm"
+                          style="background-color: rgba(59, 130, 246, <%= opacity %>);"
+                          title="<%= days[dow - 1] %> <%= hour %>:00 — <%= val %> visits">
+                        <span class="<%= opacity > 0.5 ? 'text-white' : 'text-gray-700' %>">
+                          <%= val > 0 ? val : "" %>
+                        </span>
+                      </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
 
-      <section class="space-y-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          <div class="chart-card">
-            <%= bar_chart(@tagging_sectors, title: "Tagging views: Sectors") %>
-          </div>
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Workshop analytics</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@ws_category_types, title: "Workshop Search: Category Types") %>
+            </div>
 
-          <div class="chart-card">
-            <%= bar_chart(@tagging_categories, title: "Tagging views: Categories") %>
-          </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@ws_category_names, title: "Workshop Search: Categories") %>
+            </div>
 
-          <div class="chart-card">
-            <%= column_chart(@discovery_funnel, title: "User Discovery Funnel") %>
-          </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@ws_sectors, title: "Workshop Search: Sectors") %>
+            </div>
 
-          <div class="chart-card">
-            <%= line_chart @creation_velocity_data,
-                           height: "400px",
-                           points: true,        # 👈 THIS
-                           curve: false,
-                           library: {
-                             elements: {
-                               point: {
-                                 radius: 4,      # size of dots
-                                 hoverRadius: 6
-                               }
-                             },
-                             title: { text: "Content Creation Velocity by Type" },
-                             legend: { position: "top" },
-                             yAxis: { title: { text: "Items Created" } }
-                           } %>
-          </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@ws_search_titles, title: "Workshop Search: Titles") %>
+            </div>
 
-          <div class="chart-card">
-            <%= pie_chart(
-                  scoped_events
-                    .where("name LIKE 'view.%'")
-                    .group("SUBSTRING_INDEX(name, '.', -1)")
-                    .count,
-                  title: "Content Types People View Most"
-                ) %>
-          </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@ws_search_authors, title: "Workshop Search: Authors") %>
+            </div>
 
-          <div class="chart-card">
-            <%= pie_chart(
-                  scoped_events
-                    .where("name LIKE 'print.%'")
-                    .group("SUBSTRING_INDEX(name, '.', -1)")
-                    .count,
-                  title: "Content Types Printed Most"
-                ) %>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@ws_search_full_text, title: "Workshop Search: Full-Text") %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@ws_windows_types, title: "Workshop Search: Windows Types") %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@ws_zero_results, title: "Workshop Search: No Results") %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= column_chart(@ws_funnel, title: "Workshop Discovery Funnel") %>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="space-y-10">
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-      <div class="chart-card">
-        <%= pie_chart(@content_discovery, title: "How Users Discover Content") %>
-      </div>
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Resource analytics</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@rs_keywords, title: "Resource Search: Keywords") %>
+            </div>
 
-      <div class="chart-card">
-        <%= bar_chart scoped_visits.group([:referring_domain, :landing_page])
-                                   .count.sort_by { |_k, v| -v }.first(10).to_h,
-                      title: "Top Referrer → Landing Pages" %>
-      </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@rs_kinds, title: "Resource Search: Kinds") %>
+            </div>
 
-      <div class="chart-card">
-        <%= bar_chart scoped_visits.group(:landing_page)
-                                   .order("count_id DESC")
-                                   .limit(10)
-                                   .count(:id),
-                      title: "Top Landing Pages", height: "350px" %>
-      </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= column_chart(@rs_funnel, title: "Resource Discovery Funnel") %>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div class="chart-card">
-        <%= bar_chart(
-              scoped_events.group(:visit_id).count.sort_by { |_k, v| -v }.first(10)
-                           .map { |id, c| ["Visit #{id}", c] },
-              title: "Most Engaged Visits",
-              library: { indexAxis: "y" }
-            ) %>
-      </div>
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Content discovery</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@tagging_sectors, title: "Tagging views: Sectors") %>
+            </div>
 
-      <div class="chart-card">
-        <% single_page_visits = scoped_events.group(:visit_id).having("count(*) = 1").count %>
-        <%= pie_chart single_page_visits, title: "Single-Event Visits" %>
-      </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart(@tagging_categories, title: "Tagging views: Categories") %>
+            </div>
 
-      <div class="chart-card">
-        <%= pie_chart scoped_visits.group(:country).count,
-                      title: "Visits by Country" %>
-      </div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-      <div class="chart-card">
-        <%= pie_chart ({"Logged In" => scoped_visits.where.not(user_id: nil).count,
-                        "Anonymous" => scoped_visits.where(user_id: nil).count }),
-                      title: "Login status" %>
-      </div>
-      <div class="chart-card"><%= pie_chart scoped_visits.group(:device_type).count, title: "Device Type" %></div>
-      <div class="chart-card"><%= pie_chart scoped_visits.group(:utm_source).count, title: "UTM Sources" %></div>
-      <div class="chart-card"><%= pie_chart scoped_visits.group(:referring_domain).count, title: "Referring Domains" %></div>
-      <div class="chart-card"><%= pie_chart scoped_visits.group(:browser).count, title: "Browsers" %></div>
-      <div class="chart-card"><%= pie_chart scoped_visits.group(:visitor_token).having("count(*) = 1").count, title: "New Visitors" %></div>
-      <div class="chart-card"><%= pie_chart scoped_visits.group(:visitor_token).having("count(*) > 1").count, title: "Returning Visitors" %></div>
-    </div>
-  </section>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= column_chart(@discovery_funnel, title: "User Discovery Funnel") %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= pie_chart(
+                    scoped_events
+                      .where("name LIKE 'view.%'")
+                      .group("SUBSTRING_INDEX(name, '.', -1)")
+                      .count,
+                    title: "Content Types People View Most"
+                  ) %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= pie_chart(
+                    scoped_events
+                      .where("name LIKE 'print.%'")
+                      .group("SUBSTRING_INDEX(name, '.', -1)")
+                      .count,
+                    title: "Content Types Printed Most"
+                  ) %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= pie_chart(@content_discovery, title: "How Users Discover Content") %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= pie_chart(@search_conversion, title: "Search-to-View Conversion") %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= line_chart @user_signup_trend,
+                             title: "User Signup Trend",
+                             points: true %>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Referrals & engagement</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart scoped_visits.group([:referring_domain, :landing_page])
+                                         .count.sort_by { |_k, v| -v }.first(10).to_h,
+                            title: "Top Referrer → Landing Pages" %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart scoped_visits.group(:landing_page)
+                                         .order("count_id DESC")
+                                         .limit(10)
+                                         .count(:id),
+                            title: "Top Landing Pages", height: "350px" %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart @top_engaged_users,
+                            title: "Top Engaged Users",
+                            library: { indexAxis: "y" } %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= pie_chart @bounce_rate, title: "Bounce Rate" %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= pie_chart scoped_visits.group(:country).count,
+                            title: "Visits by Country" %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= bar_chart @top_exit_events, title: "Top Exit Events" %>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= line_chart @creation_velocity_data,
+                             title: "Content Creation Velocity by Type",
+                             height: "400px",
+                             points: true,
+                             curve: false,
+                             library: {
+                               elements: {
+                                 point: {
+                                   radius: 4,
+                                   hoverRadius: 6
+                                 }
+                               },
+                               legend: { position: "top" },
+                               yAxis: { title: { text: "Items Created" } }
+                             } %>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Geographic & technical</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= pie_chart ({"Logged In" => scoped_visits.where.not(user_id: nil).count,
+                              "Anonymous" => scoped_visits.where(user_id: nil).count }),
+                            title: "Login status" %>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6"><%= pie_chart scoped_visits.group(:device_type).count, title: "Device Type" %></div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6"><%= pie_chart scoped_visits.group(:utm_source).count, title: "UTM Sources" %></div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6"><%= pie_chart scoped_visits.group(:referring_domain).count, title: "Referring Domains" %></div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6"><%= pie_chart scoped_visits.group(:browser).count, title: "Browsers" %></div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <%= pie_chart({
+                    "New" => scoped_visits.group(:visitor_token).having("count(*) = 1").count.size,
+                    "Returning" => scoped_visits.group(:visitor_token).having("count(*) > 1").count.size
+                  }, title: "New vs Returning Visitors") %>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 </div>
