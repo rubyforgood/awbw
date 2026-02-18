@@ -16,21 +16,21 @@
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
         <%= form_with url: request.path, method: :get, local: true do %>
 
-          <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div class="flex flex-wrap lg:flex-nowrap gap-4">
 
             <!-- Event Name -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 Event Name
               </label>
               <%= text_field_tag :name,
                                  params[:name],
                                  placeholder: "e.g. Viewed Workshop",
-                                 class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
             <!-- User Filter -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 User
               </label>
@@ -42,11 +42,11 @@
                                params[:user_id]
                              ),
                              include_blank: "All Users",
-                             class: "w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                             class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
             </div>
 
             <!-- Audience -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 Audience
               </label>
@@ -59,7 +59,7 @@
             </div>
 
             <!-- Time Period -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 Time Period
               </label>
@@ -72,23 +72,23 @@
             </div>
 
             <!-- Date From -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 From
               </label>
               <%= date_field_tag :from,
                                  params[:from],
-                                 class: "w-full border-gray-300 rounded-md shadow-sm" %>
+                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
             </div>
 
             <!-- Date To -->
-            <div>
+            <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
                 To
               </label>
               <%= date_field_tag :to,
                                  params[:to],
-                                 class: "w-full border-gray-300 rounded-md shadow-sm" %>
+                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
             </div>
 
           </div>
