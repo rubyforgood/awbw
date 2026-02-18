@@ -11,7 +11,7 @@ RSpec.describe "/story_share", type: :request do
   let(:base_attributes) do
     {
       title: "Story #{SecureRandom.hex(4)}",
-      body: "Once upon a time...",
+      rhino_body: "<p>Once upon a time...</p>",
       windows_type_id: windows_type.id,
       workshop_id: workshop.id,
       organization_id: organization.id,

@@ -19,7 +19,7 @@
   <!-- Right: Utilities -->
   <div class="flex items-center gap-4">
     <%= link_to "Workshops", workshops_path, class: "btn btn-secondary-outline" %>
-    <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
     <% if allowed_to?(:edit?, workshop) %>
       <%= link_to "Edit",
                   edit_workshop_path(workshop),
@@ -30,4 +30,3 @@
 
   </div>
 </div>
-

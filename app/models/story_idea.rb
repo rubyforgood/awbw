@@ -16,6 +16,8 @@ class StoryIdea < ApplicationRecord
     "I do not want my name published with my story"
   ]
 
+  has_rich_text :rhino_body
+
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :organization
@@ -26,6 +28,7 @@ class StoryIdea < ApplicationRecord
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :stories
+
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
@@ -41,9 +44,9 @@ class StoryIdea < ApplicationRecord
   validates :updated_by_id, presence: true
   validates :organization_id, presence: true
   validates :windows_type_id, presence: true
-  validates :body, presence: true
   validates :permission_given, presence: true
   validates :publish_preferences, presence: true
+  validates :rhino_body, presence: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank

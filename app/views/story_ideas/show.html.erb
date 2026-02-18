@@ -11,7 +11,7 @@
           <% if allowed_to?(:index?, StoryIdea) %>
             <%= link_to("StoryIdeas", story_ideas_path, class: "btn btn-secondary-outline") %>
           <% end %>
-          <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+          <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
           <% if allowed_to?(:edit?, @story_idea) %>
             <%= link_to("Edit", edit_story_idea_path(@story_idea), class: "btn btn-primary-outline") %>
           <% end %>
@@ -38,8 +38,8 @@
         <%= render "assets/display_assets", resource: @story_idea %>
 
         <!-- Story Body -->
-        <div class="prose prose-lg max-w-none text-gray-700 mb-10">
-          <%= simple_format(@story_idea.body) %>
+        <div class="mb-10">
+          <%= @story_idea.rhino_body %>
         </div>
       </div>
 </div>

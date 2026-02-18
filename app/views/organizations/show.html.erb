@@ -12,7 +12,7 @@
     <div class="p-8">
     <!-- Header actions -->
     <div class="flex flex-wrap justify-end gap-2 mb-4">
-      <%= link_to "Dashboard", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       <%= link_to "Organizations", organizations_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       <% if allowed_to?(:edit?, @organization) %>
         <%= link_to "Edit", edit_organization_path(@organization),
