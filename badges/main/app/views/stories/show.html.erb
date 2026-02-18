@@ -8,7 +8,7 @@
         <%= link_to "External URL", safe_url(@story.external_url), target: "_blank", rel: "noopener noreferrer",
                     class: "btn btn-secondary-outline" if @story.external_url.present? %>
         <%= link_to "Stories", stories_path, class: "btn btn-secondary-outline" %>
-        <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+        <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
         <% if allowed_to?(:edit?, @story) %>
           <%= link_to "Edit", edit_story_path(@story),
                       class: "btn btn-secondary-outline admin-only bg-blue-100" %>
@@ -60,7 +60,7 @@
         </div>
 
         <!-- Story Body Text -->
-        <div class="prose prose-lg max-w-none text-gray-700 mb-10">
+        <div class="mb-10">
           <%= @story.rhino_body %>
         </div>
 

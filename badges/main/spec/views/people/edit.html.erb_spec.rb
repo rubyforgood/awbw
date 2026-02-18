@@ -33,7 +33,7 @@ RSpec.describe "people/edit", type: :view do
   end
 
   it "has a link to the dashboard" do
-    expect(rendered).to have_link('Dashboard', href: root_path)
+    expect(rendered).to have_link('Home', href: root_path)
   end
 
   context "when person has an associated user" do

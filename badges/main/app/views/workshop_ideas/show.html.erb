@@ -11,7 +11,7 @@
           <% if allowed_to?(:index?, WorkshopIdea) %>
             <%= link_to("WorkshopIdeas", workshop_ideas_path, class: "btn btn-secondary-outline") %>
           <% end %>
-          <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+          <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
           <% if allowed_to?(:edit?, @workshop_idea) %>
             <%= link_to("Edit", edit_workshop_idea_path(@workshop_idea), class: "btn btn-primary-outline") %>
           <% end %>

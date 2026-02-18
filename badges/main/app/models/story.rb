@@ -1,6 +1,8 @@
 class Story < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
+  has_rich_text :rhino_body
+
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
@@ -26,13 +28,12 @@ class Story < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
-  has_rich_text :rhino_body
-
   # Validations
   validates :windows_type_id, presence: true
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
   validates :title, presence: true, uniqueness: true
+  validates :rhino_body, presence: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank

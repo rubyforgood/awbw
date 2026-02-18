@@ -13,7 +13,7 @@ RSpec.describe "/story_ideas", type: :request do
   let(:valid_attributes) do
     {
       title: "The Future of Festivals",
-      body: "An exploration of how technology transforms community events.",
+      rhino_body: "<p>An exploration of how technology transforms community events.</p>",
       publish_preferences: "I would like my full name published",
       permission_given: true,
       windows_type_id: windows_type.id,
@@ -27,7 +27,7 @@ RSpec.describe "/story_ideas", type: :request do
   let(:invalid_attributes) do
     {
       title: nil,                   # title is required
-      body: "",                     # body cannot be blank
+      rhino_body: "",                     # body cannot be blank
       publish_preferences: nil,     # missing preference
       created_by_id: nil            # missing creator
     }

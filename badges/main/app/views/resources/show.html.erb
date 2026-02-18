@@ -3,7 +3,7 @@
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
         <%= link_to "Resources", resources_path, class: "btn btn-secondary-outline" %>
-        <%= link_to "Dashboard", root_path, class: "btn btn-secondary-outline" %>
+        <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
         <%= link_to "External URL", safe_url(@resource.url), target: "_blank", rel: "noopener noreferrer",
                     class: "btn btn-secondary-outline" if @resource.url.present? %>
         <% if allowed_to?(:edit?, @resource) %>
