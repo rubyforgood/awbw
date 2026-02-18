@@ -118,7 +118,7 @@ module Admin
       ws_categories_raw = events
         .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.categories')"))
-        .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
 
       @ws_category_types = ws_categories_raw
         .map { |c| c["type"] }.compact.tally
@@ -132,7 +132,7 @@ module Admin
       @ws_sectors = events
         .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.sectors')"))
-        .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
         .map { |s| s["name"] }.compact.tally
         .sort_by { |_k, v| -v }.first(10).to_h
 
@@ -158,7 +158,7 @@ module Admin
       wt_ids = events
         .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.windows_types')"))
-        .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
       wt_names = WindowsType.where(id: wt_ids.uniq).pluck(:id, :short_name).to_h
       @ws_windows_types = wt_ids
         .map { |id| wt_names[id] }.compact.tally
@@ -219,12 +219,12 @@ module Admin
 
       @tagging_sectors = tagging_events
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.sectors')"))
-        .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
         .tally.sort_by { |_k, v| -v }.first(15).to_h
 
       @tagging_categories = tagging_events
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.categories')"))
-        .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
         .tally.sort_by { |_k, v| -v }.first(15).to_h
 
       # User discovery funnel - batch with LIKE patterns
@@ -384,6 +384,12 @@ module Admin
       else
         nil # all_time
       end
+    end
+
+    def safe_json_parse(json)
+      JSON.parse(json)
+    rescue JSON::ParserError, TypeError
+      []
     end
 
     def tracked_activity_conditions(scope)
