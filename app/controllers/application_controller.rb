@@ -66,7 +66,12 @@ class ApplicationController < ActionController::Base
   end
 
   def preload_current_user_associations
-    return unless current_user&.person
+    return unless current_user
+
+    # Preload bookmarks so bookmark_for uses in-memory lookup instead of N+1 queries
+    current_user.bookmarks.load
+
+    return unless current_user.person
     @current_user_active_affiliations = current_user.person
                                                   .affiliations
                                                   .active
