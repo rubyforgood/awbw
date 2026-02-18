@@ -190,15 +190,17 @@
       </div>
     <% end %>
 
-    <%= f.input :organization_status_id,
-                as: :select,
-                collection: @organization_statuses,
-                include_blank: true,
-                label: "Status",
-                required: true,
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
+    <% if params[:admin] && allowed_to?(:manage?, Organization) %>
+      <%= f.input :organization_status_id,
+                  as: :select,
+                  collection: @organization_statuses,
+                  include_blank: true,
+                  label: "Status",
+                  required: true,
+                  input_html: {
+                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  } %>
+    <% end %>
   </div>
   <% if params[:admin] && allowed_to?(:manage?, Organization) %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
