@@ -38,7 +38,8 @@ module DomainTheme
     seasoned_facilitator:     :sky,
     new_facilitator:          :green,
     spotlighted_facilitator:  :pink,
-    blog_contributor:         :orange
+    blog_contributor:         :orange,
+    affiliated_person:        :slate
   }
 
   def self.color_for(key)

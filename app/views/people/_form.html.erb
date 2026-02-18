@@ -12,8 +12,50 @@
       <div class="space-y-6">
         <div class="flex flex-col md:flex-row gap-4"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronouns %></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+        <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
+        <% decorated = person.decorate %>
+        <div class="flex flex-col md:flex-row gap-6">
+          <div class="shrink-0" title="Earliest start date from any affiliation, regardless of title. Edit affiliation records to change this date.">
+            <label class="block text-md font-medium text-gray-700 mb-1">Affiliated (any title)</label>
+            <div class="pt-1">
+              <% if decorated.affiliated_end_date %>
+                <i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i>
+              <% end %>
+              <span class="text-gray-900 font-medium"><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliated_end_date.strftime('%b %Y')}" if decorated.affiliated_end_date %></span>
+              <% if decorated.member_since_earlier_than_all_affiliations? %>
+                <p class="text-xs text-amber-700 mt-1"
+                   title="Member since (<%= person.member_since.strftime('%B %Y') %>) is earlier than any affiliation. Create an affiliation with that start date to reflect it on the profile.">
+                  ⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %>
+                </p>
+              <% elsif decorated.member_since_differs_from_all_affiliations? %>
+                <p class="text-xs text-gray-500 mt-1"
+                   title="Member since stored as <%= person.member_since.strftime('%B %Y') %>, which differs from the earliest affiliation start date.">
+                  <i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %>
+                </p>
+              <% end %>
+            </div>
+          </div>
+          <div class="shrink-0" title="Earliest start date from affiliations with 'Facilitator' in the title. Edit affiliation records to change this date.">
+            <label class="block text-md font-medium text-gray-700 mb-1">Facilitator</label>
+            <div class="pt-1">
+              <% if decorated.facilitator_end_date %>
+                <i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i>
+              <% end %>
+              <span class="text-gray-900 font-medium"><%= decorated.facilitator_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.facilitator_end_date.strftime('%b %Y')}" if decorated.facilitator_end_date %></span>
+              <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
+                <p class="text-xs text-amber-700 mt-1"
+                   title="Member since (<%= person.member_since.strftime('%B %Y') %>) is earlier than any Facilitator affiliation. Create an affiliation with that start date to reflect it on the profile.">
+                  ⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %>
+                </p>
+              <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
+                <p class="text-xs text-gray-500 mt-1"
+                   title="Member since stored as <%= person.member_since.strftime('%B %Y') %>, which differs from the earliest Facilitator affiliation start date.">
+                  <i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %>
+                </p>
+              <% end %>
+            </div>
+          </div>
+          <div class="flex-1">
             <%= f.input :date_of_birth,
                         as: :date,
                         discard_year: true,
@@ -26,32 +68,27 @@
                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                         } %>
           </div>
-
-          <div>
-            <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
-              <%= f.input :member_since,
-                          as: :date,
-                          discard_day: true,
-                          start_year: 1991,
-                          end_year: Time.current.year,
-                          prompt: { month: "Select Month", year: "Select Year" },
-                          order: [:month, :year],
-                          label: "Affiliated since",
-                          hint: "Pick January if you only know the year",
-                          wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
-                          label_html: { class: "w-full" },
-                          hint_html: { class: "w-full" },
-                          input_html: {
-                            class: "flex-1 rounded-md border-gray-300 shadow-sm admin-only bg-blue-100 border-blue-200
-                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                          } %>
-            <% else %>
-              <label class="block text-md font-medium text-gray-700 mb-1">Affiliated since</label>
-              <span class="text-gray-900 font-medium"><%= f.object.member_since&.to_date&.strftime("%B %Y") || "—" %></span>
-              <p class="text-xs text-amber-700 mt-1">Auto-managed by affiliations</p>
-            <% end %>
-          </div>
         </div>
+        <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
+          <div class="admin-only bg-blue-100 rounded-lg p-4">
+            <%= f.input :member_since,
+                        as: :date,
+                        discard_day: true,
+                        start_year: 1991,
+                        end_year: Time.current.year,
+                        prompt: { month: "Select Month", year: "Select Year" },
+                        order: [:month, :year],
+                        label: "Member since (override)",
+                        hint: "Pick January if you only know the year",
+                        wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
+                        label_html: { class: "w-full" },
+                        hint_html: { class: "w-full" },
+                        input_html: {
+                          class: "flex-1 rounded-md border-gray-300 shadow-sm admin-only bg-blue-100 border-blue-200
+                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        } %>
+          </div>
+        <% end %>
       </div>
     </div>
 
