@@ -8,7 +8,7 @@ RSpec.describe "workshop_variations/show", type: :view do
   let(:workshop_variation) { create(:workshop_variation,
                                     workshop: workshop,
                                     created_by: user,
-                                    name: "MyName", body: "MyDescription",
+                                    name: "MyName", rhino_body: "<p>MyDescription</p>",
                                     youtube_url: youtube_url,
                                     published: published) }
 
@@ -20,7 +20,7 @@ RSpec.describe "workshop_variations/show", type: :view do
   it "renders attributes" do
     render
     expect(rendered).to include(workshop_variation.name)
-    expect(rendered).to include(workshop_variation.body)
+    expect(rendered).to include(workshop_variation.rhino_body.body.to_s)
     expect(rendered).to include(workshop.title)
     expect(rendered).to include(user.name)
   end

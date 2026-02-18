@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :workshop_variation_idea do
     sequence(:name) { |n| "Workshop Variation Idea #{n}" }
-    body { "This is a variation idea description" }
+    rhino_body { "<p>This is a variation idea description</p>" }
     youtube_url { "https://www.youtube.com/watch?v=example" }
     permission_given { true }
     publish_preferences { "public" }
