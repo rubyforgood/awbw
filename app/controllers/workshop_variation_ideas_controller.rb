@@ -49,10 +49,12 @@ class WorkshopVariationIdeasController < ApplicationController
         notification_type: 0)
 
       flash[:notice] = "Workshop variation idea was successfully created."
-      if allowed_to?(:index?, WorkshopVariationIdea)
-        redirect_to workshop_variation_ideas_path
+      if params[:from] == "workshop_show" && @workshop_variation_idea.workshop.present?
+        redirect_to workshop_path(@workshop_variation_idea.workshop, anchor: "workshopVariations") and return
+      elsif allowed_to?(:index?, WorkshopVariationIdea)
+        redirect_to workshop_variation_ideas_path and return
       else
-        redirect_to root_path
+        redirect_to root_path and return
       end
     else
       set_form_variables
