@@ -19,7 +19,7 @@ run = "bundle exec rspec"
 
 [tasks.docker-up]
 description = "Start Docker containers for development"
-run = "docker compose up -d"
+run = "docker compose up --build -d"
 
 [tasks.docker-down]
 description = "Stop Docker containers"
