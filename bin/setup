@@ -51,7 +51,7 @@ FileUtils.chdir APP_ROOT do
 
   if File.exist?("package.json")
     puts "\n== Installing npm packages =="
-    system!("npm install")
+    system!("npm ci")
   end
 
   puts "\n== Preparing database =="
