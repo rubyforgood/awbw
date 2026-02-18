@@ -1,4 +1,6 @@
-<% user = activity.event.user || User.where(id: activity.event.properties["user_id"]).last %>
+<% user = activity.event.user %>
+<% decorated_activity = activity.decorate %>
+<% display_resource = activity.object || user %>
 
 <div
   class="
@@ -30,8 +32,8 @@
   <div class="w-20 bg-white flex items-top justify-center pt-3">
     <!-- Assets -->
     <%= render "assets/display_image",
-               resource: activity.object || user,
-               file: (activity.object || user).decorate.display_image,
+               resource: display_resource,
+               file: display_resource.decorate.display_image,
                link_to_object: true,
                icon_display: activity.object.is_a?(Resource),
                width: 20, height: 16 if activity.object || (user && activity.event.name.include?("auth")) %>
@@ -49,8 +51,8 @@
       <% detail = "" %>
     <% else %>
       <% path = polymorphic_path(activity) %>
-      <% title = activity.decorate.title %>
-      <% detail = activity.decorate.detail %>
+      <% title = decorated_activity.title %>
+      <% detail = decorated_activity.detail %>
     <% end %>
 
     <%= link_to path, class: "hover:underline" do %>
@@ -66,7 +68,7 @@
       </p>
 
       <div class="flex justify-end mt-4 space-x-2">
-        <% if activity.object.is_a?(Resource) && activity.decorate.downloadable_asset&.file&.attached? %>
+        <% if activity.object.is_a?(Resource) && decorated_activity.downloadable_asset&.file&.attached? %>
           <%= link_to raw("<span class='fa fa-download'></span>"),
                       resource_download_path(activity),
                       data: { turbo_prefetch: false },

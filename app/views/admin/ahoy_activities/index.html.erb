@@ -34,7 +34,7 @@
               </label>
               <%= select_tag :user_id,
                              options_from_collection_for_select(
-                               User.order(:first_name, :last_name),
+                               User.where(id: Ahoy::Visit.select(:user_id).distinct).order(:first_name, :last_name),
                                :id,
                                :full_name,
                                params[:user_id]
