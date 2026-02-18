@@ -1,10 +1,21 @@
-<% comment_user = f.object.updated_by || f.object.created_by %>
-<% initials = if comment_user&.person
-                "#{comment_user.person.first_name.first}#{comment_user.person.last_name.first}".upcase
-              elsif comment_user
-                comment_user.name.to_s.split.map(&:first).join.upcase.presence
-              end %>
-<% author_name = comment_user&.person&.full_name || comment_user&.name %>
+<% created_user = f.object.created_by %>
+<% updated_user = f.object.updated_by %>
+<% created_initials = if created_user&.person
+                        "#{created_user.person.first_name.first}#{created_user.person.last_name.first}".upcase
+                      elsif created_user
+                        created_user.name.to_s.split.map(&:first).join.upcase.presence
+                      end %>
+<% created_name = created_user&.person&.full_name || created_user&.name %>
+<% created_first_name = created_user&.person&.first_name || created_user&.name.to_s.split.first %>
+<% show_updated = updated_user.present? && updated_user != created_user %>
+<% if show_updated %>
+  <% updated_initials = if updated_user.person
+                           "#{updated_user.person.first_name.first}#{updated_user.person.last_name.first}".upcase
+                         else
+                           updated_user.name.to_s.split.map(&:first).join.upcase.presence
+                         end %>
+  <% updated_name = updated_user.person&.full_name || updated_user.name %>
+<% end %>
 <% label_colors = [
   ["bg-blue-100", "text-blue-800"],
   ["bg-green-100", "text-green-800"],
@@ -15,51 +26,66 @@
   ["bg-yellow-200", "text-yellow-800"],
   ["bg-red-100", "text-red-800"]
 ] %>
-<% user_color = label_colors[(comment_user&.id || 0) % label_colors.length] %>
+<% created_color = label_colors[(created_user&.id || 0) % label_colors.length] %>
+<% updated_color = show_updated ? label_colors[(updated_user.id || 0) % label_colors.length] : nil %>
 <% current_color = label_colors[(current_user&.id || 0) % label_colors.length] %>
 <div class="nested-fields" data-paginated-fields-target="item">
   <% if f.object.persisted? %>
-    <div class="comment-view grid grid-cols-[auto_1fr] gap-x-3 items-start mb-3">
-      <span class="text-xs text-gray-400 mt-1 whitespace-nowrap">
+    <div class="comment-view flex items-center mb-3 pl-4 gap-x-1">
+      <span class="text-xs text-gray-400 whitespace-nowrap shrink-0">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
-        <% if initials.present? %>
-          <span class="<%= user_color[0] %> <%= user_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= author_name %>"><%= initials %></span>
+      </span>
+      <span class="inline-flex items-center gap-x-1 w-20 shrink-0">
+        <% if show_updated %>
+          <% if created_initials.present? %>
+            <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= created_name %>"><%= created_initials %></span>
+          <% end %>
+          <span class="<%= updated_color[0] %> <%= updated_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="Edited by <%= updated_name %>"><%= updated_initials %></span>
+        <% else %>
+          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.to_s, length: 10, omission: "..") %></span>
         <% end %>
       </span>
-      <div class="text-sm text-gray-900 comment-body" title="<%= f.object.body %>">
+      <span class="text-sm text-gray-900 comment-body truncate" title="<%= f.object.body %>">
         <%= truncate(f.object.body, length: 135) %>
+      </span>
+    </div>
+    <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1" style="display:none">
+      <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
+        <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
+      </span>
+      <span class="inline-flex items-center gap-x-1 w-20 shrink-0 mt-2">
+        <% if show_updated %>
+          <% if created_initials.present? %>
+            <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= created_name %>"><%= created_initials %></span>
+          <% end %>
+          <span class="<%= updated_color[0] %> <%= updated_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="Edited by <%= updated_name %>"><%= updated_initials %></span>
+        <% else %>
+          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.to_s, length: 10, omission: "..") %></span>
+        <% end %>
+      </span>
+      <div class="grow">
+        <%= f.input :body,
+                    label: false,
+                    as: :text,
+                    input_html: { rows: 1, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm" } %>
       </div>
     </div>
-    <div class="comment-edit grid grid-cols-[auto_1fr] gap-x-3 items-start mb-1" style="display:none">
-      <span class="text-xs text-gray-400 mt-2 whitespace-nowrap">
-        <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
-        <% if initials.present? %>
-          <span class="<%= user_color[0] %> <%= user_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= author_name %>"><%= initials %></span>
-        <% end %>
-      </span>
-      <%= f.input :body,
-                  label: false,
-                  as: :text,
-                  input_html: { rows: 1, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm" } %>
-    </div>
   <% else %>
-    <% current_initials = if current_user&.person
-                            "#{current_user.person.first_name.first}#{current_user.person.last_name.first}".upcase
-                          elsif current_user
-                            current_user.name.to_s.split.map(&:first).join.upcase
-                          end %>
-    <div class="grid grid-cols-[auto_1fr] gap-x-3 items-start mb-3 px-4">
-      <span class="text-xs text-gray-400 mt-1 whitespace-nowrap">
+    <% current_first_name = current_user&.person&.first_name || current_user&.name.to_s.split.first %>
+    <div class="flex items-start mb-3 px-4 gap-x-1">
+      <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= Time.current.strftime("%-m/%-d/%Y %-I:%M %p") %>
-        <% if current_initials.present? %>
-          <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= current_user&.person&.full_name || current_user&.name %>"><%= current_initials %></span>
-        <% end %>
       </span>
-      <%= f.input :body,
-                  label: false,
-                  as: :text,
-                  placeholder: "Add a comment...",
-                  input_html: { rows: 2, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" } %>
+      <span class="inline-flex items-center w-20 shrink-0 mt-2">
+        <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= current_user&.person&.full_name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
+      </span>
+      <div class="grow">
+        <%= f.input :body,
+                    label: false,
+                    as: :text,
+                    placeholder: "Add a comment...",
+                    input_html: { rows: 2, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" } %>
+      </div>
     </div>
   <% end %>
 </div>
