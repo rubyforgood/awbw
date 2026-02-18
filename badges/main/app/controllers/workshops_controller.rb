@@ -179,7 +179,7 @@ class WorkshopsController < ApplicationController
   def set_show
     @quotes = Quote.where(workshop_id: @workshop.id).published
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
-    @workshop_variations = @workshop.workshop_variations.published
+    @workshop_variations = authorized_scope(@workshop.workshop_variations, type: :relation, as: :default, with: WorkshopVariationPolicy)
     @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
     @mentions = @workshop.all_mentions_grouped
   end

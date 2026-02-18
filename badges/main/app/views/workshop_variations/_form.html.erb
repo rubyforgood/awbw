@@ -61,11 +61,7 @@
       <% if allowed_to?(:manage?, WorkshopVariation) %>
         <div class="flex items-start gap-6 admin-only bg-blue-100 p-4 rounded-lg">
           <%= f.input :published, as: :boolean, input_html: { checked: f.object.id ? f.object.published? : false } %>
-          <div>
-            Publicly visible: <%= (f.object.workshop&.publicly_visible? && f.object.workshop&.published?).to_s %>
-            <br>
-            (based on workshop's 'Publicly visible` status, and Published)
-          </div>
+          <%= f.input :publicly_visible, as: :boolean, input_html: { checked: f.object.id ? f.object.publicly_visible? : false } %>
           <%= f.input :position, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
 
           <%= f.input :created_by_id,

@@ -13,7 +13,7 @@ class WorkshopVariation < ApplicationRecord
 
   has_rich_text :rhino_body
 
-  belongs_to :workshop
+  belongs_to :workshop, optional: true
   belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :created_by, class_name: "User", optional: true
@@ -40,8 +40,6 @@ class WorkshopVariation < ApplicationRecord
 
   # Scopes
   # See Publishable, Trendable
-  scope :publicly_visible, -> { joins(:workshop).where("workshops.publicly_visible = ?", true)
-                                                .published } # overrides Publishable
 
   def description
     body
