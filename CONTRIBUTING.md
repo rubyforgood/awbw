@@ -69,6 +69,8 @@ For Docker-based development (recommended):
 5. Visit <http://localhost:3000/> to see the AWBW portal page
 6. Log in as a sample user with the default [credentials](#credentials)
 
+**Note:** It's not currently possible to run system tests via Docker, so they are excluded when you run `mise docker-spec`.
+
 ### Database encoding
 
 Different schema encodings on Mac vs Linux (utf8mb4 vs utf8) were causing merge challenges in schema.rb.
