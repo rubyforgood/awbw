@@ -8,7 +8,7 @@
       <% records.each do |record| %>
         <li class="py-1 flex justify-between items-center">
           <%= link_to record.title, public_send(path_method, record),
-                      class: "text-blue-600 hover:underline truncate" %>
+                      class: "text-gray-800 hover:underline truncate" %>
 
           <span class="text-sm text-gray-600 font-mono">
           <%= record.public_send(metric) %>

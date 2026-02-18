@@ -10,7 +10,7 @@
           <li>
             <%= link_to "#{record.created_at.strftime('%Y-%m-%d')}: #{record.title}",
                         public_send(path_method, record),
-                        class: "text-blue-600 hover:underline" %>
+                        class: "text-gray-800 hover:underline" %>
           </li>
         <% end %>
       </ul>
