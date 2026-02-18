@@ -1,5 +1,4 @@
-<% content_for(:page_bg_class, "admin-or-owner") %>
-<div class="admin-or-owner <%#= DomainTheme.bg_class_for(:organizations) %> border border-gray-200 rounded-xl shadow overflow-hidden">
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
     <!-- Organization header banner -->
     <div class="<%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:organizations, intensity: 300) %> px-8 py-3">
       <div class="flex items-center gap-2">
@@ -52,11 +51,34 @@
             <%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
           </p>
         <% end %>
-        <% if @organization.start_date.present? %>
-          <p class="mt-1 text-gray-500 text-sm">
-            Affiliated since
-            <span class="font-medium"><%= @organization.start_date.year %></span>
-          </p>
+        <% org_earliest_affiliation = @organization.affiliations.minimum(:start_date) %>
+        <% org_affiliated_since = org_earliest_affiliation || @organization.start_date %>
+        <% org_show_aff_ended = @organization.affiliations.any? && !@organization.affiliations.active.exists? %>
+        <% org_show_end_date = org_show_aff_ended ? @organization.affiliations.maximum(:end_date) : @organization.end_date %>
+        <% if org_affiliated_since.present? %>
+          <div class="relative group cursor-help inline-block mt-1">
+            <p class="text-gray-500 text-sm">
+              <% if org_show_aff_ended || org_show_end_date.present? %>
+                <i class="fa-solid fa-circle-xmark text-red-400 mr-1"></i>
+              <% end %>
+              Affiliated since
+              <span class="font-medium"><%= org_affiliated_since.strftime("%b %Y") %><%= " – #{org_show_end_date.strftime('%b %Y')}" if org_show_end_date.present? %></span>
+              <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
+            </p>
+            <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
+              <% if org_earliest_affiliation.present? %>
+                <p>Earliest start date from affiliation records.</p>
+                <% if @organization.start_date.present? && @organization.start_date.beginning_of_month != org_earliest_affiliation.beginning_of_month %>
+                  <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Organization start_date (<%= @organization.start_date.strftime('%b %Y') %>) differs from earliest affiliation.</p>
+                <% end %>
+              <% else %>
+                <p>Using organization start_date.<br><br><span class="text-amber-700 font-medium">⚠ No affiliations have a start date. Add a start date to an affiliation to use it here instead.</span></p>
+              <% end %>
+              <% if org_show_aff_ended %>
+                <p class="mt-2 text-amber-700 font-medium">⚠ All affiliations have ended.</p>
+              <% end %>
+            </div>
+          </div>
         <% end %>
         <!-- Contact info -->
         <div class="mt-3 flex flex-wrap justify-center md:justify-start items-center gap-x-4 gap-y-2 text-sm">
