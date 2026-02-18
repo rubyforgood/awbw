@@ -42,7 +42,7 @@
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
                 <% affiliated_since = @affiliated_since[organization.id] || organization.start_date %>
-                <%= affiliated_since&.year %>
+                <%= affiliated_since&.strftime('%b %Y') %>
               </td>
 
               <td class="px-4 py-2 text-center text-sm">
