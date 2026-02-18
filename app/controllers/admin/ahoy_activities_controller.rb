@@ -116,7 +116,7 @@ module Admin
 
       # Workshop filter/search categories - pluck once, reuse for both type and name charts
       ws_categories_raw = events
-        .where(name: ["filter.workshops", "search.workshops"])
+        .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.categories')"))
         .flat_map { |arr| JSON.parse(arr) rescue [] }
 
@@ -130,7 +130,7 @@ module Admin
 
       # Workshop filter/search sectors
       @ws_sectors = events
-        .where(name: ["filter.workshops", "search.workshops"])
+        .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.sectors')"))
         .flat_map { |arr| JSON.parse(arr) rescue [] }
         .map { |s| s["name"] }.compact.tally
@@ -156,7 +156,7 @@ module Admin
 
       # Windows types - batch lookup
       wt_ids = events
-        .where(name: ["filter.workshops", "search.workshops"])
+        .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.windows_types')"))
         .flat_map { |arr| JSON.parse(arr) rescue [] }
       wt_names = WindowsType.where(id: wt_ids.uniq).pluck(:id, :short_name).to_h

@@ -131,7 +131,7 @@ class WorkshopLogsController < ApplicationController
       Arel.sql("COALESCE(SUM(children_first_time),0)"),
       Arel.sql("COALESCE(SUM(teens_first_time),0)"),
       Arel.sql("COALESCE(SUM(adults_first_time),0)")
-    ) || [0, 0, 0, 0, 0, 0]
+    ) || [ 0, 0, 0, 0, 0, 0 ]
   end
 
   private

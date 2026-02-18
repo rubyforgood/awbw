@@ -154,7 +154,7 @@ module Admin
         .order(Arel.sql("cnt DESC"))
         .limit(limit)
 
-      resource_ids_with_counts = rows.map { |r| [r.rid.to_i, r.cnt] }
+      resource_ids_with_counts = rows.map { |r| [ r.rid.to_i, r.cnt ] }
       record_ids = resource_ids_with_counts.map(&:first)
       counts_by_id = resource_ids_with_counts.to_h
 

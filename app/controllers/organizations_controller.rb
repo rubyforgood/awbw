@@ -59,7 +59,7 @@ class OrganizationsController < ApplicationController
       Arel.sql("COALESCE(SUM(children_first_time),0)"),
       Arel.sql("COALESCE(SUM(teens_first_time),0)"),
       Arel.sql("COALESCE(SUM(adults_first_time),0)")
-    ) || [0, 0, 0, 0, 0, 0]
+    ) || [ 0, 0, 0, 0, 0, 0 ]
 
     # Cache filter options to avoid duplicate queries
     logged_workshop_ids = workshop_logs.where.not(workshop_id: nil).distinct.pluck(:workshop_id)
