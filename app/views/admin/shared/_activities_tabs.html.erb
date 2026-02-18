@@ -1,11 +1,11 @@
-<ul class="flex border-b border-gray-300 mb-6">
-  <li class="-mb-px mr-1">
-    <%= link_to "Charts", admin_activities_charts_path,
-        class: "inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors duration-200 #{current_page?(admin_activities_charts_path) ? 'is-active' : ''}" %>
-  </li>
+<ul class="flex border-b border-gray-300 mt-4 mb-8">
   <li class="-mb-px mr-1">
     <%= link_to "Counts", admin_activities_counts_path,
         class: "inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors duration-200 #{current_page?(admin_activities_counts_path) ? 'is-active' : ''}" %>
+  </li>
+  <li class="-mb-px mr-1">
+    <%= link_to "Charts", admin_activities_charts_path,
+        class: "inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors duration-200 #{current_page?(admin_activities_charts_path) ? 'is-active' : ''}" %>
   </li>
   <li class="-mb-px mr-1">
     <%= link_to "Events", admin_activities_events_path,

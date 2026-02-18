@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="flex justify-between items-center mb-4">
-        <h1 class="text-3xl font-bold text-gray-900">Activities</h1>
+        <h1 class="text-2xl font-semibold text-gray-900">Activities</h1>
 
         <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
           <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
@@ -25,209 +25,220 @@
 
       <!-- Summary -->
       <section class="mt-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">
-          View counts
-        </h2>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+            View counts
+          </h2>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5 gap-y-2 gap-x-2">
-          <% @summary.each do |label, data| %>
-            <div class="<%= DomainTheme.bg_class_for(label) %> border border-gray-200 rounded-xl p-5
-            shadow-sm hover:shadow-md transition min-h-[130px]">
-              <div class="flex items-start justify-between">
-                <div class="text-xs font-semibold tracking-wide uppercase text-gray-500">
-                  <%= label.to_s.humanize %>
-                </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5 gap-y-2 gap-x-2">
+            <% @summary.each do |label, data| %>
+              <%= link_to polymorphic_path(label.to_s.classify.constantize), class: "block group" do %>
+                <div class="<%= DomainTheme.bg_class_for(label) %> border border-gray-200 rounded-xl p-5
+                shadow-sm hover:shadow-md transition min-h-[130px]">
+                  <div class="flex items-start justify-between">
+                    <div class="text-xs font-semibold tracking-wide uppercase text-gray-500">
+                      <%= label.to_s.humanize %>
+                    </div>
 
-                <div class="text-3xl font-bold text-gray-900 leading-none tabular-nums">
-                  <%= number_with_delimiter(data[:views]) %>
-                </div>
-              </div>
-
-              <div class="mt-3 space-y-1 text-xs text-gray-600 flex flex-col items-end">
-                <% if data[:prints].to_i > 0 %>
-                  <div class="flex items-center gap-1">
-                    <span class="tabular-nums"><%= number_with_delimiter(data[:prints]) %></span>
-                    <span class="text-gray-500">prints</span>
+                    <div class="text-3xl font-bold text-gray-900 group-hover:text-blue-600 leading-none tabular-nums transition-colors">
+                      <%= number_with_delimiter(data[:views]) %>
+                    </div>
                   </div>
-                <% end %>
 
-                <% if data[:downloads].to_i > 0 %>
-                  <div class="flex items-center gap-1">
-                    <span class="tabular-nums"><%= number_with_delimiter(data[:downloads]) %></span>
-                    <span class="text-gray-500">downloads</span>
+                  <div class="mt-3 space-y-1 text-xs text-gray-600 flex flex-col items-end">
+                    <% if data[:prints].to_i > 0 %>
+                      <div class="flex items-center gap-1">
+                        <span class="tabular-nums"><%= number_with_delimiter(data[:prints]) %></span>
+                        <span class="text-gray-500">prints</span>
+                      </div>
+                    <% end %>
+
+                    <% if data[:downloads].to_i > 0 %>
+                      <div class="flex items-center gap-1">
+                        <span class="tabular-nums"><%= number_with_delimiter(data[:downloads]) %></span>
+                        <span class="text-gray-500">downloads</span>
+                      </div>
+                    <% end %>
                   </div>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      </section>
-
-      <section class="space-y-4 mt-6">
-        <h2 class="text-lg font-semibold text-gray-800">Workshops</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <%= render "admin/analytics/popular_list",
-                     title: "Most viewed",
-                     records: @most_viewed_workshops,
-                     path_method: :workshop_path,
-                     metric: :view_count,
-                     color: :workshops
-          %>
-
-          <%= render "admin/analytics/popular_list",
-                     title: "Most printed",
-                     records: @most_printed_workshops,
-                     path_method: :workshop_path,
-                     metric: :print_count,
-                     color: :workshops
-          %>
-        </div>
-      </section>
-
-      <section class="space-y-4 mt-6">
-        <h2 class="text-lg font-semibold text-gray-800">Resources</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <%= render "admin/analytics/popular_list",
-                     title: "Most viewed",
-                     records: @most_viewed_resources,
-                     path_method: :resource_path,
-                     metric: :view_count,
-                     color: :resources %>
-          <%= render "admin/analytics/popular_list",
-                     title: "Most printed",
-                     records: @most_printed_resources,
-                     path_method: :resource_path,
-                     metric: :print_count,
-                     color: :resources %>
-          <%= render "admin/analytics/popular_list",
-                     title: "Most downloaded",
-                     records: @most_downloaded_resources,
-                     path_method: :resource_path,
-                     metric: :download_count,
-                     color: :resources %>
-        </div>
-      </section>
-
-      <section class="space-y-4 mt-6">
-        <h2 class="text-lg font-semibold text-gray-800">Community News</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <%= render "admin/analytics/popular_list",
-                     title: "Most viewed",
-                     records: @most_viewed_community_news,
-                     path_method: :community_news_path,
-                     metric: :view_count,
-                     color: :community_news
-          %>
-
-          <%= render "admin/analytics/popular_list",
-                     title: "Most printed",
-                     records: @most_printed_community_news,
-                     path_method: :community_news_path,
-                     metric: :print_count,
-                     color: :community_news
-          %>
-        </div>
-      </section>
-
-      <section class="space-y-4 mt-6">
-        <h2 class="text-lg font-semibold text-gray-800">Stories</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <%= render "admin/analytics/popular_list",
-                     title: "Stories",
-                     records: @most_viewed_stories,
-                     path_method: :story_path,
-                     metric: :view_count,
-                     color: :stories
-          %>
-
-          <%= render "admin/analytics/popular_list",
-                     title: "Most printed",
-                     records: @most_printed_stories,
-                     path_method: :story_path,
-                     metric: :print_count,
-                     color: :stories
-          %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
         </div>
       </section>
 
       <section class="mt-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-          <%= render "admin/analytics/popular_list",
-                     title: "Events",
-                     records: @most_viewed_events,
-                     path_method: :event_path,
-                     metric: :view_count,
-                     color: :events
-          %>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Workshops</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <%= render "admin/analytics/popular_list",
+                       title: "Most viewed",
+                       records: @most_viewed_workshops,
+                       path_method: :workshop_path,
+                       metric: :view_count,
+                       color: :workshops
+            %>
 
+            <%= render "admin/analytics/popular_list",
+                       title: "Most printed",
+                       records: @most_printed_workshops,
+                       path_method: :workshop_path,
+                       metric: :print_count,
+                       color: :workshops
+            %>
+          </div>
+        </div>
+      </section>
 
-          <%= render "admin/analytics/popular_list",
-                     title: "Workshop variations",
-                     records: @most_viewed_workshop_variations,
-                     path_method: :workshop_variation_path,
-                     metric: :view_count,
-                     color: :workshop_variations
-          %>
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Resources</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <%= render "admin/analytics/popular_list",
+                       title: "Most viewed",
+                       records: @most_viewed_resources,
+                       path_method: :resource_path,
+                       metric: :view_count,
+                       color: :resources %>
+            <%= render "admin/analytics/popular_list",
+                       title: "Most printed",
+                       records: @most_printed_resources,
+                       path_method: :resource_path,
+                       metric: :print_count,
+                       color: :resources %>
+            <%= render "admin/analytics/popular_list",
+                       title: "Most downloaded",
+                       records: @most_downloaded_resources,
+                       path_method: :resource_path,
+                       metric: :download_count,
+                       color: :resources %>
+          </div>
+        </div>
+      </section>
 
-          <%= render "admin/analytics/popular_list",
-                     title: "Quotes",
-                     records: @most_viewed_quotes,
-                     path_method: :quote_path,
-                     metric: :view_count,
-                     color: :quotes
-          %>
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Community News</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <%= render "admin/analytics/popular_list",
+                       title: "Most viewed",
+                       records: @most_viewed_community_news,
+                       path_method: :community_news_path,
+                       metric: :view_count,
+                       color: :community_news
+            %>
 
-          <%= render "admin/analytics/popular_list",
-                     title: "People",
-                     records: @most_viewed_people,
-                     path_method: :person_path,
-                     metric: :view_count,
-                     color: :people
-          %>
+            <%= render "admin/analytics/popular_list",
+                       title: "Most printed",
+                       records: @most_printed_community_news,
+                       path_method: :community_news_path,
+                       metric: :print_count,
+                       color: :community_news
+            %>
+          </div>
+        </div>
+      </section>
 
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Stories</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <%= render "admin/analytics/popular_list",
+                       title: "Stories",
+                       records: @most_viewed_stories,
+                       path_method: :story_path,
+                       metric: :view_count,
+                       color: :stories
+            %>
 
-          <%= render "admin/analytics/popular_list",
-                     title: "Organizations",
-                     records: @most_viewed_organizations,
-                     path_method: :organization_path,
-                     metric: :view_count,
-                     color: :organizations
-          %>
+            <%= render "admin/analytics/popular_list",
+                       title: "Most printed",
+                       records: @most_printed_stories,
+                       path_method: :story_path,
+                       metric: :print_count,
+                       color: :stories
+            %>
+          </div>
+        </div>
+      </section>
 
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Other</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <%= render "admin/analytics/popular_list",
+                       title: "Events",
+                       records: @most_viewed_events,
+                       path_method: :event_path,
+                       metric: :view_count,
+                       color: :events
+            %>
 
-          <%= render "admin/analytics/popular_list",
-                     title: "Tutorials",
-                     records: @most_viewed_tutorials,
-                     path_method: :tutorial_path,
-                     metric: :view_count,
-                     color: :tutorials
-          %>
+            <%= render "admin/analytics/popular_list",
+                       title: "Workshop variations",
+                       records: @most_viewed_workshop_variations,
+                       path_method: :workshop_variation_path,
+                       metric: :view_count,
+                       color: :workshop_variations
+            %>
+
+            <%= render "admin/analytics/popular_list",
+                       title: "Quotes",
+                       records: @most_viewed_quotes,
+                       path_method: :quote_path,
+                       metric: :view_count,
+                       color: :quotes
+            %>
+
+            <%= render "admin/analytics/popular_list",
+                       title: "People",
+                       records: @most_viewed_people,
+                       path_method: :person_path,
+                       metric: :view_count,
+                       color: :people
+            %>
+
+            <%= render "admin/analytics/popular_list",
+                       title: "Organizations",
+                       records: @most_viewed_organizations,
+                       path_method: :organization_path,
+                       metric: :view_count,
+                       color: :organizations
+            %>
+
+            <%= render "admin/analytics/popular_list",
+                       title: "Tutorials",
+                       records: @most_viewed_tutorials,
+                       path_method: :tutorial_path,
+                       metric: :view_count,
+                       color: :tutorials
+            %>
+          </div>
         </div>
       </section>
 
       <!-- Zero Engagement -->
       <section class="mt-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">
-          No engagement
-        </h2>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+            No engagement
+          </h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <%= render "zero_list",
-                     title: "Workshops",
-                     records: @zero_engagement_workshops,
-                     path_method: :workshop_path,
-                     color: :workshops
-          %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <%= render "zero_list",
+                       title: "Workshops",
+                       records: @zero_engagement_workshops,
+                       path_method: :workshop_path,
+                       color: :workshops
+            %>
 
-          <%= render "zero_list",
-                     title: "Resources",
-                     records: @zero_engagement_resources,
-                     path_method: :resource_path,
-                     color: :resources
-          %>
+            <%= render "zero_list",
+                       title: "Resources",
+                       records: @zero_engagement_resources,
+                       path_method: :resource_path,
+                       color: :resources
+            %>
+          </div>
         </div>
       </section>
 </div>
