@@ -295,13 +295,13 @@ module Admin
                                   "15-30 min" => 0, "30-60 min" => 0, "60+ min" => 0 }
       raw_durations.each do |d|
         bucket = case d.to_i
-                 when 0 then "< 1 min"
-                 when 1..5 then "1-5 min"
-                 when 6..15 then "5-15 min"
-                 when 16..30 then "15-30 min"
-                 when 31..60 then "30-60 min"
-                 else "60+ min"
-                 end
+        when 0 then "< 1 min"
+        when 1..5 then "1-5 min"
+        when 6..15 then "5-15 min"
+        when 16..30 then "15-30 min"
+        when 31..60 then "30-60 min"
+        else "60+ min"
+        end
         @session_duration_chart[bucket] += 1
       end
 
