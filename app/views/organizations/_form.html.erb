@@ -182,6 +182,16 @@
                     } %>
       </div>
     <% end %>
+
+    <%= f.input :organization_status_id,
+                as: :select,
+                collection: @organization_statuses,
+                include_blank: true,
+                label: "Status",
+                required: true,
+                input_html: {
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                } %>
   </div>
   <% if params[:admin] && allowed_to?(:manage?, Organization) %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -205,19 +215,6 @@
                       type: 'date',
                       value: f.object.end_date&.strftime('%Y-%m-%d'),
                       class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    } %>
-      </div>
-
-      <div class="admin-only bg-blue-100 p-3">
-        <%= f.input :organization_status_id,
-                    as: :select,
-                    collection: @organization_statuses,
-                    include_blank: true,
-                    label: "Status",
-                    hint: automanaged_notice.to_s.html_safe,
-                    required: true,
-                    input_html: {
-                      class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                     } %>
       </div>
     </div>
