@@ -5,6 +5,9 @@ class RichTextAsset < Asset
     "image/jpeg",
     "image/png",
     "image/gif",
+    "image/webp",
+    "image/heic",
+    "image/heif",
     "application/pdf",
     "application/zip",
     "application/msword", # Word .doc
