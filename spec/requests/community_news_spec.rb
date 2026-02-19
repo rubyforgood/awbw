@@ -111,9 +111,9 @@ RSpec.describe "/community_news", type: :request do
         }.to change(CommunityNews, :count).by(1)
       end
 
-      it "redirects to community_news index" do
+      it "redirects to the created community news" do
         post community_news_index_url, params: { community_news: valid_attributes }
-        expect(response).to redirect_to(community_news_index_url)
+        expect(response).to redirect_to(community_news_url(CommunityNews.last))
       end
     end
 
@@ -146,11 +146,11 @@ RSpec.describe "/community_news", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the community_news index" do
+      it "redirects to the updated community news" do
         community_news = CommunityNews.create! valid_attributes
         patch community_news_url(community_news), params: { community_news: new_attributes }
         community_news.reload
-        expect(response).to redirect_to(community_news_index_url)
+        expect(response).to redirect_to(community_news_url(community_news))
       end
     end
 

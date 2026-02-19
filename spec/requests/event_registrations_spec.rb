@@ -75,7 +75,7 @@ RSpec.describe "EventRegistrations", type: :request do
         patch event_registration_path(existing_registration),
               params: { event_registration: { event_id: new_event.id } }
 
-        expect(response).to redirect_to(event_registrations_path)
+        expect(response).to redirect_to(event_registration_path(existing_registration))
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
     end

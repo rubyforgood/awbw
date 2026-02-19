@@ -79,7 +79,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
             post workshop_variation_ideas_path, params: { workshop_variation_idea: valid_attributes }
           }.to change(WorkshopVariationIdea, :count).by(1)
 
-          expect(response).to redirect_to(workshop_variation_ideas_path)
+          expect(response).to redirect_to(workshop_variation_idea_path(WorkshopVariationIdea.last))
         end
 
         it "sends a notification" do
@@ -113,7 +113,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
               params: { workshop_variation_idea: { name: "Updated Name" } }
 
         expect(idea.reload.name).to eq("Updated Name")
-        expect(response).to redirect_to(workshop_variation_ideas_path)
+        expect(response).to redirect_to(workshop_variation_idea_path(idea))
       end
     end
 
@@ -173,7 +173,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
                  params: { workshop_variation_idea: valid_attributes }
           }.to change(WorkshopVariationIdea, :count).by(1)
 
-          expect(response).to redirect_to(root_path)
+          expect(response).to redirect_to(workshop_variation_idea_path(WorkshopVariationIdea.last))
         end
       end
 

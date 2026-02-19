@@ -80,7 +80,7 @@ class UsersController < ApplicationController
 
     if @user.save
       # @user.notifications.create(notification_type: 0)
-      redirect_to users_path(search: @user.email), notice: "User was successfully created."
+      redirect_to @user, notice: "User was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -114,7 +114,7 @@ class UsersController < ApplicationController
       bypass_sign_in(@user) if @user == current_user
       notice = "User was successfully updated."
       notice += " A confirmation email has been sent to #{@user.unconfirmed_email}." if @user.unconfirmed_email.present? && @user.saved_change_to_unconfirmed_email?
-      redirect_to users_path, notice: notice
+      redirect_to @user, notice: notice
     else
       flash[:alert] = "Unable to update user."
       set_form_variables

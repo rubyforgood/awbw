@@ -36,7 +36,7 @@ class TutorialsController < ApplicationController
     authorize! @tutorial
 
     if @tutorial.save
-      redirect_to tutorials_path, notice: "Tutorial was successfully created."
+      redirect_to @tutorial, notice: "Tutorial was successfully created."
     else
       @tutorial = @tutorial.decorate
       set_form_variables
@@ -47,7 +47,7 @@ class TutorialsController < ApplicationController
   def update
     authorize! @tutorial
     if @tutorial.update(tutorial_params)
-      redirect_to tutorials_path, notice: "Tutorial was successfully updated.", status: :see_other
+      redirect_to @tutorial, notice: "Tutorial was successfully updated.", status: :see_other
     else
       @tutorial = @tutorial.decorate
       set_form_variables

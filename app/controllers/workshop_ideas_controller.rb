@@ -33,8 +33,8 @@ class WorkshopIdeasController < ApplicationController
         notification_type: 0)
 
       flash[:notice] = "Workshop idea was successfully created."
-      if allowed_to?(:index?, WorkshopIdea)
-        redirect_to workshop_ideas_path
+      if allowed_to?(:show?, @workshop_idea)
+        redirect_to @workshop_idea
       else
         redirect_to root_path
       end
@@ -53,7 +53,7 @@ class WorkshopIdeasController < ApplicationController
   def update
     authorize! @workshop_idea
     if @workshop_idea.update(workshop_idea_params)
-      redirect_to workshop_ideas_path, notice: "Workshop idea was successfully updated.", status: :see_other
+      redirect_to @workshop_idea, notice: "Workshop idea was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content

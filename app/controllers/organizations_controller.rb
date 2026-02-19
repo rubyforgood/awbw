@@ -90,7 +90,7 @@ class OrganizationsController < ApplicationController
     authorize! @organization
 
     if @organization.save
-      redirect_to organizations_path, notice: "Organization was successfully created."
+      redirect_to @organization, notice: "Organization was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
