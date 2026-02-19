@@ -17,6 +17,7 @@ User.find_or_create_by!(email: "umberto.user@example.com") do |user|
   user.last_name = "User"
   user.password = "password"
   user.super_user = true
+  user.confirmed_at = Time.current
 end
 
 # Non-Admin
@@ -25,6 +26,7 @@ User.find_or_create_by!(email: "amy.user@example.com") do |user|
   user.last_name = "User"
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end
 
 # Orphaned
@@ -33,6 +35,7 @@ User.find_or_create_by!(email: "orphaned_reports@awbw.org") do |user|
   user.last_name = "User"
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end
 
 # Only reset seed-user passwords, not every user in the database

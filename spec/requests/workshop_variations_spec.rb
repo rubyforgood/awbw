@@ -69,7 +69,7 @@ RSpec.describe "/workshop_variations", type: :request do
         new_variation = WorkshopVariation.last
         expect(new_variation.workshop_variation_idea_id).to eq(workshop_variation_idea.id)
         expect(new_variation.name).to eq(workshop_variation_idea.name)
-        expect(response).to redirect_to(workshop_variations_path(sort: "created"))
+        expect(response).to redirect_to(workshop_variation_path(WorkshopVariation.last))
       end
 
       it "attaches assets from idea when promote_idea_assets is true" do
@@ -170,7 +170,7 @@ RSpec.describe "/workshop_variations", type: :request do
             post workshop_variations_path, params: { workshop_variation: valid_attributes }
           }.to change(WorkshopVariation, :count).by(1)
 
-          expect(response).to redirect_to(workshop_variations_path(sort: "created"))
+          expect(response).to redirect_to(workshop_variation_path(WorkshopVariation.last))
         end
       end
 
@@ -202,7 +202,7 @@ RSpec.describe "/workshop_variations", type: :request do
               params: { workshop_variation: { name: "Updated Name" } }
 
         expect(variation.reload.name).to eq("Updated Name")
-        expect(response).to redirect_to(workshop_variations_path)
+        expect(response).to redirect_to(workshop_variation_path(variation))
       end
     end
   end

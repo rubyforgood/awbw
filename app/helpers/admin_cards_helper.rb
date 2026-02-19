@@ -4,18 +4,18 @@ module AdminCardsHelper
   # -----------------------------
   def system_cards
     [
-      model_card(:banners, icon: "📣"),
-      model_card(:community_news, icon: "📰"),
-      model_card(:faqs, icon: "❔", title: "FAQs"),
-      model_card(:resources, icon: "📚"),
-      model_card(:events, icon: "📆"),
       model_card(:organizations, icon: "🏫"),
       model_card(:people, icon: "👥"),
+      model_card(:users, icon: "👥",  title: "User accounts"),
+      model_card(:events, icon: "📆"),
+      model_card(:resources, icon: "📚"),
       model_card(:stories, icon: "🗣️"),
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime),
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
-      model_card(:users, icon: "👥",  title: "User accounts")
+      model_card(:banners, icon: "📣"),
+      model_card(:community_news, icon: "📰"),
+      model_card(:faqs, icon: "❔", title: "FAQs")
     ]
   end
 
@@ -24,12 +24,10 @@ module AdminCardsHelper
   # -----------------------------
   def user_content_cards
     [
-      custom_card("Activity charts", admin_activities_charts_path, icon: "📊"),
-      custom_card("Activity counts", admin_activities_counts_path, icon: "🔢"),
-      custom_card("Activity logs", admin_activities_events_path, icon: "🧭"),
+      custom_card("Activities", admin_activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
-      model_card(:event_registrations, icon: "🎟️", intensity: 100),
       model_card(:quotes, icon: "💬", intensity: 100),
+      model_card(:event_registrations, icon: "🎟️", intensity: 100),
       custom_card("System notifications", notifications_path, icon: "🔔"),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),

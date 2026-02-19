@@ -54,7 +54,7 @@ RSpec.describe "People can submit a story", type: :system do
 
   expect(page).to have_content("Story was successfully created.")
   expect(page).to have_content("Healing Through Art")
-  expect(page).to have_current_path(stories_path)
+  expect(page).to have_current_path(story_path(Story.last))
 end
       it "can cancel the form" do
          click_link "Cancel"

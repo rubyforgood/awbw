@@ -119,6 +119,7 @@ module Admin
         .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.categories')"))
         .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
 
       @ws_category_types = ws_categories_raw
         .map { |c| c["type"] }.compact.tally
@@ -133,6 +134,7 @@ module Admin
         .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.sectors')"))
         .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
         .map { |s| s["name"] }.compact.tally
         .sort_by { |_k, v| -v }.first(10).to_h
 
@@ -159,6 +161,7 @@ module Admin
         .where(name: [ "filter.workshops", "search.workshops" ])
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.filters.windows_types')"))
         .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
       wt_names = WindowsType.where(id: wt_ids.uniq).pluck(:id, :short_name).to_h
       @ws_windows_types = wt_ids
         .map { |id| wt_names[id] }.compact.tally
@@ -220,11 +223,13 @@ module Admin
       @tagging_sectors = tagging_events
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.sectors')"))
         .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
         .tally.sort_by { |_k, v| -v }.first(15).to_h
 
       @tagging_categories = tagging_events
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.categories')"))
         .flat_map { |arr| JSON.parse(arr) rescue [] }
+        .flat_map { |arr| safe_json_parse(arr) }
         .tally.sort_by { |_k, v| -v }.first(15).to_h
 
       # User discovery funnel - batch with LIKE patterns
@@ -243,6 +248,81 @@ module Admin
         "Checkbox filters" => ws_funnel_counts["filter.workshops"] || 0,
         "Tagging pages" => tagging_count
       }
+
+      visits = scoped_visits
+
+      # Average events per visit
+      total_visits = visits.count
+      total_events = events.count
+      @avg_events_per_visit = total_visits > 0 ? (total_events.to_f / total_visits).round(1) : 0
+
+      # Bounce rate (single vs multi-event visits)
+      @bounce_rate = {
+        "Single-event" => events.group(:visit_id).having("count(*) = 1").count.size,
+        "Multi-event" => events.group(:visit_id).having("count(*) > 1").count.size
+      }
+
+      # Top engaged users (non-admin)
+      @top_engaged_users = events
+        .joins("INNER JOIN users ON users.id = ahoy_events.user_id")
+        .where(users: { super_user: false })
+        .group(Arel.sql("CONCAT(users.first_name, ' ', users.last_name)"))
+        .count
+        .sort_by { |_k, v| -v }
+        .first(10).to_h
+
+      # User signup trend
+      signup_range = time_range || 6.months.ago..Time.current
+      @user_signup_trend = User.where(created_at: signup_range).group_by_week(:created_at).count
+
+      # Search-to-view conversion
+      total_search_visits = events.where("name LIKE 'search.%'").distinct.count(:visit_id)
+      if total_search_visits > 0
+        search_visit_ids = events.where("name LIKE 'search.%'").select(:visit_id).distinct
+        viewed_after_search = events.where(visit_id: search_visit_ids)
+          .where("name LIKE 'view.%'").distinct.count(:visit_id)
+        @search_conversion = {
+          "Searched & Viewed" => viewed_after_search,
+          "Searched & Left" => total_search_visits - viewed_after_search
+        }
+      else
+        @search_conversion = {}
+      end
+
+      # Session duration distribution
+      duration_sub = visits.joins(:events)
+        .select("ahoy_visits.id, TIMESTAMPDIFF(MINUTE, ahoy_visits.started_at, MAX(ahoy_events.time)) as dm")
+        .group("ahoy_visits.id")
+      raw_durations = ActiveRecord::Base.connection.select_values(
+        "SELECT dm FROM (#{duration_sub.to_sql}) AS d WHERE dm IS NOT NULL"
+      )
+      @session_duration_chart = { "< 1 min" => 0, "1-5 min" => 0, "5-15 min" => 0,
+                                  "15-30 min" => 0, "30-60 min" => 0, "60+ min" => 0 }
+      raw_durations.each do |d|
+        bucket = case d.to_i
+        when 0 then "< 1 min"
+        when 1..5 then "1-5 min"
+        when 6..15 then "5-15 min"
+        when 16..30 then "15-30 min"
+        when 31..60 then "30-60 min"
+        else "60+ min"
+        end
+        @session_duration_chart[bucket] += 1
+      end
+
+      # Heatmap: visits by hour × day of week
+      @heatmap_data = visits.group(
+        Arel.sql("HOUR(started_at)"), Arel.sql("DAYOFWEEK(started_at)")
+      ).count
+
+      # Top exit events (last event per visit)
+      last_event_ids = events.group(:visit_id).select("MAX(ahoy_events.id)")
+      @top_exit_events = Ahoy::Event
+        .where(id: last_event_ids)
+        .group(:name)
+        .count
+        .sort_by { |_k, v| -v }
+        .first(10).to_h
     end
 
     def creation_velocity_data
@@ -309,6 +389,12 @@ module Admin
       else
         nil # all_time
       end
+    end
+
+    def safe_json_parse(json)
+      JSON.parse(json)
+    rescue JSON::ParserError, TypeError
+      []
     end
 
     def tracked_activity_conditions(scope)

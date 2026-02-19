@@ -107,7 +107,7 @@ class WorkshopsController < ApplicationController
 
     if success
       flash[:notice] = "Workshop created successfully."
-      redirect_to workshops_path(sort: "created")
+      redirect_to @workshop
     else
       set_form_variables
       flash.now[:alert] = "Unable to save the workshop."
@@ -165,7 +165,7 @@ class WorkshopsController < ApplicationController
 
     if success
       flash[:notice] = "Workshop updated successfully."
-      redirect_to workshops_path
+      redirect_to @workshop
     else
       set_form_variables
       flash[:alert] = "Unable to update the workshop."
@@ -179,7 +179,9 @@ class WorkshopsController < ApplicationController
   def set_show
     @quotes = Quote.where(workshop_id: @workshop.id).published
     @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
-    @workshop_variations = @workshop.workshop_variations.published
+    @workshop_variations = authorized_scope(@workshop.workshop_variations)
+                             .includes(:windows_type, :created_by, primary_asset: [ :file_attachment ])
+                             .order(created_at: :desc)
     @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
     @mentions = @workshop.all_mentions_grouped
   end
