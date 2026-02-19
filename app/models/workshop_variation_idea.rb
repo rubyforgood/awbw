@@ -19,7 +19,7 @@ class WorkshopVariationIdea < ApplicationRecord
   belongs_to :windows_type, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
-  has_many :workshop_variations
+  has_many :workshop_variations, dependent: :nullify
 
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
