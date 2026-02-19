@@ -104,7 +104,7 @@ class OrganizationsController < ApplicationController
     @organization.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
     if @organization.save
-      redirect_to organizations_path, notice: "Organization was successfully updated.", status: :see_other
+      redirect_to organization_path(@organization), notice: "Organization was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content
@@ -182,7 +182,7 @@ end
   def organization_params
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
-      :agency_type,  :agency_type_other, :internal_id, :logo, :notes, :email, :website_url,
+      :agency_type, :agency_type_other, :internal_id, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id,
       :profile_show_sectors, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
