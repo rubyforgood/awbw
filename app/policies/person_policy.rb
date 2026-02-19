@@ -2,11 +2,11 @@ class PersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
   def index?
-    authenticated?
+    admin?
   end
 
   def show?
-    admin? || owner? || (authenticated? && record.profile_is_searchable?)
+    admin?
   end
 
   def edit?
