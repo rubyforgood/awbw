@@ -25,15 +25,6 @@ class PersonDecorator < ApplicationDecorator
     "missing.png"
   end
 
-  def facilitator_since_date
-    facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
-    facilitator_affiliations.minimum(:start_date) || member_since
-  end
-
-  def affiliated_since_date
-    affiliations.minimum(:start_date)
-  end
-
   def affiliated_end_date
     return nil if affiliations.active.exists?
     affiliations.maximum(:end_date)
@@ -70,6 +61,23 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def badges
+    @badges ||= compute_badges
+  end
+
+  def facilitator_since_date
+    @facilitator_since_date ||= begin
+      facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
+      facilitator_affiliations.minimum(:start_date) || member_since
+    end
+  end
+
+  def affiliated_since_date
+    @affiliated_since_date ||= affiliations.minimum(:start_date)
+  end
+
+  private
+
+  def compute_badges
     earliest = facilitator_since_date
     years = earliest ? (Time.zone.now.year - earliest.year) : nil
     badges = []
@@ -88,8 +96,6 @@ class PersonDecorator < ApplicationDecorator
     end
     badges
   end
-
-  private
 
   def badge(label, key)
     {

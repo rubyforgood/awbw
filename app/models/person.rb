@@ -66,6 +66,8 @@ class Person < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes :first_name, :last_name, :email, :email_2
+
+    scope { left_joins(:user, :contact_methods, :addresses) }
     attributes user_first_name: "user.first_name"
     attributes user_last_name:  "user.last_name"
     attributes user_email:      "user.email"
@@ -78,10 +80,10 @@ class Person < ApplicationRecord
     attributes address_phone:  "addresses.phone"
 
     attributes all: [ :first_name, :last_name, :email, :email_2,
-                      :user_first_name, :user_last_name, :user_email, :user_phone,
-                      :contact_methods_phone,
-                      :address_street, :address_city, :address_state, :address_zip,
-                      :address_phone ]
+                      "user.first_name", "user.last_name", "user.email", "user.phone",
+                      "contact_methods.value",
+                      "addresses.street_address", "addresses.city", "addresses.state",
+                      "addresses.zip_code", "addresses.phone" ]
     options :all, type: :text, default: true, default_operator: :or
   end
 
