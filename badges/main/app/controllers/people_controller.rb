@@ -30,7 +30,7 @@ class PeopleController < ApplicationController
 
   def show
     authorize! @person
-    @person = @person.decorate
+    @person = Person.includes(:avatar_attachment, :contact_methods, :user).find(params[:id]).decorate
     track_view(@person)
 
     # Handle paginated sections for Turbo Frame requests
