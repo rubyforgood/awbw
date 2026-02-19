@@ -20,6 +20,9 @@
 <% use_profile_placeholder ||= false %>
 <% show_file_field = show_file_field.to_s.present? ? show_file_field : true %>
 <% show_existing   = show_existing.to_s.present? ? show_existing : true %>
+<% asset_class = asset.class < Asset ? asset.class : Asset %>
+<% accept_attr = asset_class.accept_attribute %>
+<% accepted_label = asset_class.accepted_types_label %>
 <% file =
     if file.present?
       file
@@ -92,6 +95,7 @@
 
         <div class="relative w-28">
           <%= f.file_field field_name,
+                           accept: accept_attr,
                            data: {
                              file_preview_target: "input",
                              action: "change->file-preview#update"
@@ -118,6 +122,8 @@
         <% end %>
 
       </div>
+
+      <p class="text-gray-400 text-xs mt-1">Accepts: <%= accepted_label %></p>
     <% end %>
 
   </div>
