@@ -20,8 +20,8 @@
 <% use_profile_placeholder ||= false %>
 <% show_file_field = show_file_field.to_s.present? ? show_file_field : true %>
 <% show_existing   = show_existing.to_s.present? ? show_existing : true %>
-<% accept_attr = asset.class.accept_attribute %>
-<% accepted_label = asset.class.accepted_types_label %>
+<% accept_attr = asset.class.respond_to?(:accept_attribute) ? asset.class.accept_attribute : nil %>
+<% accepted_label = asset.class.respond_to?(:accepted_types_label) ? asset.class.accepted_types_label : nil %>
 <% file =
     if file.present?
       file
@@ -122,7 +122,9 @@
 
       </div>
 
-      <p class="text-gray-400 text-xs mt-1">Accepts: <%= accepted_label %></p>
+      <% if accepted_label.present? %>
+        <p class="text-gray-400 text-xs mt-1">Accepts: <%= accepted_label %></p>
+      <% end %>
     <% end %>
 
   </div>
