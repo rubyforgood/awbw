@@ -77,9 +77,9 @@ RSpec.describe "/tutorials", type: :request do
         }.to change(Tutorial, :count).by(1)
       end
 
-      it "redirects to the tutorials index" do
+      it "redirects to the created tutorial" do
         post tutorials_url, params: { tutorial: valid_attributes }
-        expect(response).to redirect_to(tutorials_url)
+        expect(response).to redirect_to(tutorial_url(Tutorial.last))
       end
     end
 
@@ -112,11 +112,11 @@ RSpec.describe "/tutorials", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the tutorials index" do
+      it "redirects to the updated tutorial" do
         tutorial = Tutorial.create! valid_attributes
         patch tutorial_url(tutorial), params: { tutorial: new_attributes }
         tutorial.reload
-        expect(response).to redirect_to(tutorials_url)
+        expect(response).to redirect_to(tutorial_url(tutorial))
       end
     end
 

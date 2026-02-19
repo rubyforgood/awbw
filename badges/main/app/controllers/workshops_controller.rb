@@ -107,7 +107,7 @@ class WorkshopsController < ApplicationController
 
     if success
       flash[:notice] = "Workshop created successfully."
-      redirect_to workshops_path(sort: "created")
+      redirect_to @workshop
     else
       set_form_variables
       flash.now[:alert] = "Unable to save the workshop."
@@ -165,7 +165,7 @@ class WorkshopsController < ApplicationController
 
     if success
       flash[:notice] = "Workshop updated successfully."
-      redirect_to workshops_path
+      redirect_to @workshop
     else
       set_form_variables
       flash[:alert] = "Unable to update the workshop."

@@ -67,7 +67,7 @@ RSpec.describe "/stories", type: :request do
           post stories_url, params: { story: base_attributes }
         }.to change(Story, :count).by(1)
 
-        expect(response).to redirect_to(stories_path)
+        expect(response).to redirect_to(story_url(Story.last))
       end
     end
   end

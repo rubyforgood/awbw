@@ -123,7 +123,8 @@ RSpec.describe "Stories", type: :system do
           end
 
         expect(page).to have_content("Story was successfully updated.")
-        expect(page).to have_css("turbo-frame#story_results", text: "A New Title")
+        expect(page).to have_current_path(story_path(story))
+        expect(page).to have_content("A New Title")
       end
     end
   end
