@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_18_203619) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_19_144255) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -362,7 +362,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_203619) do
 
   create_table "community_news", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "author_id", null: false
-    t.text "body", size: :medium
+    t.text "body", size: :medium, null: true
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.boolean "featured"
@@ -769,7 +769,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_203619) do
   create_table "resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "agency"
     t.string "author"
-    t.text "body", size: :long
+    t.text "body", size: :long, null: true
     t.datetime "created_at", precision: nil, null: false
     t.boolean "featured", default: false
     t.boolean "female", default: false
@@ -815,7 +815,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_203619) do
   end
 
   create_table "stories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body", size: :medium
+    t.text "body", size: :medium, null: true
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.string "external_workshop_title"
@@ -845,7 +845,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_203619) do
   end
 
   create_table "story_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body", size: :medium
+    t.text "body", size: :medium, null: true
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.string "external_workshop_title"
@@ -866,7 +866,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_203619) do
   end
 
   create_table "tutorials", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body"
+    t.text "body", null: true
     t.datetime "created_at", null: false
     t.boolean "featured", default: false, null: false
     t.integer "position", default: 10, null: false
@@ -1097,7 +1097,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_203619) do
   end
 
   create_table "workshop_variation_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body", size: :long
+    t.text "body", size: :long, null: true
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.string "name", null: false
@@ -1119,7 +1119,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_203619) do
   end
 
   create_table "workshop_variations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body", size: :long
+    t.text "body", size: :long, null: true
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
     t.boolean "inactive", default: true
