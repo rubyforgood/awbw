@@ -102,6 +102,11 @@
   @apply text-primary border-b-2 border-primary font-bold bg-gray-100;
 }
 
+/* Highlight for tag blocks when their checkbox is selected in "Explore by combination" */
+.tags-combination-selected {
+  @apply ring-2 ring-lime-600 bg-lime-200;
+}
+
 /* Prevent pag breaks on images when printing  */
 @media print {
   table {
