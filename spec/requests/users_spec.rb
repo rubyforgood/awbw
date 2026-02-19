@@ -170,9 +170,9 @@ RSpec.describe "/users", type: :request do
           }.to change(User, :count).by(1)
         end
 
-        it "redirects to index with search params" do
+        it "redirects to the created user" do
           post users_url, params: { user: valid_attributes }
-          expect(response).to redirect_to(users_url(search: valid_attributes[:email]))
+          expect(response).to redirect_to(user_url(User.last))
         end
       end
 
@@ -224,9 +224,9 @@ RSpec.describe "/users", type: :request do
           expect(user.unconfirmed_email).to eq(new_attributes[:email])
         end
 
-        it "redirects to index" do
+        it "redirects to the updated user" do
           patch user_url(user), params: { user: new_attributes }
-          expect(response).to redirect_to(users_url)
+          expect(response).to redirect_to(user_url(user))
         end
 
         it "permits and updates time_zone" do

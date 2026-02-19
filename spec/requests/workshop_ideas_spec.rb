@@ -76,7 +76,7 @@ RSpec.describe "/workshop_ideas", type: :request do
           post workshop_ideas_path, params: { workshop_idea: valid_attributes }
         }.to change(WorkshopIdea, :count).by(1)
 
-        expect(response).to redirect_to(workshop_ideas_path)
+        expect(response).to redirect_to(workshop_idea_path(WorkshopIdea.last))
       end
     end
 
@@ -88,7 +88,7 @@ RSpec.describe "/workshop_ideas", type: :request do
               params: { workshop_idea: { title: "Updated Title" } }
 
         expect(idea.reload.title).to eq("Updated Title")
-        expect(response).to redirect_to(workshop_ideas_path)
+        expect(response).to redirect_to(workshop_idea_path(idea))
       end
     end
 

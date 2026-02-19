@@ -70,9 +70,9 @@ RSpec.describe "/organizations", type: :request do
         }.to change(Organization, :count).by(1)
       end
 
-      it "redirects to the organizations index" do
+      it "redirects to the created organization" do
         post organizations_url, params: { organization: valid_attributes }
-        expect(response).to redirect_to(organizations_url)
+        expect(response).to redirect_to(organization_url(Organization.last))
       end
     end
 

@@ -62,7 +62,7 @@ RSpec.describe "/story_ideas", type: :request do
         story_idea = create(:story_idea)
         patch story_idea_url(story_idea),
               params: { story_idea: { title: "Updated Title" } }
-        expect(response).to redirect_to(story_ideas_url)
+        expect(response).to redirect_to(story_idea_url(story_idea))
         expect(story_idea.reload.title).to eq("Updated Title")
       end
     end
