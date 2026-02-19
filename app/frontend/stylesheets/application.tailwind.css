@@ -210,3 +210,11 @@ textarea.comment-truncated:focus {
     display: none !important;
   }
 }
+
+/* Turbo progress bar */
+.turbo-progress-bar {
+  height: 7px;
+  background-color: #0076ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border-radius: 0 2px 2px 0;
+}
