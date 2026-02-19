@@ -1,5 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 
+const FILE_TYPE_ICONS = {
+    "application/pdf": "fa-regular fa-file-pdf",
+    "application/zip": "fa-regular fa-file-zipper",
+    "application/msword": "fa-regular fa-file-word",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "fa-regular fa-file-word",
+    "application/vnd.oasis.opendocument.text": "fa-regular fa-file-lines",
+    "text/html": "fa-regular fa-file-code",
+}
+
 export default class extends Controller {
     static targets = ["input", "preview", "placeholder", "filename"]
 
@@ -26,19 +35,51 @@ export default class extends Controller {
             this.filenameTarget.textContent = file.name
         }
 
-        // Update preview image (if you have one)
-        if (this.hasPreviewTarget) {
-            const reader = new FileReader()
-            reader.onload = e => {
-                this.previewTarget.src = e.target.result
-                this.previewTarget.classList.remove("hidden")
-            }
-            reader.readAsDataURL(file)
+        if (file.type.startsWith("image/")) {
+            this.showImagePreview(file)
+        } else {
+            this.showFileIcon(file.type)
         }
+    }
 
-        // Hide placeholder if present
+    // Ensure a placeholder div exists (server may not render one when a persisted file exists)
+    ensurePlaceholder() {
+        if (this.hasPlaceholderTarget) return this.placeholderTarget
+
+        const wrapper = this.hasPreviewTarget
+            ? this.previewTarget.parentElement
+            : this.element.querySelector(".flex.flex-col")
+
+        const placeholder = document.createElement("div")
+        placeholder.dataset.filePreviewTarget = "placeholder"
+        placeholder.className = "absolute inset-0 flex items-center justify-center border border-gray-300 shadow-sm bg-gray-50 text-gray-400 text-6xl"
+        wrapper.appendChild(placeholder)
+        return placeholder
+    }
+
+    showImagePreview(file) {
+        if (!this.hasPreviewTarget) return
+
+        const reader = new FileReader()
+        reader.onload = e => {
+            this.previewTarget.src = e.target.result
+            this.previewTarget.classList.remove("hidden")
+        }
+        reader.readAsDataURL(file)
+
         if (this.hasPlaceholderTarget) {
             this.placeholderTarget.classList.add("hidden")
+        }
+    }
+
+    showFileIcon(mimeType) {
+        const placeholder = this.ensurePlaceholder()
+        const iconClass = FILE_TYPE_ICONS[mimeType] || "fa-regular fa-file"
+        placeholder.innerHTML = `<i class="${iconClass} text-5xl"></i>`
+        placeholder.classList.remove("hidden")
+
+        if (this.hasPreviewTarget) {
+            this.previewTarget.classList.add("hidden")
         }
     }
 

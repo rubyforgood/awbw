@@ -84,7 +84,7 @@ class Asset < ApplicationRecord
     allowed_types = self.class::ACCEPTED_CONTENT_TYPES
 
     unless allowed_types.include?(file.content_type)
-      errors.add(:file, "type is not allowed for #{type.underscore.humanize}. Accepted types: #{allowed_types.join(', ')}")
+      errors.add(:file, "type not accepted")
     end
   end
 end

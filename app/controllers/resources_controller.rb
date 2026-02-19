@@ -79,7 +79,7 @@ class ResourcesController < ApplicationController
     end
 
     if success
-      redirect_to resources_path
+      redirect_to resource_path(@resource)
     else
       @resource = @resource.decorate
       set_form_variables
@@ -106,7 +106,7 @@ class ResourcesController < ApplicationController
 
     if success
       flash[:notice] = "Resource updated."
-      redirect_to resources_path
+      redirect_to resource_path(@resource)
     else
       set_form_variables
       flash[:alert] = "Failed to update Resource."

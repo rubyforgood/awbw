@@ -130,4 +130,11 @@
   </div>
 </div>
 
-<%= f.error :file, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" } %>
+<% if asset.errors[:file].any? %>
+  <div class="mt-2 mx-auto w-fit rounded-md border border-red-200 bg-red-50 px-3 py-2 text-center">
+    <p class="text-red-600 text-sm">
+      <i class="fa-solid fa-circle-exclamation mr-1"></i>
+      File type not accepted
+    </p>
+  </div>
+<% end %>

@@ -173,7 +173,7 @@
           <div class="flex flex-wrap gap-4 ml-8">
             <% idea_assets.each do |asset| %>
               <div class="flex flex-col items-center">
-                <%= render "assets/display_image", resource: story_idea, item: asset, variant: :gallery %>
+                <%= render "assets/display_image", resource: story_idea, item: asset, variant: :gallery, link: false %>
                 <span class="text-xs text-gray-500 mt-1"><%= asset.type.underscore.humanize %></span>
               </div>
             <% end %>
