@@ -69,9 +69,9 @@ RSpec.describe "/banners", type: :request do
         }.to change(Banner, :count).by(1)
       end
 
-      it "redirects to the banners index" do
+      it "redirects to the created banner" do
         post banners_url, params: { banner: valid_attributes }
-        expect(response).to redirect_to(banners_url)
+        expect(response).to redirect_to(banner_url(Banner.last))
       end
     end
 
@@ -104,11 +104,11 @@ RSpec.describe "/banners", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the banners index" do
+      it "redirects to the updated banner" do
         banner = Banner.create! valid_attributes
         patch banner_url(banner), params: { banner: new_attributes }
         banner.reload
-        expect(response).to redirect_to(banners_url)
+        expect(response).to redirect_to(banner_url(banner))
       end
     end
 

@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe WorkshopVariation do
   describe 'associations' do
-    it { should belong_to(:workshop) }
+    it { should belong_to(:workshop).optional }
   end
 
   describe 'validations' do

@@ -49,10 +49,12 @@ class WorkshopVariationIdeasController < ApplicationController
         notification_type: 0)
 
       flash[:notice] = "Workshop variation idea was successfully created."
-      if allowed_to?(:index?, WorkshopVariationIdea)
-        redirect_to workshop_variation_ideas_path
+      if params[:from] == "workshop_show" && @workshop_variation_idea.workshop.present?
+        redirect_to workshop_path(@workshop_variation_idea.workshop, anchor: "workshopVariations") and return
+      elsif allowed_to?(:show?, @workshop_variation_idea)
+        redirect_to @workshop_variation_idea and return
       else
-        redirect_to root_path
+        redirect_to root_path and return
       end
     else
       set_form_variables
@@ -63,7 +65,7 @@ class WorkshopVariationIdeasController < ApplicationController
   def update
     authorize! @workshop_variation_idea
     if @workshop_variation_idea.update(workshop_variation_idea_params)
-      redirect_to workshop_variation_ideas_path, notice: "Workshop variation idea was successfully updated.", status: :see_other
+      redirect_to @workshop_variation_idea, notice: "Workshop variation idea was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content

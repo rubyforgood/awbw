@@ -10,6 +10,14 @@
       <%= turbo_frame_tag "show_lazy", src: workshop_path(@workshop), data: {turbo: false} do %>
         <%= render 'show_skeleton' %>
       <% end %>
+      <script>
+        document.addEventListener("turbo:frame-load", function(event) {
+          if (event.target.id === "show_lazy" && window.location.hash) {
+            var el = document.querySelector(window.location.hash);
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }
+        }, { once: true });
+      </script>
     </div>
   </div>
 </div>

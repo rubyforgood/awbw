@@ -72,6 +72,9 @@ application.register("tabs", TabsController)
 import TagsSyncListHeightsController from "./tags_sync_list_heights_controller"
 application.register("tags-sync-list-heights", TagsSyncListHeightsController)
 
+import TagsCombinationHighlightController from "./tags_combination_highlight_controller"
+application.register("tags-combination-highlight", TagsCombinationHighlightController)
+
 import TimeframeController from "./timeframe_controller"
 application.register("timeframe", TimeframeController)
 

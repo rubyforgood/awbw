@@ -56,7 +56,11 @@ class Organization < ApplicationRecord
 
   # Scopes
   # See TagFilterable, Trendable, WindowsTypeFilterable
-  scope :active, -> { joins(:organization_status).where(organization_statuses: { name: "Active" }) }
+  scope :active, -> {
+    status_active = joins(:organization_status).where(organization_statuses: { name: "Active" })
+    affiliation_active = where(id: Affiliation.active.select(:organization_id))
+    status_active.or(affiliation_active)
+  }
   scope :address, ->(address) do
     return all if address.blank?
     terms = address.to_s.strip.split(/[\s,]+/).reject(&:blank?)
@@ -141,7 +145,8 @@ class Organization < ApplicationRecord
   end
 
   def published? # needed for my_bookmarks
-    organization_status&.name == "Active"
+    return true if organization_status&.name == "Active"
+    affiliations.active.exists?
   end
 
   def sector_list

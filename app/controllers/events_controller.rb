@@ -48,7 +48,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if success
-        format.html { redirect_to events_path, notice: "Event was successfully created." }
+        format.html { redirect_to @event, notice: "Event was successfully created." }
         format.json { render :show, status: :created, location: @event }
       else
         set_form_variables
@@ -74,7 +74,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if success
-        format.html { redirect_to events_path, notice: "Event was successfully updated." }
+        format.html { redirect_to @event, notice: "Event was successfully updated." }
         format.json { render :show, status: :ok, location: @event }
       else
         set_form_variables

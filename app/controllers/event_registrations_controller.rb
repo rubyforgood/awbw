@@ -57,7 +57,7 @@ class EventRegistrationsController < ApplicationController
 
       respond_to do |format|
         format.html {
-          redirect_to event_registrations_path,
+          redirect_to @event_registration,
             notice: "Registration created."
         }
       end
@@ -74,7 +74,7 @@ class EventRegistrationsController < ApplicationController
   def update
     authorize! @event_registration
     if @event_registration.update(event_registration_params)
-      redirect_to event_registrations_path, notice: "Registration was successfully updated.", status: :see_other
+      redirect_to @event_registration, notice: "Registration was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content

@@ -23,7 +23,7 @@ RSpec.describe PersonPolicy, type: :policy do
     context "with regular user" do
       subject { policy_for(user: regular_user) }
 
-      it { is_expected.to be_allowed_to(:index?) }
+      it { is_expected.not_to be_allowed_to(:index?) }
     end
 
     context "with no user" do
@@ -49,7 +49,7 @@ RSpec.describe PersonPolicy, type: :policy do
     context "with regular user and searchable person" do
       subject { policy_for(record: searchable_person, user: regular_user) }
 
-      it { is_expected.to be_allowed_to(:show?) }
+      it { is_expected.not_to be_allowed_to(:show?) }
     end
 
     context "with regular user and non-searchable person" do

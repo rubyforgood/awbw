@@ -1,11 +1,11 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex justify-between items-center mb-6">
-    <section class="px-8">
+    <section>
       <div class="flex flex-col items-start mb-4">
-        <h1 class="text-3xl font-bold text-gray-900 my-2">Admin Home</h1>
+        <h1 class="text-2xl font-semibold text-gray-900">Admin Home</h1>
       </div>
 
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
       <div class="flex flex-col gap-6 md:flex-row">
         <!-- Column 1 -->
         <div class="flex flex-col gap-4 flex-1">
@@ -50,8 +50,9 @@
           <% end %>
         </div>
       </div>
+      </div>
 
-      <div class="mt-20">
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mt-6">
         Base data
        <div class="flex flex-wrap gap-4 mt-3">
           <% @reference_cards.each do |card| %>
@@ -73,8 +74,8 @@
           <% end %>
         </div>
       </div>
+      </div>
     </section>
-  </div>
 </div>
 
 <div class="hidden

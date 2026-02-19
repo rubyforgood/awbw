@@ -19,7 +19,7 @@ run = "bundle exec rspec"
 
 [tasks.docker-up]
 description = "Start Docker containers for development"
-run = "docker compose up -d"
+run = "docker compose up --build -d"
 
 [tasks.docker-down]
 description = "Stop Docker containers"
@@ -49,5 +49,5 @@ description = "Provide commands to exec from the docker container. Ex: mise dock
 run = "docker compose exec web"
 
 [tasks.docker-spec]
-description = "Run RSpec tests in Docker"
-run = "docker compose exec -e RAILS_ENV=test web bundle exec rspec"
+description = "Run RSpec tests in Docker. Exclude system specs because they use ChromeDriver which is not available in the dev docker container."
+run = "docker compose exec -e RAILS_ENV=test web bundle exec rspec --tag ~type:system"

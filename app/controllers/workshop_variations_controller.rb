@@ -33,7 +33,6 @@ class WorkshopVariationsController < ApplicationController
         if params[:promote_idea_assets] == "true"
           @workshop_variation.attach_assets_from_idea!
         end
-
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
@@ -43,7 +42,13 @@ class WorkshopVariationsController < ApplicationController
 
     if success
       flash[:notice] = "Workshop Variation has been created."
-      redirect_to workshop_variations_path(sort: "created")
+      if params[:from] == "workshop_show" && @workshop_variation.workshop.present?
+        redirect_to workshop_path(@workshop_variation.workshop, anchor: "variation-#{@workshop_variation.id}") and return
+      elsif allowed_to?(:show?, @workshop_variation)
+        redirect_to @workshop_variation and return
+      else
+        redirect_to root_path and return
+      end
     else
       set_form_variables
       flash.now[:alert] = "Unable to save the workshop variation."
@@ -77,7 +82,7 @@ class WorkshopVariationsController < ApplicationController
 
     if @workshop_variation.update(workshop_variation_params)
       flash[:notice] = "Workshop Variation updated successfully."
-      redirect_to workshop_variations_path
+      redirect_to @workshop_variation
     else
       set_form_variables
       flash[:alert] = "Unable to update Workshop Variation."
@@ -108,7 +113,7 @@ class WorkshopVariationsController < ApplicationController
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
-      [ :name, :rhino_body, :published, :position, :youtube_url, :created_by_id,
+      [ :name, :rhino_body, :published, :publicly_visible, :position, :youtube_url, :created_by_id,
         :organization_id, :workshop_id, :workshop_variation_idea_id
       ]
     )

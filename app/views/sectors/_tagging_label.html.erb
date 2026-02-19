@@ -12,7 +12,7 @@
 
 <% if sector %>
   <%= link_to taggings_path(sector_names_all: sector.name),
-    data: {turbo_frame: "_top"},
+    data: { turbo_frame: "_top", sector_name: sector.name },
               class: "inline-flex items-center
                       rounded-md
                       border #{ DomainTheme.border_class_for(:sectors) } hover:#{ DomainTheme.border_class_for(:sectors, intensity: 500) }

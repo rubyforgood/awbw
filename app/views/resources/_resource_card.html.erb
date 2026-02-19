@@ -52,7 +52,11 @@
         <% end %>
       </div>
       <!-- ACTION BUTTONS -->
-      <div class="absolute bottom-3 right-3 flex items-center space-x-2 z-30">
+      <div class="absolute bottom-3 left-4 right-3 flex items-center z-30">
+        <% if allowed_to?(:edit?, resource) %>
+          <p class="admin-only text-[10px] text-blue-600 bg-blue-50 rounded px-1.5 py-0.5 whitespace-nowrap"><%= resource.created_at.strftime("%b %-d, %Y") %></p>
+        <% end %>
+        <div class="ml-auto flex items-center space-x-2">
         <% if resource.downloadable_asset&.file&.attached? %>
           <%= link_to(
                 content_tag(:span, "", class: "fa fa-download"),
@@ -69,6 +73,7 @@
                 data: {turbo_frame: "_top", turbo_prefetch: false }
               ) %>
         <% end %>
+        </div>
       </div>
     </div>
   </div>

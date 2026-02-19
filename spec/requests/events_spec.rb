@@ -91,9 +91,9 @@ RSpec.describe "Events", type: :request do
         }.to change(Event, :count).by(1)
       end
 
-      it "redirects" do
+      it "redirects to the created event" do
         post events_path, params: valid_params
-        expect(response).to redirect_to(events_path)
+        expect(response).to redirect_to(event_url(Event.last))
       end
 
       it "stores start_date/end_date in UTC when created by user in Pacific time zone" do
@@ -110,8 +110,8 @@ RSpec.describe "Events", type: :request do
           public: true
         } }
 
-        expect(response).to redirect_to(events_url)
         created = Event.order(created_at: :desc).first
+        expect(response).to redirect_to(event_url(created))
         expect(created.start_date.utc).to eq(Time.utc(2025, 6, 15, 19, 0, 0))
         expect(created.end_date.utc).to eq(Time.utc(2025, 6, 15, 20, 0, 0))
       end
@@ -129,8 +129,8 @@ RSpec.describe "Events", type: :request do
           public: true
         } }
 
-        expect(response).to redirect_to(events_url)
         created = Event.order(created_at: :desc).first
+        expect(response).to redirect_to(event_url(created))
         expect(created.start_date.utc).to eq(Time.utc(2025, 6, 15, 19, 0, 0))
         expect(created.end_date.utc).to eq(Time.utc(2025, 6, 15, 20, 0, 0))
       end

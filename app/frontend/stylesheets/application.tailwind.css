@@ -102,6 +102,11 @@
   @apply text-primary border-b-2 border-primary font-bold bg-gray-100;
 }
 
+/* Highlight for tag blocks when their checkbox is selected in "Explore by combination" */
+.tags-combination-selected {
+  @apply ring-2 ring-lime-600 bg-lime-200;
+}
+
 /* Prevent pag breaks on images when printing  */
 @media print {
   table {
@@ -204,4 +209,12 @@ textarea.comment-truncated:focus {
   .prose[data-print-options-images-value="false"] img {
     display: none !important;
   }
+}
+
+/* Turbo progress bar */
+.turbo-progress-bar {
+  height: 7px;
+  background-color: #0076ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border-radius: 0 2px 2px 0;
 }
