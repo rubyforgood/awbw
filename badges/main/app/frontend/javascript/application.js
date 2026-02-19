@@ -11,3 +11,4 @@ ActiveStorage.start();
 
 import "./controllers";
 import "./rhino/extend-editor.js";
+import "./turbo-events";
