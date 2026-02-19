@@ -44,7 +44,7 @@ class WorkshopVariationsController < ApplicationController
       flash[:notice] = "Workshop Variation has been created."
       if params[:from] == "workshop_show" && @workshop_variation.workshop.present?
         redirect_to workshop_path(@workshop_variation.workshop, anchor: "variation-#{@workshop_variation.id}") and return
-      elsif allowed_to?(:index?, WorkshopVariation)
+      elsif allowed_to?(:show?, @workshop_variation)
         redirect_to @workshop_variation and return
       else
         redirect_to root_path and return

@@ -33,7 +33,7 @@ class WorkshopIdeasController < ApplicationController
         notification_type: 0)
 
       flash[:notice] = "Workshop idea was successfully created."
-      if allowed_to?(:index?, WorkshopIdea)
+      if allowed_to?(:show?, @workshop_idea)
         redirect_to @workshop_idea
       else
         redirect_to root_path

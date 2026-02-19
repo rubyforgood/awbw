@@ -115,9 +115,9 @@ RSpec.describe "/story_ideas", type: :request do
         }.to change(StoryIdea, :count).by(1)
       end
 
-      it "redirects to root after create" do
+      it "redirects to show after create" do
         post story_ideas_url, params: { story_idea: valid_attributes }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(story_idea_url(StoryIdea.last))
       end
 
       it "assigns current_user as owner" do
