@@ -1,4 +1,4 @@
 <div class="assets">
-  <%= render "assets/display_image", resource: resource, file: (defined?(file) ? file : nil), variant: (defined?(variant) ? variant : :hero), link: (defined?(link) ? link : true) %>
-  <%= render "assets/display_gallery_media", resource: resource, link: (defined?(link) ? link : true) %>
+  <%= render "assets/display_image", resource: resource, file: (defined?(file) ? file : nil), variant: (defined?(variant) ? variant : :hero), link: (defined?(link) ? link : nil) %>
+  <%= render "assets/display_gallery_media", resource: resource, link: (defined?(link) ? link : nil) %>
 </div>

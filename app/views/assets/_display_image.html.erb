@@ -4,7 +4,7 @@
 <% file ||= item&.file || resource&.try(field_name)&.file || file %>
 <% variant ||= :gallery %>
 <% link_to_object ||= false %>
-<% link = defined?(link) ? link : true %>
+<% link = (defined?(link) && !link.nil?) ? link : link_to_object %>
 <% display_open_pdf_link ||= false %>
 <% idx ||= 0 %>
 <% item_type ||= "PrimaryAsset" %>

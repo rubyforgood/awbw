@@ -33,7 +33,6 @@
           <div class="h-96 max-h-96 bg-gray-200 overflow-hidden">
             <%= render "assets/display_image",
                        resource: @featured_story,
-                       link: false,
                        extra_image_classes: "!w-full h-full object-cover",
                        variant: :hero %>
           </div>
@@ -161,7 +160,6 @@
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_dv_story,
-                           link: false,
                            variant: :hero %>
                 <!-- Title and Organization Overlay -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
@@ -213,7 +211,6 @@
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_sj_story,
-                           link: false,
                            variant: :hero %>
                 <!-- Title and Organization Overlay -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
@@ -265,7 +262,6 @@
               <div class="aspect-[4/3] bg-gray-200 relative">
                 <%= render "assets/display_image",
                            resource: featured_fs_story,
-                           link: false,
                            variant: :hero %>
                 <!-- Title and Organization Overlay -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
@@ -361,7 +357,6 @@
           <div class="absolute inset-0 bg-gray-200">
             <%= render "assets/display_image",
                        resource: story,
-                       link: false,
                        variant: :hero,
                        height: 12
             %>

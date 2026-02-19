@@ -8,7 +8,8 @@
       <div class="aspect-[16/6] bg-gray-200">
         <%= render "assets/display_image",
                    resource: @story,
-                   variant: :hero %>
+                   variant: :hero,
+                   link: true %>
       </div>
       
       <!-- Blue Sector Box on Top Left -->
@@ -81,7 +82,7 @@
     <!-- Additional Story Assets (if any beyond hero) -->
     <% if @story.assets.count > 1 %>
       <div class="mb-10">
-        <%= render "assets/display_assets", resource: @story %>
+        <%= render "assets/display_assets", resource: @story, link: true %>
       </div>
     <% end %>
   </div>
