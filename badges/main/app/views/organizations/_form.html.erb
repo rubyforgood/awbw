@@ -3,11 +3,11 @@
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
   <% automanaged_notice = "<span class='text-xs text-amber-700 mt-1'>Auto-managed by affiliations</span>" %>
 
-  <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 p-3 mb-6 items-start">
+  <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 mb-8 items-start">
     <!-- LEFT SIDE (3/4) -->
     <div>
       <!-- Organization Name + Hidden -->
-      <div class="mb-6">
+      <div class="mb-8">
         <div class="md:col-span-2">
           <%= f.input :name,
                       label: "Organization Name",
@@ -29,7 +29,7 @@
             Sectors
           </div>
 
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+          <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm">
             <div class="flex flex-wrap items-center gap-4 p-3">
               <div class="flex flex-wrap items-center gap-2">
                 <%= f.simple_fields_for :sectorable_items do |sfi| %>
@@ -71,7 +71,14 @@
     </div>
   </div>
 
-  <!-- Classification -->
+  <!-- Background info -->
+  <div class="form-group space-y-4 mb-8">
+    <div class="font-semibold text-gray-700 mb-2">
+      Background Info
+    </div>
+
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+
   <% org_earliest_aff = f.object.persisted? ? f.object.affiliations.minimum(:start_date) : nil %>
   <% org_aff_ended = f.object.persisted? && f.object.affiliations.any? && !f.object.affiliations.active.exists? %>
   <% org_latest_end = f.object.persisted? ? f.object.affiliations.maximum(:end_date) : nil %>
@@ -129,7 +136,7 @@
 
     <div class="flex flex-col">
       <%= f.input :agency_type,
-                  label: "Agency Type",
+                  label: "Organization Type",
                   as: :select,
                   required: true,
                   collection: [
@@ -144,7 +151,7 @@
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
       <%= f.input :agency_type_other,
-                  label: "Agency Type Other",
+                  label: "Organization Type Other",
                   hint: "Please specify if 'Other' selected",
                   input_html: {
                     class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
@@ -153,7 +160,7 @@
 
     <div class="flex flex-col">
       <%= f.input :email,
-                  label: "Email",
+                  label: "Organization Email",
                   as: :email,
                   input_html: {
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -183,15 +190,17 @@
       </div>
     <% end %>
 
-    <%= f.input :organization_status_id,
-                as: :select,
-                collection: @organization_statuses,
-                include_blank: true,
-                label: "Status",
-                required: true,
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
+    <% if params[:admin] && allowed_to?(:manage?, Organization) %>
+      <%= f.input :organization_status_id,
+                  as: :select,
+                  collection: @organization_statuses,
+                  include_blank: true,
+                  label: "Status",
+                  required: true,
+                  input_html: {
+                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  } %>
+    <% end %>
   </div>
   <% if params[:admin] && allowed_to?(:manage?, Organization) %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -239,20 +248,10 @@
                 } %>
   </div>
 
-  <% if allowed_to?(:manage?, Organization) %>
-    <div class="admin-only bg-blue-100">
-      <div class="mb-6">
-        <%= f.input :notes,
-                    as: :text,
-                    label: "Internal Notes",
-                    input_html: {
-                      rows: 3,
-                      class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
-                    } %></div>
     </div>
-  <% end %>
+  </div>
 
-  <div class="form-group space-y-4">
+  <div class="form-group space-y-4 mb-8">
     <div class="font-semibold text-gray-700 mb-2">
       Addresses
     </div>
@@ -276,7 +275,7 @@
     </div>
   </div>
 
-  <div class="form-group space-y-4">
+  <div class="form-group space-y-4 mb-8">
     <div class="font-semibold text-gray-700 mb-2">
       Affiliations
     </div>
@@ -307,7 +306,7 @@
     </div>
   </div>
 
-  <div class="profile-preferences-section">
+  <div class="profile-preferences-section mb-8">
     <div class="font-medium text-gray-700 mb-2 block">
       Profile display preferences:
     </div>
@@ -337,7 +336,7 @@
 
   <% if f.object.persisted? %>
     <!-- Comments -->
-    <div class="form-group space-y-4" id="comments-section">
+    <div class="form-group space-y-4 mb-8" id="comments-section">
       <div class="font-semibold text-gray-700 mb-2">Comments</div>
 
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm"
@@ -362,6 +361,19 @@
                                     partial: "comments/comment_fields",
                                     class: "btn btn-secondary-outline" %>
       </div>
+    </div>
+  <% end %>
+
+  <% if params[:admin] && allowed_to?(:manage?, Organization) %>
+    <div class="<%= 'admin-only bg-blue-100' if allowed_to?(:manage?, Organization) %> mb-6">
+      <%= f.input :notes,
+                  as: :text,
+                  label: "Internal Notes",
+                  input_html: {
+                    rows: 3,
+                    disabled: !allowed_to?(:manage?, Organization),
+                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
+                  } %>
     </div>
   <% end %>
 
