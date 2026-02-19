@@ -57,7 +57,7 @@ class StoryIdeasController < ApplicationController
     if success
       flash[:notice] = "StoryIdea was successfully created."
       if allowed_to?(:index?, StoryIdea)
-        redirect_to story_ideas_path
+        redirect_to @story_idea
       else
         redirect_to root_path
       end
@@ -86,7 +86,7 @@ class StoryIdeasController < ApplicationController
     if success
       flash[:notice] = "StoryIdea was successfully updated."
       if allowed_to?(:index?, StoryIdea)
-        redirect_to story_ideas_path, status: :see_other
+        redirect_to @story_idea, status: :see_other
       else
         redirect_to root_path, status: :see_other
       end

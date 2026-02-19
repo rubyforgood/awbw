@@ -33,7 +33,7 @@ class QuotesController < ApplicationController
     authorize! @quote
 
     if @quote.save
-      redirect_to quotes_path, notice: "Quote was successfully created."
+      redirect_to @quote, notice: "Quote was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -43,7 +43,7 @@ class QuotesController < ApplicationController
   def update
     authorize! @quote
     if @quote.update(quote_params)
-      redirect_to quotes_path, notice: "Quote was successfully updated.", status: :see_other
+      redirect_to @quote, notice: "Quote was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content

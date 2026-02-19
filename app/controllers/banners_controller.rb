@@ -29,7 +29,7 @@ class BannersController < ApplicationController
     authorize! @banner
 
     if @banner.save
-      redirect_to banners_path, notice: "Banner was successfully created."
+      redirect_to @banner, notice: "Banner was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -39,7 +39,7 @@ class BannersController < ApplicationController
   def update
     authorize! @banner
     if @banner.update(banner_params)
-      redirect_to banners_path, notice: "Banner was successfully updated.", status: :see_other
+      redirect_to @banner, notice: "Banner was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content

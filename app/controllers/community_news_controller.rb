@@ -67,7 +67,7 @@ class CommunityNewsController < ApplicationController
     end
 
     if success
-      redirect_to community_news_index_path,
+      redirect_to @community_news,
                   notice: "Community news was successfully created."
     else
       @community_news = @community_news.decorate
@@ -91,7 +91,7 @@ class CommunityNewsController < ApplicationController
     end
 
     if success
-      redirect_to community_news_index_path,
+      redirect_to @community_news,
                   notice: "Community news was successfully updated.", status: :see_other
     else
       set_form_variables
