@@ -5,6 +5,9 @@ class Asset < ApplicationRecord
     "image/jpeg",
     "image/png",
     "image/gif",
+    "image/webp",
+    "image/heic",
+    "image/heif",
     "application/pdf",
     "application/zip",
     "application/msword", # Word .doc
@@ -39,6 +42,29 @@ class Asset < ApplicationRecord
     end
   end
 
+  CONTENT_TYPE_LABELS = {
+    "image/jpeg" => "JPG",
+    "image/png" => "PNG",
+    "image/gif" => "GIF",
+    "image/webp" => "WebP",
+    "image/heic" => "HEIC",
+    "image/heif" => "HEIF",
+    "application/pdf" => "PDF",
+    "application/zip" => "ZIP",
+    "application/msword" => "DOC",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => "DOCX",
+    "application/vnd.oasis.opendocument.text" => "ODT",
+    "text/html" => "HTML"
+  }.freeze
+
+  def self.accept_attribute
+    self::ACCEPTED_CONTENT_TYPES.join(",")
+  end
+
+  def self.accepted_types_label
+    self::ACCEPTED_CONTENT_TYPES.map { |ct| CONTENT_TYPE_LABELS[ct] || ct }.join(", ")
+  end
+
   belongs_to :owner, polymorphic: true, optional: true, touch: true
   belongs_to :report, optional: true
 
@@ -55,16 +81,10 @@ class Asset < ApplicationRecord
   def file_type
     return unless file.attached?
 
-    allowed_types =
-      case type
-      when "PrimaryAsset"
-        PrimaryAsset::ACCEPTED_CONTENT_TYPES
-      else
-        ACCEPTED_CONTENT_TYPES
-      end
+    allowed_types = self.class::ACCEPTED_CONTENT_TYPES
 
     unless allowed_types.include?(file.content_type)
-      errors.add(:file, "type is not allowed for #{type.underscore.humanize}")
+      errors.add(:file, "type not accepted")
     end
   end
 end
