@@ -43,7 +43,7 @@ RSpec.describe PersonPolicy, type: :policy do
     context "with owner" do
       subject { policy_for(record: owned_person, user: owner_user) }
 
-      it { is_expected.not_to be_allowed_to(:show?) }
+      it { is_expected.to be_allowed_to(:show?) }
     end
 
     context "with regular user and searchable person" do

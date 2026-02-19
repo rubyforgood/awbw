@@ -6,7 +6,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def show?
-    admin?
+    admin? || owner?
   end
 
   def edit?
