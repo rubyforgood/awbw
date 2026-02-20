@@ -20,7 +20,9 @@ class EventRegistration < ApplicationRecord
     if params[:registrant_name].present?
       registrations = registrations.registrant_name(params[:registrant_name].downcase.strip)
     end
-    if params[:event_name].present?
+    if params[:event_id].present?
+      registrations = registrations.where(event_id: params[:event_id])
+    elsif params[:event_name].present?
       registrations = registrations.event_title(params[:event_name].downcase.strip)
     end
     registrations

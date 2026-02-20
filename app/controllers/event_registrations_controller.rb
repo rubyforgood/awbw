@@ -10,6 +10,8 @@ class EventRegistrationsController < ApplicationController
     filtered = base_scope.search_by_params(params)
     @event_registrations_count = filtered.size
     @event_registrations = filtered.includes(:registrant, :event).paginate(page: params[:page], per_page: per_page)
+    @events = Event.order(start_date: :desc)
+    @filtered_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
 
     respond_to do |format|
       format.html

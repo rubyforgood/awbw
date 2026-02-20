@@ -1,10 +1,10 @@
 module Events
   class RegistrationsController < ApplicationController
-    before_action :set_event, only: [ :create, :destroy ]
+    before_action :set_event
+    before_action :set_registrant
 
     def create
-      registrant = params[:registrant_id] ? Person.find(params[:registrant_id]) : current_user.person
-      @event_registration = @event.event_registrations.new(registrant: registrant)
+      @event_registration = @event.event_registrations.new(registrant: @registrant)
       authorize! @event_registration
 
       if @event_registration.save
@@ -23,7 +23,7 @@ module Events
     end
 
     def destroy
-      @event_registration = @event.event_registrations.find_by(registrant: current_user.person)
+      @event_registration = @event.event_registrations.find_by(registrant: @registrant)
       authorize! @event_registration
 
       unless @event_registration
@@ -54,6 +54,10 @@ module Events
 
     def set_event
       @event = Event.find(params[:event_id])
+    end
+
+    def set_registrant
+      @registrant = params[:registrant_id] ? Person.find(params[:registrant_id]) : current_user.person
     end
   end
 end
