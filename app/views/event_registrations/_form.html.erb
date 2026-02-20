@@ -18,6 +18,13 @@
                     include_blank: true,
                     selected: f.object.registrant_id %>
       </div>
+        <%= f.select :registrant_id,
+              [],
+              { include_blank: true, selected: f.object.registrant_id },
+              data: {
+                controller: "remote-select",
+                remote_select_model_value: "person"
+              } %>
     </div>
 
     <% if f.object.persisted? %>

@@ -83,3 +83,6 @@ application.register("toggle-lock", ToggleLockController)
 
 import ToggleUserIconController from "./toggle_user_icon_controller"
 application.register("toggle-user-icon", ToggleUserIconController)
+
+import RemoteSelectController from "./remote_select_controller"
+application.register("remote-select", RemoteSelectController)
