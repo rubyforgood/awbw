@@ -10,6 +10,8 @@ class EventRegistrationsController < ApplicationController
     filtered = base_scope.search_by_params(params)
     @event_registrations_count = filtered.size
     @event_registrations = filtered.includes(:registrant, :event).paginate(page: params[:page], per_page: per_page)
+    @events = Event.order(start_date: :desc)
+    @filtered_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
 
     respond_to do |format|
       format.html
@@ -46,7 +48,7 @@ class EventRegistrationsController < ApplicationController
         noticeable: @event_registration,
         kind: "event_registration_confirmation",
         recipient_role: :person,
-        recipient_email: current_user.email,
+        recipient_email: @event_registration.registrant.preferred_email,
         notification_type: 0)
       NotificationServices::CreateNotification.call(
         noticeable: @event_registration,
@@ -99,7 +101,7 @@ class EventRegistrationsController < ApplicationController
            .or(Event.where(id: @event_registration.event_id))
            .distinct
            .order(start_date: :desc)
-    @registrants = User.has_access.includes(:person).order("people.first_name, people.last_name")
+    @registrants = Person.order(:first_name, :last_name)
   end
 
   private
@@ -124,7 +126,7 @@ class EventRegistrationsController < ApplicationController
         csv << [
           r&.first_name.to_s,
           r&.last_name.to_s,
-          r&.email.to_s,
+          r&.preferred_email.to_s,
           e&.title.to_s
         ]
       end

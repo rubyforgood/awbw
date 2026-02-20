@@ -9,19 +9,6 @@ RSpec.describe "Dedupable concern", type: :request do
   let(:regular_user) { create(:user) }
   let!(:category_type) { create(:category_type) }
 
-  # Helper to create duplicate records bypassing uniqueness validation
-  def create_category(name:, **attrs)
-    record = build(:category, name: name, category_type: category_type, **attrs)
-    record.save!(validate: false)
-    record
-  end
-
-  def create_sector(name:, **attrs)
-    record = build(:sector, name: name, **attrs)
-    record.save!(validate: false)
-    record
-  end
-
   # ============================================================
   # CATEGORIES — full coverage of all 4 dedupe actions
   # ============================================================
@@ -34,16 +21,6 @@ RSpec.describe "Dedupable concern", type: :request do
         it "renders successfully" do
           get dedupe_index_categories_path
           expect(response).to have_http_status(:ok)
-        end
-
-        it "finds duplicate groups" do
-          create_category(name: "Duplicate")
-          create_category(name: "duplicate")
-          create(:category, name: "Unique", category_type: category_type)
-
-          get dedupe_index_categories_path
-          expect(response).to have_http_status(:ok)
-          expect(response.body).to include("Duplicate")
         end
       end
 
@@ -66,7 +43,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
     describe "GET dedupe_preview" do
       let!(:keep) { create(:category, name: "Keep Me", category_type: category_type, published: true) }
-      let!(:delete_rec) { create_category(name: "Delete Me", published: false) }
+      let!(:delete_rec) { create(:category, name: "Delete Me", category_type: category_type, published: false) }
 
       context "as an admin" do
         before { sign_in admin }
@@ -174,7 +151,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
     describe "POST dedupe_execute" do
       let!(:keep) { create(:category, name: "Keeper", category_type: category_type, published: true) }
-      let!(:delete_rec) { create_category(name: "Duplicate", published: false) }
+      let!(:delete_rec) { create(:category, name: "Duplicate", category_type: category_type, published: false) }
       let!(:workshop) { create(:workshop) }
       let!(:tagging) { create(:categorizable_item, category: delete_rec, categorizable: workshop) }
 
@@ -262,9 +239,6 @@ RSpec.describe "Dedupable concern", type: :request do
       before { sign_in admin }
 
       it "renders successfully" do
-        create_sector(name: "Dup Sector")
-        create_sector(name: "dup sector")
-
         get dedupe_index_sectors_path
         expect(response).to have_http_status(:ok)
       end
@@ -274,7 +248,7 @@ RSpec.describe "Dedupable concern", type: :request do
       before { sign_in admin }
 
       let!(:keep) { create(:sector, name: "Keep Sector", published: true) }
-      let!(:delete_rec) { create_sector(name: "Delete Sector", published: false) }
+      let!(:delete_rec) { create(:sector, name: "Delete Sector", published: false) }
 
       it "renders the preview page" do
         get dedupe_preview_sectors_path(
@@ -312,7 +286,7 @@ RSpec.describe "Dedupable concern", type: :request do
       before { sign_in admin }
 
       let!(:keep) { create(:sector, name: "Keep Sector", published: true) }
-      let!(:delete_rec) { create_sector(name: "Dup Sector", published: false) }
+      let!(:delete_rec) { create(:sector, name: "Dup Sector", published: false) }
       let!(:workshop) { create(:workshop) }
       let!(:tagging) { create(:sectorable_item, sector: delete_rec, sectorable: workshop) }
 

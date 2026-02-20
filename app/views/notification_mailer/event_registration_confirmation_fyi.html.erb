@@ -1,12 +1,12 @@
-<% profile_url = @person ? person_url(@person) : user_url(@user) %>
+<% profile_url = person_url(@person) %>
 
 <p style="margin-bottom: 6px;">
   New Event Registration
 </p>
 
 <h1 style="margin: 0;">
-  <strong><%= @user.full_name %></strong>
-  (<%= @user.email %>)
+  <strong><%= @person.full_name %></strong>
+  (<%= @person.preferred_email %>)
 </h1>
 
 <p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">

@@ -19,7 +19,8 @@ class Person < ApplicationRecord
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
   # has_many through
-  has_many :event_registrations, through: :user
+  has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
+  has_many :events, through: :event_registrations
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 

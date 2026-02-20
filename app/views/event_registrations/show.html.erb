@@ -1,5 +1,9 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<div class="min-h-screen bg-gray-100 py-10 px-4">
+<% if allowed_to?(:index?, EventRegistration) %>
+  <div class="flex justify-end mb-4">
+    <%= link_to "Event Registrations", event_registrations_path, class: "btn btn-secondary-outline" %>
+  </div>
+<% end %>
   <div class="max-w-lg mx-auto">
 
     <!-- Ticket Container -->
@@ -19,32 +23,40 @@
           </div>
 
           <!-- Center: Title -->
-          <div class="text-center flex-1">
+          <div class="flex-1">
             <h1 class="text-xl font-semibold tracking-wide">
-              Event Ticket
+              Event Registration
             </h1>
-            <p class="text-sm opacity-90">
-              Registration Confirmation
-            </p>
           </div>
+
         </div>
       </div>
 
 
       <!-- Ticket Body -->
-      <div class="px-6 py-6 space-y-5">
-        <!-- Assets -->
-        <%= render "assets/display_image",
-                   resource: @event_registration.event,
-                   width: 56, height: 48,
-                   variant: :index,
-                   link_to_object: true,
-                   file: @event_registration.event.decorate.display_image %>
+      <div class="bg-gray-50 px-6 py-6 space-y-5">
+        <!-- Event Image + Registrant -->
+        <div class="flex items-center gap-4">
+          <div class="shrink-0">
+            <%= render "assets/display_image",
+                       resource: @event_registration.event,
+                       width: 32, height: 24,
+                       variant: :index,
+                       link_to_object: true,
+                       file: @event_registration.event.decorate.display_image %>
+          </div>
+          <div class="flex flex-col justify-center min-w-0 flex-1 ml-[4rem]">
+            <p class="text-gray-500 uppercase tracking-wide text-xs">Registrant</p>
+            <p class="font-medium text-gray-900 text-lg">
+              <%= @event_registration.registrant.full_name %>
+            </p>
+          </div>
+        </div>
 
         <!-- Event Name -->
         <div>
           <h2 class="text-2xl font-bold text-gray-900 leading-tight">
-            <%= @event_registration.event.title %>
+            <%= link_to @event_registration.event.title, event_path(@event_registration.event), class: "hover:underline" %>
           </h2>
         </div>
 
@@ -74,19 +86,15 @@
             </div>
           <%# end %>
 
-          <div class="my-4">
-            <p class="text-gray-500 uppercase tracking-wide text-xs">Registrant</p>
-            <p class="font-medium text-gray-900">
-              <%= @event_registration.registrant.full_name %>
-            </p>
-          </div>
 
-          <div class="my-4">
-            <p class="text-gray-500 uppercase tracking-wide text-xs">Ticket #</p>
-            <p class="font-mono text-gray-900">
-              <%= @event_registration.id %>
-            </p>
-          </div>
+          <% if @event_registration.event.videoconference_url.present? %>
+            <div>
+              <p class="text-gray-500 uppercase tracking-wide text-xs">Videoconference</p>
+              <p class="font-medium text-gray-900">
+                <%= link_to "Join online", safe_url(@event_registration.event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "text-blue-600 hover:underline" %>
+              </p>
+            </div>
+          <% end %>
 
         </div>
 
@@ -115,12 +123,7 @@
 
       </div>
 
-      <!-- Ticket Footer -->
-      <div class="bg-gray-50 px-6 py-4 text-center text-xs text-gray-500">
-        Please present this ticket at check-in
-      </div>
 
     </div>
 
   </div>
-</div>

@@ -63,7 +63,7 @@ class EventDecorator < ApplicationDecorator
     )
   end
 
-  def times(display_day: false, display_date: false)
+  def times(display_day: false, display_date: false, inline: false)
     s = start_date.in_time_zone(Time.zone)
     e = (end_date || start_date).in_time_zone(Time.zone)
 
@@ -97,12 +97,15 @@ class EventDecorator < ApplicationDecorator
     # DIFFERENT DAY → two lines
     # --------------------------------------------------
     if s.to_date != e.to_date
+      separator = inline ? " - " : h.tag.br
+      prefix_start = inline ? nil : "Start: "
+      prefix_end   = inline ? nil : "End: "
       return h.safe_join(
         [
-          parts_for.call(s, prefix: "Start: "),
-          parts_for.call(e, prefix: "End: ")
+          parts_for.call(s, prefix: prefix_start),
+          parts_for.call(e, prefix: prefix_end)
         ],
-        h.tag.br
+        separator
       )
     end
 
