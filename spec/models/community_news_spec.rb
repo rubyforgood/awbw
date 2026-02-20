@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe CommunityNews, type: :model do
   describe '.search' do
     let(:person) { create(:person, first_name: 'John', last_name: 'Doe') }
-    let(:user_with_person) { create(:user, person: person) }
+    let(:user_with_person) { person.user }
     let(:user_without_person) { create(:user, person: nil) }
 
     let!(:community_news_with_person) do
