@@ -1,5 +1,5 @@
 class Workshop < ApplicationRecord
-  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include PunctuationStrippable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
@@ -323,6 +323,8 @@ class Workshop < ApplicationRecord
 
     save!
   end
+
+  remote_searchable_by :title
 
   private
 
