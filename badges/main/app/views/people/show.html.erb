@@ -268,9 +268,11 @@
         <% end %>
 
         <!-- Comments Section -->
-        <div class="p-3">
-          <%= render "comments/section", commentable: @person.object %>
-        </div>
+        <% if allowed_to?(:manage?, Comment) %>
+          <div class="p-3">
+            <%= render "comments/section", commentable: @person.object %>
+          </div>
+        <% end %>
       </div>
       </div>
 </div>
