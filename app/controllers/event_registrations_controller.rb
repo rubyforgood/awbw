@@ -75,7 +75,11 @@ class EventRegistrationsController < ApplicationController
 
   def update
     authorize! @event_registration
-    if @event_registration.update(event_registration_params)
+    @event_registration.assign_attributes(event_registration_params)
+    @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user }
+    @event_registration.comments.select(&:changed?).each { |c| c.updated_by = current_user }
+
+    if @event_registration.save
       redirect_to @event_registration, notice: "Registration was successfully updated.", status: :see_other
     else
       set_form_variables
@@ -107,7 +111,7 @@ class EventRegistrationsController < ApplicationController
   private
 
   def set_event_registration
-    @event_registration = EventRegistration.find(params[:id])
+    @event_registration = EventRegistration.includes(comments: [ :created_by, :updated_by ]).find(params[:id])
   end
 
   # Strong parameters
