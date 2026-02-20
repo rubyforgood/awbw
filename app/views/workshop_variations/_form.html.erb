@@ -14,11 +14,18 @@
         </div>
       <% else %>
         <%= f.input :workshop_id,
-                  as: :select,
-                  collection: @workshops,
-                  required: true,
-                  prompt: "Select a Workshop",
-                  input_html: { class: "w-full" } %>
+          collection: f.object.workshop.present? ? [[ f.object.workshop.title, f.object.workshop.id]] : [],
+          include_blank: true,
+          required: true,
+          input_html: {
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "workshop"
+            }
+          },
+          prompt: "Search by title",
+          label: "Workshop",
+          label_html: { class: "block text-sm font-medium text-gray-700 mb-1 " } %>
       <% end %>
     </div>
 

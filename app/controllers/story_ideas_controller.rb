@@ -110,8 +110,6 @@ class StoryIdeasController < ApplicationController
     @organizations = (@user || current_user)&.organizations&.order(:name) || Organization.none
     @windows_types = WindowsType.all
 
-    @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
-
     users = authorized_scope(User.has_access.includes(:person))
     users = users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
     @users = users.distinct.order("people.first_name, people.last_name")

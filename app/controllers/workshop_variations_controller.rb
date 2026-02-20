@@ -72,7 +72,6 @@ class WorkshopVariationsController < ApplicationController
   def edit
     @workshop_variation = WorkshopVariation.find(params[:id])
     authorize! @workshop_variation
-    @workshops = Workshop.published.order(:title)
     set_form_variables
   end
 
@@ -103,8 +102,6 @@ class WorkshopVariationsController < ApplicationController
   # end
 
   def set_form_variables
-    workshops = authorized_scope(Workshop.all)
-    @workshops = workshops.order(:title)
     @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
       Workshop.where(id: params[:workshop_id]).last
     @workshop_variation_idea = params[:workshop_variation_idea_id].present? &&
