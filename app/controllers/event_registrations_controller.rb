@@ -105,7 +105,6 @@ class EventRegistrationsController < ApplicationController
            .or(Event.where(id: @event_registration.event_id))
            .distinct
            .order(start_date: :desc)
-    @registrants = Person.order(:first_name, :last_name)
   end
 
   private

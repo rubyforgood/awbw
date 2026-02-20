@@ -35,8 +35,6 @@ class SearchController < ApplicationController
     case model_class.name
     when "Person"
       [ pattern, pattern ]  # must match 2 placeholders
-    else
-      [ pattern ]
     end
   end
 
