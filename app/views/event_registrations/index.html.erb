@@ -36,7 +36,7 @@
                 <tbody class="divide-y divide-gray-200">
                   <% @event_registrations.each do |event_registration| %>
                     <tr id="<%= dom_id(event_registration) %>" class="hover:bg-gray-50 transition-colors duration-150">
-                      <td class="px-4 py-2 text-sm text-gray-800">
+                      <td class="px-4 py-2 text-sm text-gray-800 align-top">
                           <%= link_to event_registration.registrant.full_name,
                                       person_path(event_registration.registrant),
                                       class: "btn btn-secondary-outline" %>

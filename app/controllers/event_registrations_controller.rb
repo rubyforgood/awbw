@@ -46,7 +46,7 @@ class EventRegistrationsController < ApplicationController
         noticeable: @event_registration,
         kind: "event_registration_confirmation",
         recipient_role: :person,
-        recipient_email: current_user.email,
+        recipient_email: @event_registration.registrant.preferred_email,
         notification_type: 0)
       NotificationServices::CreateNotification.call(
         noticeable: @event_registration,

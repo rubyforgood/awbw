@@ -3,7 +3,8 @@ module Events
     before_action :set_event, only: [ :create, :destroy ]
 
     def create
-      @event_registration = @event.event_registrations.new(registrant: current_user.person)
+      registrant = params[:registrant_id] ? Person.find(params[:registrant_id]) : current_user.person
+      @event_registration = @event.event_registrations.new(registrant: registrant)
       authorize! @event_registration
 
       if @event_registration.save
