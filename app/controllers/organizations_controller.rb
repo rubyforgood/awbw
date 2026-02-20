@@ -70,7 +70,7 @@ class OrganizationsController < ApplicationController
     logged_user_ids = workshop_logs.where.not(user_id: nil).distinct.pluck(:user_id)
     @people = User.where(id: logged_user_ids)
                   .includes(:person)
-                  .select("users.id, people.first_name, people.last_name")
+                  .select("users.id, users.person_id, people.first_name, people.last_name")
                   .order("people.first_name, people.last_name")
   end
 
