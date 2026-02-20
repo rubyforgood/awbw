@@ -1,5 +1,5 @@
 class WindowsType < ApplicationRecord
-  TYPES = [ "ADULT", "CHILDREN", "COMBINED" ]
+  TYPES = [ "Adult", "Children", "Combined" ]
 
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :form_builders
