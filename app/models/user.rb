@@ -120,7 +120,7 @@ class User < ApplicationRecord
   end
 
   def full_name_with_email
-    "#{full_name} (#{email})"
+    person ? "#{person.full_name} (#{email})" : email
   end
 
   def devise_email_name

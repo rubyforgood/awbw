@@ -13,17 +13,16 @@
     </div>
   </div>
 
-  <!-- Username -->
+  <!-- Created by (user dropdown) -->
   <div>
-    <%= label_tag :user_name, "Created by", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <div class="relative">
-      <%= text_field_tag :user_name, params[:user_name],
-                         class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+    <%= label_tag :user_id, "Created by", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <div data-controller="searchable-select" data-searchable-select-mode-value="person">
+      <%= select_tag :user_id,
+                     options_from_collection_for_select(@users, :id, :full_name_with_email, params[:user_id].to_i),
+                     include_blank: "All users",
+                     data: { searchable_select_target: "select", action: "change->searchable-select#submit" },
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-      <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
-           onclick="this.closest('form').submit()">
-        <i class="fa fa-search text-gray-500"></i>
-      </div>
     </div>
   </div>
 
