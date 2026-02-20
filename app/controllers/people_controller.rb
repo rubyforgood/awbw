@@ -136,7 +136,7 @@ class PeopleController < ApplicationController
     end
 
     @person.assign_attributes(person_params)
-    @person.comments.select(&:new_record?).each { |c| c.created_by = current_user }
+    @person.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @person.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
     if @person.save
