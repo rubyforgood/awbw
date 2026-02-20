@@ -14,7 +14,7 @@
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :registrant_id,
                     collection: @registrants,
-                    label_method: :full_name, value_method: :id,
+                    label_method: ->(p) { p.preferred_email.present? ? "#{p.full_name} (#{p.preferred_email})" : p.full_name }, value_method: :id,
                     include_blank: true,
                     selected: f.object.registrant_id %>
       </div>

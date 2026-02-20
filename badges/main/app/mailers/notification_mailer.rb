@@ -4,13 +4,12 @@ class NotificationMailer < ApplicationMailer
   def event_registration_confirmation_fyi(notification)
     @event_registration = notification.noticeable
     @event = @event_registration.event.decorate
-    @user = @event_registration.registrant
-    @person = @user.person
+    @person = @event_registration.registrant
     @notification_type = "Event registration"
 
     # Send email to the admin
     mail(
-      subject: "AWBW portal: new event registration by #{@user.full_name} to #{@event.title}"
+      subject: "AWBW portal: new event registration by #{@person.full_name} to #{@event.title}"
     )
   end
 

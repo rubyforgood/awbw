@@ -1,8 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Event show page", type: :system do
-  let(:user)  { create(:user, time_zone: "Pacific Time (US & Canada)") }
-  let(:admin) { create(:user, :admin, time_zone: "Pacific Time (US & Canada)") }
+  let(:user)  { create(:user, :with_person, time_zone: "Pacific Time (US & Canada)") }
+  let(:admin) { create(:user, :with_person, :admin, time_zone: "Pacific Time (US & Canada)") }
 
   let(:event) do
     create(
@@ -105,7 +105,7 @@ RSpec.describe "Event show page", type: :system do
 
     context "user registered" do
       before do
-        create(:event_registration, event: event, registrant: user)
+        create(:event_registration, event: event, registrant: user.person)
       end
 
       it "shows deregister button, badge, and calendar links" do
@@ -188,7 +188,7 @@ RSpec.describe "Event show page", type: :system do
     end
 
     it "updates De-register back to Register after de-registering" do
-      create(:event_registration, event: event, registrant: user)
+      create(:event_registration, event: event, registrant: user.person)
 
       sign_in(user)
       visit event_path(event)

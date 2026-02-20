@@ -35,7 +35,7 @@ class EventPolicy < ApplicationPolicy
     if authenticated? # logged in users can see events they are registered for even if registration is closed
       relation.left_outer_joins(:registrants)
               .published
-              .where("registration_close_date IS NULL OR registration_close_date >= ? OR users.id = ?", Time.current, user.id)
+              .where("registration_close_date IS NULL OR registration_close_date >= ? OR people.id = ?", Time.current, user.person_id)
               .distinct
     else
       relation.publicly_visible

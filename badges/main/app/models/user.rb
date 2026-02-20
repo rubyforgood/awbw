@@ -28,7 +28,7 @@ class User < ApplicationRecord
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :bookmarks, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
-  has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
+  has_many :event_registrations, through: :person
   has_many :notifications, as: :noticeable
 
   has_many :reports
