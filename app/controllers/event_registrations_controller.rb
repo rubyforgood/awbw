@@ -76,7 +76,7 @@ class EventRegistrationsController < ApplicationController
   def update
     authorize! @event_registration
     @event_registration.assign_attributes(event_registration_params)
-    @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user }
+    @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @event_registration.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
     if @event_registration.save
