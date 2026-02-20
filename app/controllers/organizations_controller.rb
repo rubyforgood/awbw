@@ -122,19 +122,6 @@ class OrganizationsController < ApplicationController
     @organization_statuses = OrganizationStatus.all
     @sectors_collection = Sector.published.order(:name).pluck(:name, :id)
     @current_sector_ids = @organization.sectorable_items.map(&:sector_id)
-    # Build array of [display_name, id] for person selection dropdown
-    # Email priority matches Person#preferred_email: user.email > person.email > person.email_2
-    @people_array = authorized_scope(Person.left_joins(:user))
-                          .order(:first_name, :last_name)
-                          .pluck(
-                            :first_name,
-                            :last_name,
-                            :id,
-                            Arel.sql("COALESCE(users.email, people.email, people.email_2)")
-                          )
-                          .map { |fn, ln, id, email|
-                            [ "#{fn} #{ln}#{" (#{email})" if email.present?}", id ]
-                          }
 
     if @organization.persisted? && @organization.errors.empty?
       affiliations = @organization.affiliations
