@@ -113,7 +113,8 @@ class EventRegistrationsController < ApplicationController
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
-      :event_id, :registrant_id
+      :event_id, :registrant_id,
+      comments_attributes: [ :id, :body, :_destroy ]
     )
   end
 

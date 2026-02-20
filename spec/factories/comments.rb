@@ -8,5 +8,9 @@ FactoryBot.define do
     trait :for_person do
       association :commentable, factory: :person
     end
+
+    trait :for_event_registration do
+      association :commentable, factory: :event_registration
+    end
   end
 end
