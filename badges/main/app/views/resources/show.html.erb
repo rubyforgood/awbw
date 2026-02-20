@@ -13,14 +13,11 @@
         <span class="inline-block text-md">
           <%= render "bookmarks/editable_bookmark_button", resource: @resource.object %>
         </span>
-        <span class="inline-block text-md">
-          <%= print_button(@resource, printable_type: "Resource", button_text: "Print page") %>
-        </span>
         <%= link_to ("<span title='Download #{@resource.kind}'>" +
           " Download <span class='fa fa-download'></span></span>").html_safe,
                     resource_download_path(@resource),
                     class: "btn btn-utility",
-                    data: {turbo: false} if @resource.downloadable_asset&.file&.attached? %>
+                    download: true if @resource.downloadable_asset&.file&.attached? %>
       </div>
       <!-- Resource Card -->
       <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
