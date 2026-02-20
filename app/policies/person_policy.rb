@@ -21,6 +21,10 @@ class PersonPolicy < ApplicationPolicy
     admin? && record.persisted? && !has_associated_data?
   end
 
+  def search?
+    admin?
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
 

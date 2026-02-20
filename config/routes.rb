@@ -138,6 +138,7 @@ Rails.application.routes.draw do
       patch :dedupe_update_keep
     end
   end
+  get "search/:model", to: "search#index"
   resources :story_ideas
   resources :stories
   resources :story_shares, only: [ :index, :show ]
