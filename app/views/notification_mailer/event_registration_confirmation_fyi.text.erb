@@ -1,9 +1,9 @@
-<% profile_url = @person ? person_url(@person) : user_url(@user) %>
+<% profile_url = person_url(@person) %>
 
 New Event Registration
 ==========================
 
-<%= @user.full_name %> (<%= @user.email %>)
+<%= @person.full_name %> (<%= @person.preferred_email %>)
 
 Registered on
 <%= @event_registration.created_at

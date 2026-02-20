@@ -1,4 +1,4 @@
-<% registered = event.event_registrations.exists?(registrant_id: current_user&.id) %>
+<% registered = event.event_registrations.exists?(registrant_id: current_user&.person_id) %>
 <%= tag.div id: dom_id(event.object, :registration_section), class: "registration-section flex flex-col gap-4 mb-6" do %>
   <!-- ⭐ BUTTONS -->
   <div class="flex flex-wrap items-center gap-3">

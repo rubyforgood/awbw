@@ -99,7 +99,7 @@ class EventRegistrationsController < ApplicationController
            .or(Event.where(id: @event_registration.event_id))
            .distinct
            .order(start_date: :desc)
-    @registrants = User.has_access.includes(:person).order("people.first_name, people.last_name")
+    @registrants = Person.order(:first_name, :last_name)
   end
 
   private
@@ -124,7 +124,7 @@ class EventRegistrationsController < ApplicationController
         csv << [
           r&.first_name.to_s,
           r&.last_name.to_s,
-          r&.email.to_s,
+          r&.preferred_email.to_s,
           e&.title.to_s
         ]
       end

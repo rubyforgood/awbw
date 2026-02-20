@@ -3,7 +3,7 @@ module Events
     before_action :set_event, only: [ :create, :destroy ]
 
     def create
-      @event_registration = @event.event_registrations.new(registrant: current_user)
+      @event_registration = @event.event_registrations.new(registrant: current_user.person)
       authorize! @event_registration
 
       if @event_registration.save
@@ -22,7 +22,7 @@ module Events
     end
 
     def destroy
-      @event_registration = @event.event_registrations.find_by(registrant: current_user)
+      @event_registration = @event.event_registrations.find_by(registrant: current_user.person)
       authorize! @event_registration
 
       unless @event_registration

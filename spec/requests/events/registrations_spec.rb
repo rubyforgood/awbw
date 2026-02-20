@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Events::Registrations", type: :request do
-  let(:user) { create(:user) }
+  let(:user) { create(:user, :with_person) }
   let(:event) { create(:event) }
 
   before { sign_in user }
@@ -45,7 +45,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
   describe "DELETE /events/:event_id/registrations" do
     context "when registration exists" do
-      let!(:registration) { create(:event_registration, event: event, registrant: user) }
+      let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
       xit "destroys registration and returns turbo stream" do  # TODO - fix the destroy action (it's 500'ing maybe to do w policy?)
         expect {
@@ -71,7 +71,7 @@ RSpec.describe "Events::Registrations", type: :request do
     end
 
     context "when destroy fails" do
-      let!(:registration) { create(:event_registration, event: event, registrant: user) }
+      let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
       before do
         allow_any_instance_of(EventRegistration)

@@ -2,14 +2,14 @@ require "rails_helper"
 require "csv"
 
 RSpec.describe "EventRegistrations", type: :request do
-  let(:regular_user) { create(:user, first_name: "John", last_name: "Doe", email: "john.doe@example.com") }
-  let(:admin)        { create(:user, super_user: true) }
-  let(:other_user)   { create(:user) }
+  let(:regular_user) { create(:user, :with_person, first_name: "John", last_name: "Doe", email: "john.doe@example.com") }
+  let(:admin)        { create(:user, :with_person, super_user: true) }
+  let(:other_user)   { create(:user, :with_person) }
 
   let(:event)        { create(:event, title: "Test Event") }
   let(:new_event)    { create(:event) }
 
-  let!(:existing_registration) { create(:event_registration, event: event, registrant: regular_user) }
+  let!(:existing_registration) { create(:event_registration, event: event, registrant: regular_user.person) }
 
   # ============================================================
   # ADMIN
@@ -37,10 +37,11 @@ RSpec.describe "EventRegistrations", type: :request do
 
         data_rows = rows.drop(1)
         expect(data_rows).not_to be_empty
+        person = regular_user.person
         expected_row = [
-          regular_user.first_name.to_s,
-          regular_user.last_name.to_s,
-          regular_user.email.to_s,
+          person.first_name.to_s,
+          person.last_name.to_s,
+          person.preferred_email.to_s,
           event.title.to_s
         ]
         expect(data_rows).to include(expected_row)
@@ -65,7 +66,7 @@ RSpec.describe "EventRegistrations", type: :request do
       it "can create registration" do
         expect {
           post event_registrations_path,
-               params: { event_registration: { event_id: event.id, registrant_id: admin.id } }
+               params: { event_registration: { event_id: event.id, registrant_id: admin.person.id } }
         }.to change(EventRegistration, :count).by(1)
       end
     end
@@ -114,7 +115,7 @@ RSpec.describe "EventRegistrations", type: :request do
                  params: {
                    event_registration: {
                      event_id: new_event.id,
-                     registrant_id: regular_user.id
+                     registrant_id: regular_user.person.id
                    }
                  }
           }.to change(EventRegistration, :count).by(1)
@@ -128,7 +129,7 @@ RSpec.describe "EventRegistrations", type: :request do
                  params: {
                    event_registration: {
                      event_id: event.id,
-                     registrant_id: regular_user.id
+                     registrant_id: regular_user.person.id
                    }
                  }
           }.not_to change(EventRegistration, :count)
@@ -211,7 +212,7 @@ RSpec.describe "EventRegistrations", type: :request do
       it "does not create a registration" do
         expect {
           post event_registrations_path,
-               params: { event_registration: { event_id: event.id, registrant_id: regular_user.id } }
+               params: { event_registration: { event_id: event.id, registrant_id: regular_user.person.id } }
         }.not_to change(EventRegistration, :count)
 
         expect(response).to redirect_to(root_path)

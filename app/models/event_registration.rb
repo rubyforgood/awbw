@@ -1,5 +1,5 @@
 class EventRegistration < ApplicationRecord
-  belongs_to :registrant, class_name: "User", foreign_key: :registrant_id
+  belongs_to :registrant, class_name: "Person"
   belongs_to :event
   has_many :notifications, as: :noticeable, dependent: :destroy
 
@@ -9,10 +9,10 @@ class EventRegistration < ApplicationRecord
 
   # Scopes
   scope :registrant_name, ->(registrant_name) { joins(:registrant).where(
-    "LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
-    OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
-    OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
-    OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
+    "LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
+    OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
+    OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
+    OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
 
   def self.search_by_params(params)

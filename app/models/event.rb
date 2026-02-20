@@ -17,7 +17,7 @@ class Event < ApplicationRecord
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
   # has_many through
-  has_many :registrants, through: :event_registrations, class_name: "User"
+  has_many :registrants, through: :event_registrations, class_name: "Person"
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
