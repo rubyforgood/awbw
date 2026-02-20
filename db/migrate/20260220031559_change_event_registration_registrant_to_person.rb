@@ -32,7 +32,7 @@ class ChangeEventRegistrationRegistrantToPerson < ActiveRecord::Migration[8.0]
       remove_foreign_key :event_registrations, column: :registrant_id
     end
     remove_index :event_registrations, :registrant_id, if_exists: true
-    remove_index :event_registrations, [:registrant_id, :event_id], if_exists: true
+    remove_index :event_registrations, [ :registrant_id, :event_id ], if_exists: true
     remove_column :event_registrations, :registrant_id, if_exists: true
 
     # 5. Rename person_id to registrant_id
@@ -41,14 +41,14 @@ class ChangeEventRegistrationRegistrantToPerson < ActiveRecord::Migration[8.0]
     # 6. Add constraints and indexes
     change_column_null :event_registrations, :registrant_id, false
     add_index :event_registrations, :registrant_id
-    add_index :event_registrations, [:registrant_id, :event_id], unique: true
+    add_index :event_registrations, [ :registrant_id, :event_id ], unique: true
     add_foreign_key :event_registrations, :people, column: :registrant_id
   end
 
   def down
     # 1. Remove event_registrations FK and indexes
     remove_foreign_key :event_registrations, column: :registrant_id
-    remove_index :event_registrations, [:registrant_id, :event_id], if_exists: true
+    remove_index :event_registrations, [ :registrant_id, :event_id ], if_exists: true
     remove_index :event_registrations, :registrant_id, if_exists: true
 
     # 2. Add user_id column
@@ -68,7 +68,7 @@ class ChangeEventRegistrationRegistrantToPerson < ActiveRecord::Migration[8.0]
 
     # 5. Restore original constraints
     add_index :event_registrations, :registrant_id
-    add_index :event_registrations, [:registrant_id, :event_id], unique: true
+    add_index :event_registrations, [ :registrant_id, :event_id ], unique: true
     add_foreign_key :event_registrations, :users, column: :registrant_id
 
     # 6. Downsize people.id back to int

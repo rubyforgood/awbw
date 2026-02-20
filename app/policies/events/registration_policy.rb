@@ -13,6 +13,6 @@ class Events::RegistrationPolicy < ApplicationPolicy
   #
   # def owner?
   #   return false unless user
-  #   record.registrant_id == user.id
+  #   record.registrant_id == user.person_id
   # end
 end
