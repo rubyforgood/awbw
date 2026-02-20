@@ -1,7 +1,10 @@
 class EventRegistration < ApplicationRecord
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
+
+  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Validations
   validates :registrant_id, uniqueness: { scope: :event_id }

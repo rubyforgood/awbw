@@ -100,7 +100,7 @@ class OrganizationsController < ApplicationController
   def update
     authorize! @organization
     @organization.assign_attributes(organization_params)
-    @organization.comments.select(&:new_record?).each { |c| c.created_by = current_user }
+    @organization.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @organization.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
     if @organization.save
