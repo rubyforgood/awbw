@@ -299,7 +299,7 @@
       <% else %>
         <% f.object.user&.person&.affiliations&.each do |affiliation| %>
           <div class="ps-6 mb-2">
-            <li><%= affiliation.title || affiliation.position %> - <%= person_profile_button(affiliation.user.person) if affiliation.persisted? && affiliation.user.person %></li>
+            <li><%= affiliation.title || affiliation.position %> - <%= person_profile_button(affiliation.user.person, subtitle: (affiliation.user.person.preferred_email if affiliation.user.person.profile_show_email? || allowed_to?(:manage?, Person))) if affiliation.persisted? && affiliation.user.person %></li>
           </div>
         <% end %>
       <% end %>

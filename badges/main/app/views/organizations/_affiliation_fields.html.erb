@@ -6,7 +6,8 @@
     <div style="width: 350px; min-width: 350px; flex-shrink: 0;">
       <% if f.object.persisted? && f.object.person.present? %>
         <label class="block text-sm font-medium text-gray-700 mb-1">Person</label>
-        <%= person_profile_button(f.object.person, truncate_at: 30) %>
+        <% show_email = f.object.person.profile_show_email? || allowed_to?(:manage?, Person) %>
+        <%= person_profile_button(f.object.person, truncate_at: 30, subtitle: (f.object.person.preferred_email if show_email)) %>
         <%= f.hidden_field :person_id %>
       <% else %>
         <%= f.input :person_id,
