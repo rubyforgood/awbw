@@ -13,6 +13,10 @@ class WorkshopPolicy < ApplicationPolicy
     record.persisted? && admin?
   end
 
+  def search?
+    authenticated?
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
   #

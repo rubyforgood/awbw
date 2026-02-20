@@ -1,5 +1,5 @@
 class Person < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable
+  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
@@ -172,6 +172,17 @@ class Person < ApplicationRecord
 
   def preferred_email
     user&.email.presence || email.presence || email_2.presence
+  end
+
+  remote_searchable_by :first_name, :last_name
+
+  def remote_search_label
+    {
+      id: id,
+      label: preferred_email.present? ?
+        "#{full_name} (#{preferred_email})" :
+        full_name
+    }
   end
 
   private

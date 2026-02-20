@@ -9,42 +9,18 @@ class SearchController < ApplicationController
     return render json: [] if query.blank?
 
     records = model_class
-      .where(search_condition(model_class), *search_params(model_class, query))
+      .remote_search(query)
       .limit(10)
 
-    render json: records.map { |r| serialize(r) }
+    render json: records.map(&:remote_search_label)
   end
 
   private
 
   def allowed_model(model_param)
     {
-      "person"  => Person
+      "person"   => Person,
+      "workshop" => Workshop
     }[model_param]
-  end
-
-  def search_condition(model_class)
-    case model_class.name
-    when "Person"
-      "LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ?"
-    end
-  end
-
-  def search_params(model_class, query)
-    pattern = "%#{query.downcase}%"
-    case model_class.name
-    when "Person"
-      [ pattern, pattern ]  # must match 2 placeholders
-    end
-  end
-
-  def serialize(record)
-    case record
-    when Person
-      {
-        id: record.id,
-        label: record.preferred_email.present? ? "#{record.full_name} (#{record.preferred_email})" : record.full_name
-      }
-    end
   end
 end
