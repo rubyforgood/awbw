@@ -41,7 +41,8 @@
             <td class="px-4 py-2 text-left">
               <% if user.person %>
                 <% cache [user.person, "profile_button"] do %>
-                  <%= person_profile_button(user.person) %>
+                  <% show_email = user.person.profile_show_email? || allowed_to?(:manage?, Person) %>
+                  <%= person_profile_button(user.person, subtitle: (user.person.preferred_email if show_email)) %>
                 <% end %>
               <% else %>
                 <%= link_to "Create person",

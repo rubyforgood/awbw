@@ -22,7 +22,8 @@
               <% cache [person, current_user.super_user?] do %>
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2">
-                  <%= person_profile_button(person, subtitle: person.preferred_email, data: { turbo_frame: "_top" }) %>
+                  <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
+                  <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
                 </td>
                 <td class="px-4 py-2 text-center text-sm text-gray-800">
                   <%= person.member_since&.year %>

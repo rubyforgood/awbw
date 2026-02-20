@@ -40,7 +40,9 @@ module PersonHelper
       )
 
       subtitle_tag = if subtitle.present?
-        content_tag(:span, subtitle, class: "text-xs text-gray-500 font-normal truncate")
+        "<!--email_off-->".html_safe +
+          content_tag(:span, subtitle, class: "text-xs text-gray-500 font-normal truncate") +
+          "<!--email_on-->".html_safe
       else
         "".html_safe
       end
