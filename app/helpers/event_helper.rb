@@ -1,4 +1,37 @@
 module EventHelper
+  # Splits an ActionText rich text into two HTML-safe fragments by character length.
+  # Splits at the nearest block-element boundary after `split_length` plain-text characters.
+  # Returns [top_html, bottom_html].
+  def split_rich_text(rich_text, split_length: 400)
+    return ["".html_safe, "".html_safe] if rich_text.blank?
+
+    # Access the raw body HTML (no ActionText layout wrappers)
+    html = rich_text.body&.to_html.to_s
+    return ["".html_safe, "".html_safe] if html.blank?
+
+    doc = Nokogiri::HTML.fragment(html)
+    children = doc.element_children
+
+    char_count = 0
+    split_index = children.length # default: everything in top
+
+    children.each_with_index do |node, i|
+      char_count += node.text.length
+      if char_count >= split_length
+        split_index = i + 1
+        break
+      end
+    end
+
+    top_nodes = children.first(split_index)
+    bottom_nodes = children.drop(split_index)
+
+    top_html = top_nodes.map(&:to_html).join.html_safe
+    bottom_html = bottom_nodes.map(&:to_html).join.html_safe
+
+    [top_html, bottom_html]
+  end
+
   def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {})
     bg = DomainTheme.bg_class_for(:events, intensity: 100)
     hover_bg = DomainTheme.bg_class_for(:events, intensity: 100, hover: true)

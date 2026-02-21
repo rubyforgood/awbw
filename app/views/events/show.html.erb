@@ -1,72 +1,80 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
 <!-- Outer Soft Container (Events = blue theme) -->
 <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-      <!-- Top Right Actions -->
-      <div class="text-right mb-4 space-x-2">
-        <%= link_to "Events", events_path, class: "btn btn-secondary-outline" %>
-        <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
-        <% if allowed_to?(:edit?, @event) %>
-          <%= link_to "Edit",
-          edit_event_path(@event),
-          class: "btn btn-secondary-outline admin-only bg-blue-100" %>
-        <% end %>
+  <!-- Top Right Actions -->
+  <div class="text-right mb-4 space-x-2">
+    <%= link_to "Events", events_path, class: "btn btn-secondary-outline" %>
+    <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
+    <% if allowed_to?(:edit?, @event) %>
+      <%= link_to "Edit",
+      edit_event_path(@event),
+      class: "btn btn-secondary-outline admin-only bg-blue-100" %>
+    <% end %>
 
-        <span class="inline-block"><%= render "bookmarks/editable_bookmark_button", resource: @event.object %></span>
-      </div>
-      <!-- Inner White Card -->
-      <div class="bg-white rounded-lg shadow p-8">
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-10">
-          <!-- Left Column -->
-          <div class="md:col-span-3">
-            <!-- Title + Badges -->
-            <div class="my-3"><%= title_with_badges(@event, font_size: "text-3xl") %></div>
-            <!-- Dates Section -->
-            <div class="space-y-6">
-              <div class=""><%= @event.times(display_day: true, display_date: true) %></div>
+    <span class="inline-block"><%= render "bookmarks/editable_bookmark_button", resource: @event.object %></span>
+  </div>
+  <!-- Inner White Card -->
+  <div class="bg-white rounded-lg shadow p-8">
+    <!-- Top section: meta on left, image on right -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-10">
+      <!-- Left Column -->
+      <div class="md:col-span-3 md:pr-4">
+        <!-- Title + Badges -->
+        <div class="my-3"><%= title_with_badges(@event, font_size: "text-3xl") %></div>
+        <!-- Dates Section -->
+        <div class="space-y-6">
+          <div class=""><%= @event.times(display_day: true, display_date: true) %></div>
 
-              <% if @event.labelled_cost %>
-                <div><%= @event.labelled_cost %></div>
-              <% end %>
+          <% if @event.labelled_cost %>
+            <div><%= @event.labelled_cost %></div>
+          <% end %>
 
-              <% if @event.location.present? %>
-                <div>
-                  <p class="font-semibold text-gray-700">Location</p>
-                  <p class="text-gray-900"><%= @event.location.name %></p>
-                </div>
-              <% end %>
-
-              <% if @event.videoconference_url.present? %>
-                <div>
-                  <p class="font-semibold text-gray-700">Videoconference URL</p>
-                  <p class="text-gray-900">
-                    <%= link_to "Join online", safe_url(@event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "text-blue-600 hover:underline" %>
-                  </p>
-                </div>
-              <% end %>
-
-              <%= render "events/registration_section", event: @event %>
-
-              <% if @event.registration_close_date %>
-                <div>
-                  <p class="font-semibold text-gray-700">Registration Close Date</p>
-
-                  <p class="text-gray-900">
-                    <%= @event.registration_close_date&.strftime("%B %-d, %Y %l:%M %P") || "—" %>
-                  </p>
-                </div>
-              <% end %>
+          <% if @event.location.present? %>
+            <div>
+              <p class="font-semibold text-gray-700">Location</p>
+              <p class="text-gray-900"><%= @event.location.name %></p>
             </div>
-          </div>
-          <!-- Right Column -->
-          <div class="md:col-span-2 space-y-6">
-            <!-- Assets -->
-            <%= render "assets/display_assets", resource: @event, link: true %>
-          </div>
+          <% end %>
+
+          <% if @event.videoconference_url.present? %>
+            <div>
+              <p class="font-semibold text-gray-700">Videoconference URL</p>
+              <p class="text-gray-900">
+                <%= link_to "Join online", safe_url(@event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "text-blue-600 hover:underline" %>
+              </p>
+            </div>
+          <% end %>
+
+          <%= render "events/registration_section", event: @event %>
+
+          <% if @event.registration_close_date %>
+            <div>
+              <p class="font-semibold text-gray-700">Registration Close Date</p>
+
+              <p class="text-gray-900">
+                <%= @event.registration_close_date&.strftime("%B %-d, %Y %l:%M %P") || "—" %>
+              </p>
+            </div>
+          <% end %>
         </div>
-        <!-- FULL-WIDTH DESCRIPTION -->
-        <div class="mt-6 md:col-span-5">
-          <%= @event.rhino_description %>
-        </div>
-        <p class="text-sm text-gray-500 mt-6 mb-0">All times displayed in <%= Time.zone.to_s %>.</p>
+        <!-- First part of description beside the image -->
+        <% desc_top, desc_bottom = split_rich_text(@event.rhino_description, split_length: 800) %>
+        <% if desc_top.present? %>
+          <div class="mt-6 prose max-w-none prose-strong:text-inherit prose-em:text-inherit"><%= desc_top %></div>
+        <% end %>
       </div>
+      <!-- Right Column: Image -->
+      <div class="md:col-span-2 space-y-6 ml-6">
+        <%= render "assets/display_assets", resource: @event, link: true %>
+      </div>
+    </div>
+    <% if desc_bottom.present? %>
+      <!-- Remaining description: full width below -->
+      <div class="mt-6 prose max-w-none prose-strong:text-inherit prose-em:text-inherit"
+           style="max-width: 100%;">
+        <%= desc_bottom %>
+      </div>
+    <% end %>
+    <p class="text-sm text-gray-500 mt-6 mb-0">All times displayed in <%= Time.zone.to_s %>.</p>
+  </div>
 </div>
