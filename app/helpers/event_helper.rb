@@ -3,17 +3,17 @@ module EventHelper
   # Splits at the nearest block-element boundary after `split_length` plain-text characters.
   # Returns [top_html, bottom_html].
   def split_rich_text(rich_text, split_length: 400)
-    return ["".html_safe, "".html_safe] if rich_text.blank?
+    return [ "".html_safe, "".html_safe ] if rich_text.blank?
 
     # Access the raw body HTML (no ActionText layout wrappers)
     html = rich_text.body&.to_html.to_s
-    return ["".html_safe, "".html_safe] if html.blank?
+    return [ "".html_safe, "".html_safe ] if html.blank?
 
     doc = Nokogiri::HTML.fragment(html)
     children = doc.element_children
 
     # If no block elements (plain text content), return everything as top
-    return [html.html_safe, "".html_safe] if children.empty?
+    return [ html.html_safe, "".html_safe ] if children.empty?
 
     char_count = 0
     split_index = children.length # default: everything in top
@@ -32,7 +32,7 @@ module EventHelper
     top_html = top_nodes.map(&:to_html).join.html_safe
     bottom_html = bottom_nodes.map(&:to_html).join.html_safe
 
-    [top_html, bottom_html]
+    [ top_html, bottom_html ]
   end
 
   def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {})
