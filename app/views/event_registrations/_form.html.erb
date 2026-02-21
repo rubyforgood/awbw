@@ -11,13 +11,22 @@
                     selected: f.object.event_id %>
       </div>
 
-      <div class="flex-1 mb-4 md:mb-0" data-controller="searchable-select" data-searchable-select-mode-value="person">
+      <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :registrant_id,
-                    collection: @registrants,
-                    label_method: :full_name_with_email, value_method: :id,
-                    include_blank: true,
-                    selected: f.object.registrant_id,
-                    input_html: { data: { searchable_select_target: "select" } } %>
+          collection: f.object.registrant.present? ? [[
+            f.object.registrant.preferred_email.present? ? "#{f.object.registrant.full_name} (#{f.object.registrant.preferred_email})" : f.object.registrant.full_name,
+            f.object.registrant.id
+          ]] : [],
+          include_blank: true,
+          required: true,
+          input_html: {
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "person"
+            }
+          },
+          label: "Registrant"
+        %>
       </div>
     </div>
 
