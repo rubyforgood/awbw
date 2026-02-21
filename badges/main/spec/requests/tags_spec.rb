@@ -4,6 +4,12 @@ RSpec.describe "Tags index", type: :request do
   let!(:sector) { create(:sector, :published, name: "Youth") }
   let!(:category_type) { create(:category_type, name: "Theme") }
   let!(:category) { create(:category, :published, name: "Healing", category_type: category_type) }
+  let!(:workshop) { create(:workshop) }
+
+  before do
+    create(:sectorable_item, sector: sector, sectorable: workshop)
+    create(:categorizable_item, category: category, categorizable: workshop)
+  end
 
   describe "as a regular user" do
     let(:user) { create(:user) }
@@ -34,6 +40,22 @@ RSpec.describe "Tags index", type: :request do
       get tags_categories_path
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Healing")
+    end
+
+    it "only shows sectors that have at least one sectorable_item" do
+      unlinked_sector = create(:sector, :published, name: "Unlinked Sector")
+      get tags_sectors_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Youth")
+      expect(response.body).not_to include("Unlinked Sector")
+    end
+
+    it "only shows categories that have at least one categorizable_item" do
+      unlinked_category = create(:category, :published, name: "Unlinked Category", category_type: category_type)
+      get tags_categories_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Healing")
+      expect(response.body).not_to include("Unlinked Category")
     end
 
     it "does NOT show admin-only controls" do

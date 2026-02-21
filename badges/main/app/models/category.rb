@@ -26,6 +26,7 @@ class Category < ApplicationRecord
   after_destroy :expire_categories_cache
 
   # Scopes
+  scope :has_taggings, -> { joins(:categorizable_items).distinct }
   scope :category_type_id, ->(category_type_id) {
     category_type_id.present? ? where(category_type_id: category_type_id) : all }
   scope :category_name, ->(category_name) {
