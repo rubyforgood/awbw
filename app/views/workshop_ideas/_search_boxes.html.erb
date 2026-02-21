@@ -19,7 +19,7 @@
     </div>
     <div data-controller="searchable-select" data-searchable-select-mode-value="person">
       <%= select_tag :created_by_id,
-                     options_from_collection_for_select(@authors, :id, :full_name_with_email, params[:created_by_id].to_i),
+                     options_from_collection_for_select(@users, :id, :full_name_with_email, params[:created_by_id].to_i),
                      include_blank: "Author",
                      data: { searchable_select_target: "select", action: "change->searchable-select#submit" },
                      class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>

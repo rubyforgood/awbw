@@ -70,7 +70,7 @@
                 <%= f.input :created_by_id,
                             as: :select,
                             label: "Author",
-                            collection: @authors,
+                            collection: @users,
                             label_method: :full_name_with_email,
                             value_method: :id,
                             selected: f.object.created_by_id || current_user.id,
