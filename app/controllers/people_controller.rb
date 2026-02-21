@@ -201,8 +201,6 @@ class PeopleController < ApplicationController
     @all_sectors = Sector.published.order(:name)
     @sectors_collection = @all_sectors.pluck(:name, :id)
     @current_sector_ids = @person.sectorable_items.map(&:sector_id)
-
-    @organizations_array = authorized_scope(Organization.all, as: :affiliated).order(:name).pluck(:name, :id)
   end
 
   def find_duplicate_people(first_name, last_name, email)

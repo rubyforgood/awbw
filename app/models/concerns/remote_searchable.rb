@@ -17,7 +17,7 @@ module RemoteSearchable
       pattern = "%#{query}%"
 
       conditions = remote_search_columns
-        .map { |column| "#{column} LIKE :pattern" }
+        .map { |column| "#{table_name}.#{column} LIKE :pattern" }
         .join(" OR ")
 
       where(conditions, pattern: pattern)

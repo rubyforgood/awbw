@@ -1,5 +1,5 @@
 class Organization < ApplicationRecord
-  include TagFilterable, Trendable, WindowsTypeFilterable # Publishable
+  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable # Publishable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -152,6 +152,8 @@ class Organization < ApplicationRecord
   def sector_list
     sectors.pluck(:name)
   end
+
+  remote_searchable_by :name
 
   private
 
