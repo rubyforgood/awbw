@@ -1,4 +1,4 @@
-<%= turbo_frame_tag "dashboard_community_news" do %>
+<%= turbo_frame_tag "home_community_news" do %>
   <% if @community_news&.any? %>
     <div class="space-y-4">
       <% @community_news.first(3).each do |news| %>

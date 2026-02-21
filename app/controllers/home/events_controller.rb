@@ -1,13 +1,13 @@
-module Dashboard
+module Home
   class EventsController < ApplicationController
     def index
-      authorize! :dashboard
+      authorize! :home
       @events = authorized_scope(Event.includes(:bookmarks, :primary_asset)
                      .published
-                     .order(:start_date), with: DashboardPolicy)
+                     .order(:start_date), with: HomePolicy)
                      .decorate
 
-      render "dashboard/events/index"
+      render "home/events/index"
     end
   end
 end

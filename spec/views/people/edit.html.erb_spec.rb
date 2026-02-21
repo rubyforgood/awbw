@@ -32,7 +32,7 @@ RSpec.describe "people/edit", type: :view do
     expect(rendered).to have_link('Change password', href: change_password_path)
   end
 
-  it "has a link to the dashboard" do
+  it "has a link to the home page" do
     expect(rendered).to have_link('Home', href: root_path)
   end
 

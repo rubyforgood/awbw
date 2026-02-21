@@ -1,13 +1,13 @@
-module Dashboard
+module Home
   class ResourcesController < ApplicationController
     def index
-      authorize! :dashboard
+      authorize! :home
       @resources = authorized_scope(Resource.includes(primary_asset: { file_attachment: :blob }, downloadable_asset: { file_attachment: :blob }, gallery_assets: { file_attachment: :blob })
                            .published
-                           .order(position: :asc, created_at: :desc), with: DashboardPolicy)
+                           .order(position: :asc, created_at: :desc), with: HomePolicy)
                            .decorate
 
-      render "dashboard/resources/index"
+      render "home/resources/index"
     end
   end
 end

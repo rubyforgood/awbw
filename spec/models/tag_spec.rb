@@ -17,9 +17,9 @@ RSpec.describe Tag, type: :model do
     end
   end
 
-  describe ".dashboard_card_for" do
+  describe ".home_card_for" do
     let(:key) { :workshops }
-    let(:card) { Tag.dashboard_card_for(key) }
+    let(:card) { Tag.home_card_for(key) }
 
     it "returns a hash with the expected structure" do
       expect(card).to include(
@@ -60,7 +60,7 @@ RSpec.describe Tag, type: :model do
     end
 
     it "raises a KeyError for unknown keys" do
-      expect { Tag.dashboard_card_for(:not_real) }.to raise_error(KeyError)
+      expect { Tag.home_card_for(:not_real) }.to raise_error(KeyError)
     end
   end
 end

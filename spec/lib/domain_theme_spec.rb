@@ -30,7 +30,7 @@ RSpec.describe DomainTheme do
         .to eq("hover:bg-rose-100")
     end
 
-    it "defines a color for every taggable dashboard type" do
+    it "defines a color for every taggable home type" do
       # Tag::TAGGABLE_META keys: workshops, resources, community_news, stories, events, people, organizations, quotes
       expect(DomainTheme::COLORS.keys)
         .to include(*Tag::TAGGABLE_META.keys)

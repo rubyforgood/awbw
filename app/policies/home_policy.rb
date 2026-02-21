@@ -1,4 +1,4 @@
-class DashboardPolicy < ApplicationPolicy
+class HomePolicy < ApplicationPolicy
   def index?
     true
   end

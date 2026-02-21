@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe DashboardPolicy, type: :policy do
+RSpec.describe HomePolicy, type: :policy do
   let(:admin_user) { build_stubbed :user, super_user: true }
   let(:regular_user) { build_stubbed :user, super_user: false }
 

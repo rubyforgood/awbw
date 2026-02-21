@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'People can view Community News on the dashboard' do
+RSpec.describe 'People can view Community News on the home page' do
   describe 'Viewing Community News and Events' do
     before do
       page.driver.browser.manage.window.resize_to(1400, 4000)

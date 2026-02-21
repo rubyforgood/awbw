@@ -2,11 +2,11 @@
 
 <section class="<%# mt-6 %> py-10 <%= DomainTheme.bg_class_for(:events) %>">
   <div class="max-w-6xl mx-auto px-4">
-    <%= render "dashboard/dashboard_section_header",
+    <%= render "home/home_section_header",
                title: title,
                subtitle: "Workshops, trainings, and upcoming gatherings" %>
 
-    <%= turbo_frame_tag "dashboard_events", src: dashboard_events_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+    <%= turbo_frame_tag "home_events", src: home_events_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
       <%= render "events_cards_skeleton" %>
     <% end %>
   </div>
