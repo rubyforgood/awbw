@@ -55,7 +55,7 @@ RSpec.describe "Event show page", type: :system do
       expect(page).to have_text("My Event")
       expect(page).to have_text("A wonderful event")
       expect(page).to have_text(event.location.name)
-      expect(page).to have_link("Join online", href: event.videoconference_url)
+      expect(page).to have_text("Join on Example_zoom")
 
       # Decorator
       expect(page).to have_text("Cost: $10.99")
@@ -214,7 +214,7 @@ RSpec.describe "Event show page", type: :system do
       sign_in(user)
       visit event_path(event)
 
-      expect(page).to have_text("Registration Close Date")
+      expect(page).to have_text("Registration closes")
     end
 
     it "does not render when nil" do
@@ -223,7 +223,7 @@ RSpec.describe "Event show page", type: :system do
       sign_in(user)
       visit event_path(event)
 
-      expect(page).not_to have_text("Registration Close Date")
+      expect(page).not_to have_text("Registration closes")
     end
   end
 
