@@ -71,7 +71,7 @@ class OrganizationsController < ApplicationController
     @users = User.where(id: logged_user_ids)
                  .includes(:person)
                  .select("users.id, users.person_id, users.email, people.first_name, people.last_name")
-                 .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)"))
+                 .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
   end
 
   def new
@@ -125,7 +125,7 @@ class OrganizationsController < ApplicationController
     # Build array of [display_name, id] for person selection dropdown
     # Email priority matches Person#preferred_email: user.email > person.email > person.email_2
     @people_array = authorized_scope(Person.left_joins(:user))
-                          .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(COALESCE(users.email, people.email, people.email_2))"))
+                          .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
                           .pluck(
                             :first_name,
                             :last_name,

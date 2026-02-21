@@ -74,7 +74,7 @@
           <div data-controller="searchable-select" data-searchable-select-mode-value="person">
             <%= f.input :created_by_id,
                       as: :select,
-                      collection: User.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)")),
+                      collection: User.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)")),
                       label_method: :full_name_with_email,
                       value_method: :id,
                       selected: (f.object.created_by_id || current_user.id),

@@ -125,7 +125,7 @@
 
     <div class="flex-1 mb-4 md:mb-0" data-controller="searchable-select" data-searchable-select-mode-value="person">
       <%= f.input :spotlighted_facilitator_id,
-                  collection: Person.eager_load(:user).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)")),
+                  collection: Person.eager_load(:user).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)")),
                   label_method: :full_name_with_email,
                   value_method: :id,
                   include_blank: true,

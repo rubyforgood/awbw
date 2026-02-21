@@ -131,7 +131,7 @@ class StoriesController < ApplicationController
     @users = authorized_scope(User.has_access.or(User.where(id: @story.created_by_id)))
                  .includes(:person)
                  .references(:person)
-                 .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)"))
+                 .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
     @categories_grouped =
       Category
         .includes(:category_type)

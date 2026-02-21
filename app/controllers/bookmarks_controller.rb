@@ -112,7 +112,7 @@ class BookmarksController < ApplicationController
     @windows_types_array = WindowsType::TYPES
     @bookmarkable_types = Bookmark::BOOKMARKABLE_MODELS.map { |type| [ type, type ] }
     @workshops = authorized_scope(Workshop.where("led_count > 0")).order(led_count: :desc)
-    @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)"))
+    @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
   end
 
   def load_workshop_data
