@@ -12,6 +12,9 @@ module EventHelper
     doc = Nokogiri::HTML.fragment(html)
     children = doc.element_children
 
+    # If no block elements (plain text content), return everything as top
+    return [html.html_safe, "".html_safe] if children.empty?
+
     char_count = 0
     split_index = children.length # default: everything in top
 
