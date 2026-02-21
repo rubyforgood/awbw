@@ -1,6 +1,18 @@
 class EventDecorator < ApplicationDecorator
   decorates_association :bookmarkable
 
+  def display_image
+    return primary_asset.file if primary_asset&.file&.attached?
+
+    # TODO: revisit once rhino editor embeds are confirmed to work as ActionText attachments
+    # if (img = header_image)
+    #   return img
+    # end
+
+    return gallery_assets.first.file if gallery_assets.first&.file&.attached?
+    default_display_image
+  end
+
   def date
     start_date.strftime("%B %d, %Y")
   end
@@ -13,11 +25,35 @@ class EventDecorator < ApplicationDecorator
     start_time   = object.start_date.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.strftime("%Y%m%dT%H%M%SZ")
     title_encoded = ERB::Util.url_encode(object.title)
-    desc_encoded  = ERB::Util.url_encode(object.description.to_s)
+
+    has_url      = object.videoconference_url.present?
+    has_location = object.location.present?
+    location_name = has_location ? object.location.name : nil
+
+    # If both: URL in location field, physical location in description
+    # If only URL: URL in location field
+    # If only location: location in location field
+    if has_url && has_location
+      cal_location = object.videoconference_url
+      description  = "#{location_name}\n\n#{object.description}"
+    elsif has_url
+      cal_location = object.videoconference_url
+      description  = object.description.to_s
+    elsif has_location
+      cal_location = location_name
+      description  = object.description.to_s
+    else
+      cal_location = nil
+      description  = object.description.to_s
+    end
+
+    desc_encoded     = ERB::Util.url_encode(description)
+    location_encoded = ERB::Util.url_encode(cal_location.to_s)
 
     google_link =
       "https://calendar.google.com/calendar/render?action=TEMPLATE" \
-        "&text=#{title_encoded}&dates=#{start_time}/#{end_time}&details=#{desc_encoded}"
+        "&text=#{title_encoded}&dates=#{start_time}/#{end_time}" \
+        "&details=#{desc_encoded}&location=#{location_encoded}"
 
     apple_link =
       "data:text/calendar;charset=utf8,BEGIN:VCALENDAR\n" \
@@ -26,24 +62,25 @@ class EventDecorator < ApplicationDecorator
         "SUMMARY:#{object.title}\n" \
         "DTSTART:#{start_time}\n" \
         "DTEND:#{end_time}\n" \
-        "DESCRIPTION:#{object.description}\n" \
+        "DESCRIPTION:#{description}\n" \
+        "#{"LOCATION:#{cal_location}\n" if cal_location}" \
         "END:VEVENT\n" \
         "END:VCALENDAR"
 
     outlook_link =
       "https://outlook.live.com/owa/?rru=addevent" \
         "&startdt=#{start_time}&enddt=#{end_time}" \
-        "&subject=#{title_encoded}&body=#{desc_encoded}"
+        "&subject=#{title_encoded}&body=#{desc_encoded}&location=#{location_encoded}"
 
     office365_link =
       "https://outlook.office.com/owa/?rru=addevent" \
         "&startdt=#{start_time}&enddt=#{end_time}" \
-        "&subject=#{title_encoded}&body=#{desc_encoded}"
+        "&subject=#{title_encoded}&body=#{desc_encoded}&location=#{location_encoded}"
 
     yahoo_link =
       "https://calendar.yahoo.com/?v=60" \
         "&title=#{title_encoded}&st=#{start_time}" \
-        "&et=#{end_time}&desc=#{desc_encoded}"
+        "&et=#{end_time}&desc=#{desc_encoded}&in_loc=#{location_encoded}"
 
     h.safe_join(
       [
@@ -63,13 +100,18 @@ class EventDecorator < ApplicationDecorator
     )
   end
 
-  def times(display_day: false, display_date: false, inline: false)
+  def times(display_day: false, display_date: false, inline: false, styled: false)
     s = start_date.in_time_zone(Time.zone)
     e = (end_date || start_date).in_time_zone(Time.zone)
+    tz_abbr = s.strftime("%Z")
+    muted = styled ? "text-lg font-normal text-blue-400" : nil
 
     # helpers
     day  = ->(d) { d.strftime("%a") }
     date = ->(d) { d.strftime("%b %-d") }
+    full_day  = ->(d) { d.strftime("%A") }
+    full_date = ->(d) { d.strftime("%B %-d") }
+    wrap = ->(text, css) { css ? h.content_tag(:span, text, class: css) : text }
 
     format_time = lambda do |d|
       hour = d.strftime("%-l")
@@ -86,27 +128,60 @@ class EventDecorator < ApplicationDecorator
 
     parts_for = lambda do |d, prefix: nil|
       parts = []
-      parts << prefix if prefix
+      parts << wrap.call(prefix, muted) if prefix
       parts << "#{day.call(d)}, " if display_day
       parts << "#{date.call(d)} @ " if display_date
       parts << format_time.call(d)
-      parts.join
+      h.safe_join(parts)
+    end
+
+    tz_display = wrap.call(" #{tz_abbr}", muted)
+
+    # --------------------------------------------------
+    # STYLED → two-row layout (show page)
+    # --------------------------------------------------
+    if styled
+      styled_tz = h.content_tag(:span, " #{tz_abbr}", class: "text-lg")
+
+      if s.to_date != e.to_date
+        # Multi-day: date range on row 1, time range on row 2
+        date_line = if s.month == e.month && s.year == e.year
+          "#{s.strftime('%B')} #{s.strftime('%-d')}-#{e.strftime('%-d')}, #{s.strftime('%Y')}"
+        elsif s.year == e.year
+          "#{s.strftime('%B %-d')} - #{e.strftime('%B %-d')}, #{s.strftime('%Y')}"
+        else
+          "#{s.strftime('%B %-d, %Y')} - #{e.strftime('%B %-d, %Y')}"
+        end
+        time_line = "#{format_time.call(s)} - #{format_time.call(e)}"
+        return h.safe_join([ date_line, h.tag.br, time_line, styled_tz ])
+      else
+        # Same day: date on row 1, time range on row 2
+        date_line = "#{full_day.call(s)}, #{full_date.call(s)}"
+        same_exact_time = (s.hour == e.hour) && (s.min == e.min)
+        time_line = if same_exact_time
+          "#{format_time.call(s)}"
+        else
+          "#{format_time.call(s)} - #{format_time.call(e)}"
+        end
+        return h.safe_join([ date_line, h.tag.br, time_line, styled_tz ])
+      end
     end
 
     # --------------------------------------------------
     # DIFFERENT DAY → two lines
     # --------------------------------------------------
     if s.to_date != e.to_date
-      separator = inline ? " - " : h.tag.br
-      prefix_start = inline ? nil : "Start: "
-      prefix_end   = inline ? nil : "End: "
-      return h.safe_join(
-        [
-          parts_for.call(s, prefix: prefix_start),
-          parts_for.call(e, prefix: prefix_end)
-        ],
-        separator
-      )
+      if inline
+        return h.safe_join(
+          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
+          " - "
+        )
+      else
+        return h.safe_join(
+          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
+          h.tag.br
+        )
+      end
     end
 
     # --------------------------------------------------
@@ -147,6 +222,7 @@ class EventDecorator < ApplicationDecorator
       parts << "#{start_time} - #{end_time}"
     end
 
+    parts << tz_display
     h.safe_join(parts)
   end
 
@@ -181,5 +257,14 @@ class EventDecorator < ApplicationDecorator
     if bookmarkable_class_name == "Event"
       bookmarkable.breadcrumb_link
     end
+  end
+
+  private
+
+  def header_image
+    return unless object.rhino_header.body.present?
+
+    # embeds returns ActiveStorage::Attached::Many; find first image blob
+    object.rhino_header.embeds.blobs.find { |blob| blob.image? }
   end
 end

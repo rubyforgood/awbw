@@ -211,6 +211,42 @@ textarea.comment-truncated:focus {
   }
 }
 
+/* Centered rich text content (e.g. event header) */
+.rhino-centered {
+  text-align: center;
+}
+
+.rhino-centered figure,
+.rhino-centered action-text-attachment {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.rhino-centered img {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.rhino-centered ul,
+.rhino-centered ol,
+.rhino-centered blockquote,
+.rhino-centered table,
+.rhino-centered pre {
+  text-align: left;
+}
+
+/* Event register/deregister buttons (!important needed to override inline styles) */
+.event-register-btn:hover {
+  color: rgb(170, 46, 0) !important;
+  background-color: white !important;
+}
+
+.event-deregister-btn:hover {
+  background-color: rgb(170, 46, 0) !important;
+  color: white !important;
+}
+
 /* Turbo progress bar */
 .turbo-progress-bar {
   height: 7px;

@@ -5,155 +5,205 @@
     <%= render "shared/errors", resource: @event %>
   <% end %>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
     <div>
-      <div>
-        <%= f.input :title,
-                label: "Event title",
-                required: true,
-                as: :text,
-                input_html: {
-                  rows: 1,
-                  value: f.object.title,
-                  class:
-                    "w-full rounded border-gray-300 shadow-sm px-3 py-2
-                                              focus:ring-blue-500 focus:border-blue-500",
-                } %>
+      <label class="block font-medium mb-1 text-gray-700">Event title</label>
+      <div class="border border-gray-200 rounded-lg p-4">
+        <div>
+          <%= f.input :pre_title,
+                  label: "Pre-title",
+                  input_html: {
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    placeholder: "e.g. Facilitator Training Series"
+                  } %>
+        </div>
+        <div>
+          <%= f.input :title,
+                  label: "Title",
+                  required: true,
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    value: f.object.title,
+                    class:
+                      "w-full rounded border-gray-300 shadow-sm px-3 py-2
+                                                focus:ring-blue-500 focus:border-blue-500",
+                  } %>
+        </div>
+        <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page" %>
       </div>
     </div>
 
     <% if allowed_to?(:manage?, @event) %>
-      <div
-        class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
-        <%= f.input :published, as: :boolean %>
-        <%= f.input :featured, as: :boolean %>
-        <%= f.input :publicly_visible, as: :boolean %>
-        <%= f.input :publicly_featured, as: :boolean %>
+      <div class="admin-only mt-6 md:mt-0">
+        <label class="block font-medium mb-1 text-gray-700">Display settings</label>
+        <div class="bg-blue-50 border border-gray-200 rounded-lg grid grid-cols-2 gap-y-0 p-3 [&_.form-group]:mb-1">
+          <%= f.input :published, as: :boolean %>
+          <%= f.input :featured, as: :boolean %>
+          <%= f.input :publicly_visible, as: :boolean %>
+          <%= f.input :publicly_featured, as: :boolean %>
+        </div>
       </div>
     <% end %>
   </div>
 
-  <div class="form-group <%= 'has-error' if f.object.errors[:description].present? %>">
-    <%= rhino_editor(f, :description, label: "Body / Description") %>
+  <%# ---- HEADER CONTENT (top body) ---- %>
+  <div class="form-group mt-6 <%= 'has-error' if f.object.errors[:rhino_header].present? %>">
+    <%= rhino_editor(f, :header, label: "Header content") %>
 
-    <% if f.object.errors[:rhino_description].present? %>
+    <% if f.object.errors[:rhino_header].present? %>
       <div class="text-danger mt-1 text-sm">
-        Field <%= f.object.errors[:rhino_description].first %>
+        Field <%= f.object.errors[:rhino_header].first %>
       </div>
     <% end %>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-12">
-    <div>
-      <%= f.label :start_date,
-              "Start time",
-              required: true,
-              class: "block font-medium mb-1" %>
+  <%# ---- EVENT DETAILS + DISPLAY OPTIONS (two-column) ---- %>
+  <label class="block font-medium mb-1 text-gray-700 mt-12">Event details</label>
+  <div class="bg-gray-50 border border-gray-200 rounded-md p-6 mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <%# LEFT: Date/time, location, videoconference, cost %>
+      <div class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <%= f.label :start_date,
+                  "Start time",
+                  required: true,
+                  class: "block font-medium mb-1" %>
 
-      <%= f.text_field :start_date,
-                   type: "datetime-local",
-                   class:
-                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                   value: @event.start_date&.strftime("%Y-%m-%dT%H:%M"),
-                   required: true %>
+          <%= f.text_field :start_date,
+                       type: "datetime-local",
+                       class:
+                         "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       value: @event.start_date&.strftime("%Y-%m-%dT%H:%M"),
+                       required: true %>
 
-      <% if f.object.errors[:start_date].any? %>
-        <p class="text-red-500 text-sm mt-1">Start date
-          <%= f.object.errors[:start_date].join(", ") %></p>
-      <% end %>
-    </div>
+          <% if f.object.errors[:start_date].any? %>
+            <p class="text-red-500 text-sm mt-1">Start date
+              <%= f.object.errors[:start_date].join(", ") %></p>
+          <% end %>
+        </div>
 
-    <div>
-      <%= f.label :end_date, "End time", required: true, class: "block font-medium mb-1" %>
+        <div>
+          <%= f.label :end_date, "End time", required: true, class: "block font-medium mb-1" %>
 
-      <%= f.text_field :end_date,
-                   type: "datetime-local",
-                   class:
-                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                   value: @event.end_date&.strftime("%Y-%m-%dT%H:%M"),
-                   required: true %>
+          <%= f.text_field :end_date,
+                       type: "datetime-local",
+                       class:
+                         "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       value: @event.end_date&.strftime("%Y-%m-%dT%H:%M"),
+                       required: true %>
 
-      <% if f.object.errors[:end_date].any? %>
-        <p class="text-red-500 text-sm mt-1">End date
-          <%= f.object.errors[:end_date].join(", ") %></p>
-      <% end %>
-    </div>
-
-    <div>
-      <%= f.label :registration_close_date,
-              "Registration close time",
-              class: "block font-medium mb-1" %>
-
-      <%= f.text_field :registration_close_date,
-                   type: "datetime-local",
-                   class:
-                     "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                   value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
-
-      <% if f.object.errors[:registration_close_date].any? %>
-        <p class="text-red-500 text-sm mt-1">
-          Registration close date
-          <%= f.object.errors[:registration_close_date].join(", ") %>
-        </p>
-      <% end %>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-    <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
-      <%= f.input :location_id,
-                  label: "Location",
-                  collection: @locations,
-                  label_method: :name,
-                  value_method: :id,
-                  include_blank: true,
-                  input_html: {
-                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                    data: { searchable_select_target: "select" },
-                  } %>
-    </div>
-    <div>
-      <%= f.input :videoconference_url,
-                  label: "Videoconference URL",
-                  as: :url,
-                  input_html: {
-                    placeholder: "https://…",
-                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                  } %>
-    </div>
-  </div>
-
-  <% if show_feature?(:stripe_payments) %>
-    <div class="mb-6">
-      <div class="flex items-center justify-between gap-2 mb-1">
-        <%= f.label :cost, "Event Cost", class: "block font-medium" %>
-        <span class="text-sm text-gray-600">Enter $0 if the event is free</span>
+          <% if f.object.errors[:end_date].any? %>
+            <p class="text-red-500 text-sm mt-1">End date
+              <%= f.object.errors[:end_date].join(", ") %></p>
+          <% end %>
+        </div>
       </div>
 
-      <div class="relative">
-        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+      <div>
+        <%= f.label :registration_close_date,
+                "Registration close time",
+                class: "block font-medium mb-1" %>
 
-        <%= f.text_field :cost,
-                     type: "number",
-                     step: "0.01",
-                     min: "0",
-                     placeholder: "0.00",
-                     oninput:
-                       "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
+        <%= f.text_field :registration_close_date,
+                     type: "datetime-local",
                      class:
-                       "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+                       "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                     value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
+
+        <% if f.object.errors[:registration_close_date].any? %>
+          <p class="text-red-500 text-sm mt-1">
+            Registration close date
+            <%= f.object.errors[:registration_close_date].join(", ") %>
+          </p>
+        <% end %>
       </div>
 
-      <% if f.object.errors[:cost].any? %>
-        <p class="text-red-500 text-sm mt-1">Cost
-          <%= f.object.errors[:cost].join(", ") %></p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
+          <%= f.input :location_id,
+                      label: "Location",
+                      collection: @locations,
+                      label_method: :name,
+                      value_method: :id,
+                      include_blank: true,
+                      input_html: {
+                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                        data: { searchable_select_target: "select" },
+                      } %>
+        </div>
+
+        <div>
+          <%= f.input :videoconference_url,
+                      label: "Videoconference URL",
+                      as: :url,
+                      input_html: {
+                        placeholder: "https://…",
+                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      } %>
+        </div>
+      </div>
+
+      <% if show_feature?(:stripe_payments) %>
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <%= f.label :cost, "Event Cost", class: "block font-medium" %>
+            <span class="text-sm text-gray-600">Enter $0 if the event is free</span>
+          </div>
+
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+
+            <%= f.text_field :cost,
+                         type: "number",
+                         step: "0.01",
+                         min: "0",
+                         placeholder: "0.00",
+                         oninput:
+                           "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
+                         class:
+                           "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <% if f.object.errors[:cost].any? %>
+            <p class="text-red-500 text-sm mt-1">Cost
+              <%= f.object.errors[:cost].join(", ") %></p>
+          <% end %>
+        </div>
       <% end %>
+
     </div>
-  <% end %>
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+
+    <%# RIGHT: Autoshow display options %>
+    <div class="bg-white border border-gray-200 rounded-md p-4">
+      <h3 class="text-base font-semibold text-gray-800 mb-3">Display options</h3>
+      <p class="text-sm text-gray-500 mb-3">Toggle which details appear on the event page.</p>
+      <div class="space-y-2">
+        <%= f.input :autoshow_date, as: :boolean, label: "Show date on event page" %>
+        <%= f.input :autoshow_time, as: :boolean, label: "Show time on event page" %>
+        <%= f.input :autoshow_location, as: :boolean, label: "Show location on event page" %>
+        <%= f.input :autoshow_videoconference_url, as: :boolean, label: "Show videoconference link on event page" %>
+        <%= f.input :autoshow_registration, as: :boolean,
+                    label: "Show registration button & calendar links on event page" %>
+        <%= f.input :autoshow_cost, as: :boolean, label: "Show cost on event page" %>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <%# ---- DESCRIPTION (bottom body) ---- %>
+  <div class="form-group mt-12">
+    <%= rhino_editor(f, :description, label: "Description") %>
+  </div>
+
+  <%# ---- IMAGES (primary + gallery) ---- %>
+  <div class="mt-12 mb-12">
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: true, primary_title: "Primary (thumbnail)" %>
+  </div>
 
   <!-- Accordions -->
-  <div class="space-y-4 mt-8">
+  <div class="space-y-4 mt-12">
     <div class="tags-section" data-controller="dropdown">
       <button
         type="button"
