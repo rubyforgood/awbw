@@ -5,32 +5,44 @@
     <%= render "shared/errors", resource: @event %>
   <% end %>
 
-  <label class="block font-medium mb-1 text-gray-700">Event title</label>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
     <div>
-      <div>
-        <%= f.input :title,
-                label: false,
-                required: true,
-                as: :text,
-                input_html: {
-                  rows: 1,
-                  value: f.object.title,
-                  class:
-                    "w-full rounded border-gray-300 shadow-sm px-3 py-2
-                                              focus:ring-blue-500 focus:border-blue-500",
-                } %>
+      <label class="block font-medium mb-1 text-gray-700">Event title</label>
+      <div class="border border-gray-200 rounded-lg p-4">
+        <div>
+          <%= f.input :pre_title,
+                  label: "Pre-title",
+                  input_html: {
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    placeholder: "e.g. Facilitator Training Series"
+                  } %>
+        </div>
+        <div>
+          <%= f.input :title,
+                  label: "Title",
+                  required: true,
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    value: f.object.title,
+                    class:
+                      "w-full rounded border-gray-300 shadow-sm px-3 py-2
+                                                focus:ring-blue-500 focus:border-blue-500",
+                  } %>
+        </div>
+        <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page" %>
       </div>
-      <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page" %>
     </div>
 
     <% if allowed_to?(:manage?, @event) %>
-      <div
-        class="admin-only bg-blue-100 grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
-        <%= f.input :published, as: :boolean %>
-        <%= f.input :featured, as: :boolean %>
-        <%= f.input :publicly_visible, as: :boolean %>
-        <%= f.input :publicly_featured, as: :boolean %>
+      <div class="admin-only mt-6 md:mt-0">
+        <label class="block font-medium mb-1 text-gray-700">Display settings</label>
+        <div class="bg-blue-50 border border-gray-200 rounded-lg grid grid-cols-2 gap-y-0 p-3 [&_.form-group]:mb-1">
+          <%= f.input :published, as: :boolean %>
+          <%= f.input :featured, as: :boolean %>
+          <%= f.input :publicly_visible, as: :boolean %>
+          <%= f.input :publicly_featured, as: :boolean %>
+        </div>
       </div>
     <% end %>
   </div>

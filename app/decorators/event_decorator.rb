@@ -4,9 +4,10 @@ class EventDecorator < ApplicationDecorator
   def display_image
     return primary_asset.file if primary_asset&.file&.attached?
 
-    if (img = header_image)
-      return img
-    end
+    # TODO: revisit once rhino editor embeds are confirmed to work as ActionText attachments
+    # if (img = header_image)
+    #   return img
+    # end
 
     return gallery_assets.first.file if gallery_assets.first&.file&.attached?
     default_display_image
