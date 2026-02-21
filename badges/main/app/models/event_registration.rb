@@ -20,7 +20,9 @@ class EventRegistration < ApplicationRecord
 
   def self.search_by_params(params)
     registrations = is_a?(ActiveRecord::Relation) ? self : all
-    if params[:registrant_name].present?
+    if params[:registrant_id].present?
+      registrations = registrations.where(registrant_id: params[:registrant_id])
+    elsif params[:registrant_name].present?
       registrations = registrations.registrant_name(params[:registrant_name].downcase.strip)
     end
     if params[:event_id].present?

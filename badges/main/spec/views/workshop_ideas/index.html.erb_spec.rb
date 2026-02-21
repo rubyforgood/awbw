@@ -7,6 +7,7 @@ RSpec.describe "workshop_ideas/index", type: :view do
 
   before(:each) do
     assign(:workshop_ideas, WorkshopIdeaDecorator.decorate_collection(paginated([ workshop_idea1, workshop_idea2 ])))
+    assign(:users, User.none)
     allow(view).to receive(:current_user).and_return(user)
   end
 

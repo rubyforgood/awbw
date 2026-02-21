@@ -13,6 +13,7 @@ RSpec.describe "workshop_ideas/new", type: :view do
     assign(:categories_grouped, [])
     assign(:age_ranges, [])
     assign(:potential_series_workshops, [])
+    assign(:users, User.none)
   end
 
   it "renders new workshop_idea form" do

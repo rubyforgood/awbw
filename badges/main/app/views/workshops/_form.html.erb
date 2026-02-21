@@ -52,14 +52,19 @@
                         class: "block w-full rounded-md border-gray-300 shadow-sm
                         focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
-          <%= f.input :user_id,
-                      as: :select,
-                      label: "Author",
-                      collection: User.order(:last_name, :first_name),
-                      hint: "aka Created By",
-                      input_html: {
-                        class: "block w-full rounded-md border-gray-300 shadow-sm
-                        focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+          <div data-controller="searchable-select" data-searchable-select-mode-value="person">
+            <%= f.input :user_id,
+                        as: :select,
+                        label: "Author",
+                        collection: User.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)")),
+                        label_method: :full_name_with_email,
+                        value_method: :id,
+                        hint: "aka Created By",
+                        input_html: {
+                          class: "block w-full rounded-md border-gray-300 shadow-sm
+                          focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                          data: { searchable_select_target: "select" } } %>
+          </div>
         </div>
         <div class="admin-only bg-blue-100 flex p-3 gap-x-2 items-center">
           <%= f.input :workshop_idea_id,

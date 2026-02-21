@@ -68,7 +68,7 @@ class OrganizationsController < ApplicationController
                          .select("workshops.id, workshops.title, windows_types.name")
                          .order("workshops.title ASC, windows_types.name ASC")
     logged_user_ids = workshop_logs.where.not(user_id: nil).distinct.pluck(:user_id)
-    @people = User.where(id: logged_user_ids)
+    @users = User.where(id: logged_user_ids)
                   .includes(:person)
                   .select("users.id, users.person_id, people.first_name, people.last_name")
                   .order("people.first_name, people.last_name")

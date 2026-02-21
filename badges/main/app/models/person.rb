@@ -145,6 +145,16 @@ class Person < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
+  def full_name_with_email
+    email = preferred_email
+    name = full_name
+    if email.present? && name != email
+      "#{name} (#{email})"
+    else
+      name
+    end
+  end
+
   def organization_ids
     organizations.pluck(:id)
   end
