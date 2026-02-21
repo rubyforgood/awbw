@@ -9,15 +9,18 @@
         <%= f.hidden_field :organization_id %>
       <% else %>
         <%= f.input :organization_id,
-                    as: :select,
-                    label: "Organization",
-                    collection: @organizations_array,
-                    selected: f.object.organization_id,
-                    input_html: {
-                      class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                    },
-                    required: true,
-                    error: "Organization can't be blank" %>
+          include_blank: true,
+          required: true,
+          input_html: {
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "organization"
+            }
+          },
+          error: "Organization can't be blank",
+          prompt: "Search by name",
+          label: "Organization",
+          label_html: { class: "block text-sm font-medium text-gray-700 mb-1 " } %>
       <% end %>
     </div>
 

@@ -11,15 +11,16 @@
         <%= f.hidden_field :person_id %>
       <% else %>
         <%= f.input :person_id,
-                    as: :select,
-                    label: "Person",
-                    collection: @people_array,
-                    include_blank: true,
-                    selected: f.object&.person_id,
-                    required: true,
-                    input_html: {
-                      class: "block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                    } %>
+          include_blank: true,
+          required: true,
+          input_html: {
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "person"
+            }
+          },
+          label: "Person"
+        %>
       <% end %>
     </div>
 
