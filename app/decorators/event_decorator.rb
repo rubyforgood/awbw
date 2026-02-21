@@ -153,7 +153,7 @@ class EventDecorator < ApplicationDecorator
           "#{s.strftime('%B %-d, %Y')} - #{e.strftime('%B %-d, %Y')}"
         end
         time_line = "#{format_time.call(s)} - #{format_time.call(e)}"
-        return h.safe_join([date_line, h.tag.br, time_line, styled_tz])
+        return h.safe_join([ date_line, h.tag.br, time_line, styled_tz ])
       else
         # Same day: date on row 1, time range on row 2
         date_line = "#{full_day.call(s)}, #{full_date.call(s)}"
@@ -163,7 +163,7 @@ class EventDecorator < ApplicationDecorator
         else
           "#{format_time.call(s)} - #{format_time.call(e)}"
         end
-        return h.safe_join([date_line, h.tag.br, time_line, styled_tz])
+        return h.safe_join([ date_line, h.tag.br, time_line, styled_tz ])
       end
     end
 
@@ -173,12 +173,12 @@ class EventDecorator < ApplicationDecorator
     if s.to_date != e.to_date
       if inline
         return h.safe_join(
-          [parts_for.call(s), h.safe_join([parts_for.call(e), tz_display])],
+          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
           " - "
         )
       else
         return h.safe_join(
-          [parts_for.call(s), h.safe_join([parts_for.call(e), tz_display])],
+          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
           h.tag.br
         )
       end
