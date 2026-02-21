@@ -1,39 +1,52 @@
+<% instance ||= 1 %>
+<% button_text ||= "Register" %>
 <% registered = event.event_registrations.exists?(registrant_id: current_user&.person_id) %>
-<%= tag.div id: dom_id(event.object, :registration_section), class: "registration-section flex flex-col gap-4 mb-6" do %>
-  <!-- ⭐ BUTTONS -->
-  <div class="flex flex-wrap items-center gap-3">
-    <% if registered %>
-      <%= button_to "De-register",
-                    event_registrant_registration_path(event_id: event),
-                    method: :delete,
-                    data: { turbo_confirm: "Are you sure?" },
-                    class: "btn btn-secondary-outline" %>
-    <% elsif event.ended? %>
-      <span class="text-sm text-gray-500 italic">Event ended</span>
+<%= tag.div id: dom_id(event.object, "registration_section_#{instance}"), class: "registration-section flex flex-col items-center gap-4 mb-6" do %>
+  <!-- BUTTONS -->
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <% if event.ended? %>
+      <span class="text-2xl font-bold text-blue-400 italic">Event ended</span>
       <% if allowed_to?(:manage?, event) %>
         <%= button_to "Register",
                       event_registrant_registration_path(event_id: event),
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
       <% end %>
+    <% elsif registered %>
+      <%= button_to "De-register",
+                    event_registrant_registration_path(event_id: event),
+                    method: :delete,
+                    data: { turbo_confirm: "Are you sure?" },
+                    class: "btn px-10 py-2 text-2xl uppercase bg-white event-deregister-btn",
+                    style: "font-family: 'Telefon Bold', sans-serif; color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
     <% elsif !event.published? %>
       <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
     <% elsif event.registerable? %>
-      <%= button_to "Register",
+      <%= button_to button_text,
                     event_registrant_registration_path(event_id: event),
-                    class: "btn btn-primary-outline" %>
+                    class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
+                    style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
     <% else %>
-      <span class="text-sm text-gray-500 italic">Registration closed</span>
+      <span class="text-2xl font-bold text-blue-400 italic">Registration closed</span>
     <% end %>
 
     <% if registered %>
-      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+      <% registration = event.event_registrations.find_by(registrant_id: current_user&.person_id) %>
+      <%= link_to event_registration_path(registration),
+                  class: "text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full hover:bg-green-200" do %>
         You are registered!
-      </span>
+      <% end %>
     <% end %>
   </div>
 
-  <!-- ⭐ CALENDAR LINKS -->
   <% if registered %>
+    <% if event.videoconference_url.present? %>
+      <% domain_name = URI.parse(event.videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call" %>
+      <div class="text-base text-gray-700">
+        <%= link_to "Join on #{domain_name}", safe_url(event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "underline" %>
+      </div>
+    <% end %>
+
+    <!-- CALENDAR LINKS -->
     <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links %></div>
   <% end %>
 <% end %>

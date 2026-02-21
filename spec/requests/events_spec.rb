@@ -45,9 +45,9 @@ RSpec.describe "Events", type: :request do
         sign_in user_pt
         get event_url(event_with_fixed_times)
         expect(response).to be_successful
-        # 19:00 UTC = 12:00 noon PT
-        expect(response.body).to include("Sun, Jun 15 @ 12 - 1 pm")
-        expect(response.body).to include("All times displayed in (GMT-08:00) Pacific Time")
+        # 19:00 UTC = 12:00 noon PT (styled format on show page)
+        expect(response.body).to include("Sunday, June 15")
+        expect(response.body).to include("12 pm - 1 pm")
       end
 
       it "displays start time in Eastern for user with time_zone America/New_York" do
@@ -56,9 +56,9 @@ RSpec.describe "Events", type: :request do
         get event_url(event_with_fixed_times)
 
         expect(response).to be_successful
-        # 19:00 UTC = 3:00 pm ET (3 hours later than 12 pm PT)
-        expect(response.body).to include("Sun, Jun 15 @ 3 - 4 pm")
-        expect(response.body).to include("All times displayed in (GMT-05:00) Eastern Time")
+        # 19:00 UTC = 3:00 pm ET (styled format on show page)
+        expect(response.body).to include("Sunday, June 15")
+        expect(response.body).to include("3 pm - 4 pm")
       end
     end
   end

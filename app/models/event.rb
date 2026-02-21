@@ -1,6 +1,7 @@
 class Event < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
 
+  has_rich_text :rhino_header
   has_rich_text :rhino_description
 
   belongs_to :created_by, class_name: "User", optional: true
