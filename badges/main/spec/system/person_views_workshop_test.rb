@@ -12,7 +12,7 @@ RSpec.describe "People can view a workshop" do
         sign_in user
       end
 
-      it 'views workshop via dashboard' do
+      it 'views workshop via home page' do
         visit '/'
 
         expect(page).to have_content('The best workshop on mars')

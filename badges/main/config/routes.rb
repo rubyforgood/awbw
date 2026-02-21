@@ -164,7 +164,7 @@ Rails.application.routes.draw do
     end
   end
 
-  namespace :dashboard do
+  namespace :home do
     resources :workshops, only: :index
     resources :resources, only: :index
     resources :stories, only: :index
@@ -172,5 +172,5 @@ Rails.application.routes.draw do
     resources :events, only: :index
   end
 
-  root to: "dashboard#index"
+  root to: "home#index"
 end

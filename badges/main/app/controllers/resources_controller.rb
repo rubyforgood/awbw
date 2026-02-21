@@ -132,7 +132,7 @@ class ResourcesController < ApplicationController
     else
       if params[:from] == "resources_index"
         path = resources_path
-      elsif params[:from] == "dashboard_index"
+      elsif params[:from] == "home_index"
         path = root_path
       else
         resource_path(params[:resource_id])

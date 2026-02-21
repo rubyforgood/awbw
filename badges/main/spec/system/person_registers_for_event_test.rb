@@ -29,8 +29,8 @@ published: true,
         visit '/'
       end
 
-      # dashboard registration
-      it "Register for events from dashboard" do
+      # home page registration
+      it "Register for events from home page" do
         within("#card_event_#{@event.id}") do
          expect(page).to have_button("Register")
          click_button 'Register'

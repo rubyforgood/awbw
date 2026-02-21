@@ -1,0 +1,13 @@
+<% title ||= "Upcoming Events" %>
+
+<section class="<%# mt-6 %> py-10 <%= DomainTheme.bg_class_for(:events) %>">
+  <div class="max-w-6xl mx-auto px-4">
+    <%= render "home/home_section_header",
+               title: title,
+               subtitle: "Workshops, trainings, and upcoming gatherings" %>
+
+    <%= turbo_frame_tag "home_events", src: home_events_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+      <%= render "events_cards_skeleton" %>
+    <% end %>
+  </div>
+</section>
