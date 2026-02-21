@@ -11,10 +11,6 @@
         <%= f.hidden_field :person_id %>
       <% else %>
         <%= f.input :person_id,
-          collection: f.object.person.present? ? [[
-            f.object.person.preferred_email.present? ? "#{f.object.person.full_name} (#{f.object.person.preferred_email})" : f.object.person.full_name,
-            f.object.person.id
-          ]] : [],
           include_blank: true,
           required: true,
           input_html: {
