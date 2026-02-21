@@ -30,7 +30,7 @@
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <div class="mb-1">
-                    <% if allowed_to?(:manage?, Quote) && !quote.published? && controller_name != "dashboard" %>
+                    <% if allowed_to?(:manage?, Quote) && !quote.published? && controller_name != "home" %>
                       <span
                         class="inline-flex items-center px-2 py-0.5 rounded-full
                                text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap">
@@ -41,11 +41,11 @@
                     <% end %>
 
                     <!-- Featured badge -->
-                    <%# if true || (quote.featured? && controller_name != "dashboard") %>
+                    <%# if true || (quote.featured? && controller_name != "home") %>
 <!--                      <span-->
 <!--                        class="inline-flex items-center px-2 py-0.5 rounded-full-->
 <!--                               text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">-->
-<!--                        🌟 Dashboard feature -->
+<!--                        🌟 Featured -->
 <!--                      </span>-->
                     <%# end %>
                   </div>

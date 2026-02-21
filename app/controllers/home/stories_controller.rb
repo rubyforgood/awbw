@@ -1,12 +1,12 @@
-module Dashboard
+module Home
   class StoriesController < ApplicationController
     def index
-      authorize! :dashboard
+      authorize! :home
       @stories = authorized_scope(Story.published
-                      .order(:title), with: DashboardPolicy)
+                      .order(:title), with: HomePolicy)
                       .decorate
 
-      render "dashboard/stories/index"
+      render "home/stories/index"
     end
   end
 end

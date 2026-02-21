@@ -39,7 +39,7 @@ RSpec.describe "People can download resources", type: :system, js: true do
   describe "when user is logged in" do
     before { sign_in user }
 
-    context "from the dashboard" do
+    context "from the home page" do
       it "downloads the resource" do
         visit root_path
 

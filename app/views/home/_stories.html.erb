@@ -2,11 +2,11 @@
 
 <section class="<%# mt-6 %> py-10 bg-rose-50">
   <div class="max-w-6xl mx-auto px-4">
-    <%= render "dashboard/dashboard_section_header",
+    <%= render "home/home_section_header",
                title: title,
                subtitle: "Voices and experiences from our community" %>
 
-    <%= turbo_frame_tag "dashboard_stories", src: dashboard_stories_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+    <%= turbo_frame_tag "home_stories", src: home_stories_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
       <%= render "stories_cards_skeleton" %>
     <% end %>
   </div>

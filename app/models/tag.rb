@@ -42,7 +42,7 @@ class Tag
     }
   }.freeze
 
-  def self.dashboard_card_for(key)
+  def self.home_card_for(key)
     meta = TAGGABLE_META.fetch(key)
 
     {

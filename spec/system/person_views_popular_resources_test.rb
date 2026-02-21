@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe "People can view Popular Resources on the dashboard" do
+RSpec.describe "People can view Popular Resources on the home page" do
   describe "Person views and navigates to Popular Resources" do
     context "when logged in" do
       before do

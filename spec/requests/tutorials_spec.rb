@@ -18,8 +18,8 @@ RSpec.describe "/tutorials", type: :request do
   # adjust the attributes here as well.
   let(:valid_attributes) do
     {
-      title: "How to Use the Dashboard",
-      body: "<p>This tutorial walks through the main dashboard features.</p>",
+      title: "How to Use the Home Page",
+      body: "<p>This tutorial walks through the main home page features.</p>",
       youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     }
   end
@@ -101,7 +101,7 @@ RSpec.describe "/tutorials", type: :request do
     context "with valid parameters" do
       let(:new_attributes) do
         valid_attributes.merge(
-          title: "Updated: How to Use the Dashboard"
+          title: "Updated: How to Use the Home Page"
         )
       end
 
