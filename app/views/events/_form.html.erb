@@ -1,4 +1,4 @@
-<%= simple_form_for(@event) do |f| %>
+<%= simple_form_for(@event, html: { id: "event-form" }) do |f| %>
   <% f.input :created_by_id, as: :hidden, value: current_user.id %>
 
   <% if @event.errors.any? %>
@@ -305,6 +305,15 @@
       <%= link_to "Cancel",
                   (allowed_to?(:index?, Event) ? events_path : root_path),
                   class: "btn btn-secondary-outline" %>
+      <% if @event.persisted? %>
+        <button type="submit"
+                formaction="<%= preview_event_path(@event) %>"
+                formtarget="_blank"
+                data-turbo="false"
+                class="btn btn-secondary-outline">
+          Preview
+        </button>
+      <% end %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   </div>

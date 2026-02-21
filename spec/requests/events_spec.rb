@@ -179,6 +179,46 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "PATCH /preview" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders the show template with preview changes" do
+        patch preview_event_path(event), params: { event: { title: "Preview Title" } }
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Preview Title")
+        expect(response.body).to include("Preview")
+      end
+
+      it "does not persist changes to the database" do
+        original_title = event.title
+        patch preview_event_path(event), params: { event: { title: "Preview Title" } }
+        expect(event.reload.title).to eq(original_title)
+      end
+    end
+
+    context "as non-admin non-owner" do
+      before { sign_in user }
+
+      it "redirects" do
+        patch preview_event_path(event), params: { event: { title: "Preview Title" } }
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as owner" do
+      let(:owned_event) { create(:event, created_by: user) }
+
+      before { sign_in user }
+
+      it "renders the show template" do
+        patch preview_event_path(owned_event), params: { event: { title: "Owner Preview" } }
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Owner Preview")
+      end
+    end
+  end
+
   describe "DELETE /destroy" do
     context "as admin" do
       before { sign_in admin }

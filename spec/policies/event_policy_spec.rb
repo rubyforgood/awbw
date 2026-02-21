@@ -133,6 +133,13 @@ RSpec.describe EventPolicy, type: :policy do
     end
   end
 
+  describe "#preview?" do
+    it "is an alias of :edit? authorization rule" do
+      policy = policy_for(record: published_event, user: admin_user)
+      expect(:preview?).to be_an_alias_of(policy, :edit?)
+    end
+  end
+
   describe "#update?" do
     let(:owned_event) { build_stubbed :event, created_by: regular_user }
 

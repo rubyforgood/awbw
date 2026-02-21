@@ -90,6 +90,9 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create ]
   end
   resources :events do
+    member do
+      patch :preview
+    end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
   end
   resources :people do

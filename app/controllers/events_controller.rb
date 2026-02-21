@@ -1,7 +1,8 @@
 class EventsController < ApplicationController
   include AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
-  before_action :set_event, only: %i[ show edit update destroy ]
+  skip_before_action :verify_authenticity_token, only: [ :preview ]
+  before_action :set_event, only: %i[ show edit update destroy preview ]
 
   def index
     authorize!
@@ -24,6 +25,14 @@ class EventsController < ApplicationController
   def edit
     authorize! @event
     set_form_variables
+  end
+
+  def preview
+    authorize! @event
+    @event.assign_attributes(event_params)
+    @event = @event.decorate
+    @preview = true
+    render :show
   end
 
   def create
