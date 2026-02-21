@@ -207,7 +207,7 @@
             %>
 
             <%= render "admin/analytics/popular_list",
-                       title: "Tutorials",
+                       title: Tutorial.model_name.human(count: 2),
                        records: @most_viewed_tutorials,
                        path_method: :tutorial_path,
                        metric: :view_count,
