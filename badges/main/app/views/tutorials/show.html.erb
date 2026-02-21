@@ -2,7 +2,7 @@
 <div class="<%= DomainTheme.bg_class_for(:resources) %> border border-gray-200 rounded-xl shadow p-6">
       <!-- Top Right Utility Buttons -->
       <div class="text-right mb-4 space-x-1">
-        <%= link_to "Tutorials", tutorials_path, class: "btn btn-secondary-outline" %>
+        <%= link_to Tutorial.model_name.human(count: 2), tutorials_path, class: "btn btn-secondary-outline" %>
         <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
         <% if allowed_to?(:edit?, @tutorial) %>
           <%= link_to("Edit", edit_tutorial_path(@tutorial),
