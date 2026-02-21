@@ -66,13 +66,18 @@
         <div class="admin-only bg-blue-100 flex gap-x-2 items-center p-3">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
-              <%= f.input :created_by_id,
-                          as: :select,
-                          label: "Author",
-                          collection: @authors,
-                          selected: f.object.created_by_id || current_user.id,
-                          input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm
-                          focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+              <div data-controller="searchable-select" data-searchable-select-mode-value="person">
+                <%= f.input :created_by_id,
+                            as: :select,
+                            label: "Author",
+                            collection: @users,
+                            label_method: :full_name_with_email,
+                            value_method: :id,
+                            selected: f.object.created_by_id || current_user.id,
+                            input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm
+                            focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                            data: { searchable_select_target: "select" } } %>
+              </div>
             </div>
             <div>
               <%= f.input :staff_notes, as: :text,

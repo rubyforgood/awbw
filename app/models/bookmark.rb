@@ -44,6 +44,7 @@ class Bookmark < ApplicationRecord
     bookmarks = bookmarks.bookmarkable_attributes(params[:bookmarkable_type],
                                                   params[:bookmarkable_id])
     bookmarks = bookmarks.title(params[:title]) if params[:title].present?
+    bookmarks = bookmarks.where(user_id: params[:user_id]) if params[:user_id].present?
     bookmarks = bookmarks.user_name(params[:user_name]) if params[:user_name].present?
     bookmarks = bookmarks.windows_type(params[:windows_type]) if params[:windows_type].present?
 

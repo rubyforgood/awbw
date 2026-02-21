@@ -12,6 +12,9 @@ class EventRegistrationsController < ApplicationController
     @event_registrations = filtered.includes(:registrant, :event).paginate(page: params[:page], per_page: per_page)
     @events = Event.order(start_date: :desc)
     @filtered_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
+    @registrants = authorized_scope(Person.left_joins(:user))
+                     .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
+
 
     respond_to do |format|
       format.html

@@ -79,6 +79,7 @@ class WorkshopIdea < ApplicationRecord
   def self.search(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.title(params[:title]) if params[:title].present?
+    results = results.where(created_by_id: params[:created_by_id]) if params[:created_by_id].present?
     results = results.author_name(params[:author_name]) if params[:author_name].present?
     results
   end

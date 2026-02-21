@@ -113,11 +113,11 @@ class WorkshopLogsController < ApplicationController
     ).sort.reverse
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
-    @people = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
+    @users = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
                                 .joins(:person)
                                 .distinct
-                                .select("users.id, users.person_id, people.first_name, people.last_name")
-                                .order("people.first_name, people.last_name")
+                                .select("users.id, users.email, users.person_id, people.first_name, people.last_name")
+                                .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
     @organizations = authorized_scope(Organization.all)
     @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
                          .includes(:windows_type)
