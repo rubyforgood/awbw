@@ -50,6 +50,9 @@
   # --------------------------------------------------
   # Variant sizing
   # --------------------------------------------------
+  is_pdf = active_storage_file&.content_type == "application/pdf"
+  object_fit = is_pdf ? "object-contain bg-gray-100" : "object-cover"
+
   sizes = {
     hero: {
       wrapper: "mb-8",
@@ -58,14 +61,14 @@
 
     gallery: {
       wrapper: "flex grow",
-      image:   "gallery-size #{width_class} #{height_class} object-cover rounded border border-gray-300
+      image:   "gallery-size #{width_class} #{height_class} #{object_fit} rounded border border-gray-300
                 shadow-sm hover:opacity-90 transition-opacity #{extra_image_classes}",
       preview: [300, 300]
     },
 
     index: {
       wrapper: "index-size #{width_class} #{height_class} shrink-0 overflow-hidden rounded border border-gray-300",
-      image:   "w-full h-full object-cover #{extra_image_classes}",
+      image:   "w-full h-full #{object_fit} #{extra_image_classes}",
       preview: [300, 300]
     }
   }.fetch(variant)
