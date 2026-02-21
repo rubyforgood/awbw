@@ -1,80 +1,68 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
-<!-- Outer Soft Container (Events = blue theme) -->
-<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-  <!-- Top Right Actions -->
-  <div class="text-right mb-4 space-x-2">
-    <%= link_to "Events", events_path, class: "btn btn-secondary-outline" %>
-    <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
-    <% if allowed_to?(:edit?, @event) %>
-      <%= link_to "Edit",
-      edit_event_path(@event),
-      class: "btn btn-secondary-outline admin-only bg-blue-100" %>
-    <% end %>
 
-    <span class="inline-block"><%= render "bookmarks/editable_bookmark_button", resource: @event.object %></span>
+<!-- Top Right Actions -->
+<div class="flex flex-wrap justify-end gap-2">
+  <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  <%= link_to "Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  <% if allowed_to?(:edit?, @event) %>
+    <%= link_to "Edit", edit_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
+  <% end %>
+  <span class="inline-block text-sm"><%= render "bookmarks/editable_bookmark_button", resource: @event.object %></span>
+</div>
+
+<%# ---- HEADER CONTENT ---- %>
+<% if @event.rhino_header.present? %>
+  <div class="rhino-centered prose max-w-none prose-img:max-w-full prose-img:w-full prose-strong:text-inherit prose-em:text-inherit mb-4">
+    <%= @event.rhino_header %>
   </div>
-  <!-- Inner White Card -->
-  <div class="bg-white rounded-lg shadow p-8">
-    <!-- Top section: meta on left, image on right -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-10">
-      <!-- Left Column -->
-      <div class="md:col-span-3 md:pr-4">
-        <!-- Title + Badges -->
-        <div class="my-3"><%= title_with_badges(@event, font_size: "text-3xl") %></div>
-        <!-- Dates Section -->
-        <div class="space-y-6">
-          <div class=""><%= @event.times(display_day: true, display_date: true) %></div>
+<% end %>
 
-          <% if @event.labelled_cost %>
-            <div><%= @event.labelled_cost %></div>
-          <% end %>
+<%# ---- TITLE ---- %>
+<% if @event.autoshow_title %>
+  <div class="text-center mb-4 max-w-2xl mx-auto">
+    <h1 class="text-4xl font-bold text-green-800" style="font-family: Lato, sans-serif"><%= @event.title %></h1>
+  </div>
+<% end %>
 
-          <% if @event.location.present? %>
-            <div>
-              <p class="font-semibold text-gray-700">Location</p>
-              <p class="text-gray-900"><%= @event.location.name %></p>
-            </div>
-          <% end %>
-
-          <% if @event.videoconference_url.present? %>
-            <div>
-              <p class="font-semibold text-gray-700">Videoconference URL</p>
-              <p class="text-gray-900">
-                <%= link_to "Join online", safe_url(@event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "text-blue-600 hover:underline" %>
-              </p>
-            </div>
-          <% end %>
-
-          <%= render "events/registration_section", event: @event %>
-
-          <% if @event.registration_close_date %>
-            <div>
-              <p class="font-semibold text-gray-700">Registration Close Date</p>
-
-              <p class="text-gray-900">
-                <%= @event.registration_close_date&.strftime("%B %-d, %Y %l:%M %P") || "—" %>
-              </p>
-            </div>
-          <% end %>
-        </div>
-        <!-- First part of description beside the image -->
-        <% desc_top, desc_bottom = split_rich_text(@event.rhino_description, split_length: 800) %>
-        <% if desc_top.present? %>
-          <div class="mt-6 prose max-w-none prose-strong:text-inherit prose-em:text-inherit"><%= desc_top %></div>
-        <% end %>
-      </div>
-      <!-- Right Column: Image -->
-      <div class="md:col-span-2 space-y-6 ml-6">
-        <%= render "assets/display_assets", resource: @event, link: true %>
-      </div>
+<%# ---- EVENT DETAILS (conditional on autoshow) ---- %>
+<div class="text-center space-y-2 mb-4">
+  <% if @event.autoshow_date || @event.autoshow_time %>
+    <div class="text-3xl font-bold text-blue-900 uppercase" style="font-family: Lato, sans-serif">
+      <%= @event.times(display_day: @event.autoshow_date, display_date: @event.autoshow_date, styled: true) %>
     </div>
-    <% if desc_bottom.present? %>
-      <!-- Remaining description: full width below -->
-      <div class="mt-6 prose max-w-none prose-strong:text-inherit prose-em:text-inherit"
-           style="max-width: 100%;">
-        <%= desc_bottom %>
-      </div>
-    <% end %>
-    <p class="text-sm text-gray-500 mt-6 mb-0">All times displayed in <%= Time.zone.to_s %>.</p>
+  <% end %>
+
+  <% if @event.autoshow_cost && @event.labelled_cost %>
+    <div class="text-xl font-bold text-blue-900 uppercase" style="font-family: Lato, sans-serif"><%= @event.labelled_cost %></div>
+  <% end %>
+
+  <% if @event.autoshow_location && @event.location.present? %>
+    <div class="text-base text-gray-700"><%= @event.location.name %></div>
+  <% end %>
+
+  <%= render "events/videoconference_link", event: @event %>
+
+  <% if @event.registration_close_date %>
+    <div class="text-base text-gray-700">
+      Registration closes <%= @event.registration_close_date.in_time_zone(Time.zone).strftime("%B %-d, %Y %l:%M %P %Z") %>
+    </div>
+  <% end %>
+
+  <% if @event.autoshow_registration %>
+    <div class="mt-4">
+      <%= render "events/registration_section", event: @event, instance: 1, button_text: "Register Now" %>
+    </div>
+  <% end %>
+</div>
+
+<%# ---- DESCRIPTION ---- %>
+<% if @event.rhino_description.present? %>
+  <div class="prose max-w-none prose-img:max-w-full prose-img:w-full prose-strong:text-inherit prose-em:text-inherit mb-12">
+    <%= @event.rhino_description %>
   </div>
+<% end %>
+
+<%# ---- IMAGES ---- %>
+<div class="mb-12">
+  <%= render "assets/display_assets", resource: @event, link: true %>
 </div>

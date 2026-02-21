@@ -2,7 +2,7 @@
 <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="flex items-center justify-between mb-3">
     <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
-      Edit <%= @event.class.model_name.human %>
+      Edit Event: <%= @event.title %>
     </h1>
     <%= link_to "View", event_path(@event), class: "btn btn-secondary-outline" %>
   </div>

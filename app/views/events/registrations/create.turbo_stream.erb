@@ -1,3 +1,6 @@
 <%= turbo_stream.replace dom_id(@event, :card), partial: "events/card", locals: { event: @event } %>
-<%= turbo_stream.replace dom_id(@event, :registration_section), partial: "events/registration_section", locals: { event: @event.decorate } %>
+<% (1..5).each do |i| %>
+  <%= turbo_stream.replace dom_id(@event, "registration_section_#{i}"), partial: "events/registration_section", locals: { event: @event.decorate, instance: i } %>
+<% end %>
+<%= turbo_stream.replace dom_id(@event, :videoconference_link), partial: "events/videoconference_link", locals: { event: @event.decorate } %>
 <%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>

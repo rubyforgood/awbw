@@ -1,0 +1,11 @@
+<%= tag.div id: dom_id(event.object, :videoconference_link), class: "text-base text-gray-700" do %>
+  <% if event.autoshow_videoconference_url && event.videoconference_url.present? %>
+    <% domain_name = URI.parse(event.videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call" %>
+    <% registered = event.event_registrations.exists?(registrant_id: current_user&.person_id) %>
+    <% if registered %>
+      <%= link_to "Join on #{domain_name}", safe_url(event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "underline" %>
+    <% else %>
+      Join on <%= domain_name %>
+    <% end %>
+  <% end %>
+<% end %>
