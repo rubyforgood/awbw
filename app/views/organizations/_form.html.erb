@@ -200,6 +200,8 @@
                   input_html: {
                     class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                   } %>
+    <% else %>
+      <%= f.hidden_field :organization_status_id, value: f.object.organization_status_id || OrganizationStatus.find_by(name: "Active")&.id %>
     <% end %>
   </div>
   <% if params[:admin] && allowed_to?(:manage?, Organization) %>
