@@ -113,7 +113,7 @@ class WorkshopLogsController < ApplicationController
     ).sort.reverse
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
-    @people = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
+    @users = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
                                 .joins(:person)
                                 .distinct
                                 .select("users.id, users.email, users.person_id, people.first_name, people.last_name")
