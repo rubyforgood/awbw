@@ -194,7 +194,8 @@
         <%= f.input :autoshow_pre_date_text, as: :boolean, label: ("Pre-date text" + (@event.pre_date_text.present? ? " <span class='text-gray-400 font-normal'>#{h @event.pre_date_text}</span>" : "")).html_safe %>
         <%= f.input :autoshow_date, as: :boolean, label: ("Date <span class='text-gray-400 font-normal'>" + (@event.start_date.present? ? @event.start_date.in_time_zone(tz).strftime("%A, %B %-d, %Y") : Time.current.strftime("%A, %B %-d, %Y")) + "</span>").html_safe %>
         <%= f.input :autoshow_time, as: :boolean, label: ("Time <span class='text-gray-400 font-normal'>" + (@event.start_date.present? && @event.end_date.present? ? @event.start_date.in_time_zone(tz).strftime("%-l:%M %P") + " – " + @event.end_date.in_time_zone(tz).strftime("%-l:%M %P") : "3:00 pm – 5:00 pm") + " " + tz_abbr + "</span>").html_safe %>
-        <%= f.input :autoshow_cost, as: :boolean, label: ("Cost <span class='text-gray-400 font-normal'>" + (@event.labelled_cost.present? ? h(@event.labelled_cost) : "&quot;Cost: $X&quot; or &quot;Free event&quot;") + "</span>").html_safe %>
+        <% cost_preview = @event.decorate.labelled_cost %>
+        <%= f.input :autoshow_cost, as: :boolean, label: ("Cost <span class='text-gray-400 font-normal'>" + (cost_preview.present? ? h(cost_preview) : "&quot;Cost: $X&quot; or &quot;Free event&quot;") + "</span>").html_safe %>
         <%= f.input :autoshow_location, as: :boolean, label: ("Location" + (@event.location.present? ? " <span class='text-gray-400 font-normal'>#{h @event.location.name}</span>" : "")).html_safe %>
         <% vc_domain = @event.videoconference_url.present? ? (URI.parse(@event.videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call") : nil %>
         <%= f.input :autoshow_videoconference_url, as: :boolean, label: ("Videoconference <span class='text-gray-400 font-normal'>" + (vc_domain.present? ? "Join on #{vc_domain}" : "Join on [Domain]") + "</span>").html_safe %>
