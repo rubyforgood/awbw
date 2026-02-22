@@ -128,6 +128,14 @@ This project supports [Conductor](https://conductor.build) for running multiple 
 
 Configuration lives in `conductor.json` at the project root.
 
+**Logs:** Rails logs go to `log/development.log` (not the Conductor terminal). Tail them with `tail -f log/development.log`.
+
+**Browser passwords:** Conductor workspaces use `awbw.local` as the hostname so your browser retains saved passwords across ports. Add this line to `/etc/hosts` once:
+
+```
+127.0.0.1	awbw.local
+```
+
 ## Troubleshooting 👷🏼‍♀️
 
 Please let us know by opening up an issue! We have many new contributors come through and it is likely what you experienced will happen to them as well.
