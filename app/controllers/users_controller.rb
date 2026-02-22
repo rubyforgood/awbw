@@ -79,7 +79,6 @@ class UsersController < ApplicationController
     @user.updated_by = current_user
 
     if @user.save
-      # @user.notifications.create(notification_type: 0)
       redirect_to @user, notice: "User was successfully created."
     else
       set_form_variables
