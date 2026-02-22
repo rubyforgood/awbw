@@ -60,9 +60,9 @@ RSpec.describe "/sectors", type: :request do
         }.to change(Sector, :count).by(1)
       end
 
-      it "redirects to sectors index" do
+      it "redirects to the created sector" do
         post sectors_url, params: { sector: valid_attributes }
-        expect(response).to redirect_to(sectors_url)
+        expect(response).to redirect_to(sector_url(Sector.last))
       end
     end
 
@@ -95,11 +95,11 @@ RSpec.describe "/sectors", type: :request do
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the sectors index" do
+      it "redirects to the sector" do
         sector = Sector.create! valid_attributes
         patch sector_url(sector), params: { sector: new_attributes }
         sector.reload
-        expect(response).to redirect_to(sectors_url)
+        expect(response).to redirect_to(sector_url(sector))
       end
     end
 

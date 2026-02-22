@@ -30,7 +30,7 @@ class FaqsController < ApplicationController
     authorize! @faq
 
     if @faq.save
-      redirect_to faqs_path, notice: "FAQ was successfully created."
+      redirect_to @faq, notice: "FAQ was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -42,7 +42,7 @@ class FaqsController < ApplicationController
     notice = "FAQ was successfully updated."
     flash.now[:notice] = notice
     if @faq.update(faq_params)
-      redirect_to faqs_path, notice: notice, status: :see_other
+      redirect_to @faq, notice: notice, status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content
