@@ -10,6 +10,7 @@ This is a Ruby on Rails 8.1 application (Ruby 4.0.1) — the Portal for A Window
 - **Frontend:** Vite, Tailwind CSS v4, Stimulus, Turbo Rails
 - **Auth:** Devise with JWT token support
 - **Authorization:** ActionPolicy (app/policies/)
+- **Rich text:** ActionText with Rhino editor (TipTap-based)
 - **File uploads:** ActiveStorage with DigitalOcean Spaces
 - **Background jobs:** SolidQueue
 - **Caching:** SolidCache
@@ -40,6 +41,19 @@ npm ci
 - Prefer service objects under app/services/
 - Prefer POROs over concerns when possible
 - Use `after_commit` instead of `after_save` for side effects
+
+## Related Files
+
+When changing a model or controller, check whether these related files need updates:
+
+| If you change... | Also check... |
+|---|---|
+| Model | Decorator, policy, factory, model spec |
+| Controller | Policy, request spec, routing spec, views |
+| View | System spec, Stimulus controller (if interactive) |
+| Service | Service spec |
+| Decorator | Decorator spec |
+| Add/remove model, concern, service, or gem | AGENTS.md, `.github/copilot-instructions.md` |
 
 ## Key Directories
 

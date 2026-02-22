@@ -61,6 +61,7 @@ AWBW Portal (Rails 8.1)
 | `config/initializers/` | ~32 initializer files |
 | `.github/workflows/` | GitHub Actions CI |
 | `Procfile.dev` | Dev services: `vite` + `web` |
+| `ai/` | Shell script shortcuts for common dev tasks (see `ai/README.md`) |
 
 ## Key Models
 
