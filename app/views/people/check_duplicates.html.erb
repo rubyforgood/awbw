@@ -85,7 +85,7 @@
       <% end %>
 
       <div class="flex gap-3 justify-center">
-        <%= link_to "Go Back", "javascript:history.back()", class: "btn btn-secondary-outline" %>
+        <%= link_to "Go back", "javascript:history.back()", class: "btn btn-secondary-outline" %>
 
         <% unless @blocked %>
           <%= form_with url: people_path, method: :post, data: { turbo: false } do %>

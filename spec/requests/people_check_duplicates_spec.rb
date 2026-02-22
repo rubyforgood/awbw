@@ -364,13 +364,13 @@ RSpec.describe "/people/check_duplicates", type: :request do
         expect(response.body).to include("Create anyway")
       end
 
-      it "always shows the Go Back link" do
+      it "always shows the Go back link" do
         get check_duplicates_people_path, params: {
           first_name: "NewFirst", last_name: "NewLast", email: ""
         }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Go Back")
+        expect(response.body).to include("Go back")
       end
     end
 

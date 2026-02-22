@@ -139,7 +139,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
     # --- person_id passthrough ---
 
     context "when person_id is provided" do
-      it "includes person_id in the Create Anyway form" do
+      it "includes person_id in the Create anyway form" do
         person = Person.create!(
           first_name: "Solo", last_name: "Person",
           email: "solo2@testmail.org",
@@ -163,7 +163,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
         get check_duplicates_users_path, params: { email: "heading@testmail.org" }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Possible Duplicate User")
+        expect(response.body).to include("Possible duplicate user")
       end
 
       it "displays the checked email" do
@@ -172,10 +172,10 @@ RSpec.describe "/users/check_duplicates", type: :request do
         expect(response.body).to include("heading@testmail.org")
       end
 
-      it "always shows the Go Back link" do
+      it "always shows the Go back link" do
         get check_duplicates_users_path, params: { email: "heading@testmail.org" }
 
-        expect(response.body).to include("Go Back")
+        expect(response.body).to include("Go back")
       end
     end
 
