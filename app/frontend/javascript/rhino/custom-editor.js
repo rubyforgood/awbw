@@ -40,6 +40,11 @@ class CustomEditor extends TipTapEditor {
           <slot name="font-picker"> ${this.renderFontPicker()} </slot>
           <slot name="after-font-picker"></slot>
 
+          <!-- Font Size -->
+          <slot name="before-font-size-picker"></slot>
+          <slot name="font-size-picker"> ${this.renderFontSizePicker()} </slot>
+          <slot name="after-font-size-picker"></slot>
+
           <!-- Strike -->
           <slot name="before-strike-button"></slot>
           <slot name="strike-button">${this.renderStrikeButton()}</slot>
@@ -552,6 +557,50 @@ class CustomEditor extends TipTapEditor {
               ?selected=${font.family && this.editor.isActive("textStyle", { fontFamily: font.family })}
             >
               ${font.name}
+            </option>
+          `,
+        )}
+      </select>
+    `;
+  }
+
+  renderFontSizePicker() {
+    if (!this.editor) return html``;
+
+    const sizes = [
+      { name: "Default", size: "" },
+      { name: "12px", size: "12px" },
+      { name: "14px", size: "14px" },
+      { name: "16px", size: "16px" },
+      { name: "18px", size: "18px" },
+      { name: "20px", size: "20px" },
+      { name: "24px", size: "24px" },
+      { name: "28px", size: "28px" },
+      { name: "32px", size: "32px" },
+      { name: "36px", size: "36px" },
+      { name: "48px", size: "48px" },
+    ];
+
+    return html`
+      <select
+        class="toolbar__font-size-picker"
+        title="Font Size"
+        @change=${(event) => {
+          const fontSize = event.target.value;
+          if (fontSize === "") {
+            this.editor.chain().focus().unsetFontSize().run();
+          } else {
+            this.editor.chain().focus().setFontSize(fontSize).run();
+          }
+        }}
+      >
+        ${sizes.map(
+          (size) => html`
+            <option
+              value=${size.size}
+              ?selected=${size.size && this.editor.isActive("textStyle", { fontSize: size.size })}
+            >
+              ${size.name}
             </option>
           `,
         )}
