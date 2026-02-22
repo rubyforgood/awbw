@@ -118,6 +118,16 @@ These credentials also work for [staging](https://awbw-staging-xzek4.ondigitaloc
 3. Run `mise server`. On the Ports tab, visit the forwarded port 3000 URL marked as Application to see the AWBW portal page.
 4. Login as a sample user with the default [credentials](#credentials).
 
+## Conductor (Parallel AI Workspaces) 🎼
+
+This project supports [Conductor](https://conductor.build) for running multiple coding agents in parallel. Each workspace gets its own port, database, and session cookie automatically.
+
+1. Open the project in Conductor — it will run `bin/conductor-setup` to symlink config files and set up a workspace-specific database.
+2. The dev server starts on the port assigned by Conductor (via `CONDUCTOR_PORT`).
+3. When a workspace is archived, `bin/conductor-archive` stops the running server.
+
+Configuration lives in `conductor.json` at the project root.
+
 ## Troubleshooting 👷🏼‍♀️
 
 Please let us know by opening up an issue! We have many new contributors come through and it is likely what you experienced will happen to them as well.
