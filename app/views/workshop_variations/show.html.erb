@@ -38,7 +38,14 @@
       <!-- Author and Date -->
       <div class="flex flex-col gap-1">
         <div class="flex items-center text-gray-600 text-sm gap-2">
-          <span><%= @workshop_variation.created_by&.name %></span>
+          <span>
+            <% creator = @workshop_variation.created_by %>
+            <% if creator&.person && allowed_to?(:show?, creator.person, with: PersonPolicy) %>
+              <%= link_to creator.name, person_path(creator.person), class: "text-blue-600 hover:underline" %>
+            <% else %>
+              <%= creator&.name %>
+            <% end %>
+          </span>
           <span class="<%= "border-l border-gray-400 pl-2" if @workshop_variation.created_by.present? %>">
             <%= @workshop_variation.created_at.strftime('%B %e, %Y') %>
           </span>
