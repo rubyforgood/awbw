@@ -531,7 +531,7 @@ class CustomEditor extends TipTapEditor {
     if (!this.editor) return html``;
 
     const fonts = [
-      { name: "Default", family: "" },
+      { name: "Default Font", family: "" },
       { name: "Lato", family: "Lato, sans-serif" },
       { name: "Telefon Bold", family: "Telefon Bold" },
     ];
@@ -568,7 +568,7 @@ class CustomEditor extends TipTapEditor {
     if (!this.editor) return html``;
 
     const sizes = [
-      { name: "Default", size: "" },
+      { name: "Default Size", size: "" },
       { name: "12px", size: "12px" },
       { name: "14px", size: "14px" },
       { name: "16px", size: "16px" },
