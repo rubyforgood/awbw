@@ -11,7 +11,7 @@ class ContactUsMailer < ApplicationMailer
       "#{contact_us[:first_name]} #{contact_us[:last_name]}".strip
     end
 
-    mail(to: @mail_to, subject: "AWBW portal: New contact form submission from #{sender_name}: #{@contact_us[:subject]}", from: @contact_us[:from])
+    mail(to: @mail_to, subject: "AWBW Portal: New contact form submission from #{sender_name}: #{@contact_us[:subject]}", from: @contact_us[:from])
   end
 
   def confirmation(contact_us, user = nil)
@@ -19,6 +19,6 @@ class ContactUsMailer < ApplicationMailer
     @user = user
 
     recipient = user&.email || contact_us[:from]
-    mail(to: recipient, subject: "AWBW portal: We received your message re #{contact_us[:subject]}")
+    mail(to: recipient, subject: "AWBW Portal: We received your message re #{contact_us[:subject]}")
   end
 end
