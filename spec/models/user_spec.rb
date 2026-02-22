@@ -258,20 +258,15 @@ RSpec.describe User do
     end
   end
 
-  describe "#devise_email_name" do
+  describe "#first_name_or_email" do
     it "returns person first_name when person exists" do
       person = create(:person, first_name: "Jane")
-      expect(person.user.devise_email_name).to eq("Jane")
+      expect(person.user.first_name_or_email).to eq("Jane")
     end
 
-    it "returns user first_name when no person" do
-      user = create(:user, first_name: "Bob")
-      expect(user.devise_email_name).to eq("Bob")
-    end
-
-    it "returns email when no name available" do
-      user = create(:user, first_name: nil)
-      expect(user.devise_email_name).to eq(user.email)
+    it "returns email when no person" do
+      user = create(:user)
+      expect(user.first_name_or_email).to eq(user.email)
     end
   end
 end
