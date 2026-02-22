@@ -38,18 +38,19 @@ Rails.application.configure do
   config.active_storage.service = :local
 
   # URL helpers, *_url helpers, mailers
-  Rails.application.routes.default_url_options[:host] ||= "localhost:3000"
+  # Moved to config/initializers/default_host.rb for dynamic Conductor port support
+  # Rails.application.routes.default_url_options[:host] ||= "localhost:3000"
 
   config.after_initialize do
     Bullet.enable = true
     Bullet.rails_logger = true
 
-    # blob.url, disk service
-    ActiveStorage::Current.url_options = {
-      protocol: "http",
-      host: "localhost",
-      port: 3000
-    }
+    # Moved to config/initializers/default_host.rb for dynamic Conductor port support
+    # ActiveStorage::Current.url_options = {
+    #   protocol: "http",
+    #   host: "localhost",
+    #   port: 3000
+    # }
 
     if ActionMailer::Base.delivery_method == :smtp
       raise "SMTP must not be enabled in development"
@@ -71,7 +72,8 @@ Rails.application.configure do
   config.action_mailer.perform_caching = false
 
   # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000, protocol: "http" }
+  # Moved to config/initializers/default_host.rb for dynamic Conductor port support
+  # config.action_mailer.default_url_options = { host: "localhost", port: 3000, protocol: "http" }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -106,6 +108,9 @@ Rails.application.configure do
 
   # needed for codespaces
   config.hosts << ".app.github.dev"
+  # Allow Conductor workspaces on any port
+  config.hosts << /\Alocalhost(:\d+)?\z/
+  config.hosts << /\Aawbw\.local(:\d+)?\z/
 
   feature_flag_variables = File.join(Rails.root, "config", "feature_flag_variables.rb")
   load(feature_flag_variables) if File.exist?(feature_flag_variables)
