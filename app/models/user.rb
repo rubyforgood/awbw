@@ -123,8 +123,8 @@ class User < ApplicationRecord
     person ? "#{person.full_name} (#{email})" : email
   end
 
-  def devise_email_name
-    person&.first_name.presence || first_name.presence || email
+  def first_name_or_email
+    person&.first_name.presence || email
   end
 
   def submitted_monthly_report(submitted_date = Date.today, windows_type, organization_id)
