@@ -31,7 +31,7 @@ class OrganizationStatusesController < ApplicationController
     authorize! @organization_status
 
     if @organization_status.save
-      redirect_to organization_statuses_path, notice: "Organization status was successfully created."
+      redirect_to @organization_status, notice: "Organization status was successfully created."
     else
       @organization_status = OrganizationStatus.new.decorate
       set_form_variables
@@ -42,7 +42,7 @@ class OrganizationStatusesController < ApplicationController
   def update
     authorize! @organization_status
     if @organization_status.update(organization_status_params)
-      redirect_to organization_statuses_path, notice: "Organization status was successfully updated.", status: :see_other
+      redirect_to @organization_status, notice: "Organization status was successfully updated.", status: :see_other
     else
       @organization_status = OrganizationStatus.new.decorate
       set_form_variables
