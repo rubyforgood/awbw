@@ -34,6 +34,12 @@ class CustomEditor extends TipTapEditor {
           <slot name="before-color-picker"></slot>
           <slot name="color-picker"> ${this.renderTextColorPicker()} </slot>
           <slot name="after-color-picker"></slot>
+
+          <!-- Font Family -->
+          <slot name="before-font-picker"></slot>
+          <slot name="font-picker"> ${this.renderFontPicker()} </slot>
+          <slot name="after-font-picker"></slot>
+
           <!-- Strike -->
           <slot name="before-strike-button"></slot>
           <slot name="strike-button">${this.renderStrikeButton()}</slot>
@@ -513,6 +519,43 @@ class CustomEditor extends TipTapEditor {
         }}
         title="Text color"
       />
+    `;
+  }
+
+  renderFontPicker() {
+    if (!this.editor) return html``;
+
+    const fonts = [
+      { name: "Default", family: "" },
+      { name: "Lato", family: "Lato, sans-serif" },
+      { name: "Telefon Bold", family: "Telefon Bold" },
+    ];
+
+    return html`
+      <select
+        class="toolbar__font-picker"
+        title="Font"
+        @change=${(event) => {
+          const fontFamily = event.target.value;
+          if (fontFamily === "") {
+            this.editor.chain().focus().unsetFontFamily().run();
+          } else {
+            this.editor.chain().focus().setFontFamily(fontFamily).run();
+          }
+        }}
+      >
+        ${fonts.map(
+          (font) => html`
+            <option
+              value=${font.family}
+              style="font-family: ${font.family || 'inherit'}"
+              ?selected=${font.family && this.editor.isActive("textStyle", { fontFamily: font.family })}
+            >
+              ${font.name}
+            </option>
+          `,
+        )}
+      </select>
     `;
   }
 }
