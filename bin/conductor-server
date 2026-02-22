@@ -12,7 +12,7 @@ cd $(dirname "$0")/..
 export PORT=${CONDUCTOR_PORT:-${PORT:-3000}}
 export VITE_RUBY_PORT=$((PORT + 36))
 
-echo "Starting on http://localhost:${PORT} (Vite on :${VITE_RUBY_PORT})"
+echo "Starting on http://awbw.local:${PORT} (Vite on :${VITE_RUBY_PORT})"
 
 # Start Vite dev server in the background
 bin/vite dev &

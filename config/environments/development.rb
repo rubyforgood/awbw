@@ -110,6 +110,7 @@ Rails.application.configure do
   config.hosts << ".app.github.dev"
   # Allow Conductor workspaces on any port
   config.hosts << /\Alocalhost(:\d+)?\z/
+  config.hosts << /\Aawbw\.local(:\d+)?\z/
 
   feature_flag_variables = File.join(Rails.root, "config", "feature_flag_variables.rb")
   load(feature_flag_variables) if File.exist?(feature_flag_variables)
