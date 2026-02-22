@@ -14,10 +14,10 @@
 <% section_subtitle    ||= nil %>
 <% include_primary_asset  ||= false %>
 <% include_downloadable_asset  ||= false %>
-<% primary_title       ||= "Primary image" %>
+<% primary_title       ||= "Primary (thumbnail/hero)" %>
 <% downloadable_title       ||= "Downloadable attachment" %>
 <% include_gallery_assets = true unless local_assigns.key?(:include_gallery_assets) %>
-<% gallery_title       ||= "Gallery attachments" %>
+<% gallery_title       ||= "Upload" %>
 
 <div class="image-fields my-3">
   <h2 class="text-lg font-semibold text-gray-800 mb-2">
