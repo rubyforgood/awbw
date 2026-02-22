@@ -46,14 +46,6 @@
               <i class="fa-solid <%= sort_icon.call("created_at") %> text-xs opacity-70"></i>
             <% end %>
           </th>
-          <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[7rem]">
-            <%= link_to community_news_index_path(sort_base.merge(sort: "updated_at", direction: (@sort == "updated_at" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-                        data: { turbo_frame: "community_news_results" },
-                        class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
-              Updated
-              <i class="fa-solid <%= sort_icon.call("updated_at") %> text-xs opacity-70"></i>
-            <% end %>
-          </th>
           <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
         </tr>
       </thead>
@@ -90,7 +82,6 @@
             <td class="px-6 py-4 text-gray-600"><%= news.organization&.name || "—" %></td>
 
             <td class="px-6 py-4 text-center text-sm text-gray-500 whitespace-nowrap"><%= news.created_at.strftime("%b %d, %Y") %></td>
-            <td class="px-6 py-4 text-center text-sm text-gray-500 whitespace-nowrap"><%= news.updated_at.strftime("%b %d, %Y") %></td>
 
             <td class="px-6 py-4 text-right">
               <div class="inline-flex gap-2">
