@@ -9,11 +9,11 @@ class EventMailerPreview < ActionMailer::Preview
   def sample_event_registration
     # Try to reuse existing records to avoid duplication
     event = Event.first || create_event
-    user  = User.first  || create_user
+    person = Person.first || create_person
 
     EventRegistration.new(
       event: event,
-      registrant: user
+      registrant: person
     )
   end
 
@@ -29,12 +29,13 @@ class EventMailerPreview < ActionMailer::Preview
     )
   end
 
-  def create_user
-    User.create!(
+  def create_person
+    user = User.create!(
       email: "participant@example.org",
       first_name: "Alex",
       last_name: "Rivera",
       password: "password123"
     )
+    user.person
   end
 end
