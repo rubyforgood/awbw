@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+## Architecture Reference
+
+For detailed architecture, models, controllers, services, and testing structure, read `AGENTS.md`.
+
 ## Project Overview
 
 This is a Ruby on Rails 8.1 application (Ruby 4.0.1) — the Portal for A Window Between Worlds (AWBW). It manages workshops, resources, community news, stories, and events for workshop leaders.

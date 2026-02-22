@@ -1,0 +1,96 @@
+#!/bin/sh
+#/ Usage: bin/conductor-setup
+#/
+#/ Setup files that are not tracked in git for Conductor workspaces.
+#/ This is run automatically when a new workspace is created.
+
+set -e
+cd $(dirname "$0")/..
+
+if [ -z "$CONDUCTOR_ROOT_PATH" ]; then
+  echo "Not running inside Conductor. Falling back to normal setup..."
+
+  if [ ! -f .env ]; then
+    echo "Creating .env from .env.sample..."
+    cp .env.sample .env
+  else
+    echo ".env already exists, skipping..."
+  fi
+
+  bin/setup "$@"
+  exit 0
+fi
+
+echo "Setting up Conductor workspace..."
+
+# Trust mise.toml so we don't get prompted every workspace
+if command -v mise > /dev/null 2>&1; then
+  echo "Trusting mise.toml..."
+  mise trust
+fi
+
+# Symlink .env from the root repo so all workspaces share the same config.
+if [ -f "$CONDUCTOR_ROOT_PATH/.env" ]; then
+  echo "Symlinking .env from $CONDUCTOR_ROOT_PATH/.env..."
+  ln -sf "$CONDUCTOR_ROOT_PATH/.env" .env
+else
+  echo "Warning: $CONDUCTOR_ROOT_PATH/.env not found."
+  echo "Create it from .env.sample: cp .env.sample $CONDUCTOR_ROOT_PATH/.env"
+fi
+
+# Copy credential files from repo root
+for key_file in config/credentials.yml config/master.key; do
+  if [ -f "$CONDUCTOR_ROOT_PATH/$key_file" ]; then
+    echo "Copying $key_file from repo root..."
+    mkdir -p "$(dirname "$key_file")"
+    cp "$CONDUCTOR_ROOT_PATH/$key_file" "$key_file"
+  fi
+done
+
+# Copy credential key files if they exist
+if [ -d "$CONDUCTOR_ROOT_PATH/config/credentials" ]; then
+  for key_file in "$CONDUCTOR_ROOT_PATH"/config/credentials/*.key; do
+    if [ -f "$key_file" ]; then
+      echo "Copying $(basename "$key_file") from repo root..."
+      mkdir -p config/credentials
+      cp "$key_file" "config/credentials/$(basename "$key_file")"
+    fi
+  done
+fi
+
+# Symlink storage directory for Active Storage
+if [ -d "$CONDUCTOR_ROOT_PATH/storage" ]; then
+  echo "Symlinking storage from $CONDUCTOR_ROOT_PATH/storage..."
+  rm -rf storage
+  ln -sf "$CONDUCTOR_ROOT_PATH/storage" storage
+else
+  echo "Creating storage directory at $CONDUCTOR_ROOT_PATH/storage..."
+  mkdir -p "$CONDUCTOR_ROOT_PATH/storage"
+  ln -sf "$CONDUCTOR_ROOT_PATH/storage" storage
+fi
+
+# Symlink .bundle for private gem credentials
+if [ -d "$CONDUCTOR_ROOT_PATH/.bundle" ]; then
+  if [ -e .bundle ] && [ ! -L .bundle ]; then
+    echo "Error: .bundle exists and is not a symlink. Remove it manually first."
+    exit 1
+  fi
+  echo "Symlinking .bundle from $CONDUCTOR_ROOT_PATH/.bundle..."
+  ln -sf "$CONDUCTOR_ROOT_PATH/.bundle" .bundle
+fi
+
+# Install deps before bin/setup so they're available when Rails env loads
+echo ""
+echo "== Installing dependencies =="
+bundle check > /dev/null 2>&1 || bundle install
+npm ci
+
+# Run full setup (database drop, create, migrate, seed)
+bin/setup --skip-server
+
+PORT=${CONDUCTOR_PORT:-${PORT:-3000}}
+echo ""
+echo "Conductor setup complete!"
+echo "App will run at http://localhost:${PORT}"
+echo "Vite dev server at http://localhost:$((PORT + 36))"
+echo "Database: awbw_development_${CONDUCTOR_PORT}"

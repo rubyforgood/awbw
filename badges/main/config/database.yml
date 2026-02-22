@@ -22,7 +22,7 @@ base: &base
 development:
   primary: &primary_development
     <<: *base
-    database: awbw_development
+    database: awbw_development<%= "_#{ENV['CONDUCTOR_PORT']}" if ENV['CONDUCTOR_PORT'] %>
 #  queue:
 #    <<: *primary_development
 #    database: awbw_development_queue
@@ -37,7 +37,7 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *base
-  database: awbw_test
+  database: awbw_test<%= "_#{ENV['CONDUCTOR_PORT']}" if ENV['CONDUCTOR_PORT'] %>
 
 staging:
   primary: &primary_staging
