@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Start development services (web + vite).
+# Runs Procfile.dev.
+#
+# Usage:
+#   ai/server
+set -euo pipefail
+bin/dev

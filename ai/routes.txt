@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Search Rails routes. Pass a grep pattern to filter.
+#
+# Usage:
+#   ai/routes                  # all routes (slow — large output)
+#   ai/routes -g workshops     # routes matching "workshops"
+#   ai/routes -g events        # routes matching "events"
+set -euo pipefail
+bundle exec rails routes "$@"
