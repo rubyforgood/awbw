@@ -62,7 +62,7 @@ class WorkshopVariationsController < ApplicationController
     track_view(@workshop_variation)
 
     @workshop = @workshop_variation.workshop.decorate
-    @bookmark = current_user.bookmarks.find_by(bookmarkable: @workshop)
+    @bookmark = current_user&.bookmarks&.find_by(bookmarkable: @workshop)
     @new_bookmark = @workshop.bookmarks.build
     @quotes = @workshop.quotes
     @workshop_variations = @workshop.workshop_variations
