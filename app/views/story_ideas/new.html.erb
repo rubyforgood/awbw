@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
 <div class="<%= DomainTheme.bg_class_for(:story_ideas, intensity: 200) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="flex items-center justify-between mb-3">
-    <h1 class="text-2xl font-semibold text-gray-900">New <%= @story_idea.class.model_name.human %></h1>
+    <h1 class="text-2xl font-semibold text-gray-900">New <%= @story_idea.class.model_name.human.downcase %></h1>
   </div>
 
   <div class="mb-6 text-gray-700 leading-relaxed">

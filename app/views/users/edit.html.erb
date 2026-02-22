@@ -4,7 +4,7 @@
           <!-- Header -->
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-semibold text-gray-900">
-              Edit <%= @user.class.model_name.human %>: <%= @user.email %>
+              Edit <%= @user.class.model_name.human.downcase %>: <%= @user.email %>
               <i class="fa-solid fa-user-shield text-blue-500" data-toggle-user-icon-target="adminIcon"
                  style="<%= 'display:none' unless @user.super_user? %>"></i>
               <i class="fa-solid fa-lock text-red-500" data-toggle-user-icon-target="lockIcon"

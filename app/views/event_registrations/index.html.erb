@@ -72,7 +72,7 @@
 
             <!-- Empty state -->
             <% unless @event_registrations.any? %>
-              <p class="text-gray-500 text-center py-6">No <%= EventRegistration.model_name.human.pluralize %> found.</p>
+              <p class="text-gray-500 text-center py-6">No <%= EventRegistration.model_name.human.pluralize.downcase %> found.</p>
             <% end %>
 
             <!-- Pagination -->

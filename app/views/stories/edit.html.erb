@@ -2,7 +2,7 @@
 <div class="<%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow p-6">
         <div class="flex items-center justify-between mb-3">
           <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
-            Edit <%= @story.class.model_name.human %>
+            Edit <%= @story.class.model_name.human.downcase %>
           </h1>
           <div class="text-right space-x-2">
             <%= link_to "External URL", safe_url(@story.external_url), target: "_blank", rel: "noopener noreferrer",

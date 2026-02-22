@@ -7,7 +7,7 @@
             <%= Quote.model_name.human.pluralize %> (<%= @quotes_count %>)
           </h1>
           <div class="flex gap-2">
-            <%= link_to("New #{Quote.model_name.human}",
+            <%= link_to("New #{Quote.model_name.human.downcase}",
                                 new_quote_path,
                                 class: "btn btn-primary-outline") %>
           </div>
@@ -82,7 +82,7 @@
         <!-- Empty state -->
         <% unless @quotes.any? %>
           <p class="text-gray-500 text-center py-6">
-            No <%= Quote.model_name.human.pluralize %> found.
+            No <%= Quote.model_name.human.pluralize.downcase %> found.
           </p>
         <% end %>
 

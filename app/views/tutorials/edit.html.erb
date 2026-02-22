@@ -2,7 +2,7 @@
 <div class="<%= DomainTheme.bg_class_for(:resources) %> border border-gray-200 rounded-xl shadow p-6">
         <div class="flex items-center justify-between mb-3">
           <h1 class="text-2xl font-semibold text-gray-900">
-            Edit <%= @tutorial.class.model_name.human %>
+            Edit <%= @tutorial.class.model_name.human.downcase %>
           </h1>
           <%= link_to "View", tutorial_path(@tutorial),
                       class: "btn btn-secondary-outline h-10 px-4 py-2 text-sm font-medium" %>
