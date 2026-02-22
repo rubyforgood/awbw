@@ -1,11 +1,11 @@
-<hr>
+<% if local_assigns.fetch(:show_divider, true) %><hr><% end %>
 
 <article id="tutorial-<%= tutorial.id %>"
          class="tutorial-block scroll-mt-24">
 
   <header class="mb-4 flex w-full items-center gap-4">
-    <h2 class="text-2xl font-semibold text-gray-900">
-      <%= link_to tutorial.title,
+    <h2 class="text-2xl">
+      <%= link_to title_with_badges(tutorial, font_size: "text-2xl"),
                   tutorial_path(tutorial),
                   data: { turbo_prefetch: false },
                   class: "hover:underline" %>

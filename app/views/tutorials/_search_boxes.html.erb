@@ -1,41 +1,119 @@
 <!-- Filters -->
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg"
+     data-controller="collection">
+
   <%= form_with url: tutorials_path,
                 method: :get,
-                local: true,
-                class: "grid grid-cols-1 md:grid-cols-3 gap-4 items-end" do |f| %>
+                data: { turbo_frame: "tutorials_results" },
+                autocomplete: "off",
+                class: "space-y-4" do |f| %>
 
-    <div>
-      <%= f.label :search, "Title or body contains",
-                  class: "block text-sm font-medium text-gray-700" %>
+    <div class="flex flex-wrap gap-4 items-end">
+      <div class="flex-1 min-w-[200px]">
+        <%= f.label :search, "Title or body contains",
+                    class: "text-sm font-medium text-gray-500 mb-1" %>
 
-      <%= f.text_field :search,
-                       value: params[:search],
-                       placeholder: "e.g. Profile, Workshop search…",
-                       class: "mt-1 block w-full rounded-md border border-gray-300 p-2",
-                       oninput: "this.form.requestSubmit()" %>
-    </div>
-
-    <% if allowed_to?(:manage?, Tutorial) %>
-      <div class="admin-only bg-blue-100">
-        <%= f.label :published, "Published",
-                    class: "block text-sm font-medium text-gray-700" %>
-
-        <%= f.select :published,
-                     options_for_select([["All", ""], ["Published", "true"], ["Unpublished", "false"]], params[:published]),
-                     {},
-                     class: "mt-1 block w-full rounded-md border border-gray-300 p-2",
-                     onchange: "this.form.requestSubmit()" %>
+        <%= f.text_field :search,
+                         value: params[:search],
+                         placeholder: "e.g. Profile, Workshop search…",
+                         class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                                   focus:ring-blue-500 focus:border-blue-500",
+                         oninput: "this.form.requestSubmit()" %>
       </div>
-    <% end %>
 
-    <!-- Clear -->
-    <div>
-      <%= link_to "Clear filters",
+      <%# Sectors dropdown %>
+      <div class="relative">
+        <div data-controller="dropdown" class="inline-block w-full" data-dropdown-target="content">
+          <button
+            id="sectors-button"
+            type="button"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"sectors-dropdown":"hidden"},{"sectors-arrow":"rotate-180"},{"sectors-button":"rounded-md rounded-t-md"}]'
+            class="relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
+                   border border-gray-300 cursor-pointer flex justify-between items-center"
+          >
+            <label class="mb-0 font-medium text-gray-700">Sectors</label>
+            <i id="sectors-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+          </button>
+
+          <div
+            id="sectors-dropdown"
+            class="absolute left-0 top-full min-w-max shadow-sm bg-white border border-t-0
+                   border-gray-300 rounded-b-md hidden z-40"
+          >
+            <% @sectors.each do |sector| %>
+              <div class="flex items-center gap-2 mb-1 px-4">
+                <%= check_box_tag "sectors[#{sector.id}]",
+                                  sector.id,
+                                  params.dig(:sectors, sector.id.to_s).to_s == sector.id.to_s,
+                                  id: "sectors_#{sector.id}",
+                                  class: "category-checkbox" %>
+                <%= label_tag "sectors_#{sector.id}",
+                              sector.name.titleize,
+                              class: "text-sm text-gray-700 whitespace-nowrap" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%# Categories dropdown %>
+      <div class="relative">
+        <div data-controller="dropdown" class="inline-block w-full" data-dropdown-target="content">
+          <button
+            id="categories-button"
+            type="button"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"categories-dropdown":"hidden"},{"categories-arrow":"rotate-180"},{"categories-button":"rounded-md rounded-t-md"}]'
+            class="relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
+                   border border-gray-300 cursor-pointer flex justify-between items-center"
+          >
+            <label class="mb-0 font-medium text-gray-700">Categories</label>
+            <i id="categories-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+          </button>
+
+          <div
+            id="categories-dropdown"
+            class="absolute left-0 top-full min-w-max shadow-sm bg-white border border-t-0
+                   border-gray-300 rounded-b-md hidden z-40"
+          >
+            <% @category_types.each do |category_type| %>
+              <% category_type.categories.ordered_by_position_and_name.each do |category| %>
+                <div class="flex items-center gap-2 mb-1 px-4">
+                  <%= check_box_tag "categories[#{category.id}]",
+                                    category.id,
+                                    params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
+                                    id: "category_#{category.id}",
+                                    class: "category-checkbox" %>
+                  <%= label_tag "category_#{category.id}",
+                                "#{category_type.title}: #{category.name}",
+                                class: "text-sm text-gray-700 whitespace-nowrap" %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <% if allowed_to?(:manage?, Tutorial) %>
+        <div class="min-w-[150px] admin-only bg-blue-100 p-2 rounded-md">
+          <label for="published" class="block text-xs font-semibold uppercase text-gray-600 tracking-wide mb-1">
+            Published
+          </label>
+
+          <%= select_tag :published,
+                         options_for_select(
+                           [["All", ""], ["Published", "true"], ["Unpublished", "false"]],
+                           params[:published]
+                         ),
+                         class: "border border-gray-300 rounded-lg px-3 py-2 text-gray-700 w-full" %>
+        </div>
+      <% end %>
+
+      <div><%= link_to "Clear filters",
                   tutorials_path,
                   class: "btn btn-utility-outline whitespace-nowrap",
-                  data: { action: "collection#clearAndSubmit" } %>
+                  data: { action: "collection#clearAndSubmit" } %></div>
     </div>
-
   <% end %>
 </div>

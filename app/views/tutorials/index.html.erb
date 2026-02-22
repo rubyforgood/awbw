@@ -21,28 +21,18 @@
       </div>
     </div>
 
-    <%= render "search_boxes" rescue nil %>
+    <%= render "search_boxes" %>
 
-    <!-- Inner White Card -->
-    <div class="bg-white rounded-lg shadow-md p-6 mt-4">
-      <div class="overflow-x-auto">
-        <div class="space-y-16">
-          <% if @tutorials.any? %>
-            <% @tutorials.each do |tutorial| %>
-              <%= render "tutorial", tutorial: tutorial %>
-            <% end %>
+    <% result_src = tutorials_path + "?" + request.query_string %>
 
-            <!-- Pagination -->
-            <div class="pagination flex justify-center mt-12">
-              <%= tailwind_paginate @tutorials %>
-            </div>
-          <% else %>
-            <div class="text-gray-500 italic">
-              No <%= Tutorial.model_name.human(count: 2).downcase %> found matching your filters.
-            </div>
+    <%= turbo_frame_tag "tutorials_results", src: result_src do %>
+      <div class="bg-white rounded-lg shadow-md p-6 mt-4 animate-pulse">
+        <div class="space-y-4">
+          <% 3.times do %>
+            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
           <% end %>
         </div>
       </div>
-    </div>
+    <% end %>
   </div>
 </div>

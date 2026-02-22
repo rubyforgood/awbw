@@ -1,0 +1,15 @@
+<%= turbo_frame_tag "home_video_gallery" do %>
+  <% if @tutorials&.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @tutorials.each do |tutorial| %>
+        <%= render "tutorials/video_card", tutorial: tutorial %>
+      <% end %>
+    </div>
+    <div class="mt-6 text-right"><%= link_to "Browse all tutorials",
+                tutorials_path,
+                data: { turbo_frame: "_top" },
+                class: "text-primary font-medium hover:underline" %></div>
+  <% else %>
+    <p class="text-gray-500">No videos yet.</p>
+  <% end %>
+<% end %>
