@@ -231,9 +231,13 @@ class EventDecorator < ApplicationDecorator
   end
 
   def labelled_cost
-    return if cost_cents.blank? || cost_cents.zero?
+    return if cost_cents.blank?
+    return "Free event" if cost_cents.zero?
 
-    "Cost: $#{cost}"
+    dollars = cost_cents / 100
+    cents   = cost_cents % 100
+    formatted = cents.zero? ? "$#{dollars}" : "$#{dollars}.#{cents.to_s.rjust(2, '0')}"
+    "Cost: #{formatted}"
   end
 
   def content

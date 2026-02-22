@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_180500) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_22_000000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -410,7 +410,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_180500) do
     t.boolean "autoshow_cost", default: true, null: false
     t.boolean "autoshow_date", default: true, null: false
     t.boolean "autoshow_location", default: true, null: false
+    t.boolean "autoshow_pre_date_text", default: true, null: false
     t.boolean "autoshow_registration", default: true, null: false
+    t.boolean "autoshow_registration_close", default: true, null: false
     t.boolean "autoshow_time", default: true, null: false
     t.boolean "autoshow_title", default: true, null: false
     t.boolean "autoshow_videoconference_url", default: true, null: false
@@ -422,6 +424,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_180500) do
     t.boolean "featured", default: false, null: false
     t.boolean "inactive", default: true, null: false
     t.integer "location_id"
+    t.string "pre_date_text"
     t.string "pre_title"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
