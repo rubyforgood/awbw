@@ -11,174 +11,59 @@
 <% extra_image_classes ||= "" %>
 <% width ||= "32" %>
 <% height ||= width %>
-<%
-  # --------------------------------------------------
-  # Normalize file input
-  # --------------------------------------------------
-  icon_display ||= file.is_a?(Symbol)
-  active_storage_file = if !icon_display && file.respond_to?(:attached?) && file.attached?
-    file
-  elsif !icon_display && (file.is_a?(ActiveStorage::Blob) || file.is_a?(ActiveStorage::Attachment))
-    file
-  end
-  asset_fallback = file.is_a?(String) ? file : nil
 
-  return unless icon_display || active_storage_file || asset_fallback
-
-  # Normalize blob access — Blob IS the blob, Attachment/Attached delegates to .blob
-  active_storage_blob = active_storage_file.respond_to?(:blob) ? active_storage_file.blob : active_storage_file
-
-  # Tailwind width / height maps
-  width_classes = {
-  "18"   => "w-18",
-  "24"   => "w-24",
-  "32"   => "w-32",
-  "full" => "w-full"
-  }.freeze
-
-  height_classes = {
-  "14"   => "h-14",
-  "18"   => "h-18",
-  "24"   => "h-24",
-  "32"   => "h-32",
-  "full" => "h-full"
-  }.freeze
-
-  width_class  = width_classes.fetch(width.to_s, "w-auto")
-  height_class = height_classes.fetch(height.to_s, "h-auto")
-
-  # --------------------------------------------------
-  # Variant sizing
-  # --------------------------------------------------
-  is_pdf = active_storage_file&.content_type == "application/pdf"
-  object_fit = is_pdf ? "object-contain bg-gray-100" : "object-cover"
-
-  sizes = {
-    hero: {
-      wrapper: "mb-8",
-      image:   "hero-size w-full rounded-lg shadow-sm border border-gray-200 #{extra_image_classes}"
-    },
-
-    gallery: {
-      wrapper: "flex grow",
-      image:   "gallery-size #{width_class} #{height_class} #{object_fit} rounded border border-gray-300
-                shadow-sm hover:opacity-90 transition-opacity #{extra_image_classes}",
-      preview: [300, 300]
-    },
-
-    index: {
-      wrapper: "index-size #{width_class} #{height_class} shrink-0 overflow-hidden rounded border border-gray-300",
-      image:   "w-full h-full #{object_fit} #{extra_image_classes}",
-      preview: [300, 300]
-    }
-  }.fetch(variant)
-
-  # --------------------------------------------------
-  # Link target
-  # --------------------------------------------------
-  link_href =
-    if link_to_object && resource
-      polymorphic_path(resource)
-    elsif active_storage_file
-      url_for(active_storage_file)
-    elsif icon_display
-      nil
-    else
-      asset_path(asset_fallback)
-    end
+<% result = DisplayImagePresenter.call(
+     resource: resource, item: item, file: file, field_name: field_name,
+     variant: variant, width: width, height: height,
+     link: link, link_to_object: link_to_object,
+     display_open_pdf_link: display_open_pdf_link,
+     idx: idx, item_type: item_type, extra_image_classes: extra_image_classes,
+     view_context: self
+   )
+   return if result.display_type == :none
 %>
-<%#
-  --------------------------------------------------
-  # Inner content (NO LINKS HERE)
-  # --------------------------------------------------
-%>
+
 <% inner = capture do %>
-  <div class="<%= variant %>-item <%= resource&.class&.table_name %>-<%= idx %> <%= sizes[:wrapper] %>">
-    <% if active_storage_file %>
-      <% if active_storage_file.previewable? %>
-        <%# Use preview for PDFs in hero, thumbnail variant for small images, full preview for larger images %>
-        <% if active_storage_file.content_type == "application/pdf" %>
-          <% if variant == :hero %>
-            <% image_to_render = active_storage_file.preview(resize_to_limit: [1200, 1200]) %>
-          <% else %>
-            <% image_to_render = active_storage_file.preview(resize_to_limit: sizes[:preview]) %>
-          <% end %>
-        <% elsif (variant == :index || variant == :gallery || (width.to_i > 0 && width.to_i <= 32 && height.to_i <= 32)) && 
-             active_storage_file.variable? %>
-        <% image_to_render = active_storage_file.variant(:thumbnail) %>
-      <% else %>
-        <% image_to_render = active_storage_file.preview(resize_to_limit: sizes[:preview]) %>
-      <% end %>
-      <%= image_tag(
-              image_to_render,
-              class: "#{sizes[:image]} hover:opacity-95 transition-opacity",
-              alt: "#{item_type} preview #{idx + 1} (#{active_storage_blob&.filename})"
-            ) %>
-    <% elsif active_storage_file.content_type == "application/pdf" && variant != :hero %>
+  <div class="<%= variant %>-item <%= resource&.class&.table_name %>-<%= idx %> <%= result.wrapper_classes %>">
+    <% case result.display_type %>
+    <% when :active_storage %>
+      <%= image_tag result.renderable,
+                    class: result.image_classes,
+                    alt: result.alt_text %>
+    <% when :pdf_document %>
       <div class="flex items-center gap-3 p-4 border rounded-lg bg-gray-50">
         <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
-        <span class="font-medium underline hover:no-underline"><%= active_storage_blob&.filename %></span>
+        <span class="font-medium underline hover:no-underline"><%= result.filename %></span>
       </div>
-    <% else %>
-      <%# Use thumbnail variant for index, gallery and small sizes (only for variable files), full size for hero, original for larger ones %>
-      <% if variant == :hero %>
-        <% image_to_render = active_storage_file %>
-      <% elsif (variant == :index || variant == :gallery || (width.to_i <= 32 && height.to_i <= 32)) && 
-             active_storage_file.variable? %>
-      <% image_to_render = active_storage_file.variant(:thumbnail) %>
-    <% else %>
-      <% image_to_render = active_storage_file %>
-    <% end %>
-    <%= image_tag(
-              image_to_render,
-              class: "#{sizes[:image]} hover:opacity-95 transition-opacity",
-              alt: "#{item_type} image #{idx + 1} (#{active_storage_blob&.filename})"
-            ) %>
-  <% end %>
-<% elsif icon_display %>
-  <div class="<%= sizes[:image] %> hover:opacity-95 transition-opacity">
-    <%= render "assets/display_icon",
+    <% when :icon %>
+      <div class="<%= result.image_classes %> hover:opacity-95 transition-opacity">
+        <%= render "assets/display_icon",
                    resource: resource,
                    width: 18,
                    height: 18,
                    variant: variant %>
+      </div>
+    <% when :fallback %>
+      <%= image_tag result.renderable,
+                    class: result.image_classes,
+                    alt: result.alt_text %>
+    <% end %>
   </div>
-<% else %>
-  <%# ---- Asset fallback (string filename) ---- %>
-  <%= image_tag(
-            asset_fallback,
-            class: sizes[:image],
-            alt: "#{item_type} fallback image #{idx + 1}"
-          ) %>
 <% end %>
-</div>
-<% end %>
-<%#
-  --------------------------------------------------
-  # Optional link wrapper
-  # --------------------------------------------------
-%>
-<% if link && link_href.present? %>
-  <% link_options =
-      if link_to_object
-        { class: "display-image-link", data: { turbo_frame: "_top", turbo_prefetch: false } }
-      else
-        { class: "display-image-link", target: "_blank", rel: "noopener noreferrer" }
-      end %>
-  <%= link_to link_href, **link_options do %>
+
+<% if result.link_href.present? %>
+  <%= link_to result.link_href, **result.link_options do %>
     <%= inner %>
   <% end %>
-  <% if active_storage_file&.previewable? &&
-        display_open_pdf_link &&
-        active_storage_file.content_type == "application/pdf" %>
-  <div class="mt-2 text-sm text-gray-600">
-    <%= link_to "Open PDF",
-                  rails_blob_path(file, disposition: :inline),
+  <% if result.show_pdf_link %>
+    <div class="mt-2 text-sm text-gray-600">
+      <%= link_to "Open PDF",
+                  result.pdf_link_path,
                   target: "_blank",
                   rel: "noopener",
                   class: "underline hover:no-underline" %>
-  </div>
-<% end %>
+    </div>
+  <% end %>
 <% else %>
   <%= inner %>
 <% end %>
