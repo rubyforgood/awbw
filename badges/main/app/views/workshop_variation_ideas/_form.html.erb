@@ -143,7 +143,7 @@
         </div>
       </div>
     <% end %>
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true unless promoted_to_variation %>
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: false unless promoted_to_variation %>
     <div class="action-buttons mt-8 flex justify-center gap-3 pt-6">
       <% if allowed_to?(:destroy?, f.object) && f.object. workshop_variations.none? && !promoted_to_variation %>
         <span class="admin-only bg-blue-100 p-3">
