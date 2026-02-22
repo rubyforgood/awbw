@@ -12,7 +12,10 @@ class StoriesController < ApplicationController
                                                    :created_by, :bookmarks, :primary_asset,
                                                    :story_idea))
       filtered = base_scope.search_by_params(params)
-                           .order(created_at: :desc)
+      sortable = %w[title updated_at created_at windows_type workshop author organization]
+      @sort = sortable.include?(params[:sort]) ? params[:sort] : "created_at"
+      @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+      filtered = apply_sort(filtered, @sort, @sort_direction)
       @stories = filtered.paginate(page: params[:page], per_page: per_page).decorate
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
 
@@ -168,6 +171,28 @@ class StoriesController < ApplicationController
 
   def set_story
     @story = Story.find(params[:id])
+  end
+
+  def apply_sort(scope, column, direction)
+    dir = direction.to_sym
+    case column
+    when "title", "updated_at", "created_at"
+      scope.reorder(column => dir)
+    when "windows_type"
+      scope.left_joins(:windows_type)
+           .reorder(WindowsType.arel_table[:short_name].public_send(dir))
+    when "workshop"
+      scope.left_joins(:workshop)
+           .reorder(Workshop.arel_table[:title].public_send(dir))
+    when "author"
+      scope.left_joins(created_by: :person)
+           .reorder(Person.arel_table[:first_name].public_send(dir))
+    when "organization"
+      scope.left_joins(:organization)
+           .reorder(Organization.arel_table[:name].public_send(dir))
+    else
+      scope.reorder(created_at: :desc)
+    end
   end
 
   # Strong parameters
