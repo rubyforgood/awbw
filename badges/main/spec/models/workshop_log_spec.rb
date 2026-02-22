@@ -49,8 +49,25 @@ RSpec.describe WorkshopLog do
     end
   end
 
-  # Add tests for specific methods like #num_ongoing, #num_first_time, callbacks
-  describe 'callbacks' do
-    # Test after_save :update_workshop_log_count
+  describe 'updating does not fail due to notifications' do
+    it 'saves successfully even when associated notifications exist' do
+      workshop_log = create(:workshop_log)
+      create(:notification,
+             noticeable: workshop_log,
+             kind: :workshop_log_submitted_fyi,
+             recipient_role: :admin,
+             recipient_email: "test@example.com",
+             notification_type: 0)
+
+      workshop_log.reload
+      workshop_log.children_ongoing = 5
+      expect(workshop_log.save).to be true
+    end
+
+    it 'does not create a notification on save' do
+      workshop_log = create(:workshop_log)
+      expect { workshop_log.update!(children_ongoing: 3) }
+        .not_to change { Notification.count }
+    end
   end
 end
