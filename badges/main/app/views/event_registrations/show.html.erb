@@ -10,7 +10,7 @@
     <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
 
       <!-- Ticket Header -->
-      <div class="<%= DomainTheme.bg_class_for(:events, intensity: 600) %> text-white px-6 py-4">
+      <div class="bg-blue-900 text-white px-6 py-4">
         <div class="flex items-center justify-between gap-4">
 
           <!-- Left: Logo -->
@@ -54,8 +54,11 @@
         </div>
 
         <!-- Event Name -->
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 leading-tight">
+        <div class="text-center">
+          <% if @event_registration.event.respond_to?(:pre_title) && @event_registration.event.pre_title.present? %>
+            <p class="text-base font-semibold text-gray-700 mb-1" style="font-family: 'Telefon Bold', sans-serif"><%= @event_registration.event.pre_title %></p>
+          <% end %>
+          <h2 class="text-3xl font-bold text-green-800 leading-tight" style="font-family: Lato, sans-serif">
             <%= link_to @event_registration.event.title, event_path(@event_registration.event), class: "hover:underline" %>
           </h2>
         </div>
@@ -67,32 +70,34 @@
           <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
         </div>
 
-        <!-- Ticket Details -->
-        <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+        <!-- Event Details -->
+        <div class="text-center space-y-2">
 
-          <div>
-            <p class="text-gray-500 uppercase tracking-wide text-xs">Date</p>
-            <p class="font-medium text-gray-900">
-              <%= @event_registration.event.decorate.times(display_day: true, display_date: true) %>
-            </p>
+          <div class="text-xl font-bold text-blue-900 uppercase" style="font-family: Lato, sans-serif">
+            <%= @event_registration.event.decorate.times(display_day: true, display_date: true, styled: true) %>
           </div>
 
-          <%# if @event_registration.event.location.present? %>
-            <div>
-              <p class="text-gray-500 uppercase tracking-wide text-xs">Location</p>
-              <p class="font-medium text-gray-900">
-                TBA<%#= @event_registration.event.location %>
-              </p>
+          <% if @event_registration.event.decorate.labelled_cost.present? %>
+            <div class="text-lg font-bold text-blue-900 uppercase" style="font-family: Lato, sans-serif">
+              <%= @event_registration.event.decorate.labelled_cost %>
             </div>
-          <%# end %>
+          <% end %>
 
+          <% if @event_registration.event.location.present? %>
+            <div class="text-base text-gray-700">
+              <%= @event_registration.event.location.name %>
+            </div>
+          <% end %>
 
           <% if @event_registration.event.videoconference_url.present? %>
-            <div>
-              <p class="text-gray-500 uppercase tracking-wide text-xs">Videoconference</p>
-              <p class="font-medium text-gray-900">
-                <%= link_to "Join online", safe_url(@event_registration.event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "text-blue-600 hover:underline" %>
-              </p>
+            <div class="text-base text-gray-700">
+              <%= link_to "Join online", safe_url(@event_registration.event.videoconference_url), target: "_blank", rel: "noopener noreferrer", class: "underline" %>
+            </div>
+          <% end %>
+
+          <% if @event_registration.event.registration_close_date %>
+            <div class="text-base text-gray-700">
+              Registration closes <%= @event_registration.event.registration_close_date.in_time_zone(Time.zone).strftime("%B %-d, %Y %l:%M %P %Z") %>
             </div>
           <% end %>
 
@@ -104,15 +109,15 @@
         <!-- Status + Meta -->
         <div class="flex items-center justify-between mt-4">
           <div>
-            <% registration_color = @event_registration.checked_in? ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800" %>
-            <% payment_color = @event_registration.paid? ? "bg-green-100 text-green-800" : "bg-yellow-100 text-orange-800" %>
-
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium <%= registration_color %>">
-              <%= @event_registration.checked_in? ? "Checked In" : "Registered" %>
-            </span>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium <%= payment_color %>">
-              <%= @event_registration.paid? ? "Paid" : "Payment due" %>
-            </span>
+            <% if @event_registration.checked_in? %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Checked In
+              </span>
+            <% elsif @event_registration.respond_to?(:canceled?) && @event_registration.canceled? %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                Canceled
+              </span>
+            <% end %>
           </div>
 
           <p class="text-xs text-gray-500">

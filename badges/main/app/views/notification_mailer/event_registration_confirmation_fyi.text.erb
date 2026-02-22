@@ -20,7 +20,12 @@ Event date
 
 <% if @event.location.present? %>
   Location
-  <%= @event.location %>
+  <%= @event.location.name %>
+<% end %>
+
+<% if @event.videoconference_url.present? %>
+  Videoconference URL
+  <%= @event.videoconference_url %>
 <% end %>
 
 <% if @event.labelled_cost.present? %>

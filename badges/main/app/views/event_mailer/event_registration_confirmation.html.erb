@@ -9,52 +9,45 @@
     This message confirms your registration for the following <%= @organization_name %> event:
   </p>
 
-  <div style="text-align: left;">
-    <table width="100%"
-           cellpadding="0"
-           cellspacing="0"
-           style="background-color:#f3f4f6;border-radius:6px;padding:12px;margin:16px 0;">
-      <tr>
-        <td style="padding:6px 0;">
-          <span style="padding-bottom: 12px"><strong>Event</strong></span><br>
-          <%= @event.title %>
-        </td>
-      </tr>
+  <div style="text-align: center; background-color: #f3f4f6; border-radius: 6px; padding: 24px; margin: 16px 0;">
+    <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
+      <p style="font-size: 14px; font-weight: 600; color: #374151; margin: 0 0 4px; font-family: 'Telefon Bold', sans-serif;">
+        <%= @event.pre_title %>
+      </p>
+    <% end %>
 
-      <tr>
-        <td style="padding:6px 0;">
-          <span style="padding-bottom: 12px"><strong>Date</strong></span><br>
-          <%= @event.times(display_day: true, display_date: true) %>
-        </td>
-      </tr>
+    <h2 style="font-size: 28px; font-weight: bold; color: #166534; margin: 0 0 16px; font-family: Lato, sans-serif;">
+      <%= @event.title %>
+    </h2>
 
-      <% if @event.location.present? %>
-        <tr>
-          <td style="padding:6px 0;">
-            <span style="padding-bottom: 12px"><strong>Location</strong></span><br>
-            <%= @event.location.name %>
-          </td>
-        </tr>
-      <% end %>
+    <p style="font-size: 22px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
+      <% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
+    </p>
 
-      <% if @event.videoconference_url.present? %>
-        <tr>
-          <td style="padding:6px 0;">
-            <span style="padding-bottom: 12px"><strong>Videoconference URL</strong></span><br>
-            <a href="<%= @event.videoconference_url %>"><%= @event.videoconference_url %></a>
-          </td>
-        </tr>
-      <% end %>
+    <% if @event.labelled_cost.present? %>
+      <p style="font-size: 18px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
+        <%= @event.labelled_cost %>
+      </p>
+    <% end %>
 
-      <% if @event.labelled_cost.present? %>
-        <tr>
-          <td style="padding:6px 0;">
-            <span style="padding-bottom: 12px"><strong>Cost</strong></span><br>
-            <%= @event.labelled_cost %>
-          </td>
-        </tr>
-      <% end %>
-    </table>
+    <% if @event.location.present? %>
+      <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
+        <%= @event.location.name %>
+      </p>
+    <% end %>
+
+    <% if @event.videoconference_url.present? %>
+      <% domain_name = URI.parse(@event.videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call" %>
+      <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
+        <a href="<%= @event.videoconference_url %>" style="color: #374151; text-decoration: underline;">Join us on <%= domain_name %></a>
+      </p>
+    <% end %>
+
+    <% if @event.registration_close_date %>
+      <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
+        Registration closes <%= @event.registration_close_date.in_time_zone(@time_zone).strftime("%B %-d, %Y %l:%M %P %Z") %>
+      </p>
+    <% end %>
   </div>
 
   <% if @event.detail.present? %>
@@ -64,20 +57,15 @@
     </p>
     <hr style="margin: 24px 0;">
   <% end %>
-
-  <% if @event.registration_close_date %>
-    <p>
-      Registration closes on
-      <%= @event.registration_close_date.strftime("%A, %B %-d, %Y at %-l:%M %p %Z") %>.
-    </p>
-  <% end %>
 </div>
-
 
 <p>
   Visit the event page for updates, directions, or calendar links:
 </p>
 
 <p>
+  <% if @event_registration.persisted? %>
+    <a href="<%= event_registration_url(@event_registration) %>" class="button">View registration</a>
+  <% end %>
   <a href="<%= @event_url %>" class="button">View event</a>
 </p>
