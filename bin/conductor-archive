@@ -1,0 +1,23 @@
+#!/bin/sh
+#/ Usage: bin/conductor-archive
+#/
+#/ Clean up when a Conductor workspace is moved to done.
+#/ Stops any running Rails/Vite processes for this workspace.
+
+set -e
+cd $(dirname "$0")/..
+
+PORT=${CONDUCTOR_PORT:-${PORT:-3000}}
+
+echo "Archiving Conductor workspace (port ${PORT})..."
+
+# Kill any processes listening on this workspace's ports
+for p in "$PORT" "$((PORT + 36))"; do
+  pid=$(lsof -ti :"$p" 2>/dev/null || true)
+  if [ -n "$pid" ]; then
+    echo "Stopping process on port $p (pid $pid)..."
+    kill "$pid" 2>/dev/null || true
+  fi
+done
+
+echo "Archive complete."
