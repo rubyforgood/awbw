@@ -1,17 +1,16 @@
-<h1>We received your message</h1>
+<h1>We Have Received Your Message</h1>
 
 <div style="text-align: left;">
   <p>
     <% if @user.present? %>
-      Hello <strong><%= @user.first_name %></strong>,
+      Hello <%= @user.first_name %>,
     <% else %>
-      Hello <strong><%= @contact_us[:first_name] %></strong>,
+      Hello <%= @contact_us[:first_name] %>,
     <% end %>
   </p>
 
   <p>
-    Thank you for reaching out to us. We have received your message
-    and our team will respond as soon as possible.
+    Thank you for reaching out. A member of our team will review your inquiry and get back to you as soon as possible.
   </p>
 </div>
 
@@ -33,7 +32,7 @@
 
 <div style="text-align: left;">
   <p>
-    If you have any additional questions, please visit
-    <%= link_to "our contact page", contact_us_url %> to connect with staff.
+    In community,<br>
+    AWBW Programs
   </p>
 </div>

@@ -1,15 +1,20 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
 <div class="<%= DomainTheme.bg_class_for(:story_ideas, intensity: 200) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="flex items-center justify-between mb-3">
-    <h1 class="text-2xl font-semibold text-gray-900">Share Your <%= @story_idea.class.model_name.human %></h1>
+    <h1 class="text-2xl font-semibold text-gray-900">New <%= @story_idea.class.model_name.human %></h1>
   </div>
 
-  <div class="mb-6">
-    Story Share was created to uplift your voice and experiences as an anchor for your peers,
-    as well as to illustrate to the general public the transformative and healing power of art you witness every day.
+  <div class="mb-6 text-gray-700 leading-relaxed">
+    At A Window Between Worlds, we value every story you share. Your voice helps paint a picture of the positive impact
+    of art on people and communities, inspiring others to use art in similarly powerful and far reaching ways.
     <br><br>
-    We look forward to reading each and every story about the innovation and
-    transformation of both you and your participants. Thank you for taking the time to share.
+    Thank you for considering submitting to our
+    <%= link_to "Story Share", "https://www.awbw.org/stories",
+                target: "_blank", class: "text-blue-600 hover:text-blue-800" %>.
+    Stories are typically short (200-400 words) and describe an art workshop you did and the impact it had on someone.
+    You can write about art workshops you've done with clients, family, friends, colleagues, community members,
+    volunteers, and yourself. To help your stories make the greatest impact, check out these
+    <%= link_to "tips for stories", resource_path(1011), class: "text-blue-600 hover:text-blue-800" %>
     <br><br>
     <span class="italic">
       Please note: edits may be made, and not all stories

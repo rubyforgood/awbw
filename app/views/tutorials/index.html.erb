@@ -8,7 +8,11 @@
         </h2>
 
         <p class="text-gray-600 max-w-2xl">
-          Step-by-step guides to help you get the most out of the platform
+          <% if user_signed_in? %>
+            Our library of step-by-step tutorials and informational videos designed to support your journey.
+          <% else %>
+            A library of videos designed to introduce you to our work and the real-world impact shared by the community we serve.
+          <% end %>
         </p>
       </div>
 
