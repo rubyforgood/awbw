@@ -158,6 +158,7 @@ Rails.application.routes.draw do
   resources :workshop_mentions, only: [ :index ]
   resources :resource_mentions, only: [ :index ]
   resources :rich_text_asset_mentions, only: [ :index ]
+  resources :event_mentions, only: [ :index ]
 
   namespace :api do
     namespace :v1 do
