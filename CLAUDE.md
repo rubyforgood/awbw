@@ -14,13 +14,25 @@ This is a Ruby on Rails 8.1 application (Ruby 4.0.1) — the Portal for A Window
 - **Background jobs:** SolidQueue
 - **Caching:** SolidCache
 
+## Setup
+
+Full setup (bundle, npm, database create/migrate/seed):
+```
+bin/setup
+```
+
+If you just need frontend dependencies:
+```
+npm ci
+```
+
 ## Code Style
 
-- Follow RuboCop with rubocop-rails-omakase, rubocop-rails, and rubocop-performance
+- Follow RuboCop with rubocop-rails-omakase
 - Use modern Ruby syntax
 - Prefer early returns and guard clauses
 - Avoid unnecessary and/or complex conditionals
-- Prefer enums and scopes over magic strings
+- Prefer constants and scopes over magic strings
 - Use safe navigation (`&.`) where appropriate
 - Use `presence` over blank checks
 - Use `Arel.sql` for raw SQL in order clauses
@@ -36,7 +48,6 @@ This is a Ruby on Rails 8.1 application (Ruby 4.0.1) — the Portal for A Window
 - `app/policies/` — ActionPolicy authorization rules
 - `app/presenters/` — Presentation objects
 - `app/frontend/` — Vite/JS components (Stimulus controllers, etc.)
-- `frontend/` — Additional frontend assets
 
 ## Testing
 
@@ -73,3 +84,38 @@ bundle exec rubocop -a
 bundle exec brakeman
 bundle exec bundle-audit check --update
 ```
+
+## JavaScript
+
+- ES6+ syntax, ESM imports/exports
+- Prefer Stimulus + Turbo for new interactive features
+- Controller naming: `[name]_controller.js`
+- Keep controllers focused and small
+- Use Tailwind CSS v4 utility classes
+
+## Git
+
+- Default branch is `main`
+- Commit messages should explain why, not what
+- CI runs via GitHub Actions (`.github/workflows/`)
+
+## PRs
+
+- Use `docs/pull_request_template.md` for PR description structure
+- Use bullet points, not paragraphs, when filling out each section
+- Description must explain why the change was made, not just what
+- Include screenshots for UI changes
+
+## Quick Commands
+
+See `ai/` directory for executable scripts:
+
+| Command | What it does |
+|---|---|
+| `ai/test [args]` | Run RSpec |
+| `ai/lint` | Rubocop on all files |
+| `ai/lint --fix` | Auto-fix lint issues |
+| `ai/server` | Start dev services (web + vite) |
+| `ai/console` | Rails console |
+| `ai/routes -g pattern` | Search Rails routes |
+| `ai/db-migrate` | Run database migrations |
