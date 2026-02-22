@@ -2,7 +2,7 @@
 #/ Usage: bin/conductor-archive
 #/
 #/ Clean up when a Conductor workspace is moved to done.
-#/ Stops any running Rails/Vite processes for this workspace.
+#/ Stops any running Rails/Vite processes and drops workspace databases.
 
 set -e
 cd $(dirname "$0")/..
@@ -19,5 +19,12 @@ for p in "$PORT" "$((PORT + 36))"; do
     kill "$pid" 2>/dev/null || true
   fi
 done
+
+# Drop workspace-specific databases
+if [ -n "$CONDUCTOR_PORT" ]; then
+  echo "Dropping workspace databases..."
+  bin/rails db:drop 2>/dev/null || true
+  RAILS_ENV=test bin/rails db:drop 2>/dev/null || true
+fi
 
 echo "Archive complete."
