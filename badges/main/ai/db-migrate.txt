@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Run database migrations for all databases.
+#
+# Usage:
+#   ai/db-migrate                    # migrate
+#   ai/db-migrate VERSION=0          # rollback all
+set -euo pipefail
+bundle exec rails db:migrate "$@"

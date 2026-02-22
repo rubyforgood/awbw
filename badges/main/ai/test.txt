@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Run RSpec tests. Pass any args through (file paths, flags, etc.)
+#
+# Usage:
+#   ai/test                                      # all specs
+#   ai/test spec/models/user_spec.rb             # specific spec
+#   ai/test spec/models/user_spec.rb:42          # specific line
+#   ai/test --fail-fast                          # stop on first failure
+set -euo pipefail
+bundle exec rspec "$@"
