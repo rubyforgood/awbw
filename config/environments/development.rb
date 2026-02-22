@@ -37,6 +37,7 @@ Rails.application.configure do
   # Active Storage
   config.active_storage.service = :local
 
+  # URL helpers, *_url helpers, mailers
   # Moved to config/initializers/default_host.rb for dynamic Conductor port support
   # Rails.application.routes.default_url_options[:host] ||= "localhost:3000"
 
