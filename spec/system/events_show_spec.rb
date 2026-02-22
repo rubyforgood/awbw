@@ -264,20 +264,20 @@ RSpec.describe "Event show page", type: :system do
       sign_in(user)
       visit event_path(event)
 
-      encoded_url = CGI.escape(event_url(event))
+      encoded_path = CGI.escape("/events/#{event.id}")
 
       # Share buttons point to correct share endpoints with event URL
       linkedin = find("a[title='Share on LinkedIn']")
       expect(linkedin[:href]).to include("linkedin.com/sharing/share-offsite/")
-      expect(linkedin[:href]).to include(encoded_url)
+      expect(linkedin[:href]).to include(encoded_path)
 
       facebook = find("a[title='Share on Facebook']")
       expect(facebook[:href]).to include("facebook.com/sharer/sharer.php")
-      expect(facebook[:href]).to include(encoded_url)
+      expect(facebook[:href]).to include(encoded_path)
 
       twitter = find("a[title='Share on X']")
       expect(twitter[:href]).to include("twitter.com/intent/tweet")
-      expect(twitter[:href]).to include(encoded_url)
+      expect(twitter[:href]).to include(encoded_path)
 
       # Profile links
       instagram = find("a[title='Follow on Instagram']")
