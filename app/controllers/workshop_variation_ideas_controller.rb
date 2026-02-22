@@ -18,7 +18,7 @@ class WorkshopVariationIdeasController < ApplicationController
     track_view(@workshop_variation_idea)
 
     @workshop = (@workshop_variation_idea.workshop || Workshop.where(id: params[:workshop_id]).last)&.decorate
-    @bookmark = current_user.bookmarks.find_by(bookmarkable: @workshop)
+    @bookmark = current_user&.bookmarks&.find_by(bookmarkable: @workshop)
     @new_bookmark = @workshop.bookmarks.build
     @quotes = @workshop.quotes
     @workshop_variation_ideas = WorkshopVariationIdea.where(workshop: @workshop)
