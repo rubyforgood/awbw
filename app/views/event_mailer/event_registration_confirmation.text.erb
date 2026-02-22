@@ -4,8 +4,9 @@ Hello <%= @person.full_name %>,
 
 This message confirms your registration for the following event:
 
-<%= @event.title %>
-<%= @event.times(display_day: true, display_date: true) %>
+<% if @event.respond_to?(:pre_title) && @event.pre_title.present? %><%= @event.pre_title %>
+<% end %><%= @event.title %>
+<% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
 
 <% if @event.location.present? %>
 Location: <%= @event.location.name %>
@@ -29,7 +30,7 @@ View the event page:
 
 <% if @event.registration_close_date %>
   Registration closes on
-  <%= @event.registration_close_date.strftime("%A, %B %-d, %Y at %-l:%M %p %Z") %>
+  <%= @event.registration_close_date.in_time_zone(@time_zone).strftime("%A, %B %-d, %Y at %-l:%M %p %Z") %>
 <% end %>
 
 --

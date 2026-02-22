@@ -6,9 +6,10 @@ class EventMailer < ApplicationMailer
 
     @notification_type = "Event registration confirmation"
 
+    @time_zone = @person.user&.time_zone || Time.zone.name
     @event_url = event_url(@event)
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
-    @organization_website  = ENV.fetch("ORGANIZATION_WEBSITE", unauthenticated_root_url)
+    @organization_website  = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
     mail(
       to: @person.preferred_email,
