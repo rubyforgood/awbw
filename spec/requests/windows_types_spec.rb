@@ -62,7 +62,7 @@ RSpec.describe "/windows_types", type: :request do
 
       it "redirects to the created windows_type" do
         post windows_types_url, params: { windows_type: valid_attributes }
-        expect(response).to redirect_to(windows_types_url)
+        expect(response).to redirect_to(windows_type_url(WindowsType.last))
       end
     end
 
@@ -96,7 +96,7 @@ RSpec.describe "/windows_types", type: :request do
       it "redirects to the windows_type" do
         windows_type = WindowsType.create!(valid_attributes)
         patch windows_type_url(windows_type), params: { windows_type: new_attributes }
-        expect(response).to redirect_to(windows_types_url)
+        expect(response).to redirect_to(windows_type_url(windows_type))
       end
     end
 
