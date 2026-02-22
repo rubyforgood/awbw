@@ -2,5 +2,6 @@
 <% (1..5).each do |i| %>
   <%= turbo_stream.replace dom_id(@event, "registration_section_#{i}"), partial: "events/registration_section", locals: { event: @event.decorate, instance: i } %>
 <% end %>
+<%= turbo_stream.replace_all ".inline-event-registration" , partial: "events/registration_button", locals: { event: @event.decorate } %>
 <%= turbo_stream.replace dom_id(@event, :videoconference_link), partial: "events/videoconference_link", locals: { event: @event.decorate } %>
 <%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>

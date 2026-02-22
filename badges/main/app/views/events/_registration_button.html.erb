@@ -1,0 +1,28 @@
+<%
+  # ActionText passes the record using model_name.element as the variable via :as option
+  event = event.decorate if event&.respond_to?(:decorate)
+%>
+<span class="inline-event-registration">
+  <% if event.nil? %>
+    <span class="text-xs text-red-500">No event</span>
+  <% elsif Current.user.nil? %>
+    <span class="text-xs text-gray-500">Login to register</span>
+  <% elsif event.event_registrations.exists?(registrant_id: Current.user.person_id) %>
+    <%= link_to "De-register",
+                event_registrant_registration_path(event_id: event),
+                data: { turbo_method: :delete, turbo_confirm: "Are you sure?"},
+                class: "btn btn-secondary-outline text-sm" %>
+    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Registered</span>
+  <% elsif event.ended? %>
+    <span class="text-sm text-gray-500 italic">Event ended</span>
+  <% elsif !event.published? %>
+    <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
+  <% elsif event.registerable? %>
+    <%= link_to "Register",
+                event_registrant_registration_path(event_id: event),
+                data: { turbo_method: :post },
+                class: "btn btn-primary-outline text-sm" %>
+  <% else %>
+    <span class="text-sm text-gray-500 italic">Registration closed</span>
+  <% end %>
+</span>

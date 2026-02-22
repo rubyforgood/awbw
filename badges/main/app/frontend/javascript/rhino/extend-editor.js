@@ -11,6 +11,7 @@ import { GridCell } from "./grid/gridCell";
 import WorkshopMention from "./mentions/WorkshopMention.js";
 import ResourceMention from "./mentions/ResourceMention.js";
 import AssetMention from "./mentions/AssetMention.js";
+import EventMention from "./mentions/EventMention.js";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 
 function extendRhinoEditor(event) {
@@ -72,6 +73,20 @@ function extendRhinoEditor(event) {
       },
 
       attachmentContentType: "application/vnd.active_record.asset",
+    }),
+    EventMention.configure({
+      suggestion: {
+        char: "$",
+        items: async ({ query }) => {
+          const response = await fetch(
+            `/event_mentions.json?query=${query}`,
+          );
+          const data = await response.json();
+          return data;
+        },
+      },
+
+      attachmentContentType: "application/vnd.active_record.event",
     }),
   );
 }
