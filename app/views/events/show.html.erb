@@ -17,6 +17,58 @@
 </div>
 <% end %>
 
+<%# ---- SOCIAL SHARE SIDEBAR ---- %>
+<% share_url = event_url(@event) %>
+<% share_title = @event.title %>
+<% encoded_url = CGI.escape(share_url) %>
+<% encoded_title = CGI.escape(share_title) %>
+<% linkedin_share = "https://www.linkedin.com/sharing/share-offsite/?url=#{encoded_url}" %>
+<% facebook_share = "https://www.facebook.com/sharer/sharer.php?u=#{encoded_url}" %>
+<% twitter_share = "https://twitter.com/intent/tweet?text=#{encoded_title}&url=#{encoded_url}" %>
+<div class="fixed left-4 top-1/3 z-50 flex flex-col gap-3 print:hidden">
+  <!-- LinkedIn -->
+  <%= link_to linkedin_share,
+              target: "_blank", rel: "noopener noreferrer",
+              class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#0A66C2] transition",
+              title: "Share on LinkedIn" do %>
+    <i class="fab fa-linkedin-in text-gray-600 group-hover:text-white text-lg"></i>
+  <% end %>
+  <!-- Instagram -->
+  <%= link_to "https://www.instagram.com/awbworg",
+              target: "_blank", rel: "noopener noreferrer",
+              class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-gradient-to-tr hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF] transition",
+              title: "Follow on Instagram" do %>
+    <i class="fab fa-instagram text-gray-600 group-hover:text-white text-lg"></i>
+  <% end %>
+  <!-- Facebook -->
+  <%= link_to facebook_share,
+              target: "_blank", rel: "noopener noreferrer",
+              class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#1877F2] transition",
+              title: "Share on Facebook" do %>
+    <i class="fab fa-facebook-f text-gray-600 group-hover:text-white text-lg"></i>
+  <% end %>
+  <!-- Twitter / X -->
+  <%= link_to twitter_share,
+              target: "_blank", rel: "noopener noreferrer",
+              class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-black transition",
+              title: "Share on X" do %>
+    <i class="fa-brands fa-x-twitter text-gray-600 group-hover:text-white text-lg"></i>
+  <% end %>
+  <!-- YouTube -->
+  <%= link_to "https://www.youtube.com/@awbworg",
+              target: "_blank", rel: "noopener noreferrer",
+              class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-[#FF0000] transition",
+              title: "Subscribe on YouTube" do %>
+    <i class="fa-brands fa-youtube text-gray-600 group-hover:text-white text-lg"></i>
+  <% end %>
+  <!-- Print -->
+  <button onclick="window.print();"
+          class="group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-gray-700 transition cursor-pointer"
+          title="Print this page">
+    <i class="fas fa-print text-gray-600 group-hover:text-white text-lg"></i>
+  </button>
+</div>
+
 <%# ---- HEADER CONTENT ---- %>
 <% if @event.rhino_header.present? %>
   <div class="rhino-centered prose max-w-none prose-img:max-w-full prose-img:w-full prose-strong:text-inherit prose-em:text-inherit mb-4">
