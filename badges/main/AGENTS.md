@@ -152,6 +152,7 @@ end
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
+- `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
 - `AuthenticationToken` — JWT token generation for API
 - `ModelDeduper` — Deduplication logic
 - `NotificationServices::CreateNotification` — Notification creation
@@ -319,4 +320,3 @@ Located in `lib/tasks/` (~17 files). Notable:
 - `paperclip_to_active_storage.rake` — File upload migration
 - `rhino_migrator.rake` — Rich text editor migration
 - `tag_deduping.rake` — Tag deduplication
-- `bulk_invite.rake` — Bulk user invitations
