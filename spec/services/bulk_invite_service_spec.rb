@@ -8,7 +8,7 @@ RSpec.describe BulkInviteService do
   describe ".call" do
     it "delegates to a new instance" do
       user = create(:user, :unconfirmed)
-      results = described_class.call(ids: [user.id], dry_run: true)
+      results = described_class.call(ids: [ user.id ], dry_run: true)
 
       expect(results[:missing_ids]).to be_empty
     end
@@ -17,11 +17,11 @@ RSpec.describe BulkInviteService do
   describe "#call" do
     context "when no users are found" do
       it "returns empty results with missing IDs" do
-        results = described_class.call(ids: [999_999])
+        results = described_class.call(ids: [ 999_999 ])
 
         expect(results[:sent_ids]).to be_empty
         expect(results[:failed]).to be_empty
-        expect(results[:missing_ids]).to eq([999_999])
+        expect(results[:missing_ids]).to eq([ 999_999 ])
       end
     end
 
@@ -30,7 +30,7 @@ RSpec.describe BulkInviteService do
         user = create(:user, :unconfirmed)
 
         expect {
-          described_class.call(ids: [user.id], dry_run: true)
+          described_class.call(ids: [ user.id ], dry_run: true)
         }.not_to have_enqueued_job(BulkInviteEmailJob)
 
         user.reload
@@ -40,9 +40,9 @@ RSpec.describe BulkInviteService do
 
       it "returns user IDs that would be sent in dry_run_would_send" do
         user = create(:user, :unconfirmed)
-        results = described_class.call(ids: [user.id], dry_run: true)
+        results = described_class.call(ids: [ user.id ], dry_run: true)
 
-        expect(results[:dry_run_would_send_ids]).to eq([user.id])
+        expect(results[:dry_run_would_send_ids]).to eq([ user.id ])
         expect(results).not_to have_key(:sent_ids)
         expect(results).not_to have_key(:failed)
       end
@@ -51,7 +51,7 @@ RSpec.describe BulkInviteService do
     context "with valid users" do
       it "sets welcome instructions token and sent_at" do
         user = create(:user, :unconfirmed)
-        described_class.call(ids: [user.id])
+        described_class.call(ids: [ user.id ])
 
         user.reload
         expect(user.welcome_instructions_token).to be_present
@@ -60,7 +60,7 @@ RSpec.describe BulkInviteService do
 
       it "nils out created_at" do
         user = create(:user, :unconfirmed)
-        described_class.call(ids: [user.id])
+        described_class.call(ids: [ user.id ])
 
         user.reload
         expect(user.created_at).to be_nil
@@ -76,9 +76,9 @@ RSpec.describe BulkInviteService do
 
       it "returns sent user IDs in results" do
         user = create(:user, :unconfirmed)
-        results = described_class.call(ids: [user.id])
+        results = described_class.call(ids: [ user.id ])
 
-        expect(results[:sent_ids]).to eq([user.id])
+        expect(results[:sent_ids]).to eq([ user.id ])
       end
     end
 
@@ -87,17 +87,17 @@ RSpec.describe BulkInviteService do
         confirmed_user = create(:user)
         unconfirmed_user = create(:user, :unconfirmed)
 
-        results = described_class.call(ids: [confirmed_user.id, unconfirmed_user.id])
+        results = described_class.call(ids: [ confirmed_user.id, unconfirmed_user.id ])
 
-        expect(results[:already_confirmed_ids]).to eq([confirmed_user.id])
-        expect(results[:sent_ids]).to eq([unconfirmed_user.id])
+        expect(results[:already_confirmed_ids]).to eq([ confirmed_user.id ])
+        expect(results[:sent_ids]).to eq([ unconfirmed_user.id ])
       end
 
       it "does not enqueue jobs for confirmed users" do
         confirmed_user = create(:user)
 
         expect {
-          described_class.call(ids: [confirmed_user.id])
+          described_class.call(ids: [ confirmed_user.id ])
         }.not_to have_enqueued_job(BulkInviteEmailJob)
       end
     end
@@ -105,9 +105,9 @@ RSpec.describe BulkInviteService do
     context "with a mix of valid and invalid IDs" do
       it "reports missing IDs and still processes valid ones" do
         user = create(:user, :unconfirmed)
-        results = described_class.call(ids: [user.id, 999_999])
+        results = described_class.call(ids: [ user.id, 999_999 ])
 
-        expect(results[:missing_ids]).to eq([999_999])
+        expect(results[:missing_ids]).to eq([ 999_999 ])
         expect(results[:sent_ids].size).to eq(1)
       end
     end
@@ -123,11 +123,11 @@ RSpec.describe BulkInviteService do
           method.call(*args)
         end
 
-        results = described_class.call(ids: [bad_user.id, good_user.id])
+        results = described_class.call(ids: [ bad_user.id, good_user.id ])
 
         expect(results[:failed].size).to eq(1)
         expect(results[:failed].first).to include(id: bad_user.id, error: "boom")
-        expect(results[:sent_ids]).to eq([good_user.id])
+        expect(results[:sent_ids]).to eq([ good_user.id ])
       end
 
       it "does not roll back other users' transactions" do
@@ -140,7 +140,7 @@ RSpec.describe BulkInviteService do
           method.call(*args)
         end
 
-        described_class.call(ids: [bad_user.id, good_user.id])
+        described_class.call(ids: [ bad_user.id, good_user.id ])
 
         good_user.reload
         expect(good_user.welcome_instructions_token).to be_present
