@@ -2,7 +2,7 @@ default_allowed_tags = Class.new.include(ActionText::ContentHelper).new.sanitize
 ActionText::ContentHelper.allowed_tags = default_allowed_tags.merge(%w[iframe table colgroup col thead tbody tfoot tr th td form button input span])
 
 default_allowed_attributes = Class.new.include(ActionText::ContentHelper).new.sanitizer_allowed_attributes
-ActionText::ContentHelper.allowed_attributes = default_allowed_attributes.merge(%w[style colspan rowspan cellpadding cellspacing width height align valign target formmethod formaction data-turbo-confirm data-turbo-frame data-turbo class value type name method action])
+ActionText::ContentHelper.allowed_attributes = default_allowed_attributes.merge(%w[style colspan rowspan cellpadding cellspacing width height align valign target data-turbo-confirm data-turbo-frame data-turbo-method class value type name method action])
 
 module ActionText
   class TrixAttachment
