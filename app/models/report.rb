@@ -6,7 +6,7 @@ class Report < ApplicationRecord
   belongs_to :workshop
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy, autosave: false
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
   has_many :report_form_field_answers,
            foreign_key: :report_id, inverse_of: :report,
@@ -51,7 +51,6 @@ class Report < ApplicationRecord
 
   before_save :set_has_attachment # TODO verify set_has_attachment works as expected once this feature is enabled in the UI
   after_create :set_windows_type
-  after_save :create_notification
 
   # Scopes
   scope :in_month, ->(date) { where(created_at: date.beginning_of_month..date.end_of_month) }
@@ -175,7 +174,4 @@ class Report < ApplicationRecord
     update(windows_type_id: organization.windows_type.id)
   end
 
-  def create_notification
-    notifications.create(notification_type: 0)
-  end
 end
