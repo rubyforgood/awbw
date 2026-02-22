@@ -103,8 +103,7 @@ module ApplicationHelper
         "application/vnd.oasis.opendocument.presentation" => "fa-file-powerpoint",
 
         # Archives
-        "application/gzip" => "fa-file-archive",
-        "application/zip" => "fa-file-archive"
+        "application/gzip" => "fa-file-archive"
     }
 
     if mime

@@ -9,11 +9,9 @@ class Asset < ApplicationRecord
     "image/heic",
     "image/heif",
     "application/pdf",
-    "application/zip",
     "application/msword", # Word .doc
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document", # Word .docx
-    "application/vnd.oasis.opendocument.text", # Word document .odt
-    "text/html"
+    "application/vnd.oasis.opendocument.text" # Word document .odt
   ].freeze
 
 
@@ -50,11 +48,9 @@ class Asset < ApplicationRecord
     "image/heic" => "HEIC",
     "image/heif" => "HEIF",
     "application/pdf" => "PDF",
-    "application/zip" => "ZIP",
     "application/msword" => "DOC",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => "DOCX",
-    "application/vnd.oasis.opendocument.text" => "ODT",
-    "text/html" => "HTML"
+    "application/vnd.oasis.opendocument.text" => "ODT"
   }.freeze
 
   def self.accept_attribute
