@@ -46,14 +46,10 @@
       <div class="<%= yield(:page_bg_class) if content_for?(:page_bg_class) %> flex-grow">
         <div class="<%= 'mx-auto max-w-7xl px-2 sm:px-6 lg:px-8' unless content_for?(:full_width) %> <%= 'pt-3' unless controller_name == 'home' %>">
           <%# TODO handle printable area %>
-          <% if user_signed_in? %>
-            <div class="signed-in-user <%= 'my-3' unless controller_name == 'home' %>"><%= render "shared/flash_messages" %><%= yield %></div>
-          <% else %>
-            <div class="not-signed-in-user min-h-screen flex flex-col">
-              <%= render "shared/flash_messages" %>
-              <%= yield %>
-            </div>
-          <% end %>
+          <div class="<%= 'my-3' unless controller_name == 'home' %>">
+            <%= render "shared/flash_messages" %>
+            <%= yield %>
+          </div>
         </div>
       </div>
     </div>
