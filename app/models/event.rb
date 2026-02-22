@@ -1,5 +1,6 @@
 class Event < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
+  include ActionText::Attachable
 
   has_rich_text :rhino_header
   has_rich_text :rhino_description
@@ -89,5 +90,21 @@ class Event < ApplicationRecord
       dollar_amount = dollar_amount.to_s.gsub(/[^\d.]/, "").to_f
       self.cost_cents = (dollar_amount.to_f * 100).round
     end
+  end
+
+  def attachable_content_type
+    "application/vnd.active_record.event"
+  end
+
+  def to_attachable_partial_path
+    "events/registration_button"
+  end
+
+  def to_trix_content_attachment_partial_path
+    "events/registration_button"
+  end
+
+  def to_partial_path
+    "events/registration_button"
   end
 end
