@@ -63,3 +63,44 @@ custom-rhino-editor span.mention {
   padding: 0.1rem 0.3rem;
   box-decoration-break: clone;
 }
+
+custom-rhino-editor .toolbar__font-picker {
+  background: transparent;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  height: 32px;
+}
+
+custom-rhino-editor .toolbar__font-picker:hover {
+  border-color: #adb5bd;
+}
+
+custom-rhino-editor .toolbar__font-picker:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+custom-rhino-editor .toolbar__font-size-picker {
+  background: transparent;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  height: 32px;
+  min-width: 70px;
+}
+
+custom-rhino-editor .toolbar__font-size-picker:hover {
+  border-color: #adb5bd;
+}
+
+custom-rhino-editor .toolbar__font-size-picker:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
