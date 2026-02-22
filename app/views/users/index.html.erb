@@ -71,9 +71,8 @@
                                                                 page: params[:page],
                                                                 number_of_items_per_page:
                                                                   params[:number_of_items_per_page]),
-                            method: :post,
                             class: "btn btn-secondary-outline",
-                            data: { turbo: false } %>
+                            data: { turbo_method: :post } %>
               <% end %>
               <% if user.unconfirmed_email.present? %>
                 <i class="fa-solid fa-triangle-exclamation text-warning" title="Email change pending: <%= user.unconfirmed_email %>"></i>
