@@ -23,7 +23,7 @@ class DeviseMailer < Devise::Mailer
     @token  = token
     @user = record
 
-    opts[:subject] = "AWBW portal: Confirmation instructions for #{record.full_name}"
+    opts[:subject] = "AWBW portal: Welcome instructions for #{record.full_name}"
     @mail   = super
   end
 
@@ -42,15 +42,6 @@ class DeviseMailer < Devise::Mailer
 
   def set_branding
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "Our organization")
-  end
-
-  def headers_for(action, opts)
-    headers = super
-    headers[:subject] = I18n.t(
-      "devise.mailer.#{action}.subject",
-      organization_name: @organization_name
-    )
-    headers
   end
 
   private

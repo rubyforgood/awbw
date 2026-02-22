@@ -18,11 +18,11 @@ en:
       unconfirmed: "You have to confirm your email address before continuing."
     mailer:
       confirmation_instructions:
-        subject: "Confirmation instructions"
+        subject: "AWBW portal: Welcome instructions"
       reset_password_instructions:
-        subject: "Password reset request for your %{organization_name} account"
+        subject: "AWBW portal: Password reset request"
       unlock_instructions:
-        subject: "Unlock instructions"
+        subject: "AWBW portal: Unlock instructions"
     omniauth_callbacks:
       failure: "Could not authenticate you from %{kind} because \"%{reason}\"."
       success: "Successfully authenticated from %{kind} account."
