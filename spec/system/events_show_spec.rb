@@ -256,6 +256,46 @@ RSpec.describe "Event show page", type: :system do
   end
 
   # --------------------------------------------------
+  # SOCIAL SHARE SIDEBAR
+  # --------------------------------------------------
+
+  describe "social share sidebar" do
+    it "renders share links with correct URLs" do
+      sign_in(user)
+      visit event_path(event)
+
+      encoded_url = CGI.escape(event_url(event))
+      encoded_title = CGI.escape(event.title)
+
+      # Share buttons point to correct share endpoints with event URL
+      expect(page).to have_link(title: "Share on LinkedIn",
+        href: "https://www.linkedin.com/sharing/share-offsite/?url=#{encoded_url}")
+      expect(page).to have_link(title: "Share on Facebook",
+        href: "https://www.facebook.com/sharer/sharer.php?u=#{encoded_url}")
+      expect(page).to have_link(title: "Share on X",
+        href: "https://twitter.com/intent/tweet?text=#{encoded_title}&url=#{encoded_url}")
+
+      # Profile links
+      expect(page).to have_link(title: "Follow on Instagram",
+        href: "https://www.instagram.com/awbworg")
+      expect(page).to have_link(title: "Subscribe on YouTube",
+        href: "https://www.youtube.com/@awbworg")
+
+      # Print button
+      expect(page).to have_button(title: "Print this page")
+    end
+
+    it "renders share links for guests on public events" do
+      visit event_path(event)
+
+      expect(page).to have_link(title: "Share on Facebook")
+      expect(page).to have_link(title: "Share on LinkedIn")
+      expect(page).to have_link(title: "Share on X")
+      expect(page).to have_button(title: "Print this page")
+    end
+  end
+
+  # --------------------------------------------------
   # POLICY / VISIBILITY EDGE CASES
   # --------------------------------------------------
 
