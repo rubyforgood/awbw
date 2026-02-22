@@ -29,20 +29,20 @@ RSpec.describe "Community News Index", type: :system do
     # Wait for turbo frame to load
     expect(page).to have_content("Banana News")
 
-    # Click "Title" to sort ascending
+    # Click "Title" — first click on an inactive column sorts descending
     click_link "Title"
 
-    # Arrow should switch to up (asc)
+    # Arrow should show down (desc)
     within("thead") do
       title_header = find("th", text: "Title")
-      expect(title_header).to have_css("i.fa-arrow-up")
+      expect(title_header).to have_css("i.fa-arrow-down")
     end
 
-    # Apple should appear before Banana in ascending order
+    # Banana should appear before Apple in descending order
     rows = all("tbody tr td:first-child").map(&:text)
-    apple_index = rows.index { |t| t.include?("Apple News") }
     banana_index = rows.index { |t| t.include?("Banana News") }
-    expect(apple_index).to be < banana_index
+    apple_index = rows.index { |t| t.include?("Apple News") }
+    expect(banana_index).to be < apple_index
   end
 
   scenario "Admin toggles title sort direction across multiple clicks" do
@@ -55,17 +55,7 @@ RSpec.describe "Community News Index", type: :system do
     # Wait for turbo frame to load
     expect(page).to have_content("Banana News")
 
-    # First click: sort ascending (A-Z)
-    click_link "Title"
-
-    within("thead") do
-      expect(find("th", text: "Title")).to have_css("i.fa-arrow-up")
-    end
-
-    rows = all("tbody tr td:first-child").map(&:text)
-    expect(rows.index { |t| t.include?("Apple News") }).to be < rows.index { |t| t.include?("Banana News") }
-
-    # Second click: sort descending (Z-A)
+    # First click: sort descending (Z-A) — first click on inactive column defaults to desc
     click_link "Title"
 
     within("thead") do
@@ -75,7 +65,7 @@ RSpec.describe "Community News Index", type: :system do
     rows = all("tbody tr td:first-child").map(&:text)
     expect(rows.index { |t| t.include?("Banana News") }).to be < rows.index { |t| t.include?("Apple News") }
 
-    # Third click: back to ascending (A-Z)
+    # Second click: sort ascending (A-Z)
     click_link "Title"
 
     within("thead") do
@@ -84,6 +74,16 @@ RSpec.describe "Community News Index", type: :system do
 
     rows = all("tbody tr td:first-child").map(&:text)
     expect(rows.index { |t| t.include?("Apple News") }).to be < rows.index { |t| t.include?("Banana News") }
+
+    # Third click: back to descending (Z-A)
+    click_link "Title"
+
+    within("thead") do
+      expect(find("th", text: "Title")).to have_css("i.fa-arrow-down")
+    end
+
+    rows = all("tbody tr td:first-child").map(&:text)
+    expect(rows.index { |t| t.include?("Banana News") }).to be < rows.index { |t| t.include?("Apple News") }
   end
 
   scenario "Admin sees message when no community news exist" do
