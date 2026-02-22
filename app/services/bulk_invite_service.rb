@@ -10,7 +10,11 @@ class BulkInviteService
   def initialize(ids:, dry_run: false)
     @ids = Array(ids).map(&:to_i)
     @dry_run = dry_run
-    @results = { sent: [], failed: [], missing_ids: [] }
+    @results = if dry_run
+      { dry_run_would_send_ids: [], missing_ids: [], already_confirmed_ids: [] }
+    else
+      { sent_ids: [], failed: [], missing_ids: [], already_confirmed_ids: [] }
+    end
   end
 
   def call
@@ -24,20 +28,33 @@ class BulkInviteService
       return results
     end
 
-    log "Found #{users.count} users:"
-    users.find_each { |u| log "  #{u.id}: #{u.name} <#{u.email}>" }
+    confirmed, unconfirmed = users.partition { |u| u.confirmed_at.present? }
+
+    if confirmed.any?
+      @results[:already_confirmed_ids] = confirmed.map(&:id)
+      log "Already confirmed (skipping): #{confirmed.map { |u| "#{u.id}: #{u.name} <#{u.email}>" }.join(", ")}"
+    end
+
+    if unconfirmed.empty?
+      log "No unconfirmed users to invite."
+      return results
+    end
+
+    log "Found #{unconfirmed.size} unconfirmed users:"
+    unconfirmed.each { |u| log "  #{u.id}: #{u.name} <#{u.email}>" }
 
     if dry_run
+      unconfirmed.each { |u| results[:dry_run_would_send_ids] << u.id }
       log "DRY RUN — no invitations sent."
       return results
     end
 
-    total = users.count
-    users.find_each.with_index(1) do |user, index|
+    total = unconfirmed.size
+    unconfirmed.each.with_index(1) do |user, index|
       invite_user(user, index, total)
     end
 
-    log "Done. Sent: #{results[:sent].size}, Failed: #{results[:failed].size}"
+    log "Done. Sent: #{results[:sent_ids].size}, Failed: #{results[:failed].size}"
     results[:failed].each { |e| log "  FAILED: #{e[:email]} — #{e[:error]}" }
 
     results
@@ -52,10 +69,10 @@ class BulkInviteService
     end
 
     BulkInviteEmailJob.perform_later(user.id)
-    results[:sent] << { id: user.id, email: user.email }
+    results[:sent_ids] << user.id
     log "  Invited #{user.email} (#{index}/#{total})"
   rescue => e
-    results[:failed] << { id: user.id, email: user.email, error: e.message }
+    results[:failed] << { id: user.id, error: e.message }
     log "  FAILED #{user.email}: #{e.message} (#{index}/#{total})"
   end
 
