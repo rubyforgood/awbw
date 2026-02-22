@@ -18,6 +18,6 @@ RSpec.describe "banners/index", type: :view do
   it "renders a friendly message when no banners exist" do
     assign(:banners, paginated([]))
     render
-    expect(rendered).to match(/No Banners found/)
+    expect(rendered).to match(/No banners found/)
   end
 end

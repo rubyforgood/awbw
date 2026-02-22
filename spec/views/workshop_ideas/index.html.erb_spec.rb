@@ -19,6 +19,6 @@ RSpec.describe "workshop_ideas/index", type: :view do
   it "renders a friendly message when no workshop_ideas exist" do
     assign(:workshop_ideas, paginated([]))
     render
-    expect(rendered).to match(/No Workshop ideas found/)
+    expect(rendered).to match(/No workshop ideas found/)
   end
 end

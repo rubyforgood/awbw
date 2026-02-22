@@ -22,10 +22,10 @@ RSpec.describe "/users/check_duplicates", type: :request do
         expect(response.body).to include("Edit the existing user or change this user")
       end
 
-      it "hides the Create Anyway button" do
+      it "hides the Create anyway button" do
         get check_duplicates_users_path, params: { email: "jane@testmail.org" }
 
-        expect(response.body).not_to include("Create Anyway")
+        expect(response.body).not_to include("Create anyway")
       end
 
       it "is case insensitive" do
@@ -61,10 +61,10 @@ RSpec.describe "/users/check_duplicates", type: :request do
         expect(response.body).to include("Solo Person")
       end
 
-      it "shows the Create Anyway button" do
+      it "shows the Create anyway button" do
         get check_duplicates_users_path, params: { email: "solo@testmail.org" }
 
-        expect(response.body).to include("Create Anyway")
+        expect(response.body).to include("Create anyway")
       end
 
       it "does not show the block message" do
@@ -132,7 +132,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
       it "is blocked because a user exists" do
         get check_duplicates_users_path, params: { email: "shared@testmail.org" }
 
-        expect(response.body).not_to include("Create Anyway")
+        expect(response.body).not_to include("Create anyway")
       end
     end
 
@@ -182,11 +182,11 @@ RSpec.describe "/users/check_duplicates", type: :request do
     # --- No duplicates ---
 
     context "when no duplicates exist" do
-      it "shows the Create Anyway button" do
+      it "shows the Create anyway button" do
         get check_duplicates_users_path, params: { email: "brand.new@testmail.org" }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Create Anyway")
+        expect(response.body).to include("Create anyway")
       end
 
       it "does not show any duplicate badges" do
