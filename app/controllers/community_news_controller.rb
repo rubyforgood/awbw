@@ -10,7 +10,7 @@ class CommunityNewsController < ApplicationController
       base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset,
                                                              :author, :organization, author: :person ]))
       filtered = base_scope.search_by_params(params)
-      @sort = %w[created_at updated_at title author organization].include?(params[:sort]) ? params[:sort] : "updated_at"
+      @sort = %w[created_at title author organization].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
       filtered = case @sort
       when "author"
