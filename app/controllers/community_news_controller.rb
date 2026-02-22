@@ -10,9 +10,16 @@ class CommunityNewsController < ApplicationController
       base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset,
                                                              :author, :organization, author: :person ]))
       filtered = base_scope.search_by_params(params)
-      @sort = %w[created_at updated_at].include?(params[:sort]) ? params[:sort] : "updated_at"
+      @sort = %w[created_at updated_at title author organization].include?(params[:sort]) ? params[:sort] : "updated_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
-      filtered = filtered.reorder(@sort => @sort_direction)
+      filtered = case @sort
+      when "author"
+        filtered.left_joins(author: :person).reorder("people.last_name #{@sort_direction}, people.first_name #{@sort_direction}")
+      when "organization"
+        filtered.left_joins(:organization).reorder("organizations.name #{@sort_direction}")
+      else
+        filtered.reorder(@sort => @sort_direction)
+      end
       @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
 

@@ -14,9 +14,30 @@
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Title</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Author</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Organization</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+            <%= link_to community_news_index_path(sort_base.merge(sort: "title", direction: (@sort == "title" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+                        data: { turbo_frame: "community_news_results" },
+                        class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
+              Title
+              <i class="fa-solid <%= sort_icon.call("title") %> text-xs opacity-70"></i>
+            <% end %>
+          </th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+            <%= link_to community_news_index_path(sort_base.merge(sort: "author", direction: (@sort == "author" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+                        data: { turbo_frame: "community_news_results" },
+                        class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
+              Author
+              <i class="fa-solid <%= sort_icon.call("author") %> text-xs opacity-70"></i>
+            <% end %>
+          </th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+            <%= link_to community_news_index_path(sort_base.merge(sort: "organization", direction: (@sort == "organization" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+                        data: { turbo_frame: "community_news_results" },
+                        class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
+              Organization
+              <i class="fa-solid <%= sort_icon.call("organization") %> text-xs opacity-70"></i>
+            <% end %>
+          </th>
           <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[7rem]">
             <%= link_to community_news_index_path(sort_base.merge(sort: "created_at", direction: (@sort == "created_at" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
                         data: { turbo_frame: "community_news_results" },
