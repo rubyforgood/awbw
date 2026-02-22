@@ -1,0 +1,16 @@
+#!/bin/sh
+#/ Usage: bin/conductor-server
+#/
+#/ Start all development processes for a Conductor workspace.
+#/ Uses CONDUCTOR_PORT if set, otherwise PORT, defaulting to 3000.
+#/ Sets VITE_RUBY_PORT to PORT + 36 to avoid port conflicts.
+
+set -e
+cd $(dirname "$0")/..
+
+# Use CONDUCTOR_PORT if set, otherwise PORT, defaulting to 3000
+export PORT=${CONDUCTOR_PORT:-${PORT:-3000}}
+export VITE_RUBY_PORT=$((PORT + 36))
+
+echo "Starting on http://localhost:${PORT} (Vite on :${VITE_RUBY_PORT})"
+exec bundle exec foreman start -p ${PORT} -f Procfile.dev
