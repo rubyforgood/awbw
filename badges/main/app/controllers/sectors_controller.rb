@@ -32,7 +32,7 @@ class SectorsController < ApplicationController
     authorize! @sector
 
     if @sector.save
-      redirect_to sectors_path, notice: "Sector was successfully created."
+      redirect_to @sector, notice: "Sector was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -42,7 +42,7 @@ class SectorsController < ApplicationController
   def update
     authorize! @sector
     if @sector.update(sector_params)
-      redirect_to sectors_path, notice: "Sector was successfully updated.", status: :see_other
+      redirect_to @sector, notice: "Sector was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content

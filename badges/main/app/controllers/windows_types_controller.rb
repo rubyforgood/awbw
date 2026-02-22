@@ -33,7 +33,7 @@ class WindowsTypesController < ApplicationController
     @windows_type.categories = Category.where(id: selected_ids)
 
     if @windows_type.save
-      redirect_to windows_types_path, notice: "Windows type was successfully created."
+      redirect_to @windows_type, notice: "Windows type was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -47,7 +47,7 @@ class WindowsTypesController < ApplicationController
     @windows_type.categories = Category.where(id: selected_ids)
 
     if @windows_type.update(windows_type_params)
-      redirect_to windows_types_path, notice: "Windows type was successfully updated.", status: :see_other
+      redirect_to @windows_type, notice: "Windows type was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content

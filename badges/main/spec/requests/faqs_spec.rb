@@ -138,9 +138,9 @@ RSpec.describe "/faqs", type: :request do
         }.to change(Faq, :count).by(1)
       end
 
-      it "redirects to the faqs index" do
+      it "redirects to the created faq" do
         post faqs_url, params: { faq: valid_attributes }
-        expect(response).to redirect_to(faqs_url)
+        expect(response).to redirect_to(faq_url(Faq.last))
       end
     end
 
@@ -176,9 +176,9 @@ RSpec.describe "/faqs", type: :request do
         expect(faq.answer).to eq("Updated answer text.")
       end
 
-      it "redirects to the faqs index" do
+      it "redirects to the faq" do
         patch faq_url(faq), params: { faq: new_attributes }
-        expect(response).to redirect_to(faqs_url)
+        expect(response).to redirect_to(faq_url(faq))
       end
     end
 

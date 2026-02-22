@@ -39,7 +39,7 @@ RSpec.describe "OrganizationStatuses", type: :request do
         post organization_statuses_path, params: valid_params
       }.to change(OrganizationStatus, :count).by(1)
 
-      expect(response).to redirect_to(organization_statuses_path)
+      expect(response).to redirect_to(organization_status_path(OrganizationStatus.last))
     end
 
     it "rejects invalid create" do
@@ -51,7 +51,7 @@ RSpec.describe "OrganizationStatuses", type: :request do
       patch organization_status_path(status),
             params: { organization_status: { name: "Updated" } }
 
-      expect(response).to redirect_to(organization_statuses_path)
+      expect(response).to redirect_to(organization_status_path(status))
       expect(status.reload.name).to eq("Updated")
     end
 

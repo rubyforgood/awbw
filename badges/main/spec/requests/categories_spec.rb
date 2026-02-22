@@ -67,7 +67,7 @@ RSpec.describe "Categories", type: :request do
             post categories_path, params: { category: valid_attributes }
           }.to change(Category, :count).by(1)
 
-          expect(response).to redirect_to(categories_path)
+          expect(response).to redirect_to(category_path(Category.last))
         end
       end
 

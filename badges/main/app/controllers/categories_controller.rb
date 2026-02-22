@@ -42,7 +42,7 @@ class CategoriesController < ApplicationController
     authorize! @category
 
     if @category.save
-      redirect_to categories_path, notice: "Category was successfully created."
+      redirect_to @category, notice: "Category was successfully created."
     else
       set_form_variables
       render :new, status: :unprocessable_content
@@ -53,7 +53,7 @@ class CategoriesController < ApplicationController
     authorize! @category
     respond_to do |format|
       if @category.update(category_params)
-        format.html { redirect_to categories_path, notice: "Category was successfully updated.", status: :see_other }
+        format.html { redirect_to @category, notice: "Category was successfully updated.", status: :see_other }
         format.json { head :ok }
       else
         format.html do

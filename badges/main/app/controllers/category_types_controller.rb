@@ -29,7 +29,7 @@ class CategoryTypesController < ApplicationController
     authorize! @category_type
 
     if @category_type.save
-      redirect_to category_types_path, notice: "Category type was successfully created."
+      redirect_to @category_type, notice: "Category type was successfully created."
     else
       @category_type = @category_type.decorate
       render :new, status: :unprocessable_content
@@ -39,7 +39,7 @@ class CategoryTypesController < ApplicationController
   def update
     authorize! @category_type
     if @category_type.update(category_type_params)
-      redirect_to category_types_path, notice: "Category type was successfully updated.", status: :see_other
+      redirect_to @category_type, notice: "Category type was successfully updated.", status: :see_other
     else
       @category_type = @category_type.decorate
       render :edit, status: :unprocessable_content
