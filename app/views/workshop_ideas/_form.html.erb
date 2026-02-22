@@ -386,7 +386,7 @@
     </div>
 
 
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: false %>
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
         <%= link_to "Delete", @workshop_idea, class: "btn btn-danger-outline",

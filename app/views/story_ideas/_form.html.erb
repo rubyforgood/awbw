@@ -259,8 +259,8 @@
     <% end %>
 
     <div id="attachments">
-      <%= render "shared/form_image_fields", f: f, include_primary_asset: true,
-                 primary_title: "Primary attachment", gallery_title: "Additional attachment" %>
+      <%= render "shared/form_image_fields", f: f, include_primary_asset: false,
+                 gallery_title: "Additional attachment" %>
     </div>
 
     <div id="publish-preferences" class="flex pt-6 gap-4">
