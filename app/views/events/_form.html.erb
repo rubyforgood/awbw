@@ -61,9 +61,9 @@
   <%# ---- EVENT DETAILS + DISPLAY OPTIONS (two-column) ---- %>
   <label class="block font-medium mb-1 text-gray-700 mt-12">Event details</label>
   <div class="bg-gray-50 border border-gray-200 rounded-md p-6 mb-12">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <%# LEFT: Date/time, location, videoconference, cost %>
-      <div class="space-y-6">
+      <div class="md:col-span-2 space-y-6">
       <div>
         <%= f.input :pre_date_text,
                 label: "Pre-date text",
@@ -73,7 +73,7 @@
                 } %>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <%= f.label :start_date,
                   "Start time",
@@ -108,25 +108,25 @@
               <%= f.object.errors[:end_date].join(", ") %></p>
           <% end %>
         </div>
-      </div>
 
-      <div>
-        <%= f.label :registration_close_date,
+        <div>
+          <%= f.label :registration_close_date,
                 "Registration close time",
                 class: "block font-medium mb-1" %>
 
-        <%= f.text_field :registration_close_date,
-                     type: "datetime-local",
-                     class:
-                       "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                     value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
+          <%= f.text_field :registration_close_date,
+                       type: "datetime-local",
+                       class:
+                         "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                       value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
 
-        <% if f.object.errors[:registration_close_date].any? %>
-          <p class="text-red-500 text-sm mt-1">
-            Registration close date
-            <%= f.object.errors[:registration_close_date].join(", ") %>
-          </p>
-        <% end %>
+          <% if f.object.errors[:registration_close_date].any? %>
+            <p class="text-red-500 text-sm mt-1">
+              Registration close date
+              <%= f.object.errors[:registration_close_date].join(", ") %>
+            </p>
+          <% end %>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -187,16 +187,19 @@
     <%# RIGHT: Autoshow display options %>
     <div class="bg-white border border-gray-200 rounded-md p-4">
       <h3 class="text-base font-semibold text-gray-800 mb-3">Display options</h3>
-      <p class="text-sm text-gray-500 mb-3">Toggle which details appear on the event page.</p>
+      <p class="text-sm text-gray-500 mb-3">Toggle which details appear on the event page.<br>Fields with no value will be ignored.</p>
       <div class="space-y-2">
-        <%= f.input :autoshow_date, as: :boolean, label: "Show date on event page" %>
-        <%= f.input :autoshow_time, as: :boolean, label: "Show time on event page" %>
-        <%= f.input :autoshow_location, as: :boolean, label: "Show location on event page" %>
-        <%= f.input :autoshow_videoconference_url, as: :boolean, label: "Show videoconference link on event page" %>
-        <%= f.input :autoshow_registration, as: :boolean,
-                    label: "Show registration button & calendar links on event page" %>
-        <%= f.input :autoshow_pre_date_text, as: :boolean, label: "Show pre-date text on event page" %>
-        <%= f.input :autoshow_cost, as: :boolean, label: "Show cost on event page" %>
+        <% tz = Time.zone %>
+        <% tz_abbr = @event.start_date.present? ? @event.start_date.in_time_zone(tz).strftime("%Z") : Time.current.strftime("%Z") %>
+        <%= f.input :autoshow_pre_date_text, as: :boolean, label: ("Pre-date text" + (@event.pre_date_text.present? ? " <span class='text-gray-400 font-normal'>#{h @event.pre_date_text}</span>" : "")).html_safe %>
+        <%= f.input :autoshow_date, as: :boolean, label: ("Date <span class='text-gray-400 font-normal'>" + (@event.start_date.present? ? @event.start_date.in_time_zone(tz).strftime("%A, %B %-d, %Y") : Time.current.strftime("%A, %B %-d, %Y")) + "</span>").html_safe %>
+        <%= f.input :autoshow_time, as: :boolean, label: ("Time <span class='text-gray-400 font-normal'>" + (@event.start_date.present? && @event.end_date.present? ? @event.start_date.in_time_zone(tz).strftime("%-l:%M %P") + " – " + @event.end_date.in_time_zone(tz).strftime("%-l:%M %P") : "3:00 pm – 5:00 pm") + " " + tz_abbr + "</span>").html_safe %>
+        <%= f.input :autoshow_cost, as: :boolean, label: ("Cost <span class='text-gray-400 font-normal'>" + (@event.labelled_cost.present? ? h(@event.labelled_cost) : "&quot;Cost: $X&quot; or &quot;Free event&quot;") + "</span>").html_safe %>
+        <%= f.input :autoshow_location, as: :boolean, label: ("Location" + (@event.location.present? ? " <span class='text-gray-400 font-normal'>#{h @event.location.name}</span>" : "")).html_safe %>
+        <% vc_domain = @event.videoconference_url.present? ? (URI.parse(@event.videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call") : nil %>
+        <%= f.input :autoshow_videoconference_url, as: :boolean, label: ("Videoconference <span class='text-gray-400 font-normal'>" + (vc_domain.present? ? "Join on #{vc_domain}" : "Join on [Domain]") + "</span>").html_safe %>
+        <%= f.input :autoshow_registration_close, as: :boolean, label: ("Registration close <span class='text-gray-400 font-normal'>Registration closes " + (@event.registration_close_date.present? ? @event.registration_close_date.in_time_zone(tz).strftime("%B %-d, %Y %-l:%M %P") : 2.days.from_now.in_time_zone(tz).strftime("%B %-d, %Y %-l:%M %P")) + " " + tz_abbr + "</span>").html_safe %>
+        <%= f.input :autoshow_registration, as: :boolean, label: "Registration button <span class='text-gray-400 font-normal'>Register + calendar links</span>".html_safe %>
       </div>
     </div>
     </div>
@@ -207,13 +210,36 @@
     <%= rhino_editor(f, :description, label: "Description") %>
   </div>
 
-  <%# ---- IMAGES (primary + gallery) ---- %>
-  <div class="mt-12 mb-12">
-    <%= render "shared/form_image_fields", f: f, include_primary_asset: true, primary_title: "Primary (thumbnail)" %>
-  </div>
-
   <!-- Accordions -->
   <div class="space-y-4 mt-12">
+    <div class="images-section" data-controller="dropdown">
+      <button
+        type="button"
+        id="images_button"
+        class="
+          flex items-center justify-between cursor-pointer w-full
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"images":"hidden"}, {"images_arrow":"rotate-180"}, {"images_button":"rounded-md rounded-t-md"}]'>
+        Images
+        <svg
+          id="images_arrow"
+          class="w-6 h-6 shrink-0"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg">
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+      </button>
+
+      <div id="images" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <%= render "shared/form_image_fields", f: f, include_primary_asset: true, primary_title: "Primary (thumbnail)" %>
+      </div>
+    </div>
     <div class="tags-section" data-controller="dropdown">
       <button
         type="button"

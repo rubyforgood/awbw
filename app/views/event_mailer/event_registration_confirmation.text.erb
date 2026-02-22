@@ -30,7 +30,8 @@ View the event page:
 
 <% if @event.registration_close_date %>
   Registration closes on
-  <%= @event.registration_close_date.in_time_zone(@time_zone).strftime("%A, %B %-d, %Y at %-l:%M %p %Z") %>
+  <% text_tz_abbr = @event.start_date.in_time_zone(@time_zone).strftime("%Z") %>
+  <%= @event.registration_close_date.in_time_zone(@time_zone).strftime("%A, %B %-d, %Y at %-l:%M %p") %> <%= text_tz_abbr %>
 <% end %>
 
 --

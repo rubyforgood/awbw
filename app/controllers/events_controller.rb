@@ -151,6 +151,7 @@ class EventsController < ApplicationController
                                   :autoshow_title,
                                   :autoshow_videoconference_url,
                                   :autoshow_pre_date_text,
+                                  :autoshow_registration_close,
                                   :pre_title,
                                   :pre_date_text,
                                   :featured,
