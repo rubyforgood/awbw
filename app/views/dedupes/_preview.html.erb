@@ -125,10 +125,10 @@
     <span class="ml-2 text-gray-900 font-semibold"><%= keep_items.count %></span>
   </div>
 
-  <!-- Tagged Items row -->
+  <!-- Tagged items row -->
   <div class="border-x border-b border-<%= color %>-200 rounded-b-xl bg-white px-5 py-3">
     <% if delete_items.any? %>
-      <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged Items</h3>
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged items</h3>
       <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto">
         <% delete_items.sort_by { |item| [item.public_send(item_type_col), (item.public_send(assoc_name).try(:name) || item.public_send(assoc_name).try(:title) || "").to_s.downcase] }.each do |item| %>
           <li class="pl-2">
@@ -141,7 +141,7 @@
   </div>
   <div class="border-x border-b border-<%= color %>-200 rounded-b-xl bg-white px-5 py-3">
     <% if keep_items.any? %>
-      <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged Items</h3>
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">Tagged items</h3>
       <ul class="text-sm text-gray-500 space-y-1 max-h-40 overflow-y-auto">
         <% keep_items.sort_by { |item| [item.public_send(item_type_col), (item.public_send(assoc_name).try(:name) || item.public_send(assoc_name).try(:title) || "").to_s.downcase] }.each do |item| %>
           <li class="pl-2">
