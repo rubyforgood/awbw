@@ -64,6 +64,15 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <%# LEFT: Date/time, location, videoconference, cost %>
       <div class="space-y-6">
+      <div>
+        <%= f.input :pre_date_text,
+                label: "Pre-date text",
+                input_html: {
+                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                  placeholder: "e.g. Upcoming Workshop"
+                } %>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <%= f.label :start_date,
@@ -186,6 +195,7 @@
         <%= f.input :autoshow_videoconference_url, as: :boolean, label: "Show videoconference link on event page" %>
         <%= f.input :autoshow_registration, as: :boolean,
                     label: "Show registration button & calendar links on event page" %>
+        <%= f.input :autoshow_pre_date_text, as: :boolean, label: "Show pre-date text on event page" %>
         <%= f.input :autoshow_cost, as: :boolean, label: "Show cost on event page" %>
       </div>
     </div>
