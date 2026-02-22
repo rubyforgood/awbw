@@ -37,12 +37,19 @@ Rails.application.configure do
   # Active Storage
   config.active_storage.service = :local
 
-  # Host/URL config is set dynamically in config/initializers/default_host.rb
-  # so each Conductor workspace gets the correct port.
+  # Moved to config/initializers/default_host.rb for dynamic Conductor port support
+  # Rails.application.routes.default_url_options[:host] ||= "localhost:3000"
 
   config.after_initialize do
     Bullet.enable = true
     Bullet.rails_logger = true
+
+    # Moved to config/initializers/default_host.rb for dynamic Conductor port support
+    # ActiveStorage::Current.url_options = {
+    #   protocol: "http",
+    #   host: "localhost",
+    #   port: 3000
+    # }
 
     if ActionMailer::Base.delivery_method == :smtp
       raise "SMTP must not be enabled in development"
@@ -63,7 +70,8 @@ Rails.application.configure do
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 
-  # Mailer default_url_options set dynamically in config/initializers/default_host.rb
+  # Moved to config/initializers/default_host.rb for dynamic Conductor port support
+  # config.action_mailer.default_url_options = { host: "localhost", port: 3000, protocol: "http" }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
