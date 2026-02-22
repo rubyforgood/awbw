@@ -24,7 +24,7 @@ RSpec.describe "workshops/edit", type: :view do
     end
 
     it "displays the edit form" do
-      expect(rendered).to match(/Edit Workshop/)
+      expect(rendered).to match(/Edit workshop/)
     end
 
     it "displays the View button" do
