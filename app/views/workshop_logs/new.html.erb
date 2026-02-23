@@ -20,15 +20,12 @@
 
         <!-- Title -->
         <h1 class="text-2xl font-semibold text-gray-900">
-          New <%= @workshop_log.class.model_name.human %>
+          New <%= @workshop_log.class.model_name.human.downcase %>
         </h1>
 
         <!-- Description -->
         <p class="text-gray-700 leading-relaxed">
-          Please submit a workshop log after each workshop you lead.
-          Select your workshop type from the options below, then choose the workshop name
-          in the dropdown. If you don’t see your title (for an original or variation),
-          select <span class="font-semibold text-blue-700">“New Workshop.”</span>
+          An optional tool to track data from your art workshops. If you don't see the workshop you facilitated listed in the dropdown menu, you can type in a new title in the field below.
         </p>
       </div>
 

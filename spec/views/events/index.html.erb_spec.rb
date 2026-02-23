@@ -29,7 +29,7 @@ RSpec.describe "events/index", type: :view do
     end
 
     it "renders New Event link" do
-      expect(rendered).to have_link("New Event", href: new_event_path)
+      expect(rendered).to have_link("New event", href: new_event_path)
     end
   end
 
@@ -56,7 +56,7 @@ RSpec.describe "events/index", type: :view do
     end
 
     it "does not render New Event link" do
-      expect(rendered).not_to have_link("New Event")
+      expect(rendered).not_to have_link("New event")
     end
   end
 end

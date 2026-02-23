@@ -5,7 +5,7 @@ A monthly report has already been submitted for this month. Please contact your 
 <%= form_for @report, as: :report, url: report_path( @report ), method: :put do |f| %>
   <hr>
  <% unless params[:form_builder_id] == "7" %>
-   <h4>Report Type</h4>
+   <h4>Report type</h4>
   </hr>
 
   <!-- ######### row 1 ##### -->
@@ -19,7 +19,7 @@ A monthly report has already been submitted for this month. Please contact your 
     </div>
 
     <div class='col-md-8'>
-      <%= label_tag 'Reporting for the Month Of' %>
+      <%= label_tag 'Reporting for the month of' %>
       <!-- date select -->
       <%= f.date_select :date,
           { discard_day: true, selected: Date.new( @year.to_i, @month.to_i ), use_hidden: true }, {:onchange => "" } %>

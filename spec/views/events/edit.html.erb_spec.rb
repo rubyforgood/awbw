@@ -27,7 +27,7 @@ RSpec.describe "events/edit", type: :view do
   it "renders the editing event heading" do
     render
 
-    expect(rendered).to have_selector("h1", text: "Edit Event")
+    expect(rendered).to have_selector("h1", text: "Edit event")
   end
 
   it "renders the form partial" do

@@ -4,7 +4,7 @@
   <div class="max-w-6xl mx-auto px-4">
     <%= render "home/home_section_header",
                title: title,
-               subtitle: "Tools and activities used across our network" %>
+               subtitle: "Tools to support your work" %>
 
     <%= turbo_frame_tag "home_resources", src: home_resources_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
       <%= render "resources_cards_skeleton" %>

@@ -9,7 +9,7 @@ class NotificationMailer < ApplicationMailer
 
     # Send email to the admin
     mail(
-      subject: "AWBW portal: new event registration by #{@person.full_name} to #{@event.title}"
+      subject: "AWBW Portal: new event registration by #{@person.full_name} to #{@event.title}"
     )
   end
 
@@ -31,7 +31,7 @@ class NotificationMailer < ApplicationMailer
     @answers     = @noticeable.report_form_field_answers if @noticeable.respond_to?(:report_form_field_answers)
 
     mail(
-      subject: "AWBW portal: new #{@noticeable_klass} submission by #{@user.full_name}"
+      subject: "AWBW Portal: new #{@noticeable_klass} submission by #{@user.full_name}"
     )
   end
 
@@ -51,7 +51,7 @@ class NotificationMailer < ApplicationMailer
     end
 
     mail(
-      subject: "AWBW portal: new #{@type} submission by #{@user.full_name}"
+      subject: "AWBW Portal: new #{@type} submission by #{@user.full_name}"
     )
   end
 
@@ -62,7 +62,7 @@ class NotificationMailer < ApplicationMailer
 
     # Send email to the admin
     mail(
-      subject: "AWBW portal: user password reset by #{@user.full_name}"
+      subject: "AWBW Portal: user password reset by #{@user.full_name}"
     )
   end
 
@@ -82,7 +82,7 @@ class NotificationMailer < ApplicationMailer
     end
 
     mail(
-      subject: "AWBW portal: new WorkshopLog submission by #{@user.full_name}"
+      subject: "AWBW Portal: new WorkshopLog submission by #{@user.full_name}"
     )
   end
 

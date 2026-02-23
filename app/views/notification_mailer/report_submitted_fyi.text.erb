@@ -1,6 +1,6 @@
 <% profile_url = @person ? person_url(@person) : user_url(@user) %>
 
-New <%= @noticeable.class.model_name.human.titleize %> <%= @type %>
+New <%= @noticeable.class.model_name.human.downcase %>
 ==========================
 
 <%= @user.name %>

@@ -128,7 +128,7 @@
     <!-- Empty state -->
     <% unless @users.any? %>
       <p class="text-gray-500 text-center py-6">
-        No <%= User.model_name.human.pluralize %> found.
+        No <%= User.model_name.human.pluralize.downcase %> found.
       </p>
     <% end %>
 

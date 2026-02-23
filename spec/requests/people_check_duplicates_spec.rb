@@ -16,7 +16,7 @@ RSpec.describe "/people/check_duplicates", type: :request do
         get check_duplicates_people_path, params: { first_name: "Jane", last_name: "Doe", email: "" }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Possible Duplicate Person")
+        expect(response.body).to include("Possible duplicate person")
         expect(response.body).to include("Jane Doe")
       end
 
@@ -33,10 +33,10 @@ RSpec.describe "/people/check_duplicates", type: :request do
         expect(response.body).to include("name match")
       end
 
-      it "shows the Create Anyway button" do
+      it "shows the Create anyway button" do
         get check_duplicates_people_path, params: { first_name: "Jane", last_name: "Doe", email: "" }
 
-        expect(response.body).to include("Create Anyway")
+        expect(response.body).to include("Create anyway")
       end
     end
 
@@ -142,12 +142,12 @@ RSpec.describe "/people/check_duplicates", type: :request do
         expect(response.body).to include("Please edit the existing record instead")
       end
 
-      it "hides the Create Anyway button" do
+      it "hides the Create anyway button" do
         get check_duplicates_people_path, params: {
           first_name: "Jane", last_name: "Doe", email: existing_person.email
         }
 
-        expect(response.body).not_to include("Create Anyway")
+        expect(response.body).not_to include("Create anyway")
       end
     end
 
@@ -355,22 +355,22 @@ RSpec.describe "/people/check_duplicates", type: :request do
     # --- No duplicates ---
 
     context "when no duplicates exist" do
-      it "shows the Create Anyway button" do
+      it "shows the Create anyway button" do
         get check_duplicates_people_path, params: {
           first_name: "NewFirst", last_name: "NewLast", email: "new@testmail.org"
         }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Create Anyway")
+        expect(response.body).to include("Create anyway")
       end
 
-      it "always shows the Go Back link" do
+      it "always shows the Go back link" do
         get check_duplicates_people_path, params: {
           first_name: "NewFirst", last_name: "NewLast", email: ""
         }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Go Back")
+        expect(response.body).to include("Go back")
       end
     end
 
