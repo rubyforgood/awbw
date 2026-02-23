@@ -23,12 +23,17 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def manage?
+    admin? || owner?
+  end
+
   alias_rule :preview?, to: :edit?
 
   private
 
   def owner?
     return false unless authenticated?
+    return false unless record.is_a?(Event)
     record.created_by == user
   end
 
