@@ -153,6 +153,31 @@ module ApplicationHelper
     "Email #{email_confirmation_icon(user)}".html_safe
   end
 
+  # Returns checkbox options for the visibility filter dropdown.
+  # Each entry is [label, param_name, admin_only].
+  # Options adapt to the model's columns and the user's role.
+  def visibility_filter_options(model_class, admin:, authenticated:)
+    cols = model_class.column_names
+    options = []
+
+    if admin
+      options << [ "Published", :published, true ]
+      options << [ "Unpublished", :unpublished, true ]
+      options << [ "Featured", :featured, false ]             if cols.include?("featured")
+      options << [ "Publicly Visible", :publicly_visible, true ] if cols.include?("publicly_visible")
+      options << [ "Publicly Featured", :publicly_featured, false ] if cols.include?("publicly_featured")
+    elsif authenticated
+      options << [ "Not Featured", :not_featured, false ]     if cols.include?("featured")
+      options << [ "Featured", :featured, false ]             if cols.include?("featured")
+      options << [ "Publicly Featured", :publicly_featured, false ] if cols.include?("publicly_featured")
+    else
+      options << [ "Not Publicly Featured", :not_publicly_featured, false ] if cols.include?("publicly_featured")
+      options << [ "Publicly Featured", :publicly_featured, false ]         if cols.include?("publicly_featured")
+    end
+
+    options
+  end
+
   # Fundamental US time zones only (for user preference dropdown).
   # Order: Eastern → Pacific, then Alaska, Hawaii, Arizona.
   def us_time_zone_fundamentals

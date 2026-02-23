@@ -54,13 +54,18 @@ class CommunityNews < ApplicationRecord
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
-    conditions[:published] = params[:published] if params[:published].present?
-    community_news = self.search(conditions)
+
+    # Use visibility checkbox filters when present; otherwise pass published to SearchCop
+    if visibility_params_present?(params)
+      community_news = apply_visibility_filters(self.search(conditions), params)
+    else
+      conditions[:published] = params[:published] if params[:published].present?
+      community_news = self.search(conditions)
+    end
 
     community_news = community_news.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)
     community_news = community_news.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     community_news = community_news.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
-    # community_news = community_news.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     community_news
   end
 end

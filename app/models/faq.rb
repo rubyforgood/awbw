@@ -18,9 +18,13 @@ class Faq < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
-    if params[:published].to_s.present?
-      value = ActiveModel::Type::Boolean.new.cast(params[:published])
-      results = results.where(published: value)
+    case params[:published].to_s
+    when "publicly_visible"
+      results = results.publicly_visible
+    when "true"
+      results = results.where(published: true)
+    when "false"
+      results = results.where(published: false)
     end
     results
   end

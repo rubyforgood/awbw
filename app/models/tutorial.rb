@@ -61,7 +61,11 @@ class Tutorial < ApplicationRecord
     resources = resources.title_or_body(params[:search]) if params[:search].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.body(params[:body]) if params[:body].present?
-    resources = resources.published(params[:published]) if params[:published].present?
+    if visibility_params_present?(params)
+      resources = apply_visibility_filters(resources, params)
+    elsif params[:published].present?
+      resources = resources.published(params[:published])
+    end
     resources = resources.with_sector_ids(params[:sectors]) if params[:sectors].present?
     resources = resources.with_category_ids(params[:categories]) if params[:categories].present?
     resources = resources.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
