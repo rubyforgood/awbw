@@ -64,6 +64,9 @@ export default class extends Controller {
       select.selectedIndex = 0;
     });
     this.element.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+      if (input.checked) {
+        this.toggleClass(input);
+      }
       input.checked = false;
     });
     // this.element.reset();
