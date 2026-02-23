@@ -24,7 +24,7 @@ module AnalyticsHelper
     toggle_div = if image_toggle
       tag.div(
       id: "print-images-toggle",
-      title: "Toggle images",
+      title: "With or without images",
       class: "inline-flex items-center cursor-pointer select-none ml-2 border-l-2 pl-2"
     ) do
       safe_join([
