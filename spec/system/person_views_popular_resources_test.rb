@@ -6,13 +6,13 @@ RSpec.describe "People can view Popular Resources on the home page" do
       before do
         @user = create(:user)
         create(:person, user: @user)
-        @popular_resource = create(:resource,
+        @popular_resource = create(:resource, :published,
           title: "Most Popular Resource",
           featured: true,
-          kind: "Scholarship"
+          kind: "Handout"
         )
 
-        @unpopular_resource = create(:resource,
+        @unpopular_resource = create(:resource, :published,
           title: "Unpopular Resource",
           kind: "Template"
         )
@@ -55,6 +55,7 @@ RSpec.describe "People can view Popular Resources on the home page" do
       end
 
       it "navigates to all resources page via 'Browse all resources' link and sees both resources" do
+        expect(page).to have_content("Most Popular Resource")
         click_link 'Browse all resources'
         expect(page).to have_current_path(resources_path)
 
