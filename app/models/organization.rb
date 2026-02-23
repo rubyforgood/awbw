@@ -153,6 +153,22 @@ class Organization < ApplicationRecord
     sectors.pluck(:name)
   end
 
+  def direct_sectors
+    sectors
+ end
+
+  def affiliated_sectors
+    users
+      .includes(person: :sectors)
+      .map(&:person)
+      .compact
+      .flat_map(&:sectors)
+  end
+
+  def all_sectors
+    (direct_sectors + affiliated_sectors).uniq
+  end
+
   remote_searchable_by :name
 
   private
