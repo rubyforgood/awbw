@@ -23,6 +23,10 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def manage?
+    admin? || owner?
+  end
+
   alias_rule :preview?, to: :edit?
 
   private

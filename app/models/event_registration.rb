@@ -3,12 +3,16 @@ class EventRegistration < ApplicationRecord
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :payments, as: :payable, dependent: :nullify
 
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
+
+  ATTENDANCE_STATUSES = %w[ registered attended incomplete_attendance cancelled no_show ].freeze
 
   # Validations
   validates :registrant_id, uniqueness: { scope: :event_id }
   validates :event_id, presence: true
+  validates :status, inclusion: { in: ATTENDANCE_STATUSES }, allow_nil: false
 
   # Scopes
   scope :registrant_name, ->(registrant_name) { joins(:registrant).where(
@@ -42,6 +46,24 @@ class EventRegistration < ApplicationRecord
   end
 
   def paid?
-    # paid_at.present?
+    paid_in_full?
+  end
+
+  # True if event is free or total successful payments >= event.cost_cents
+  def paid_in_full?
+    return true if event.cost_cents.to_i <= 0
+    payments.successful.sum(:amount_cents) >= event.cost_cents.to_i
+  end
+
+  def attendance_status_label
+    return "—" if status.blank?
+    case status
+    when "registered" then "Registered (before date of event)"
+    when "attended" then "Attended"
+    when "incomplete_attendance" then "Incomplete attendance"
+    when "cancelled" then "Cancelled"
+    when "no_show" then "No show"
+    else status.humanize
+    end
   end
 end
