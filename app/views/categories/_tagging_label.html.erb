@@ -10,7 +10,7 @@
 
 <% if category %>
   <%= link_to taggings_path(category_names_all: category.name),
-    data: { turbo_frame: "_top", category_name: category.name },
+    data: { turbo_frame: "_top", category_name: category.name, controller: "tag-link-loading", action: "click->tag-link-loading#showSpinner" },
               class: "inline-flex items-center
                       rounded-md
                       border #{ DomainTheme.border_class_for(:categories) } hover:#{ DomainTheme.border_class_for(:categories, intensity: 500) }
@@ -19,7 +19,7 @@
                       px-3 py-1
                       text-sm font-medium
                       transition" do %>
-    <%= "#{category.category_type&.name}: " if !name_only && category.category_type %>
-    <%= category.name %>
+    <span data-tag-link-loading-target="text"><%= "#{category.category_type&.name}: " if !name_only && category.category_type %><%= category.name %></span>
+    <span data-tag-link-loading-target="spinner" class="hidden"><i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i></span>
   <% end %>
 <% end %>
