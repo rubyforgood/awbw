@@ -1,6 +1,4 @@
 class ResourceDecorator < ApplicationDecorator
-  include ::Linkable
-
   def detail(length: nil)
     length ? body&.truncate(length) : body  # TODO - rename field
   end
@@ -11,10 +9,6 @@ class ResourceDecorator < ApplicationDecorator
 
   def kind_display
     kind == "Scholarship" ? "Scholar-ship" : (kind.present? ? kind.titleize : "Resource")
-  end
-
-  def external_url
-    object.url
   end
 
   def truncated_author
