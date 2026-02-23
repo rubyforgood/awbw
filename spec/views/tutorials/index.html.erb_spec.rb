@@ -23,6 +23,8 @@ RSpec.describe "tutorials/index", type: :view do
       youtube_url: "Youtube Url"
     )
     assign(:tutorials, Tutorial.all.decorate)
+    assign(:sectors, Sector.published.order(:name))
+    assign(:category_types, CategoryType.published.where(story_specific: false).order(:name).decorate)
   end
 
   it "renders a list of tutorials" do

@@ -14,6 +14,10 @@ RSpec.describe "tutorials/new", type: :view do
       position: 1,
       youtube_url: "MyString"
     ).decorate)
+    assign(:categories_grouped, Category.includes(:category_type).published.order(:position, :name)
+      .group_by(&:category_type).select { |type, _| type.nil? || type.published? }
+      .sort_by { |type, _| type&.name.to_s.downcase })
+    assign(:sectors, Sector.published.order(:name))
   end
 
   it "renders new tutorial form" do
