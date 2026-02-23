@@ -66,6 +66,9 @@ application.register("share-url", ShareUrlController)
 import SortableController from "./sortable_controller"
 application.register("sortable", SortableController)
 
+import TagLinkLoadingController from "./tag_link_loading_controller"
+application.register("tag-link-loading", TagLinkLoadingController)
+
 import TabsController from "./tabs_controller"
 application.register("tabs", TabsController)
 

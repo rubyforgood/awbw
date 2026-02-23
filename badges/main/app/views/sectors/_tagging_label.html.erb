@@ -12,7 +12,7 @@
 
 <% if sector %>
   <%= link_to taggings_path(sector_names_all: sector.name),
-    data: { turbo_frame: "_top", sector_name: sector.name },
+    data: { turbo_frame: "_top", sector_name: sector.name, controller: "tag-link-loading", action: "click->tag-link-loading#showSpinner" },
               class: "inline-flex items-center
                       rounded-md
                       border #{ DomainTheme.border_class_for(:sectors) } hover:#{ DomainTheme.border_class_for(:sectors, intensity: 500) }
@@ -21,9 +21,7 @@
                       px-3 py-1
                       text-sm font-medium
                       transition" do %>
-    <%= sector.name %>
-    <% if display_leader && is_leader %>
-      <span class="ml-1 text-xs text-indigo-600">(Leader)</span>
-    <% end %>
+    <span data-tag-link-loading-target="text"><%= sector.name %><% if display_leader && is_leader %><span class="ml-1 text-xs text-indigo-600">(Leader)</span><% end %></span>
+    <span data-tag-link-loading-target="spinner" class="hidden"><i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i></span>
   <% end %>
 <% end %>
