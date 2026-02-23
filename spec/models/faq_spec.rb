@@ -49,18 +49,18 @@ RSpec.describe Faq do
       expect(results).not_to include(unpublished_faq)
     end
 
-    it "filters by unpublished param when true" do
-      results = Faq.search_by_params({ published: true })
+    it "filters by published param" do
+      results = Faq.search_by_params({ published: "true" })
       expect(results).to contain_exactly(unpublished_faq)
     end
 
-    it "filters by unpublished param when false" do
-      results = Faq.search_by_params({ published: false })
+    it "filters by unpublished param" do
+      results = Faq.search_by_params({ unpublished: "true" })
       expect(results).to contain_exactly(published_faq)
     end
 
-    it "chains query and unpublished filters" do
-      results = Faq.search_by_params({ query: "Admin", published: true })
+    it "chains query and published filters" do
+      results = Faq.search_by_params({ query: "Admin", published: "true" })
       expect(results).to contain_exactly(unpublished_faq)
     end
   end
