@@ -38,10 +38,12 @@ class EventsController < ApplicationController
   def manage
     authorize! @event, to: :manage?
     @event = @event.decorate
-    @event_registrations = @event.event_registrations
+    scope = @event.event_registrations
       .includes(:payments, registrant: [ { affiliations: :organization }, :contact_methods ])
       .joins(:registrant)
-      .order("people.first_name, people.last_name")
+    scope = scope.keyword(params[:keyword]) if params[:keyword].present?
+    scope = scope.attendance_status(params[:attendance_status]) if params[:attendance_status].present?
+    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
 
     respond_to do |format|
       format.html
