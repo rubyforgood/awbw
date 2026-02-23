@@ -4,7 +4,7 @@
   <div class="max-w-6xl mx-auto px-4">
     <%= render "home/home_section_header",
                title: title,
-               subtitle: "Inspiration in motion from our creative community" %>
+               subtitle: "Inspiration in motion" %>
 
     <%= turbo_frame_tag "home_video_gallery", src: home_video_gallery_index_path, loading: :lazy, data: { controller: "prefetch-lazy" } do %>
       <%= render "video_gallery_skeleton" %>
