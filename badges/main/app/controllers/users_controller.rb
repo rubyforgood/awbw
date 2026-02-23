@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy,
-                                   :generate_person, :toggle_lock_status, :confirm_email,
+                                   :toggle_lock_status, :confirm_email,
                                    :send_welcome_instructions, :send_reset_password_instructions ]
 
   def index
@@ -157,24 +157,6 @@ class UsersController < ApplicationController
             locals: { user: @user }
           )
         end
-      end
-    end
-  end
-
-  # ---------------------------------------------------------
-  # PERSON
-  # ---------------------------------------------------------
-  def generate_person
-    authorize! @user
-
-    if @user.person.present?
-      redirect_to @user.person and return
-    else
-      @person = PersonFromUserService.new(user: @user).call
-      if @person.save
-        redirect_to @person, notice: "Person was successfully created for this user." and return
-      else
-        redirect_to @user, alert: "Unable to create person: #{@person.errors.full_messages.join(", ")}" and return
       end
     end
   end
