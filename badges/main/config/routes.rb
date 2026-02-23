@@ -90,6 +90,7 @@ Rails.application.routes.draw do
   end
   resources :events do
     member do
+      get :manage
       patch :preview
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
