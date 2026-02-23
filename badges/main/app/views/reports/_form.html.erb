@@ -5,7 +5,7 @@
   method: :post do |f| %>
   <hr>
  <% unless params[:form_builder_id].to_i == 7 %>
-   <h4>Report Type</h4>
+   <h4>Report type</h4>
   </hr>
   <!-- ######### row 1 ##### -->
   <div class="row">
@@ -18,7 +18,7 @@
       </div>
     </div>
     <div class='col-md-8'>
-      <%= f.label 'Reporting for the Month Of' %>
+      <%= f.label 'Reporting for the month of' %>
       <%= f.date_select :date,
          { discard_day: true, selected: Date.new( @year.to_i, @month.to_i ), use_hidden: true },
            onchange: 'window.location = window.location.toString().split("&month=")[0 + "&month=" +  $("#report_date_2i").val() + "&year=" + $("#report_date_1i").val()' %>

@@ -1,7 +1,7 @@
 <% profile_url = @person ? person_url(@person) : user_url(@user) %>
 
 <p style="margin-bottom: 6px;">
-  New <%= @noticeable.class.model_name.human.titleize %> <%= @type %>
+  New <%= @noticeable.class.model_name.human.downcase %>
 </p>
 
 <h1 style="margin: 0;">

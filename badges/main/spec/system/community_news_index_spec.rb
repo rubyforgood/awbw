@@ -11,7 +11,7 @@ RSpec.describe "Community News Index", type: :system do
 
     visit community_news_index_path
 
-    expect(page).to have_content("Community news")
+    expect(page).to have_content("News")
     expect(page).to have_css("turbo-frame#community_news_results")
     expect(page).to have_css("turbo-frame[src]")
 

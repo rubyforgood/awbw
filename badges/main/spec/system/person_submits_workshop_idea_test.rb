@@ -17,7 +17,7 @@ RSpec.describe "People can submit a workshop idea", type: :system do
       end
 
       it "shows the new workshop form" do
-        expect(page).to have_content("New Workshop idea")
+        expect(page).to have_content("New workshop idea")
       end
 
       it "submits the form when clicking Submit" do

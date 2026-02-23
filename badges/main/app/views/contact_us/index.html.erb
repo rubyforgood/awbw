@@ -2,26 +2,28 @@
       <!-- Header -->
       <header class="space-y-4">
         <h2 class="text-3xl font-bold tracking-tight text-gray-900">
-          Contact Us
+          Contact us
         </h2>
         <p class="text-lg text-gray-600 leading-relaxed max-w-2xl">
-          Questions? Comments? Concerns? We'd love to hear from you.
+          We welcome you to contact us with any questions. We are here to help.
         </p>
-        <div class="text-sm text-amber-700 bg-amber-50 border border-amber-300 rounded-lg p-4">
-          <strong>Please note:</strong> We are a training organization. If you are a survivor and in need of support,
-          call <strong>211</strong>, which connects people with social service organizations.
-        </div>
+        <% unless user_signed_in? %>
+          <div class="text-sm text-amber-700 bg-amber-50 border border-amber-300 rounded-lg p-4">
+            <strong>Please note:</strong> We are a training organization. If you are a survivor and in need of support,
+            call <strong>211</strong>, which connects people with social service organizations.
+          </div>
+        <% end %>
       </header>
       <!-- Contact Details -->
-      <div class="mt-10 grid grid-cols-1 md:grid-cols-5 gap-x-10 gap-y-6 text-gray-800">
-        <div class="space-y-4 md:col-span-3">
+      <div class="mt-10 text-gray-800">
+        <div class="space-y-4">
           <div class="grid grid-cols-2 gap-x-8">
             <div>
               <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
                 Email
               </div>
               <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-                          subject: "AWBW portal: Website question",
+                          subject: "AWBW Portal: Website question",
                           class: "text-blue-600 hover:text-blue-800 font-medium" %>
             </div>
             <div>
@@ -63,17 +65,6 @@
                 <i class="fa-brands fa-youtube text-gray-600 group-hover:text-white text-lg"></i>
               <% end %>
             </div>
-          </div>
-        </div>
-        <div class="md:col-span-2">
-          <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-1">
-            Mailing Address
-          </div>
-          <div class="text-gray-700 leading-relaxed">
-            Attn: Zachery Scott, Executive Director<br>
-            A Window Between Worlds<br>
-            1029 1/2 W 24th Street<br>
-            Los Angeles, CA 90007
           </div>
         </div>
       </div>

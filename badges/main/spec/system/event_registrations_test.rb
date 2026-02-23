@@ -13,7 +13,7 @@ RSpec.describe "Event Registration form", type: :system do
       end
 
       it "shows the new event registration form" do
-        expect(page).to have_content("New Event Registration")
+        expect(page).to have_content("New event registration")
         expect(page).to have_selector("select#event_registration_event_id")
         expect(page).to have_selector("select#event_registration_registrant_id")
       end
@@ -30,7 +30,7 @@ RSpec.describe "Event Registration form", type: :system do
       end
 
       it "shows the edit event registration form" do
-        expect(page).to have_content("Edit Event Registration")
+        expect(page).to have_content("Edit event registration")
         expect(page).to have_selector("select#event_registration_event_id")
         expect(page).to have_selector("select#event_registration_registrant_id")
       end

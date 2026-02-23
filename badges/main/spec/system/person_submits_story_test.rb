@@ -16,7 +16,7 @@ RSpec.describe "People can submit a story", type: :system do
       end
 
       it "shows the New Story form" do
-        expect(page).to have_content("New Story")
+        expect(page).to have_content("New story")
         expect(page).to have_field("Title")
         expect(page).to have_field("Body")
       end

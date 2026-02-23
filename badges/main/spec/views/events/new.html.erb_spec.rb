@@ -16,7 +16,7 @@ RSpec.describe "events/new", type: :view do
   it "renders the new event heading" do
     render
 
-    expect(rendered).to have_selector("h1", text: "New Event")
+    expect(rendered).to have_selector("h1", text: "New event")
   end
 
   it "renders the form partial" do

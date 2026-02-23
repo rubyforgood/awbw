@@ -23,7 +23,7 @@ RSpec.describe "People can submit a workshop log" do
         visit new_workshop_log_path
       end
       it "successfully submits a complete workshop log" do
-        expect(page).to have_content("New Workshop log")
+        expect(page).to have_content("New workshop log")
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
         select @organization.name, from: "workshop_log[organization_id]"
         fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")

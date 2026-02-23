@@ -18,6 +18,6 @@ RSpec.describe "windows_types/index", type: :view do
   it "renders a friendly message when no windows_types exist" do
     assign(:windows_types, paginated([]))
     render
-    expect(rendered).to match(/No Windows types found/)
+    expect(rendered).to match(/No windows types found/)
   end
 end

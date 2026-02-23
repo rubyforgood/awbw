@@ -78,7 +78,7 @@
             <% else %>
               <!-- Empty state -->
               <p class="text-gray-500 text-center py-6">
-                No <%= Sector.model_name.human.pluralize %> found.
+                No <%= Sector.model_name.human.pluralize.downcase %> found.
               </p>
             <% end %>
           </div>

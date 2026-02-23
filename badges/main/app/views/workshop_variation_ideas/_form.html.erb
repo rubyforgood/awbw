@@ -85,7 +85,7 @@
     <% else %>
       <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
         <%= rhino_editor(f, :body,
-                      label: "Share a little bit about your workshop variation, how you modified the workshop to fit your population/setting/facilitation style, and/or anything about how the workshop was received by participants, things you would do differently next time, etc.") %>
+                      label: "Tell us about your workshop variation. Please share how you adapted the workshop to fit your population, setting, and/or facilitation style. We also invite you to share participant feedback, insights on how it was received, and any ideas for changes you might make in the future.") %>
 
         <% if f.object.errors[:rhino_body].present? %>
           <div class="text-danger mt-1 text-sm">Field <%= f.object.errors[:rhino_body].first %></div>

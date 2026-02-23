@@ -8,7 +8,7 @@
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
           </svg>
         </div>
-        <h1 class="ml-4 text-xl font-semibold text-gray-900">Possible Duplicate User</h1>
+        <h1 class="ml-4 text-xl font-semibold text-gray-900">Possible duplicate user</h1>
       </div>
 
       <p class="text-sm text-gray-600 mb-2">
@@ -67,7 +67,7 @@
       <% end %>
 
       <div class="flex gap-3 justify-center">
-        <%= link_to "Go Back", "javascript:history.back()", class: "btn btn-secondary-outline" %>
+        <%= link_to "Go back", "javascript:history.back()", class: "btn btn-secondary-outline" %>
 
         <% unless @blocked %>
           <%= form_with url: users_path, method: :post, data: { turbo: false } do %>
@@ -76,7 +76,7 @@
               <input type="hidden" name="person_id" value="<%= @person_id %>">
             <% end %>
             <input type="hidden" name="skip_duplicate_check" value="1">
-            <button type="submit" class="btn btn-primary">Create Anyway</button>
+            <button type="submit" class="btn btn-primary">Create anyway</button>
           <% end %>
         <% end %>
       </div>
