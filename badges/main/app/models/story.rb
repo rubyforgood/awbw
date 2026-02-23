@@ -64,8 +64,14 @@ class Story < ApplicationRecord
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
     conditions[:query] = params[:query] if params[:query].present?
-    conditions[:published] = params[:published] if params[:published].present?
-    stories = self.search(conditions)
+
+    # Use visibility checkbox filters when present; otherwise pass published to SearchCop
+    if visibility_params_present?(params)
+      stories = apply_visibility_filters(self.search(conditions), params)
+    else
+      conditions[:published] = params[:published] if params[:published].present?
+      stories = self.search(conditions)
+    end
 
     stories = stories.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)
     stories = stories.facilitator_spotlights(params[:facilitator_spotlights]) if params[:facilitator_spotlights].present?

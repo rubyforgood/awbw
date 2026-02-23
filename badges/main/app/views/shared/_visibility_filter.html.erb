@@ -1,0 +1,51 @@
+<% admin = local_assigns[:admin] || false %>
+<% authenticated = local_assigns[:authenticated] || false %>
+<% label_class = local_assigns[:label_class] || "block text-sm font-medium text-gray-500 mb-1" %>
+<% button_text = local_assigns[:button_text] || "Visibility" %>
+<% show_label = local_assigns.fetch(:show_label, true) %>
+<% options = visibility_filter_options(model_class, admin: admin, authenticated: authenticated) %>
+
+<% if options.any? %>
+  <div class="relative">
+    <% if show_label %>
+      <label class="<%= label_class %>">Visibility</label>
+    <% end %>
+    <div
+      data-controller="dropdown"
+      class="inline-block w-full"
+      data-dropdown-target="content"
+    >
+      <button
+        id="visibility-filter-button"
+        type="button"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"visibility-filter-dropdown":"hidden"},{"visibility-filter-arrow":"rotate-180"},{"visibility-filter-button":"rounded-md rounded-t-md"}]'
+        class="
+          relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm
+          rounded-md border border-gray-300 cursor-pointer flex justify-between
+          items-center">
+        <label class="mb-0 font-medium text-gray-700"><%= button_text %></label>
+        <i id="visibility-filter-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+      </button>
+
+      <div
+        id="visibility-filter-dropdown"
+        class="
+          absolute left-0 top-full w-full shadow-sm bg-white border border-t-0
+          border-gray-300 rounded-b-md hidden z-40">
+        <% options.each do |label, param_name, admin_only| %>
+          <div class="flex items-center gap-2 mb-1 px-4 <%= 'admin-only bg-blue-100' if admin_only %>">
+            <%= check_box_tag param_name,
+                true,
+                params[param_name].present?,
+                id: "visibility_#{param_name}",
+                class: "category-checkbox" %>
+            <%= label_tag "visibility_#{param_name}",
+                label,
+                class: "text-sm text-gray-700" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
