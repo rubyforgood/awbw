@@ -1,0 +1,22 @@
+<%= turbo_frame_tag "tutorials_results" do %>
+  <div class="bg-white rounded-lg shadow-md p-6 mt-4">
+    <div class="overflow-x-auto">
+      <div class="space-y-16">
+        <% if @tutorials.any? %>
+          <% @tutorials.each_with_index do |tutorial, idx| %>
+            <%= render "tutorial", tutorial: tutorial, show_divider: idx > 0 %>
+          <% end %>
+
+          <!-- Pagination -->
+          <div class="pagination flex justify-center mt-12">
+            <%= tailwind_paginate @tutorials %>
+          </div>
+        <% else %>
+          <div class="text-gray-500 italic">
+            No <%= Tutorial.model_name.human(count: 2).downcase %> found matching your filters.
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

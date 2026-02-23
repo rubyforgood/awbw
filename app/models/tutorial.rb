@@ -1,9 +1,13 @@
 class Tutorial < ApplicationRecord
-  include Publishable, TagFilterable, Trendable, RichTextSearchable
+  include Featureable, Publishable, TagFilterable, Trendable, RichTextSearchable
 
   has_rich_text :rhino_body
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
+  has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
+  has_many :categories, through: :categorizable_items
+  has_many :sectors, through: :sectorable_items
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
@@ -30,13 +34,36 @@ class Tutorial < ApplicationRecord
   scope :body, ->(body) { where("body like ?", "%#{ body }%") }
   scope :title, ->(title) { where("title like ?", "%#{ title }%") }
   scope :tutorial_name, ->(tutorial_name) { title(tutorial_name) }
+  scope :with_sector_ids, ->(sector_hash) {
+    ids = sector_hash.values.reject(&:blank?).map(&:to_i)
+    return all if ids.empty?
+    joins(:sectorable_items)
+      .where(sectorable_items: { sectorable_type: "Tutorial", sector_id: ids })
+      .distinct
+  }
+
+  scope :with_category_ids, ->(category_hash) {
+    ids = category_hash.values.reject(&:blank?).map(&:to_i)
+    return all if ids.empty?
+    joins(:categorizable_items)
+      .where(categorizable_items: { categorizable_type: "Tutorial", category_id: ids })
+      .distinct
+  }
+
+  scope :title_or_body, ->(term) {
+    pattern = "%#{term}%"
+    left_joins(:rich_text_rhino_body)
+      .where("tutorials.title LIKE :q OR tutorials.body LIKE :q OR action_text_rich_texts.body LIKE :q", q: pattern)
+  }
 
   def self.search_by_params(params)
     resources = is_a?(ActiveRecord::Relation) ? self : all
-    resources = resources.search(params[:search]) if params[:search].present?
+    resources = resources.title_or_body(params[:search]) if params[:search].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.body(params[:body]) if params[:body].present?
     resources = resources.published(params[:published]) if params[:published].present?
+    resources = resources.with_sector_ids(params[:sectors]) if params[:sectors].present?
+    resources = resources.with_category_ids(params[:categories]) if params[:categories].present?
     resources = resources.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     resources = resources.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     resources
