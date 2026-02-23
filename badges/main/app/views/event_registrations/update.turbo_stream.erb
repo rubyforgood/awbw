@@ -1,0 +1,3 @@
+<%= turbo_stream.replace dom_id(@event_registration, :attendance_status),
+      partial: "event_registrations/attendance_status_badge",
+      locals: { registration: @event_registration } %>

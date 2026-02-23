@@ -83,10 +83,18 @@ class EventRegistrationsController < ApplicationController
     @event_registration.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
     if @event_registration.save
-      redirect_to @event_registration, notice: "Registration was successfully updated.", status: :see_other
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to @event_registration, notice: "Registration was successfully updated.", status: :see_other }
+      end
     else
-      set_form_variables
-      render :edit, status: :unprocessable_content
+      respond_to do |format|
+        format.turbo_stream { head :unprocessable_content }
+        format.html do
+          set_form_variables
+          render :edit, status: :unprocessable_content
+        end
+      end
     end
   end
 
@@ -119,7 +127,7 @@ class EventRegistrationsController < ApplicationController
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
-      :event_id, :registrant_id,
+      :event_id, :registrant_id, :status,
       comments_attributes: [ :id, :body, :_destroy ]
     )
   end
