@@ -7,11 +7,11 @@ RSpec.describe 'People can bookmark workshops' do
         user = create(:user)
         create(:person, user: user)
         adult_window = create(:windows_type, :adult)
-        create(:workshop, title: 'The best workshop in the world', windows_type: adult_window, featured: true)
-        create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, featured: true)
-        create(:workshop, title: 'oh hello!', windows_type: adult_window, featured: true)
-        create(:workshop, title: 'Advanced Leadership Skills', windows_type: adult_window, featured: true)
-        create(:workshop, title: 'Mindfulness Meditation', windows_type: adult_window, featured: true)
+        create(:workshop, :published, title: 'The best workshop in the world', windows_type: adult_window, featured: true)
+        create(:workshop, :published, title: 'The best workshop on mars', windows_type: adult_window, featured: true)
+        create(:workshop, :published, title: 'oh hello!', windows_type: adult_window, featured: true)
+        create(:workshop, :published, title: 'Advanced Leadership Skills', windows_type: adult_window, featured: true)
+        create(:workshop, :published, title: 'Mindfulness Meditation', windows_type: adult_window, featured: true)
 
 
         sign_in user

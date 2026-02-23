@@ -41,6 +41,57 @@ RSpec.describe "Workshops", type: :system do
         expect(page).to have_content(workshop_mars.title)
         expect(page).not_to have_content(workshop_hello.title)
       end
+
+      it 'User clears checkbox and text filters and sees all results again' do
+        user = create(:user)
+        sign_in(user)
+
+        sector = create(:sector, :published, name: "Health")
+        category_type = create(:category_type, :published, name: "Themes")
+        category = create(:category, :published, name: "Healing", category_type: category_type)
+        adult_window = create(:windows_type, :adult)
+        children_window = create(:windows_type, :children)
+
+        workshop_adult = create(:workshop, :published, title: 'Adult Healing Workshop',
+                                windows_type: adult_window, sectors: [ sector ], categories: [ category ],
+                                rhino_objective: "test")
+        workshop_child = create(:workshop, :published, title: 'Children Fun Workshop',
+                                windows_type: children_window, rhino_objective: "test")
+
+        visit workshops_path
+
+        expect(page).to have_content(workshop_adult.title)
+        expect(page).to have_content(workshop_child.title)
+
+        # Filter by text
+        fill_in 'title', with: 'Adult'
+        expect(page).to have_content(workshop_adult.title)
+        expect(page).not_to have_content(workshop_child.title)
+
+        # Also check a sector checkbox
+        click_on "Sector"
+        check("sectors_#{sector.id}")
+        expect(page).to have_content(workshop_adult.title)
+
+        # Also check a windows type checkbox
+        click_on "Windows Audience"
+        check("windows_types_#{adult_window.id}")
+        expect(page).to have_content(workshop_adult.title)
+
+        # Clear all filters
+        click_link "Clear filters"
+
+        # Both workshops should reappear
+        expect(page).to have_content(workshop_adult.title)
+        expect(page).to have_content(workshop_child.title)
+
+        # Text field should be empty
+        expect(find_field('title').value).to eq('')
+
+        # Checkboxes should be unchecked
+        expect(find("#sectors_#{sector.id}", visible: :all)).not_to be_checked
+        expect(find("#windows_types_#{adult_window.id}", visible: :all)).not_to be_checked
+      end
     end
   end
 

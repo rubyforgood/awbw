@@ -69,7 +69,6 @@ export default class extends Controller {
       }
       input.checked = false;
     });
-    // this.element.reset();
     this.element.reset();
     this.submitForm();
   }
