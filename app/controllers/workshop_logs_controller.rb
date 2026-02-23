@@ -102,15 +102,19 @@ class WorkshopLogsController < ApplicationController
   end
 
   def set_index_variables # needs to not be private
-    scoped_logs = authorized_scope(WorkshopLog.all)
-    @month_year_options = scoped_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
-                                     .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
+    cache_key_prefix = "workshop_logs/index_dropdowns/#{current_user&.id}"
+    @month_year_options = Rails.cache.fetch("#{cache_key_prefix}/month_year", expires_in: 5.minutes) do
+      scoped_logs = authorized_scope(WorkshopLog.all)
+      scoped_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
+                 .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
            MAX(COALESCE(date, created_at)) AS max_dt")
-                                     .order("max_dt DESC")
-                                     .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
-    @year_options = scoped_logs.pluck(
-      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
-    ).sort.reverse
+                 .order("max_dt DESC")
+                 .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
+    end
+    @year_options = Rails.cache.fetch("#{cache_key_prefix}/year", expires_in: 5.minutes) do
+      scoped_logs = authorized_scope(WorkshopLog.all)
+      scoped_logs.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")).sort.reverse
+    end
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
     @users = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
