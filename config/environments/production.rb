@@ -103,7 +103,7 @@ Rails.application.configure do
   }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
+  config.asset_host = ENV["ASSET_HOST"] if ENV["ASSET_HOST"].present?
   config.action_mailer.asset_host = "https://#{app_host}"
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
