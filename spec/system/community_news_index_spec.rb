@@ -86,6 +86,64 @@ RSpec.describe "Community News Index", type: :system do
     expect(rows.index { |t| t.include?("Banana News") }).to be < rows.index { |t| t.include?("Apple News") }
   end
 
+  scenario "Admin clears text filters and sees all results again" do
+    create(:community_news, :published, title: "Banana News", rhino_body: "content")
+    create(:community_news, :published, title: "Apple News", rhino_body: "content")
+
+    sign_in admin
+    visit community_news_index_path
+
+    # Wait for turbo frame to load both results
+    expect(page).to have_content("Banana News")
+    expect(page).to have_content("Apple News")
+
+    # Filter by title to narrow results
+    fill_in "title", with: "Banana"
+
+    expect(page).to have_content("Banana News")
+    expect(page).not_to have_content("Apple News")
+
+    # Click "Clear filters" to reset
+    click_link "Clear filters"
+
+    # Both results should reappear
+    expect(page).to have_content("Banana News")
+    expect(page).to have_content("Apple News")
+
+    # Text field should be empty
+    expect(find_field("title").value).to eq("")
+  end
+
+  scenario "Admin clears multiple text filters and sees all results again" do
+    create(:community_news, :published, title: "Banana News", rhino_body: "tropical fruit")
+    create(:community_news, :published, title: "Apple News", rhino_body: "temperate fruit")
+
+    sign_in admin
+    visit community_news_index_path
+
+    # Wait for turbo frame to load both results
+    expect(page).to have_content("Banana News")
+    expect(page).to have_content("Apple News")
+
+    # Filter by title and keyword to narrow results
+    fill_in "title", with: "Banana"
+    fill_in "query", with: "tropical"
+
+    expect(page).to have_content("Banana News")
+    expect(page).not_to have_content("Apple News")
+
+    # Click "Clear filters" to reset
+    click_link "Clear filters"
+
+    # Both results should reappear
+    expect(page).to have_content("Banana News")
+    expect(page).to have_content("Apple News")
+
+    # Both text fields should be empty
+    expect(find_field("title").value).to eq("")
+    expect(find_field("query").value).to eq("")
+  end
+
   scenario "Admin sees message when no community news exist" do
     sign_in admin
 

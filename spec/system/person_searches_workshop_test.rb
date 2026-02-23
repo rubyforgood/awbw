@@ -8,24 +8,18 @@ RSpec.describe 'People can search for a workshop' do
         create(:person, user: user)
 
         adult_window = create(:windows_type, :adult)
-        workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window)
-        workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: adult_window)
-        workshop_hello = create(:workshop, title: 'oh hello!', windows_type: adult_window)
+        workshop_world = create(:workshop, :published, title: 'The best workshop in the world', windows_type: adult_window)
+        workshop_mars = create(:workshop, :published, title: 'The best workshop on mars', windows_type: adult_window)
+        workshop_hello = create(:workshop, :published, title: 'oh hello!', windows_type: adult_window)
 
         sign_in user
         visit '/'
       end
 
-      it "navigate to workshops from nav" do
-        expect(page).to have_content("Curriculum")
-        click_button('facilitate_button')
-
-        within '#curriculum_menu' do
-          click_link('Workshops')
-        end
+      it "views all workshops on the index page" do
+        visit workshops_path
         expect(page).to have_current_path(workshops_path)
         expect(page).to have_content('Workshops')
-        expect(page).to have_content('KEYWORD SEARCH FILTERS')
 
         expect(page).to have_content('The best workshop in the world')
         expect(page).to have_content('The best workshop on mars')

@@ -7,8 +7,8 @@ RSpec.describe "People can view a workshop" do
         user = create(:user)
         create(:person, user: user)
         adult_window = create(:windows_type, :adult)
-        @workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window)
-        @workshop_mars = create(:workshop, title: 'The best workshop on mars', windows_type: adult_window, featured: true, objective: 'take everyone to mars', materials: 'rocket', setup: 'make a rocket')
+        @workshop_world = create(:workshop, :published, title: 'The best workshop in the world', windows_type: adult_window)
+        @workshop_mars = create(:workshop, :published, title: 'The best workshop on mars', windows_type: adult_window, featured: true, rhino_objective: 'take everyone to mars', rhino_materials: 'rocket', rhino_setup: 'make a rocket')
         sign_in user
       end
 

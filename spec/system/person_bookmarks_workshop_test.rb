@@ -7,7 +7,7 @@ RSpec.describe 'People can bookmark workshops' do
         user = create(:user)
         create(:person, user: user)
         adult_window = create(:windows_type, :adult)
-        @workshop_world = create(:workshop, title: 'The best workshop in the world', windows_type: adult_window)
+        @workshop_world = create(:workshop, :published, title: 'The best workshop in the world', windows_type: adult_window)
 
         sign_in user
         visit '/workshops'
