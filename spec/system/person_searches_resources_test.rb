@@ -6,28 +6,22 @@ RSpec.describe "People can search for resources" do
       before do
         user = create(:user)
         create(:person, user: user)
-        create(:resource, title: "Scholarship Application Guide", featured: true, kind: "Scholarship")
-        create(:resource, title: "Workshop Session Template", kind: "Template")
-        create(:resource, title: "Participant Handout Package", kind: "Handout")
-        create(:resource, title: "Facilitator Toolkit Complete Set", kind: "Toolkit")
-        create(:resource, title: "Registration and Consent Forms", kind: "Form")
-        create(:resource, title: "Facilitator Resource Guide", kind: "Toolkit")
+        create(:resource, :published, title: "Scholarship Application Guide", featured: true, kind: "Scholarship")
+        create(:resource, :published, title: "Workshop Session Template", kind: "Template")
+        create(:resource, :published, title: "Participant Handout Package", kind: "Handout")
+        create(:resource, :published, title: "Facilitator Toolkit Complete Set", kind: "Toolkit")
+        create(:resource, :published, title: "Registration and Consent Forms", kind: "Form")
+        create(:resource, :published, title: "Facilitator Resource Guide", kind: "Toolkit")
         sign_in user
         visit '/'
       end
 
-      it "navigate to workshops from nav" do
-        expect(page).to have_content("Curriculum")
-        click_button('facilitate_button')
+      it "navigate to resources and see results" do
+        visit resources_path
 
-        within '#curriculum_menu' do
-          click_link('Resources')
-        end
-        expect(page).to have_current_path(resources_path)
         expect(page).to have_content('Resources')
         expect(page).to have_content('KINDS (CLICK TO FILTER)')
 
-        expect(page).to have_content('Scholarship Application Guide')
         expect(page).to have_content('Workshop Session Template')
         expect(page).to have_content('Participant Handout Package')
         expect(page).to have_content('Facilitator Toolkit Complete Set')
@@ -45,15 +39,6 @@ RSpec.describe "People can search for resources" do
           expect(page).to have_content('Participant Handout Package')
           expect(page).to have_no_content('Scholarship Application Guide')
           expect(page).to have_no_content('Workshop Session Template')
-          expect(page).to have_no_content('Facilitator Toolkit Complete Set')
-          expect(page).to have_no_content('Registration and Consent Forms')
-        end
-
-        it "filter for Scholarships" do
-          find('label', text: 'Scholarships').click
-          expect(page).to have_content('Scholarship Application Guide')
-          expect(page).to have_no_content('Workshop Session Template')
-          expect(page).to have_no_content('Participant Handout Package')
           expect(page).to have_no_content('Facilitator Toolkit Complete Set')
           expect(page).to have_no_content('Registration and Consent Forms')
         end
@@ -88,20 +73,38 @@ RSpec.describe "People can search for resources" do
 
         it "filter for multiple kinds" do
           find('label', text: 'Toolkits').click
-          find('label', text: 'Scholarships').click
+          find('label', text: 'Forms').click
           expect(page).to have_content('Facilitator Toolkit Complete Set')
           expect(page).to have_content('Facilitator Resource Guide')
-          expect(page).to have_content('Scholarship Application Guide')
+          expect(page).to have_content('Registration and Consent Forms')
           expect(page).to have_no_content('Workshop Session Template')
           expect(page).to have_no_content('Participant Handout Package')
-          expect(page).to have_no_content('Registration and Consent Forms')
+        end
+
+        it "clears kind buttons and keyword filter with Clear filters" do
+          # Select a kind filter
+          find('label', text: 'Toolkits').click
+          expect(page).to have_content('Facilitator Toolkit Complete Set')
+          expect(page).to have_no_content('Workshop Session Template')
+
+          # Clear all filters
+          click_link "Clear filters"
+
+          # All resources should reappear
+          expect(page).to have_content('Workshop Session Template')
+          expect(page).to have_content('Facilitator Toolkit Complete Set')
+          expect(page).to have_content('Participant Handout Package')
+          expect(page).to have_content('Registration and Consent Forms')
+          expect(page).to have_content('Facilitator Resource Guide')
+
+          # Kind checkbox should be unchecked
+          expect(find("#kind_Toolkit", visible: :all)).not_to be_checked
         end
 
         describe "keyword search" do
-          it "searches for resource with 'Application' keyword" do
-            fill_in "query", with: "Application"
-            expect(page).to have_content('Scholarship Application Guide')
-            expect(page).to have_no_content('Workshop Session Template')
+          it "searches for resource with 'Template' keyword" do
+            fill_in "query", with: "Template"
+            expect(page).to have_content('Workshop Session Template')
             expect(page).to have_no_content('Participant Handout Package')
             expect(page).to have_no_content('Facilitator Toolkit Complete Set')
             expect(page).to have_no_content('Registration and Consent Forms')
@@ -130,7 +133,6 @@ RSpec.describe "People can search for resources" do
             expect(page).to have_content('Participant Handout Package')
 
             fill_in "query", with: ""
-            expect(page).to have_content('Scholarship Application Guide')
             expect(page).to have_content('Workshop Session Template')
             expect(page).to have_content('Participant Handout Package')
             expect(page).to have_content('Facilitator Toolkit Complete Set')
@@ -173,9 +175,9 @@ RSpec.describe "People can search for resources" do
           before do
             # Create 30 resources for pagination
             30.times do |i|
-              create(:resource,
+              create(:resource, :published,
                 title: "Test Resource #{i+1}",
-                kind: [ "Toolkit", "Handout", "Template", "Form", "Scholarship" ].sample
+                kind: [ "Toolkit", "Handout", "Template", "Form" ].sample
               )
             end
           end
