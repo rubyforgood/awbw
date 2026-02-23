@@ -1,6 +1,11 @@
 module Publishable
   extend ActiveSupport::Concern
 
+  VISIBILITY_PARAMS = %i[
+    published unpublished featured not_featured
+    publicly_visible publicly_featured not_publicly_featured
+  ].freeze
+
   included do
     scope :published, ->(flag = nil) do
       value = flag.nil? || flag == "" ? true : ActiveModel::Type::Boolean.new.cast(flag)
@@ -10,5 +15,30 @@ module Publishable
     scope :publicly_visible, -> {
       # Only query DB when this scope is called
       column_names.include?("publicly_visible") ? published.where(publicly_visible: true) : published }
+  end
+
+  class_methods do
+    # Chains checked visibility checkbox params with AND logic.
+    # Returns the original scope when no visibility params are checked.
+    def apply_visibility_filters(scope, params)
+      scope = scope.published                                        if visibility_param_checked?(params, :published)
+      scope = scope.published(false)                                 if visibility_param_checked?(params, :unpublished)
+      scope = scope.published.where(featured: true)                  if visibility_param_checked?(params, :featured) && column_names.include?("featured")
+      scope = scope.where(featured: false)                           if visibility_param_checked?(params, :not_featured) && column_names.include?("featured")
+      scope = scope.publicly_visible                                 if visibility_param_checked?(params, :publicly_visible) && column_names.include?("publicly_visible")
+      scope = scope.publicly_visible.where(publicly_featured: true)  if visibility_param_checked?(params, :publicly_featured) && column_names.include?("publicly_featured")
+      scope = scope.publicly_visible.where(publicly_featured: false) if visibility_param_checked?(params, :not_publicly_featured) && column_names.include?("publicly_featured")
+      scope
+    end
+
+    def visibility_params_present?(params)
+      VISIBILITY_PARAMS.any? { |key| visibility_param_checked?(params, key) }
+    end
+
+    private
+
+    def visibility_param_checked?(params, key)
+      params.key?(key) && ActiveModel::Type::Boolean.new.cast(params[key])
+    end
   end
 end

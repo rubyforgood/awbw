@@ -39,5 +39,9 @@
              items: @sectors.reject { |sector| sector.name == "Other" },
              param_name: :sectors %>
 
-  <%= render "inactive_fields" if allowed_to?(:manage?, Workshop) %>
+  <%= render "shared/visibility_filter",
+             model_class: Workshop,
+             admin: allowed_to?(:manage?, Workshop),
+             authenticated: user_signed_in?,
+             show_label: false %>
 </div>

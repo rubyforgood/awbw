@@ -43,7 +43,7 @@ RSpec.describe 'People can filter workshops using metadata' do
         expect(page).to have_content('The best workshop on mars')
         expect(page).to have_content('Windows Type')
         expect(page).to have_content('Sector')
-        expect(page).not_to have_content('Publish status')
+        expect(page).to have_content('Visibility')
       end
 
       it "filters by Adult window type" do
@@ -200,15 +200,15 @@ RSpec.describe 'People can filter workshops using metadata' do
       end
 
       it "shows publish status filter for admin" do
-        expect(page).to have_content('Publish status')
+        expect(page).to have_content('Visibility')
         expect(page).to have_content('Published Workshop')
         expect(page).to have_content('Another Published Workshop')
         expect(page).to have_content('Hidden Workshop')
       end
 
       it "filters to show only unpublished workshops" do
-        find("#published-button").click
-        check "published_false"
+        find("#visibility-filter-button").click
+        check "visibility_unpublished"
 
         expect(page).to have_content('Hidden Workshop')
         expect(page).not_to have_content('Published Workshop')
@@ -216,8 +216,8 @@ RSpec.describe 'People can filter workshops using metadata' do
       end
 
       it "filters to show only published workshops" do
-        find("#published-button").click
-        check "published_true"
+        find("#visibility-filter-button").click
+        check "visibility_published"
 
         expect(page).to have_content('Published Workshop')
         expect(page).to have_content('Another Published Workshop')
@@ -225,8 +225,8 @@ RSpec.describe 'People can filter workshops using metadata' do
       end
 
       it "combines publish status with sector filter" do
-        find("#published-button").click
-        check "published_false"
+        find("#visibility-filter-button").click
+        check "visibility_unpublished"
         find("#sectors-button").click
         check "Lgbtqia"
 

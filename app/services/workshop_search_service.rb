@@ -63,20 +63,10 @@ class WorkshopSearchService
   end
 
   def filter_by_published_status
-    if admin
-      pub   = params.key?(:published)   ? ActiveModel::Type::Boolean.new.cast(params[:published])   : nil
-      unpub = params.key?(:unpublished) ? ActiveModel::Type::Boolean.new.cast(params[:unpublished]) : nil
-
-      case [ pub, unpub ]
-      when [ true, nil ], [ true, false ]
-        @workshops = @workshops.published(true)     # ONLY published
-      when [ nil, true ], [ false, true ]
-        @workshops = @workshops.published(false)    # ONLY unpublished
-      when [ false, false ]
-        @workshops = @workshops.none                # NONE
-      else # incl [ nil, nil ] && [ true, true ]
-        @workshops                                  # ALL
-      end
+    if Workshop.visibility_params_present?(params)
+      @workshops = Workshop.apply_visibility_filters(@workshops, params)
+    elsif admin
+      @workshops # ALL (no checkboxes checked, admin sees everything)
     elsif user
       @workshops = @workshops.published
     else
