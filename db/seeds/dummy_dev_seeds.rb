@@ -11,9 +11,11 @@ puts "Creating CommunityNews…"
   "New Resources Added to the Library",
   "How Creativity Builds Connection"
 ].each do |title|
+  body_content = Faker::Lorem.paragraph(sentence_count: 6)
   CommunityNews.where(title: title)
                .first_or_create!(
-                  body: Faker::Lorem.paragraph(sentence_count: 6),
+                  body: body_content,
+                  rhino_body: "<p>#{body_content}</p>",
                   featured: [ true, false ].sample,
                   published: [ true, true, true, false ].sample,
                   author_id: User.all.sample.id,
@@ -28,8 +30,10 @@ end
 
 puts "Creating new StoryIdeas…"
 10.times do |i|
+  body_content = Faker::Lorem.paragraph(sentence_count: 10)
   StoryIdea.create!(
-    body: Faker::Lorem.paragraph(sentence_count: 10),
+    body: body_content,
+    rhino_body: "<p>#{body_content}</p>",
     publish_preferences: StoryIdea::PUBLISH_PREFERENCES.sample,
     permission_given: true,
     external_workshop_title: [ nil, nil, "Community Art Night", "Healing Arts Circle" ].sample,
@@ -58,9 +62,11 @@ puts "Creating Stories…"
   "Leadership in Action: A Facilitator’s Story",
   "When Art Opens a Door"
 ].each do |title|
+  body_content = Faker::Lorem.paragraph(sentence_count: 10)
   Story.where(title: title)
        .first_or_create!(
-          body: Faker::Lorem.paragraph(sentence_count: 10),
+          body: body_content,
+          rhino_body: "<p>#{body_content}</p>",
           featured: [ true, false, false, false, false, false ].sample,
           published: [ true, true, true, false ].sample,
           permission_given: true,
@@ -120,7 +126,7 @@ puts "Creating new Resources…"
 10.times do
   kind = Resource::PUBLISHED_KINDS.sample
   Resource.where(title: Faker::Book.title).first_or_create!(
-    text: Faker::Lorem.paragraph(sentence_count: 8),
+    body: Faker::Lorem.paragraph(sentence_count: 8),
     author: [ Faker::Name.name, nil ].sample,
     agency: [ Faker::Company.name, nil ].sample,
     kind: kind,
@@ -129,7 +135,7 @@ puts "Creating new Resources…"
     inactive: [ true, false, false ].sample, # mostly false = active
     legacy: [ true, false, false ].sample,
     legacy_id: rand(1000..9999),
-    ordering: rand(1..50),
+    position: rand(1..50),
     windows_type_id: WindowsType.all.sample&.id,
     workshop_id: Workshop.all.sample&.id,
     user_id: User.all.sample&.id,
@@ -221,7 +227,7 @@ faqs.each do |faq_data|
     faq.question = faq_data[:question]
     faq.answer   = faq_data[:answer]
     faq.published = faq_data[:published]
-    faq.ordering = faq_data[:ordering]
+    faq.position = faq_data[:ordering]
     faq.save!
   end
 end
