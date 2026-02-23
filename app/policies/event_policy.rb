@@ -33,6 +33,7 @@ class EventPolicy < ApplicationPolicy
 
   def owner?
     return false unless authenticated?
+    return false unless record.is_a?(Event)
     record.created_by == user
   end
 
