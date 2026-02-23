@@ -18,11 +18,13 @@ puts "Creating CommunityNews…"
                   rhino_body: "<p>#{body_content}</p>",
                   featured: [ true, false ].sample,
                   published: [ true, true, true, false ].sample,
+                  publicly_visible: [ true, true, false ].sample,
+                  publicly_featured: [ true, false, false, false ].sample,
                   author_id: User.all.sample.id,
                   created_by_id: User.first.id,
                   updated_by_id: User.first.id,
-                  organization_id: Organization.all.sample.id,
-                  windows_type_id: WindowsType.all.sample.id,
+                  organization_id: Organization.all.sample&.id,
+                  windows_type_id: WindowsType.all.sample&.id,
                   created_at: Time.current - rand(1..60).days,
                   updated_at: Time.current - rand(1..30).days
                 )
@@ -37,9 +39,9 @@ puts "Creating new StoryIdeas…"
     publish_preferences: StoryIdea::PUBLISH_PREFERENCES.sample,
     permission_given: true,
     external_workshop_title: [ nil, nil, "Community Art Night", "Healing Arts Circle" ].sample,
-    organization_id: Organization.all.sample.id,
+    organization_id: Organization.all.sample&.id,
     workshop_id: Workshop.all.sample&.id,
-    windows_type_id: WindowsType.all.sample.id,
+    windows_type_id: WindowsType.all.sample&.id,
     youtube_url: [ nil, nil, "https://youtube.com/watch?v=dQw4w9WgXcQ",
                   "https://youtube.com/watch?v=abcd1234xyz" ].sample,
     created_by_id: User.first.id,
@@ -69,12 +71,14 @@ puts "Creating Stories…"
           rhino_body: "<p>#{body_content}</p>",
           featured: [ true, false, false, false, false, false ].sample,
           published: [ true, true, true, false ].sample,
+          publicly_visible: [ true, true, false ].sample,
+          publicly_featured: [ true, false, false, false ].sample,
           permission_given: true,
           external_workshop_title: [ nil, nil, nil, nil, nil, nil, "Community Art Night", "Healing Arts Circle" ].sample,
-          organization_id: Organization.all.sample.id,
+          organization_id: Organization.all.sample&.id,
           workshop_id: [ nil, Workshop.all.sample&.id ].sample,
           story_idea_id: [ nil, nil, nil, nil, nil, nil, nil, nil, StoryIdea.all.sample&.id ].sample,
-          windows_type_id: WindowsType.all.sample.id,
+          windows_type_id: WindowsType.all.sample&.id,
           spotlighted_facilitator_id: [ nil, nil, nil, nil, Person.all.sample&.id ].sample,
           youtube_url: [
             nil,
@@ -113,6 +117,8 @@ puts "Creating Events…"
     description: Faker::Lorem.paragraph(sentence_count: 6),
     featured: [ true, false ].sample,
     published: [ false, false, true ].sample,
+    publicly_visible: [ true, true, false ].sample,
+    publicly_featured: [ true, false, false, false ].sample,
     registration_close_date: registration_close,
     created_by_id: User.first.id,
     created_at: Time.current - rand(10..90).days,
@@ -133,6 +139,7 @@ puts "Creating new Resources…"
     url: [ "https://example.com/resource/#{SecureRandom.hex(4)}", nil ].sample,
     featured: [ true, false ].sample,
     inactive: [ true, false, false ].sample, # mostly false = active
+    publicly_visible: [ true, true, false ].sample,
     legacy: [ true, false, false ].sample,
     legacy_id: rand(1000..9999),
     position: rand(1..50),
@@ -150,13 +157,13 @@ faqs = [
     id: 1, question: "Why art?",
     answer: %(
 Art workshops provide a unique way to assist survivors of domestic violence in healing from the trauma of abuse, finding their voice, and building the courage to make healthy decisions for their future. For victims of domestic violence, art workshops provide a special "window" of support to share the complexity of their emotions, discover that they are not alone, and are not to blame for the violence. The art also helps survivors build healthy ways to handle anger and communicate non-violently.
-    ), published: true, ordering: 200
+    ), published: true, publicly_visible: true, ordering: 200
   },
   {
     id: 2, question: "What is the difference between the Windows Program and art therapy?",
     answer: %(
 The AWBW workshops offer a process of self-expression, self-exploration, and self-interpretation. Unlike art therapy, there is no therapist or other authority responsible for interpretation or diagnosis. Each participant is in charge of her own creative exploration. For women and children who have been living under the control of another human being for so long, a simple art experience can provide a powerful opportunity to notice for the first time that they have the freedom to decide what they want to create. By placing the authority in the hands of each participant, the Windows workshops create an environment where survivors effectively support each other and take leadership in finding their own solutions.
-    ), published: true, ordering: 190
+    ), published: true, publicly_visible: true, ordering: 190
   },
   {
     id: 4, question: "I work with survivors of domestic violence. How can I bring the AWBW Program to my organization?",
@@ -174,7 +181,7 @@ We welcome you to implement the <a href="/awbw/programs-adult_windows.phjp">Adul
     id: 7, question: "I am a survivor. How can I participate in the art program?",
     answer: %(
 You are welcome to participate in our <a href="/awbw/programs-sac.php">Survivor's Art Circle</a>, which provides support and encouragement for any domestic violence survivor wishing to use art as a healing tool. If you are in the Los Angeles area, you can attend monthly hands-on workshops with other survivors. If you are not in Los Angeles, you are welcome to participate in the online community of support. As part of the Survivor's Art Circle you will receive a monthly newsflash, and will be welcome to participate in group project ideas you can complete at home. You will also be welcome to participate in Survivor's Art Circle exhibition opportunities.
-    ), published: true, ordering: 140
+    ), published: true, publicly_visible: true, ordering: 140
   },
   {
     id: 12, question: "How do I get a scholarship for Leadership Training?",
@@ -227,6 +234,7 @@ faqs.each do |faq_data|
     faq.question = faq_data[:question]
     faq.answer   = faq_data[:answer]
     faq.published = faq_data[:published]
+    faq.publicly_visible = faq_data[:publicly_visible] || false
     faq.position = faq_data[:ordering]
     faq.save!
   end

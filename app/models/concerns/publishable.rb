@@ -18,21 +18,17 @@ module Publishable
   end
 
   class_methods do
-    # Combines checked visibility checkbox params with OR logic.
+    # Chains checked visibility checkbox params with AND logic.
     # Returns the original scope when no visibility params are checked.
     def apply_visibility_filters(scope, params)
-      conditions = []
-      conditions << scope.published                                        if visibility_param_checked?(params, :published)
-      conditions << scope.published(false)                                 if visibility_param_checked?(params, :unpublished)
-      conditions << scope.published.where(featured: true)                  if visibility_param_checked?(params, :featured) && column_names.include?("featured")
-      conditions << scope.where(featured: false)                           if visibility_param_checked?(params, :not_featured) && column_names.include?("featured")
-      conditions << scope.publicly_visible                                 if visibility_param_checked?(params, :publicly_visible) && column_names.include?("publicly_visible")
-      conditions << scope.publicly_visible.where(publicly_featured: true)  if visibility_param_checked?(params, :publicly_featured) && column_names.include?("publicly_featured")
-      conditions << scope.publicly_visible.where(publicly_featured: false) if visibility_param_checked?(params, :not_publicly_featured) && column_names.include?("publicly_featured")
-
-      return scope if conditions.empty?
-
-      conditions.reduce { |combined, cond| combined.or(cond) }
+      scope = scope.published                                        if visibility_param_checked?(params, :published)
+      scope = scope.published(false)                                 if visibility_param_checked?(params, :unpublished)
+      scope = scope.published.where(featured: true)                  if visibility_param_checked?(params, :featured) && column_names.include?("featured")
+      scope = scope.where(featured: false)                           if visibility_param_checked?(params, :not_featured) && column_names.include?("featured")
+      scope = scope.publicly_visible                                 if visibility_param_checked?(params, :publicly_visible) && column_names.include?("publicly_visible")
+      scope = scope.publicly_visible.where(publicly_featured: true)  if visibility_param_checked?(params, :publicly_featured) && column_names.include?("publicly_featured")
+      scope = scope.publicly_visible.where(publicly_featured: false) if visibility_param_checked?(params, :not_publicly_featured) && column_names.include?("publicly_featured")
+      scope
     end
 
     def visibility_params_present?(params)

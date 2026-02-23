@@ -4,8 +4,8 @@ namespace :db do
     task seed: :environment do |task, arguments|
       [
         :import_workshops,
-        :generate_dev_seeds,
         :import_organizations,
+        :generate_dev_seeds,
         :import_quotes,
         :import_workshop_quotes,
         :import_workshop_variations
@@ -79,9 +79,8 @@ def create_organization(organization)
     description: organization["txt_description"],
     notes: organization["txt_notes"],
     filemaker_code: organization["str_filemakercode"],
-    inactive: organization["bln_inactive"],
     legacy: true,
-    organization_status_id: organization["statusid"]
+    organization_status_id: organization["num_statusid"]
   )
 end
 
@@ -136,7 +135,7 @@ end
 def create_quote(row)
   Quote.find_or_create_by(
     quote: row["str_quote"],
-    inactive: row["bln_inactive"],
+    inactive: row["bln_inactive"] || false,
     legacy_id: row["id"],
     legacy: true
   )
@@ -162,13 +161,13 @@ def create_workshop_variation(xml, _name = nil)
     legacy: true,
     name: search_for_value(xml, "str_name"),
     body: search_for_value(xml, "txt_code"),
-    inactive: search_for_value(xml, "bln_inactive"),
-    ordering: search_for_value(xml, "ordering"),
+    inactive: search_for_value(xml, "bln_inactive") || false,
+    position: search_for_value(xml, "ordering"),
   )
 end
 
 def windows_type_id(legacy_id)
   WindowsType.find_by(
     legacy_id: legacy_id
-  ).id
+  )&.id
 end

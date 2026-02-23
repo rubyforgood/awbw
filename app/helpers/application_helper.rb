@@ -164,11 +164,12 @@ module ApplicationHelper
       options << [ "Published", :published, true ]
       options << [ "Unpublished", :unpublished, true ]
       options << [ "Featured", :featured, false ]             if cols.include?("featured")
-      options << [ "Publicly Visible", :publicly_visible, true ] if cols.include?("publicly_visible")
+      options << [ "Publicly Visible", :publicly_visible, false ] if cols.include?("publicly_visible")
       options << [ "Publicly Featured", :publicly_featured, false ] if cols.include?("publicly_featured")
     elsif authenticated
       options << [ "Not Featured", :not_featured, false ]     if cols.include?("featured")
       options << [ "Featured", :featured, false ]             if cols.include?("featured")
+      options << [ "Publicly Visible", :publicly_visible, false ] if cols.include?("publicly_visible")
       options << [ "Publicly Featured", :publicly_featured, false ] if cols.include?("publicly_featured")
     else
       options << [ "Not Publicly Featured", :not_publicly_featured, false ] if cols.include?("publicly_featured")
