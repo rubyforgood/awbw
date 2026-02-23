@@ -10,23 +10,28 @@ puts "Creating CommunityNews…"
   "Partner Site Success Story",
   "New Resources Added to the Library",
   "How Creativity Builds Connection"
-].each do |title|
+].each_with_index do |title, i|
+  visibility = if i < 3
+    { published: true, featured: true }
+  elsif i < 6
+    { published: true, publicly_visible: true, publicly_featured: true }
+  else
+    { published: [ true, true, false ].sample, featured: [ true, false ].sample,
+      publicly_visible: [ true, false ].sample, publicly_featured: [ true, false ].sample }
+  end
+
   body_content = Faker::Lorem.paragraph(sentence_count: 6)
   CommunityNews.where(title: title)
                .first_or_create!(
-                  body: body_content,
                   rhino_body: "<p>#{body_content}</p>",
-                  featured: [ true, false ].sample,
-                  published: [ true, true, true, false ].sample,
-                  publicly_visible: [ true, true, false ].sample,
-                  publicly_featured: [ true, false, false, false ].sample,
-                  author_id: User.all.sample.id,
-                  created_by_id: User.first.id,
-                  updated_by_id: User.first.id,
+                  author_id: User.all.sample&.id,
+                  created_by_id: User.first&.id,
+                  updated_by_id: User.first&.id,
                   organization_id: Organization.all.sample&.id,
                   windows_type_id: WindowsType.all.sample&.id,
                   created_at: Time.current - rand(1..60).days,
-                  updated_at: Time.current - rand(1..30).days
+                  updated_at: Time.current - rand(1..30).days,
+                  **visibility
                 )
 end
 
@@ -34,7 +39,6 @@ puts "Creating new StoryIdeas…"
 10.times do |i|
   body_content = Faker::Lorem.paragraph(sentence_count: 10)
   StoryIdea.create!(
-    body: body_content,
     rhino_body: "<p>#{body_content}</p>",
     publish_preferences: StoryIdea::PUBLISH_PREFERENCES.sample,
     permission_given: true,
@@ -44,8 +48,8 @@ puts "Creating new StoryIdeas…"
     windows_type_id: WindowsType.all.sample&.id,
     youtube_url: [ nil, nil, "https://youtube.com/watch?v=dQw4w9WgXcQ",
                   "https://youtube.com/watch?v=abcd1234xyz" ].sample,
-    created_by_id: User.first.id,
-    updated_by_id: User.first.id,
+    created_by_id: User.first&.id,
+    updated_by_id: User.first&.id,
     created_at: Time.current - rand(1..90).days,
     updated_at: Time.current - rand(1..40).days
   )
@@ -63,16 +67,20 @@ puts "Creating Stories…"
   "Community Coming Together Through Workshops",
   "Leadership in Action: A Facilitator’s Story",
   "When Art Opens a Door"
-].each do |title|
+].each_with_index do |title, i|
+  visibility = if i < 3
+    { published: true, featured: true }
+  elsif i < 6
+    { published: true, publicly_visible: true, publicly_featured: true }
+  else
+    { published: [ true, true, false ].sample, featured: [ true, false ].sample,
+      publicly_visible: [ true, false ].sample, publicly_featured: [ true, false ].sample }
+  end
+
   body_content = Faker::Lorem.paragraph(sentence_count: 10)
   Story.where(title: title)
        .first_or_create!(
-          body: body_content,
           rhino_body: "<p>#{body_content}</p>",
-          featured: [ true, false, false, false, false, false ].sample,
-          published: [ true, true, true, false ].sample,
-          publicly_visible: [ true, true, false ].sample,
-          publicly_featured: [ true, false, false, false ].sample,
           permission_given: true,
           external_workshop_title: [ nil, nil, nil, nil, nil, nil, "Community Art Night", "Healing Arts Circle" ].sample,
           organization_id: Organization.all.sample&.id,
@@ -86,10 +94,11 @@ puts "Creating Stories…"
             "https://youtube.com/watch?v=dQw4w9WgXcQ",
             "https://youtube.com/watch?v=abcd1234xyz"
           ].sample,
-          created_by_id: User.first.id,
-          updated_by_id: User.first.id,
+          created_by_id: User.first&.id,
+          updated_by_id: User.first&.id,
           created_at: Time.current - rand(1..90).days,
-          updated_at: Time.current - rand(1..40).days
+          updated_at: Time.current - rand(1..40).days,
+          **visibility
        )
 end
 
@@ -106,40 +115,55 @@ puts "Creating Events…"
   "Leaders in Creativity: Facilitator Roundtable",
   "Family Creative Expression Day",
   "Creative Safety & Support Workshop"
-].each do |title|
+].each_with_index do |title, i|
   start_date = Time.current + rand(5..60).days
   end_date   = start_date + rand(1..3).hours
   registration_close = start_date - rand(2..10).days
+
+  visibility = if i < 3
+    { published: true, featured: true }
+  elsif i < 6
+    { published: true, publicly_visible: true, publicly_featured: true }
+  else
+    { published: [ true, true, false ].sample, featured: [ true, false ].sample,
+      publicly_visible: [ true, false ].sample, publicly_featured: [ true, false ].sample }
+  end
+
   Event.where(title: title,
               start_date: start_date,
               end_date: end_date,)
        .first_or_create!(
-    description: Faker::Lorem.paragraph(sentence_count: 6),
-    featured: [ true, false ].sample,
-    published: [ false, false, true ].sample,
-    publicly_visible: [ true, true, false ].sample,
-    publicly_featured: [ true, false, false, false ].sample,
+    rhino_description: Faker::Lorem.paragraph(sentence_count: 6),
     registration_close_date: registration_close,
-    created_by_id: User.first.id,
+    created_by_id: User.first&.id,
     created_at: Time.current - rand(10..90).days,
-    updated_at: Time.current - rand(1..30).days
+    updated_at: Time.current - rand(1..30).days,
+    **visibility
   )
 end
 
 
 
 puts "Creating new Resources…"
-10.times do
+10.times do |i|
   kind = Resource::PUBLISHED_KINDS.sample
+
+  visibility = if i < 3
+    { published: true, featured: true }
+  elsif i < 6
+    { published: true, publicly_visible: true, publicly_featured: true }
+  else
+    { published: [ true, true, false ].sample, featured: [ true, false ].sample,
+      publicly_visible: [ true, false ].sample, publicly_featured: [ true, false ].sample }
+  end
+
   Resource.where(title: Faker::Book.title).first_or_create!(
     body: Faker::Lorem.paragraph(sentence_count: 8),
     author: [ Faker::Name.name, nil ].sample,
     agency: [ Faker::Company.name, nil ].sample,
     kind: kind,
     url: [ "https://example.com/resource/#{SecureRandom.hex(4)}", nil ].sample,
-    featured: [ true, false ].sample,
-    inactive: [ true, false, false ].sample, # mostly false = active
-    publicly_visible: [ true, true, false ].sample,
+    inactive: false,
     legacy: [ true, false, false ].sample,
     legacy_id: rand(1000..9999),
     position: rand(1..50),
@@ -147,7 +171,8 @@ puts "Creating new Resources…"
     workshop_id: Workshop.all.sample&.id,
     user_id: User.all.sample&.id,
     created_at: Time.current - rand(20..120).days,
-    updated_at: Time.current - rand(1..40).days
+    updated_at: Time.current - rand(1..40).days,
+    **visibility
   )
 end
 
@@ -266,6 +291,9 @@ workshops = [
      description: "Helps children and teens discover more about their inner selves through mixed-media portrait creation.",
      tips: "<span class='EmailHeader'>Embodied art note…</span>",
      published: true,
+     featured: true,
+     publicly_visible: true,
+     publicly_featured: true,
      searchable: true,
      created_at: Time.zone.parse("2009-08-25 14:50:19"),
      updated_at: Time.zone.parse("2014-07-31 12:32:27")
@@ -292,6 +320,7 @@ workshops = [
      year: 2012,
      description: "Participants create mandalas focused on gratitude, calming the nervous system.",
      published: true,
+     featured: true,
      searchable: true,
      created_at: Time.zone.parse("2012-05-11 14:00:00"),
      updated_at: Time.zone.parse("2015-02-01 09:22:10")
@@ -305,6 +334,9 @@ workshops = [
      year: 2015,
      description: "Explores what safety looks and feels like through imagery and symbolism.",
      published: true,
+     featured: true,
+     publicly_visible: true,
+     publicly_featured: true,
      searchable: true,
      created_at: Time.zone.parse("2015-02-02 10:10:10"),
      updated_at: Time.zone.parse("2016-01-20 08:01:22")
@@ -331,6 +363,7 @@ workshops = [
      year: 2018,
      description: "Participants explore emotional landscapes by drawing and labeling heart maps.",
      published: true,
+     featured: true,
      searchable: true,
      created_at: Time.zone.parse("2018-03-14 09:40:00"),
      updated_at: Time.zone.parse("2019-05-11 16:02:10")
@@ -357,6 +390,9 @@ workshops = [
      year: 2020,
      description: "Participants create symbolic flags representing identity, hopes, and values.",
      published: true,
+     featured: true,
+     publicly_visible: true,
+     publicly_featured: true,
      searchable: true,
      created_at: Time.zone.parse("2020-05-03 12:10:00"),
      updated_at: Time.zone.parse("2021-02-14 10:10:10")
@@ -438,7 +474,7 @@ workshops = [
      month: 4, year: 2022,
      description: "Decorated stones used to tell collaborative stories.",
      notes: "", tips: "", pub_issue: "X/4",
-     misc1: "", misc2: "", published: true, searchable: true,
+     misc1: "", misc2: "", published: true, featured: true, searchable: true,
      created_at: Time.zone.parse("2022-04-04"), updated_at: Time.zone.parse("2023-01-01")
   },
   {
@@ -508,7 +544,62 @@ workshops.each do |workshop|
 end
 puts "Done assigning categories and sectors."
 
-
-# Bookmark
-# Stories
-# # LeaderSpotlight
+puts "Creating Tutorials…"
+[
+  {
+    title: "Getting Started: Your First Workshop",
+    rhino_body: "A step-by-step guide to preparing and leading your first AWBW workshop.",
+    youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    published: true,
+    featured: true,
+    publicly_visible: true,
+    publicly_featured: true,
+    position: 1
+  },
+  {
+    title: "Trauma-Informed Facilitation Basics",
+    rhino_body: "Learn the foundations of trauma-informed facilitation for art-based healing workshops.",
+    youtube_url: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    published: true,
+    featured: true,
+    publicly_visible: true,
+    publicly_featured: true,
+    position: 2
+  },
+  {
+    title: "Creating Safe Spaces for Art Expression",
+    rhino_body: "How to set up your workshop environment to foster safety, trust, and creative expression.",
+    youtube_url: "https://www.youtube.com/watch?v=9bZkp7q19f0",
+    published: true,
+    featured: true,
+    publicly_visible: true,
+    publicly_featured: true,
+    position: 3
+  },
+  {
+    title: "Working with Children and Youth",
+    rhino_body: "Techniques and tips for adapting workshops for younger participants.",
+    youtube_url: "https://www.youtube.com/watch?v=kJQP7kiw5Fk",
+    published: true,
+    featured: true,
+    position: 4
+  },
+  {
+    title: "Art Materials and Supply Management",
+    rhino_body: "A practical guide to choosing, organizing, and budgeting for art supplies.",
+    youtube_url: "https://www.youtube.com/watch?v=RgKAFK5djSk",
+    published: true,
+    featured: true,
+    position: 5
+  },
+  {
+    title: "Monthly Reporting Walkthrough",
+    rhino_body: "How to complete your monthly reports and share workshop outcomes with AWBW.",
+    youtube_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
+    published: true,
+    featured: true,
+    position: 6
+  }
+].each do |tutorial_data|
+  Tutorial.where(title: tutorial_data[:title]).first_or_create!(tutorial_data)
+end

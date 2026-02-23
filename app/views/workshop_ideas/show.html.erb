@@ -1,22 +1,17 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
 <div class="<%= DomainTheme.bg_class_for(:workshop_ideas) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex items-center justify-between mb-6">
-        <!-- Title -->
-        <h1 class="text-2xl font-semibold text-gray-900">
-          <%= @workshop_idea.class.model_name.human %> details
-        </h1>
-
-        <!-- Buttons Group -->
-        <div class="flex items-center gap-2">
-          <% if allowed_to?(:index?, WorkshopIdea) %>
-            <%= link_to("WorkshopIdeas", workshop_ideas_path, class: "btn btn-secondary-outline") %>
-          <% end %>
-          <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
-          <% if allowed_to?(:edit?, @workshop_idea) %>
-            <%= link_to("Edit", edit_workshop_idea_path(@workshop_idea), class: "btn btn-primary-outline") %>
-          <% end %>
-        </div>
+      <div class="flex flex-wrap justify-end gap-2 mb-4">
+        <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <% if allowed_to?(:index?, WorkshopIdea) %>
+          <%= link_to "Workshop Ideas", workshop_ideas_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <% end %>
+        <% if allowed_to?(:edit?, @workshop_idea) %>
+          <%= link_to "Edit", edit_workshop_idea_path(@workshop_idea), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <% end %>
       </div>
+      <h1 class="text-2xl font-semibold text-gray-900 mb-6">
+        <%= @workshop_idea.class.model_name.human %> details
+      </h1>
 
       <div class="space-y-6">
         <div class="mt-4">
