@@ -110,6 +110,28 @@ RSpec.describe CommunityNews, type: :model do
       end
     end
 
+    context 'when filtering by year' do
+      let!(:news_2025) do
+        create(:community_news, title: 'Old News', created_at: Date.new(2025, 6, 15))
+      end
+
+      let!(:news_2026) do
+        create(:community_news, title: 'New News', created_at: Date.new(2026, 3, 1))
+      end
+
+      it 'returns records from the specified year' do
+        results = CommunityNews.by_year('2025')
+        expect(results).to include(news_2025)
+        expect(results).not_to include(news_2026)
+      end
+
+      it 'returns records from a different year' do
+        results = CommunityNews.by_year('2026')
+        expect(results).to include(news_2026)
+        expect(results).not_to include(news_2025)
+      end
+    end
+
     context 'LEFT JOIN behavior' do
       it 'includes records without people in search results' do
         results = CommunityNews.search('Special')

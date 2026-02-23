@@ -1,56 +1,56 @@
 <%= turbo_stream.replace("community_news_count", partial: "community_news_count") %>
-<% if @community_news.any? %>
-  <%
-    sort_base = params.permit(:title, :query, :published, :number_of_items_per_page).to_h.symbolize_keys
-    sort_icon = ->(column) {
-      if @sort == column
-        @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
-      else
-        "fa-sort"
-      end
-    }
-  %>
-  <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm animate-fade blur-on-submit">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-            <%= link_to community_news_index_path(sort_base.merge(sort: "title", direction: (@sort == "title" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-                        data: { turbo_frame: "community_news_results" },
-                        class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
-              Title
-              <i class="fa-solid <%= sort_icon.call("title") %> text-xs opacity-70"></i>
-            <% end %>
-          </th>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-            <%= link_to community_news_index_path(sort_base.merge(sort: "author", direction: (@sort == "author" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-                        data: { turbo_frame: "community_news_results" },
-                        class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
-              Author
-              <i class="fa-solid <%= sort_icon.call("author") %> text-xs opacity-70"></i>
-            <% end %>
-          </th>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-            <%= link_to community_news_index_path(sort_base.merge(sort: "organization", direction: (@sort == "organization" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-                        data: { turbo_frame: "community_news_results" },
-                        class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
-              Organization
-              <i class="fa-solid <%= sort_icon.call("organization") %> text-xs opacity-70"></i>
-            <% end %>
-          </th>
-          <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[7rem]">
-            <%= link_to community_news_index_path(sort_base.merge(sort: "created_at", direction: (@sort == "created_at" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-                        data: { turbo_frame: "community_news_results" },
-                        class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
-              Created At
-              <i class="fa-solid <%= sort_icon.call("created_at") %> text-xs opacity-70"></i>
-            <% end %>
-          </th>
-          <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
-        </tr>
-      </thead>
+<%
+  sort_base = params.permit(:title, :query, :published, :year, :number_of_items_per_page).to_h.symbolize_keys
+  sort_icon = ->(column) {
+    if @sort == column
+      @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
+    else
+      "fa-sort"
+    end
+  }
+%>
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @community_news.any? %>">
+  <table class="w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+          <%= link_to community_news_index_path(sort_base.merge(sort: "title", direction: (@sort == "title" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+                      data: { turbo_frame: "community_news_results" },
+                      class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
+            Title
+            <i class="fa-solid <%= sort_icon.call("title") %> text-xs opacity-70"></i>
+          <% end %>
+        </th>
+        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+          <%= link_to community_news_index_path(sort_base.merge(sort: "author", direction: (@sort == "author" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+                      data: { turbo_frame: "community_news_results" },
+                      class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
+            Author
+            <i class="fa-solid <%= sort_icon.call("author") %> text-xs opacity-70"></i>
+          <% end %>
+        </th>
+        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+          <%= link_to community_news_index_path(sort_base.merge(sort: "organization", direction: (@sort == "organization" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+                      data: { turbo_frame: "community_news_results" },
+                      class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
+            Organization
+            <i class="fa-solid <%= sort_icon.call("organization") %> text-xs opacity-70"></i>
+          <% end %>
+        </th>
+        <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[7rem]">
+          <%= link_to community_news_index_path(sort_base.merge(sort: "created_at", direction: (@sort == "created_at" && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+                      data: { turbo_frame: "community_news_results" },
+                      class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
+            Created At
+            <i class="fa-solid <%= sort_icon.call("created_at") %> text-xs opacity-70"></i>
+          <% end %>
+        </th>
+        <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
+      </tr>
+    </thead>
 
-      <tbody class="divide-y divide-gray-100">
+    <tbody class="divide-y divide-gray-100">
+      <% if @community_news.any? %>
         <% @community_news.each do |news| %>
           <tr class="hover:bg-gray-50 transition">
             <td class="px-4 py-2 text-sm text-gray-800 flex items-center gap-2">
@@ -100,22 +100,26 @@
             </td>
           </tr>
         <% end %>
-      </tbody>
-    </table>
-  </div>
+      <% else %>
+        <tr>
+          <td colspan="5" class="text-center py-16">
+            <h2 class="text-gray-600 text-lg mb-2">No community news yet</h2>
+            <% if allowed_to?(:new?, CommunityNews) %>
+              <div class="admin-only bg-blue-100 p-3">
+                <%= link_to "Create a community news",
+                            new_community_news_path,
+                            class: "btn btn-primary" %>
+              </div>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<% if @community_news.any? %>
   <!-- Pagination -->
   <div class="mt-6 flex justify-center">
     <div class="pagination mt-6"><%= tailwind_paginate @community_news %></div>
-  </div>
-<% else %>
-  <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
-    <h2 class="text-gray-600 text-lg mb-2">No community news yet</h2>
-    <% if allowed_to?(:new?, CommunityNews) %>
-      <div class="admin-only bg-blue-100 p-3">
-        <%= link_to "Create a community news",
-                    new_community_news_path,
-                    class: "btn btn-primary" %>
-      </div>
-    <% end %>
   </div>
 <% end %>

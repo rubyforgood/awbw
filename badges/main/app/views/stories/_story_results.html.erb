@@ -1,38 +1,38 @@
 <%= turbo_stream.replace("story_count", partial: "story_count") %>
-<% if @stories.any? %>
-  <%
-    sort_base = params.permit(:title, :query, :published, :number_of_items_per_page).to_h.symbolize_keys
-    sort_icon = ->(column) {
-      if @sort == column
-        @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
-      else
-        "fa-sort"
-      end
-    }
-    sort_link = ->(column, label) {
-      link_to stories_path(sort_base.merge(sort: column, direction: (@sort == column && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-              data: { turbo_frame: "story_results" },
-              class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do
-        concat label
-        concat content_tag(:i, "", class: "fa-solid #{sort_icon.call(column)} text-xs opacity-70")
-      end
-    }
-  %>
-  <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm animate-fade blur-on-submit">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("title", "Title") %></th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("windows_type", "Windows Type") %></th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("workshop", "Workshop") %></th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("author", "Author") %></th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("organization", "Organization") %></th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("updated_at", "Updated At") %></th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
-        </tr>
-      </thead>
+<%
+  sort_base = params.permit(:title, :query, :published, :year, :number_of_items_per_page).to_h.symbolize_keys
+  sort_icon = ->(column) {
+    if @sort == column
+      @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
+    else
+      "fa-sort"
+    end
+  }
+  sort_link = ->(column, label) {
+    link_to stories_path(sort_base.merge(sort: column, direction: (@sort == column && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+            data: { turbo_frame: "story_results" },
+            class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do
+      concat label
+      concat content_tag(:i, "", class: "fa-solid #{sort_icon.call(column)} text-xs opacity-70")
+    end
+  }
+%>
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @stories.any? %>">
+  <table class="w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("title", "Title") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("windows_type", "Windows Type") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("workshop", "Workshop") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("author", "Author") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("organization", "Organization") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("updated_at", "Updated At") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+      </tr>
+    </thead>
 
-      <tbody class="divide-y divide-gray-100">
+    <tbody class="divide-y divide-gray-100">
+      <% if @stories.any? %>
         <% @stories.each do |story| %>
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-2 text-sm text-gray-800 flex items-center gap-2">
@@ -82,24 +82,27 @@
             </td>
           </tr>
         <% end %>
-      </tbody>
-    </table>
-  </div>
+      <% else %>
+        <tr>
+          <td colspan="7" class="text-center py-16">
+            <h2 class="text-gray-600 text-lg mb-2">No stories found</h2>
+            <% if allowed_to?(:new?, Story) %>
+              <div class="admin-only bg-blue-100 p-3">
+                <%= link_to "Create a story",
+                            new_story_path,
+                            data: {turbo_frame: "_top"},
+                            class: "btn btn-primary" %>
+              </div>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<% if @stories.any? %>
   <!-- Pagination -->
   <div class="mt-6 flex justify-center">
     <div class="pagination mt-6"><%= tailwind_paginate @stories %></div>
-  </div>
-<% else %>
-  <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
-    <h2 class="text-gray-600 text-lg mb-2">No stories found</h2>
-
-    <% if allowed_to?(:new?, Story) %>
-      <div class="admin-only bg-blue-100 p-3">
-        <%= link_to "Create a story",
-                    new_story_path,
-                    data: {turbo_frame: "_top"},
-                    class: "btn btn-primary" %>
-      </div>
-    <% end %>
   </div>
 <% end %>
