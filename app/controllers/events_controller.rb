@@ -46,35 +46,7 @@ class EventsController < ApplicationController
     respond_to do |format|
       format.html
       format.csv do
-        require "csv"
-        cost_required = @event.cost_cents.to_i > 0
-        headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Payment status", "Payment total" ]
-        csv = CSV.generate(headers: headers, write_headers: true) do |csv_out|
-          @event_registrations.each do |registration|
-            person = registration.registrant
-            orgs = person.affiliations
-              .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
-              .map(&:organization).compact.uniq
-            org_names = orgs.map(&:name).join("; ")
-            total_cents = registration.payments.successful.sum(:amount_cents)
-            payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
-            payment_status = if cost_required
-              registration.paid_in_full? ? "Paid in full" : "Not paid in full"
-            else
-              ""
-            end
-            csv_out << [
-              person.first_name,
-              person.last_name,
-              person.preferred_email.presence || "",
-              person.phone_number.presence || "",
-              org_names.presence || "",
-              payment_status,
-              payment_total
-            ]
-          end
-        end
-        send_data csv,
+        send_data event_registrations_csv_string,
           filename: "event-#{@event.id}-registrations-#{Date.current.iso8601}.csv",
           type: "text/csv",
           disposition: "attachment"
@@ -151,6 +123,37 @@ class EventsController < ApplicationController
   end
 
   private
+
+  def event_registrations_csv_string
+    require "csv"
+    cost_required = @event.cost_cents.to_i > 0
+    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Payment status", "Payment total" ]
+    CSV.generate(headers: headers, write_headers: true) do |csv_out|
+      @event_registrations.each do |registration|
+        csv_out << event_registration_csv_row(registration, cost_required)
+      end
+    end
+  end
+
+  def event_registration_csv_row(registration, cost_required)
+    person = registration.registrant
+    orgs = person.affiliations
+      .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
+      .map(&:organization).compact.uniq
+    org_names = orgs.map(&:name).join("; ")
+    total_cents = registration.payments.successful.sum(:amount_cents)
+    payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
+    payment_status = cost_required ? (registration.paid_in_full? ? "Paid in full" : "Not paid in full") : ""
+    [
+      person.first_name,
+      person.last_name,
+      person.preferred_email.presence || "",
+      person.phone_number.presence || "",
+      org_names.presence || "",
+      payment_status,
+      payment_total
+    ]
+  end
 
   def set_form_variables
     @event = @event.decorate
