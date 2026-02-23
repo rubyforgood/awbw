@@ -57,7 +57,7 @@ class TutorialsController < ApplicationController
     end
 
     if success
-      redirect_to @tutorial, notice: "Tutorial was successfully created."
+      redirect_to @tutorial, notice: "Video was successfully created."
     else
       @tutorial = @tutorial.decorate
       set_form_variables
@@ -81,7 +81,7 @@ class TutorialsController < ApplicationController
     end
 
     if success
-      redirect_to @tutorial, notice: "Tutorial was successfully updated.", status: :see_other
+      redirect_to @tutorial, notice: "Video was successfully updated.", status: :see_other
     else
       @tutorial = @tutorial.decorate
       set_form_variables
@@ -92,7 +92,7 @@ class TutorialsController < ApplicationController
   def destroy
     authorize! @tutorial
     @tutorial.destroy!
-    redirect_to tutorials_path, notice: "Tutorial was successfully destroyed."
+    redirect_to tutorials_path, notice: "Video was successfully destroyed."
   end
 
   # Optional hooks for setting variables for forms or index
