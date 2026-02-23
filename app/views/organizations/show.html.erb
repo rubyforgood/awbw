@@ -154,36 +154,36 @@
             <p class="text-gray-500 italic">No affiliations listed.</p>
           <% end %>
         </div>
-          <!-- Sectors -->
-<% if @organization.profile_show_sectors? %>
-  <div class="md:col-span-2 p-3">
-    <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+                <!-- Sectors -->
+        <% if @organization.profile_show_sectors? %>
+          <div class="md:col-span-2 p-3">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
 
-    <% sectors = @organization.all_sectors.sort_by { |s| s&.name.to_s } %>
+            <% sectors = @organization.all_sectors.sort_by { |s| s&.name.to_s } %>
 
-    <% if sectors.any? %>
-      <div class="flex flex-wrap gap-2">
-        <% sectors.first(3).each do |sector| %>
-          <%= render "sectors/tagging_label",
-                     sector: sector,
-                     display_leader: true %>
-        <% end %>
+            <% if sectors.any? %>
+              <div class="flex flex-wrap gap-2">
+                <% sectors.first(3).each do |sector| %>
+                  <%= render "sectors/tagging_label",
+                             sector: sector,
+                             display_leader: true %>
+                <% end %>
 
-        <% if sectors.length > 3 %>
-          <span class="text-gray-500 px-2">...</span>
-        <% end %>
-      </div>
-    <% else %>
-      <p class="text-gray-500 italic">None selected.</p>
-    <% end %>
+                <% if sectors.length > 3 %>
+                  <span class="text-gray-500 px-2">...</span>
+                <% end %>
+              </div>
+            <% else %>
+              <p class="text-gray-500 italic">None selected.</p>
+            <% end %>
 
-    <div class="mt-4">
-      <%= link_to "More...",
-                  populations_served_organization_path(@organization),
-                  class: "inline-block px-4 py-2 bg-gray-100 border border-gray-300 rounded shadow-sm text-gray-800 hover:bg-gray-200 transition" %>
-    </div>
-  </div>
-<% end %>
+            <div class="mt-4">
+              <%= link_to "Explore sector data",
+                          populations_served_organization_path(@organization),
+                          class: "inline-block px-4 py-2 bg-gray-100 border border-gray-300 rounded shadow-sm text-gray-800 hover:bg-gray-200 transition" %>
+            </div>
+          </div>
+        <% end %>     
       </div>
     <hr class="my-8 border-gray-200">
     <!-- Workshops authored -->
