@@ -1,6 +1,24 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:users) %> border border-gray-200 rounded-xl shadow p-6" data-controller="toggle-user-icon">
         <div class="space-y-6">
+          <!-- Navigation links -->
+          <div class="flex flex-wrap justify-end gap-2 mb-4">
+            <% unless @user.person %>
+              <div class="admin-only bg-blue-100 p-2">
+                No person!
+                <%= link_to "Create person",
+                            new_person_path(user_id: @user.id),
+                            class: "btn btn-warning px-2 py-1" %>
+              </div>
+            <% end %>
+            <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+            <%= link_to "Users", users_path, class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+            <% if @user.person %>
+              <%= link_to "Person profile", person_path(@user.person),
+                          class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+            <% end %>
+            <%= link_to "View", user_path(@user), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+          </div>
           <!-- Header -->
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-semibold text-gray-900">
@@ -10,20 +28,7 @@
               <i class="fa-solid fa-lock text-red-500" data-toggle-user-icon-target="lockIcon"
                  style="<%= 'display:none' unless @user.locked_at.present? %>"></i>
             </h1>
-
             <div class="flex space-x-2">
-              <% if @user.person %>
-                <%= link_to "Person profile",
-                            person_path(@user.person),
-                            class: "btn btn-secondary-outline mr-2" %>
-              <% else %>
-                <div class="admin-only bg-blue-100 p-2 mr-2">
-                  No person!
-                  <%= link_to "Create person",
-                              new_person_path(user_id: @user.id),
-                              class: "btn btn-warning px-2 py-1" %>
-                </div>
-              <% end %>
               <%= button_to "Reset password",
                             send_reset_password_instructions_user_path(@user),
                             method: :post,
@@ -39,12 +44,6 @@
                             change_password_path,
                             class: "btn btn-secondary-outline" %>
               <% end %>
-              <%= link_to "Users",
-                          users_path,
-                          class: "btn btn-secondary-outline" %>
-              <%= link_to "View",
-                          user_path(@user),
-                          class: "btn btn-secondary-outline" %>
             </div>
           </div>
 
