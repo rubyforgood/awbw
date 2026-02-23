@@ -37,7 +37,6 @@ Rails.application.routes.draw do
       get :check_duplicates
     end
     member do
-      get :generate_person
       post :send_reset_password_instructions
       post :send_welcome_instructions
       post :toggle_lock_status
