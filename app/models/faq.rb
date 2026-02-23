@@ -18,13 +18,10 @@ class Faq < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
-    case params[:published].to_s
-    when "publicly_visible"
-      results = results.publicly_visible
-    when "true"
-      results = results.where(published: true)
-    when "false"
-      results = results.where(published: false)
+    if visibility_params_present?(params)
+      results = apply_visibility_filters(results, params)
+    elsif params[:published].present?
+      results = results.published(params[:published])
     end
     results
   end
