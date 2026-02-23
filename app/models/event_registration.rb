@@ -21,6 +21,27 @@ class EventRegistration < ApplicationRecord
     OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
     OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
+  scope :attendance_status, ->(status) { where(status: status) }
+  scope :keyword, ->(term) {
+    return none if term.blank?
+
+    sanitized = "%#{sanitize_sql_like(term.downcase.strip)}%"
+    left_joins(registrant: [ :user, :contact_methods, :addresses, { affiliations: [ :organization ] } ])
+      .left_joins(registrant: { affiliations: { organization: :addresses } })
+      .where(
+        "LOWER(people.first_name) LIKE :term
+        OR LOWER(people.last_name) LIKE :term
+        OR LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :term
+        OR LOWER(users.email) LIKE :term
+        OR LOWER(people.email) LIKE :term
+        OR LOWER(contact_methods.value) LIKE :term
+        OR LOWER(addresses.city) LIKE :term
+        OR LOWER(addresses.phone) LIKE :term
+        OR LOWER(organizations.name) LIKE :term",
+        term: sanitized
+      )
+      .distinct
+  }
 
   def self.search_by_params(params)
     registrations = is_a?(ActiveRecord::Relation) ? self : all
@@ -58,7 +79,7 @@ class EventRegistration < ApplicationRecord
   def attendance_status_label
     return "—" if status.blank?
     case status
-    when "registered" then "Registered (before date of event)"
+    when "registered" then "Registered"
     when "attended" then "Attended"
     when "incomplete_attendance" then "Incomplete attendance"
     when "cancelled" then "Cancelled"
