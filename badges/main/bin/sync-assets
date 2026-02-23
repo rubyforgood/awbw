@@ -1,0 +1,43 @@
+#!/bin/bash
+set -euo pipefail
+
+# Sync precompiled assets from a Docker image to DigitalOcean Spaces.
+# Requires: aws CLI, docker, and DO_SPACES_KEY/DO_SPACES_SECRET/DO_SPACES_REGION env vars.
+#
+# Usage: bin/sync-assets [image_name]
+#   image_name defaults to "awbw:latest"
+
+IMAGE="${1:-awbw:latest}"
+BUCKET="${DO_SPACES_BUCKET_ASSETS:?Set DO_SPACES_BUCKET_ASSETS (e.g. awbw-assets-staging)}"
+REGION="${DO_SPACES_REGION:?Set DO_SPACES_REGION (e.g. sfo3)}"
+ENDPOINT="https://${REGION}.digitaloceanspaces.com"
+
+export AWS_ACCESS_KEY_ID="${DO_SPACES_KEY:?Set DO_SPACES_KEY}"
+export AWS_SECRET_ACCESS_KEY="${DO_SPACES_SECRET:?Set DO_SPACES_SECRET}"
+
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
+
+echo "Extracting assets from ${IMAGE}..."
+CONTAINER=$(docker create "$IMAGE")
+docker cp "${CONTAINER}:/app/public/assets" "$TMPDIR/assets" 2>/dev/null || true
+docker cp "${CONTAINER}:/app/public/vite" "$TMPDIR/vite" 2>/dev/null || true
+docker rm "$CONTAINER" > /dev/null
+
+echo "Syncing to s3://${BUCKET} via ${ENDPOINT}..."
+
+if [ -d "$TMPDIR/assets" ]; then
+  aws s3 sync "$TMPDIR/assets" "s3://${BUCKET}/assets/" \
+    --endpoint-url "$ENDPOINT" \
+    --cache-control "public, immutable, max-age=31536000" \
+    --acl public-read
+fi
+
+if [ -d "$TMPDIR/vite" ]; then
+  aws s3 sync "$TMPDIR/vite" "s3://${BUCKET}/vite/" \
+    --endpoint-url "$ENDPOINT" \
+    --cache-control "public, immutable, max-age=31536000" \
+    --acl public-read
+fi
+
+echo "Done. Assets available at https://${BUCKET}.${REGION}.cdn.digitaloceanspaces.com"
