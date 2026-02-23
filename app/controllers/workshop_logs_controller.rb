@@ -5,7 +5,7 @@ class WorkshopLogsController < ApplicationController
     authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :user, :windows_type)
+    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, user: :person)
                                              .where(type: "WorkshopLog"))
     filtered = base_scope.search(params)
     @workshop_logs_unpaginated  = filtered
