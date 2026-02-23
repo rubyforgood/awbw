@@ -23,6 +23,7 @@ RSpec.describe "page_bg_class alignment with policies" do
   EXPECTED_MAPPINGS = {
     # ─── public (policy action returns true) ───
     "app/views/community_news/index.html.erb"          => "public",
+    "app/views/contact_us/index.html.erb"              => "public",
     "app/views/events/index.html.erb"                  => "public",
     "app/views/faqs/index.html.erb"                    => "public",
     "app/views/resources/index.html.erb"               => "public",
