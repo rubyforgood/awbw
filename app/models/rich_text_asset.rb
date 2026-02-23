@@ -9,11 +9,9 @@ class RichTextAsset < Asset
     "image/heic",
     "image/heif",
     "application/pdf",
-    "application/zip",
     "application/msword", # Word .doc
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document", # Word .docx
-    "application/vnd.oasis.opendocument.text", # Word document .odt
-    "text/html"
+    "application/vnd.oasis.opendocument.text" # Word document .odt
   ].freeze
 
   has_many :action_text_mentions,

@@ -2,11 +2,9 @@ import { Controller } from "@hotwired/stimulus"
 
 const FILE_TYPE_ICONS = {
     "application/pdf": "fa-regular fa-file-pdf",
-    "application/zip": "fa-regular fa-file-zipper",
     "application/msword": "fa-regular fa-file-word",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "fa-regular fa-file-word",
     "application/vnd.oasis.opendocument.text": "fa-regular fa-file-lines",
-    "text/html": "fa-regular fa-file-code",
 }
 
 export default class extends Controller {
