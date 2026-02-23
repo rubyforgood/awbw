@@ -1,14 +1,11 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:resources) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex items-center justify-between mb-3">
-        <h1 class="text-2xl font-semibold text-gray-900">Edit <%= @resource.class.model_name.human.downcase %></h1>
-
-        <div class="text-end">
-          <%= link_to "External URL", safe_url(@resource.url), target: "_blank", rel: "noopener noreferrer",
-                      class: "btn btn-secondary-outline" if @resource.url.present? %>
-          <%= link_to "View", resource_path(@resource, no_redirect: true), class: "btn btn-secondary-outline" %>
-        </div>
+      <div class="flex flex-wrap justify-end gap-2 mb-4">
+        <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <%= link_to "Resources", resources_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <%= link_to "View", resource_path(@resource, no_redirect: true), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       </div>
+      <h1 class="text-2xl font-semibold text-gray-900 mb-3">Edit <%= @resource.class.model_name.human.downcase %></h1>
 
       <div class="space-y-6">
           <div class="mt-4 bg-white rounded p-3">

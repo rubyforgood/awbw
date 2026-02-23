@@ -1,25 +1,26 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:users) %> border border-gray-200 rounded-xl shadow p-6">
 
-      <!-- Top buttons -->
-      <div class="flex justify-end mb-6">
-        <% if @user.person %>
-          <%= link_to "Person profile",
-                      person_path(@user.person),
-                      class: "btn btn-secondary-outline mr-2" %>
-        <% else %>
-          <div class="admin-only bg-blue-100 p-2 mr-2">
+      <!-- Top links -->
+      <div class="flex flex-wrap justify-end gap-2 mb-4">
+        <% unless @user.person %>
+          <div class="admin-only bg-blue-100 p-2">
             Not associated with a person
             <%= link_to "Create person",
                         new_person_path(user_id: @user.id),
                         class: "btn btn-warning px-2 py-1" %>
           </div>
         <% end %>
+        <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% if allowed_to?(:index?, User) %>
-          <%= link_to "Users", users_path, class: "btn btn-secondary-outline mr-2" %>
+          <%= link_to "Users", users_path, class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <% end %>
+        <% if @user.person %>
+          <%= link_to "Person profile", person_path(@user.person),
+                      class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% end %>
         <% if allowed_to?(:edit?, @user) %>
-          <%= link_to "Edit", edit_user_path(@user), class: "btn btn-primary-outline" %>
+          <%= link_to "Edit", edit_user_path(@user), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% end %>
       </div>
 

@@ -1,12 +1,13 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:resources) %> border border-gray-200 rounded-xl shadow p-6">
-        <div class="flex items-center justify-between mb-3">
-          <h1 class="text-2xl font-semibold text-gray-900">
-            Edit <%= @tutorial.class.model_name.human.downcase %>
-          </h1>
-          <%= link_to "View", tutorial_path(@tutorial),
-                      class: "btn btn-secondary-outline h-10 px-4 py-2 text-sm font-medium" %>
+        <div class="flex flex-wrap justify-end gap-2 mb-4">
+          <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+          <%= link_to Tutorial.model_name.human(count: 2), tutorials_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+          <%= link_to "View", tutorial_path(@tutorial), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         </div>
+        <h1 class="text-2xl font-semibold text-gray-900 mb-3">
+          Edit <%= @tutorial.class.model_name.human.downcase %>
+        </h1>
 
         <div class="bg-white rounded p-6">
           <div class="mt-4">
