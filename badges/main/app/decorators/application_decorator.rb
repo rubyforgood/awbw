@@ -16,6 +16,10 @@ class ApplicationDecorator < Draper::Decorator
     h.polymorphic_path(object)
   end
 
+  def published?
+    object.respond_to?(:published?) ? object.published? : true
+  end
+
   def external_link?
     false
   end
