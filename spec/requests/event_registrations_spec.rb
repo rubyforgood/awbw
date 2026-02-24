@@ -47,18 +47,18 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(data_rows).to include(expected_row)
       end
 
-      xit "paginates results" do
-        registrations = create_list(:event_registration, 3)
+      it "paginates results" do
+        additional = create_list(:event_registration, 3)
 
         get event_registrations_path, params: { number_of_items_per_page: 1 }
 
         expect(response).to have_http_status(:success)
 
-        first  = ActionView::RecordIdentifier.dom_id(registrations.first)
-        second = ActionView::RecordIdentifier.dom_id(registrations.second)
+        first_dom_id = ActionView::RecordIdentifier.dom_id(existing_registration)
+        other_dom_id = ActionView::RecordIdentifier.dom_id(additional.first)
 
-        expect(response.body).to include(first)
-        expect(response.body).not_to include(second)
+        expect(response.body).to include(first_dom_id)
+        expect(response.body).not_to include(other_dom_id)
       end
     end
 
@@ -109,7 +109,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
     describe "POST /event_registrations" do
       context "when no registration exists yet" do
-        xit "creates a new EventRegistration" do # figure out why this is broken now
+        it "creates a new EventRegistration" do
           expect {
             post event_registrations_path,
                  params: {
@@ -123,7 +123,7 @@ RSpec.describe "EventRegistrations", type: :request do
       end
 
       context "when a registration already exists" do
-        xit "does not create a duplicate registration" do # figure out why this is broken now
+        it "does not create a duplicate registration" do
           expect {
             post event_registrations_path,
                  params: {
@@ -150,23 +150,22 @@ RSpec.describe "EventRegistrations", type: :request do
     end
 
     describe "PATCH /event_registrations/:id" do
-      context "with valid parameters" do
-        xit "updates the registration" do # TODO - figure out why this is broken now
-          patch event_registration_path(existing_registration),
-                params: { event_registration: { event_id: new_event.id } }
+      it "can update attendance status" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: "cancelled" } }
 
-          expect(response).to redirect_to(event_path(existing_registration.event))
-          expect(flash[:notice]).to eq("Registration was successfully updated.")
-          expect(existing_registration.reload.event_id).to eq(new_event.id)
-        end
+        expect(existing_registration.reload.status).to eq("cancelled")
+        expect(response).to redirect_to(event_registration_path(existing_registration))
+        expect(flash[:notice]).to eq("Registration was successfully updated.")
       end
 
-      context "with invalid parameters" do
-        it "redirects to root" do
-          patch event_registration_path(existing_registration),
-                params: { event_registration: { event_id: nil } }
-          expect(response).to redirect_to(root_path)
-        end
+      it "cannot update event_id" do
+        original_event_id = existing_registration.event_id
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { event_id: new_event.id } }
+
+        expect(existing_registration.reload.event_id).to eq(original_event_id)
       end
     end
 

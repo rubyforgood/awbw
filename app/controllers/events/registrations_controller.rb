@@ -24,9 +24,9 @@ module Events
 
     def destroy
       @event_registration = @event.event_registrations.find_by(registrant: @registrant)
-      authorize! @event_registration
 
       unless @event_registration
+        skip_verify_authorized!
         alert = "Registration not found"
         respond_to do |format|
           format.turbo_stream { flash.now[:alert] = alert }
@@ -34,6 +34,8 @@ module Events
         end
         return
       end
+
+      authorize! @event_registration
 
       if @event_registration.destroy
         success = "You are no longer registered."
