@@ -265,7 +265,7 @@
       <%= f.input :created_by_id,
                   collection: @users, label_method: :full_name_with_email,
                   value_method: :id,
-                  selected: f.object.organization_id || @story_idea&.organization_id,
+                  selected: f.object.created_by_id,
                   label: (f.object.created_by&.person ? (
                     link_to "Story author",
                             person_path(f.object.created_by.person),
