@@ -11,6 +11,7 @@ class UserPolicy < ApplicationPolicy
   def toggle_lock_status? = admin?
   def confirm_email? = admin?
   def send_welcome_instructions? = admin?
+  def search? = admin?
   def change_password? = authenticated?
   def update_password? = authenticated?
 

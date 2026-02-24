@@ -5,7 +5,6 @@ RSpec.describe "stories/new", type: :view do
 
   before(:each) do
     assign(:windows_types, [])
-    assign(:users, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
     assign(:story_ideas, [])
