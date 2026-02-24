@@ -1,15 +1,11 @@
 if defined?(Rack::MiniProfiler)
-  # Enable in development and staging, disable in production
-  if Rails.env.production?
-    Rack::MiniProfiler.config.enabled = false
-  elsif Rails.env.staging? && ENV["RACK_MINI_PROFILER"] == "true"
-    Rack::MiniProfiler.config.enabled = true
-    Rack::MiniProfiler.config.authorization_mode = :allow_all
-    Rack::MiniProfiler.config.position = "bottom-left"
-    Rack::MiniProfiler.config.enable_hotwire_turbo_drive_support = true
-  else
-    Rack::MiniProfiler.config.enabled = true
-    Rack::MiniProfiler.config.position = "bottom-left"
-    Rack::MiniProfiler.config.enable_hotwire_turbo_drive_support = true
-  end
+  Rack::MiniProfiler.config.enabled =
+    if Rails.env.development?
+      true
+    else
+      ENV.fetch("RACK_MINI_PROFILER", "false").downcase == "true"
+    end
+
+  Rack::MiniProfiler.config.position = "bottom-left"
+  Rack::MiniProfiler.config.enable_hotwire_turbo_drive_support = true
 end
