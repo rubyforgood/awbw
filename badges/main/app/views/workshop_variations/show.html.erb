@@ -37,10 +37,11 @@
               <%= @workshop_variation.author_credit %>
             <% else %>
               <% creator = @workshop_variation.created_by %>
+              <% display_name = @workshop_variation.workshop_variation_idea&.author_credit || creator&.name %>
               <% if creator&.person && allowed_to?(:show?, creator.person, with: PersonPolicy) %>
-                <%= link_to creator.name, person_path(creator.person), class: "text-blue-600 hover:underline" %>
+                <%= link_to display_name, person_path(creator.person), class: "text-blue-600 hover:underline" %>
               <% else %>
-                <%= creator&.name %>
+                <%= display_name %>
               <% end %>
             <% end %>
           </span>

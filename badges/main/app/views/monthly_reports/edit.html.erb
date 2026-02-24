@@ -42,7 +42,7 @@ A monthly report has already been submitted for this month. Please contact your 
       <div class='form-group'>
         <%= f.label "Person" %>
         <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
-        <%= f.hidden_field :user_id, value: current_user.id %>
+        <%= f.hidden_field :created_by_id, value: current_user.id %>
         <%= f.hidden_field :type %>
         <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
         <%= f.hidden_field :id, value: @report.id %>
@@ -143,7 +143,7 @@ A monthly report has already been submitted for this month. Please contact your 
 
               <div class="row">
                 <div class="col-xs-2">
-                  <img src="<%= @report.image.file.url %>" class="portrait-img"/>
+                  <%= image_tag @report.image.file, class: "portrait-img" %>
                   </div>
                </div>
             </div>

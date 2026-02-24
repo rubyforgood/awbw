@@ -139,7 +139,7 @@ RSpec.describe "Workshops", type: :system do
         user = create(:user, :admin)
         sign_in(user)
         adult_window = create(:windows_type, :adult)
-        workshop = create(:workshop, title: "Old Title", windows_type: adult_window, user: user)
+        workshop = create(:workshop, title: "Old Title", windows_type: adult_window, created_by: user)
 
         visit edit_workshop_path(workshop)
 

@@ -23,7 +23,7 @@ RSpec.describe "People can view a submitted workshop log" do
         @workshop_log1 = create(:workshop_log,
           workshop_id: @workshop1.id,
           organization_id: @organization.id,
-          user_id: @user.id,
+          created_by_id: @user.id,
           date: 1.day.ago,
           adults_first_time: 4,
           adults_ongoing: 10,
@@ -35,7 +35,7 @@ RSpec.describe "People can view a submitted workshop log" do
         @workshop_log2 = create(:workshop_log,
           workshop_id: @workshop2.id,
           organization_id: @organization.id,
-          user_id: @user.id,
+          created_by_id: @user.id,
           date: 2.months.ago,
           adults_first_time: 2,
           adults_ongoing: 8,
@@ -46,7 +46,7 @@ RSpec.describe "People can view a submitted workshop log" do
         )
 
         sign_in @user
-        visit "/workshop_logs?user_id=#{@user.id}"
+        visit "/workshop_logs?created_by_id=#{@user.id}"
       end
 
       it "verifies workshop log page has all required elements" do

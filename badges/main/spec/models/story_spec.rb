@@ -8,21 +8,21 @@ RSpec.describe Story, type: :model do
 
     context "when author_credit_preference is full name" do
       it "returns the person's full name" do
-        story.update!(author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES[0])
+        story.update!(author_credit_preference: "full_name")
         expect(story.author_credit).to eq(person.full_name)
       end
     end
 
     context "when author_credit_preference is first name only" do
       it "returns the person's first name" do
-        story.update!(author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES[1])
+        story.update!(author_credit_preference: "first_name_only")
         expect(story.author_credit).to eq(person.first_name)
       end
     end
 
     context "when author_credit_preference is anonymous" do
       it "returns Anonymous" do
-        story.update!(author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES[2])
+        story.update!(author_credit_preference: "anonymous")
         expect(story.author_credit).to eq("Anonymous")
       end
     end

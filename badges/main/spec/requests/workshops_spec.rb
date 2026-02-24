@@ -5,7 +5,7 @@ RSpec.describe "/workshops", type: :request do
   describe "DELETE /destroy" do
     let(:user) { create(:user) }
     let(:admin) { create(:user, :admin) }
-    let(:workshop) { create(:workshop, user: user) }
+    let(:workshop) { create(:workshop, created_by: user) }
 
     context "when current_user is an admin" do
       before do

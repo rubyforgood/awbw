@@ -5,7 +5,7 @@ class WorkshopLogsController < ApplicationController
     authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, user: :person)
+    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, created_by: :person)
                                              .where(type: "WorkshopLog"))
     filtered = base_scope.search(params)
     @workshop_logs_unpaginated  = filtered
@@ -117,7 +117,7 @@ class WorkshopLogsController < ApplicationController
     end
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
-    @users = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:user_id)))
+    @users = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:created_by_id)))
                                 .joins(:person)
                                 .distinct
                                 .select("users.id, users.email, users.person_id, people.first_name, people.last_name")
@@ -212,7 +212,7 @@ class WorkshopLogsController < ApplicationController
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :user_id, :organization_id, :date,
+      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :created_by_id, :organization_id, :date,
       :workshop_name, :workshop_id, :windows_type_id, :other_description, :external_workshop_title, # :user,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,

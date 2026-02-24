@@ -31,16 +31,15 @@ class User < ApplicationRecord
   has_many :event_registrations, through: :person
   has_many :notifications, as: :noticeable
 
-  has_many :reports
-  has_many :resources
+  has_many :reports, foreign_key: :created_by_id, inverse_of: :created_by
+  has_many :resources, foreign_key: :created_by_id, inverse_of: :created_by
   has_many :user_forms, dependent: :destroy
-  has_many :workshops
-  has_many :workshop_logs
+  has_many :workshops, foreign_key: :created_by_id, inverse_of: :created_by
+  has_many :workshop_logs, foreign_key: :created_by_id, inverse_of: :created_by
 
   # created_by associations
   has_many :stories_as_creator, foreign_key: :created_by_id, class_name: "Story"
   has_many :story_ideas_as_creator, foreign_key: :created_by_id, class_name: "StoryIdea"
-  has_many :workshops_as_creator, foreign_key: :created_by_id, class_name: "Workshop"
   has_many :workshop_ideas_as_creator, foreign_key: :created_by_id, class_name: "WorkshopIdea"
   has_many :workshop_variations_as_creator, foreign_key: :created_by_id, class_name: "WorkshopVariation"
   has_many :workshop_variation_ideas_creator, foreign_key: :created_by_id, class_name: "WorkshopVariationIdea"
@@ -157,7 +156,7 @@ class User < ApplicationRecord
   end
 
   def name
-    person ? person.full_name : email
+    person ? person.name : email
   end
 
   def primary_asset # method needed for idea_submitted_fyi mailer
@@ -233,10 +232,10 @@ class User < ApplicationRecord
     return unless orphaned_user
 
     # Reassign reports
-    reports.update_all(user_id: orphaned_user.id)
+    reports.update_all(created_by_id: orphaned_user.id)
 
     # Reassign workshop_logs
-    workshop_logs.update_all(user_id: orphaned_user.id)
+    workshop_logs.update_all(created_by_id: orphaned_user.id)
   end
 
   def after_confirmation

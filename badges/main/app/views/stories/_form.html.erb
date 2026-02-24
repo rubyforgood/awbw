@@ -121,7 +121,7 @@
           Story idea author credit:
           <br>
           <% if story_idea.created_by.person %>
-            <%= person_profile_button(story_idea.created_by.person, display_name: story_idea.author_credit, subtitle: story_idea.created_by.person.full_name) %>
+            <%= person_profile_button(story_idea.created_by.person, display_name: story_idea.author_credit, subtitle: story_idea.created_by.person.name) %>
           <% else %>
             <%= story_idea.author_credit %>
           <% end %>

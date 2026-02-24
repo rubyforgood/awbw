@@ -28,8 +28,8 @@ RSpec.describe Resource do
       random_string = Array.new(3) { SecureRandom.alphanumeric(6) }.join(' ')
       user = create(:user)
 
-      resource1 = Resource.create!(title: random_string, user: user, kind: "Handout")
-      resource2 = Resource.create!(title: "Other", user: user, kind: "Handout")
+      resource1 = Resource.create!(title: random_string, created_by: user, kind: "Handout")
+      resource2 = Resource.create!(title: "Other", created_by: user, kind: "Handout")
 
       expect(Resource.count).to eq(2)
 
@@ -44,10 +44,10 @@ RSpec.describe Resource do
         user = create(:user)
 
         # Create resources in chronological order
-        resource1 = Resource.create!(title: "Non-featured 1", user: user, kind: "Handout", featured: false, created_at: 3.days.ago)
-        resource2 = Resource.create!(title: "Featured 1", user: user, kind: "Handout", featured: true, created_at: 2.days.ago)
-        resource3 = Resource.create!(title: "Non-featured 2", user: user, kind: "Handout", featured: false, created_at: 1.day.ago)
-        resource4 = Resource.create!(title: "Featured 2", user: user, kind: "Handout", featured: true, created_at: 1.hour.ago)
+        resource1 = Resource.create!(title: "Non-featured 1", created_by: user, kind: "Handout", featured: false, created_at: 3.days.ago)
+        resource2 = Resource.create!(title: "Featured 1", created_by: user, kind: "Handout", featured: true, created_at: 2.days.ago)
+        resource3 = Resource.create!(title: "Non-featured 2", created_by: user, kind: "Handout", featured: false, created_at: 1.day.ago)
+        resource4 = Resource.create!(title: "Featured 2", created_by: user, kind: "Handout", featured: true, created_at: 1.hour.ago)
 
         results = Resource.by_featured_first
 

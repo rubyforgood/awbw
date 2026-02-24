@@ -1,10 +1,6 @@
 # coding: utf-8
 
 class WorkshopDecorator < ApplicationDecorator
-  def created_by
-    user
-  end
-
   def default_display_image
     "workshop_default.jpg"
   end
