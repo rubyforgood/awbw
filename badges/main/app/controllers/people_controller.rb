@@ -1,5 +1,5 @@
 class PeopleController < ApplicationController
-  include AhoyTracking
+  include AhoyTracking, TagAssignable
   before_action :set_person, only: %i[ show edit update destroy ]
 
   def index
@@ -120,6 +120,7 @@ class PeopleController < ApplicationController
 
     respond_to do |format|
       if @person.save
+        assign_associations(@person) if params.dig(:person, :category_ids)
         format.html { redirect_to @person, notice: "Person was successfully created." }
       else
         set_form_variables
@@ -140,6 +141,7 @@ class PeopleController < ApplicationController
     @person.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
     if @person.save
+      assign_associations(@person) if params.dig(:person, :category_ids)
       redirect_to @person, notice: "Person was successfully updated."
     else
       set_form_variables
@@ -201,6 +203,14 @@ class PeopleController < ApplicationController
     @all_sectors = Sector.published.order(:name)
     @sectors_collection = @all_sectors.pluck(:name, :id)
     @current_sector_ids = @person.sectorable_items.map(&:sector_id)
+
+    @person_categories_grouped = Category
+      .includes(:category_type)
+      .published
+      .order(:position, :name)
+      .group_by(&:category_type)
+      .select { |type, _| type&.profile_specific? }
+      .sort_by { |type, _| type&.name.to_s.downcase }
   end
 
   def find_duplicate_people(first_name, last_name, email)
@@ -295,7 +305,7 @@ class PeopleController < ApplicationController
   def person_params
     params.require(:person).permit(
       :avatar,
-      :first_name, :last_name,
+      :first_name, :legal_first_name, :last_name,
       :email, :email_type,
       :email_2, :email_2_type,
       :street_address, :city, :state, :zip, :country, :mailing_address_type,
@@ -329,6 +339,7 @@ class PeopleController < ApplicationController
       :youtube_url,
       :twitter_url,
       :created_by_id, :updated_by_id,
+      category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ],
       addresses_attributes: [
         :id,

@@ -1,8 +1,8 @@
 class EventsController < ApplicationController
-  include AhoyTracking
+  include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview manage ]
+  before_action :set_event, only: %i[ show edit update destroy preview manage copy_registration_form ]
 
   def index
     authorize!
@@ -124,6 +124,20 @@ class EventsController < ApplicationController
     end
   end
 
+  def copy_registration_form
+    authorize! @event, to: :manage?
+
+    source_event = Event.find(params[:source_event_id])
+    source_form = source_event.forms.find_by(name: EventRegistrationFormBuilder::FORM_NAME)
+
+    if source_form
+      EventRegistrationFormBuilder.copy!(from_form: source_form, to_event: @event)
+      redirect_to edit_event_path(@event), notice: "Registration form copied successfully."
+    else
+      redirect_to edit_event_path(@event), alert: "Source event has no registration form."
+    end
+  end
+
   private
 
   def event_registrations_csv_string
@@ -168,18 +182,9 @@ class EventsController < ApplicationController
         .published
         .order(:position, :name)
         .group_by(&:category_type)
-        .select { |type, _| type.nil? || (type.published? && !type.story_specific?) }
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
     @sectors = Sector.published.order(:name)
-  end
-
-  def assign_associations(event)
-    selected_category_ids = Array(params[:event][:category_ids]).reject(&:blank?).map(&:to_i)
-    event.categories = Category.where(id: selected_category_ids)
-
-    selected_sector_ids = Array(params[:event][:sector_ids]).reject(&:blank?).map(&:to_i)
-    event.sectors = Sector.where(id: selected_sector_ids)
-    event.save!
   end
 
   def set_event

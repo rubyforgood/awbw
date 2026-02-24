@@ -22,6 +22,7 @@
                   as: :boolean,
                   label: "Primary",
                   input_html: {
+                    checked: f.object.new_record? || f.object.primary?,
                     class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
                   } %>
     </div>

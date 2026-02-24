@@ -24,9 +24,9 @@ module Events
 
     def destroy
       @event_registration = @event.event_registrations.find_by(registrant: @registrant)
-      authorize! @event_registration
 
       unless @event_registration
+        skip_verify_authorized!
         alert = "Registration not found"
         respond_to do |format|
           format.turbo_stream { flash.now[:alert] = alert }
@@ -34,6 +34,8 @@ module Events
         end
         return
       end
+
+      authorize! @event_registration
 
       if @event_registration.destroy
         success = "You are no longer registered."
@@ -57,7 +59,23 @@ module Events
     end
 
     def set_registrant
-      @registrant = params[:registrant_id] ? Person.find(params[:registrant_id]) : current_user.person
+      if params[:registrant_id]
+        @registrant = Person.find(params[:registrant_id])
+      else
+        @registrant = current_user.person || create_person_for_current_user
+      end
+    end
+
+    def create_person_for_current_user
+      person = Person.create!(
+        first_name: current_user.first_name,
+        last_name: current_user.last_name,
+        email: current_user.email,
+        created_by: current_user,
+        updated_by: current_user
+      )
+      current_user.update!(person: person)
+      person
     end
   end
 end

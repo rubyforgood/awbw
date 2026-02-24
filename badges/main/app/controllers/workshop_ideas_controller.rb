@@ -80,7 +80,7 @@ class WorkshopIdeasController < ApplicationController
         .published
         .order(:position, :name)
         .group_by(&:category_type)
-        .select { |type, _| type.nil? || (type.published? && !type.story_specific?) }
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
     @workshop_idea.build_primary_asset if @workshop_idea.primary_asset.blank?
     @workshop_idea.gallery_assets.build

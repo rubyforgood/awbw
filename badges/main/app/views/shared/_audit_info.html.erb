@@ -4,11 +4,13 @@
   return unless resource&.persisted?
 
   model = resource.respond_to?(:object) ? resource.object : resource
-  created_by_user = resource.try(:created_by) || resource.try(:user)
-  updated_by_user = resource.try(:updated_by) || resource.try(:user)
+  ahoy_scope = Ahoy::Event.where(resource_type: model.class.name, resource_id: model.id)
 
-  # Check if there's a user association for models without explicit created_by
-  resource_user = resource.try(:user) if created_by_user.nil? && updated_by_user.nil?
+  created_by_user = resource.try(:created_by) || resource.try(:user) ||
+    ahoy_scope.where("name LIKE 'create.%'").order(time: :asc).first&.user
+
+  updated_by_user = resource.try(:updated_by) || resource.try(:user) ||
+    ahoy_scope.where("name LIKE 'update.%'").order(time: :desc).first&.user
 %>
 
 <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
@@ -19,8 +21,6 @@
         <%= resource.created_at.strftime("%b %d, %Y at %-l:%M %p") %>
         <% if created_by_user&.person %>
           by <%= link_to created_by_user.full_name, person_path(created_by_user.person), class: "text-indigo-600 hover:underline" %>
-        <% elsif resource_user&.person %>
-          by <%= link_to resource_user.full_name, person_path(resource_user.person), class: "text-indigo-600 hover:underline" %>
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
@@ -37,9 +37,7 @@
         <span class="font-medium">Last updated:</span>
         <%= resource.updated_at.strftime("%b %d, %Y at %-l:%M %p") %>
         <% if updated_by_user&.person %>
-          by <%= link_to updated_by_user.full_name, user_path(updated_by_user.person), class: "text-indigo-600 hover:underline" %>
-        <% elsif resource_user&.person %>
-          by <%= link_to resource_user.full_name, user_path(resource_user.person), class: "text-indigo-600 hover:underline" %>
+          by <%= link_to updated_by_user.full_name, person_path(updated_by_user.person), class: "text-indigo-600 hover:underline" %>
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),

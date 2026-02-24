@@ -1,5 +1,5 @@
 class OrganizationsController < ApplicationController
-  include AhoyTracking
+  include AhoyTracking, TagAssignable
   before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
   def index
@@ -90,6 +90,7 @@ class OrganizationsController < ApplicationController
     authorize! @organization
 
     if @organization.save
+      assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to @organization, notice: "Organization was successfully created."
     else
       set_form_variables
@@ -104,6 +105,7 @@ class OrganizationsController < ApplicationController
     @organization.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
     if @organization.save
+      assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to organization_path(@organization), notice: "Organization was successfully updated.", status: :see_other
     else
       set_form_variables
@@ -135,6 +137,14 @@ class OrganizationsController < ApplicationController
                              }
       @organization.affiliations.proxy_association.target.replace(sorted)
     end
+
+    @org_categories_grouped = Category
+      .includes(:category_type)
+      .published
+      .order(:position, :name)
+      .group_by(&:category_type)
+      .select { |type, _| type&.profile_specific? }
+      .sort_by { |type, _| type&.name.to_s.downcase }
   end
 
   def set_index_variables
@@ -159,6 +169,7 @@ end
   def set_organization
     @organization = Organization.includes(
       :organization_status, :windows_type, :addresses,
+      :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
       affiliations: :person
@@ -174,6 +185,7 @@ end
       :profile_show_sectors, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
       :profile_show_stories, :profile_show_events_registered, :profile_show_workshop_logs,
+      category_ids: [],
       sectorable_items_attributes: [
         :id,
         :sector_id,

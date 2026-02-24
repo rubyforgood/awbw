@@ -71,6 +71,32 @@
     </div>
   </div>
 
+  <!-- Profile-specific Categories (e.g. Workshop Environments) -->
+  <% if @org_categories_grouped.present? %>
+    <div class="form-group space-y-4 mb-8">
+      <% @org_categories_grouped.each do |type, cats| %>
+        <div class="font-semibold text-gray-700 mb-2"><%= type.display_label %></div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+          <div class="flex flex-wrap gap-3">
+            <% cats.each do |category| %>
+              <% id = "organization_category_ids_#{category.id}" %>
+              <label for="<%= id %>"
+                     class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                <%= hidden_field_tag "organization[category_ids][]", "" %>
+                <%= check_box_tag "organization[category_ids][]",
+                                  category.id,
+                                  @organization.category_ids.include?(category.id),
+                                  id: id,
+                                  class: "h-4 w-4 text-blue-600 rounded" %>
+                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
   <!-- Background info -->
   <div class="form-group space-y-4 mb-8">
     <div class="font-semibold text-gray-700 mb-2">

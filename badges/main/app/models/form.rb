@@ -7,7 +7,7 @@ class Form < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :form_fields, allow_destroy: true
 
-  def name
-    owner ? "#{owner.try(:name)} Form" : "New Form"
+  def display_name
+    name.presence || (owner ? "#{owner.try(:name)} Form" : "New Form")
   end
 end

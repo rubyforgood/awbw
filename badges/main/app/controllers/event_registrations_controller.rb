@@ -1,6 +1,7 @@
 class EventRegistrationsController < ApplicationController
   require "csv"
 
+  skip_before_action :authenticate_user!, only: [ :show ]
   before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -78,7 +79,7 @@ class EventRegistrationsController < ApplicationController
 
   def update
     authorize! @event_registration
-    @event_registration.assign_attributes(event_registration_params)
+    @event_registration.assign_attributes(event_registration_update_params)
     @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @event_registration.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
@@ -130,6 +131,14 @@ class EventRegistrationsController < ApplicationController
       :event_id, :registrant_id, :status,
       comments_attributes: [ :id, :body, :_destroy ]
     )
+  end
+
+  def event_registration_update_params
+    if allowed_to?(:manage?, with: EventRegistrationPolicy)
+      event_registration_params
+    else
+      params.require(:event_registration).permit(:status)
+    end
   end
 
   def csv_export(registrations)

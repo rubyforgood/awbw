@@ -4,9 +4,10 @@ class EventRegistrationPolicy < ApplicationPolicy
   # override or add new rules here that are not defined in ApplicationPolicy
 
   def index?   = admin?
-  def create? = admin? || owner?
+  def create?  = admin? || owner?
+  def update?  = admin? || owner?
   def destroy? = record.persisted? && (admin? || owner?)
-  def show? = admin? || owner?
+  def show? = true
 
 
   relation_scope do |relation|

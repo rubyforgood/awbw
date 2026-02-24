@@ -46,7 +46,15 @@
                   <% @event_registrations.each do |event_registration| %>
                     <tr id="<%= dom_id(event_registration) %>" class="hover:bg-gray-50 transition-colors duration-150">
                       <td class="px-4 py-2 text-sm text-gray-800 align-top">
+                        <div class="flex items-center gap-2">
                           <%= person_profile_button(event_registration.registrant) %>
+                          <% reg_form = event_registration.event.forms.find_by(name: "Public Registration") %>
+                          <% if reg_form && reg_form.user_forms.exists?(user: event_registration.registrant&.user) %>
+                            <i class="fa-solid fa-file-lines text-green-600 shrink-0" title="Completed registration form"></i>
+                          <% elsif reg_form %>
+                            <i class="fa-regular fa-file-lines text-gray-300 shrink-0" title="No registration form submitted"></i>
+                          <% end %>
+                        </div>
                       </td>
                       <% unless @filtered_event %>
                         <td class="px-4 py-2 text-sm text-gray-800 min-w-[50ch]">
@@ -61,8 +69,12 @@
 
                       <!-- Actions -->
                       <td class="px-4 py-2 text-center align-top">
-                        <%= link_to "Edit", edit_event_registration_path(event_registration),
-                                    class: "btn btn-secondary-outline" %>
+                        <div class="flex items-center justify-center gap-2">
+                          <%= link_to "View", event_registration_path(event_registration),
+                                      class: "btn btn-secondary-outline" %>
+                          <%= link_to "Edit", edit_event_registration_path(event_registration),
+                                      class: "btn btn-secondary-outline" %>
+                        </div>
                       </td>
                     </tr>
                   <% end %>

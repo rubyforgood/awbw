@@ -1,5 +1,5 @@
 class TutorialsController < ApplicationController
-  include AhoyTracking
+  include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_tutorial, only: [ :show, :edit, :update, :destroy ]
 
@@ -16,7 +16,7 @@ class TutorialsController < ApplicationController
       render :index_lazy
     else
       @sectors = Sector.published.order(:name)
-      @category_types = CategoryType.published.where(story_specific: false).order(:name).decorate
+      @category_types = CategoryType.published.general.order(:name).decorate
 
       render :index
     end
@@ -114,15 +114,6 @@ class TutorialsController < ApplicationController
 
   def set_tutorial
     @tutorial = Tutorial.find(params[:id])
-  end
-
-  def assign_associations(tutorial)
-    selected_category_ids = Array(params[:tutorial][:category_ids]).reject(&:blank?).map(&:to_i)
-    tutorial.categories = Category.where(id: selected_category_ids)
-
-    selected_sector_ids = Array(params[:tutorial][:sector_ids]).reject(&:blank?).map(&:to_i)
-    tutorial.sectors = Sector.where(id: selected_sector_ids)
-    tutorial.save!
   end
 
   # Strong parameters

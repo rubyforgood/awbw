@@ -30,6 +30,14 @@
           <% end %>
         </p>
         <p class="text-gray-700">
+          <span class="font-bold">Profile specific:</span>
+          <% if @category_type.profile_specific? %>
+            <span class="fa fa-check-circle text-green-500 ml-1"></span>
+          <% else %>
+            <span class="text-gray-400 ml-1">--</span>
+          <% end %>
+        </p>
+        <p class="text-gray-700">
           <span class="font-bold">Display text:</span>
           <span class="ml-1"><%= @category_type.display_text %></span>
         </p>
