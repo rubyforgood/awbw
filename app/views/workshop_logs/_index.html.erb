@@ -20,7 +20,7 @@
             <%= link_to "New #{WorkshopLog.model_name.human.downcase}",
                         new_workshop_log_path(organization_id: params[:organization_id],
                                               workshop_id: params[:workshop_id],
-                                              user_id: current_user.id),
+                                              created_by_id: current_user.id),
                         class: "btn btn-primary" %>
           </div>
         </div>
@@ -91,7 +91,7 @@
                     <% end %>
                   </td>
                   <td class="px-2 text-left text-xs">
-                    <%= log.user ? link_to(log.user.name, log.user.person ? person_path(log.user.person) : user_path(log.user)) : "—" %>
+                    <%= log.created_by ? link_to(log.created_by.name, log.created_by.person ? person_path(log.created_by.person) : user_path(log.created_by)) : "—" %>
                   </td>
 
                   <td class="text-center font-bold text-lg bg-purple-100"><%= display_count(log.total_attendance) %></td>

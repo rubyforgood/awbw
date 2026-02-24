@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "resources/show", type: :view do
   let(:admin) { create(:user, :admin) }
-  let(:resource) { create(:resource, :published, user: admin) }
+  let(:resource) { create(:resource, :published, created_by: admin) }
 
   before do
     sign_in admin

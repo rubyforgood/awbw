@@ -53,7 +53,7 @@
                         focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
           <div data-controller="searchable-select" data-searchable-select-mode-value="person">
-            <%= f.input :user_id,
+            <%= f.input :created_by_id,
                         as: :select,
                         label: "Author",
                         collection: User.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)")),
@@ -98,7 +98,7 @@
           <%# end %>
         </div>
       <% else %>
-        <%= f.hidden_field :user_id, value: current_user&.id %>
+        <%= f.hidden_field :created_by_id, value: current_user&.id %>
       <% end %>
     </div>
 

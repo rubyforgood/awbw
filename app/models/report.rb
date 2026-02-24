@@ -1,6 +1,6 @@
 class Report < ApplicationRecord
   belongs_to :owner, polymorphic: true, optional: true
-  belongs_to :user
+  belongs_to :created_by, class_name: "User"
   belongs_to :organization
   belongs_to :windows_type
   belongs_to :workshop
@@ -57,7 +57,7 @@ class Report < ApplicationRecord
   scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
   scope :organization_id, ->(organization_id) { where(organization_id: organization_id) if organization_id.present? }
   scope :organization_ids, ->(organization_ids) { where(organization_id: organization_ids) }
-  scope :user_id, ->(user_id) { where(user_id: user_id.to_i) if user_id.present? }
+  scope :created_by_id, ->(created_by_id) { where(created_by_id: created_by_id.to_i) if created_by_id.present? }
   scope :month_and_year, ->(month_and_year) {
     if month_and_year.present?
       year, month = month_and_year.split("-").map(&:to_i)
@@ -73,7 +73,7 @@ class Report < ApplicationRecord
 
   def self.search(params)
     logs = is_a?(ActiveRecord::Relation) ? self : all
-    logs = logs.user_id(params[:user_id]) if params[:user_id].present?
+    logs = logs.created_by_id(params[:created_by_id]) if params[:created_by_id].present?
     logs = logs.month_and_year(params[:month_and_year]) if params[:month_and_year].present?
     logs = logs.year(params[:year]) if params[:year].present?
     logs = logs.workshop_id(params[:workshop_id]) if params[:workshop_id].present?
@@ -87,15 +87,15 @@ class Report < ApplicationRecord
     else
       case type
       when "MonthlyReport"
-        "#{type} - Monthly Report Date: #{date_label} - User: #{user.full_name if user}"
+        "#{type} - Monthly Report Date: #{date_label} - User: #{created_by.full_name if created_by}"
       when "Report"
         if owner_type and owner_type == "Resource"
-          "#{type} - #{owner ? owner_type : "[ EMPTY ]"} - User: #{user.full_name if user}"
+          "#{type} - #{owner ? owner_type : "[ EMPTY ]"} - User: #{created_by.full_name if created_by}"
         else
-          "#{type} - #{owner ? owner.type : "[ EMPTY ]"} - User: #{user.full_name if user}"
+          "#{type} - #{owner ? owner.type : "[ EMPTY ]"} - User: #{created_by.full_name if created_by}"
         end
       else
-        "#{type} - #{owner ? owner.communal_label(self) : "[ EMPTY ]"} - User: #{user.full_name if user}"
+        "#{type} - #{owner ? owner.communal_label(self) : "[ EMPTY ]"} - User: #{created_by.full_name if created_by}"
       end
     end
   end
@@ -147,7 +147,7 @@ class Report < ApplicationRecord
   end
 
   def user_name
-    user.name
+    created_by.name
   end
 
   def title

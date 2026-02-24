@@ -105,7 +105,7 @@ class Organization < ApplicationRecord
   def affiliated_workshop_logs
     direct = WorkshopLog.where(organization_id: id)
     legacy = WorkshopLog.where(organization_id: nil)
-                        .where(user_id: users.select(:id))
+                        .where(created_by_id: users.select(:id))
     direct.or(legacy).distinct
   end
 

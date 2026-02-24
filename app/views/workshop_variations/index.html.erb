@@ -46,12 +46,13 @@
                 </span>
               </td>
               <td class="px-4 py-2 text-sm text-gray-800 text-center">
-                <% if workshop_variation.created_by && workshop_variation.created_by.person %>
-                  <%= link_to workshop_variation.created_by.full_name,
+                <% display_name = workshop_variation.workshop_variation_idea&.author_credit || workshop_variation.created_by&.name %>
+                <% if workshop_variation.created_by&.person %>
+                  <%= link_to display_name,
                               person_path(workshop_variation.created_by.person),
                               class: "btn btn-secondary-outline" %>
-                <% elsif workshop_variation.created_by %>
-                  <%= workshop_variation.created_by.full_name %>
+                <% elsif display_name %>
+                  <%= display_name %>
                 <% end %>
               </td>
               <td class="px-4 py-2 text-sm text-gray-500 text-center whitespace-nowrap"><%= workshop_variation.updated_at&.strftime('%m/%d/%y') %></td>

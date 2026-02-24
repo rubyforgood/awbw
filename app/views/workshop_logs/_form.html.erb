@@ -1,6 +1,6 @@
 <div class="rounded-xl bg-white p-6">
   <%= simple_form_for(@workshop_log) do |f| %>
-    <%= f.input :user_id, as: :hidden, input_html: { value: params[:user_id] || current_user.id } %>
+    <%= f.input :created_by_id, as: :hidden, input_html: { value: params[:created_by_id] || current_user.id } %>
     <%= f.input :windows_type_id, as: :hidden, input_html: { value: @windows_type_id } %>
 
     <!-- Error messages -->

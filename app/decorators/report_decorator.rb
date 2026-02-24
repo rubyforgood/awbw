@@ -1,8 +1,4 @@
 class ReportDecorator < ApplicationDecorator
-  def created_by
-    user
-  end
-
   def windows_type_name
     name.titleize
   end

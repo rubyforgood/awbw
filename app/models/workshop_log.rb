@@ -13,8 +13,8 @@ class WorkshopLog < Report
   # See report.rb
 
   def name
-    return "" unless user
-    "#{user.name}"
+    return "" unless created_by
+    "#{created_by.name}"
   end
 
   def full_name

@@ -38,7 +38,7 @@ class ResourcesController < ApplicationController
   end
 
   def edit
-    @resource = Resource.includes(user: :person).find(resource_id_param).decorate
+    @resource = Resource.includes(created_by: :person).find(resource_id_param).decorate
     authorize! @resource
     set_form_variables
 
@@ -51,7 +51,7 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.includes(
-      :user,
+      :created_by,
       :bookmarks,
       primary_asset:  :file_attachment,
       downloadable_asset:  :file_attachment,
@@ -91,7 +91,7 @@ class ResourcesController < ApplicationController
   def update
     @resource = Resource.find(params[:id])
     authorize! @resource
-    @resource.user ||= current_user
+    @resource.created_by ||= current_user
     success = false
 
     Resource.transaction do
@@ -149,7 +149,7 @@ class ResourcesController < ApplicationController
     @resource.build_downloadable_asset if @resource.downloadable_asset.blank?
     @resource.gallery_assets.build
     @windows_types = WindowsType.all
-    @authors = authorized_scope(User.has_access.or(User.where(id: @resource.user_id)))
+    @authors = authorized_scope(User.has_access.or(User.where(id: @resource.created_by_id)))
                    .includes(:person)
                    .order("people.first_name, people.last_name")
                    .map { |u| [ u.full_name, u.id ] }
@@ -192,7 +192,7 @@ class ResourcesController < ApplicationController
   def load_forms
     form = @resource.form
     if form
-      @user_form = Report.new(user: current_user, owner: @resource)
+      @user_form = Report.new(created_by: current_user, owner: @resource)
       form.form_fields.where(status: 1).each do |field|
         @user_form.report_form_field_answers.build(form_field: field)
       end
