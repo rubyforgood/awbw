@@ -17,10 +17,6 @@ class PeopleController < ApplicationController
                            .order(:first_name, :last_name)
       @count_display = filtered.count
       @people = filtered.paginate(page: params[:page], per_page: per_page)
-      ActiveRecord::Associations::Preloader.new(
-        records: @people.map(&:user).compact,
-        associations: [ :avatar_attachment ]
-      ).call
 
       render :people_results
     else
