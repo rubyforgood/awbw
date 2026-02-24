@@ -1,3 +1,31 @@
+puts "Creating Persons and Affiliations for seed users…"
+[
+  User.find_by(email: "umberto.user@example.com"),
+  User.find_by(email: "amy.user@example.com")
+].compact.each do |user|
+  next if user.person.present?
+
+  person = Person.create!(
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    created_by: user,
+    updated_by: user,
+    profile_is_searchable: true
+  )
+  user.update!(person: person)
+
+  org = Organization.all.sample
+  next unless org
+
+  Affiliation.create!(
+    person: person,
+    organization: org,
+    position: :leader,
+    start_date: 1.year.ago.to_date
+  )
+end
+
 puts "Creating CommunityNews…"
 [
   "Workshop Spotlight: Building Confidence Through Art",
@@ -40,7 +68,7 @@ puts "Creating new StoryIdeas…"
   body_content = Faker::Lorem.paragraph(sentence_count: 10)
   StoryIdea.create!(
     rhino_body: "<p>#{body_content}</p>",
-    publish_preferences: StoryIdea::PUBLISH_PREFERENCES.sample,
+    author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES.sample,
     permission_given: true,
     external_workshop_title: [ nil, nil, "Community Art Night", "Healing Arts Circle" ].sample,
     organization_id: Organization.all.sample&.id,

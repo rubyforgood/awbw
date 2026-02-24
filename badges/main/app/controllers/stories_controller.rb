@@ -200,7 +200,7 @@ class StoriesController < ApplicationController
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
-      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
+      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference,
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
@@ -216,7 +216,8 @@ class StoriesController < ApplicationController
       workshop_id: idea.workshop_id,
       external_workshop_title: idea.external_workshop_title,
       windows_type_id: idea.windows_type_id,
-      youtube_url: idea.youtube_url
+      youtube_url: idea.youtube_url,
+      author_credit_preference: idea.author_credit_preference
     }
   end
 end

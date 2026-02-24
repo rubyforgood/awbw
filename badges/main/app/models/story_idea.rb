@@ -1,4 +1,5 @@
 class StoryIdea < ApplicationRecord
+  include AuthorCreditable
   include SearchCop
   search_scope :search do
     attributes :title, :body
@@ -9,12 +10,6 @@ class StoryIdea < ApplicationRecord
     results = results.search(params[:query]) if params[:query].present?
     results
   end
-
-  PUBLISH_PREFERENCES = [
-    "I would like my full name published with the story",
-    "I would like only my first name published",
-    "I do not want my name published with my story"
-  ]
 
   has_rich_text :rhino_body
 
@@ -45,7 +40,7 @@ class StoryIdea < ApplicationRecord
   validates :organization_id, presence: true
   validates :windows_type_id, presence: true
   validates :permission_given, presence: true
-  validates :publish_preferences, presence: true
+  validates :author_credit_preference, presence: true
   validates :rhino_body, presence: true
 
   # Nested attributes
@@ -62,17 +57,6 @@ class StoryIdea < ApplicationRecord
 
   def workshop_title
     workshop&.title ||  "[#{external_workshop_title}]"
-  end
-
-  def author_credit
-    case publish_preferences
-    when "I would like my full name published with the story"
-      created_by.full_name
-    when "I would like only my first name published"
-      created_by.first_name
-    else # "I do not want my name published with my story"
-      "Anonymous"
-    end
   end
 
   def organization_name

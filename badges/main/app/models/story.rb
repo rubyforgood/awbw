@@ -1,4 +1,5 @@
 class Story < ApplicationRecord
+  include AuthorCreditable
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
   has_rich_text :rhino_body

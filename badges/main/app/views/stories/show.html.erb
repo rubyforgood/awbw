@@ -28,11 +28,10 @@
         <!-- Meta Data (exact screenshot style) -->
         <div class="text-sm text-gray-600 space-y-0.5 mb-6">
           <p><strong>Story by:</strong>
-            <% author_credit = @story.story_idea&.author_credit || @story.created_by.full_name %>
             <% if @story.created_by.person&.profile_is_searchable %>
-              <%= link_to author_credit, person_path(@story.created_by) %>
+              <%= link_to @story.author_credit, person_path(@story.created_by) %>
             <% else %>
-              <%= author_credit %>
+              <%= @story.author_credit %>
             <% end %>
           </p>
           <p><strong>Organization Name:</strong>

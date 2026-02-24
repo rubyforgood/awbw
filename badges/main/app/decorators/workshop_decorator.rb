@@ -55,7 +55,7 @@ class WorkshopDecorator < ApplicationDecorator
   end
 
   def author
-    "#{full_name}"
+    author_credit_preference.present? ? author_credit : full_name.to_s
   end
 
   def list_sectors
