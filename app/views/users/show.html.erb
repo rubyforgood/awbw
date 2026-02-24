@@ -52,8 +52,8 @@
             <% end %>
           </h2>
 
-          <% if @user.avatar.attached? %>
-            <%= image_tag @user.avatar,
+          <% if @user.person&.avatar&.attached? %>
+            <%= image_tag @user.person.avatar,
                           id: "avatar-preview",
                           class: "w-16 h-16 rounded-full object-cover border border-gray-300 shadow-sm" %>
           <% else %>
