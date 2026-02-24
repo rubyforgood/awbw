@@ -57,15 +57,15 @@
  <div class="flex-1 text-sm text-gray-700">
    <div class="text-sm text-gray-600">
      Created by:
-     <% if bookmarkable.respond_to?(:user) && bookmarkable.user %>
-       <%= link_to bookmarkable.user.full_name,
-                   bookmarkable.user.person ? person_path(bookmarkable.user.person) : user_path(bookmarkable.user),
+     <% if bookmarkable.respond_to?(:created_by) && bookmarkable.created_by %>
+       <%= link_to bookmarkable.created_by.name,
+                   bookmarkable.created_by.person ? person_path(bookmarkable.created_by.person) : user_path(bookmarkable.created_by),
                    class: "hover:underline",
                    data: { turbo: false, } %>
      <% elsif bookmark.bookmarkable_type == "Workshop" %>
        <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Person" %>
      <% elsif bookmarkable.respond_to?(:created_by) && bookmarkable.created_by %>
-       <%= link_to bookmarkable.object.created_by.full_name,
+       <%= link_to bookmarkable.object.created_by.name,
                    bookmarkable.created_by.person ? person_path(bookmarkable.created_by.person) : user_path(bookmarkable.created_by),
                    class: "hover:underline",
                    data: { turbo: false, } %>

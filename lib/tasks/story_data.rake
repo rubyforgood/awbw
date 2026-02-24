@@ -10,8 +10,8 @@ namespace :story_data do
       Story.where(title:                 resource.title,)
            .first_or_create!(
         body:                  resource.text.presence || "test",
-        created_by_id:         resource.user_id || default_user_id,
-        updated_by_id:         resource.user_id || default_user_id,
+        created_by_id:         resource.created_by_id || default_user_id,
+        updated_by_id:         resource.created_by_id || default_user_id,
         featured:              resource.featured,
         permission_given:      true,
         organization_id:       nil, # resources don't store this, add mapping if needed

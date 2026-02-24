@@ -27,8 +27,6 @@ class ApplicationPolicy < ActionPolicy::Base
     return false unless user
     if record.respond_to?(:created_by_id)
       record.created_by_id == user.id
-    elsif record.respond_to?(:user_id)
-      record.user_id == user.id
     else
       false
     end

@@ -24,7 +24,7 @@ class Workshop < ApplicationRecord
   end
 
   belongs_to :windows_type, optional: true
-  belongs_to :user, optional: true
+  belongs_to :created_by, class_name: "User", optional: true
   belongs_to :workshop_idea, optional: true
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -52,7 +52,7 @@ class Workshop < ApplicationRecord
            source: :category # needs to be after has_many :categorizable_items
   has_many :categories, through: :categorizable_items
   has_many :category_types, through: :categories
-  has_many :organizations, through: :user
+  has_many :organizations, through: :created_by
   has_many :quotes, through: :quotable_item_quotes
   has_many :resources, through: :workshop_resources, source: :resource
   has_many :sectors, through: :sectorable_items
@@ -139,7 +139,7 @@ class Workshop < ApplicationRecord
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
-  scope :created_by_id, ->(created_by_id) { where(user_id: created_by_id) }
+  scope :created_by_id, ->(created_by_id) { where(created_by_id: created_by_id) }
   scope :legacy, -> { where(legacy: true) }
   scope :title, ->(title) {
     spaced = "%#{ActiveRecord::Base.sanitize_sql_like(strip_punctuation_spaced(title))}%"
@@ -186,8 +186,7 @@ class Workshop < ApplicationRecord
   end
 
   def author_name
-    return unless user
-    user.full_name
+    created_by&.name || full_name.presence
   end
 
   def date

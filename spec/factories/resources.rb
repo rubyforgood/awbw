@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :resource do
-    association :user
+    association :created_by, factory: :user
     title { Faker::Lorem.sentence }
     kind { Resource::PUBLISHED_KINDS.sample }
 

@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :workshop do
     # Associations
-    association :user
+    association :created_by, factory: :user
     association :windows_type
 
     title { Faker::Lorem.sentence.gsub("error", "eldor") }

@@ -13,7 +13,7 @@ RSpec.describe "/resources", type: :request do
       published: true,
       kind: Resource::PUBLISHED_KINDS.first,
       windows_type_id: windows_type.id,
-      user_id: user.id
+      created_by_id: user.id
     }
   end
 
@@ -22,7 +22,7 @@ RSpec.describe "/resources", type: :request do
       title: nil,
       body: "",
       kind: nil,
-      user_id: user.id      # REQUIRED
+      created_by_id: user.id      # REQUIRED
     }
   end
 

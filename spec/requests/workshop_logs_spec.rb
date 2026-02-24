@@ -14,7 +14,7 @@ RSpec.describe "/workshop_logs", type: :request do
       workshop_id: workshop.id,
       organization_id: organization.id,
       windows_type_id: windows_type.id,
-      user_id: user.id,
+      created_by_id: user.id,
 
       children_first_time: 3,
       children_ongoing: 5,

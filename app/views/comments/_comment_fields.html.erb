@@ -5,7 +5,7 @@
                       elsif created_user
                         created_user.name.to_s.split.map(&:first).join.upcase.presence
                       end %>
-<% created_name = created_user&.person&.full_name || created_user&.name %>
+<% created_name = created_user&.person&.name || created_user&.name %>
 <% created_first_name = created_user&.person&.first_name || created_user&.name.to_s.split.first %>
 <% show_updated = updated_user.present? && updated_user != created_user %>
 <% if show_updated %>
@@ -14,7 +14,7 @@
                          else
                            updated_user.name.to_s.split.map(&:first).join.upcase.presence
                          end %>
-  <% updated_name = updated_user.person&.full_name || updated_user.name %>
+  <% updated_name = updated_user.person&.name || updated_user.name %>
 <% end %>
 <% label_colors = [
   ["bg-sky-100", "text-sky-800"],
@@ -79,7 +79,7 @@
         <%= Time.current.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
       <span class="inline-flex items-center w-20 shrink-0 mt-2">
-        <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= current_user&.person&.full_name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
+        <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= current_user&.person&.name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
       </span>
       <div class="grow">
         <%= f.input :body,

@@ -16,8 +16,7 @@ module AuthorCreditable
   }.freeze
 
   def author_credit
-    u = respond_to?(:created_by) ? created_by : user
-    person = u&.person
+    person = created_by&.person
     case author_credit_preference
     when "full_name" then person&.full_name || "Anonymous"
     when "first_name_only" then person&.first_name || "Anonymous"

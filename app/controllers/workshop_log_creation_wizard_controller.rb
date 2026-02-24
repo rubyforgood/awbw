@@ -148,14 +148,14 @@ class WorkshopLogCreationWizardController < ApplicationController
   end
 
   def load_workshop_log
-    @workshop_log = @workshop.workshop_logs.build(user_id: @user.id)
+    @workshop_log = @workshop.workshop_logs.build(created_by: @user)
   end
 
   def workshop_params
     adjust_date
     params.require(:workshop).permit(
       :title, :date, :windows_type_id,
-      workshop_logs_attributes: [ :user_id, :rating, :reaction, :similarities, :is_embodied_art_workshop,
+      workshop_logs_attributes: [ :created_by_id, :rating, :reaction, :similarities, :is_embodied_art_workshop,
                                  :successes, :challenges, :differences, :date,
                                  :suggestions, :questions, :lead_similar, :organization_id,
                                  :num_participants_on_going, :num_participants_first_time,

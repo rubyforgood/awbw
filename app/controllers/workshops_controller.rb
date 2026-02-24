@@ -15,8 +15,8 @@ class WorkshopsController < ApplicationController
       track_index_intent(Workshop, search_service.workshops, params)
 
       @workshops = authorized_scope(search_service.workshops
-                                                  .includes(:categories, :windows_type, :user, :bookmarks,
-                                                            user: [ :person ], primary_asset: [ :file_attachment ]))
+                                                  .includes(:categories, :windows_type, :bookmarks,
+                                                            created_by: [ :person ], primary_asset: [ :file_attachment ]))
                                                   .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
       render :workshop_results
@@ -80,7 +80,7 @@ class WorkshopsController < ApplicationController
       @workshop = WorkshopFromIdeaService.new(@workshop_idea, user: current_user).call
       authorize! @workshop
     else
-      @workshop = Workshop.new(user: current_user)
+      @workshop = Workshop.new(created_by: current_user)
       authorize! @workshop
     end
     set_form_variables
@@ -231,7 +231,7 @@ class WorkshopsController < ApplicationController
   def workshop_params
     params.require(:workshop).permit(
       :title, :featured, :published,
-      :full_name, :user_id, :windows_type_id, :workshop_idea_id, :author_credit_preference,
+      :full_name, :created_by_id, :windows_type_id, :workshop_idea_id, :author_credit_preference,
       :month, :year,
       :publicly_visible,
       :publicly_featured,

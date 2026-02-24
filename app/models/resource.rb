@@ -14,7 +14,7 @@ class Resource < ApplicationRecord
 
   has_rich_text :rhino_body
 
-  belongs_to :user
+  belongs_to :created_by, class_name: "User"
   belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
   has_one :form, as: :owner

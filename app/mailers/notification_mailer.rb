@@ -46,7 +46,7 @@ class NotificationMailer < ApplicationMailer
       @report      = @noticeable
       @attachments = extract_attachments(@noticeable)
       @quotes      = @report.quotes if @report.respond_to?(:quotes)
-      @user        = @noticeable.respond_to?(:user) ? @noticeable.user : @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
+      @user        = @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
       @answers     = @report.report_form_field_answers if @report.respond_to?(:report_form_field_answers)
     end
 
@@ -77,7 +77,7 @@ class NotificationMailer < ApplicationMailer
       @report      = @noticeable
       @attachments = extract_attachments(@noticeable)
       @quotes      = @report.quotes if @report.respond_to?(:quotes)
-      @user        = @noticeable.respond_to?(:user) ? @noticeable.user : @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
+      @user        = @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
       @answers     = @report.report_form_field_answers if @report.respond_to?(:report_form_field_answers)
     end
 

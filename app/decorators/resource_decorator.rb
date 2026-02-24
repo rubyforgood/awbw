@@ -36,7 +36,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def author_full_name
-    author || "#{user.first_name} #{user.last_name}"
+    author || created_by.name
   end
 
   def display_date
