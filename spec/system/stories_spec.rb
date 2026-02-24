@@ -5,6 +5,7 @@ RSpec.describe "Stories", type: :system do
     context "as a regular_user" do
       it "sees overview of stories" do
         sign_in(create(:user))
+        visit root_path
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
@@ -67,6 +68,8 @@ RSpec.describe "Stories", type: :system do
   end
 
   describe "view story" do
+    before { driven_by(:rack_test) }
+
     context "as a regular_user" do
       it "sees story show" do
         sign_in(create(:user))
