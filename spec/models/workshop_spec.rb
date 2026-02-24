@@ -89,5 +89,35 @@ RSpec.describe Workshop do
     end
   end
 
+  describe "#author_credit" do
+    let(:person) { create(:person) }
+    let(:user) { create(:user, person: person) }
+    let(:workshop) { create(:workshop, user: user) }
+
+    it "returns the person's full name when preference is full_name" do
+      workshop.update!(author_credit_preference: "full_name")
+      expect(workshop.author_credit).to eq(person.full_name)
+    end
+
+    it "returns the person's first name when preference is first_name_only" do
+      workshop.update!(author_credit_preference: "first_name_only")
+      expect(workshop.author_credit).to eq(person.first_name)
+    end
+
+    it "returns Anonymous when preference is anonymous" do
+      workshop.update!(author_credit_preference: "anonymous")
+      expect(workshop.author_credit).to eq("Anonymous")
+    end
+
+    it "falls back to person's display name when preference is nil" do
+      expect(workshop.author_credit).to eq(person.name)
+    end
+
+    it "returns Anonymous when user has no person" do
+      workshop.update!(user: create(:user, person: nil))
+      expect(workshop.author_credit).to eq("Anonymous")
+    end
+  end
+
   # Add tests for scopes, methods like #rating, #log_count, SearchCop etc.
 end
