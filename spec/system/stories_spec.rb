@@ -114,6 +114,7 @@ RSpec.describe "Stories", type: :system do
       it "Admin can edit an existing story" do
         user = create(:user, :admin)
         sign_in(user)
+        visit root_path
         adult_window = create(:windows_type, :adult)
         story = create(:story, title: "Old Title", windows_type: adult_window, created_by: user)
 
