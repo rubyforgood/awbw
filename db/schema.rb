@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_23_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_23_180000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -775,8 +775,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_23_000000) do
     t.string "workshop_name"
     t.index ["organization_id"], name: "index_reports_on_organization_id"
     t.index ["owner_type", "owner_id"], name: "index_reports_on_owner_type_and_owner_id"
+    t.index ["type", "date"], name: "index_reports_on_type_and_date"
     t.index ["user_id"], name: "index_reports_on_user_id"
     t.index ["windows_type_id"], name: "index_reports_on_windows_type_id"
+    t.index ["workshop_id"], name: "index_reports_on_workshop_id"
   end
 
   create_table "resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
