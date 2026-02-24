@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe Story, type: :model do
   describe "#author_credit" do
-    let(:person) { create(:person) }
-    let(:user) { create(:user, person: person) }
+    let(:user) { create(:user, :with_person) }
+    let(:person) { user.person }
     let(:story) { create(:story, created_by: user) }
 
     context "when author_credit_preference is full name" do

@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "stories/show", type: :view do
-  let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin, :with_person) }
   let(:story_idea) { create(:story_idea, :with_story,
                             created_by: admin, updated_by: admin,
                             body: "MyBody", youtube_url: "Youtube_url") }
@@ -19,6 +19,6 @@ RSpec.describe "stories/show", type: :view do
     expect(rendered).to match(story_idea.organization.name)
     expect(rendered).to match(story_idea.workshop.name)
     expect(rendered).to match(/My Body/)
-    expect(rendered).to match(story_idea.created_by.full_name)
+    expect(rendered).to match(story.author_credit)
   end
 end

@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "story_ideas/show", type: :view do
-  let(:user) { create(:user) }
+  let(:user) { create(:user, :with_person) }
   let(:story_idea) { create(:story_idea, created_by: user, updated_by: user, rhino_body: "<p>MyBody</p>", youtube_url: "Youtube_url") }
 
   before(:each) do
@@ -13,6 +13,6 @@ RSpec.describe "story_ideas/show", type: :view do
     expect(rendered).to match(story_idea.organization.name)
     expect(rendered).to match(story_idea.workshop.name)
     expect(rendered).to match(/MyBody/)
-    expect(rendered).to match(user.full_name)
+    expect(rendered).to match(story_idea.author_credit)
   end
 end
