@@ -2,7 +2,7 @@ if defined?(Rack::MiniProfiler)
   # Enable in development and staging, disable in production
   if Rails.env.production?
     Rack::MiniProfiler.config.enabled = false
-  elsif Rails.env.staging?
+  elsif Rails.env.staging? && ENV["RACK_MINI_PROFILER"] == "true"
     Rack::MiniProfiler.config.enabled = true
     Rack::MiniProfiler.config.authorization_mode = :allow_all
     Rack::MiniProfiler.config.position = "bottom-left"
