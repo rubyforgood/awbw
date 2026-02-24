@@ -8,7 +8,7 @@ class UserDecorator < ApplicationDecorator
   end
 
   def default_display_image
-    return avatar if respond_to?(:avatar) && avatar&.attached?
+    return person.avatar if person&.avatar&.attached?
     "missing.png"
   end
 

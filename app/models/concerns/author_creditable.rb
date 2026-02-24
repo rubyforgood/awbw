@@ -23,7 +23,10 @@ module AuthorCreditable
     person = created_by&.person
     case author_credit_preference
     when "full_name" then person&.full_name || "Anonymous"
-    when "first_name_last_initial" then person ? "#{person.first_name} #{person.last_name&.first}" : "Anonymous"
+    when "first_name_last_initial"
+      first = person&.first_name
+      last_initial = person&.last_name&.first
+      first.present? ? "#{first} #{last_initial}." : "Anonymous"
     when "first_name_only" then person&.first_name || "Anonymous"
     when "last_name_only" then person&.last_name || "Anonymous"
     when "anonymous" then "Anonymous"

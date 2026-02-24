@@ -133,7 +133,8 @@ class Organization < ApplicationRecord
   end
 
   def organization_description
-    "#{name}, #{organization_locality}"
+    locality = organization_locality
+    locality.present? ? "#{name}, #{locality}" : name
   end
 
   def organization_locality

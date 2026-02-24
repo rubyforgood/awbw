@@ -54,9 +54,6 @@ class User < ApplicationRecord
   has_many :windows_types, through: :organizations
 
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
-  # Images
-  has_one_attached :avatar
-
   # Nested attributes
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
@@ -70,6 +67,8 @@ class User < ApplicationRecord
   validate :person_id_must_be_present_if_previously_set, on: :update
   validates_associated :person, if: -> { person.present? }
 
+
+  include RemoteSearchable
 
   # Search Cop
   include SearchCop
@@ -92,6 +91,24 @@ class User < ApplicationRecord
       results = results.where("inactive = ? OR locked_at IS NOT NULL OR confirmed_at IS NULL", true)
     end
     results
+  end
+
+  remote_searchable_by :email
+
+  def self.remote_search(query)
+    return none if query.blank?
+
+    pattern = "%#{query}%"
+    has_access
+      .left_joins(:person)
+      .where(
+        "users.email LIKE :pattern OR people.first_name LIKE :pattern OR people.last_name LIKE :pattern",
+        pattern: pattern
+      )
+  end
+
+  def remote_search_label
+    { id: id, label: full_name_with_email }
   end
 
   def active_for_authentication?

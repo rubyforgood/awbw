@@ -37,10 +37,6 @@
             <%= image_tag @person.avatar.variant(:thumbnail),
                           id: "person_#{@person.id}_avatar_image",
                           class: "w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow" %>
-          <% elsif @person.user&.avatar&.attached? %>
-            <%= image_tag @person.user.avatar,
-                          id: "person_#{@person.id}_avatar_image",
-                          class: "w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow" %>
           <% else %>
             <%= image_tag "missing.png",
                           id: "person_#{@person.id}_avatar_image",
