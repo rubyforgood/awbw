@@ -1,4 +1,5 @@
 class WorkshopVariation < ApplicationRecord
+  include AuthorCreditable
   include Publishable, Trendable
   include SearchCop
   search_scope :search do

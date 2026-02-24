@@ -14,7 +14,7 @@ RSpec.describe "/story_ideas", type: :request do
     {
       title: "The Future of Festivals",
       rhino_body: "<p>An exploration of how technology transforms community events.</p>",
-      publish_preferences: "I would like my full name published",
+      author_credit_preference: "full_name",
       permission_given: true,
       windows_type_id: windows_type.id,
       workshop_id: workshop.id,
@@ -28,7 +28,7 @@ RSpec.describe "/story_ideas", type: :request do
     {
       title: nil,                   # title is required
       rhino_body: "",                     # body cannot be blank
-      publish_preferences: nil,     # missing preference
+      author_credit_preference: nil,     # missing preference
       created_by_id: nil            # missing creator
     }
   end

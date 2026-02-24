@@ -4,7 +4,7 @@ FactoryBot.define do
     rhino_body { "<p>This is a variation idea description</p>" }
     youtube_url { "https://www.youtube.com/watch?v=example" }
     permission_given { true }
-    publish_preferences { "public" }
+    author_credit_preference { "full_name" }
     association :workshop
     association :organization
     association :windows_type

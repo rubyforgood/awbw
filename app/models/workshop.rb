@@ -1,4 +1,5 @@
 class Workshop < ApplicationRecord
+  include AuthorCreditable
   include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include PunctuationStrippable
   include Rails.application.routes.url_helpers

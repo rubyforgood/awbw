@@ -94,12 +94,12 @@
     <% end %>
 
     <div class="flex my-6 gap-4">
-      <%= f.input :publish_preferences,
+      <%= f.input :author_credit_preference,
                   as: :select,
                   required: true,
-                  collection: StoryIdea::PUBLISH_PREFERENCES,
+                  collection: AuthorCreditable::IDEA_FORM_OPTIONS,
                   include_blank: "Select a preference",
-                  selected: f.object.publish_preferences %>
+                  selected: f.object.author_credit_preference %>
       <%= f.input :youtube_url,
                   as: :text,
                   label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,

@@ -59,8 +59,7 @@
     <div class="text-sm text-gray-600 space-y-1 mb-8">
       <p>
         <strong>Story by:</strong>
-        <% author_credit = @story.story_idea&.author_credit || @story.created_by.full_name %>
-        <%= author_credit %>
+        <%= @story.author_credit %>
       </p>
       <p>
         <strong>Organization Name:</strong>

@@ -85,6 +85,15 @@
                                         class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500
                                           focus:border-blue-500 sm:text-sm" } %>
             </div>
+            <div>
+              <%= f.input :author_credit_preference,
+                          as: :select,
+                          collection: AuthorCreditable::IDEA_FORM_OPTIONS,
+                          include_blank: "Select a preference",
+                          selected: f.object.author_credit_preference,
+                          label: "Author credit preference",
+                          hint: "Controls how the author's name is displayed" %>
+            </div>
           </div>
         </div>
       </div>
