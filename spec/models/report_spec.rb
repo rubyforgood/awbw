@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Report do
   describe "associations" do
-    it { should belong_to(:user) }
+    it { should belong_to(:created_by) }
     it { should belong_to(:organization) }
     it { should belong_to(:windows_type) }
     it { should belong_to(:owner).optional }

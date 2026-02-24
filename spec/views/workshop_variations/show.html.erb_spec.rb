@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "workshop_variations/show", type: :view do
   let(:user) { create(:user) }
-  let(:workshop) { create(:workshop, user: user) }
+  let(:workshop) { create(:workshop, created_by: user) }
   let(:published) { true }
   let(:youtube_url) { nil }
   let(:workshop_variation) { create(:workshop_variation,
