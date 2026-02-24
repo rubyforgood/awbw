@@ -17,10 +17,7 @@ module PersonHelper
 
       # --- Avatar ---
       avatar = if person.avatar.present?
-        image_tag url_for(person.avatar),
-                  class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
-      elsif person.user&.avatar.present?
-        image_tag url_for(person.user.avatar),
+        image_tag person.avatar.variant(:thumbnail),
                   class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
       else
         content_tag(:span, person.name.to_s.first.to_s.upcase,
