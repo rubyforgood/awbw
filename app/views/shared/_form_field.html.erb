@@ -101,5 +101,5 @@
     <% end %>
     <p id="<%= field.html_id %>_error" class="hide">Please select at least one option</p>
   </div>
-  <%= "<br/>".html_safe if field.html_id == 'children_s_ages' && field.form.name.include?('Family Workshop Log') %>
+  <%= "<br/>".html_safe if field.html_id == 'children_s_ages' && field.form.display_name.include?('Family Workshop Log') %>
 <% end %>

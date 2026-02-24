@@ -7,7 +7,7 @@ class EventRegistrationPolicy < ApplicationPolicy
   def create?  = admin? || owner?
   def update?  = admin? || owner?
   def destroy? = record.persisted? && (admin? || owner?)
-  def show?    = admin? || owner?
+  def show? = true
 
 
   relation_scope do |relation|

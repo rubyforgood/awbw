@@ -1,5 +1,5 @@
 class StoriesController < ApplicationController
-  include ExternallyRedirectable, AhoyTracking
+  include ExternallyRedirectable, AhoyTracking, TagAssignable
 
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_story, only: [ :show, :edit, :update, :destroy ]
@@ -156,16 +156,6 @@ class StoriesController < ApplicationController
     @story.build_primary_asset if @story.primary_asset.blank?
     @story.gallery_assets.build
   end
-
-  def assign_associations(story)
-    selected_category_ids = Array(params[:story][:category_ids]).reject(&:blank?).map(&:to_i)
-    story.categories = Category.where(id: selected_category_ids)
-
-    selected_sector_ids = Array(params[:story][:sector_ids]).reject(&:blank?).map(&:to_i)
-    story.sectors = Sector.where(id: selected_sector_ids)
-    story.save!
-  end
-
 
   private
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_24_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_24_000004) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -322,6 +322,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000000) do
     t.string "display_text"
     t.string "legacy_id"
     t.string "name", null: false
+    t.boolean "profile_specific", default: false, null: false
     t.boolean "published", default: false, null: false
     t.boolean "story_specific", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
@@ -484,6 +485,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000000) do
     t.integer "answer_datatype"
     t.integer "answer_type"
     t.datetime "created_at", precision: nil, null: false
+    t.string "field_group"
+    t.string "field_key"
     t.integer "form_id", null: false
     t.string "instructional_hint"
     t.boolean "is_required", default: true
@@ -492,6 +495,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000000) do
     t.string "question", null: false
     t.integer "status", default: 1
     t.datetime "updated_at", precision: nil, null: false
+    t.index ["field_group"], name: "index_form_fields_on_field_group"
+    t.index ["field_key"], name: "index_form_fields_on_field_key"
     t.index ["form_id"], name: "index_form_fields_on_form_id"
     t.index ["parent_id"], name: "index_form_fields_on_parent_id"
   end
@@ -499,6 +504,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000000) do
   create_table "forms", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.integer "form_builder_id"
+    t.string "name"
     t.integer "owner_id", null: false
     t.string "owner_type", null: false
     t.datetime "updated_at", precision: nil, null: false
@@ -672,6 +678,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_000000) do
     t.string "first_name", null: false
     t.string "instagram_url"
     t.string "last_name", null: false
+    t.string "legal_first_name"
     t.string "linked_in_url"
     t.date "member_since"
     t.text "notes"

@@ -25,24 +25,32 @@ RSpec.describe Form do
   #   pending("Requires functional owner factory and association uncommented")
   # end
 
-  describe '#name' do
-    # These tests remain relevant
+  describe '#display_name' do
     let(:user_owner) do
       create(:user)
     end
     let(:form) { build(:form, owner: user_owner) }
 
-    context 'when owner is present' do
-      it 'returns owner name Form' do
-        # Need to handle potential nil name from owner.try(:name)
-        owner_name = user_owner.try(:name) || user_owner.email # Or however owner name is derived
-        expect(form.name).to eq("#{owner_name} Form")
+    context 'when name is set' do
+      it 'returns the name' do
+        form.name = "Public Registration"
+        expect(form.display_name).to eq("Public Registration")
       end
     end
-    context 'when owner is nil' do
+
+    context 'when name is blank and owner is present' do
+      it 'returns owner name Form' do
+        form.name = nil
+        owner_name = user_owner.try(:name) || user_owner.email
+        expect(form.display_name).to eq("#{owner_name} Form")
+      end
+    end
+
+    context 'when name is blank and owner is nil' do
       it 'returns New Form' do
+        form.name = nil
         form.owner = nil
-        expect(form.name).to eq('New Form')
+        expect(form.display_name).to eq('New Form')
       end
     end
   end

@@ -1,0 +1,140 @@
+<%# locals: (field:, value: nil) %>
+<% return if field.group_header? %>
+
+<% error = @field_errors&.dig(field.id) %>
+<% error_border = error ? "border-red-500" : "border-gray-300" %>
+
+<div class="mb-5">
+  <label class="block text-sm font-medium text-gray-700 mb-1" for="public_registration_form_fields_<%= field.id %>">
+    <%= field.question %>
+    <% if field.is_required %>
+      <span class="text-red-500">*</span>
+    <% end %>
+  </label>
+
+  <% if field.instructional_hint.present? %>
+    <p class="text-xs text-gray-500 mb-1"><%= field.instructional_hint %></p>
+  <% end %>
+
+  <% field_name = "public_registration[form_fields][#{field.id}]" %>
+  <% field_id = "public_registration_form_fields_#{field.id}" %>
+
+  <% case field.answer_type %>
+  <% when "free_form_input_one_line" %>
+    <% if field.field_key&.end_with?("_state") %>
+      <select name="<%= field_name %>"
+              id="<%= field_id %>"
+              class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              <%= "required" if field.is_required %>>
+        <option value="">Select a state</option>
+        <% us_states.each do |name, abbr| %>
+          <option value="<%= abbr %>" <%= "selected" if value == abbr %>><%= name %> (<%= abbr %>)</option>
+        <% end %>
+      </select>
+    <% else %>
+      <%
+        input_type = case field.field_key
+                     when /email(?!_type)/ then "email"
+                     when "phone" then "tel"
+                     when "agency_website" then "url"
+                     else
+                       field.number_integer? ? "number" : "text"
+                     end
+        extra_attrs = []
+        extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
+      %>
+      <input type="<%= input_type %>"
+             name="<%= field_name %>"
+             id="<%= field_id %>"
+             value="<%= value %>"
+             class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+             <%= "required" if field.is_required %>
+             <%= raw(extra_attrs.join(" ")) %>>
+    <% end %>
+
+  <% when "free_form_input_paragraph" %>
+    <textarea name="<%= field_name %>"
+              id="<%= field_id %>"
+              rows="4"
+              class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              <%= "required" if field.is_required %>><%= value %></textarea>
+
+  <% when "multiple_choice_radio" %>
+    <div class="flex flex-wrap gap-4 mt-1">
+      <% field.form_field_answer_options.includes(:answer_option).each do |ffao| %>
+        <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input type="radio"
+                 name="<%= field_name %>"
+                 value="<%= ffao.answer_option.name %>"
+                 class="text-blue-600 focus:ring-blue-500"
+                 <%= "checked" if value == ffao.answer_option.name %>
+                 <%= "required" if field.is_required %>>
+          <%= ffao.answer_option.name %>
+        </label>
+      <% end %>
+    </div>
+
+  <% when "multiple_choice_checkbox" %>
+    <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
+    <% selected_values = Array(value) %>
+
+    <% if field.field_key.in?(%w[primary_service_area workshop_environments client_life_experiences primary_age_group]) %>
+      <%# Professional fields: render dynamic sector/category options %>
+      <% if field.field_key == "primary_service_area" %>
+        <% options = Sector.published.order(:name) %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+          <% options.each do |sector| %>
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox"
+                     name="<%= checkbox_name %>"
+                     value="<%= sector.id %>"
+                     class="rounded text-blue-600 focus:ring-blue-500"
+                     <%= "checked" if selected_values.include?(sector.id.to_s) %>>
+              <%= sector.name %>
+            </label>
+          <% end %>
+        </div>
+      <% else %>
+        <%# Categories for workshop_environments, client_life_experiences, primary_age_group %>
+        <% category_type_name = {
+          "workshop_environments" => "WorkshopEnvironment",
+          "client_life_experiences" => "StoryPopulation",
+          "primary_age_group" => "AgeRange"
+        }[field.field_key] %>
+        <% ct = CategoryType.find_by(name: category_type_name) %>
+        <% options = ct&.categories&.published&.order(:position, :name) || [] %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+          <% options.each do |category| %>
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox"
+                     name="<%= checkbox_name %>"
+                     value="<%= category.id %>"
+                     class="rounded text-blue-600 focus:ring-blue-500"
+                     <%= "checked" if selected_values.include?(category.id.to_s) %>>
+              <%= category.name %>
+            </label>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      <%# Standard answer options %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+        <% field.form_field_answer_options.includes(:answer_option).each do |ffao| %>
+          <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox"
+                   name="<%= checkbox_name %>"
+                   value="<%= ffao.answer_option.name %>"
+                   class="rounded text-blue-600 focus:ring-blue-500"
+                   <%= "checked" if selected_values.include?(ffao.answer_option.name) %>>
+            <%= ffao.answer_option.name %>
+          </label>
+        <% end %>
+      </div>
+    <% end %>
+
+  <% end %>
+
+  <% if error %>
+    <p class="text-xs text-red-600 mt-1"><%= field.question %> <%= error %></p>
+  <% end %>
+</div>

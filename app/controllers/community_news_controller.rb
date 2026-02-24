@@ -1,5 +1,5 @@
 class CommunityNewsController < ApplicationController
-  include ExternallyRedirectable, AhoyTracking
+  include ExternallyRedirectable, AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_community_news, only: [ :show, :edit, :update, :destroy ]
 
@@ -127,20 +127,11 @@ class CommunityNewsController < ApplicationController
         .published
         .order(:position, :name)
         .group_by(&:category_type)
-        .select { |type, _| type.nil? || (type.published? && !type.story_specific?) }
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
     @sectors = Sector.published.order(:name)
     @community_news.build_primary_asset if @community_news.primary_asset.blank?
     @community_news.gallery_assets.build
-  end
-
-  def assign_associations(community_news)
-    selected_category_ids = Array(params[:community_news][:category_ids]).reject(&:blank?).map(&:to_i)
-    community_news.categories = Category.where(id: selected_category_ids)
-
-    selected_sector_ids = Array(params[:community_news][:sector_ids]).reject(&:blank?).map(&:to_i)
-    community_news.sectors = Sector.where(id: selected_sector_ids)
-    community_news.save!
   end
 
   private

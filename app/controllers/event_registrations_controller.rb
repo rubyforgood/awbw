@@ -1,6 +1,7 @@
 class EventRegistrationsController < ApplicationController
   require "csv"
 
+  skip_before_action :authenticate_user!, only: [ :show ]
   before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
 
   def index

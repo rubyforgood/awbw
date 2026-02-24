@@ -76,4 +76,16 @@ module EventHelper
       text_block
     end
   end
+
+  def display_response_text(field, response)
+    return tag.span("—", class: "text-gray-400") if response&.text.blank?
+
+    if field.field_key == "primary_service_area"
+      response.text.split(", ").map { |id| Sector.find_by(id: id)&.name }.compact.join(", ").presence || response.text
+    elsif field.field_key.in?(%w[workshop_environments client_life_experiences primary_age_group])
+      response.text.split(", ").map { |id| Category.find_by(id: id)&.name }.compact.join(", ").presence || response.text
+    else
+      response.text
+    end
+  end
 end

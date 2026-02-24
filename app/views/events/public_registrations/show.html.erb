@@ -1,0 +1,92 @@
+<% content_for(:page_bg_class, "admin-or-owner") %>
+
+<div class="max-w-2xl mx-auto py-8 px-4">
+
+  <%# ---- BACK LINK ---- %>
+  <div class="mb-4">
+    <%= link_to event_registration_path(@user_form.user.event_registrations.find_by(event: @event)),
+                class: "text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to Registration
+    <% end %>
+  </div>
+
+  <%# ---- FORM RESPONSES CARD ---- %>
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+
+    <%# Card Header %>
+    <div class="bg-blue-900 text-white px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="shrink-0">
+          <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto") %>
+        </div>
+        <div class="flex-1">
+          <h1 class="text-xl font-semibold tracking-wide">Registration Details</h1>
+          <p class="text-sm text-blue-200"><%= @event.title %></p>
+        </div>
+      </div>
+    </div>
+
+    <%# Card Body %>
+    <div class="px-6 py-6 space-y-1">
+      <%
+        row_groups = [
+          { keys: %w[first_name last_name], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          { keys: %w[nickname pronouns], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } },
+          { keys: %w[secondary_email secondary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "secondary_email" => "md:col-span-2" } },
+          { keys: %w[mailing_city mailing_state mailing_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
+          { keys: %w[phone phone_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          { keys: %w[agency_name agency_position], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          { keys: %w[agency_city agency_state agency_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
+          { keys: %w[number_of_attendees payment_method], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+        ]
+
+        field_key_to_group = {}
+        row_groups.each { |g| g[:keys].each { |k| field_key_to_group[k] = g } }
+
+        fields_by_key = @form_fields.select(&:field_key).index_by(&:field_key)
+        rendered_keys = {}
+      %>
+
+      <% @form_fields.each do |field| %>
+        <% next if field.field_key.present? && rendered_keys[field.field_key] %>
+
+        <% if field.group_header? %>
+          <div class="pt-6 pb-2 border-b border-gray-200 mb-4">
+            <h3 class="text-lg font-semibold text-gray-800"><%= field.question %></h3>
+          </div>
+        <% elsif (group = field.field_key.present? && field_key_to_group[field.field_key]) %>
+          <div class="<%= group[:grid] %>">
+            <% group[:keys].each do |key| %>
+              <% row_field = fields_by_key[key] %>
+              <% next unless row_field %>
+              <% rendered_keys[key] = true %>
+              <% response = @responses[row_field.id] %>
+              <% span = group.dig(:spans, key) %>
+              <div class="<%= span %> py-2">
+                <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide"><%= row_field.question %></dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                  <%= display_response_text(row_field, response) %>
+                </dd>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <% response = @responses[field.id] %>
+          <div class="py-2">
+            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide"><%= field.question %></dt>
+            <dd class="mt-1 text-sm text-gray-900">
+              <%= display_response_text(field, response) %>
+            </dd>
+          </div>
+        <% end %>
+      <% end %>
+
+      <div class="pt-4 border-t border-gray-200 mt-4">
+        <p class="text-xs text-gray-500">
+          Submitted on <%= @user_form.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

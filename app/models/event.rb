@@ -9,6 +9,7 @@ class Event < ApplicationRecord
   belongs_to :location, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
+  has_many :forms, as: :owner, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
