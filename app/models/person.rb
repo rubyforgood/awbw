@@ -186,10 +186,6 @@ class Person < ApplicationRecord
 
   remote_searchable_by :first_name, :last_name
 
-  def self.remote_search(query)
-    super.order(:first_name, :last_name)
-  end
-
   def remote_search_label
     {
       id: id,
