@@ -7,7 +7,6 @@ class UsersController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(User.includes(:created_by, :updated_by,
-                                                avatar_attachment: :blob,
                                                 person: { avatar_attachment: :blob }))
     filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
     @users_count = filtered.count
@@ -309,7 +308,7 @@ class UsersController < ApplicationController
       :email, :comment, :person_id, :inactive, :locked, :primary_address, :time_zone, :super_user,
 
       ##### legacy to remove later
-      :agency_id, :legacy, :legacy_id, :subscribecode, :avatar, :first_name, :last_name, # legacy to remove later
+      :agency_id, :legacy, :legacy_id, :subscribecode, :first_name, :last_name, # legacy to remove later
       :address, :address2, :city, :city2, :state, :state2, :zip, :zip2, # legacy to remove later
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
       #####

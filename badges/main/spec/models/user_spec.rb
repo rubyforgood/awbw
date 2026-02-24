@@ -27,9 +27,6 @@ RSpec.describe User do
     # it { should have_many(:colleagues).through(:organizations).source(:organization_users) }
     it { should have_many(:notifications) } # As :noticeable
 
-    # Paperclip avatar
-    # it { should have_attached_file(:avatar) }
-
     # Nested Attributes
     it { should accept_nested_attributes_for(:user_forms) }
   end

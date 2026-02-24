@@ -54,9 +54,6 @@ class User < ApplicationRecord
   has_many :windows_types, through: :organizations
 
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
-  # Images
-  has_one_attached :avatar
-
   # Nested attributes
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
