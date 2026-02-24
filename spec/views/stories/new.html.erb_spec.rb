@@ -140,7 +140,7 @@ RSpec.describe "stories/new", type: :view do
 
     context "with sectors and categories from story idea" do
       let(:sector) { create(:sector, :published, name: "Domestic Violence") }
-      let(:category_type) { create(:category_type, :published, name: "StoryPopulation", story_specific: true, display_text: "Who is your story about?") }
+      let(:category_type) { create(:category_type, :published, name: "StoryPopulation", story_specific: true, display_text: "Who is this story about?") }
       let(:category) { create(:category, :published, name: "Adults", category_type: category_type) }
 
       before do
@@ -175,7 +175,7 @@ RSpec.describe "stories/new", type: :view do
       create(:category_type, :published,
              name: "StoryPopulation",
              story_specific: true,
-             display_text: "Who is your story about?")
+             display_text: "Who is this story about?")
     end
 
     let(:general_type) do
@@ -218,7 +218,7 @@ RSpec.describe "stories/new", type: :view do
     it "displays story-specific category type with display_label" do
       render
 
-      expect(rendered).to include("Who is your story about?")
+      expect(rendered).to include("Who is this story about?")
     end
 
     it "displays story-specific category checkboxes" do
@@ -246,7 +246,7 @@ RSpec.describe "stories/new", type: :view do
     it "shows story-specific types before general types" do
       render
 
-      population_pos = rendered.index("Who is your story about?")
+      population_pos = rendered.index("Who is this story about?")
       age_range_pos = rendered.index("Age Range")
       expect(population_pos).to be < age_range_pos
     end

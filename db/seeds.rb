@@ -86,7 +86,7 @@ OrganizationStatus::ORGANIZATION_STATUSES.each do |status|
 end
 
 puts "Creating Organization…"
-awbw_org = Organization.find_or_create_by!(name: "AWBW") do |org|
+awbw_org = Organization.find_or_create_by!(name: ENV.fetch("ORGANIZATION_NAME", "AWBW")) do |org|
   org.organization_status = OrganizationStatus.find_by!(name: "Active")
 end
 
@@ -234,11 +234,11 @@ end
 
 puts "Creating StoryPopulation CategoryType…"
 story_population_type = find_or_create_by_name!(CategoryType, "StoryPopulation") do |ct|
-  ct.display_text = "Who is your story about?"
+  ct.display_text = "Who is this story about?"
   ct.story_specific = true
   ct.published = true
 end
-story_population_type.update!(display_text: "Who is your story about?", story_specific: true, published: true)
+story_population_type.update!(display_text: "Who is this story about?", story_specific: true, published: true)
 
 %w[Adults Children Colleagues Community Families Self Teens].each do |name|
   cat = Category.where("LOWER(name) = LOWER(?)", name).first

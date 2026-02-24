@@ -41,7 +41,11 @@
           </p>
           <% if @story.decorate.workshop_title.present? %>
             <p><strong>Workshop:</strong>
-              <%= link_to @story.decorate.workshop_title, workshop_path(@story.workshop), class: "hover:underline" %>
+              <% if @story.workshop %>
+                <%= link_to @story.decorate.workshop_title, workshop_path(@story.workshop), class: "hover:underline" %>
+              <% else %>
+                <%= @story.decorate.workshop_title %>
+              <% end %>
             </p>
           <% end %>
         </div>

@@ -4,6 +4,8 @@
   <% story_idea = @story_idea || f.object.story_idea %>
   <% selected_sector_ids = @preselected_sector_ids || @story.sector_ids %>
   <% selected_category_ids = @preselected_category_ids || @story.category_ids %>
+  <% story_specific_categories = @categories_grouped.select { |type, _| type&.story_specific? } %>
+  <% remaining_categories = @categories_grouped.reject { |type, _| type&.story_specific? } %>
 
   <% if story_idea %>
     <div class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 mb-6">
@@ -15,7 +17,7 @@
     </div>
   <% end %>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div><%= f.input :title, as: :text,
                      input_html: { rows: 2,
                                    value: f.object.title || @story_idea&.title } %></div>
@@ -36,22 +38,53 @@
       <%= f.input :windows_type_id,
                   collection: @windows_types, label_method: :short_name, value_method: :id,
                   selected: f.object.windows_type_id || @story_idea&.windows_type_id || params[:windows_type_id],
-                  prompt: "Select Windows Type" %>
+                  prompt: "Select audience",
+                  label: "Windows audience",
+                  label_html: { class: "block font-medium mb-1 text-gray-700" },
+                  input_html: {
+                    class: select_caret_class(blank: f.object.windows_type_id.blank?),
+                    style: custom_caret_style,
+                    onchange: select_caret_onchange
+                  } %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :workshop_id,
-                  collection: @workshops, label_method: :title, value_method: :id,
-                  selected: f.object.workshop_id || @story_idea&.workshop_id || params[:workshop_id],
-                  prompt: "Select Workshop" %>
+                  collection: f.object.workshop.present? ? [[ f.object.workshop.title, f.object.workshop.id ]] : [],
+                  include_blank: true,
+                  input_html: {
+                    class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
+                    data: {
+                      controller: "remote-select",
+                      remote_select_model_value: "workshop"
+                    }
+                  },
+                  prompt: "Search by title",
+                  label: "Workshop",
+                  label_html: { class: "block font-medium mb-1 text-gray-700" } %>
+
+      <%= f.input :external_workshop_title,
+                  as: :text,
+                  label: "External title (if no workshop above)",
+                  input_html: { rows: 1 } %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
+      <% default_org = default_organization_for_form(f.object) %>
       <%= f.input :organization_id,
+                  collection: default_org ? [[ default_org.name, default_org.id ]] : [],
+                  selected: default_org&.id,
+                  include_blank: true,
+                  input_html: {
+                    class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
+                    data: {
+                      controller: "remote-select",
+                      remote_select_model_value: "organization"
+                    }
+                  },
+                  prompt: "Search by name",
                   label: "Organization",
-                  collection: @organizations, label_method: :name,
-                  value_method: :id,
-                  selected: f.object.organization_id || @story_idea&.organization_id %>
+                  label_html: { class: "block font-medium mb-1 text-gray-700" } %>
     </div>
   </div>
 
@@ -66,98 +99,61 @@
     <% end %>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-    <%= f.input :youtube_url, as: :text,
-                label: "YouTube URL",
-                hint: "(Embed a YouTube video)",
-                input_html: { rows: 1, class: "w-full", value: f.object.youtube_url || @story_idea&.youtube_url } %>
+  <!-- Story-specific tags (sectors + story-specific categories) -->
+  <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6 mt-6">
+    <h3 class="text-base font-semibold text-gray-800 mb-3">
+      <%= Sector::STORY_DISPLAY_TEXT %>
+    </h3>
 
-    <%= f.input :website_url, as: :text,
-                label: "External URL",
-                hint: "(open in external website instead)",
-                input_html: { rows: 1, class: "w-full" } %>
-  </div>
+    <div class="flex flex-wrap gap-3">
+      <% @sectors.each do |sector| %>
+        <% id = "story_sector_ids_#{sector.id}" %>
 
-  <div class="flex flex-col md:flex-row md:space-x-4">
-    <div class="flex-1 mb-4 md:mb-0">
-      <% story_idea_label = if f.object.story_idea
-        (link_to "Source story idea",
-                 story_idea_path(f.object.story_idea), class: "hover:underline")
-      else
-        "Source story idea"
-      end %>
-      <%= f.input :story_idea_id,
-                  collection: @story_ideas, label_method: :full_name,
-                  value_method: :id,
-                  selected: f.object.story_idea_id || @story_idea&.id,
-                  label: story_idea_label.html_safe,
-                  prompt: "Select idea" %>
-    </div>
+        <label
+          for="<%= id %>"
+          class="
+            flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
+            rounded-lg shadow-sm hover:bg-gray-100 transition">
+          <%= hidden_field_tag "story[sector_ids][]", "" %>
+          <%= check_box_tag "story[sector_ids][]",
+                            sector.id,
+                            selected_sector_ids.include?(sector.id),
+                            id: id,
+                            class: "h-4 w-4 text-blue-600 rounded" %>
 
-      <div class="flex-1 mb-4 md:mb-0" data-controller="searchable-select" data-searchable-select-mode-value="person">
-        <%= f.input :created_by_id,
-                    collection: @users, label_method: :full_name_with_email,
-                    value_method: :id,
-                    selected: f.object.organization_id || @story_idea&.organization_id,
-                    label: (f.object.created_by&.person ? (
-                      link_to "Story author",
-                              person_path(f.object.created_by.person),
-                              class: "hover:underline") : "Story author").html_safe,
-                    prompt: "Select User",
-                    input_html: { data: { searchable_select_target: "select" } } %>
-
-      <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :author_credit_preference,
-                    as: :select,
-                    collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                    include_blank: "Select a preference",
-                    selected: f.object.author_credit_preference || story_idea&.author_credit_preference,
-                    label: "Author credit preference",
-                    hint: "Controls how the author's name is displayed" %>
-      </div>
-
-      <% if story_idea %>
-        <div class="flex-1 mb-4 md:mb-0">
-          Story idea author credit:
-          <br>
-          <% if story_idea.created_by.person %>
-            <%= person_profile_button(story_idea.created_by.person, display_name: story_idea.author_credit, subtitle: story_idea.created_by.person.name) %>
-          <% else %>
-            <%= story_idea.author_credit %>
-          <% end %>
-          <br>
-          Story idea "author credit preference":
-          <br>
-          <div class="italic"><%= link_to story_idea.author_credit_preference, edit_story_idea_path(story_idea, anchor: "publish-preferences"), class: "hover:underline hover:text-blue-600" %></div>
-        </div>
+          <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+        </label>
       <% end %>
     </div>
-
-    <div class="flex-1 mb-4 md:mb-0" data-controller="searchable-select" data-searchable-select-mode-value="person">
-      <%= f.input :spotlighted_facilitator_id,
-                  collection: Person.eager_load(:user).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)")),
-                  label_method: :full_name_with_email,
-                  value_method: :id,
-                  include_blank: true,
-                  selected: f.object.spotlighted_facilitator_id,
-                  input_html: { data: { searchable_select_target: "select" } },
-                  label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
-                                                                         person_path(f.object.spotlighted_facilitator_id),
-                                                                         class: "hover:underline") : "Story spotlighted facilitator").html_safe %>
-    </div>
-
-    <%= f.hidden_field :updated_by_id, value: current_user.id %>
-
-    <% if f.object.persisted? %>
-      <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-        Last updated by:
-        <br>
-        <%= f.object.updated_by&.full_name %>
-        <br>
-        <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
-      </div>
-    <% end %>
   </div>
+
+  <% story_specific_categories.each do |type, cats| %>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+      <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.display_label %></h3>
+
+      <div class="flex flex-wrap gap-3">
+        <% cats.each do |category| %>
+          <% id = "story_category_ids_#{category.id}" %>
+
+          <label
+            for="<%= id %>"
+            class="
+              flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
+              border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+            <%= hidden_field_tag "story[category_ids][]", "" %>
+            <%= check_box_tag "story[category_ids][]",
+                              category.id,
+                              selected_category_ids.include?(category.id),
+                              id: id,
+                              class: "h-4 w-4 text-blue-600 rounded" %>
+
+            <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+          </label>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <% if story_idea %>
     <% idea_assets = story_idea.assets.select { |a| a.file.attached? } %>
     <% if idea_assets.any? %>
@@ -197,97 +193,188 @@
 
   <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
-  <!-- Accordions -->
-  <div class="space-y-4 mt-8">
-    <div class="tags-section" data-controller="dropdown">
-      <button
-        type="button"
-        id="tags_button"
-        class="
-          flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
-        data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
-        Tags
-        <svg
-          id="tags_arrow"
-          class="w-6 h-6 shrink-0 rotate-180"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg">
-          <path
-            fill-rule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clip-rule="evenodd"
-          ></path>
-        </svg>
-      </button>
+  <div class="flex flex-col md:flex-row md:space-x-4 mt-4">
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :author_credit_preference,
+                  as: :select,
+                  collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
+                  prompt: "Select a preference",
+                  selected: f.object.author_credit_preference || story_idea&.author_credit_preference,
+                  label: "Author credit preference",
+                  hint: "Controls how the author's name is displayed",
+                  input_html: {
+                    class: select_caret_class(blank: f.object.author_credit_preference.blank?),
+                    style: custom_caret_style,
+                    onchange: select_caret_onchange
+                  } %>
+    </div>
 
-      <div id="tags" class="border border-gray-300 p-4 rounded-b-md">
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
-          <!-- Header -->
-          <h3 class="text-base font-semibold text-gray-800 mb-3">
-            <%= Sector::STORY_DISPLAY_TEXT %>
-          </h3>
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :youtube_url, as: :text,
+                  label: "YouTube URL",
+                  hint: "(Embed a YouTube video)",
+                  input_html: { rows: 1, class: "w-full", value: f.object.youtube_url || @story_idea&.youtube_url } %>
+    </div>
 
-          <!-- Checkbox List -->
-          <div class="flex flex-wrap gap-3">
-            <% @sectors.each do |sector| %>
-              <% id = "story_sector_ids_#{sector.id}" %>
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :website_url, as: :text,
+                  label: "External URL",
+                  hint: "(open in external website instead)",
+                  input_html: { rows: 1, class: "w-full" } %>
+    </div>
+  </div>
 
-              <label
-                for="<%= id %>"
-                class="
-                  flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                  rounded-lg shadow-sm hover:bg-gray-100 transition">
-                <%= hidden_field_tag "story[sector_ids][]", "" %>
-                <!-- # To ensure unchecked boxes are submitted -->
-                <%= check_box_tag "story[sector_ids][]",
-                                  sector.id,
-                                  selected_sector_ids.include?(sector.id),
-                                  id: id,
-                                  class: "h-4 w-4 text-blue-600 rounded" %>
+  <% if story_idea %>
+    <div class="flex flex-col md:flex-row md:space-x-4">
+      <div class="flex-1 mb-4 md:mb-0">
+        Story idea author credit:
+        <br>
+        <% if story_idea.created_by.person %>
+          <%= person_profile_button(story_idea.created_by.person, display_name: story_idea.author_credit, subtitle: story_idea.created_by.person.full_name) %>
+        <% else %>
+          <%= story_idea.author_credit %>
+        <% end %>
+        <br>
+        Story idea "author credit preference":
+        <br>
+        <div class="italic"><%= link_to story_idea.author_credit_preference, edit_story_idea_path(story_idea, anchor: "publish-preferences"), class: "hover:underline hover:text-blue-600" %></div>
+      </div>
 
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
-              </label>
+      <% if f.object.persisted? %>
+        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
+          Last updated by:
+          <br>
+          <%= f.object.updated_by&.full_name %>
+          <br>
+          <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
+        </div>
+      <% end %>
+    </div>
+  <% elsif f.object.persisted? %>
+    <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
+      Last updated by:
+      <br>
+      <%= f.object.updated_by&.full_name %>
+      <br>
+      <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
+    </div>
+  <% end %>
+
+  <div class="flex flex-col md:flex-row md:space-x-4">
+    <div class="flex-1 mb-4 md:mb-0" data-controller="searchable-select" data-searchable-select-mode-value="person" data-searchable-select-placeholder-value="Select user">
+      <%= f.input :created_by_id,
+                  collection: @users, label_method: :full_name_with_email,
+                  value_method: :id,
+                  selected: f.object.organization_id || @story_idea&.organization_id,
+                  label: (f.object.created_by&.person ? (
+                    link_to "Story author",
+                            person_path(f.object.created_by.person),
+                            class: "hover:underline") : "Story author").html_safe,
+                  include_blank: true,
+                  input_html: { data: { searchable_select_target: "select" } } %>
+    </div>
+
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :spotlighted_facilitator_id,
+                  collection: f.object.spotlighted_facilitator.present? ? [[ f.object.spotlighted_facilitator.full_name_with_email, f.object.spotlighted_facilitator.id ]] : [],
+                  include_blank: true,
+                  input_html: {
+                    class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
+                    data: {
+                      controller: "remote-select",
+                      remote_select_model_value: "person"
+                    }
+                  },
+                  prompt: "Search by name",
+                  label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
+                                                                         person_path(f.object.spotlighted_facilitator_id),
+                                                                         class: "hover:underline") : "Story spotlighted facilitator").html_safe,
+                  label_html: { class: "block font-medium mb-1 text-gray-700" } %>
+    </div>
+
+    <div class="flex-1 mb-4 md:mb-0">
+      <% story_idea_label = if f.object.story_idea
+        (link_to "Source story idea",
+                 story_idea_path(f.object.story_idea), class: "hover:underline")
+      else
+        "Source story idea"
+      end %>
+      <%= f.input :story_idea_id,
+                  collection: @story_ideas, label_method: :full_name,
+                  value_method: :id,
+                  selected: f.object.story_idea_id || @story_idea&.id,
+                  label: story_idea_label.html_safe,
+                  prompt: "Select idea",
+                  input_html: {
+                    class: select_caret_class(blank: f.object.story_idea_id.blank?),
+                    style: custom_caret_style,
+                    onchange: select_caret_onchange
+                  } %>
+    </div>
+  </div>
+
+  <!-- Remaining tags accordion -->
+  <% if remaining_categories.any? %>
+    <div class="space-y-4 mt-8">
+      <div class="tags-section" data-controller="dropdown">
+        <button
+          type="button"
+          id="tags_button"
+          class="
+            flex items-center justify-between cursor-pointer w-full
+            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
+          Tags
+          <svg
+            id="tags_arrow"
+            class="w-6 h-6 shrink-0 rotate-180"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+              fill-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+        </button>
+
+        <div id="tags" class="border border-gray-300 p-4 rounded-b-md">
+          <div class="form-group space-y-6">
+            <% remaining_categories.each do |type, cats| %>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type&.display_label || "Uncategorized" %></h3>
+
+                <div class="flex flex-wrap gap-3">
+                  <% cats.each do |category| %>
+                    <% id = "story_category_ids_#{category.id}" %>
+
+                    <label
+                      for="<%= id %>"
+                      class="
+                        flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
+                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                      <%= hidden_field_tag "story[category_ids][]", "" %>
+                      <%= check_box_tag "story[category_ids][]",
+                                        category.id,
+                                        selected_category_ids.include?(category.id),
+                                        id: id,
+                                        class: "h-4 w-4 text-blue-600 rounded" %>
+
+                      <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
             <% end %>
           </div>
         </div>
-
-        <div class="form-group space-y-6">
-          <% @categories_grouped.each do |type, cats| %>
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-              <!-- Header -->
-              <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.display_label %></h3>
-
-              <!-- Checkbox List -->
-              <div class="flex flex-wrap gap-3">
-                <% cats.each do |category| %>
-                  <% id = "story_category_ids_#{category.id}" %>
-
-                  <label
-                    for="<%= id %>"
-                    class="
-                      flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                      border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                    <%= hidden_field_tag "story[category_ids][]", "" %>
-                    <!-- # To ensure unchecked boxes are submitted -->
-                    <%= check_box_tag "story[category_ids][]",
-                                      category.id,
-                                      selected_category_ids.include?(category.id),
-                                      id: id,
-                                      class: "h-4 w-4 text-blue-600 rounded" %>
-
-                    <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-                  </label>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        </div>
       </div>
     </div>
-  </div>
+  <% end %>
+
+  <%= f.hidden_field :updated_by_id, value: current_user.id %>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
