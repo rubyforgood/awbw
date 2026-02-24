@@ -12,21 +12,42 @@ def find_or_create_by_name!(klass, name, **attrs, &block)
 end
 
 # Admin
-User.find_or_create_by!(email: "umberto.user@example.com") do |user|
-  user.first_name = "Umberto"
-  user.last_name = "User"
+admin = User.find_or_create_by!(email: "umberto.user@example.com") do |user|
   user.password = "password"
   user.super_user = true
   user.confirmed_at = Time.current
 end
 
+unless admin.person.present?
+  person = Person.create!(
+    first_name: "Umberto",
+    last_name: "User",
+    email: admin.email,
+    created_by: admin,
+    updated_by: admin,
+    profile_is_searchable: true
+  )
+  admin.update!(person: person)
+end
+
+
 # Non-Admin
-User.find_or_create_by!(email: "amy.user@example.com") do |user|
-  user.first_name = "Amy"
-  user.last_name = "User"
+amy = User.find_or_create_by!(email: "amy.user@example.com") do |user|
   user.password = "password"
   user.super_user = false
   user.confirmed_at = Time.current
+end
+
+unless amy.person.present?
+  person = Person.create!(
+    first_name: "Amy",
+    last_name: "User",
+    email: amy.email,
+    created_by: amy,
+    updated_by: amy,
+    profile_is_searchable: true
+  )
+  amy.update!(person: person)
 end
 
 # Orphaned
@@ -62,6 +83,22 @@ FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).firs
 puts "Creating OrganizationStatuses…"
 OrganizationStatus::ORGANIZATION_STATUSES.each do |status|
   OrganizationStatus.where(name: status).first_or_create!
+end
+
+puts "Creating Organization…"
+awbw_org = Organization.find_or_create_by!(name: "AWBW") do |org|
+  org.organization_status = OrganizationStatus.find_by!(name: "Active")
+end
+
+[ admin, amy ].each do |user|
+  next unless user.person.present? && user.person.affiliations.empty?
+
+  Affiliation.create!(
+    person: user.person,
+    organization: awbw_org,
+    position: :leader,
+    start_date: 1.year.ago.to_date
+  )
 end
 
 puts "Creating OrganizationObligations…"

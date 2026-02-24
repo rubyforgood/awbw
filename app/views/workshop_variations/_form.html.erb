@@ -81,6 +81,13 @@
                       input_html: { class: "w-full rounded-lg px-3 py-2",
                                     data: { searchable_select_target: "select" } } %>
           </div>
+          <%= f.input :author_credit_preference,
+                      as: :select,
+                      collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
+                      include_blank: "Select a preference",
+                      selected: f.object.author_credit_preference,
+                      label: "Author credit preference",
+                      hint: "Controls how the author's name is displayed" %>
         </div>
       <% else %>
         <%= f.hidden_field :created_by_id, value: current_user.id %>

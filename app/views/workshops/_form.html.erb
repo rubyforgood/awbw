@@ -65,6 +65,13 @@
                           focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
                           data: { searchable_select_target: "select" } } %>
           </div>
+          <%= f.input :author_credit_preference,
+                      as: :select,
+                      collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
+                      include_blank: "Select a preference",
+                      selected: f.object.author_credit_preference,
+                      label: "Author credit preference",
+                      hint: "Controls how the author's name is displayed" %>
         </div>
         <div class="admin-only bg-blue-100 flex p-3 gap-x-2 items-center">
           <%= f.input :workshop_idea_id,

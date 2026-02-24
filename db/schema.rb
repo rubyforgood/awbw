@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_22_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_23_000000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -830,6 +830,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_180000) do
   end
 
   create_table "stories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "author_credit_preference"
     t.text "body", size: :medium
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
@@ -861,13 +862,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_180000) do
   end
 
   create_table "story_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "author_credit_preference", null: false
     t.text "body", size: :medium
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.string "external_workshop_title"
     t.integer "organization_id", null: false
     t.boolean "permission_given"
-    t.string "publish_preferences", null: false
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
@@ -1012,6 +1013,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_180000) do
   create_table "workshop_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "age_range", size: :medium
     t.text "age_range_spanish", size: :medium
+    t.string "author_credit_preference"
     t.text "closing", size: :medium
     t.text "closing_spanish", size: :medium
     t.datetime "created_at", null: false
@@ -1115,13 +1117,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_180000) do
   end
 
   create_table "workshop_variation_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "author_credit_preference", null: false
     t.text "body", size: :long
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
     t.string "name", null: false
     t.integer "organization_id", null: false
     t.boolean "permission_given"
-    t.string "publish_preferences", null: false
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
     t.integer "windows_type_id", null: false
@@ -1137,6 +1139,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_180000) do
   end
 
   create_table "workshop_variations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "author_credit_preference"
     t.text "body", size: :long
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
@@ -1163,6 +1166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_180000) do
   create_table "workshops", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "age_range", size: :long
     t.text "age_range_spanish", size: :long
+    t.string "author_credit_preference"
     t.string "author_location"
     t.text "closing", size: :long
     t.text "closing_spanish", size: :long

@@ -13,7 +13,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
       rhino_body: "<p>A variation focusing on mindfulness and relaxation.</p>",
       youtube_url: "https://www.youtube.com/watch?v=example",
       permission_given: true,
-      publish_preferences: "public",
+      author_credit_preference: "full_name",
       workshop_id: workshop.id,
       organization_id: organization.id,
       windows_type_id: windows_type.id,

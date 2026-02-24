@@ -6,7 +6,7 @@ FactoryBot.define do
     title { "My Title" }
     rhino_body { "<p>My Body</p>" }
     permission_given { true }
-    publish_preferences { "I would like my full name published with the story" }
+    author_credit_preference { "full_name" }
     association :created_by, factory: :user
     association :updated_by, factory: :user
 
