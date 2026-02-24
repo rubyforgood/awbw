@@ -65,7 +65,7 @@ class OrganizationsController < ApplicationController
     logged_workshop_ids = workshop_logs.where.not(workshop_id: nil).distinct.pluck(:workshop_id)
     @workshops = Workshop.joins(:windows_type)
                          .where(id: logged_workshop_ids)
-                         .select("workshops.id, workshops.title, windows_types.name")
+                         .select("workshops.id, workshops.title, workshops.windows_type_id, windows_types.name")
                          .order("workshops.title ASC, windows_types.name ASC")
     logged_user_ids = workshop_logs.where.not(created_by_id: nil).distinct.pluck(:created_by_id)
     @users = User.where(id: logged_user_ids)
