@@ -5,6 +5,7 @@ RSpec.describe "Stories", type: :system do
     context "as a regular_user" do
       it "sees overview of stories" do
         sign_in(create(:user))
+        visit root_path
 
         create(:sector, :other)
         adult_window = create(:windows_type, :adult)
@@ -70,6 +71,7 @@ RSpec.describe "Stories", type: :system do
     context "as a regular_user" do
       it "sees story show" do
         sign_in(create(:user))
+        visit root_path
         story = create(:story, :published, title: "The best story in the world. This is a tribute.")
 
         visit story_path(story)
@@ -79,6 +81,7 @@ RSpec.describe "Stories", type: :system do
 
       it "cannot see unpublished story show" do
         sign_in(create(:user))
+        visit root_path
         story = create(:story, :unpublished, title: "The best story in the world. This is a tribute.")
         visit story_path(story)
         expect(page).to have_current_path(root_path)
@@ -111,6 +114,7 @@ RSpec.describe "Stories", type: :system do
       it "Admin can edit an existing story" do
         user = create(:user, :admin)
         sign_in(user)
+        visit root_path
         adult_window = create(:windows_type, :adult)
         story = create(:story, title: "Old Title", windows_type: adult_window, created_by: user)
 
