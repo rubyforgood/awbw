@@ -266,4 +266,52 @@ RSpec.describe User do
       expect(user.first_name_or_email).to eq(user.email)
     end
   end
+
+  describe '.search_by_params' do
+    let!(:admin_user) { create(:user, first_name: 'Alice', last_name: 'Admin', email: 'alice@example.com', super_user: true) }
+    let!(:regular_user) { create(:user, first_name: 'Bob', last_name: 'Regular', email: 'bob@example.com', super_user: false) }
+    let!(:inactive_user) { create(:user, first_name: 'Carol', last_name: 'Inactive', email: 'carol@example.com', inactive: true) }
+    let!(:locked_user) { create(:user, first_name: 'Dave', last_name: 'Locked', email: 'dave@example.com', locked_at: Time.current) }
+
+    it 'returns all when no params' do
+      results = User.search_by_params({})
+      expect(results).to include(admin_user, regular_user, inactive_user, locked_user)
+    end
+
+    it 'filters by search term matching name' do
+      results = User.search_by_params(search: 'Alice')
+      expect(results).to include(admin_user)
+      expect(results).not_to include(regular_user)
+    end
+
+    it 'filters by search term matching email' do
+      results = User.search_by_params(search: 'bob@example')
+      expect(results).to include(regular_user)
+      expect(results).not_to include(admin_user)
+    end
+
+    it 'filters by super_user' do
+      results = User.search_by_params(super_user: 'true')
+      expect(results).to include(admin_user)
+      expect(results).not_to include(regular_user)
+    end
+
+    it 'filters by access true (has access)' do
+      results = User.search_by_params(access: 'true')
+      expect(results).to include(admin_user, regular_user)
+      expect(results).not_to include(inactive_user, locked_user)
+    end
+
+    it 'filters by access false (no access)' do
+      results = User.search_by_params(access: 'false')
+      expect(results).to include(inactive_user, locked_user)
+      expect(results).not_to include(admin_user, regular_user)
+    end
+
+    it 'chains search and super_user filters' do
+      results = User.search_by_params(search: 'Alice', super_user: 'true')
+      expect(results).to include(admin_user)
+      expect(results).not_to include(regular_user, inactive_user)
+    end
+  end
 end

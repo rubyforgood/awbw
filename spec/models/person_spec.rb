@@ -255,6 +255,52 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe '.search_by_params' do
+    let(:org_alpha) { create(:organization, name: "Alpha Center") }
+    let(:org_beta) { create(:organization, name: "Beta Foundation") }
+
+    let!(:person_alice) do
+      create(:person, first_name: 'Alice', last_name: 'Smith', email: 'alice@example.com').tap do |p|
+        create(:affiliation, person: p, organization: org_alpha)
+      end
+    end
+
+    let!(:person_bob) do
+      create(:person, first_name: 'Bob', last_name: 'Jones', email: 'bob@example.com').tap do |p|
+        create(:affiliation, person: p, organization: org_beta)
+      end
+    end
+
+    it 'returns all when no params' do
+      results = Person.search_by_params({})
+      expect(results).to include(person_alice, person_bob)
+    end
+
+    it 'filters by contact_info matching name' do
+      results = Person.search_by_params(contact_info: 'Alice')
+      expect(results).to include(person_alice)
+      expect(results).not_to include(person_bob)
+    end
+
+    it 'filters by contact_info matching email' do
+      results = Person.search_by_params(contact_info: 'bob@example')
+      expect(results).to include(person_bob)
+      expect(results).not_to include(person_alice)
+    end
+
+    it 'filters by organization_name' do
+      results = Person.search_by_params(organization_name: 'Alpha')
+      expect(results).to include(person_alice)
+      expect(results).not_to include(person_bob)
+    end
+
+    it 'chains contact_info and organization_name' do
+      results = Person.search_by_params(contact_info: 'Alice', organization_name: 'Alpha')
+      expect(results).to include(person_alice)
+      expect(results).not_to include(person_bob)
+    end
+  end
+
   describe ".published" do
     let!(:searchable_with_active) do
       person = create(:person, profile_is_searchable: true)
