@@ -90,7 +90,7 @@ awbw_org = Organization.find_or_create_by!(name: "AWBW") do |org|
   org.organization_status = OrganizationStatus.find_by!(name: "Active")
 end
 
-[admin, amy].each do |user|
+[ admin, amy ].each do |user|
   next unless user.person.present? && user.person.affiliations.empty?
 
   Affiliation.create!(
