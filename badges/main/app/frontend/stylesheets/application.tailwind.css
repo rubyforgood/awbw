@@ -98,6 +98,12 @@
   @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300;
 }
 
+/* Native select placeholder styling (grey prompt text + custom caret) */
+select.select-placeholder {
+  color: #9ca3af !important;
+  font-size: 0.875rem !important;
+}
+
 .is-active {
   @apply text-primary border-b-2 border-primary font-bold bg-gray-100;
 }

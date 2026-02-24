@@ -1,101 +1,98 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
 <div class="<%= DomainTheme.bg_class_for(:workshop_ideas) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex flex-wrap justify-end gap-2 mb-4">
-        <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-        <% if allowed_to?(:index?, WorkshopIdea) %>
-          <%= link_to "Workshop Ideas", workshop_ideas_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-        <% end %>
-        <% if allowed_to?(:edit?, @workshop_idea) %>
-          <%= link_to "Edit", edit_workshop_idea_path(@workshop_idea), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-        <% end %>
-      </div>
-      <h1 class="text-2xl font-semibold text-gray-900 mb-6">
-        <%= @workshop_idea.class.model_name.human %> details
-      </h1>
+  <div class="flex flex-wrap justify-end gap-2 mb-4">
+    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% if allowed_to?(:index?, WorkshopIdea) %>
+      <%= link_to "Workshop Ideas", workshop_ideas_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% end %>
+    <% if allowed_to?(:edit?, @workshop_idea) %>
+      <%= link_to "Edit", edit_workshop_idea_path(@workshop_idea), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% end %>
+  </div>
 
-      <div class="space-y-6">
-        <div class="mt-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Title:</p>
-              <p class="text-gray-900"><%= @workshop_idea.title %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Description:</p>
-              <p class="text-gray-900"><%= @workshop_idea.description %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Staff notes:</p>
-              <p class="text-gray-900"><%= @workshop_idea.staff_notes %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Created by:</p>
-              <p class="text-gray-900"><%= @workshop_idea.created_by %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Windows type:</p>
-              <p class="text-gray-900"><%= @workshop_idea.windows_type_id %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Tips:</p>
-              <p class="text-gray-900"><%= @workshop_idea.tips %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Objective:</p>
-              <p class="text-gray-900"><%= @workshop_idea.objective %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Materials:</p>
-              <p class="text-gray-900"><%= @workshop_idea.materials %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Introduction:</p>
-              <p class="text-gray-900"><%= @workshop_idea.introduction %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Creation:</p>
-              <p class="text-gray-900"><%= @workshop_idea.creation %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Closing:</p>
-              <p class="text-gray-900"><%= @workshop_idea.closing %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Visualization:</p>
-              <p class="text-gray-900"><%= @workshop_idea.visualization %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Warm up:</p>
-              <p class="text-gray-900"><%= @workshop_idea.warm_up %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Opening circle:</p>
-              <p class="text-gray-900"><%= @workshop_idea.opening_circle %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Demonstration:</p>
-              <p class="text-gray-900"><%= @workshop_idea.demonstration %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Setup:</p>
-              <p class="text-gray-900"><%= @workshop_idea.setup %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Instructions:</p>
-              <p class="text-gray-900"><%= @workshop_idea.instructions %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Optional materials:</p>
-              <p class="text-gray-900"><%= @workshop_idea.optional_materials %></p>
-            </div>
-            <div class="mb-3">
-              <p class="font-bold text-gray-700">Notes:</p>
-              <p class="text-gray-900"><%= @workshop_idea.notes %></p>
-            </div>
-          </div>
+  <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+    <div class="font-semibold text-gray-900 mb-2">
+      <h1 class="text-3xl tracking-tight"><%= @workshop_idea.title %></h1>
+    </div>
+
+    <% if @workshop_idea.workshops.any? %>
+      <div class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+        <i class="fas fa-arrow-up-from-bracket text-blue-600"></i>
+        <span class="text-sm font-medium text-blue-800">
+          Promoted to:
+          <% @workshop_idea.workshops.each do |workshop| %>
+            <%= link_to workshop.title, workshop_path(workshop), class: "underline hover:text-blue-600" %>
+          <% end %>
+        </span>
+      </div>
+    <% end %>
+
+    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm text-gray-600">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div>
+          <span class="font-semibold text-gray-700">Author credit:</span>
+          <%= @workshop_idea.author_credit_preference&.humanize || "—" %>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Windows audience:</span>
+          <%= @workshop_idea.windows_type&.short_name || "—" %>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Timeframe:</span>
+          <%= @workshop_idea.timeframe.presence || "—" %>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Created by:</span>
+          <%= @workshop_idea.created_by&.full_name %>
+          <br><span class="text-gray-400"><%= @workshop_idea.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Updated by:</span>
+          <%= @workshop_idea.updated_by&.full_name %>
+          <br><span class="text-gray-400"><%= @workshop_idea.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
       </div>
-      <div class="media">
-        <%= render "assets/display_assets", resource: @workshop_idea, link: true %>
+
+      <% if @workshop_idea.staff_notes.present? %>
+        <div class="mt-3 pt-3 border-t border-gray-200">
+          <span class="font-semibold text-gray-700">Staff notes:</span>
+          <%= @workshop_idea.staff_notes %>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @workshop_idea.description.present? %>
+      <div class="text-sm text-gray-600">
+        <p><strong>Description:</strong> <%= @workshop_idea.description %></p>
       </div>
+    <% end %>
+
+    <%= render "assets/display_assets", resource: @workshop_idea, link: true %>
+
+    <%
+      sections = [
+        ["Objective",          @workshop_idea.rhino_objective],
+        ["Materials",          @workshop_idea.rhino_materials],
+        ["Optional materials", @workshop_idea.rhino_optional_materials],
+        ["Setup",              @workshop_idea.rhino_setup],
+        ["Introduction",       @workshop_idea.rhino_introduction],
+        ["Opening circle",     @workshop_idea.rhino_opening_circle],
+        ["Warm up",            @workshop_idea.rhino_warm_up],
+        ["Visualization",      @workshop_idea.rhino_visualization],
+        ["Demonstration",      @workshop_idea.rhino_demonstration],
+        ["Creation",           @workshop_idea.rhino_creation],
+        ["Closing",            @workshop_idea.rhino_closing],
+        ["Tips",               @workshop_idea.rhino_tips],
+        ["Notes",              @workshop_idea.rhino_notes],
+      ]
+    %>
+    <% sections.each do |label, content| %>
+      <% if content.present? %>
+        <div class="mb-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-1"><%= label %></h3>
+          <div class="text-gray-900"><%= content %></div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
 </div>

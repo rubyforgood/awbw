@@ -181,6 +181,28 @@ module ApplicationHelper
 
   # Fundamental US time zones only (for user preference dropdown).
   # Order: Eastern → Pacific, then Alaska, Hawaii, Arizona.
+  def default_organization_for_form(object)
+    return object.organization if object.organization.present?
+
+    if current_user.super_user?
+      Organization.find_by(name: ENV["ORGANIZATION_NAME"])
+    elsif current_user.person&.affiliations&.count == 1
+      current_user.person.primary_organization
+    end
+  end
+
+  def custom_caret_style
+    "background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M2 4l4 4 4-4'/%3E%3C/svg%3E\");background-position:right 0.75rem center;background-size:12px;background-repeat:no-repeat;"
+  end
+
+  def select_caret_class(blank:)
+    "w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg appearance-none #{"select-placeholder" if blank}"
+  end
+
+  def select_caret_onchange
+    "if(this.value){this.classList.remove('select-placeholder')}else{this.classList.add('select-placeholder')}"
+  end
+
   def us_time_zone_fundamentals
     zone_names = [
       "Eastern Time (US & Canada)",
