@@ -45,6 +45,13 @@ RSpec.describe "/organizations", type: :request do
       get organization_url(organization)
       expect(response).to be_successful
     end
+
+    it "renders successfully with workshop logs" do
+      organization = Organization.create!(valid_attributes)
+      workshop_log = create(:workshop_log, organization: organization, created_by: admin)
+      get organization_url(organization)
+      expect(response).to be_successful
+    end
   end
 
   describe "GET /new" do
