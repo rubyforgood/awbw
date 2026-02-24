@@ -73,4 +73,31 @@ RSpec.describe Event, type: :model do
       end
     end
   end
+
+  describe '.search_by_params' do
+    let!(:art_event) { create(:event, title: 'Art Workshop Showcase', description: 'Annual art exhibition') }
+    let!(:music_event) { create(:event, title: 'Music Therapy Session', description: 'Healing through music') }
+
+    it 'returns all when no params' do
+      results = Event.search_by_params({})
+      expect(results).to include(art_event, music_event)
+    end
+
+    it 'filters by query matching title' do
+      results = Event.search_by_params(query: 'Art Workshop')
+      expect(results).to include(art_event)
+      expect(results).not_to include(music_event)
+    end
+
+    it 'filters by query matching description' do
+      results = Event.search_by_params(query: 'Healing')
+      expect(results).to include(music_event)
+      expect(results).not_to include(art_event)
+    end
+
+    it 'returns empty for non-matching query' do
+      results = Event.search_by_params(query: 'nonexistent')
+      expect(results).not_to include(art_event, music_event)
+    end
+  end
 end

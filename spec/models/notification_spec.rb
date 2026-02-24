@@ -89,4 +89,32 @@ RSpec.describe Notification do
       expect(third_resend.resend_number).to eq(3)
     end
   end
+
+  describe '.search_by_params' do
+    let!(:notification_alice) { create(:notification, recipient_email: 'alice@example.com', email_subject: 'Welcome to AWBW') }
+    let!(:notification_bob) { create(:notification, recipient_email: 'bob@example.com', email_subject: 'Password Reset') }
+
+    it 'returns all when no params' do
+      results = Notification.search_by_params({})
+      expect(results).to include(notification_alice, notification_bob)
+    end
+
+    it 'filters by email' do
+      results = Notification.search_by_params(email: 'alice')
+      expect(results).to include(notification_alice)
+      expect(results).not_to include(notification_bob)
+    end
+
+    it 'filters by subject_line' do
+      results = Notification.search_by_params(subject_line: 'Welcome')
+      expect(results).to include(notification_alice)
+      expect(results).not_to include(notification_bob)
+    end
+
+    it 'chains email and subject_line filters' do
+      results = Notification.search_by_params(email: 'alice', subject_line: 'Welcome')
+      expect(results).to include(notification_alice)
+      expect(results).not_to include(notification_bob)
+    end
+  end
 end
