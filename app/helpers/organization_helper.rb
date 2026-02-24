@@ -15,7 +15,7 @@ module OrganizationHelper
                     overflow-hidden" do
       # --- Logo ---
       logo = if organization.respond_to?(:logo) && organization.logo.attached?
-        image_tag url_for(organization.logo),
+        image_tag organization.logo,
                   class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
       else
         content_tag(:span, organization.name.first.upcase,
