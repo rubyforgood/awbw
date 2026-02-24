@@ -5,9 +5,6 @@ RSpec.describe "stories/new", type: :view do
 
   before(:each) do
     assign(:windows_types, [])
-    assign(:workshops, [])
-    assign(:organizations, [])
-    assign(:users, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
     assign(:story_ideas, [])
@@ -56,8 +53,6 @@ RSpec.describe "stories/new", type: :view do
       assign(:story_idea, story_idea)
       assign(:story_ideas, StoryIdea.where(id: story_idea.id))
       assign(:windows_types, WindowsType.where(id: story_idea.windows_type_id))
-      assign(:workshops, Workshop.where(id: story_idea.workshop_id))
-      assign(:organizations, Organization.where(id: story_idea.organization_id))
     end
 
     it "pre-fills windows_type_id from story idea" do
@@ -140,7 +135,7 @@ RSpec.describe "stories/new", type: :view do
 
     context "with sectors and categories from story idea" do
       let(:sector) { create(:sector, :published, name: "Domestic Violence") }
-      let(:category_type) { create(:category_type, :published, name: "StoryPopulation", story_specific: true, display_text: "Who is your story about?") }
+      let(:category_type) { create(:category_type, :published, name: "StoryPopulation", story_specific: true, display_text: "Who is this story about?") }
       let(:category) { create(:category, :published, name: "Adults", category_type: category_type) }
 
       before do
@@ -175,7 +170,7 @@ RSpec.describe "stories/new", type: :view do
       create(:category_type, :published,
              name: "StoryPopulation",
              story_specific: true,
-             display_text: "Who is your story about?")
+             display_text: "Who is this story about?")
     end
 
     let(:general_type) do
@@ -218,7 +213,7 @@ RSpec.describe "stories/new", type: :view do
     it "displays story-specific category type with display_label" do
       render
 
-      expect(rendered).to include("Who is your story about?")
+      expect(rendered).to include("Who is this story about?")
     end
 
     it "displays story-specific category checkboxes" do
@@ -246,7 +241,7 @@ RSpec.describe "stories/new", type: :view do
     it "shows story-specific types before general types" do
       render
 
-      population_pos = rendered.index("Who is your story about?")
+      population_pos = rendered.index("Who is this story about?")
       age_range_pos = rendered.index("Age Range")
       expect(population_pos).to be < age_range_pos
     end

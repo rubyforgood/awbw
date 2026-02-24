@@ -122,7 +122,7 @@ RSpec.describe "Stories", type: :system do
 
         within("#edit_story_#{story.id}") do
             fill_in "Title", with: "A New Title"
-            select adult_window.short_name, from: "Windows type"
+            select adult_window.short_name, from: "Windows audience"
             click_on "Save changes"
           end
 

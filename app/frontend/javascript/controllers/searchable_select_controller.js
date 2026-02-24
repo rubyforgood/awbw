@@ -35,6 +35,11 @@ export default class extends Controller {
     }
 
     this.tomSelect = new TomSelect(el, options);
+
+    // Clear empty selection so the placeholder text shows in grey
+    if (!el.value) {
+      this.tomSelect.clear(true);
+    }
   }
 
   submit() {
