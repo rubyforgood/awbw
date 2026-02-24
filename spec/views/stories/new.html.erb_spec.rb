@@ -5,8 +5,6 @@ RSpec.describe "stories/new", type: :view do
 
   before(:each) do
     assign(:windows_types, [])
-    assign(:workshops, [])
-    assign(:organizations, [])
     assign(:users, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
@@ -56,8 +54,6 @@ RSpec.describe "stories/new", type: :view do
       assign(:story_idea, story_idea)
       assign(:story_ideas, StoryIdea.where(id: story_idea.id))
       assign(:windows_types, WindowsType.where(id: story_idea.windows_type_id))
-      assign(:workshops, Workshop.where(id: story_idea.workshop_id))
-      assign(:organizations, Organization.where(id: story_idea.organization_id))
     end
 
     it "pre-fills windows_type_id from story idea" do
