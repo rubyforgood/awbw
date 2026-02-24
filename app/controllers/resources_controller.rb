@@ -1,5 +1,5 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable, AhoyTracking
+  include ExternallyRedirectable, AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
@@ -159,18 +159,9 @@ class ResourcesController < ApplicationController
         .published
         .order(:position, :name)
         .group_by(&:category_type)
-        .select { |type, _| type.nil? || (type.published? && !type.story_specific?) }
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
     @sectors = Sector.published.order(:name)
-  end
-
-  def assign_associations(resource)
-    selected_category_ids = Array(params[:resource][:category_ids]).reject(&:blank?).map(&:to_i)
-    resource.categories = Category.where(id: selected_category_ids)
-
-    selected_sector_ids = Array(params[:resource][:sector_ids]).reject(&:blank?).map(&:to_i)
-    resource.sectors = Sector.where(id: selected_sector_ids)
-    resource.save!
   end
 
   def resource_id_param

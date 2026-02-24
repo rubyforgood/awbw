@@ -1,4 +1,5 @@
 class StoryIdeasController < ApplicationController
+  include TagAssignable
   before_action :set_story_idea, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -135,15 +136,6 @@ class StoryIdeasController < ApplicationController
     end
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
     @story_idea.gallery_assets.build
-  end
-
-  def assign_associations(story_idea)
-    selected_category_ids = Array(params[:story_idea][:category_ids]).reject(&:blank?).map(&:to_i)
-    story_idea.categories = Category.where(id: selected_category_ids)
-
-    selected_sector_ids = Array(params[:story_idea][:sector_ids]).reject(&:blank?).map(&:to_i)
-    story_idea.sectors = Sector.where(id: selected_sector_ids)
-    story_idea.save!
   end
 
   private

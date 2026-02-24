@@ -249,3 +249,39 @@ story_population_type.update!(display_text: "Who is your story about?", story_sp
   end
   cat.update!(published: true) unless cat.published?
 end
+
+puts "Creating WorkshopEnvironment CategoryType…"
+workshop_env_type = find_or_create_by_name!(CategoryType, "WorkshopEnvironment") do |ct|
+  ct.display_text = "Workshop Environments"
+  ct.story_specific = false
+  ct.profile_specific = true
+  ct.published = true
+end
+workshop_env_type.update!(display_text: "Workshop Environments", story_specific: false, profile_specific: true, published: true)
+
+%w[Shelter School Hospital Community\ Center After-School\ Program Virtual/Online Private\ Practice Other].each do |name|
+  cat = Category.where("LOWER(name) = LOWER(?)", name).first
+  if cat
+    cat.update!(category_type: workshop_env_type) unless cat.category_type_id == workshop_env_type.id
+  else
+    cat = workshop_env_type.categories.create!(name: name, published: true)
+  end
+  cat.update!(published: true) unless cat.published?
+end
+
+puts "Creating registerable Event with registration form…"
+reg_event = Event.find_or_create_by!(title: "AWBW Facilitator Training") do |event|
+  event.start_date = 2.months.from_now
+  event.end_date = 2.months.from_now + 3.hours
+  event.registration_close_date = 2.months.from_now - 1.day
+  event.published = true
+  event.publicly_visible = true
+  event.featured = true
+  event.cost = 150
+  event.created_by = User.find_by(email: "umberto.user@example.com")
+end
+
+unless reg_event.forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)
+  EventRegistrationFormBuilder.build!(reg_event)
+  puts "  → Registration form created for '#{reg_event.title}'"
+end

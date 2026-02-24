@@ -92,8 +92,10 @@ Rails.application.routes.draw do
     member do
       get :manage
       patch :preview
+      post :copy_registration_form
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
+    resource :public_registration, only: [ :new, :create, :show ], module: :events
   end
   resources :people do
     collection do

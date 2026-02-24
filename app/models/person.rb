@@ -200,6 +200,7 @@ class Person < ApplicationRecord
   def strip_whitespace
     self.first_name = first_name&.strip
     self.last_name = last_name&.strip
+    self.legal_first_name = legal_first_name&.strip
     self.email = email&.strip
     self.email_2 = email_2&.strip
   end

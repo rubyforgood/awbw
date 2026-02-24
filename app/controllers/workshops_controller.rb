@@ -1,10 +1,10 @@
 class WorkshopsController < ApplicationController
-  include AhoyTracking
+  include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
     authorize!
-    @category_types = CategoryType.published.where(story_specific: false).order(:name).decorate
+    @category_types = CategoryType.published.general.order(:name).decorate
     @sectors        = Sector.published.order(:name)
     @windows_types  = WindowsType.all
 
@@ -204,24 +204,13 @@ class WorkshopsController < ApplicationController
         .published
         .order(:position, :name)
         .group_by(&:category_type)
-        .select { |type, _| type.nil? || (type.published? && !type.story_specific?) }
+        .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)
 
     @workshop.build_primary_asset if @workshop.primary_asset.blank?
     @workshop.gallery_assets.build
-  end
-
-  def assign_associations(workshop)
-    # Convert checkbox values into categorizable_items updates
-    selected_category_ids = Array(params[:workshop][:category_ids]).reject(&:blank?).map(&:to_i)
-    workshop.categories = Category.where(id: selected_category_ids)
-
-    # Convert checkbox values into sectorable_items updates
-    selected_sector_ids = Array(params[:workshop][:sector_ids]).reject(&:blank?).map(&:to_i)
-    workshop.sectors = Sector.where(id: selected_sector_ids)
-    workshop.save!
   end
 
   def log_workshop_error(action, error)

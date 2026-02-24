@@ -28,7 +28,7 @@
                   as: :boolean,
                   wrapper: false,
                   label: false,
-                  input_html: { class: "mr-2 text-blue-600 focus:ring-blue-500" } %>
+                  input_html: { checked: f.object.new_record? || f.object.primary?, class: "mr-2 text-blue-600 focus:ring-blue-500" } %>
     </div>
 
     <!-- Inactive -->
