@@ -6,7 +6,7 @@ class TutorialsController < ApplicationController
   def index
     authorize!
     if turbo_frame_request?
-      per_page = params[:number_of_items_per_page].presence || 25
+      per_page = params[:number_of_items_per_page].presence || 6
       base_scope = authorized_scope(Tutorial.all)
       filtered = base_scope.search_by_params(params)
 
