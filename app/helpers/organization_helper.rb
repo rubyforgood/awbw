@@ -5,7 +5,7 @@ module OrganizationHelper
     text = DomainTheme.text_class_for(:organizations)
     border = DomainTheme.border_class_for(:organizations)
 
-    hover_title = [organization.name, subtitle].compact_blank.join(" — ")
+    hover_title = [ organization.name, subtitle ].compact_blank.join(" — ")
 
     link_to organization_path(organization),
             data: data,

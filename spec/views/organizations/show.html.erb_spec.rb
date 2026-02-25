@@ -28,7 +28,7 @@ RSpec.describe "organizations/show", type: :view do
 
     it "groups multiple affiliations for the same person into one button" do
       # name appears twice per button (display text + title attr), so 2 = one button
-    expect(rendered.scan("Amy User").count).to eq(2)
+      expect(rendered.scan("Amy User").count).to eq(2)
     end
 
     it "shows combined titles as subtitle" do

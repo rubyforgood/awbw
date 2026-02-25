@@ -6,7 +6,7 @@ module PersonHelper
     border = DomainTheme.border_class_for(:people)
 
     full_name = display_name || person.try(:name) || person.to_s
-    hover_title = [full_name, subtitle].compact_blank.join(" — ")
+    hover_title = [ full_name, subtitle ].compact_blank.join(" — ")
 
     link_to person_path(person),
             data: data,
