@@ -139,13 +139,16 @@
             Affiliations
           </h2>
           <% active_affiliations = @organization.affiliations
-               .select { |affiliation| !affiliation.inactive? && (affiliation.end_date.nil? || affiliation.end_date >= Date.current) && affiliation.person.present? }
-               .sort_by { |affiliation| [affiliation.person.first_name.to_s.downcase, affiliation.person.last_name.to_s.downcase] } %>
-          <% if active_affiliations.any? %>
+               .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) && a.person.present? }
+               .sort_by { |a| [a.person.first_name.to_s.downcase, a.person.last_name.to_s.downcase] } %>
+          <% grouped = active_affiliations.group_by(&:person) %>
+          <% if grouped.any? %>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              <% active_affiliations.each do |affiliation| %>
+              <% grouped.each do |person, person_affiliations| %>
                 <div data-paginated-fields-target="item">
-                  <%= person_profile_button(affiliation.person, subtitle: affiliation.title.presence) %>
+                  <% titles = person_affiliations.filter_map { |a| a.title.presence }.uniq %>
+                  <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
+                  <%= person_profile_button(person, subtitle: titles.any? ? titles.join(", ") : nil) %>
                 </div>
               <% end %>
             </div>
