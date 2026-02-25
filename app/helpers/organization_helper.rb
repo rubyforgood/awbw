@@ -1,9 +1,16 @@
 module OrganizationHelper
-  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {})
-    bg = DomainTheme.bg_class_for(:organizations, intensity: 100)
-    hover_bg = DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)
-    text = DomainTheme.text_class_for(:organizations)
-    border = DomainTheme.border_class_for(:organizations)
+  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {}, inactive: false)
+    if inactive
+      bg = "bg-gray-100"
+      hover_bg = "hover:bg-gray-200"
+      text = "text-gray-400"
+      border = "border-gray-300"
+    else
+      bg = DomainTheme.bg_class_for(:organizations, intensity: 100)
+      hover_bg = DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)
+      text = DomainTheme.text_class_for(:organizations)
+      border = DomainTheme.border_class_for(:organizations)
+    end
 
     hover_title = [ organization.name, subtitle ].compact_blank.join(" — ")
 

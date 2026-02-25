@@ -2,14 +2,19 @@
 <% per_page ||= 10 %>
 <% show_subtitle = local_assigns.fetch(:show_subtitle, true) %>
 <% button_data = local_assigns.fetch(:button_data, {}) %>
-<% active_affiliations = affiliations
-     .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) && a.organization.present? }
+<% include_inactive = local_assigns.fetch(:include_inactive, false) %>
+<% all_affiliations = affiliations.select { |a| a.organization.present? } %>
+<% active_affiliations = all_affiliations
+     .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
      .sort_by { |a| a.organization.name.to_s.downcase } %>
-<% grouped = active_affiliations.group_by(&:organization) %>
-<% if grouped.any? %>
+<% inactive_affiliations = include_inactive ?
+     (all_affiliations - active_affiliations).sort_by { |a| a.organization.name.to_s.downcase } : [] %>
+<% active_grouped = active_affiliations.group_by(&:organization) %>
+<% inactive_grouped = inactive_affiliations.group_by(&:organization) %>
+<% if active_grouped.any? || inactive_grouped.any? %>
   <div data-controller="paginated-fields" data-paginated-fields-per-page-value="<%= per_page %>">
     <div class="<%= grid_classes %>">
-      <% grouped.each do |organization, org_affiliations| %>
+      <% active_grouped.each do |organization, org_affiliations| %>
         <div data-paginated-fields-target="item">
           <% if show_subtitle %>
             <% titles = org_affiliations.filter_map { |a| a.title.presence }.uniq %>
@@ -17,6 +22,17 @@
             <%= organization_profile_button(organization, subtitle: titles.any? ? titles.join(", ") : nil, data: button_data) %>
           <% else %>
             <%= organization_profile_button(organization, data: button_data) %>
+          <% end %>
+        </div>
+      <% end %>
+      <% inactive_grouped.each do |organization, org_affiliations| %>
+        <div data-paginated-fields-target="item">
+          <% if show_subtitle %>
+            <% titles = org_affiliations.filter_map { |a| a.title.presence }.uniq %>
+            <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
+            <%= organization_profile_button(organization, subtitle: titles.any? ? titles.join(", ") : nil, data: button_data, inactive: true) %>
+          <% else %>
+            <%= organization_profile_button(organization, data: button_data, inactive: true) %>
           <% end %>
         </div>
       <% end %>
