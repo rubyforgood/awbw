@@ -106,7 +106,7 @@
             </div>
             <% if current_user && @user %>
               <div class="text-sm text-blue-700 bg-blue-50 border border-blue-300 rounded-lg p-4">
-                Hello, <%= @user.person&.first_name %>! We're glad to hear from you. We'll reply by email to <%= @user.email %>.
+                Hello, <%= @user.first_name_or_email %>! We're glad to hear from you. We'll reply by email to <%= @user.email %>.
               </div>
             <% end %>
             <%= form_tag("/contact_us", method: "POST", class: "space-y-8", id: "contact-us-form", novalidate: true) do %>
