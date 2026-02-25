@@ -88,6 +88,9 @@
               </h3>
               <p class="text-gray-600 max-w-md mx-auto">
                 Your message has been received and our team will respond as soon as possible.
+                <% if current_user && @user %>
+                  We'll reply by email to <strong><%= @user.email %></strong>.
+                <% end %>
               </p>
             </div>
             <script>document.getElementById("thank-you").scrollIntoView({ behavior: "smooth", block: "center" });</script>
@@ -98,12 +101,12 @@
                 Send us a message
               </h3>
               <p class="text-gray-600">
-                Please complete the form below and our team will respond as soon as possible.
+                Please complete the form below and our team will respond by email as soon as possible.
               </p>
             </div>
             <% if current_user && @user %>
               <div class="text-sm text-blue-700 bg-blue-50 border border-blue-300 rounded-lg p-4">
-                <strong>Hello, <%= @user.first_name %>!</strong> We're glad to hear from you.
+                Hello, <%= @user.first_name_or_email %>! We're glad to hear from you. We'll reply by email to <%= @user.email %>.
               </div>
             <% end %>
             <%= form_tag("/contact_us", method: "POST", class: "space-y-8", id: "contact-us-form", novalidate: true) do %>
@@ -155,8 +158,8 @@
                   </div>
                 </div>
               <% else %>
-                <input type="hidden" name="contact_us[first_name]" value="<%= @user.first_name %>">
-                <input type="hidden" name="contact_us[last_name]" value="<%= @user.last_name %>">
+                <input type="hidden" name="contact_us[first_name]" value="<%= @user.person&.first_name %>">
+                <input type="hidden" name="contact_us[last_name]" value="<%= @user.person&.last_name %>">
                 <input type="hidden" name="contact_us[from]" value="<%= @user.email %>">
                 <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.primary_organization&.name || '' %>">
               <% end %>
