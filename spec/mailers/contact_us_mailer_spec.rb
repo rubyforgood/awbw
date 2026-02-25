@@ -55,20 +55,20 @@ RSpec.describe ContactUsMailer do
     end
 
     it 'renders the email content correctly for logged in user' do
-      user = create(:user, first_name: 'Jane', last_name: 'Smith')
+      user = create(:user, :with_person)
       contact_params = {
         subject: 'Test Subject',
         from: user.email,
         q: 'general',
-        first_name: user.first_name,
-        last_name: user.last_name,
+        first_name: user.person.first_name,
+        last_name: user.person.last_name,
         agency: 'Test Agency',
         message: 'This is a test message from logged in user'
       }
 
       mail = described_class.hello(contact_params, user)
 
-      expect(mail.body.encoded).to include('Jane Smith')
+      expect(mail.body.encoded).to include("#{user.person.first_name} #{user.person.last_name}")
       expect(mail.body.encoded).to include('This is a test message from logged in user')
     end
   end
