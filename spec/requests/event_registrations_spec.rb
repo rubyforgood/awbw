@@ -2,7 +2,7 @@ require "rails_helper"
 require "csv"
 
 RSpec.describe "EventRegistrations", type: :request do
-  let(:regular_user) { create(:user, :with_person, first_name: "John", last_name: "Doe", email: "john.doe@example.com") }
+  let(:regular_user) { create(:user, :with_person, email: "john.doe@example.com") }
   let(:admin)        { create(:user, :with_person, super_user: true) }
   let(:other_user)   { create(:user, :with_person) }
 
