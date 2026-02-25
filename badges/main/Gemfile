@@ -109,3 +109,6 @@ gem "solid_queue", "~> 1.3"
 gem "opentelemetry-sdk"
 gem "opentelemetry-exporter-otlp"
 gem "opentelemetry-instrumentation-all"
+
+# Error monitoring (production-only via initializer guard)
+gem "honeybadger", "~> 6.4"
