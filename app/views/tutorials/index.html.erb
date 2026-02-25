@@ -18,7 +18,7 @@
         </p>
       </div>
 
-      <div class="text-right text-end">
+      <div class="text-right">
         <% if allowed_to?(:new?, Tutorial) %>
           <%= link_to "New #{Tutorial.model_name.human.downcase}",
                        new_tutorial_path,
@@ -31,7 +31,7 @@
 
     <% result_src = tutorials_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag "tutorials_results", src: result_src do %>
+    <%= turbo_frame_tag "tutorials_results", src: result_src  do %>
       <div class="bg-white rounded-lg shadow-md p-6 mt-4 animate-pulse">
         <div class="space-y-4">
           <% 3.times do %>
