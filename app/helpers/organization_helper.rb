@@ -5,8 +5,11 @@ module OrganizationHelper
     text = DomainTheme.text_class_for(:organizations)
     border = DomainTheme.border_class_for(:organizations)
 
+    hover_title = [organization.name, subtitle].compact_blank.join(" — ")
+
     link_to organization_path(organization),
             data: data,
+            title: hover_title,
             class: "group relative flex items-center gap-2
                     w-full px-4 py-2
                     border #{border} #{bg} #{hover_bg} rounded-lg
@@ -29,7 +32,6 @@ module OrganizationHelper
       name = content_tag(
         :span,
         display_name,
-        title: organization.name.to_s,
         class: "font-semibold #{text} truncate"
       )
 

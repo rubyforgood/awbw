@@ -5,8 +5,12 @@ module PersonHelper
     text = DomainTheme.text_class_for(:people)
     border = DomainTheme.border_class_for(:people)
 
+    full_name = display_name || person.try(:name) || person.to_s
+    hover_title = [full_name, subtitle].compact_blank.join(" — ")
+
     link_to person_path(person),
             data: data,
+            title: hover_title,
             class: "group relative flex items-center gap-2
                     w-full px-4 py-2
                     border #{border} #{bg} #{hover_bg} rounded-lg
@@ -32,7 +36,6 @@ module PersonHelper
       name = content_tag(
         :span,
         display_name,
-        title: person.name.to_s,
         class: "font-semibold #{text} truncate"
       )
 
