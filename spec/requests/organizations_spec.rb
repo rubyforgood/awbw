@@ -130,6 +130,54 @@ RSpec.describe "/organizations", type: :request do
     end
   end
 
+  describe "sector saving" do
+    let!(:sector) { create(:sector, :published) }
+    let(:organization) { Organization.create!(valid_attributes) }
+
+    it "saves sectors via nested attributes on create" do
+      post organizations_url, params: {
+        organization: valid_attributes.merge(
+          category_ids: [""],
+          sectorable_items_attributes: {
+            "0" => { sector_id: sector.id, _destroy: "false" }
+          }
+        )
+      }
+
+      expect(Organization.last.sectors).to include(sector)
+    end
+
+    it "saves sectors via nested attributes on update" do
+      patch organization_url(organization), params: {
+        organization: {
+          name: organization.name,
+          category_ids: [""],
+          sectorable_items_attributes: {
+            "0" => { sector_id: sector.id, _destroy: "false" }
+          }
+        }
+      }
+
+      organization.reload
+      expect(organization.sectors).to include(sector)
+    end
+
+    it "preserves existing sectors when updating other fields" do
+      organization.sectorable_items.create!(sector: sector)
+      expect(organization.sectors).to include(sector)
+
+      patch organization_url(organization), params: {
+        organization: {
+          name: "Updated Name",
+          category_ids: [""]
+        }
+      }
+
+      organization.reload
+      expect(organization.sectors).to include(sector)
+    end
+  end
+
   describe "DELETE /destroy" do
     it "destroys the requested organization" do
       organization = Organization.create!(valid_attributes)
