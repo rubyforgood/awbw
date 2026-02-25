@@ -13,6 +13,7 @@ class PasswordsController < Devise::PasswordsController
   def update
     authorize! :password, to: :update?
     super do |resource|
+      resource.confirm if invite_confirmable?(resource)
       track_event("auth.password_changed", user_id: resource.id) if resource.errors.empty?
     end
   end
@@ -26,5 +27,13 @@ class PasswordsController < Devise::PasswordsController
     resource_class.sign_in_after_reset_password ?
       after_sign_in_path_for(resource) :
       new_session_path(resource_name)
+  end
+
+  private
+
+  def invite_confirmable?(resource)
+    return false if resource.errors.present? || resource.confirmed_at
+
+    true
   end
 end
