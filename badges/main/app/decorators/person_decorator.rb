@@ -31,7 +31,7 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def facilitator_end_date
-    facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
+    facilitator_affiliations = affiliations.facilitators
     return nil if facilitator_affiliations.active.exists?
     facilitator_affiliations.maximum(:end_date)
   end
@@ -41,7 +41,7 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def member_since_earlier_than_facilitator_affiliations?
-    earliest_facilitator = affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
+    earliest_facilitator = affiliations.facilitators.minimum(:start_date)
     member_since.present? && earliest_facilitator.present? && member_since.beginning_of_month < earliest_facilitator.beginning_of_month
   end
 
@@ -51,7 +51,7 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def member_since_differs_from_facilitator_affiliations?
-    earliest_facilitator = affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
+    earliest_facilitator = affiliations.facilitators.minimum(:start_date)
     member_since.present? && earliest_facilitator.present? && member_since.beginning_of_month != earliest_facilitator.beginning_of_month
   end
 
@@ -66,7 +66,7 @@ class PersonDecorator < ApplicationDecorator
 
   def facilitator_since_date
     @facilitator_since_date ||= begin
-      facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
+      facilitator_affiliations = affiliations.facilitators
       facilitator_affiliations.minimum(:start_date) || member_since
     end
   end

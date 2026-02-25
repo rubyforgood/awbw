@@ -1,10 +1,11 @@
 <%= turbo_frame_tag "person_affiliations_section" do %>
   <% if affiliations.any? %>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 blur-on-submit">
-      <% affiliations.each do |affiliation| %>
-        <% if affiliation.organization %>
-          <%= organization_profile_button(affiliation.organization, data: { turbo_frame: "_top" }) %>
-        <% end %>
+      <% affiliations.select(&:organization).group_by(&:organization).each do |organization, org_affiliations| %>
+        <% titles = org_affiliations.filter_map { |a| a.title.presence }.uniq %>
+        <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
+        <% subtitle = titles.any? ? titles.join(", ") : nil %>
+        <%= organization_profile_button(organization, subtitle: subtitle, data: { turbo_frame: "_top" }) %>
       <% end %>
     </div>
     <div class="mt-6 flex justify-center">

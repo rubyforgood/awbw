@@ -55,7 +55,7 @@
                 Facilitator since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
               </label>
               <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
-                <% facilitator_start = person.affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date) %>
+                <% facilitator_start = person.affiliations.facilitators.minimum(:start_date) %>
                 <% if facilitator_start.nil? && person.member_since.present? %>
                   <p>Earliest start date from affiliations with 'facilitator' somewhere in the title.<br><br><span class="text-amber-700 font-medium">⚠ Currently showing the legacy member_since value (<%= person.member_since.strftime('%b %Y') %>) because no Facilitator affiliation has a start date. Add a start date to a Facilitator affiliation to stop using the legacy value.</span></p>
                 <% else %>
