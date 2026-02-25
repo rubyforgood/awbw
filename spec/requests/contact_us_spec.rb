@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "ContactUs", type: :request do
-  let(:user) { create(:user, first_name: "John", last_name: "Doe") }
+  let(:user) { create(:user, :with_person) }
   let(:valid_params) do
     {
       contact_us: {
@@ -47,6 +47,11 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).not_to include("twitter.com")
       end
 
+      it "shows respond by email in form intro" do
+        get contact_us_path
+        expect(response.body).to include("respond by email")
+      end
+
       it "shows thank you message after form submission" do
         post contact_us_path, params: valid_params
         follow_redirect!
@@ -71,9 +76,10 @@ RSpec.describe "ContactUs", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
-      it "shows personalized greeting" do
+      it "shows personalized greeting with email reply info" do
         get contact_us_path
-        expect(response.body).to include("Hello, #{user.first_name}")
+        expect(response.body).to include("Hello, #{user.person.first_name}!")
+        expect(response.body).to include("reply by email to #{user.email}")
       end
 
       it "does not show visible form fields for name, email, and agency" do
@@ -82,6 +88,24 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).to include('name="contact_us[first_name]"')
         expect(response.body).to include('name="contact_us[last_name]"')
         expect(response.body).to include('name="contact_us[from]"')
+      end
+
+      it "shows thank you message with email after form submission" do
+        post contact_us_path, params: {
+          contact_us: {
+            first_name: user.person.first_name,
+            last_name: user.person.last_name,
+            from: user.email,
+            agency: "",
+            subject: "Test",
+            message: "Test",
+            q: "general"
+          }
+        }
+        follow_redirect!
+        expect(response.body).to include("Thank you for contacting us!")
+        expect(response.body).to include("reply by email to")
+        expect(response.body).to include(user.email)
       end
 
       it "does not show adult or children program options" do
@@ -129,8 +153,8 @@ RSpec.describe "ContactUs", type: :request do
       let(:logged_in_params) do
         {
           contact_us: {
-            first_name: user.first_name,
-            last_name: user.last_name,
+            first_name: user.person.first_name,
+            last_name: user.person.last_name,
             from: user.email,
             agency: "",
             subject: "Test Subject from logged in user",
