@@ -307,7 +307,10 @@ RuboCop linting on PRs and pushes to main.
 | Rich text | ActionText + Rhino editor (TipTap-based) |
 | File uploads | ActiveStorage (DigitalOcean Spaces) + legacy Paperclip |
 | Feature flags | FeatureFlipper |
+| Error monitoring | Honeybadger |
+| Observability | OpenTelemetry (Honeycomb via OTLP exporter) |
 | Analytics | Ahoy (events + visits), Chartkick, Groupdate, Blazer |
+| Audit/change logging | Approximated via Ahoy (may adopt PaperTrail or Audited in the future) |
 | Geocoding | Geocoder + MaxMind GeoIP2 |
 | Email styling | Premailer-rails (inline CSS) |
 | Positioning | Positioning gem for ordered records |
