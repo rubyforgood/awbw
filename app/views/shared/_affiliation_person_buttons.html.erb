@@ -1,0 +1,28 @@
+<% grid_classes ||= "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" %>
+<% per_page ||= 9 %>
+<% show_subtitle = local_assigns.fetch(:show_subtitle, true) %>
+<% button_data = local_assigns.fetch(:button_data, {}) %>
+<% active_affiliations = affiliations
+     .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) && a.person.present? }
+     .sort_by { |a| [a.person.first_name.to_s.downcase, a.person.last_name.to_s.downcase] } %>
+<% grouped = active_affiliations.group_by(&:person) %>
+<% if grouped.any? %>
+  <div data-controller="paginated-fields" data-paginated-fields-per-page-value="<%= per_page %>">
+    <div class="<%= grid_classes %>">
+      <% grouped.each do |person, person_affiliations| %>
+        <div data-paginated-fields-target="item">
+          <% if show_subtitle %>
+            <% titles = person_affiliations.filter_map { |a| a.title.presence }.uniq %>
+            <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
+            <%= person_profile_button(person, subtitle: titles.any? ? titles.join(", ") : nil, data: button_data) %>
+          <% else %>
+            <%= person_profile_button(person, data: button_data) %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <div data-paginated-fields-target="nav" class="mt-3"></div>
+  </div>
+<% else %>
+  <p class="text-gray-500 italic">No affiliations listed.</p>
+<% end %>

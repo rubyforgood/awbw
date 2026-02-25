@@ -12,6 +12,25 @@ class OrganizationDecorator < ApplicationDecorator
     name
   end
 
+  def affiliated_since_date
+    @affiliated_since_date ||= affiliations.minimum(:start_date)
+  end
+
+  def affiliated_end_date
+    return nil if affiliations.active.exists?
+    affiliations.maximum(:end_date)
+  end
+
+  def facilitator_since_date
+    @facilitator_since_date ||= affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
+  end
+
+  def facilitator_end_date
+    facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
+    return nil if facilitator_affiliations.active.exists?
+    facilitator_affiliations.maximum(:end_date)
+  end
+
   def badges
     earliest = affiliations.minimum(:start_date) || start_date
     years = earliest ? (Time.zone.now.year - earliest.year) : nil

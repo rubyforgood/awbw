@@ -134,27 +134,15 @@
     <!-- Info grid -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
         <!-- Organization affiliations -->
-        <div class="md:col-span-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
+        <div class="md:col-span-3">
           <h2 class="text-lg font-semibold text-gray-800 mb-2">
             Affiliations
           </h2>
-          <% active_affiliations = @organization.affiliations
-               .select { |affiliation| !affiliation.inactive? && (affiliation.end_date.nil? || affiliation.end_date >= Date.current) && affiliation.person.present? }
-               .sort_by { |affiliation| [affiliation.person.first_name.to_s.downcase, affiliation.person.last_name.to_s.downcase] } %>
-          <% if active_affiliations.any? %>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              <% active_affiliations.group_by(&:person).each do |person, person_affiliations| %>
-                <div data-paginated-fields-target="item">
-                  <% titles = person_affiliations.filter_map { |a| a.title.presence }.uniq %>
-                  <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
-                  <%= person_profile_button(person, subtitle: titles.any? ? titles.join(", ") : nil) %>
-                </div>
-              <% end %>
-            </div>
-            <div data-paginated-fields-target="nav" class="mt-3"></div>
-          <% else %>
-            <p class="text-gray-500 italic">No affiliations listed.</p>
-          <% end %>
+          <%= render "shared/affiliation_person_buttons",
+                     affiliations: @organization.affiliations,
+                     show_subtitle: true,
+                     grid_classes: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2",
+                     per_page: 9 %>
         </div>
         <!-- Sectors -->
         <% if @organization.profile_show_sectors? %>
