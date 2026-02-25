@@ -99,8 +99,8 @@
                 <i class="fa-solid fa-lock text-red-500" title="Unconfirmed — cannot log in"></i>
               <% end %>
               <% if !user.inactive? && !user.locked_at.present? && user.confirmed_at.present? %>
-                <% created_info = "Created #{l(user.created_at, format: :long)}" if user.created_at.present?
-                   created_info += " by #{user.created_by.name}" if user.created_by.present? %>
+                <% created_info = user.created_at.present? ? "Created #{l(user.created_at, format: :long)}" : ""
+                  created_info += " by #{user.created_by.name}" if user.created_by.present? %>
                 <span class="fa fa-check-circle text-gray-300" title="<%= created_info %>"></span>
               <% end %>
             </td>
