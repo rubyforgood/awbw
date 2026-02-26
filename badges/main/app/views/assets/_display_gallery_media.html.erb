@@ -1,8 +1,9 @@
 <!-- Gallery Media -->
 <% gallery_assets = resource.gallery_assets.select { |img| img.file.attached? } %>
+<% align = (defined?(align) && align.present?) ? align.to_s : "center" %>
 <% if gallery_assets.any? %>
-  <div class="<%= resource.class.table_name %>-gallery text-center mb-4">
-    <div class="flex flex-wrap justify-center gap-4 mx-auto max-w-4xl">
+  <div class="<%= resource.class.table_name %>-gallery text-<%= align %> mb-4">
+    <div class="flex flex-wrap justify-<%= align %> gap-4 <%= 'mx-auto' if align == 'center' %> max-w-4xl">
       <% gallery_assets.each_with_index do |gallery_assets, idx| %>
         <%= render "assets/display_image", item: gallery_assets, idx: idx, variant: :gallery, link: (defined?(link) ? link : nil) %>
       <% end %>

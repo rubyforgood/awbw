@@ -1,154 +1,169 @@
 <% content_for(:page_bg_class, "admin-or-owner-or-member") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border border-gray-200 rounded-xl shadow p-6 space-y-6">
+<div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap justify-end gap-2 mb-4">
+    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% if allowed_to?(:index?, WorkshopLog) %>
+      <%= link_to "My Workshop Logs", workshop_logs_path(created_by_id: current_user.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% end %>
+    <% if allowed_to?(:edit?, @workshop_log) %>
+      <%= link_to "Edit", edit_workshop_log_path(@workshop_log), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% end %>
+  </div>
 
-      <!-- Header -->
-      <div class="flex flex-wrap justify-end gap-2 mb-4">
-        <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-        <% if allowed_to?(:index?, WorkshopLog) %>
-          <%= link_to "Workshop Logs", workshop_logs_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-        <% end %>
-        <% if allowed_to?(:edit?, @workshop_log) %>
-          <%= link_to "Edit", edit_workshop_log_path(@workshop_log), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-        <% end %>
-      </div>
-      <h1 class="text-2xl font-semibold text-gray-900">
-        <%= @workshop_log.workshop&.title || "Workshop Log" %>
-      </h1>
+  <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+    <div class="font-semibold text-gray-900 mb-2">
+      <h1 class="text-3xl tracking-tight"><%= @workshop_log.workshop&.title || "Workshop Log" %></h1>
+    </div>
 
-      <!-- Workshop Info -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800">
+    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm text-gray-600">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div>
-          <p><span class="font-semibold text-gray-700">Person:</span>
-            <% if @workshop_log.created_by && allowed_to?(:show?, @workshop_log.created_by) %>
-              <%= link_to @workshop_log.created_by.name,
-                          @workshop_log.created_by.person ? person_path(@workshop_log.created_by.person) : user_path(@workshop_log.created_by),
-                          class: "btn btn-secondary-outline" %>
-            <% else %>
-              <%= @workshop_log.created_by&.name || "-" %>
-            <% end %>
-          </p>
-          <p>
-            <span class="font-semibold text-gray-700">Organization:</span>
-            <% if @workshop_log.organization && allowed_to?(:show?, @workshop_log.organization) %>
-              <%= link_to @workshop_log.organization.name,
-                          organization_path(@workshop_log.organization),
-                          class: "btn btn-secondary-outline" %>
-            <% else %>
-            -
-            <% end %>
-          </p>
-          <p><span class="font-semibold text-gray-700">Workshop Type:</span> <%= @workshop_log.workshop&.windows_type&.short_name || "—" %></p>
+          <span class="font-semibold text-gray-700">Submitted by:</span>
+          <% if @workshop_log.created_by && allowed_to?(:show?, @workshop_log.created_by) %>
+            <%= link_to @workshop_log.created_by.name,
+                        @workshop_log.created_by.person ? person_path(@workshop_log.created_by.person) : user_path(@workshop_log.created_by),
+                        class: "hover:underline" %>
+          <% else %>
+            <%= @workshop_log.created_by&.name || "—" %>
+          <% end %>
         </div>
         <div>
-          <p><span class="font-semibold text-gray-700">Workshop date:</span> <%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %></p>
-          <p><span class="font-semibold text-gray-700">Log created:</span> <%= @workshop_log.created_at.strftime("%b %d, %Y") %></p>
-          <p><span class="font-semibold text-gray-700">Log updated:</span> <%= @workshop_log.updated_at.strftime("%b %d, %Y") %></p>
+          <span class="font-semibold text-gray-700">Organization:</span>
+          <% if @workshop_log.organization && allowed_to?(:show?, @workshop_log.organization) %>
+            <%= link_to @workshop_log.organization.name,
+                        organization_path(@workshop_log.organization),
+                        class: "hover:underline" %>
+          <% else %>
+            —
+          <% end %>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Windows audience:</span>
+          <%= @workshop_log.workshop&.windows_type&.short_name || "—" %>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Workshop date:</span>
+          <%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Created:</span>
+          <%= @workshop_log.created_by&.full_name %>
+          <br><span class="text-gray-400"><%= @workshop_log.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Updated by:</span>
+          <%= @updated_by&.full_name || "—" %>
+          <br><span class="text-gray-400"><%= @workshop_log.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
       </div>
+    </div>
 
-      <!-- Assets -->
-      <%= render "assets/display_gallery_media", resource: @workshop_log %>
+    <!-- Participant counts -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-800 mb-2">Participant counts</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+          <thead>
+          <tr class="bg-gray-100">
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Category</th>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Children</th>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Teens</th>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Adults</th>
+            <th class="px-4 py-2 text-center text-sm font-bold text-gray-800 bg-gray-300 uppercase">Total</th>
+          </tr>
+          </thead>
 
-      <!-- Participant counts -->
-      <div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Participant counts</h2>
-        <div class="overflow-x-auto">
-          <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
-            <thead>
-            <tr class="bg-gray-100">
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Category</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Children</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Teens</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 bg-gray-200">Adults</th>
-              <th class="px-4 py-2 text-center text-sm font-bold text-gray-800 bg-gray-300 uppercase">Total</th>
-            </tr>
-            </thead>
+          <tbody class="divide-y divide-gray-200">
+          <!-- Ongoing -->
+          <tr>
+            <td class="px-4 py-2 font-medium text-gray-700">Ongoing Participants</td>
+            <td class="text-center bg-blue-100"><%= display_count(@workshop_log.children_ongoing) %></td>
+            <td class="text-center bg-blue-100"><%= display_count(@workshop_log.teens_ongoing) %></td>
+            <td class="text-center bg-blue-100"><%= display_count(@workshop_log.adults_ongoing) %></td>
+            <td class="text-center font-semibold bg-blue-200">
+              <%= display_count(@workshop_log.children_ongoing.to_i +
+                                  @workshop_log.teens_ongoing.to_i +
+                                  @workshop_log.adults_ongoing.to_i) %>
+            </td>
+          </tr>
 
-            <tbody class="divide-y divide-gray-200">
-            <!-- Ongoing -->
-            <tr>
-              <td class="px-4 py-2 font-medium text-gray-700">Ongoing Participants</td>
-              <td class="text-center bg-blue-100"><%= display_count(@workshop_log.children_ongoing) %></td>
-              <td class="text-center bg-blue-100"><%= display_count(@workshop_log.teens_ongoing) %></td>
-              <td class="text-center bg-blue-100"><%= display_count(@workshop_log.adults_ongoing) %></td>
-              <td class="text-center font-semibold bg-blue-200">
-                <%= display_count(@workshop_log.children_ongoing.to_i +
-                                    @workshop_log.teens_ongoing.to_i +
-                                    @workshop_log.adults_ongoing.to_i) %>
-              </td>
-            </tr>
+          <!-- First-time -->
+          <tr>
+            <td class="px-4 py-2 font-medium text-gray-700">First-Time Participants</td>
+            <td class="text-center bg-green-100"><%= display_count(@workshop_log.children_first_time) %></td>
+            <td class="text-center bg-green-100"><%= display_count(@workshop_log.teens_first_time) %></td>
+            <td class="text-center bg-green-100"><%= display_count(@workshop_log.adults_first_time) %></td>
+            <td class="text-center font-semibold bg-green-200">
+              <%= display_count(@workshop_log.children_first_time.to_i +
+                                  @workshop_log.teens_first_time.to_i +
+                                  @workshop_log.adults_first_time.to_i) %>
+            </td>
+          </tr>
 
-            <!-- First-time -->
-            <tr>
-              <td class="px-4 py-2 font-medium text-gray-700">First-Time Participants</td>
-              <td class="text-center bg-green-100"><%= display_count(@workshop_log.children_first_time) %></td>
-              <td class="text-center bg-green-100"><%= display_count(@workshop_log.teens_first_time) %></td>
-              <td class="text-center bg-green-100"><%= display_count(@workshop_log.adults_first_time) %></td>
-              <td class="text-center font-semibold bg-green-200">
-                <%= display_count(@workshop_log.children_first_time.to_i +
-                                    @workshop_log.teens_first_time.to_i +
-                                    @workshop_log.adults_first_time.to_i) %>
-              </td>
-            </tr>
-
-            <!-- Subtotals -->
-            <% children_total = @workshop_log.children_ongoing.to_i + @workshop_log.children_first_time.to_i %>
-            <% teens_total    = @workshop_log.teens_ongoing.to_i + @workshop_log.teens_first_time.to_i %>
-            <% adults_total   = @workshop_log.adults_ongoing.to_i + @workshop_log.adults_first_time.to_i %>
-            <tr class="font-semibold">
-              <td class="px-4 py-2 text-right text-sm font-bold text-gray-800 uppercase">Subtotal</td>
-              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(children_total) %></td>
-              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(teens_total) %></td>
-              <td class="text-center font-bold text-md bg-purple-100"><%= display_count(adults_total) %></td>
-              <td class="text-center text-lg font-bold bg-purple-200">
-                <%= display_count(children_total + teens_total + adults_total) %>
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
+          <!-- Subtotals -->
+          <% children_total = @workshop_log.children_ongoing.to_i + @workshop_log.children_first_time.to_i %>
+          <% teens_total    = @workshop_log.teens_ongoing.to_i + @workshop_log.teens_first_time.to_i %>
+          <% adults_total   = @workshop_log.adults_ongoing.to_i + @workshop_log.adults_first_time.to_i %>
+          <tr class="font-semibold">
+            <td class="px-4 py-2 text-right text-sm font-bold text-gray-800 uppercase">Subtotal</td>
+            <td class="text-center font-bold text-md bg-purple-100"><%= display_count(children_total) %></td>
+            <td class="text-center font-bold text-md bg-purple-100"><%= display_count(teens_total) %></td>
+            <td class="text-center font-bold text-md bg-purple-100"><%= display_count(adults_total) %></td>
+            <td class="text-center text-lg font-bold bg-purple-200">
+              <%= display_count(children_total + teens_total + adults_total) %>
+            </td>
+          </tr>
+          </tbody>
+        </table>
       </div>
+    </div>
 
-      <!-- Responses -->
-      <% if @answers.any? %>
-        <div class="mt-8 space-y-3">
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">Responses</h2>
-          <% @answers.each do |answer| %>
-            <div class="border-b border-gray-200 pb-2">
-              <p class="text-sm font-semibold text-gray-700"><%= answer.form_field.question %></p>
-              <p class="text-gray-800"><%= answer.response.presence || "—" %></p>
+    <!-- Responses -->
+    <% if @answers.any? %>
+      <div class="space-y-3">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Responses</h2>
+        <% @answers.each do |answer| %>
+          <div class="border-b border-gray-200 pb-2">
+            <p class="text-sm font-semibold text-gray-700"><%= answer.form_field.question %></p>
+            <p class="text-gray-800"><%= answer.response.presence || "—" %></p>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <!-- Uploads -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-800 mb-2">Uploads</h2>
+      <%= render "assets/display_assets", resource: @workshop_log, link: true, align: :start %>
+    </div>
+
+    <!-- Quotes -->
+    <% if @workshop_log.quotes.any? %>
+      <div class="space-y-3">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Quotes</h2>
+        <div class="space-y-6">
+          <% @workshop_log.quotes.decorate.each do |quote| %>
+            <div>
+              <div class="relative bg-gray-100 italic leading-relaxed p-6 rounded-2xl">
+                <div class="font-semibold text-gray-700 italic text-lg">
+                  <%= link_to quote.detail, quote_path(quote.object), class: "hover:underline" %>
+                  <span class="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded-full">
+                    <span class="fa fa-eye-slash"></span>
+                    Unpublished
+                  </span>
+                </div>
+                <div class="text-gray-700 mt-3">
+                  -- <%= quote.attribution %>
+                  <%= "@ " + quote.created_at.strftime("%m-%d-%-Y") %>
+                  <%= ("re " + link_to(quote.workshop.title, workshop_path(quote.workshop),
+                                       class: "hover:underline") if quote.workshop).to_s.html_safe %>
+                </div>
+                <div class="absolute -bottom-3 left-8 w-0 h-0 border-t-8 border-t-gray-100 border-x-8 border-x-transparent"></div>
+              </div>
             </div>
           <% end %>
         </div>
-      <% end %>
-
-      <!-- Quotes -->
-      <% if @workshop_log.quotes.any? %>
-        <div class="mt-8 space-y-3">
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">Quotes</h2>
-          <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-6 mb-6">
-            <% @workshop_log.quotes.decorate.each do |quote| %>
-              <div>
-                <div class="relative bg-gray-100 italic leading-relaxed p-6 rounded-2xl">
-                  <div class="font-semibold text-gray-700 italic text-lg">
-                    <%= link_to quote.detail, quote_path(quote.object), class: "hover:underline" %>
-                    <span class="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded-full">
-                      <span class="fa fa-eye-slash"></span>
-                      Unpublished
-                    </span>
-                  </div>
-                  <div class="text-gray-700 mt-3">
-                    -- <%= quote.attribution %>
-                    <%= "@ " + quote.created_at.strftime("%m-%d-%-Y") %>
-                    <%= ("re " + link_to(quote.workshop.title, workshop_path(quote.workshop),
-                                         class: "hover:underline") if quote.workshop).to_s.html_safe %>
-                  </div>
-                  <div class="absolute -bottom-3 left-8 w-0 h-0 border-t-8 border-t-gray-100 border-x-8 border-x-transparent"></div>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-
+      </div>
+    <% end %>
+  </div>
 </div>
