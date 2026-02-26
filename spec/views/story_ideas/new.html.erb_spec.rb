@@ -48,7 +48,7 @@ RSpec.describe "story_ideas/new", type: :view do
     end
 
     context "with one organization" do
-      let(:organizations) { [create(:organization)] }
+      let(:organizations) { [ create(:organization) ] }
 
       include_examples "hidden organization field"
     end
@@ -64,7 +64,7 @@ RSpec.describe "story_ideas/new", type: :view do
     end
 
     context "with one organization" do
-      let(:organizations) { [create(:organization)] }
+      let(:organizations) { [ create(:organization) ] }
 
       include_examples "hidden organization field"
     end
