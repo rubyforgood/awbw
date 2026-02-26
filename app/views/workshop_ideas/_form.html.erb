@@ -42,6 +42,7 @@
         <%= f.input :windows_type_id,
                     as: :select,
                     label: "Windows audience",
+                    prompt: "Select audience",
                     required: true,
                     collection: @windows_types, label_method: :short_name, value_method: :id,
                     selected: f.object.windows_type_id,
