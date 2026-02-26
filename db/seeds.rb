@@ -277,11 +277,7 @@ reg_event = Event.find_or_create_by!(title: "AWBW Facilitator Training") do |eve
   event.published = true
   event.publicly_visible = true
   event.featured = true
+  event.public_registration_enabled = true
   event.cost = 150
   event.created_by = User.find_by(email: "umberto.user@example.com")
-end
-
-unless reg_event.forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)
-  EventRegistrationFormBuilder.build!(reg_event)
-  puts "  → Registration form created for '#{reg_event.title}'"
 end

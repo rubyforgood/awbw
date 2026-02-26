@@ -36,12 +36,15 @@
 
     <% if allowed_to?(:manage?, @event) %>
       <div class="admin-only mt-6 md:mt-0">
-        <label class="block font-medium mb-1 text-gray-700">Display settings</label>
+        <label id="display_settings" class="block font-medium mb-1 text-gray-700">Display settings</label>
         <div class="bg-blue-50 border border-gray-200 rounded-lg grid grid-cols-2 gap-y-0 p-3 [&_.form-group]:mb-1">
           <%= f.input :published, as: :boolean %>
           <%= f.input :featured, as: :boolean %>
           <%= f.input :publicly_visible, as: :boolean %>
           <%= f.input :publicly_featured, as: :boolean %>
+          <div id="public_registration_setting" class="px-1" style="scroll-margin-top: 10rem;">
+            <%= f.input :public_registration_enabled, as: :boolean, label: "Publicly registerable" %>
+          </div>
         </div>
       </div>
     <% end %>
@@ -332,45 +335,65 @@
   </div>
 
   <% if @event.persisted? && allowed_to?(:manage?, @event) %>
-    <div class="admin-only mt-8" data-controller="dropdown">
+    <div class="admin-only mt-4" data-controller="dropdown">
       <button
         type="button"
         id="registration_form_button"
-        class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"registration_form_section":"hidden"}, {"registration_form_arrow":"rotate-180"}, {"registration_form_button":"rounded-md rounded-t-md"}]'>
+        data-dropdown-payload-param='[{"registration_form_section":"hidden"}, {"registration_form_arrow":"rotate-180"}, {"registration_form_button":"rounded-t-md rounded-md"}]'>
         Registration Form
-        <svg id="registration_form_arrow" class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+        <svg id="registration_form_arrow" class="w-6 h-6 shrink-0 rotate-180" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
       </button>
 
-      <div id="registration_form_section" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <% if @event.forms.exists?(name: "Public Registration") %>
-          <p class="text-sm text-green-700 mb-2">This event has a public registration form.</p>
-          <%= link_to "View public registration page",
-                      new_event_public_registration_path(@event),
-                      class: "text-sm text-blue-700 hover:text-blue-900 underline",
-                      target: "_blank" %>
-        <% else %>
-          <p class="text-sm text-gray-600 mb-3">No registration form yet. Copy one from another event or create one via the console.</p>
-        <% end %>
-
-        <div class="mt-4 border-t border-gray-200 pt-4">
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Copy registration form from another event</h4>
-          <% events_with_forms = Event.joins(:forms).where(forms: { name: "Public Registration" }).where.not(id: @event.id).distinct.order(start_date: :desc) %>
-          <% if events_with_forms.any? %>
-            <%= form_with url: copy_registration_form_event_path(@event), method: :post, local: true, class: "flex items-end gap-3" do %>
-              <div class="flex-1">
-                <select name="source_event_id" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
-                  <% events_with_forms.each do |ev| %>
-                    <option value="<%= ev.id %>"><%= ev.title %> (<%= ev.start_date.strftime("%Y-%m-%d") %>)</option>
-                  <% end %>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-secondary-outline text-sm">Copy Form</button>
+      <div id="registration_form_section" class="border border-gray-300 p-4 rounded-b-md">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <p class="text-sm mb-2">
+              Public registration:
+              <% if @event.public_registration_enabled? %>
+                <a href="#public_registration_setting"
+                   class="text-green-700 font-medium hover:underline"
+                   data-controller="anchor-highlight"
+                   data-action="click->anchor-highlight#flash"
+                   data-anchor-highlight-target-param="public_registration_setting">Enabled</a>
+              <% else %>
+                <a href="#public_registration_setting"
+                   class="text-gray-500 font-medium hover:underline"
+                   data-controller="anchor-highlight"
+                   data-action="click->anchor-highlight#flash"
+                   data-anchor-highlight-target-param="public_registration_setting">Disabled</a>
+              <% end %>
+            </p>
+            <% if @event.forms.exists?(name: "Public Registration") %>
+              <p class="text-sm text-green-700 mb-2">This event has a public registration form.</p>
+              <%= link_to "View public registration page",
+                          new_event_public_registration_path(@event),
+                          class: "text-sm text-blue-700 hover:text-blue-900 underline",
+                          target: "_blank" %>
+            <% else %>
+              <p class="text-sm text-gray-600">No registration form yet.</p>
             <% end %>
-          <% else %>
-            <p class="text-sm text-gray-500">No other events have registration forms to copy.</p>
-          <% end %>
+          </div>
+
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Copy registration form from another event</h4>
+            <% events_with_forms = Event.joins(:forms).where(forms: { name: "Public Registration" }).where.not(id: @event.id).distinct.order(start_date: :desc) %>
+            <% if events_with_forms.any? %>
+              <%= form_with url: copy_registration_form_event_path(@event), method: :post, local: true, class: "flex items-end gap-3" do %>
+                <div class="flex-1">
+                  <select name="source_event_id" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
+                    <% events_with_forms.each do |ev| %>
+                      <option value="<%= ev.id %>"><%= ev.title %> (<%= ev.start_date.strftime("%Y-%m-%d") %>)</option>
+                    <% end %>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-secondary-outline text-sm">Copy Form</button>
+              <% end %>
+            <% else %>
+              <p class="text-sm text-gray-500">No other events have registration forms to copy.</p>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
