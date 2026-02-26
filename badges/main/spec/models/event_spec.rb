@@ -74,6 +74,32 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#build_public_registration_form" do
+    it "builds a registration form when public_registration_enabled is set on create" do
+      event = create(:event, public_registration_enabled: true)
+      expect(event.forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)).to be true
+    end
+
+    it "does not build a registration form when public_registration_enabled is false" do
+      event = create(:event, public_registration_enabled: false)
+      expect(event.forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)).to be false
+    end
+
+    it "builds a registration form when toggled to true on update" do
+      event = create(:event, public_registration_enabled: false)
+      event.update!(public_registration_enabled: true)
+      expect(event.forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)).to be true
+    end
+
+    it "does not duplicate the form if one already exists" do
+      event = create(:event, public_registration_enabled: true)
+      expect(event.forms.where(name: EventRegistrationFormBuilder::FORM_NAME).count).to eq(1)
+
+      event.update!(title: "Updated title")
+      expect(event.forms.where(name: EventRegistrationFormBuilder::FORM_NAME).count).to eq(1)
+    end
+  end
+
   describe '.search_by_params' do
     let!(:art_event) { create(:event, title: 'Art Workshop Showcase', description: 'Annual art exhibition') }
     let!(:music_event) { create(:event, title: 'Music Therapy Session', description: 'Healing through music') }

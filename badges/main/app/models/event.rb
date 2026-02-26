@@ -24,6 +24,9 @@ class Event < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
+  # Callbacks
+  after_commit :build_public_registration_form, if: :public_registration_just_enabled?
+
   # Validations
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :published, in: [ true, false ]
@@ -107,5 +110,17 @@ class Event < ApplicationRecord
 
   def to_partial_path
     "events/registration_button"
+  end
+
+  private
+
+  def public_registration_just_enabled?
+    public_registration_enabled? && saved_change_to_public_registration_enabled?
+  end
+
+  def build_public_registration_form
+    return if forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)
+
+    EventRegistrationFormBuilder.build!(self)
   end
 end
