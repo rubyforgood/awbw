@@ -50,7 +50,10 @@
       </div>
       <div>
         <%= f.input :windows_type_id,
+                    as: :select,
                     required: true,
+                    label: "Windows audience",
+                    prompt: "Select audience",
                     collection: @windows_types, label_method: :short_name, value_method: :id,
                     disabled: promoted_to_variation,
                     input_html: {

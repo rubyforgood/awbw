@@ -47,8 +47,8 @@
         <%= f.input :windows_type_id,
                     collection: @windows_types, label_method: :short_name, value_method: :id,
                     disabled: promoted_to_story,
-                    prompt: "Select audience",
                     label: "Windows audience",
+                    prompt: "Select audience",
                     label_html: { class: "block font-medium mb-1 text-gray-700" },
                     input_html: {
                       class: "#{select_caret_class(blank: f.object.windows_type_id.blank?)} #{"readonly" if promoted_to_story}",
