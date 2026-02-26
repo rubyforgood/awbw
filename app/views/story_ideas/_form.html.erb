@@ -82,23 +82,27 @@
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <% default_org = default_organization_for_form(f.object) %>
-        <%= f.input :organization_id,
-                    as: :select,
-                    collection: @organizations,
-                    label_method: :type_name,
-                    value_method: :id,
-                    label: "Organization",
-                    required: true,
-                    disabled: promoted_to_story,
-                    hint: "Please contact AWBW if your agency is not listed.",
-                    prompt: "Select organization",
-                    selected: (params[:organization_id].presence || f.object.organization_id || default_org&.id),
-                    input_html: {
-                      class: "#{select_caret_class(blank: (f.object.organization_id || default_org&.id).blank?)} #{"readonly" if promoted_to_story}",
-                      style: custom_caret_style,
-                      onchange: select_caret_onchange
-                    },
-                    label_html: { class: "block font-medium mb-1 text-gray-700" } %>
+        <% if @organizations.size == 1 %>
+          <%= f.hidden_field :organization_id, value: @organizations.first.id %>
+        <% else %>
+          <%= f.input :organization_id,
+                      as: :select,
+                      collection: @organizations,
+                      label_method: :type_name,
+                      value_method: :id,
+                      label: "Organization",
+                      required: true,
+                      disabled: promoted_to_story,
+                      hint: "Please contact AWBW if your agency is not listed.",
+                      prompt: "Select organization",
+                      selected: (params[:organization_id].presence || f.object.organization_id || default_org&.id),
+                      input_html: {
+                        class: "#{select_caret_class(blank: (f.object.organization_id || default_org&.id).blank?)} #{"readonly" if promoted_to_story}",
+                        style: custom_caret_style,
+                        onchange: select_caret_onchange
+                      },
+                      label_html: { class: "block font-medium mb-1 text-gray-700" } %>
+        <% end %>
       </div>
     </div>
 
