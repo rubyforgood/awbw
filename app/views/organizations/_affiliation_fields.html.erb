@@ -32,6 +32,7 @@
                     rows: 1,
                     value: f.object&.title || f.object&.position || "Facilitator",
                     style: "height: 42px; min-height: 42px;",
+                    data: { action: "input->affiliation-dates#recalculate" }
                   } %>
     </div>
 
@@ -42,7 +43,8 @@
                   input_html: {
                     type: "date",
                     value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
-                    class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                    data: { action: "change->affiliation-dates#recalculate" }
                   } %>
     </div>
 
@@ -54,7 +56,7 @@
                     type: "date",
                     value: f.object.end_date&.strftime("%Y-%m-%d"),
                     class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
-                    data: { action: "change->inactive-toggle#toggle" }
+                    data: { action: "change->inactive-toggle#toggle change->affiliation-dates#recalculate" }
                   } %>
     </div>
 

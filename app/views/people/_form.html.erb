@@ -1,5 +1,5 @@
 <%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
-                                          data: { turbo: false, controller: "dirty-form" } } do |f| %>
+                                          data: { turbo: false, controller: "dirty-form affiliation-dates" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
 
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
@@ -37,10 +37,7 @@
                 <% end %>
               </div>
               <div class="pt-1">
-                <% if decorated.affiliated_end_date %>
-                  <i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i>
-                <% end %>
-                <span class="text-gray-900 font-medium"><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliated_end_date.strftime('%b %Y')}" if decorated.affiliated_end_date %></span>
+                <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if decorated.affiliated_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i><% end %><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliated_end_date.strftime('%b %Y')}" if decorated.affiliated_end_date %></span>
                 <% if decorated.affiliated_since_date.nil? && person.affiliations.exists? %>
                   <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
                 <% elsif decorated.member_since_earlier_than_all_affiliations? %>
@@ -68,10 +65,7 @@
                 <% end %>
               </div>
               <div class="pt-1">
-                <% if decorated.facilitator_end_date %>
-                  <i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i>
-                <% end %>
-                <span class="text-gray-900 font-medium"><%= decorated.facilitator_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.facilitator_end_date.strftime('%b %Y')}" if decorated.facilitator_end_date %></span>
+                <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><% if decorated.facilitator_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i><% end %><%= decorated.facilitator_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.facilitator_end_date.strftime('%b %Y')}" if decorated.facilitator_end_date %></span>
                 <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
                   <p class="text-xs text-amber-700 mt-1">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
                 <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
@@ -262,7 +256,7 @@
 
     <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:organizations) %> p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Person) %>
-        <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
+        <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
           <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
               <%= render "affiliation_fields",
