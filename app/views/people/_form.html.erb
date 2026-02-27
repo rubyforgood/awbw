@@ -256,7 +256,7 @@
 
     <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:organizations) %> p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Person) %>
-        <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
+        <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
           <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
               <%= render "affiliation_fields",
