@@ -13,24 +13,51 @@ RSpec.describe NotificationMailer, type: :mailer do
 
   describe "#idea_submitted_fyi" do
     let(:user) { create(:user) }
-    let(:story_idea) { create(:story_idea, created_by: user) }
-    let(:notification) { create(:notification, kind: "idea_submitted_fyi", noticeable: story_idea) }
 
-    context "with attachments" do
-      let(:primary_asset) { create(:primary_asset, :with_file, owner: story_idea) }
-      let(:gallery_asset) { create(:gallery_asset, :with_file, owner: story_idea) }
+    context "with a story_idea as noticeable" do
+      let(:story_idea) { create(:story_idea, created_by: user) }
+      let(:notification) { create(:notification, kind: "idea_submitted_fyi", noticeable: story_idea) }
 
-      before do
-        primary_asset
-        gallery_asset
+      it "renders without raising" do
+        expect {
+          described_class.idea_submitted_fyi(notification).deliver_now
+        }.not_to raise_error
       end
 
-      it "includes attachments in the email body" do
-        mail = described_class.idea_submitted_fyi(notification)
-        expect(mail.body.encoded).to include("Attachments")
-        expect(mail.body.encoded).to include(primary_asset.file.filename.to_s)
-        expect(mail.body.encoded).to include(gallery_asset.file.filename.to_s)
+      context "with attachments" do
+        let(:primary_asset) { create(:primary_asset, :with_file, owner: story_idea) }
+        let(:gallery_asset) { create(:gallery_asset, :with_file, owner: story_idea) }
+
+        before do
+          primary_asset
+          gallery_asset
+        end
+
+        it "includes attachments in the email body" do
+          mail = described_class.idea_submitted_fyi(notification)
+          expect(mail.body.encoded).to include("Attachments")
+          expect(mail.body.encoded).to include(primary_asset.file.filename.to_s)
+          expect(mail.body.encoded).to include(gallery_asset.file.filename.to_s)
+        end
+
+        it "renders without raising" do
+          expect {
+            described_class.idea_submitted_fyi(notification).deliver_now
+          }.not_to raise_error
+        end
       end
+
+      context "without attachments" do
+        it "does not include Attachments section" do
+          mail = described_class.idea_submitted_fyi(notification)
+          expect(mail.body.encoded).not_to include("Attachments")
+        end
+      end
+    end
+
+    context "with a workshop_idea as noticeable" do
+      let(:workshop_idea) { create(:workshop_idea, created_by: user, updated_by: user) }
+      let(:notification) { create(:notification, kind: "idea_submitted_fyi", noticeable: workshop_idea) }
 
       it "renders without raising" do
         expect {
@@ -39,17 +66,26 @@ RSpec.describe NotificationMailer, type: :mailer do
       end
     end
 
-    context "without attachments" do
+    context "with a workshop_variation_idea as noticeable" do
+      let(:workshop_variation_idea) { create(:workshop_variation_idea, created_by: user, updated_by: user) }
+      let(:notification) { create(:notification, kind: "idea_submitted_fyi", noticeable: workshop_variation_idea) }
+
       it "renders without raising" do
         expect {
           described_class.idea_submitted_fyi(notification).deliver_now
         }.not_to raise_error
       end
+    end
+  end
 
-      it "does not include Attachments section" do
-        mail = described_class.idea_submitted_fyi(notification)
-        expect(mail.body.encoded).not_to include("Attachments")
-      end
+  describe "#workshop_log_submitted_fyi" do
+    let(:workshop_log) { create(:workshop_log) }
+    let(:notification) { create(:notification, kind: "workshop_log_submitted_fyi", noticeable: workshop_log) }
+
+    it "renders without raising" do
+      expect {
+        described_class.workshop_log_submitted_fyi(notification).deliver_now
+      }.not_to raise_error
     end
   end
 

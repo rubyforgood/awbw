@@ -1,6 +1,7 @@
 class WorkshopVariationIdeaDecorator < ApplicationDecorator
   def detail(length: nil)
-    length ? description&.truncate(length) : description
+    text = rhino_body&.to_plain_text
+    length ? text&.truncate(length) : text
   end
 
   def default_display_image
