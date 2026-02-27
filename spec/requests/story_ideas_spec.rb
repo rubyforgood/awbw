@@ -75,14 +75,14 @@ RSpec.describe "/story_ideas", type: :request do
     end
 
     describe "POST /create" do
-      it "creates StoryIdea without FYI notification" do
+      it "creates StoryIdea with admin and submitter notifications" do
         story_idea_count_before = StoryIdea.count
         notification_count_before = Notification.count
 
         post story_ideas_url, params: { story_idea: valid_attributes }
 
         expect(StoryIdea.count).to eq(story_idea_count_before + 1)
-        expect(Notification.count).to eq(notification_count_before + 1)
+        expect(Notification.count).to eq(notification_count_before + 2)
 
         story_idea = StoryIdea.order(:id).last
         expect(story_idea).to be_present
@@ -125,20 +125,23 @@ RSpec.describe "/story_ideas", type: :request do
         expect(StoryIdea.last.created_by).to eq(regular_user)
       end
 
-      it "creates an FYI notification and enqueues mailer job" do
+      it "creates admin and submitter notifications and enqueues mailer jobs" do
         clear_enqueued_jobs
 
         expect {
           post story_ideas_url, params: { story_idea: valid_attributes }
         }.to change(StoryIdea, :count).by(1)
-                                      .and change(Notification, :count).by(1)
+                                      .and change(Notification, :count).by(2)
 
-        notification = Notification.last
-        story_idea   = StoryIdea.last
+        story_idea = StoryIdea.last
+        notifications = Notification.where(noticeable: story_idea).order(:id)
 
-        expect(notification.kind).to eq("idea_submitted_fyi")
-        expect(notification.noticeable).to eq(story_idea)
-        expect(notification.recipient_role).to eq("admin")
+        admin_notification = notifications.find_by(kind: "idea_submitted_fyi")
+        expect(admin_notification.recipient_role).to eq("admin")
+
+        submitter_notification = notifications.find_by(kind: "idea_submitted")
+        expect(submitter_notification.recipient_role).to eq("person")
+        expect(submitter_notification.recipient_email).to eq(regular_user.email)
 
         expect(enqueued_jobs.map { |j| j[:job] })
           .to include(NotificationMailerJob)
