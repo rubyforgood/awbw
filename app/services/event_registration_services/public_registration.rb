@@ -15,21 +15,19 @@ module EventRegistrationServices
 
     def call
       ActiveRecord::Base.transaction do
-        user = find_or_create_user
-        person = find_or_create_person(user)
-        user.update!(person: person) unless user.person_id == person.id
+        person = find_or_create_person
 
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
 
-        organization = find_or_create_organization if field_value("agency_name").present?
+        organization = find_organization if field_value("agency_name").present?
         create_affiliation(person, organization) if organization
         create_agency_address(organization) if organization && field_value("agency_city").present?
 
         assign_tags(person, organization)
 
         event_registration = create_event_registration(person)
-        user_form = create_user_form(user, event_registration)
+        create_user_form(user, event_registration)
 
         send_notifications(event_registration)
 
@@ -65,24 +63,7 @@ module EventRegistrationServices
       end
     end
 
-    def find_or_create_user
-      email = field_value("primary_email")&.strip&.downcase
-      user = User.find_by("LOWER(email) = ?", email)
-      return user if user
-
-      names = resolve_names
-      User.create!(
-        email: email,
-        password: SecureRandom.hex(16),
-        first_name: names[:first_name],
-        last_name: field_value("last_name"),
-        confirmed_at: Time.current
-      )
-    end
-
-    def find_or_create_person(user)
-      return user.person if user.person.present?
-
+    def find_or_create_person
       names = resolve_names
       first_name = names[:first_name]
       last_name = field_value("last_name")&.strip
@@ -104,8 +85,6 @@ module EventRegistrationServices
         email_type: email_type,
         email_2: field_value("secondary_email")&.strip,
         email_2_type: field_value("secondary_email_type")&.downcase || "personal",
-        created_by: user,
-        updated_by: user
       )
     end
 
@@ -150,14 +129,11 @@ module EventRegistrationServices
       )
     end
 
-    def find_or_create_organization
+    def find_organization
       name = field_value("agency_name")&.strip
       return nil if name.blank?
 
-      Organization.find_or_create_by!(name: name) do |org|
-        org.organization_status = OrganizationStatus.find_by(name: "Pending")
-        org.website_url = field_value("agency_website")
-      end
+      Organization.find_by(name: name)
     end
 
     def create_affiliation(person, organization)
