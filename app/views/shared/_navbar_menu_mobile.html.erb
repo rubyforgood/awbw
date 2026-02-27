@@ -164,6 +164,39 @@
           <i class="fas fa-book-open"></i>
           <span>New story idea</span>
         <% end %>
+
+        <% if allowed_to?(:new?, Story) %>
+          <div class="admin-only bg-blue-100">
+            <%= link_to new_story_path,
+                        class: "flex items-center px-4 py-2 text-sm text-white
+                      hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+              <i class="fas fa-book"></i>
+              <span>New story</span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if allowed_to?(:new?, WorkshopVariation) %>
+          <div class="admin-only bg-blue-100">
+            <%= link_to new_workshop_variation_path,
+                        class: "flex items-center px-4 py-2 text-sm text-white
+                      hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+              <i class="fas fa-swatchbook"></i>
+              <span>New workshop variation</span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if allowed_to?(:new?, Workshop) %>
+          <div class="admin-only bg-blue-100">
+            <%= link_to new_workshop_path,
+                        class: "flex items-center px-4 py-2 text-sm text-white
+                      hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+              <i class="fas fa-chalkboard-teacher"></i>
+              <span>New workshop</span>
+            <% end %>
+          </div>
+        <% end %>
       </div>
     </div>
     <% end %>
