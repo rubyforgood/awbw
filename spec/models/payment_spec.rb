@@ -14,9 +14,22 @@ RSpec.describe Payment, type: :model do
 
       it { should validate_presence_of(:currency) }
       it { should validate_presence_of(:status) }
-      it { should validate_presence_of(:stripe_payment_intent_id) }
       it { should validate_numericality_of(:amount_cents).is_greater_than_or_equal_to(0) }
       it { should validate_inclusion_of(:status).in_array(Payment::STRIPE_PAYMENT_STATUSES) }
+      it { should validate_inclusion_of(:payment_type).in_array(Payment::PAYMENT_TYPES) }
+    end
+
+    describe "stripe_payment_intent_id conditional presence" do
+      it "requires stripe_payment_intent_id for stripe payments" do
+        payment = build(:payment, payment_type: "stripe", stripe_payment_intent_id: nil)
+        expect(payment).not_to be_valid
+        expect(payment.errors[:stripe_payment_intent_id]).to be_present
+      end
+
+      it "does not require stripe_payment_intent_id for scholarship payments" do
+        payment = build(:payment, :scholarship, :succeeded, amount_cents: 1000)
+        expect(payment).to be_valid
+      end
     end
 
     describe "with create subject for uniqueness" do
@@ -40,6 +53,10 @@ RSpec.describe Payment, type: :model do
   end
 
   describe "constants" do
+    it "defines PAYMENT_TYPES" do
+      expect(Payment::PAYMENT_TYPES).to eq(%w[stripe scholarship check purchase_order other])
+    end
+
     it "defines STRIPE_PAYMENT_STATUSES" do
       expect(Payment::STRIPE_PAYMENT_STATUSES).to eq(%w[
         pending
@@ -78,6 +95,16 @@ RSpec.describe Payment, type: :model do
         expect(Payment.successful).to include(succeeded_payment)
         expect(Payment.successful).not_to include(pending_payment)
         expect(Payment.successful).not_to include(failed_payment)
+      end
+    end
+
+    describe ".scholarships" do
+      let!(:scholarship_payment) { create(:payment, :scholarship, :succeeded, amount_cents: 1000) }
+      let!(:stripe_payment) { create(:payment, :succeeded) }
+
+      it "returns only scholarship payments" do
+        expect(Payment.scholarships).to include(scholarship_payment)
+        expect(Payment.scholarships).not_to include(stripe_payment)
       end
     end
 

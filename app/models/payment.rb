@@ -7,11 +7,14 @@ class Payment < ApplicationRecord
   attribute :currency, :string, default: "usd"
   attribute :status,   :string, default: "pending"
 
+  PAYMENT_TYPES = %w[ stripe scholarship check purchase_order other ].freeze
+
   # --- Validations ---
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validates :currency, presence: true
   validates :status, presence: true
-  validates :stripe_payment_intent_id, presence: true
+  validates :payment_type, inclusion: { in: PAYMENT_TYPES }
+  validates :stripe_payment_intent_id, presence: true, if: -> { payment_type == "stripe" }
 
   validates :stripe_payment_intent_id, uniqueness: true, allow_nil: true
   validates :stripe_charge_id, uniqueness: true, allow_nil: true
@@ -29,7 +32,12 @@ class Payment < ApplicationRecord
 
   validates :status, inclusion: { in: STRIPE_PAYMENT_STATUSES }
 
-  scope :for_payable, ->(payable) { where(payable: payable) }
-  scope :successful,  -> { where(status: "succeeded") }
-  scope :pendingish,  -> { where(status: %w[pending requires_action processing]) }
+  scope :for_payable,  ->(payable) { where(payable: payable) }
+  scope :successful,   -> { where(status: "succeeded") }
+  scope :pendingish,   -> { where(status: %w[pending requires_action processing]) }
+  scope :scholarships, -> { where(payment_type: "scholarship") }
+
+  def scholarship?
+    payment_type == "scholarship"
+  end
 end
