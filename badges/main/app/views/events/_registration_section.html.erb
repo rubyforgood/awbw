@@ -55,6 +55,11 @@
     <% end %>
 
     <!-- CALENDAR LINKS -->
-    <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links %></div>
+    <div class="flex flex-col items-center">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+        Add to Your Calendar
+      </p>
+      <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links %></div>
+    </div>
   <% end %>
 <% end %>

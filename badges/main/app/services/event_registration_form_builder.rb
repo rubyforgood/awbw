@@ -64,7 +64,7 @@ class EventRegistrationFormBuilder
                          key: "last_name", group: "contact", required: true)
     position = add_field(form, position, "Preferred Nickname", :free_form_input_one_line,
                          key: "nickname", group: "contact", required: false)
-    position = add_field(form, position, "Preferred Pronouns", :free_form_input_one_line,
+    position = add_field(form, position, "Pronouns", :free_form_input_one_line,
                          key: "pronouns", group: "contact", required: false)
     position = add_field(form, position, "Primary Email", :free_form_input_one_line,
                          key: "primary_email", group: "contact", required: true)
