@@ -4,21 +4,9 @@ export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer"]
 
   connect() {
+    this.element.addEventListener("cocoon:after-insert", () => this.recalculate())
+    this.element.addEventListener("cocoon:after-remove", () => this.recalculate())
     this.element.dataset.affiliationDatesReady = ""
-  }
-
-  affiliationsContainerTargetConnected(target) {
-    this.containerObserver = new MutationObserver(() => this.recalculate())
-    this.containerObserver.observe(target, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["style"]
-    })
-  }
-
-  affiliationsContainerTargetDisconnected() {
-    this.containerObserver?.disconnect()
   }
 
   recalculate() {
