@@ -7,7 +7,7 @@
     <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
       <p class="text-base font-semibold text-gray-700 mb-2" style="font-family: 'Telefon Bold', sans-serif; font-size: 42px"><%= @event.pre_title %></p>
     <% end %>
-    <h1 class="font-bold text-green-800 mb-4" style="font-family: Lato, sans-serif; font-size: 53px"><%= @event.title %></h1>
+    <h1 class="font-bold text-green-800 mb-4" style="font-family: Lato, sans-serif; font-size: 53px"><%= link_to @event.title, event_path(@event), class: "hover:underline" %></h1>
 
     <div class="text-center space-y-2">
       <div class="font-bold text-blue-900 uppercase" style="font-family: Lato, sans-serif; font-size: 35px">
@@ -22,6 +22,12 @@
         <div class="text-base text-gray-700"><%= @event.location.name %></div>
       <% end %>
     </div>
+  </div>
+
+  <div class="mb-4">
+    <%= link_to event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      &larr; Back to Event
+    <% end %>
   </div>
 
   <%# ---- REGISTRATION FORM CARD ---- %>
