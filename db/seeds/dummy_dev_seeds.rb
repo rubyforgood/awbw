@@ -318,6 +318,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
     created_at: Time.zone.parse("2005-03-01 02:45:51")
   }
 ].each do |workshop_data|
+  workshop_data[:tips] = workshop_data[:rhino_tips] if workshop_data[:rhino_tips]
   Workshop.where(title: workshop_data[:title]).first_or_create!(workshop_data)
 end
 
@@ -531,6 +532,7 @@ variations.each do |var_data|
   next unless workshop
 
   workshop.workshop_variations.where(name: var_data[:name]).first_or_create!(
+    body: var_data[:rhino_body],
     rhino_body: var_data[:rhino_body],
     position: var_data[:position]
   )
@@ -589,6 +591,7 @@ puts "Creating CommunityNews…"
   body_content = Faker::Lorem.paragraph(sentence_count: 6)
   CommunityNews.where(title: title)
                .first_or_create!(
+                  body: body_content,
                   rhino_body: "<p>#{body_content}</p>",
                   author_id: User.all.sample&.id,
                   created_by_id: User.first&.id,
@@ -605,6 +608,7 @@ puts "Creating new StoryIdeas…"
 10.times do |i|
   body_content = Faker::Lorem.paragraph(sentence_count: 10)
   StoryIdea.create!(
+    body: body_content,
     rhino_body: "<p>#{body_content}</p>",
     author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES.sample,
     permission_given: true,
@@ -646,6 +650,7 @@ puts "Creating Stories…"
   body_content = Faker::Lorem.paragraph(sentence_count: 10)
   Story.where(title: title)
        .first_or_create!(
+          body: body_content,
           rhino_body: "<p>#{body_content}</p>",
           permission_given: true,
           external_workshop_title: [ nil, nil, nil, nil, nil, nil, "Community Art Night", "Healing Arts Circle" ].sample,
@@ -695,11 +700,13 @@ puts "Creating Events…"
       publicly_visible: [ true, false ].sample, publicly_featured: [ true, false ].sample }
   end
 
+  desc_content = Faker::Lorem.paragraph(sentence_count: 6)
   Event.where(title: title,
               start_date: start_date,
               end_date: end_date,)
        .first_or_create!(
-    rhino_description: Faker::Lorem.paragraph(sentence_count: 6),
+    description: desc_content,
+    rhino_description: desc_content,
     registration_close_date: registration_close,
     created_by_id: User.first&.id,
     created_at: Time.current - rand(10..90).days,
@@ -723,8 +730,10 @@ puts "Creating new Resources…"
       publicly_visible: [ true, false ].sample, publicly_featured: [ true, false ].sample }
   end
 
+  resource_body = Faker::Lorem.paragraph(sentence_count: 8)
   Resource.where(title: Faker::Book.title).first_or_create!(
-    rhino_body: Faker::Lorem.paragraph(sentence_count: 8),
+    body: resource_body,
+    rhino_body: resource_body,
     author: [ Faker::Name.name, nil ].sample,
     agency: [ Faker::Company.name, nil ].sample,
     kind: kind,
