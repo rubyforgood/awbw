@@ -27,7 +27,7 @@ module EventRegistrationServices
         assign_tags(person, organization)
 
         event_registration = create_event_registration(person)
-        create_user_form(user, event_registration)
+        create_person_form(person, event_registration)
 
         send_notifications(event_registration)
 
@@ -200,8 +200,8 @@ module EventRegistrationServices
       @event.event_registrations.create!(registrant: person)
     end
 
-    def create_user_form(user, event_registration)
-      user_form = UserForm.create!(user: user, form: @form)
+    def create_person_form(person, event_registration)
+      person_form = PersonForm.create!(person: person, form: @form)
 
       @form.form_fields.where(status: :active).find_each do |field|
         next if field.group_header?
@@ -213,14 +213,14 @@ module EventRegistrationServices
           raw_value.to_s
         end
 
-        UserFormFormField.create!(
-          user_form: user_form,
+        PersonFormFormField.create!(
+          person_form: person_form,
           form_field: field,
           text: text
         )
       end
 
-      user_form
+      person_form
     end
 
     def send_notifications(event_registration)

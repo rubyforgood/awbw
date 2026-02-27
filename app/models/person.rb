@@ -1,8 +1,8 @@
 class Person < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable
 
-  belongs_to :created_by, class_name: "User"
-  belongs_to :updated_by, class_name: "User"
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   has_one :user, inverse_of: :person, dependent: :nullify
   has_many :affiliations, dependent: :destroy
@@ -23,6 +23,7 @@ class Person < ApplicationRecord
   has_many :events, through: :event_registrations
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
+  has_many :person_forms, dependent: :destroy
 
   # Asset associations
   has_one_attached :avatar, dependent: :purge do |attachable|

@@ -48,7 +48,6 @@ module Events
       )
 
       if result.success?
-        sign_in(result.event_registration.registrant.user) unless user_signed_in?
         redirect_to event_registration_path(result.event_registration),
                     notice: "You have been successfully registered!"
       else
@@ -74,14 +73,14 @@ module Events
         current_user
       end
 
-      @user_form = @form.user_forms.find_by(user: target_user)
-      unless @user_form
+      @person_form = @form.person_forms.find_by(person: target_user.person)
+      unless @person_form
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
       end
 
       @form_fields = @form.form_fields.where(status: :active).reorder(position: :asc)
-      @responses = @user_form.user_form_form_fields.index_by(&:form_field_id)
+      @responses = @person_form.person_form_form_fields.index_by(&:form_field_id)
       @event = @event.decorate
     end
 
