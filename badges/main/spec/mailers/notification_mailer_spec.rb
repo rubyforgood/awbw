@@ -89,6 +89,52 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#idea_submitted" do
+    let(:user) { create(:user) }
+    let(:story_idea) { create(:story_idea, created_by: user) }
+    let(:notification) do
+      create(:notification, kind: "idea_submitted", noticeable: story_idea,
+             recipient_role: "person", recipient_email: user.email)
+    end
+
+    it "renders without raising" do
+      expect {
+        described_class.idea_submitted(notification).deliver_now
+      }.not_to raise_error
+    end
+
+    it "sends to the submitter" do
+      mail = described_class.idea_submitted(notification)
+      expect(mail.to).to eq([ user.email ])
+    end
+
+    it "includes a confirmation message" do
+      mail = described_class.idea_submitted(notification)
+      expect(mail.body.encoded).to include("Submission received")
+      expect(mail.body.encoded).to include("Thank you for your submission")
+    end
+  end
+
+  describe "#workshop_log_submitted" do
+    let(:user) { create(:user) }
+    let(:workshop_log) { create(:workshop_log, created_by: user) }
+    let(:notification) do
+      create(:notification, kind: "workshop_log_submitted", noticeable: workshop_log,
+             recipient_role: "person", recipient_email: user.email)
+    end
+
+    it "renders without raising" do
+      expect {
+        described_class.workshop_log_submitted(notification).deliver_now
+      }.not_to raise_error
+    end
+
+    it "sends to the submitter" do
+      mail = described_class.workshop_log_submitted(notification)
+      expect(mail.to).to eq([ user.email ])
+    end
+  end
+
   describe "#reset_password_fyi" do
     let(:user) { create(:user, email: "user@example.com") }
     let(:notification) { create(:notification, kind: "reset_password_fyi", noticeable: user) }

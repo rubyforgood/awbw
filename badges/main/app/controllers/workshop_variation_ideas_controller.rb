@@ -43,6 +43,12 @@ class WorkshopVariationIdeasController < ApplicationController
     if @workshop_variation_idea.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_variation_idea,
+        kind: :idea_submitted,
+        recipient_role: :person,
+        recipient_email: @workshop_variation_idea.created_by.email,
+        notification_type: 0)
+      NotificationServices::CreateNotification.call(
+        noticeable: @workshop_variation_idea,
         kind: :idea_submitted_fyi,
         recipient_role: :admin,
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),

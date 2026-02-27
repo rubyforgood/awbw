@@ -6,7 +6,8 @@ class WorkshopDecorator < ApplicationDecorator
   end
 
   def detail(length: nil)
-    length ? description&.truncate(length) : description
+    text = rhino_objective&.to_plain_text
+    length ? text&.truncate(length) : text
   end
 
   def disable_title_field?

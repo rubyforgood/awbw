@@ -82,11 +82,17 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
           expect(response).to redirect_to(workshop_variation_idea_path(WorkshopVariationIdea.last))
         end
 
-        it "sends a notification" do
+        it "sends admin and submitter notifications" do
           expect(NotificationServices::CreateNotification).to receive(:call).with(
             hash_including(
               kind: :idea_submitted_fyi,
               recipient_role: :admin
+            )
+          )
+          expect(NotificationServices::CreateNotification).to receive(:call).with(
+            hash_including(
+              kind: :idea_submitted,
+              recipient_role: :person
             )
           )
 

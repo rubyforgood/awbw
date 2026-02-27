@@ -1,6 +1,9 @@
 class NotificationMailer < ApplicationMailer
   default to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
 
+  SUBJECT_PREFIX = "AWBW Portal:".freeze
+  FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze
+
   def event_registration_confirmation_fyi(notification)
     @event_registration = notification.noticeable
     @event = @event_registration.event.decorate
@@ -9,10 +12,27 @@ class NotificationMailer < ApplicationMailer
 
     # Send email to the admin
     mail(
-      subject: "AWBW Portal: new event registration by #{@person.full_name} to #{@event.title}"
+      subject: "#{FYI_PREFIX} New event registration by #{@person.full_name} to #{@event.title}"
     )
   end
 
+
+  def idea_submitted(notification)
+    @notification = notification
+    @noticeable = notification.noticeable.decorate
+    @noticeable_klass = @noticeable.object.class
+
+    if @noticeable_klass == User
+      @user = @noticeable.object
+    else
+      @user = @noticeable.try(:user) || @noticeable.try(:created_by)
+    end
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Your #{@noticeable_klass.model_name.human.downcase} has been received"
+    )
+  end
 
   def idea_submitted_fyi(notification)
     @notification = notification
@@ -31,7 +51,7 @@ class NotificationMailer < ApplicationMailer
     @answers     = @noticeable.report_form_field_answers if @noticeable.respond_to?(:report_form_field_answers)
 
     mail(
-      subject: "AWBW Portal: new #{@noticeable_klass} submission by #{@user.full_name}"
+      subject: "#{FYI_PREFIX} New #{@noticeable_klass} submission by #{@user.full_name}"
     )
   end
 
@@ -51,7 +71,7 @@ class NotificationMailer < ApplicationMailer
     end
 
     mail(
-      subject: "AWBW Portal: new #{@type} submission by #{@user.full_name}"
+      subject: "#{FYI_PREFIX} New #{@type} submission by #{@user.full_name}"
     )
   end
 
@@ -62,7 +82,24 @@ class NotificationMailer < ApplicationMailer
 
     # Send email to the admin
     mail(
-      subject: "AWBW Portal: user password reset by #{@user.full_name}"
+      subject: "#{FYI_PREFIX} New password reset by #{@user.full_name}"
+    )
+  end
+
+  def workshop_log_submitted(notification)
+    @notification = notification
+    @noticeable = notification.noticeable
+
+    if @noticeable.is_a?(User)
+      @user = @noticeable
+    else
+      @user = @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
+      @report = @noticeable
+    end
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Your workshop log has been received"
     )
   end
 
@@ -82,7 +119,7 @@ class NotificationMailer < ApplicationMailer
     end
 
     mail(
-      subject: "AWBW Portal: new WorkshopLog submission by #{@user.full_name}"
+      subject: "#{FYI_PREFIX} New WorkshopLog submission by #{@user.full_name}"
     )
   end
 

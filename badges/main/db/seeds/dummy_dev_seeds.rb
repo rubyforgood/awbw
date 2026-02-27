@@ -83,6 +83,65 @@ puts "Creating new StoryIdeas…"
   )
 end
 
+puts "Creating WorkshopIdeas…"
+[
+  "Creative Expression Through Collage",
+  "Mindful Drawing for Healing",
+  "Empowerment Through Mixed Media"
+].each do |title|
+  WorkshopIdea.where(title: title).first_or_create!(
+    windows_type_id: WindowsType.all.sample&.id,
+    created_by_id: User.first&.id,
+    updated_by_id: User.first&.id,
+    created_at: Time.current - rand(1..90).days,
+    updated_at: Time.current - rand(1..40).days
+  )
+end
+
+puts "Creating WorkshopVariationIdeas…"
+[
+  "Art Journaling Variation",
+  "Group Mural Adaptation",
+  "Outdoor Collage Variation"
+].each do |name|
+  workshop = Workshop.all.sample
+  next unless workshop
+
+  WorkshopVariationIdea.where(name: name, workshop_id: workshop.id).first_or_create!(
+    rhino_body: "<p>#{Faker::Lorem.paragraph(sentence_count: 6)}</p>",
+    permission_given: true,
+    author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES.sample,
+    organization_id: Organization.all.sample&.id,
+    windows_type_id: WindowsType.all.sample&.id,
+    created_by_id: User.first&.id,
+    updated_by_id: User.first&.id,
+    created_at: Time.current - rand(1..90).days,
+    updated_at: Time.current - rand(1..40).days
+  )
+end
+
+puts "Creating WorkshopLogs…"
+5.times do
+  workshop = Workshop.all.sample
+  next unless workshop
+
+  WorkshopLog.create!(
+    workshop_id: workshop.id,
+    organization_id: Organization.all.sample&.id,
+    windows_type_id: WindowsType.all.sample&.id,
+    created_by_id: User.first&.id,
+    date: Date.today - rand(1..90).days,
+    children_ongoing: rand(0..5),
+    teens_ongoing: rand(0..3),
+    adults_ongoing: rand(0..10),
+    children_first_time: rand(0..2),
+    teens_first_time: rand(0..2),
+    adults_first_time: rand(0..4),
+    created_at: Time.current - rand(1..90).days,
+    updated_at: Time.current - rand(1..40).days
+  )
+end
+
 puts "Creating Stories…"
 [
   "Healing Through Art: A Survivor’s Journey",

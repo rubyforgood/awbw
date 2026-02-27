@@ -1,0 +1,20 @@
+Submission received
+
+Hello <%= @user.full_name %>,
+
+Thank you for your submission. We have received your <%= @noticeable_klass.model_name.human.downcase %> and will review it shortly.
+
+<% if @noticeable.respond_to?(:title) %>
+<%= @noticeable.title %>
+Submitted on <%= @noticeable.created_at
+                            .in_time_zone("Pacific Time (US & Canada)")
+                            .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+<% end %>
+
+<% if @noticeable.present? %>
+View submission:
+<%= polymorphic_url(@noticeable) %>
+<% end %>
+
+--
+This is an automated confirmation from AWBW.

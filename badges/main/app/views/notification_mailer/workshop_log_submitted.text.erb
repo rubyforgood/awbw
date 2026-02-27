@@ -1,0 +1,19 @@
+Workshop log received
+
+Hello <%= @user.name %>,
+
+Thank you for submitting your workshop log. We have received it and will review it shortly.
+
+<% if @report.present? %>
+Workshop: <%= @noticeable.workshop&.title %>
+<% if @noticeable.windows_type.present? %>Sector: <%= @noticeable.windows_type.short_name %><% end %>
+Submitted on <%= @noticeable.created_at
+                            .in_time_zone("Pacific Time (US & Canada)")
+                            .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+View workshop log:
+<%= workshop_log_url(@report) %>
+<% end %>
+
+--
+This is an automated confirmation from AWBW.

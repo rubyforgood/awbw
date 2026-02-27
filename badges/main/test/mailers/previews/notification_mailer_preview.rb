@@ -7,7 +7,7 @@ class NotificationMailerPreview < ActionMailer::Preview
           registrant: User.first || raise("Need a User")
         )
 
-    notification = Notification.where(kind: "event_registration_confirmation_fyi").last ||
+    notification = find_valid_notification("event_registration_confirmation_fyi") ||
       Notification.create!(
         noticeable: event_registration,
         notification_type: 1,
@@ -19,9 +19,23 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.event_registration_confirmation_fyi(notification)
   end
 
+  def idea_submitted
+    noticeable = StoryIdea.first || WorkshopVariationIdea.first
+    user = noticeable&.created_by || User.first
+    notification = find_valid_notification("idea_submitted") ||
+      Notification.create!(
+        noticeable: noticeable || User.first,
+        notification_type: 0,
+        kind: "idea_submitted",
+        recipient_role: "person",
+        recipient_email: user&.email || "preview@example.com"
+      )
+    NotificationMailer.idea_submitted(notification)
+  end
+
   def idea_submitted_fyi
-    noticeable = StoryIdea.first || WorkshopIdea.first
-    notification = Notification.where(kind: "idea_submitted_fyi").last ||
+    noticeable = StoryIdea.first || WorkshopVariationIdea.first
+    notification = find_valid_notification("idea_submitted_fyi") ||
       Notification.create!(
         noticeable: noticeable,
         notification_type: 0,
@@ -33,7 +47,7 @@ class NotificationMailerPreview < ActionMailer::Preview
   end
 
   def report_submitted_fyi
-    notification = Notification.where(kind: "report_submitted_fyi").last ||
+    notification = find_valid_notification("report_submitted_fyi") ||
       Notification.create!(
         noticeable: Report.where.not(type: "WorkshopLog").first || Report.first || WorkshopLog.first,
         notification_type: 0,
@@ -46,7 +60,7 @@ class NotificationMailerPreview < ActionMailer::Preview
   end
 
   def reset_password_fyi
-    notification = Notification.where(kind: "reset_password_fyi").last ||
+    notification = find_valid_notification("reset_password_fyi") ||
       Notification.create!(
         noticeable: User.first,
         notification_type: 1,
@@ -58,8 +72,22 @@ class NotificationMailerPreview < ActionMailer::Preview
   end
 
 
+  def workshop_log_submitted
+    noticeable = WorkshopLog.first || Report.first
+    user = noticeable&.created_by || User.first
+    notification = find_valid_notification("workshop_log_submitted") ||
+      Notification.create!(
+        noticeable: noticeable || User.first,
+        notification_type: 0,
+        kind: "workshop_log_submitted",
+        recipient_role: "person",
+        recipient_email: user&.email || "preview@example.com"
+      )
+    NotificationMailer.workshop_log_submitted(notification)
+  end
+
   def workshop_log_submitted_fyi
-    notification = Notification.where(kind: "workshop_log_submitted_fyi").last ||
+    notification = find_valid_notification("workshop_log_submitted_fyi") ||
       Notification.create!(
         noticeable: WorkshopLog.first || Report.first,
         notification_type: 0,
@@ -69,5 +97,11 @@ class NotificationMailerPreview < ActionMailer::Preview
       )
 
     NotificationMailer.workshop_log_submitted_fyi(notification)
+  end
+
+  private
+
+  def find_valid_notification(kind)
+    Notification.where(kind: kind).order(id: :desc).find_each.find(&:noticeable)
   end
 end
