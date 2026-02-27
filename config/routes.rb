@@ -149,7 +149,6 @@ Rails.application.routes.draw do
   resources :story_shares, only: [ :index, :show ]
   resources :tutorials
   resources :user_forms
-  resources :person_forms
   resources :windows_types
   resources :workshop_ideas
   resources :workshop_logs
