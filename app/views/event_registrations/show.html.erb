@@ -149,10 +149,10 @@
         </div>
 
         <% registration_form = @event_registration.event.forms.find_by(name: "Public Registration") %>
-        <% if registration_form && registration_form.user_forms.exists?(user: @event_registration.registrant&.user) %>
+        <% if registration_form && registration_form.person_forms.exists?(person: @event_registration.registrant) %>
           <div class="mt-4 text-center">
             <%= link_to "View Registration Form",
-                        event_public_registration_path(@event_registration.event, user_id: @event_registration.registrant&.user&.id),
+                        event_public_registration_path(@event_registration.event, person_id: @event_registration.registrant&.id),
                         class: "text-sm text-blue-700 hover:text-blue-900 underline" %>
           </div>
         <% end %>

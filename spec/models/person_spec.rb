@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe Person, type: :model do
   describe "associations" do
     it { should have_one(:user) }
-    it { should belong_to(:created_by).class_name("User") }
-    it { should belong_to(:updated_by).class_name("User") }
+    it { should belong_to(:created_by).class_name("User").optional(true) }
+    it { should belong_to(:updated_by).class_name("User").optional(true) }
     it { should have_many(:affiliations).dependent(:destroy) }
     it { should have_many(:organizations).through(:affiliations) }
     it { should have_many(:addresses) }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_26_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -668,7 +668,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_200000) do
     t.text "bio", size: :medium
     t.boolean "blog_contributor", default: false, null: false
     t.datetime "created_at", null: false
-    t.integer "created_by_id", null: false
+    t.integer "created_by_id"
     t.date "date_of_birth"
     t.string "display_name_preference"
     t.string "email"
@@ -703,7 +703,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_200000) do
     t.string "pronouns"
     t.string "twitter_url"
     t.datetime "updated_at", null: false
-    t.integer "updated_by_id", null: false
+    t.integer "updated_by_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_people_on_created_by_id"
     t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
@@ -714,6 +714,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_200000) do
     t.integer "legacy_id"
     t.string "security_cat"
     t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "person_form_form_fields", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "form_field_id"
+    t.bigint "person_form_id"
+    t.text "text"
+    t.datetime "updated_at", null: false
+    t.index ["form_field_id"], name: "index_person_form_form_fields_on_form_field_id"
+    t.index ["person_form_id"], name: "index_person_form_form_fields_on_person_form_id"
+  end
+
+  create_table "person_forms", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "form_id"
+    t.bigint "person_id"
+    t.datetime "updated_at", null: false
+    t.index ["form_id"], name: "index_person_forms_on_form_id"
+    t.index ["person_id"], name: "index_person_forms_on_person_id"
   end
 
   create_table "quotable_item_quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1316,6 +1335,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_200000) do
   add_foreign_key "organizations", "windows_types"
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
+  add_foreign_key "person_form_form_fields", "form_fields"
+  add_foreign_key "person_form_form_fields", "person_forms"
+  add_foreign_key "person_forms", "forms"
+  add_foreign_key "person_forms", "people"
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "workshops"
   add_foreign_key "report_form_field_answers", "answer_options"
