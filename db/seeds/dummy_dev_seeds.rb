@@ -394,129 +394,131 @@ seed_quotes.each_with_index do |quote, i|
 end
 
 puts "Creating Workshop Variations…"
+# rubocop:disable Style/PercentLiteralDelimiters
 variations = [
   {
     workshop_title: "Watercolor Windows",
     name: "Hope Prayers",
-    rhino_body: "<p>As you guide the relaxation and painting process, you could focus on words that bring hope. For example strength, wisdom, courage, joy. The participants could imagine breathing these things in and painting them in shapes and colors.</p>",
+    rhino_body: %[As you guide the relaxation and painting process, you could focus on words that bring hope.&nbsp; For example strength, wisdom, courage, joy.&nbsp; The participants could imagine breathing these things in, feeling them fill their bodies, and express them in shapes and colors in their paintings.],
     position: 20
   },
   {
     workshop_title: "Watercolor Windows",
     name: "Self-Care Prayers",
-    rhino_body: "<p>As you guide the relaxation and painting process, you could imagine breathing in self-care, listening deeply for what we need to do to take care of ourselves, and noticing whatever shapes and colors come to mind.</p>",
+    rhino_body: %[As you guide the relaxation and painting process, you could imagine breathing in self-care, listening deeply for what we need to do to take care of ourselves, and noticing whatever shapes and colors come to mind as we think of taking care of ourselves.],
     position: 15
   },
   {
     workshop_title: "Watercolor Windows",
     name: "Working from Quotes",
-    rhino_body: "<p>Have a jar of inspirational quotes so each person can pick one without looking, see what the quote inspires in her, and then paint shapes and colors inspired by the quote.</p>",
+    rhino_body: %[Have a jar of inspirational quotes so each person can pick one without looking, see what they quote inspires in her, and then paint shapes and colors inspired by the quote.&nbsp; (see enclosed list to copy and cut up for your jar).<br />Or:<br />Hand out the entire list of inspirational quotes to each participant so she can read them, choose her favorite ones, and then create paintings expressing these quotes in shapes and<br />colors.],
     position: 5
   },
   {
     workshop_title: "Story Dolls",
     name: "Split Masks",
-    rhino_body: "<p>When working with a group that was getting ready to leave the shelter, we did the Survival Masks project. Most of the participants chose to split the face on the mask. They painted the right side to represent the past and the left side to represent the future.</p>",
+    rhino_body: %[Recently when I was working with a group that was getting ready to leave the shelter, we did the Survival Masks project. &nbsp;<br/><br/>Most of the participants chose to split the face on the mask.&nbsp; They created one side to represent what they came to the shelter as and the other side to represent what they were leaving with. &nbsp;<br/><br/>It was incredibly powerful for them to actually see the difference and acknowledge their growth.&nbsp; It was fascinating for all of us to see their change so clearly. &nbsp;<br/><br/>When they left the shelter they very carefully packed their art work between their clothing, so they could keep it protected!],
     position: 20
   },
   {
     workshop_title: "Story Dolls",
     name: "For Pregnant Teens",
-    rhino_body: "<p>When leading Windows workshops with pregnant teens, they call me 'The Art Lady!' and are excited when I arrive at the Center. Doing the Debut CD project, I asked the girls to create a CD that would tell the story of themselves or their baby's debut into the world.</p>",
+    rhino_body: %[I lead Windows workshops with pregnant teens. They call me &lsquo;The Art Lady!&rsquo; and are excited when I arrive at the Center. &nbsp;<br/><br/>Doing the Debut CD project, I asked the girls to create a CD that would express the message that they want to tell their child.&nbsp; After the project, one of the teen moms who had been very dependant on her boyfriend said, &lsquo;Never have a baby because you are lonely.&rsquo;&nbsp; This was a major moment of self-awareness for her.<br/><br/>It made me smile recently when one new girl told me she had heard about the Windows groups and she was looking forward to it because it would give her a break from &lsquo;having&rsquo; to talk about feelings &ndash; but little did she know, they talk about feelings all the time through their art!],
     position: 15
   },
   {
     workshop_title: "Befriending Your Feelings",
     name: "Then & Now Drawings",
-    rhino_body: "<p>Draw an image of how it was to sleep while you were in the abusive relationship, and how you want sleep to be, now, when you are safe. Use Cray-Pas, crayons, markers, or pastels to express both experiences.</p>",
+    rhino_body: %[<span class="TextHeader2">Materials:</span><br/>Cray-Pas (or crayons, markers, pastels, etc.) and paper<br/><br/><span class="TextHeader2">Project:</span><br/>Draw an image of how it was to sleep while you were in the abusive relationship, and how you want sleep to be, now, when you are free of the abusive relationship.&nbsp; Put words into the drawings as needed.<br/>],
     position: 35
   },
   {
     workshop_title: "Befriending Your Feelings",
     name: "Dream-Catchers",
-    rhino_body: "<p>Dream-Catchers come from the traditions of some Indigenous American tribes. They are meant to filter dreams, catching the bad ones and letting the good ones through. Participants create their own dream-catchers using paper plates, scissors, string, beads, feathers, and markers.</p>",
+    rhino_body: %[<span class="TextHeader2">Materials:</span><br/>Strong paper plates, scissors, string, hole-punches, beads, feathers, markers<br/><br/><span class="TextHeader2">Project:</span> <br/>Dream-Catchers come from the traditions of some Indigenous American tribes.&nbsp; They are based on the belief that dreams are messages sent to us from sacred beings during our sleep.&nbsp; The Dream-Catchers, web-like hoops are placed by our heads during sleep so that they can catch the bad dreams (messages) and permit the good ones to pass through and reach our minds during sleep.&nbsp; Then, when the rays of the sun come up in the morning the bad dreams are burnt away and therefore we are only left with the good ones.&nbsp; (A simplified way of creating Dream-Catchers is written in the AWBW Children&rsquo;s Windows Manual.&nbsp; If you need a copy of the workshop, let us know.)<br/>],
     position: 25
   },
   {
     workshop_title: "Comfort Journals",
     name: "Decorate with Super Sculpey",
-    rhino_body: "<p>You can decorate your box with Super Sculpey instead of collage. To do this, roll out a piece of Super Sculpey to create a thin \"tortilla.\" Put the cover of your matchbox on the Super Sculpey and press gently to leave an outline. Cut out the shape and decorate.</p>",
+    rhino_body: %[You can decorate your box with Super Sculpey instead of collage.&nbsp; To do this, roll out a piece of Super Sculpey to create a thin Super Sculpey &quot;tortilla.&quot;&nbsp; Put the cover of your match-box in the middle of this &quot;tortilla&quot; and cover the outside of it with this.&nbsp; Cut excess on side with an Exacto knife - DON'T FOLD THE CLAY OVER THE EDGE INTO THE INSIDE OF THE BOX BECAUSE YOU WON'T BE ABLE TO OPEN AND CLOSE THE BOX.&nbsp; Make a second &quot;tortilla&quot; for the other side of the cover.&nbsp; Use Super Sculpey to create a 3-dimentional design on top of the box.&nbsp; Make flowers or&nbsp; abstract shapes and then place them on top of the Super Sculpey &quot;tortilla&quot;&nbsp; layer that is in place.&nbsp; Be sure to press them in&mdash;don't just place them on top.&nbsp; Once finished, bake it in the oven like usual.&nbsp; The Super Sculpey protects the box from burning, but keep checking the oven.&nbsp; If your box has a lot of pieces sticking out of it, paint a couple of thin layers of Gesso to make the Super Sculpey a little tougher so it won't break apart while you paint it (or afterwards).&nbsp; Now paint the Super Sculpey.&nbsp; Once dried (you might have to wait a while), cover the whole work with a layer of Mod-Podge to give it shine and to protect the paint.],
     position: 20
   },
   {
     workshop_title: "Comfort Journals",
     name: "Binding into a Book",
-    rhino_body: "<p>The paintings and words from any of these variations could be bound together into little books each person can use as a source of inspiration and strength. It could be a Personal Reminders Book or a collection of comfort imagery.</p>",
+    rhino_body: %[The paintings and words from any of these variations could be bound together into little books each person can use as a source of inspiration and strength. It could be her Personal Reminders Book, her Personal Rulebook, her Personal Inspiration Book. Each woman could come up with her own title and purpose for how she wants to use her book.],
     position: 1
   },
   {
     workshop_title: "Peace Weavings",
     name: "Simple Variation",
-    rhino_body: "<p>Just write with pens and markers on the paper feather pattern instead of using the foil and plastic wrap. This is a simpler version that works well with younger participants or when supplies are limited.</p>",
+    rhino_body: %[Just write with pens and markers on the paper feather pattern instead of using the foil and plastic wrap.],
     position: 20
   },
   {
     workshop_title: "Peace Weavings",
     name: "Group Ornament",
-    rhino_body: "<p>In this variation, everyone works on creating one large prayer ornament. The participants each put their prayer onto a small colored circle. Then they attach their small circles to the large ornament as a community piece.</p>",
+    rhino_body: %[In this variation, everyone works on creating one large prayer ornament.&nbsp; The participants each put their prayer onto a small colored circle.&nbsp; Then they attach their small circles to the larger one using a hole punch and ribbons.&nbsp; It ends up looking sort of like an advent calendar where you can open up individual circles.<br/>],
     position: 15
   },
   {
     workshop_title: "Ceremonial Staffs",
     name: "Single Ornaments",
-    rhino_body: "<p>In this variation, everyone makes individual ornaments that they can use to decorate a tree or the walls of the shelter. Making the ornaments card-like so they can open up allows participants to write personal messages inside.</p>",
+    rhino_body: %[In this variation, everyone makes individual ornaments that they can use to decorate a tree or the walls of the shelter.&nbsp; I recommend making the ornaments card-like so they can open up.&nbsp; Decorate the front as an art gift to God and write the prayer inside.&nbsp; Use a hole punch and ribbon to hang each one.],
     position: 20
   },
   {
     workshop_title: "Our Family Tree",
     name: "Growing, Step by Step",
-    rhino_body: "<p>If the idea of looking into the past seems too difficult, you could call the workshop \"Growing, Step by Step\" and have each person use their three squares to illustrate a way they wish to grow in the coming months.</p>",
+    rhino_body: %[If the idea of looking into the past seems too difficult, you could just call the workshop &ldquo;Growing, Step by Step&rdquo; and have each person use their three squares to illustrate a way they wish to grow, step by step. <br/>],
     position: 20
   },
   {
     workshop_title: "Dreams and Goals Greeting Cards",
     name: "Nap Permission Slips",
-    rhino_body: "<p>Sometimes we are told that taking naps is lazy or bad. The truth is that naps can be deeply restorative. In this variation, participants create beautiful permission slips giving themselves permission to rest and recharge.</p>",
+    rhino_body: %[<span class="TextHeader2">Materials:</span><br/>Colored construction paper, scissors, markers, Cray-Pas, hole puncher, ribbons<br/> <br/><span class="TextHeader2">Project:</span><br/>Sometimes we are told that taking naps is lazy or bad.&nbsp; The truth is that naps can be a very important part of recovering from stresses and gaining strength and clarity.&nbsp; Write for yourself permission slips to nap.&nbsp; Decorate them with ribbons, designs, whatever will help remind you that naps are a very good thing.&nbsp; (You might want to check out a wonderful book by Sark: <span style="font-style: italic;">Change Your Life Without Getting Out of Bed:&nbsp; The Ultimate Nap Book</span>.)],
     position: 20
   },
   {
     workshop_title: "Inner Self Portraits",
     name: "Nap Goggles",
-    rhino_body: "<p>Sometimes it is nice to have something soft and comforting pressing gently on your eyes when resting. In this variation, participants decorate flat, rectangular make-up sponges with acrylic paints and attach ribbons to create soothing nap goggles.</p>",
+    rhino_body: %[<span class="TextHeader2">Materials:</span><br/>Flat, rectangular make-up sponges, ribbons, scissors, acrylic paints, brushes, water<br/> <span class="TextHeader2">Project:</span> <br/>Sometimes it is nice to have something soft and comforting pressing gently on your eyes, blocking out the light, and reminding you it&rsquo;s okay to sleep.&nbsp; (This can be especially important for day-time naps!)&nbsp; To tie your goggles together, gently poke a hole in the sponge with the tip of scissors.&nbsp; Then poke the ribbon through with the scissor tip to thread.&nbsp; (Poke gently!&nbsp; The sponges can rip.)&nbsp; Tie your goggles together in the center to fit over your nose.&nbsp; Then tie the outside ribbon to fit around your head. When you are ready, paint on the outside of them whatever images remind you of the deep, delicious rest that you deserve everyday.<br/>],
     position: 15
   },
   {
     workshop_title: "Feelings Collages",
     name: "Sweet-Dreams Pillows",
-    rhino_body: "<p>Decorate or create a special Sweet-Dreams Pillow. Using fabric crayons and simple sewing supplies, participants design comforting pillows with imagery and words that represent safety and peace.</p>",
+    rhino_body: %[<span class="TextHeader2">Materials:</span><br/>Supplies for hand-sewing mini pillows (fabric, thread, stuffing, etc. or ready-made pillow cases to decorate, if available), fabric crayons, newspaper, an electric iron<br/><br/><span class="TextHeader2">Project:</span><br/>Decorate or create for yourself a special Sweet-Dreams Pillow.&nbsp; Cover it with whatever images, colors and words will help you sleep deeply.&nbsp; Use your pillow to create your safe &ldquo;nest&rdquo; for your deep wonderful rests.],
     position: 10
   },
   {
     workshop_title: "Creating Joy",
     name: "Guided Relaxation",
-    rhino_body: "<p>This is not an art project but a supplementary relaxation exercise. Lay comfortably, ready for sleep. A guided relaxation is read aloud, helping participants focus on breathing and releasing tension throughout the body.</p>",
+    rhino_body: %[<span class="TextHeader2">Materials:</span><br/>Copies of a favorite guided relaxation to hand out (see page 5 for sample, audio tapes and tape recorder (optional)<br/><br/><span class="TextHeader2">Description:</span><br/>This is not an art project.&nbsp; It is a supplementary suggestion for help with sleeping.&nbsp; Using a guided relaxation can be a marvelous way to relax and fall asleep, when you feel tense or unable to sleep.&nbsp; The relaxation can be recorded, or memorized.&nbsp; For those who have tape players, it is wonderful to have the relaxation on tape, so they can listen and fall asleep, rather than trying to remember the relaxation.&nbsp; Distribute copies of the sample relaxation, and encourage participants to take their copy with them and to change it as they wish.&nbsp; If taping is possible, you might set up the equipment for this in a separate room.&nbsp; That way, those who wish to make themselves a sleep relaxation tape may do so, one at a time, throughout the art workshop.&nbsp; &nbsp;<br/><br/><br/><span style="font-weight: bold;">Guided Relaxation for Peaceful Sleep</span><br style="font-weight: bold;"/>Lay comfortably in your bed, ready for sleep.&nbsp; Adjust your arms and legs so that they are comfortable and settled. Notice your breathing...Now take some deep breaths in, and as you let each one out, say to yourself, &ldquo;relax&rdquo;... &nbsp;<br/><br/>When you are ready, become aware of your face.&nbsp; Notice your whole head and neck.&nbsp; Now take a deep breath in, and squeeze the muscles in your face, head, and neck.&nbsp; Now let your breath go and release all the tension from your head.&nbsp; As you relax your head, picture the relaxation spreading through your entire body. &nbsp;<br/><br/>Repeat above sequence for these: <br/>*shoulders and back* &nbsp;<br/>*arms and hands* &nbsp;<br/>*chest and stomach* <br/>*legs and feet* <br/><br/>Now take another deep breath for your entire body.&nbsp; Gently tense the muscles from head to toe, one more time, and release.&nbsp; Feel the tension melting away with your breath. &nbsp;<br/><br/>Rest comfortably in this position.&nbsp; Just enjoy how relaxed your whole body is, as you drift off to a deep, peaceful and refreshing sleep.],
     position: 5
   },
   {
     workshop_title: "Personal Needs Flower",
     name: "Personal Symbols Keytags",
-    rhino_body: "<p>Adapt the key-tags' meaning to be a personal symbol for participants to represent themselves. Each person creates a small, portable reminder of their identity and strengths that they can carry with them.</p>",
+    rhino_body: %[&nbsp;I would suggest adapting the key-tags&#39; meaning to be a personal symbol for them to represent themselves.],
     position: 20
   },
   {
     workshop_title: "My Butterfly",
     name: "Tough Spot Prayers",
-    rhino_body: "<p>With this variation, you could encourage each participant to notice a worry or challenge that she wants guidance or help with and put it into shapes and colors. Then through the process of painting, she can transform those feelings into something beautiful.</p>",
+    rhino_body: %[With this variation, you could encourage each participant to notice a worry or challenge that she wants guidance or help with and put it into shapes and colors. Then through the process<br />of painting that shape in consecutive paintings, she can see what emerges and how it transforms, just in shapes and colors, exploring how that challenge can be resolved or transformed.],
     position: 10
   },
   {
     workshop_title: "Inspirational Scrolls",
     name: "Sleep Rocks",
-    rhino_body: "<p>Select a rock to be your special sleep rock. Using smooth rocks and paint pens, participants decorate their rocks with soothing imagery and words. The rock can be held while falling asleep as a grounding, comforting object.</p>",
+    rhino_body: %[<span class="TextHeader2">Materials:</span><br/>Smooth rocks (can be purchased at garden and home supply places), paint pens (any opaque pens that can write on rocks)<br/> <br/><span class="TextHeader2">Project:</span><br/>Select a rock to be your special sleep rock.&nbsp; Hold it and let your eyes close.&nbsp; As you rest with your rock, notice what thoughts your rock holds for you.&nbsp; What thoughts about sleep, about resting, about you?&nbsp; What words come to mind?&nbsp; When you are ready, write these words on your rock.],
     position: 30
   }
 ]
 
+# rubocop:enable Style/PercentLiteralDelimiters
 variations.each do |var_data|
   workshop = Workshop.find_by(title: var_data[:workshop_title])
   next unless workshop
