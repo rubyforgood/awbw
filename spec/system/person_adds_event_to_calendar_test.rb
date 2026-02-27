@@ -36,8 +36,8 @@ RSpec.describe "People can register for an event" do
 
       describe "Calendar links after registration" do
         let(:title_encoded) { ERB::Util.url_encode(@event.title) }
-        let(:start_time) { @event.start_date.strftime("%Y%m%dT%H%M%SZ") }
-        let(:end_time) { @event.end_date.strftime("%Y%m%dT%H%M%SZ") }
+        let(:start_time) { @event.start_date.utc.strftime("%Y%m%dT%H%M%SZ") }
+        let(:end_time) { @event.end_date.utc.strftime("%Y%m%dT%H%M%SZ") }
 
         before do
           visit events_path
