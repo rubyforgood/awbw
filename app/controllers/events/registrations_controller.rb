@@ -8,11 +8,7 @@ module Events
       authorize! @event_registration
 
       if @event_registration.save
-        success = "You have successfully registered for this event."
-        respond_to do |format|
-          format.turbo_stream { flash.now[:notice] = success }
-          format.html { redirect_to @event, notice: success }
-        end
+        redirect_to @event_registration, notice: "You have successfully registered for this event."
       else
         error = @event_registration.errors.full_messages.to_sentence
         respond_to do |format|

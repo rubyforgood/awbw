@@ -26,6 +26,11 @@ module EventRegistrationServices
 
         assign_tags(person, organization)
 
+        existing = @event.event_registrations.find_by(registrant: person)
+        if existing
+          return Result.new(success?: true, event_registration: existing, errors: [])
+        end
+
         event_registration = create_event_registration(person)
         create_person_form(person, event_registration)
 
