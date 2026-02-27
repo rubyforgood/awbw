@@ -32,7 +32,7 @@
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div>
           <span class="font-semibold text-gray-700">Submitted by:</span>
-          <% if @workshop_variation_idea.created_by&.person %>
+          <% if @workshop_variation_idea.created_by&.person && allowed_to?(:show?, @workshop_variation_idea.created_by.person) %>
             <%= link_to @workshop_variation_idea.created_by.name,
                         person_path(@workshop_variation_idea.created_by.person),
                         data: { turbo_frame: "_top" },
@@ -55,12 +55,12 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Workshop:</span>
-          <% if @workshop_variation_idea.workshop %>
+          <% if @workshop_variation_idea.workshop && allowed_to?(:show?, @workshop_variation_idea.workshop) %>
             <%= link_to @workshop_variation_idea.workshop.title, workshop_path(@workshop_variation_idea.workshop),
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}" %>
           <% else %>
-            —
+            <%= @workshop_variation_idea.workshop&.title || "—" %>
           <% end %>
         </div>
         <div>
@@ -69,13 +69,13 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Organization:</span>
-          <% if @workshop_variation_idea.organization %>
+          <% if @workshop_variation_idea.organization && allowed_to?(:show?, @workshop_variation_idea.organization) %>
             <%= link_to @workshop_variation_idea.organization.name,
                         organization_path(@workshop_variation_idea.organization),
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:organizations, intensity: 100)} #{DomainTheme.text_class_for(:organizations)} #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)}" %>
           <% else %>
-            —
+            <%= @workshop_variation_idea.organization&.name || "—" %>
           <% end %>
         </div>
         <div class="hidden md:block"></div>

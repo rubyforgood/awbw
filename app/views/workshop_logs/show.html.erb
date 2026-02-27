@@ -19,7 +19,7 @@
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div>
           <span class="font-semibold text-gray-700">Submitted by:</span>
-          <% if @workshop_log.created_by&.person %>
+          <% if @workshop_log.created_by&.person && allowed_to?(:show?, @workshop_log.created_by.person) %>
             <%= link_to @workshop_log.created_by.name,
                         person_path(@workshop_log.created_by.person),
                         data: { turbo_frame: "_top" },
@@ -30,13 +30,13 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Organization:</span>
-          <% if @workshop_log.organization %>
+          <% if @workshop_log.organization && allowed_to?(:show?, @workshop_log.organization) %>
             <%= link_to @workshop_log.organization.name,
                         organization_path(@workshop_log.organization),
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:organizations, intensity: 100)} #{DomainTheme.text_class_for(:organizations)} #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)}" %>
           <% else %>
-            —
+            <%= @workshop_log.organization&.name || "—" %>
           <% end %>
         </div>
         <div>
@@ -45,12 +45,12 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Workshop:</span>
-          <% if @workshop_log.workshop %>
+          <% if @workshop_log.workshop && allowed_to?(:show?, @workshop_log.workshop) %>
             <%= link_to @workshop_log.workshop.title, workshop_path(@workshop_log.workshop),
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}" %>
           <% else %>
-            —
+            <%= @workshop_log.workshop&.title || "—" %>
           <% end %>
           <br><span class="text-gray-400"><%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %></span>
         </div>

@@ -31,7 +31,7 @@
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div>
           <span class="font-semibold text-gray-700">Story by:</span>
-          <% if @story_idea.created_by&.person %>
+          <% if @story_idea.created_by&.person && allowed_to?(:show?, @story_idea.created_by.person) %>
             <%= link_to @story_idea.created_by.name,
                         person_path(@story_idea.created_by.person),
                         data: { turbo_frame: "_top" },
@@ -55,7 +55,7 @@
         <div>
           <span class="font-semibold text-gray-700">Workshop:</span>
           <% workshop_title = @story_idea.workshop&.title || @story_idea.external_workshop_title %>
-          <% if @story_idea.workshop %>
+          <% if @story_idea.workshop && allowed_to?(:show?, @story_idea.workshop) %>
             <%= link_to workshop_title, workshop_path(@story_idea.workshop),
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}" %>
@@ -71,13 +71,13 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Organization:</span>
-          <% if @story_idea.organization %>
+          <% if @story_idea.organization && allowed_to?(:show?, @story_idea.organization) %>
             <%= link_to @story_idea.organization.name,
                         organization_path(@story_idea.organization),
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:organizations, intensity: 100)} #{DomainTheme.text_class_for(:organizations)} #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)}" %>
           <% else %>
-            —
+            <%= @story_idea.organization&.name || "—" %>
           <% end %>
         </div>
         <div class="hidden md:block"></div>
