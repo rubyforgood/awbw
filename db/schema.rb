@@ -658,7 +658,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
     t.string "status", null: false
     t.string "stripe_charge_id"
     t.json "stripe_metadata"
-    t.string "stripe_payment_intent_id", null: false
+    t.string "stripe_payment_intent_id"
     t.datetime "updated_at", null: false
     t.index ["payable_type", "payable_id", "status"], name: "index_payments_on_payable_type_and_payable_id_and_status"
     t.index ["payable_type", "payable_id"], name: "index_payments_on_payable"

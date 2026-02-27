@@ -10,15 +10,15 @@ RSpec.describe "Events::Registrations", type: :request do
 
   describe "POST /events/:event_id/registrations" do
     context "when successful" do
-      it "creates a registration and returns turbo stream" do
+      it "creates a registration and redirects to registration show" do
         expect {
           post event_registrant_registration_path(event_id: event.id),
             headers: turbo_headers
         }.to change(EventRegistration, :count).by(1)
 
-        expect(response).to have_http_status(:ok)
-        expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-        expect(flash.now[:notice]).to eq("You have successfully registered for this event.")
+        registration = EventRegistration.last
+        expect(response).to redirect_to(event_registration_path(registration))
+        expect(flash[:notice]).to eq("You have successfully registered for this event.")
       end
     end
 
