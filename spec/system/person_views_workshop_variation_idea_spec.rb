@@ -21,10 +21,11 @@ RSpec.describe "Viewing a workshop variation idea", type: :system do
       sign_in user
     end
 
-    it "displays the organization as a clickable label" do
+    it "displays the organization as plain text (non-admin)" do
       visit workshop_variation_idea_path(idea)
 
-      expect(page).to have_link(organization.name, href: organization_path(organization))
+      expect(page).to have_text(organization.name)
+      expect(page).not_to have_link(organization.name)
     end
 
     it "displays the creator as a clickable label" do
@@ -49,8 +50,8 @@ RSpec.describe "Viewing a workshop variation idea", type: :system do
     it "displays the creator as plain text" do
       visit workshop_variation_idea_path(idea)
 
-      expect(page).to have_text(user.full_name)
-      expect(page).not_to have_link(user.full_name)
+      expect(page).to have_text(user.name)
+      expect(page).not_to have_link(user.name)
     end
   end
 

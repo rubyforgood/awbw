@@ -21,10 +21,11 @@ RSpec.describe "Viewing a workshop log", type: :system do
 
     before { sign_in user }
 
-    it "displays the organization as a clickable label" do
+    it "displays the organization as plain text (non-admin)" do
       visit workshop_log_path(workshop_log)
 
-      expect(page).to have_link("Community Arts Project", href: organization_path(organization))
+      expect(page).to have_text("Community Arts Project")
+      expect(page).not_to have_link("Community Arts Project")
     end
 
     it "displays the creator as a clickable label" do
