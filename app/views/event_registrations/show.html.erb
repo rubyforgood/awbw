@@ -7,6 +7,12 @@
 </div>
   <div class="max-w-lg mx-auto">
 
+    <div class="mb-4">
+      <%= link_to event_path(@event_registration.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        &larr; Back to Event
+      <% end %>
+    </div>
+
     <!-- Ticket Container -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
 
@@ -130,6 +136,16 @@
             Registered on <%= @event_registration.created_at.strftime("%B %d, %Y") %>
           </p>
 
+        </div>
+
+        <!-- CALENDAR LINKS -->
+        <div class="flex flex-col items-center mt-4 pt-3 border-t border-gray-100">
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+            Add to Your Calendar
+          </p>
+          <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium">
+            <%= @event_registration.event.decorate.calendar_links %>
+          </div>
         </div>
 
         <% registration_form = @event_registration.event.forms.find_by(name: "Public Registration") %>

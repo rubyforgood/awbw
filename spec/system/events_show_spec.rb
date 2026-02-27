@@ -114,6 +114,7 @@ RSpec.describe "Event show page", type: :system do
 
         expect(page).to have_button("De-register")
         expect(page).to have_text("You are registered!")
+        expect(page).to have_text("Add to Your Calendar")
         expect(page).to have_text("Google")
         expect(page).to have_text("Office 365")
       end
