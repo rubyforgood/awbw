@@ -37,7 +37,7 @@
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:people, intensity: 100)} #{DomainTheme.text_class_for(:people)} #{DomainTheme.bg_class_for(:people, intensity: 100, hover: true)}" %>
           <% else %>
-            <%= @story_idea.created_by&.full_name || "—" %>
+            <%= @story_idea.created_by&.name || "—" %>
           <% end %>
         </div>
         <div>
@@ -83,12 +83,12 @@
         <div class="hidden md:block"></div>
         <div>
           <span class="font-semibold text-gray-700">Created by:</span>
-          <%= @story_idea.created_by&.full_name %>
+          <%= @story_idea.created_by&.name %>
           <br><span class="text-gray-400"><%= @story_idea.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Updated by:</span>
-          <%= @updated_by&.full_name || "—" %>
+          <%= @updated_by&.name || "—" %>
           <br><span class="text-gray-400"><%= @story_idea.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
       </div>
