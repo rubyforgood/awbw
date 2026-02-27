@@ -1,6 +1,6 @@
 module Events
   class PublicRegistrationsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show]
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
     before_action :set_event
     before_action :ensure_registerable, only: [ :new, :create ]
 
