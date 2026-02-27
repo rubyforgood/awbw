@@ -23,6 +23,10 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
+  def facilitator?
+    title.to_s.downcase.include?("facilitator")
+  end
+
   def name
     "#{person.name}" if person
   end
