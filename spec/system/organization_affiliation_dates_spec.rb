@@ -14,6 +14,11 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     sign_in admin
   end
 
+  def visit_and_wait(path)
+    visit path
+    expect(page).to have_css("[data-affiliation-dates-ready]", wait: 10)
+  end
+
   def set_date_input(input, value)
     page.execute_script(
       "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
@@ -22,7 +27,7 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
   end
 
   it "updates Affiliated since when a start date changes" do
-    visit edit_organization_path(organization, admin: true)
+    visit_and_wait edit_organization_path(organization, admin: true)
 
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
     expect(affiliated).to have_text("May 2019")
@@ -30,11 +35,11 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
     set_date_input(start_inputs.first, "2017-02-01")
 
-    expect { affiliated.text }.to eventually(include("Feb 2017"))
+    expect(affiliated).to have_text("Feb 2017", wait: 5)
   end
 
   it "shows end date and icon when all affiliations are inactive" do
-    visit edit_organization_path(organization, admin: true)
+    visit_and_wait edit_organization_path(organization, admin: true)
 
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
 
@@ -42,14 +47,14 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     set_date_input(end_inputs[0], "2023-03-01")
     set_date_input(end_inputs[1], "2024-08-01")
 
-    expect { affiliated.text }.to eventually(include("Aug 2024"))
+    expect(affiliated).to have_text("Aug 2024", wait: 5)
     within(affiliated) do
       expect(page).to have_css("i.fa-circle-xmark")
     end
   end
 
   it "removes an affiliation and recalculates" do
-    visit edit_organization_path(organization, admin: true)
+    visit_and_wait edit_organization_path(organization, admin: true)
 
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
     expect(affiliated).to have_text("May 2019")
@@ -57,6 +62,6 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     remove_links = all("a", text: "Remove")
     remove_links.first.click
 
-    expect { affiliated.text }.to eventually(include("Sep 2021"))
+    expect(affiliated).to have_text("Sep 2021", wait: 5)
   end
 end

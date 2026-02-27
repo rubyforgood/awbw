@@ -13,6 +13,11 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     sign_in admin
   end
 
+  def visit_and_wait(path)
+    visit path
+    expect(page).to have_css("[data-affiliation-dates-ready]", wait: 10)
+  end
+
   def set_date_input(input, value)
     page.execute_script(
       "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
@@ -28,7 +33,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
   end
 
   it "updates Affiliated since when a start date changes" do
-    visit edit_person_path(person, admin: true)
+    visit_and_wait edit_person_path(person, admin: true)
 
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
     expect(affiliated).to have_text("Mar 2020")
@@ -36,11 +41,11 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
     set_date_input(start_inputs.first, "2018-01-15")
 
-    expect { affiliated.text }.to eventually(include("Jan 2018"))
+    expect(affiliated).to have_text("Jan 2018", wait: 5)
   end
 
   it "updates Facilitator since when a start date changes" do
-    visit edit_person_path(person, admin: true)
+    visit_and_wait edit_person_path(person, admin: true)
 
     facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
     expect(facilitator).to have_text("Mar 2020")
@@ -48,11 +53,11 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
     set_date_input(start_inputs.first, "2019-07-01")
 
-    expect { facilitator.text }.to eventually(include("Jul 2019"))
+    expect(facilitator).to have_text("Jul 2019", wait: 5)
   end
 
   it "updates Facilitator since when a title changes" do
-    visit edit_person_path(person, admin: true)
+    visit_and_wait edit_person_path(person, admin: true)
 
     facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
     expect(facilitator).to have_text("Mar 2020")
@@ -61,11 +66,11 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     set_textarea_input(title_textareas.last, "Lead Facilitator")
 
     # Both affiliations now have "Facilitator" in the title; earliest is still Mar 2020
-    expect { facilitator.text }.to eventually(include("Mar 2020"))
+    expect(facilitator).to have_text("Mar 2020", wait: 5)
   end
 
   it "shows end date and icon when all affiliations are inactive" do
-    visit edit_person_path(person, admin: true)
+    visit_and_wait edit_person_path(person, admin: true)
 
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
 
@@ -73,14 +78,14 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     set_date_input(end_inputs[0], "2023-01-01")
     set_date_input(end_inputs[1], "2024-06-01")
 
-    expect { affiliated.text }.to eventually(include("Jun 2024"))
+    expect(affiliated).to have_text("Jun 2024", wait: 5)
     within(affiliated) do
       expect(page).to have_css("i.fa-circle-xmark")
     end
   end
 
   it "removes an affiliation and recalculates" do
-    visit edit_person_path(person, admin: true)
+    visit_and_wait edit_person_path(person, admin: true)
 
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
     expect(affiliated).to have_text("Mar 2020")
@@ -88,6 +93,6 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     remove_links = all("a", text: "Remove")
     remove_links.first.click
 
-    expect { affiliated.text }.to eventually(include("Jun 2022"))
+    expect(affiliated).to have_text("Jun 2022", wait: 5)
   end
 end
