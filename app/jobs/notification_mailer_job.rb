@@ -5,8 +5,10 @@ class NotificationMailerJob < ApplicationJob
     notification = Notification.find(notification_id)
 
     mailer_map = {
+      "idea_submitted"       => ->(n) { NotificationMailer.idea_submitted(n) },
       "idea_submitted_fyi"   => ->(n) { NotificationMailer.idea_submitted_fyi(n) },
       "report_submitted_fyi" => ->(n) { NotificationMailer.report_submitted_fyi(n) },
+      "workshop_log_submitted"     => ->(n) { NotificationMailer.workshop_log_submitted(n) },
       "workshop_log_submitted_fyi" => ->(n) { NotificationMailer.workshop_log_submitted_fyi(n) },
       "reset_password_fyi"   => ->(n) { NotificationMailer.reset_password_fyi(n) },
       "event_registration_confirmation" => ->(n) { EventMailer.event_registration_confirmation(n.noticeable) },

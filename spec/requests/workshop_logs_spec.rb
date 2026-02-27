@@ -88,19 +88,22 @@ RSpec.describe "/workshop_logs", type: :request do
         expect(response).to have_http_status(:redirect)
       end
 
-      it "creates an FYI notification and enqueues mail" do
+      it "creates admin and submitter notifications and enqueues mail" do
         expect {
           post workshop_logs_path, params: {
             workshop_log: valid_attributes
           }
-        }.to change(Notification, :count).by(1)
+        }.to change(Notification, :count).by(2)
 
-        notification = Notification.last
         workshop_log = WorkshopLog.last
+        notifications = Notification.where(noticeable: workshop_log).order(:id)
 
-        expect(notification.kind).to eq("workshop_log_submitted_fyi")
-        expect(notification.noticeable).to eq(workshop_log)
-        expect(notification.recipient_role).to eq("admin")
+        admin_notification = notifications.find_by(kind: "workshop_log_submitted_fyi")
+        expect(admin_notification.recipient_role).to eq("admin")
+
+        submitter_notification = notifications.find_by(kind: "workshop_log_submitted")
+        expect(submitter_notification.recipient_role).to eq("person")
+        expect(submitter_notification.recipient_email).to eq(user.email)
 
         expect(enqueued_jobs.map { |j| j[:job] })
           .to include(NotificationMailerJob)
