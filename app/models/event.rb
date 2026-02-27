@@ -57,6 +57,15 @@ class Event < ApplicationRecord
     stories
   end
 
+  def active_registration_for(person)
+    return nil unless person
+    event_registrations.active.find_by(registrant_id: person.id)
+  end
+
+  def actively_registered?(person)
+    active_registration_for(person).present?
+  end
+
   def ended?
     end_date < Time.current
   end

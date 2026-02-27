@@ -52,6 +52,52 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#active_registration_for" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person) }
+
+    it "returns nil when person is nil" do
+      expect(event.active_registration_for(nil)).to be_nil
+    end
+
+    it "returns nil when person has no registration" do
+      expect(event.active_registration_for(person)).to be_nil
+    end
+
+    it "returns the registration when person has an active registration" do
+      reg = create(:event_registration, event: event, registrant: person, status: "registered")
+      expect(event.active_registration_for(person)).to eq(reg)
+    end
+
+    it "returns nil when person has a cancelled registration" do
+      create(:event_registration, event: event, registrant: person, status: "cancelled")
+      expect(event.active_registration_for(person)).to be_nil
+    end
+  end
+
+  describe "#actively_registered?" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person) }
+
+    it "returns false when person is nil" do
+      expect(event.actively_registered?(nil)).to be false
+    end
+
+    it "returns true when person has an active registration" do
+      create(:event_registration, event: event, registrant: person, status: "registered")
+      expect(event.actively_registered?(person)).to be true
+    end
+
+    it "returns false when person has a cancelled registration" do
+      create(:event_registration, event: event, registrant: person, status: "cancelled")
+      expect(event.actively_registered?(person)).to be false
+    end
+
+    it "returns false when person has no registration" do
+      expect(event.actively_registered?(person)).to be false
+    end
+  end
+
   describe "cost as virtual attribute of cost_cents" do
     let(:event) { create(:event, cost_cents: 5431) }
 
