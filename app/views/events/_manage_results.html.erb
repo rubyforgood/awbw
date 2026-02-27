@@ -14,6 +14,7 @@
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
               <% end %>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Attendance status</th>
+              <th class="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
@@ -54,6 +55,9 @@
                 <% end %>
                 <td class="px-4 py-2 text-sm text-nowrap">
                   <%= render "event_registrations/attendance_status_badge", registration: registration %>
+                </td>
+                <td class="px-4 py-2 text-right text-sm">
+                  <%= link_to "Edit", edit_event_registration_path(registration), class: "text-blue-600 hover:text-blue-800 underline", data: { turbo_frame: "_top" } %>
                 </td>
               </tr>
             <% end %>

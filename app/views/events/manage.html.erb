@@ -15,6 +15,7 @@
       <%= link_to "View", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       <% if allowed_to?(:edit?, @event) %>
         <%= link_to "Edit", edit_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <%= link_to "New registration", new_event_registration_path(event_id: @event.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       <% end %>
     </div>
   </div>

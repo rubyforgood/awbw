@@ -33,7 +33,7 @@ class EventRegistrationsController < ApplicationController
   end
 
   def new
-    @event_registration = EventRegistration.new
+    @event_registration = EventRegistration.new(event_id: params[:event_id])
     authorize! @event_registration
     set_form_variables
   end
@@ -128,7 +128,7 @@ class EventRegistrationsController < ApplicationController
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
-      :event_id, :registrant_id, :status,
+      :event_id, :registrant_id, :status, :scholarship_tasks_completed,
       comments_attributes: [ :id, :body, :_destroy ]
     )
   end
