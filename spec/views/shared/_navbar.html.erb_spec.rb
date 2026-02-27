@@ -48,6 +48,12 @@ RSpec.describe "shared/_navbar", type: :view do
       expect(rendered).not_to include("Admin")
     end
 
+    it "does not show admin-only New dropdown items" do
+      expect(rendered).not_to have_css(".admin-only", text: "New story")
+      expect(rendered).not_to have_css(".admin-only", text: "New workshop variation")
+      expect(rendered).not_to have_css(".admin-only", text: "New workshop")
+    end
+
     it "shows personal menu items" do
       expect(rendered).to include("My bookmarks")
       expect(rendered).to include("My workshop logs")
@@ -76,6 +82,12 @@ RSpec.describe "shared/_navbar", type: :view do
 
     it "shows profile and team links" do
       expect(rendered).to include("My profile")
+    end
+
+    it "shows admin-only New dropdown items" do
+      expect(rendered).to have_css(".admin-only", text: "New story")
+      expect(rendered).to have_css(".admin-only", text: "New workshop variation")
+      expect(rendered).to have_css(".admin-only", text: "New workshop")
     end
   end
 
