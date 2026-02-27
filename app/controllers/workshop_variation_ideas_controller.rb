@@ -16,6 +16,10 @@ class WorkshopVariationIdeasController < ApplicationController
   def show
     authorize! @workshop_variation_idea
     track_view(@workshop_variation_idea)
+    @updated_by = Ahoy::Event.where(resource_type: "WorkshopVariationIdea", resource_id: @workshop_variation_idea.id)
+                              .where("name LIKE 'update.%'")
+                              .order(time: :desc)
+                              .first&.user
 
     @workshop = (@workshop_variation_idea.workshop || Workshop.where(id: params[:workshop_id]).last)&.decorate
     @bookmark = current_user&.bookmarks&.find_by(bookmarkable: @workshop)
