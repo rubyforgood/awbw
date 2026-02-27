@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Organization affiliation dates auto-update", type: :system do
   let(:admin) { create(:user, :admin) }
+  let!(:admin_person) { create(:person, user: admin) }
   let!(:person1) { create(:person) }
   let!(:person2) { create(:person) }
   let!(:organization) { create(:organization) }
@@ -13,6 +14,13 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     sign_in admin
   end
 
+  def set_date_input(input, value)
+    page.execute_script(
+      "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
+      input, value
+    )
+  end
+
   it "updates Affiliated since when a start date changes" do
     visit edit_organization_path(organization, admin: true)
 
@@ -20,7 +28,7 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     expect(affiliated).to have_text("May 2019")
 
     start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
-    start_inputs.first.fill_in with: "2017-02-01"
+    set_date_input(start_inputs.first, "2017-02-01")
 
     expect { affiliated.text }.to eventually(include("Feb 2017"))
   end
@@ -31,8 +39,8 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
 
     end_inputs = all("input[name*='affiliations_attributes'][name*='end_date']")
-    end_inputs[0].fill_in with: "2023-03-01"
-    end_inputs[1].fill_in with: "2024-08-01"
+    set_date_input(end_inputs[0], "2023-03-01")
+    set_date_input(end_inputs[1], "2024-08-01")
 
     expect { affiliated.text }.to eventually(include("Aug 2024"))
     within(affiliated) do
