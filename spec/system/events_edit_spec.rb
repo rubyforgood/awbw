@@ -4,7 +4,7 @@ RSpec.describe "Event edit form", type: :system do
   let(:admin) { create(:user, :with_person, :admin) }
   let(:event) { create(:event, title: "Original Title") }
 
-  before { driven_by(:selenium_chrome_headless) }
+  before { driven_by(:rack_test) }
 
   context "when another event has a registration form" do
     before do
