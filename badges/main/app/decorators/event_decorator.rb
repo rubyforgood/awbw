@@ -22,8 +22,8 @@ class EventDecorator < ApplicationDecorator
   end
 
   def calendar_links
-    start_time   = object.start_date.strftime("%Y%m%dT%H%M%SZ")
-    end_time     = object.end_date.strftime("%Y%m%dT%H%M%SZ")
+    start_time   = object.start_date.utc.strftime("%Y%m%dT%H%M%SZ")
+    end_time     = object.end_date.utc.strftime("%Y%m%dT%H%M%SZ")
     title_encoded = ERB::Util.url_encode(object.title)
 
     has_url      = object.videoconference_url.present?
