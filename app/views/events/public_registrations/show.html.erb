@@ -4,7 +4,7 @@
 
   <%# ---- BACK LINK ---- %>
   <div class="mb-4">
-    <%= link_to event_registration_path(@user_form.user.event_registrations.find_by(event: @event)),
+    <%= link_to event_registration_path(@person_form.person.event_registrations.find_by(event: @event)),
                 class: "text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to Registration
     <% end %>
@@ -84,7 +84,7 @@
 
       <div class="pt-4 border-t border-gray-200 mt-4">
         <p class="text-xs text-gray-500">
-          Submitted on <%= @user_form.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+          Submitted on <%= @person_form.created_at.strftime("%B %d, %Y at %l:%M %P") %>
         </p>
       </div>
     </div>

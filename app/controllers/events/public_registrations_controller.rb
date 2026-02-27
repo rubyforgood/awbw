@@ -1,6 +1,6 @@
 module Events
   class PublicRegistrationsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create ]
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show]
     before_action :set_event
     before_action :ensure_registerable, only: [ :new, :create ]
 
@@ -67,13 +67,8 @@ module Events
         return
       end
 
-      target_user = if params[:user_id].present? && allowed_to?(:index?, EventRegistration)
-        User.find_by(id: params[:user_id])
-      else
-        current_user
-      end
 
-      @person_form = @form.person_forms.find_by(person: target_user.person)
+      @person_form = @form.person_forms.find_by(person: params[:person_id])
       unless @person_form
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
