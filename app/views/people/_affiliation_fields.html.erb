@@ -1,6 +1,7 @@
 <% if allowed_to?(:manage?, Person) %>
   <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
   <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-end mb-4 rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-white border-gray-200' %>"
+       style="border-left: 4px solid <%= f.object.facilitator? ? '#e879f9' : '#d1d5db' %>"
        data-controller="inactive-toggle">
     <div style="width: 350px; min-width: 350px; flex-shrink: 0;">
       <% if f.object.persisted? && f.object.organization.present? %>
