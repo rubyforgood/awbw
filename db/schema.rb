@@ -401,6 +401,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
     t.datetime "created_at", null: false
     t.bigint "event_id"
     t.bigint "registrant_id", null: false
+    t.boolean "scholarship_tasks_completed", default: false, null: false
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
@@ -417,7 +418,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
     t.boolean "autoshow_registration_close", default: true, null: false
     t.boolean "autoshow_time", default: true, null: false
     t.boolean "autoshow_title", default: true, null: false
-    t.boolean "autoshow_videoconference_url", default: true, null: false
+    t.boolean "autoshow_videoconference_label", default: true, null: false
+    t.boolean "autoshow_videoconference_link", default: true, null: false
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
@@ -436,6 +438,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
     t.datetime "start_date", precision: nil, null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.string "videoconference_label", default: "Virtual event"
     t.string "videoconference_url"
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
     t.index ["location_id"], name: "index_events_on_location_id"
@@ -651,6 +654,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
     t.string "payable_type", null: false
     t.bigint "payer_id", null: false
     t.string "payer_type", null: false
+    t.string "payment_type", default: "stripe", null: false
     t.string "status", null: false
     t.string "stripe_charge_id"
     t.json "stripe_metadata"

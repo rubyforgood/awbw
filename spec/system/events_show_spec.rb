@@ -55,7 +55,7 @@ RSpec.describe "Event show page", type: :system do
       expect(page).to have_text("My Event")
       expect(page).to have_text("A wonderful event")
       expect(page).to have_text(event.location.name)
-      expect(page).to have_text("Join on Example_zoom")
+      expect(page).to have_text("Virtual event")
 
       # Decorator
       expect(page).to have_text("Cost: $10.99")
@@ -161,6 +161,160 @@ RSpec.describe "Event show page", type: :system do
         expect(page).to have_text("Not published")
         expect(page).not_to have_text("Registration closed")
         expect(page).not_to have_button("Register")
+      end
+    end
+  end
+
+  # --------------------------------------------------
+  # VIDEOCONFERENCE LINK
+  # --------------------------------------------------
+
+  describe "virtual event label" do
+    it "shows 'Virtual event' label by default" do
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).to have_text("Virtual event")
+    end
+
+    it "shows custom label text when set" do
+      event.update!(videoconference_label: "Join us online")
+
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).to have_text("Join us online")
+      expect(page).not_to have_text("Virtual event")
+    end
+
+    it "hides label when autoshow_videoconference_label is false" do
+      event.update!(autoshow_videoconference_label: false)
+
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).not_to have_text("Virtual event")
+    end
+
+    it "hides label when videoconference_label is blank" do
+      event.update!(videoconference_label: "")
+
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).not_to have_text("Virtual event")
+    end
+  end
+
+  describe "videoconference link" do
+    context "user not registered" do
+      it "does not show the join link" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "user registered for a free event" do
+      let(:free_event) do
+        create(:event, :published, :publicly_visible,
+               title: "Free Event",
+               cost_cents: 0,
+               videoconference_url: "https://www.zoom.us/123",
+               start_date: 2.days.from_now,
+               end_date: 2.days.from_now + 2.hours)
+      end
+
+      before { create(:event_registration, event: free_event, registrant: user.person) }
+
+      it "shows linked 'Join on Zoom'" do
+        sign_in(user)
+        visit event_path(free_event)
+
+        expect(page).to have_link("Join on Zoom", href: "https://www.zoom.us/123")
+      end
+    end
+
+    context "user registered for a paid event but not paid" do
+      before { create(:event_registration, event: event, registrant: user.person) }
+
+      it "does not show the join link" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "user registered and paid for a paid event" do
+      before do
+        registration = create(:event_registration, event: event, registrant: user.person)
+        create(:payment, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+      end
+
+      it "shows linked 'Join on' domain" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_link("Join on Example_zoom", href: "https://www.example_zoom.com/123")
+      end
+    end
+
+    context "user registration is cancelled" do
+      before do
+        create(:event_registration, event: event, registrant: user.person, status: "cancelled")
+      end
+
+      it "does not show the join link" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "user has full scholarship with tasks completed" do
+      before do
+        registration = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
+        create(:payment, :scholarship, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+      end
+
+      it "shows linked 'Join on' domain" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "user has scholarship but tasks not completed" do
+      before do
+        registration = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: false)
+        create(:payment, :scholarship, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+      end
+
+      it "does not show the join link" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "autoshow_videoconference_link is false" do
+      before do
+        event.update!(autoshow_videoconference_link: false)
+        registration = create(:event_registration, event: event, registrant: user.person)
+        create(:payment, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+      end
+
+      it "hides the join link even when joinable" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_text("Virtual event")
+        expect(page).not_to have_link("Join on Example_zoom")
       end
     end
   end

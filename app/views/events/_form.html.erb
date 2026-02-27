@@ -154,6 +154,12 @@
                         placeholder: "https://…",
                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                       } %>
+          <%= f.input :videoconference_label,
+                      label: "Videoconference label",
+                      input_html: {
+                        placeholder: "Virtual event",
+                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      } %>
         </div>
       </div>
 
@@ -200,8 +206,10 @@
         <% cost_preview = @event.decorate.labelled_cost %>
         <%= f.input :autoshow_cost, as: :boolean, label: ("Cost <span class='text-gray-400 font-normal'>" + (cost_preview.present? ? h(cost_preview) : "&quot;Cost: $X&quot; or &quot;Free event&quot;") + "</span>").html_safe %>
         <%= f.input :autoshow_location, as: :boolean, label: ("Location" + (@event.location.present? ? " <span class='text-gray-400 font-normal'>#{h @event.location.name}</span>" : "")).html_safe %>
-        <% vc_domain = @event.videoconference_url.present? ? (URI.parse(@event.videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call") : nil %>
-        <%= f.input :autoshow_videoconference_url, as: :boolean, label: ("Videoconference <span class='text-gray-400 font-normal'>" + (vc_domain.present? ? "Join on #{vc_domain}" : "Join on [Domain]") + "</span>").html_safe %>
+        <% vc_domain = @event.videoconference_url.present? ? @event.decorate.videoconference_domain : nil %>
+        <%= f.input :autoshow_videoconference_link, as: :boolean, label: ("Videoconference link <span class='text-gray-400 font-normal'>" + (vc_domain.present? ? "Join on #{vc_domain}" : "Join on [Domain]") + "</span>").html_safe %>
+        <% vc_label = @event.videoconference_label.presence || "Virtual event" %>
+        <%= f.input :autoshow_videoconference_label, as: :boolean, label: ("Videoconference label <span class='text-gray-400 font-normal'>#{h vc_label}</span>").html_safe %>
         <%= f.input :autoshow_registration_close, as: :boolean, label: ("Registration close <span class='text-gray-400 font-normal'>Registration closes " + (@event.registration_close_date.present? ? @event.registration_close_date.in_time_zone(tz).strftime("%B %-d, %Y %-l:%M %P") : 2.days.from_now.in_time_zone(tz).strftime("%B %-d, %Y %-l:%M %P")) + " " + tz_abbr + "</span>").html_safe %>
         <%= f.input :autoshow_registration, as: :boolean, label: "Registration button <span class='text-gray-400 font-normal'>Register + calendar links</span>".html_safe %>
       </div>

@@ -1,6 +1,10 @@
 class EventDecorator < ApplicationDecorator
   decorates_association :bookmarkable
 
+  def videoconference_domain
+    URI.parse(videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call"
+  end
+
   def display_image
     return primary_asset.file if primary_asset&.file&.attached?
 
