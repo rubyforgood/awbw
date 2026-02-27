@@ -2,6 +2,7 @@ class Form < ApplicationRecord
   belongs_to :owner, polymorphic: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
   has_many :user_forms
+  has_many :person_forms
   has_many :reports, as: :owner
 
   # Nested attributes

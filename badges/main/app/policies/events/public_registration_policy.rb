@@ -8,6 +8,6 @@ class Events::PublicRegistrationPolicy < ApplicationPolicy
   end
 
   def show?
-    authenticated?
+    true
   end
 end
