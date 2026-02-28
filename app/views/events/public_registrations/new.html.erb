@@ -61,10 +61,17 @@
 
         <%# Row groupings: related fields share a grid row on md+ screens %>
         <%
+          fields_by_key_check = @form_fields.select(&:field_key).index_by(&:field_key)
+          email_row = if fields_by_key_check["confirm_email"]
+            { keys: %w[primary_email confirm_email], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" }
+          else
+            { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } }
+          end
+
           row_groups = [
             { keys: %w[first_name last_name], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
             { keys: %w[nickname pronouns], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-            { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } },
+            email_row,
             { keys: %w[secondary_email secondary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "secondary_email" => "md:col-span-2" } },
             { keys: %w[mailing_city mailing_state mailing_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
             { keys: %w[phone phone_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
