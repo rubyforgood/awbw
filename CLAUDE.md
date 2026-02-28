@@ -154,6 +154,11 @@ bundle exec bundle-audit check --update
 - Keep controllers focused and small
 - Use Tailwind CSS v4 utility classes
 
+## Migrations
+
+- Name migration files using **UTC timestamps** (e.g., `20260228143000`), not sequential numbers (e.g., `20260228000007`)
+- Multiple branches adding migrations on the same date will collide if they use sequential numbering
+
 ## Git
 
 - Default branch is `main`

@@ -10,6 +10,7 @@
             <tr>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization(s)</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Scholarship</th>
               <% if @event.cost_cents.to_i > 0 %>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
               <% end %>
@@ -49,6 +50,19 @@
                             class: "inline-block px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700" %>
                       <% end %>
                     </div>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-2 text-sm">
+                  <% if registration.scholarship_recipient? %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-800">
+                      <i class="fa-solid fa-graduation-cap"></i>
+                      Scholarship
+                      <% if registration.scholarship_tasks_completed? %>
+                        <i class="fa-solid fa-circle-check"></i>
+                      <% end %>
+                    </span>
                   <% else %>
                     <span class="text-gray-400">—</span>
                   <% end %>

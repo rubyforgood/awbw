@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_000007) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_134201) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -401,6 +401,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000007) do
     t.datetime "created_at", null: false
     t.bigint "event_id"
     t.bigint "registrant_id", null: false
+    t.boolean "scholarship_recipient", default: false, null: false
     t.boolean "scholarship_tasks_completed", default: false, null: false
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
@@ -511,6 +512,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000007) do
     t.string "name"
     t.integer "owner_id", null: false
     t.string "owner_type", null: false
+    t.boolean "scholarship_application", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
     t.index ["owner_type", "owner_id"], name: "index_forms_on_owner_type_and_owner_id"

@@ -27,6 +27,7 @@ class EventRegistration < ApplicationRecord
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :attendance_status, ->(status) { where(status: status) }
+  scope :scholarship, -> { where(scholarship_recipient: true) }
   scope :keyword, ->(term) {
     return none if term.blank?
 
@@ -88,9 +89,10 @@ class EventRegistration < ApplicationRecord
     end
   end
 
-  # True if event is free or total successful payments >= event.cost_cents
+  # True if event is free, scholarship recipient, or total successful payments >= event.cost_cents
   def paid_in_full?
     return true if event.cost_cents.to_i <= 0
+    return true if scholarship_recipient?
     successful_payments_total_cents >= event.cost_cents.to_i
   end
 

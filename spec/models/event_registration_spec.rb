@@ -150,6 +150,11 @@ RSpec.describe EventRegistration, type: :model do
       expect(reg).to be_paid_in_full
     end
 
+    it "returns true when registrant is a scholarship recipient" do
+      reg = create(:event_registration, :scholarship, event: event, registrant: user.person)
+      expect(reg).to be_paid_in_full
+    end
+
     it "returns true when payments cover cost" do
       reg = create(:event_registration, event: event, registrant: user.person)
       create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1000)

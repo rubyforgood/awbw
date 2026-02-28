@@ -25,6 +25,16 @@ RSpec.describe Form do
   #   pending("Requires functional owner factory and association uncommented")
   # end
 
+  describe ".scholarship_application" do
+    it "returns only forms marked as scholarship applications" do
+      regular_form = create(:form)
+      scholarship_form = create(:form, scholarship_application: true)
+
+      expect(Form.scholarship_application).to include(scholarship_form)
+      expect(Form.scholarship_application).not_to include(regular_form)
+    end
+  end
+
   describe '#display_name' do
     let(:user_owner) do
       create(:user)
