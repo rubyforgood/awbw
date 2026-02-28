@@ -134,7 +134,7 @@
             <% end %>
           </div>
           <div class="pt-1">
-            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if org_aff_ended || (f.object.end_date.present? && !has_affiliations) %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="Affiliation ended"></i><% end %><%= (org_earliest_aff || f.object.start_date)&.strftime('%b %Y') || "—" %><%= " – #{org_end_date.strftime('%b %Y')}" if org_end_date.present? %></span>
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><%= (org_earliest_aff || f.object.start_date)&.strftime('%b %Y') || "—" %><%= " – #{org_end_date.strftime('%b %Y')}" if org_end_date.present? %></span>
             <% if has_affiliations && org_earliest_aff.nil? %>
               <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
             <% elsif f.object.start_date.present? && org_earliest_aff.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>

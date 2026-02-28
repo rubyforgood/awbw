@@ -83,9 +83,6 @@ export default class extends Controller {
   updateDisplay(target, sinceDate, endDate) {
     if (!target) return
     let html = ""
-    if (endDate) {
-      html += '<i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i>'
-    }
     html += sinceDate ? this.formatDate(sinceDate) : "—"
     if (endDate) html += ` – ${this.formatDate(endDate)}`
     target.innerHTML = html

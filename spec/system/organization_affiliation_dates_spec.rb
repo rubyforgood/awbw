@@ -38,7 +38,7 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     expect(affiliated).to have_text("Feb 2017", wait: 5)
   end
 
-  it "shows end date and icon when all affiliations are inactive" do
+  it "shows end date when all affiliations are inactive" do
     visit_and_wait edit_organization_path(organization, admin: true)
 
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
@@ -48,9 +48,6 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     set_date_input(end_inputs[1], "2024-08-01")
 
     expect(affiliated).to have_text("Aug 2024", wait: 5)
-    within(affiliated) do
-      expect(page).to have_css("i.fa-circle-xmark")
-    end
   end
 
   it "removes an affiliation and recalculates" do

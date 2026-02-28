@@ -59,9 +59,6 @@
         <% if org_affiliated_since.present? %>
           <div class="relative group cursor-help inline-block mt-1">
             <p class="text-gray-500 text-sm">
-              <% if org_show_aff_ended || org_show_end_date.present? %>
-                <i class="fa-solid fa-circle-xmark text-red-400 mr-1"></i>
-              <% end %>
               Affiliated since
               <span class="font-medium"><%= org_affiliated_since.strftime("%b %Y") %><%= " – #{org_show_end_date.strftime('%b %Y')}" if org_show_end_date.present? %></span>
               <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
