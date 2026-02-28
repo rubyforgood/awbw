@@ -268,4 +268,3 @@ workshop_env_type.update!(display_text: "Workshop Environments", story_specific:
   end
   cat.update!(published: true) unless cat.published?
 end
-
