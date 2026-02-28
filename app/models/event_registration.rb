@@ -3,7 +3,9 @@ class EventRegistration < ApplicationRecord
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
-  has_many :payments, as: :payable, dependent: :nullify
+  has_many :payments, as: :payable
+
+  before_destroy :create_refund_payments
 
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
@@ -106,5 +108,21 @@ class EventRegistration < ApplicationRecord
     when "no_show" then "No show"
     else status.humanize
     end
+  end
+
+  private
+
+  def create_refund_payments
+    paid_cents = payments.successful.sum(:amount_cents)
+    return if paid_cents <= 0
+
+    payments.create!(
+      amount_cents: -paid_cents,
+      payer: registrant,
+      event: event,
+      payment_type: "refund",
+      status: "refunded",
+      currency: "usd"
+    )
   end
 end

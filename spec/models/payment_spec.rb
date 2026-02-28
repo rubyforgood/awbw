@@ -6,6 +6,7 @@ RSpec.describe Payment, type: :model do
 
     it { should belong_to(:payer).required }
     it { should belong_to(:payable).required }
+    it { should belong_to(:event).optional }
   end
 
   describe "validations" do
@@ -14,7 +15,7 @@ RSpec.describe Payment, type: :model do
 
       it { should validate_presence_of(:currency) }
       it { should validate_presence_of(:status) }
-      it { should validate_numericality_of(:amount_cents).is_greater_than_or_equal_to(0) }
+      it { should validate_numericality_of(:amount_cents) }
       it { should validate_inclusion_of(:status).in_array(Payment::STRIPE_PAYMENT_STATUSES) }
       it { should validate_inclusion_of(:payment_type).in_array(Payment::PAYMENT_TYPES) }
     end
@@ -54,7 +55,7 @@ RSpec.describe Payment, type: :model do
 
   describe "constants" do
     it "defines PAYMENT_TYPES" do
-      expect(Payment::PAYMENT_TYPES).to eq(%w[stripe scholarship check purchase_order other])
+      expect(Payment::PAYMENT_TYPES).to eq(%w[stripe scholarship check purchase_order other refund])
     end
 
     it "defines STRIPE_PAYMENT_STATUSES" do
