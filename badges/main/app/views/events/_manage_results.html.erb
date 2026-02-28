@@ -14,6 +14,7 @@
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
               <% end %>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Attendance status</th>
+              <th class="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
@@ -22,7 +23,16 @@
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
-                  <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                  <div class="flex items-center gap-1">
+                    <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                    <% if registration.comments.any? %>
+                      <% latest_comment = registration.comments.first %>
+                      <i class="fa-solid fa-message text-purple-400" title="<%= registration.comments.size %> comment<%= 's' if registration.comments.size != 1 %> — Latest (<%= latest_comment.created_at.strftime('%Y-%m-%d') %>): <%= latest_comment.body.truncate(100) %>"></i>
+                    <% end %>
+                    <% if @duplicate_emails&.include?(person.preferred_email&.downcase) %>
+                      <i class="fa-solid fa-triangle-exclamation text-amber-500" title="Multiple registrants share this email address — this may cause login conflicts"></i>
+                    <% end %>
+                  </div>
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <% orgs = person.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq %>
@@ -49,11 +59,19 @@
                       <span class="text-gray-400">—</span>
                     <% else %>
                       <span class="font-medium text-amber-700">Not paid in full</span>
+                      <% paid_cents = registration.payments.successful.sum(:amount_cents) %>
+                      <% if paid_cents > 0 %>
+                        <% due_cents = @event.cost_cents - paid_cents %>
+                        <p class="text-xs text-gray-500 mt-0.5">$<%= "%.2f" % (paid_cents / 100.0) %> paid &middot; $<%= "%.2f" % (due_cents / 100.0) %> due</p>
+                      <% end %>
                     <% end %>
                   </td>
                 <% end %>
                 <td class="px-4 py-2 text-sm text-nowrap">
                   <%= render "event_registrations/attendance_status_badge", registration: registration %>
+                </td>
+                <td class="px-4 py-2 text-right text-sm">
+                  <%= link_to "Edit", edit_event_registration_path(registration, return_to: "manage"), class: "text-blue-600 hover:text-blue-800 underline", data: { turbo_frame: "_top" } %>
                 </td>
               </tr>
             <% end %>

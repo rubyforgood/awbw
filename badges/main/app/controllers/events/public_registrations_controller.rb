@@ -41,6 +41,8 @@ module Events
         return
       end
 
+      Current.source = "public_registration"
+
       result = EventRegistrationServices::PublicRegistration.call(
         event: @event,
         form: @form,

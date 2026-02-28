@@ -134,7 +134,7 @@ RSpec.describe "EventRegistrations", type: :request do
                  }
           }.not_to change(EventRegistration, :count)
 
-          expect(response).to redirect_to(event_registrations_path)
+          expect(response).to redirect_to(manage_event_path(event))
           expect(flash[:alert]).to be_present
         end
       end

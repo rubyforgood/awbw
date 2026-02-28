@@ -39,11 +39,14 @@ class EventsController < ApplicationController
     authorize! @event, to: :manage?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:payments, registrant: [ { affiliations: :organization }, :contact_methods ])
+      .includes(:payments, :comments, registrant: [ { affiliations: :organization }, :contact_methods ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.attendance_status(params[:attendance_status]) if params[:attendance_status].present?
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
+
+    emails = @event_registrations.map { |r| r.registrant.preferred_email&.downcase }.compact
+    @duplicate_emails = emails.tally.select { |_, count| count > 1 }.keys.to_set
 
     respond_to do |format|
       format.html
@@ -198,6 +201,7 @@ class EventsController < ApplicationController
                                   :title,
                                   :pre_title,
                                   :videoconference_url,
+                                  :videoconference_label,
                                   :rhino_header,
                                   :rhino_description,
                                   :autoshow_cost,
@@ -206,7 +210,8 @@ class EventsController < ApplicationController
                                   :autoshow_registration,
                                   :autoshow_time,
                                   :autoshow_title,
-                                  :autoshow_videoconference_url,
+                                  :autoshow_videoconference_link,
+                                  :autoshow_videoconference_label,
                                   :autoshow_pre_date_text,
                                   :autoshow_registration_close,
                                   :public_registration_enabled,

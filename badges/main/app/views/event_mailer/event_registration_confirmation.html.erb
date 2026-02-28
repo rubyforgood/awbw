@@ -37,9 +37,8 @@
     <% end %>
 
     <% if @event.videoconference_url.present? %>
-      <% domain_name = URI.parse(@event.videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call" %>
       <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
-        <a href="<%= @event.videoconference_url %>" style="color: #374151; text-decoration: underline;">Join us on <%= domain_name %></a>
+        <a href="<%= @event.videoconference_url %>" style="color: #374151; text-decoration: underline;">Join us on <%= @event.decorate.videoconference_domain %></a>
       </p>
     <% end %>
 

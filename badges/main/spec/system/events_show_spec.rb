@@ -31,7 +31,6 @@ RSpec.describe "Event show page", type: :system do
       visit event_path(event)
 
       expect(page).to have_text("My Event")
-      expect(page).to have_button("Register") # register still visible
     end
 
     it "blocks guests from non-public events" do
@@ -40,6 +39,39 @@ RSpec.describe "Event show page", type: :system do
       visit event_path(event)
 
       expect(page).to have_current_path(root_path)
+    end
+
+    context "when event has a public registration form" do
+      before { event.update!(public_registration_enabled: true) }
+
+      it "shows register link to public registration" do
+        visit event_path(event)
+
+        expect(page).to have_link("Register", href: new_event_public_registration_path(event))
+      end
+    end
+
+    context "when event has no public registration form" do
+      it "does not show a register button" do
+        visit event_path(event)
+
+        expect(page).not_to have_button("Register")
+        expect(page).not_to have_link("Register")
+      end
+    end
+
+    context "when event has public_registration_enabled but no form" do
+      before do
+        event.update!(public_registration_enabled: true)
+        event.forms.destroy_all
+      end
+
+      it "does not show a register button" do
+        visit event_path(event)
+
+        expect(page).not_to have_button("Register")
+        expect(page).not_to have_link("Register")
+      end
     end
   end
 
@@ -55,7 +87,7 @@ RSpec.describe "Event show page", type: :system do
       expect(page).to have_text("My Event")
       expect(page).to have_text("A wonderful event")
       expect(page).to have_text(event.location.name)
-      expect(page).to have_text("Join on Example_zoom")
+      expect(page).to have_text("Virtual event")
 
       # Decorator
       expect(page).to have_text("Cost: $10.99")
@@ -166,13 +198,167 @@ RSpec.describe "Event show page", type: :system do
   end
 
   # --------------------------------------------------
+  # VIDEOCONFERENCE LINK
+  # --------------------------------------------------
+
+  describe "virtual event label" do
+    it "shows 'Virtual event' label by default" do
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).to have_text("Virtual event")
+    end
+
+    it "shows custom label text when set" do
+      event.update!(videoconference_label: "Join us online")
+
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).to have_text("Join us online")
+      expect(page).not_to have_text("Virtual event")
+    end
+
+    it "hides label when autoshow_videoconference_label is false" do
+      event.update!(autoshow_videoconference_label: false)
+
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).not_to have_text("Virtual event")
+    end
+
+    it "hides label when videoconference_label is blank" do
+      event.update!(videoconference_label: "")
+
+      sign_in(user)
+      visit event_path(event)
+
+      expect(page).not_to have_text("Virtual event")
+    end
+  end
+
+  describe "videoconference link" do
+    context "user not registered" do
+      it "does not show the join link" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "user registered for a free event" do
+      let(:free_event) do
+        create(:event, :published, :publicly_visible,
+               title: "Free Event",
+               cost_cents: 0,
+               videoconference_url: "https://www.zoom.us/123",
+               start_date: 2.days.from_now,
+               end_date: 2.days.from_now + 2.hours)
+      end
+
+      before { create(:event_registration, event: free_event, registrant: user.person) }
+
+      it "shows linked 'Join on Zoom'" do
+        sign_in(user)
+        visit event_path(free_event)
+
+        expect(page).to have_link("Join on Zoom", href: "https://www.zoom.us/123")
+      end
+    end
+
+    context "user registered for a paid event but not paid" do
+      before { create(:event_registration, event: event, registrant: user.person) }
+
+      it "does not show the join link" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "user registered and paid for a paid event" do
+      before do
+        registration = create(:event_registration, event: event, registrant: user.person)
+        create(:payment, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+      end
+
+      it "shows linked 'Join on' domain" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_link("Join on Example_zoom", href: "https://www.example_zoom.com/123")
+      end
+    end
+
+    context "user registration is cancelled" do
+      before do
+        create(:event_registration, event: event, registrant: user.person, status: "cancelled")
+      end
+
+      it "does not show the join link" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "user has full scholarship with tasks completed" do
+      before do
+        registration = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
+        create(:payment, :scholarship, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+      end
+
+      it "shows linked 'Join on' domain" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "user has scholarship but tasks not completed" do
+      before do
+        registration = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: false)
+        create(:payment, :scholarship, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+      end
+
+      it "does not show the join link" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+
+    context "autoshow_videoconference_link is false" do
+      before do
+        event.update!(autoshow_videoconference_link: false)
+        registration = create(:event_registration, event: event, registrant: user.person)
+        create(:payment, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+      end
+
+      it "hides the join link even when joinable" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_text("Virtual event")
+        expect(page).not_to have_link("Join on Example_zoom")
+      end
+    end
+  end
+
+  # --------------------------------------------------
   # REGISTRATION BUTTON UPDATES VIA TURBO
   # --------------------------------------------------
 
   describe "registration button updates via Turbo", js: true do
     before { driven_by(:selenium_chrome_headless) }
 
-    it "updates Register to De-register and shows badge without full page reload" do
+    it "updates Register to De-register and shows clickable registration link without full page reload" do
       sign_in(user)
       visit event_path(event)
 
@@ -184,8 +370,11 @@ RSpec.describe "Event show page", type: :system do
       # Turbo stream replaces the registration section; we stay on the event page
       expect(page).to have_current_path(event_path(event))
       expect(page).to have_button("De-register")
-      expect(page).to have_text("You are registered!")
       expect(page).not_to have_button("Register")
+
+      # "You are registered!" is a clickable link to the registration show page
+      registration = EventRegistration.last
+      expect(page).to have_link("You are registered!", href: event_registration_path(registration))
     end
 
     it "updates De-register back to Register after de-registering" do

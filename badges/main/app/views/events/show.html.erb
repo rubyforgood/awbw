@@ -112,6 +112,10 @@
     <div class="text-base text-gray-700"><%= @event.location.name %></div>
   <% end %>
 
+  <% if @event.autoshow_videoconference_label && @event.videoconference_label.present? %>
+    <div class="text-base text-gray-700"><%= @event.videoconference_label %></div>
+  <% end %>
+
   <%= render "events/videoconference_link", event: @event %>
 
   <% if @event.autoshow_registration_close && @event.registration_close_date %>
