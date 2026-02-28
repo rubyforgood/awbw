@@ -3,22 +3,36 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer"]
 
+  initialize() {
+    this.boundRecalculate = () => this.recalculate()
+    this.boundReattach = () => {
+      this.attachFieldListeners()
+      this.recalculate()
+    }
+  }
+
   connect() {
+    this.element.addEventListener("cocoon:after-insert", this.boundReattach)
+    this.element.addEventListener("cocoon:after-remove", this.boundReattach)
     this.element.dataset.affiliationDatesReady = ""
+    this.attachFieldListeners()
   }
 
-  affiliationsContainerTargetConnected(target) {
-    this.containerObserver = new MutationObserver(() => this.recalculate())
-    this.containerObserver.observe(target, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["style"]
+  disconnect() {
+    this.element.removeEventListener("cocoon:after-insert", this.boundReattach)
+    this.element.removeEventListener("cocoon:after-remove", this.boundReattach)
+  }
+
+  attachFieldListeners() {
+    if (!this.hasAffiliationsContainerTarget) return
+    const fields = this.affiliationsContainerTarget.querySelectorAll(".nested-fields")
+    fields.forEach(field => {
+      const inputs = field.querySelectorAll("input[name*='start_date'], input[name*='end_date'], textarea[name*='title']")
+      inputs.forEach(input => {
+        input.addEventListener("change", this.boundRecalculate)
+        input.addEventListener("input", this.boundRecalculate)
+      })
     })
-  }
-
-  affiliationsContainerTargetDisconnected() {
-    this.containerObserver?.disconnect()
   }
 
   recalculate() {
