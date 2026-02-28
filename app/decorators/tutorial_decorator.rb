@@ -1,4 +1,4 @@
-class TutorialDecorator < Draper::Decorator
+class TutorialDecorator < ApplicationDecorator
   delegate_all
 
   def display_text
@@ -7,9 +7,5 @@ class TutorialDecorator < Draper::Decorator
 
   def detail(length: nil)
     length ? body&.truncate(length) : body
-  end
-
-  def default_display_image
-    "theme_default.png"
   end
 end
