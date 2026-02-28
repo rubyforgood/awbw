@@ -37,7 +37,7 @@
                 <% end %>
               </div>
               <div class="pt-1">
-                <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if decorated.affiliated_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i><% end %><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliated_end_date.strftime('%b %Y')}" if decorated.affiliated_end_date %></span>
+                <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if decorated.affiliation_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i><% end %><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliation_end_date.strftime('%b %Y')}" if decorated.affiliation_end_date %></span>
                 <% if decorated.affiliated_since_date.nil? && person.affiliations.exists? %>
                   <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
                 <% elsif decorated.member_since_earlier_than_all_affiliations? %>
