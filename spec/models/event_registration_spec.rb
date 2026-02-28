@@ -140,6 +140,56 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#paid_in_full?" do
+    let(:event) { create(:event, cost_cents: 1000) }
+    let(:user) { create(:user, :with_person) }
+
+    it "returns true when event is free" do
+      free_event = create(:event, cost_cents: 0)
+      reg = create(:event_registration, event: free_event, registrant: user.person)
+      expect(reg).to be_paid_in_full
+    end
+
+    it "returns true when payments cover cost" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1000)
+      expect(reg).to be_paid_in_full
+    end
+
+    it "returns false when payments are insufficient" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 500)
+      expect(reg).not_to be_paid_in_full
+    end
+
+    it "returns correct result when payments are preloaded" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1000)
+
+      preloaded = EventRegistration.includes(:payments).find(reg.id)
+      expect(preloaded.payments).to be_loaded
+      expect(preloaded).to be_paid_in_full
+    end
+
+    it "returns correct result when preloaded payments are insufficient" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 500)
+
+      preloaded = EventRegistration.includes(:payments).find(reg.id)
+      expect(preloaded.payments).to be_loaded
+      expect(preloaded).not_to be_paid_in_full
+    end
+
+    it "ignores non-succeeded payments when preloaded" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      create(:payment, payable: reg, payer: user, amount_cents: 1000, status: "pending")
+
+      preloaded = EventRegistration.includes(:payments).find(reg.id)
+      expect(preloaded.payments).to be_loaded
+      expect(preloaded).not_to be_paid_in_full
+    end
+  end
+
   describe '.search_by_params' do
     let(:person_alice) { create(:person, first_name: 'Alice', last_name: 'Smith') }
     let(:person_bob) { create(:person, first_name: 'Bob', last_name: 'Jones') }

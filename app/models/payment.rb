@@ -39,6 +39,10 @@ class Payment < ApplicationRecord
   scope :scholarships, -> { where(payment_type: "scholarship") }
   scope :refunds, -> { where(payment_type: "refund") }
 
+  def succeeded?
+    status == "succeeded"
+  end
+
   def scholarship?
     payment_type == "scholarship"
   end

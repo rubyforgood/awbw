@@ -39,7 +39,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :manage?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:payments, :comments, registrant: [ { affiliations: :organization }, :contact_methods ])
+      .includes(:payments, :comments, registrant: [ :user, :contact_methods, { affiliations: :organization }, { avatar_attachment: :blob } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.attendance_status(params[:attendance_status]) if params[:attendance_status].present?
@@ -160,7 +160,7 @@ class EventsController < ApplicationController
       .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
-    total_cents = registration.payments.successful.sum(:amount_cents)
+    total_cents = registration.successful_payments_total_cents
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
     payment_status = cost_required ? (registration.paid_in_full? ? "Paid in full" : "Not paid in full") : ""
     [
