@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_000005) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -648,6 +648,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
     t.integer "amount_cents", null: false
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
+    t.bigint "event_id"
     t.string "failure_code"
     t.string "failure_message"
     t.bigint "payable_id", null: false
@@ -660,6 +661,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
     t.json "stripe_metadata"
     t.string "stripe_payment_intent_id"
     t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_payments_on_event_id"
     t.index ["payable_type", "payable_id", "status"], name: "index_payments_on_payable_type_and_payable_id_and_status"
     t.index ["payable_type", "payable_id"], name: "index_payments_on_payable"
     t.index ["payer_type", "payer_id"], name: "index_payments_on_payer"
@@ -1337,6 +1339,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_000000) do
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"
+  add_foreign_key "payments", "events"
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "person_form_form_fields", "form_fields"
