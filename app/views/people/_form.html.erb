@@ -265,10 +265,10 @@
           <% end %>
           <div data-paginated-fields-target="nav"></div>
 
-          <div class="admin-only bg-blue-100 p-3 mt-6"><%= link_to_add_association "➕ Add Affiliation",
+          <div class="p-3 mt-6"><%= link_to_add_association "➕ Add Affiliation",
                                         f,
                                         :affiliations,
-                                        class: "btn btn-secondary-outline" %></div>
+                                        class: "admin-only bg-blue-100 btn btn-secondary-outline" %></div>
         </div>
       <% else %>
         <% f.object.affiliations.each do |affiliation| %>
