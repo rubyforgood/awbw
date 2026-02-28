@@ -99,7 +99,10 @@ module Events
 
     def validate_required_fields(form_params)
       errors = {}
-      @form.form_fields.where(status: :active).find_each do |field|
+      fields = @form.form_fields.where(status: :active)
+      fields_by_key = fields.select { |f| f.field_key.present? }.index_by(&:field_key)
+
+      fields.find_each do |field|
         next if field.group_header?
 
         value = form_params[field.id.to_s]
@@ -117,6 +120,17 @@ module Events
           errors[field.id] = "must be a valid email address"
         end
       end
+
+      confirm_field = fields_by_key["confirm_email"]
+      email_field = fields_by_key["primary_email"]
+      if confirm_field && email_field && errors[confirm_field.id].nil?
+        confirm_value = form_params[confirm_field.id.to_s].to_s.strip
+        email_value = form_params[email_field.id.to_s].to_s.strip
+        if confirm_value.present? && confirm_value != email_value
+          errors[confirm_field.id] = "must match email"
+        end
+      end
+
       errors
     end
   end
