@@ -3,19 +3,22 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer"]
 
-  initialize() {
-    this.boundRecalculate = () => this.recalculate()
-  }
-
   connect() {
-    this.element.addEventListener("cocoon:after-insert", this.boundRecalculate)
-    this.element.addEventListener("cocoon:after-remove", this.boundRecalculate)
     this.element.dataset.affiliationDatesReady = ""
   }
 
   affiliationsContainerTargetConnected(target) {
-    target.addEventListener("cocoon:after-insert", this.boundRecalculate)
-    target.addEventListener("cocoon:after-remove", this.boundRecalculate)
+    this.containerObserver = new MutationObserver(() => this.recalculate())
+    this.containerObserver.observe(target, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["style"]
+    })
+  }
+
+  affiliationsContainerTargetDisconnected() {
+    this.containerObserver?.disconnect()
   }
 
   recalculate() {
