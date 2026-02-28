@@ -1,9 +1,16 @@
 module PersonHelper
-  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {})
-    bg = DomainTheme.bg_class_for(:people, intensity: 100)
-    hover_bg = DomainTheme.bg_class_for(:people, intensity: 100, hover: true)
-    text = DomainTheme.text_class_for(:people)
-    border = DomainTheme.border_class_for(:people)
+  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false)
+    if inactive
+      bg = "bg-gray-100"
+      hover_bg = "hover:bg-gray-200"
+      text = "text-gray-400"
+      border = "border-gray-300"
+    else
+      bg = DomainTheme.bg_class_for(:people, intensity: 100)
+      hover_bg = DomainTheme.bg_class_for(:people, intensity: 100, hover: true)
+      text = DomainTheme.text_class_for(:people)
+      border = DomainTheme.border_class_for(:people)
+    end
 
     full_name = display_name || person.try(:name) || person.to_s
     hover_title = [ full_name, subtitle ].compact_blank.join(" — ")

@@ -25,12 +25,12 @@ class PersonDecorator < ApplicationDecorator
     "missing.png"
   end
 
-  def affiliated_end_date
+  def affiliation_end_date
     return nil if affiliations.active.exists?
     affiliations.maximum(:end_date)
   end
 
-  def facilitator_end_date
+  def facilitation_end_date
     facilitator_affiliations = affiliations.facilitators
     return nil if facilitator_affiliations.active.exists?
     facilitator_affiliations.maximum(:end_date)

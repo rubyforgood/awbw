@@ -30,25 +30,21 @@
           </div>
 
           <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm">
-            <div class="flex flex-wrap items-center gap-4 p-3">
-              <div class="flex flex-wrap items-center gap-2">
-                <%= f.simple_fields_for :sectorable_items do |sfi| %>
-                  <%= render "shared/sectorable_item_fields", f: sfi %>
-                <% end %>
+            <%= f.simple_fields_for :sectorable_items do |sfi| %>
+              <%= render "shared/sectorable_item_fields", f: sfi %>
+            <% end %>
 
-                <%= link_to_add_association "➕ Add Sector",
-                                          f,
-                                          :sectorable_items,
-                                          partial: "shared/sectorable_item_fields",
-                                          render_options: {
-                                            locals: {
-                                              collection: (@sectors_collection || [])
-                                                .reject { |_, id| (@current_sector_ids || []).include?(id) }
-                                            }
-                                          },
-                                        class: "btn btn-secondary-outline" %>
-              </div>
-            </div>
+            <%= link_to_add_association "➕ Add Sector",
+                                        f,
+                                        :sectorable_items,
+                                        partial: "shared/sectorable_item_fields",
+                                        render_options: {
+                                          locals: {
+                                            collection: (@sectors_collection || [])
+                                              .reject { |_, id| (@current_sector_ids || []).include?(id) }
+                                          }
+                                        },
+                                      class: "btn btn-secondary-outline" %>
           </div>
         </div>
 
