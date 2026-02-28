@@ -148,7 +148,8 @@ class EventRegistrationsController < ApplicationController
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
-      :event_id, :registrant_id, :status, :scholarship_tasks_completed,
+      :event_id, :registrant_id, :status,
+      :scholarship_recipient, :scholarship_tasks_completed,
       comments_attributes: [ :id, :body, :_destroy ]
     )
   end
@@ -163,7 +164,7 @@ class EventRegistrationsController < ApplicationController
 
   def csv_export(registrations)
     CSV.generate(headers: true) do |csv|
-      csv << [ "First name", "Last name", "Email", "Event" ]
+      csv << [ "First name", "Last name", "Email", "Event", "Scholarship recipient", "Scholarship tasks completed" ]
       registrations.find_each do |er|
         r = er.registrant
         e = er.event
@@ -171,7 +172,9 @@ class EventRegistrationsController < ApplicationController
           r&.first_name.to_s,
           r&.last_name.to_s,
           r&.preferred_email.to_s,
-          e&.title.to_s
+          e&.title.to_s,
+          er.scholarship_recipient? ? "Yes" : "No",
+          er.scholarship_tasks_completed? ? "Yes" : "No"
         ]
       end
     end
