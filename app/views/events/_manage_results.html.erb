@@ -59,7 +59,7 @@
                       <span class="text-gray-400">—</span>
                     <% else %>
                       <span class="font-medium text-amber-700">Not paid in full</span>
-                      <% paid_cents = registration.payments.successful.sum(:amount_cents) %>
+                      <% paid_cents = registration.payments.select { |p| p.status == "succeeded" }.sum(&:amount_cents) %>
                       <% if paid_cents > 0 %>
                         <% due_cents = @event.cost_cents - paid_cents %>
                         <p class="text-xs text-gray-500 mt-0.5">$<%= "%.2f" % (paid_cents / 100.0) %> paid &middot; $<%= "%.2f" % (due_cents / 100.0) %> due</p>
