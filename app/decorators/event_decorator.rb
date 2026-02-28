@@ -37,18 +37,20 @@ class EventDecorator < ApplicationDecorator
     # If both: URL in location field, physical location in description
     # If only URL: URL in location field
     # If only location: location in location field
+    event_description = object.rhino_description.to_plain_text
+
     if has_url && has_location
       cal_location = object.videoconference_url
-      description  = "#{location_name}\n\n#{object.description}"
+      description  = "#{location_name}\n\n#{event_description}"
     elsif has_url
       cal_location = object.videoconference_url
-      description  = object.description.to_s
+      description  = event_description
     elsif has_location
       cal_location = location_name
-      description  = object.description.to_s
+      description  = event_description
     else
       cal_location = nil
-      description  = object.description.to_s
+      description  = event_description
     end
 
     desc_encoded     = ERB::Util.url_encode(description)
