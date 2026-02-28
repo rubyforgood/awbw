@@ -14,8 +14,8 @@ RSpec.describe "/workshops", type: :request do
         workshop: {
           title: "Sector Test Workshop",
           windows_type_id: windows_type.id,
-          category_ids: [""],
-          sector_ids: ["", sector.id.to_s]
+          category_ids: [ "" ],
+          sector_ids: [ "", sector.id.to_s ]
         }
       }
 
@@ -29,8 +29,8 @@ RSpec.describe "/workshops", type: :request do
       patch workshop_url(workshop), params: {
         workshop: {
           title: workshop.title,
-          category_ids: [""],
-          sector_ids: ["", second_sector.id.to_s]
+          category_ids: [ "" ],
+          sector_ids: [ "", second_sector.id.to_s ]
         }
       }
 

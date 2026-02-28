@@ -16,7 +16,7 @@ RSpec.describe "POST /people", type: :request do
           last_name: "Tester",
           created_by_id: admin.id,
           updated_by_id: admin.id,
-          category_ids: [""],
+          category_ids: [ "" ],
           sectorable_items_attributes: {
             "0" => { sector_id: sector.id, _destroy: "false" }
           }
@@ -32,7 +32,7 @@ RSpec.describe "POST /people", type: :request do
       patch person_path(person), params: {
         person: {
           first_name: person.first_name,
-          category_ids: [""],
+          category_ids: [ "" ],
           sectorable_items_attributes: {
             "0" => { sector_id: sector.id, _destroy: "false" }
           }
@@ -50,7 +50,7 @@ RSpec.describe "POST /people", type: :request do
       patch person_path(person), params: {
         person: {
           first_name: "Updated",
-          category_ids: [""]
+          category_ids: [ "" ]
         }
       }
 

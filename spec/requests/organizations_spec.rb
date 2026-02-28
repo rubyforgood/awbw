@@ -137,7 +137,7 @@ RSpec.describe "/organizations", type: :request do
     it "saves sectors via nested attributes on create" do
       post organizations_url, params: {
         organization: valid_attributes.merge(
-          category_ids: [""],
+          category_ids: [ "" ],
           sectorable_items_attributes: {
             "0" => { sector_id: sector.id, _destroy: "false" }
           }
@@ -151,7 +151,7 @@ RSpec.describe "/organizations", type: :request do
       patch organization_url(organization), params: {
         organization: {
           name: organization.name,
-          category_ids: [""],
+          category_ids: [ "" ],
           sectorable_items_attributes: {
             "0" => { sector_id: sector.id, _destroy: "false" }
           }
@@ -169,7 +169,7 @@ RSpec.describe "/organizations", type: :request do
       patch organization_url(organization), params: {
         organization: {
           name: "Updated Name",
-          category_ids: [""]
+          category_ids: [ "" ]
         }
       }
 
