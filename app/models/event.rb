@@ -9,6 +9,7 @@ class Event < ApplicationRecord
   belongs_to :location, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
+  has_many :payments
   has_many :forms, as: :owner, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -55,6 +56,15 @@ class Event < ApplicationRecord
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     stories
+  end
+
+  def active_registration_for(person)
+    return nil unless person
+    event_registrations.active.find_by(registrant_id: person.id)
+  end
+
+  def actively_registered?(person)
+    active_registration_for(person).present?
   end
 
   def ended?

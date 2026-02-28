@@ -1,5 +1,6 @@
 module Events
   class RegistrationsController < ApplicationController
+    before_action :authenticate_user!
     before_action :set_event
     before_action :set_registrant
 
@@ -11,7 +12,7 @@ module Events
         success = "You have successfully registered for this event."
         respond_to do |format|
           format.turbo_stream { flash.now[:notice] = success }
-          format.html { redirect_to @event, notice: success }
+          format.html { redirect_to @event_registration, notice: success }
         end
       else
         error = @event_registration.errors.full_messages.to_sentence

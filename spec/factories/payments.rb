@@ -49,5 +49,11 @@ FactoryBot.define do
     trait :with_charge_id do
       stripe_charge_id { "ch_#{SecureRandom.hex(24)}" }
     end
+
+    trait :scholarship do
+      payment_type { "scholarship" }
+      stripe_payment_intent_id { nil }
+      stripe_charge_id { nil }
+    end
   end
 end

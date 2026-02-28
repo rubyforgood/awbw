@@ -26,8 +26,14 @@ module EventRegistrationServices
 
         assign_tags(person, organization)
 
+        existing = @event.event_registrations.find_by(registrant: person)
+        if existing
+          update_person_form(person)
+          return Result.new(success?: true, event_registration: existing, errors: [])
+        end
+
         event_registration = create_event_registration(person)
-        create_person_form(person, event_registration)
+        create_person_form(person)
 
         send_notifications(event_registration)
 
@@ -96,7 +102,16 @@ module EventRegistrationServices
         "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
         new_city&.downcase, new_state&.downcase.to_s
       )
-      return existing if existing
+
+      if existing
+        existing.update!(
+          street_address: field_value("mailing_street"),
+          zip_code: field_value("mailing_zip"),
+          primary: true,
+          inactive: false
+        )
+        return existing
+      end
 
       person.addresses.where(primary: true).update_all(primary: false, inactive: true)
 
@@ -117,7 +132,15 @@ module EventRegistrationServices
       contact_type = phone_type == "work" ? "work" : "personal"
 
       existing = person.contact_methods.find_by(kind: :phone, value: phone_value)
-      return existing if existing
+
+      if existing
+        existing.update!(
+          contact_type: contact_type,
+          primary: true,
+          inactive: false
+        )
+        return existing
+      end
 
       person.contact_methods.where(kind: :phone, primary: true).update_all(primary: false, inactive: true)
 
@@ -154,7 +177,16 @@ module EventRegistrationServices
         "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
         new_city&.downcase, new_state&.downcase.to_s
       )
-      return existing if existing
+
+      if existing
+        existing.update!(
+          street_address: field_value("agency_street"),
+          zip_code: field_value("agency_zip"),
+          primary: true,
+          inactive: false
+        )
+        return existing
+      end
 
       organization.addresses.where(primary: true).update_all(primary: false, inactive: true)
 
@@ -200,9 +232,19 @@ module EventRegistrationServices
       @event.event_registrations.create!(registrant: person)
     end
 
-    def create_person_form(person, event_registration)
+    def create_person_form(person)
       person_form = PersonForm.create!(person: person, form: @form)
+      save_form_fields(person_form)
+      person_form
+    end
 
+    def update_person_form(person)
+      person_form = PersonForm.find_or_create_by!(person: person, form: @form)
+      save_form_fields(person_form)
+      person_form
+    end
+
+    def save_form_fields(person_form)
       @form.form_fields.where(status: :active).find_each do |field|
         next if field.group_header?
 
@@ -213,14 +255,9 @@ module EventRegistrationServices
           raw_value.to_s
         end
 
-        PersonFormFormField.create!(
-          person_form: person_form,
-          form_field: field,
-          text: text
-        )
+        record = person_form.person_form_form_fields.find_or_initialize_by(form_field: field)
+        record.update!(text: text)
       end
-
-      person_form
     end
 
     def send_notifications(event_registration)

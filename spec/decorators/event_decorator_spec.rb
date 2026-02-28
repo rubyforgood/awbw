@@ -1,6 +1,23 @@
 require 'rails_helper'
 
 RSpec.describe EventDecorator do
+  describe "#videoconference_domain" do
+    it "extracts domain name from URL" do
+      event = build(:event, videoconference_url: "https://www.zoom.us/j/123").decorate
+      expect(event.videoconference_domain).to eq("Zoom")
+    end
+
+    it "handles URLs without www" do
+      event = build(:event, videoconference_url: "https://meet.google.com/abc").decorate
+      expect(event.videoconference_domain).to eq("Google")
+    end
+
+    it "returns 'video call' for invalid URLs" do
+      event = build(:event, videoconference_url: "not a url").decorate
+      expect(event.videoconference_domain).to eq("video call")
+    end
+  end
+
   describe "#labelled_cost" do
     it "returns nil when cost_cents is nil" do
       event = build(:event, cost_cents: nil).decorate

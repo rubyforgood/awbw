@@ -263,7 +263,7 @@ module AhoyTrackable
   end
 
   def track_lifecycle_event(action, extra_properties = {})
-    return unless Current.user
+    return unless Current.user || Current.source
     return if self.class.name.start_with?("Ahoy::")
     return if self.class.name.in?(%w[Notification ActiveStorage::Attachment ActiveStorage::Blob])
 
@@ -273,6 +273,7 @@ module AhoyTrackable
 
     payload = Analytics::EventBuilder.lifecycle(action, self, user: Current.user)
     payload[:properties].merge!(extra_properties) if extra_properties.present?
+    payload[:properties][:source] = Current.source if Current.source
     Analytics::LifecycleBuffer.push(payload)
   rescue => e
     Rails.logger.error "Ahoy lifecycle tracking failed: #{e.message}"

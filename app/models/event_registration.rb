@@ -3,11 +3,15 @@ class EventRegistration < ApplicationRecord
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
-  has_many :payments, as: :payable, dependent: :nullify
+  has_many :payments, as: :payable
+
+  before_destroy :create_refund_payments
 
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
-  ATTENDANCE_STATUSES = %w[ registered attended incomplete_attendance cancelled no_show ].freeze
+  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
+  INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
+  ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
 
   # Validations
   validates :registrant_id, uniqueness: { scope: :event_id }
@@ -21,6 +25,7 @@ class EventRegistration < ApplicationRecord
     OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
     OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
+  scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :attendance_status, ->(status) { where(status: status) }
   scope :keyword, ->(term) {
     return none if term.blank?
@@ -62,6 +67,10 @@ class EventRegistration < ApplicationRecord
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
 
+  def active?
+    status.in?(ACTIVE_STATUSES)
+  end
+
   def checked_in?
     # checked_in_at.present?
   end
@@ -76,6 +85,19 @@ class EventRegistration < ApplicationRecord
     payments.successful.sum(:amount_cents) >= event.cost_cents.to_i
   end
 
+  def scholarship?
+    payments.scholarships.exists?
+  end
+
+  def scholarship_tasks_met?
+    return true unless scholarship?
+    scholarship_tasks_completed?
+  end
+
+  def joinable?
+    active? && paid? && scholarship_tasks_met?
+  end
+
   def attendance_status_label
     return "—" if status.blank?
     case status
@@ -86,5 +108,21 @@ class EventRegistration < ApplicationRecord
     when "no_show" then "No show"
     else status.humanize
     end
+  end
+
+  private
+
+  def create_refund_payments
+    paid_cents = payments.successful.sum(:amount_cents)
+    return if paid_cents <= 0
+
+    payments.create!(
+      amount_cents: -paid_cents,
+      payer: registrant,
+      event: event,
+      payment_type: "refund",
+      status: "refunded",
+      currency: "usd"
+    )
   end
 end

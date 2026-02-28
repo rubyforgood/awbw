@@ -33,7 +33,7 @@ class EventRegistrationsController < ApplicationController
   end
 
   def new
-    @event_registration = EventRegistration.new
+    @event_registration = EventRegistration.new(event_id: params[:event_id])
     authorize! @event_registration
     set_form_variables
   end
@@ -63,15 +63,25 @@ class EventRegistrationsController < ApplicationController
 
       respond_to do |format|
         format.html {
-          redirect_to @event_registration,
-            notice: "Registration created."
+          if params.dig(:event_registration, :event_id).present?
+            redirect_to manage_event_path(@event_registration.event),
+              notice: "Registration created."
+          else
+            redirect_to @event_registration,
+              notice: "Registration created."
+          end
         }
       end
     else
       respond_to do |format|
         format.html {
-          redirect_to event_registrations_path,
-            alert: @event_registration.errors.full_messages.to_sentence
+          if @event_registration.event_id.present?
+            redirect_to manage_event_path(@event_registration.event),
+              alert: @event_registration.errors.full_messages.to_sentence
+          else
+            redirect_to event_registrations_path,
+              alert: @event_registration.errors.full_messages.to_sentence
+          end
         }
       end
     end
@@ -86,7 +96,13 @@ class EventRegistrationsController < ApplicationController
     if @event_registration.save
       respond_to do |format|
         format.turbo_stream
-        format.html { redirect_to @event_registration, notice: "Registration was successfully updated.", status: :see_other }
+        format.html {
+          if params[:return_to] == "manage"
+            redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+          else
+            redirect_to @event_registration, notice: "Registration was successfully updated.", status: :see_other
+          end
+        }
       end
     else
       respond_to do |format|
@@ -117,6 +133,10 @@ class EventRegistrationsController < ApplicationController
            .or(Event.where(id: @event_registration.event_id))
            .distinct
            .order(start_date: :desc)
+
+    if @event_registration.event_id.present?
+      @exclude_registrant_ids = @event_registration.event.event_registrations.pluck(:registrant_id).join(",")
+    end
   end
 
   private
@@ -128,7 +148,7 @@ class EventRegistrationsController < ApplicationController
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
-      :event_id, :registrant_id, :status,
+      :event_id, :registrant_id, :status, :scholarship_tasks_completed,
       comments_attributes: [ :id, :body, :_destroy ]
     )
   end

@@ -7,7 +7,7 @@
     <span class="text-xs text-red-500">No event</span>
   <% elsif Current.user.nil? %>
     <span class="text-xs text-gray-500">Login to register</span>
-  <% elsif event.event_registrations.exists?(registrant_id: Current.user.person_id) %>
+  <% elsif event.actively_registered?(Current.user.person) %>
     <%= link_to "De-register",
                 event_registrant_registration_path(event_id: event),
                 data: { turbo_method: :delete, turbo_confirm: "Are you sure?"},
