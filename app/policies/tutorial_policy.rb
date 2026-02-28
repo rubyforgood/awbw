@@ -6,7 +6,7 @@ class TutorialPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || record.publicly_visible? || (authenticated && record.published?)
+    admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
   # Scoping
