@@ -263,39 +263,33 @@
   <div class="flex flex-col md:flex-row md:space-x-4">
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :created_by_id,
-                  collection: f.object.created_by.present? ? [[ f.object.created_by.full_name_with_email, f.object.created_by.id ]] : [],
-                  include_blank: true,
-                  input_html: {
-                    class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
-                    data: {
-                      controller: "remote-select",
-                      remote_select_model_value: "user"
-                    }
-                  },
-                  prompt: "Search by name or email",
+                  collection: @users.map { |u| [ u.full_name_with_email, u.id ] },
+                  prompt: "Select an author",
                   label: (f.object.created_by&.person ? (
                     link_to "Story author",
                             person_path(f.object.created_by.person),
                             class: "hover:underline") : "Story author").html_safe,
-                  label_html: { class: "block font-medium mb-1 text-gray-700" } %>
+                  label_html: { class: "block font-medium mb-1 text-gray-700" },
+                  input_html: {
+                    class: select_caret_class(blank: f.object.created_by_id.blank?),
+                    style: custom_caret_style,
+                    onchange: select_caret_onchange
+                  } %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :spotlighted_facilitator_id,
-                  collection: f.object.spotlighted_facilitator.present? ? [[ f.object.spotlighted_facilitator.full_name_with_email, f.object.spotlighted_facilitator.id ]] : [],
-                  include_blank: true,
-                  input_html: {
-                    class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
-                    data: {
-                      controller: "remote-select",
-                      remote_select_model_value: "person"
-                    }
-                  },
-                  prompt: "Search by name",
+                  collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                  prompt: "Select a facilitator",
                   label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
                                                                          person_path(f.object.spotlighted_facilitator_id),
                                                                          class: "hover:underline") : "Story spotlighted facilitator").html_safe,
-                  label_html: { class: "block font-medium mb-1 text-gray-700" } %>
+                  label_html: { class: "block font-medium mb-1 text-gray-700" },
+                  input_html: {
+                    class: select_caret_class(blank: f.object.spotlighted_facilitator_id.blank?),
+                    style: custom_caret_style,
+                    onchange: select_caret_onchange
+                  } %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
