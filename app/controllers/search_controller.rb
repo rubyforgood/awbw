@@ -13,7 +13,14 @@ class SearchController < ApplicationController
     records = authorized_scope(
       model_class.remote_search(query),
      **scope_options_for(model_class)
-    ).limit(10)
+    )
+
+    if params[:exclude].present?
+      exclude_ids = params[:exclude].split(",").map(&:to_i)
+      records = records.where.not(id: exclude_ids)
+    end
+
+    records = records.limit(10)
 
     render json: records.map(&:remote_search_label)
   end
