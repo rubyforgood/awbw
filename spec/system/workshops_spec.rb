@@ -81,6 +81,9 @@ RSpec.describe "Workshops", type: :system do
         # Clear all filters
         click_link "Clear filters"
 
+        # Wait for filters to actually clear before asserting
+        expect(page).not_to have_link("Clear filters")
+
         # Both workshops should reappear
         expect(page).to have_content(workshop_adult.title)
         expect(page).to have_content(workshop_child.title)
