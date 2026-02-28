@@ -1,4 +1,5 @@
 <%= simple_form_for(event_registration, data: { turbo: false }) do |f| %>
+  <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
   <%= render 'shared/errors', resource: event_registration if event_registration.errors.any? %>
 
   <div class="p-3">
@@ -10,6 +11,7 @@
         <% elsif f.object.event_id.present? %>
           <label class="block text-sm font-medium text-gray-700 mb-1">Event</label>
           <p class="text-gray-900 font-medium py-2"><%= f.object.event.title %></p>
+          <p class="text-sm text-gray-500 -mt-1"><%= f.object.event.decorate.times(display_day: true, display_date: true) %></p>
           <%= f.hidden_field :event_id %>
         <% else %>
           <%= f.input :event_id,
@@ -40,8 +42,9 @@
             input_html: {
               data: {
                 controller: "remote-select",
-                remote_select_model_value: "person"
-              }
+                remote_select_model_value: "person",
+                remote_select_exclude_value: @exclude_registrant_ids
+              }.compact
             },
             label: "Registrant"
           %>
@@ -64,6 +67,15 @@
             <p class="py-2 text-sm <%= f.object.paid_in_full? ? 'text-green-700' : 'text-amber-700 font-medium' %>">
               <%= f.object.paid_in_full? ? "Paid in full" : "Not paid in full" %>
             </p>
+            <% unless f.object.paid_in_full? %>
+              <% paid_cents = f.object.payments.successful.sum(:amount_cents) %>
+              <% due_cents = f.object.event.cost_cents - paid_cents %>
+              <% if paid_cents > 0 %>
+                <p class="text-xs text-gray-500">
+                  $<%= "%.2f" % (paid_cents / 100.0) %> paid &middot; $<%= "%.2f" % (due_cents / 100.0) %> due
+                </p>
+              <% end %>
+            <% end %>
           <% else %>
             <p class="py-2 text-sm text-gray-500">Free event</p>
           <% end %>
