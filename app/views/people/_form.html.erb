@@ -37,7 +37,7 @@
                 <% end %>
               </div>
               <div class="pt-1">
-                <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliated_end_date.strftime('%b %Y')}" if decorated.affiliated_end_date %></span>
+                <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if decorated.affiliated_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i><% end %><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliated_end_date.strftime('%b %Y')}" if decorated.affiliated_end_date %></span>
                 <% if decorated.affiliated_since_date.nil? && person.affiliations.exists? %>
                   <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
                 <% elsif decorated.member_since_earlier_than_all_affiliations? %>
@@ -65,7 +65,7 @@
                 <% end %>
               </div>
               <div class="pt-1">
-                <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><%= decorated.facilitator_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.facilitator_end_date.strftime('%b %Y')}" if decorated.facilitator_end_date %></span>
+                <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><% if decorated.facilitator_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i><% end %><%= decorated.facilitator_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.facilitator_end_date.strftime('%b %Y')}" if decorated.facilitator_end_date %></span>
                 <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
                   <p class="text-xs text-amber-700 mt-1">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
                 <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
