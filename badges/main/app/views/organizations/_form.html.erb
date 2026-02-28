@@ -1,4 +1,4 @@
-<%= simple_form_for(@organization) do |f| %>
+<%= simple_form_for(@organization, html: { data: { controller: "affiliation-dates" } }) do |f| %>
   <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
   <% automanaged_notice = "<span class='text-xs text-amber-700 mt-1'>Auto-managed by affiliations</span>" %>
@@ -134,12 +134,7 @@
             <% end %>
           </div>
           <div class="pt-1">
-            <% if org_aff_ended || (f.object.end_date.present? && !has_affiliations) %>
-              <i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="Affiliation ended"></i>
-            <% end %>
-            <span class="text-gray-900 font-medium">
-              <%= (org_earliest_aff || f.object.start_date)&.strftime('%b %Y') || "—" %><%= " – #{org_end_date.strftime('%b %Y')}" if org_end_date.present? %>
-            </span>
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if org_aff_ended || (f.object.end_date.present? && !has_affiliations) %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="Affiliation ended"></i><% end %><%= (org_earliest_aff || f.object.start_date)&.strftime('%b %Y') || "—" %><%= " – #{org_end_date.strftime('%b %Y')}" if org_end_date.present? %></span>
             <% if has_affiliations && org_earliest_aff.nil? %>
               <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
             <% elsif f.object.start_date.present? && org_earliest_aff.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
@@ -310,7 +305,7 @@
 
     <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Organization) %>
-        <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
+        <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
           <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
               <%= render "affiliation_fields",

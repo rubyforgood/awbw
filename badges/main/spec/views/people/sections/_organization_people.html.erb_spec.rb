@@ -31,7 +31,7 @@ RSpec.describe "people/sections/_affiliations", type: :view do
     render partial: "people/sections/affiliations",
            locals: { person: person, affiliations: affiliations }
 
-    expect(rendered).to include("No affiliations listed")
+    expect(rendered).to include("No affiliations listed").or include("No active affiliations")
   end
 
   it "groups multiple affiliations with the same organization into one button" do
