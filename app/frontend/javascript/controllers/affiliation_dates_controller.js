@@ -14,8 +14,9 @@ export default class extends Controller {
   connect() {
     this.element.addEventListener("cocoon:after-insert", this.boundReattach)
     this.element.addEventListener("cocoon:after-remove", this.boundReattach)
-    this.element.dataset.affiliationDatesReady = ""
     this.attachFieldListeners()
+    this.recalculate()
+    this.element.dataset.affiliationDatesReady = ""
   }
 
   disconnect() {
