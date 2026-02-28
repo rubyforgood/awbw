@@ -19,10 +19,11 @@
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div>
           <span class="font-semibold text-gray-700">Submitted by:</span>
-          <% if @workshop_log.created_by && allowed_to?(:show?, @workshop_log.created_by) %>
+          <% if @workshop_log.created_by&.person && allowed_to?(:show?, @workshop_log.created_by.person) %>
             <%= link_to @workshop_log.created_by.name,
-                        @workshop_log.created_by.person ? person_path(@workshop_log.created_by.person) : user_path(@workshop_log.created_by),
-                        class: "hover:underline" %>
+                        person_path(@workshop_log.created_by.person),
+                        data: { turbo_frame: "_top" },
+                        class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:people, intensity: 100)} #{DomainTheme.text_class_for(:people)} #{DomainTheme.bg_class_for(:people, intensity: 100, hover: true)}" %>
           <% else %>
             <%= @workshop_log.created_by&.name || "—" %>
           <% end %>
@@ -32,9 +33,10 @@
           <% if @workshop_log.organization && allowed_to?(:show?, @workshop_log.organization) %>
             <%= link_to @workshop_log.organization.name,
                         organization_path(@workshop_log.organization),
-                        class: "hover:underline" %>
+                        data: { turbo_frame: "_top" },
+                        class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:organizations, intensity: 100)} #{DomainTheme.text_class_for(:organizations)} #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)}" %>
           <% else %>
-            —
+            <%= @workshop_log.organization&.name || "—" %>
           <% end %>
         </div>
         <div>
@@ -42,17 +44,24 @@
           <%= @workshop_log.workshop&.windows_type&.short_name || "—" %>
         </div>
         <div>
-          <span class="font-semibold text-gray-700">Workshop date:</span>
-          <%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %>
+          <span class="font-semibold text-gray-700">Workshop:</span>
+          <% if @workshop_log.workshop && allowed_to?(:show?, @workshop_log.workshop) %>
+            <%= link_to @workshop_log.workshop.title, workshop_path(@workshop_log.workshop),
+                        data: { turbo_frame: "_top" },
+                        class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}" %>
+          <% else %>
+            <%= @workshop_log.workshop&.title || "—" %>
+          <% end %>
+          <br><span class="text-gray-400"><%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %></span>
         </div>
         <div>
-          <span class="font-semibold text-gray-700">Created:</span>
-          <%= @workshop_log.created_by&.full_name %>
+          <span class="font-semibold text-gray-700">Created by:</span>
+          <%= @workshop_log.created_by&.name %>
           <br><span class="text-gray-400"><%= @workshop_log.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Updated by:</span>
-          <%= @updated_by&.full_name || "—" %>
+          <%= @updated_by&.name || "—" %>
           <br><span class="text-gray-400"><%= @workshop_log.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
       </div>
