@@ -44,4 +44,33 @@ RSpec.describe EventDecorator do
       expect(event.labelled_cost).to eq("Cost: $25.05")
     end
   end
+
+  describe "#calendar_links" do
+    it "includes rhino_description plain text in all calendar links" do
+      event = create(:event)
+      event.update!(rhino_description: "<div>Join us for healing through art</div>")
+      decorated = event.decorate
+
+      html = decorated.calendar_links
+      doc = Nokogiri::HTML.fragment(html)
+      links = doc.css("a")
+
+      desc_encoded = ERB::Util.url_encode("Join us for healing through art")
+
+      google = links.find { |a| a.text == "Google" }
+      expect(google["href"]).to include("details=#{desc_encoded}")
+
+      apple = links.find { |a| a.text == "Apple" }
+      expect(apple["href"]).to include("DESCRIPTION:Join us for healing through art")
+
+      outlook = links.find { |a| a.text == "Outlook" }
+      expect(outlook["href"]).to include("body=#{desc_encoded}")
+
+      office365 = links.find { |a| a.text == "Office 365" }
+      expect(office365["href"]).to include("body=#{desc_encoded}")
+
+      yahoo = links.find { |a| a.text == "Yahoo" }
+      expect(yahoo["href"]).to include("desc=#{desc_encoded}")
+    end
+  end
 end
