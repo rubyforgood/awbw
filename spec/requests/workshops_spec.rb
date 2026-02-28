@@ -1,6 +1,45 @@
 require 'rails_helper'
 
 RSpec.describe "/workshops", type: :request do
+  # --- SECTORS ---------------------------------------------------------------
+  describe "sector saving via sector_ids" do
+    let(:admin) { create(:user, :admin) }
+    let!(:sector) { create(:sector, :published) }
+    let!(:windows_type) { create(:windows_type) }
+
+    before { sign_in admin }
+
+    it "saves sectors via sector_ids on create" do
+      post workshops_url, params: {
+        workshop: {
+          title: "Sector Test Workshop",
+          windows_type_id: windows_type.id,
+          category_ids: [ "" ],
+          sector_ids: [ "", sector.id.to_s ]
+        }
+      }
+
+      expect(Workshop.last.sectors).to include(sector)
+    end
+
+    it "updates sectors via sector_ids on update" do
+      workshop = create(:workshop)
+      second_sector = create(:sector, :published)
+
+      patch workshop_url(workshop), params: {
+        workshop: {
+          title: workshop.title,
+          category_ids: [ "" ],
+          sector_ids: [ "", second_sector.id.to_s ]
+        }
+      }
+
+      workshop.reload
+      expect(workshop.sectors).to include(second_sector)
+      expect(workshop.sectors).not_to include(sector)
+    end
+  end
+
   # --- DESTROY ---------------------------------------------------------------
   describe "DELETE /destroy" do
     let(:user) { create(:user) }

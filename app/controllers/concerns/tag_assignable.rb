@@ -9,8 +9,10 @@ module TagAssignable
     selected_category_ids = Array(params[key][:category_ids]).reject(&:blank?).map(&:to_i)
     record.categories = Category.where(id: selected_category_ids)
 
-    selected_sector_ids = Array(params[key][:sector_ids]).reject(&:blank?).map(&:to_i)
-    record.sectors = Sector.where(id: selected_sector_ids)
+    if params[key].key?(:sector_ids)
+      selected_sector_ids = Array(params[key][:sector_ids]).reject(&:blank?).map(&:to_i)
+      record.sectors = Sector.where(id: selected_sector_ids)
+    end
 
     record.save!
   end
