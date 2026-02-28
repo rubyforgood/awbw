@@ -79,16 +79,19 @@ class EventRegistration < ApplicationRecord
     paid_in_full?
   end
 
-  # True if event is free or total successful payments >= event.cost_cents
-  def paid_in_full?
-    return true if event.cost_cents.to_i <= 0
-
-    total = if payments.loaded?
-      payments.select { |p| p.status == "succeeded" }.sum(&:amount_cents)
+  # Sum of successful payment amounts, using preloaded collection when available
+  def successful_payments_total_cents
+    if payments.loaded?
+      payments.select(&:succeeded?).sum(&:amount_cents)
     else
       payments.successful.sum(:amount_cents)
     end
-    total >= event.cost_cents.to_i
+  end
+
+  # True if event is free or total successful payments >= event.cost_cents
+  def paid_in_full?
+    return true if event.cost_cents.to_i <= 0
+    successful_payments_total_cents >= event.cost_cents.to_i
   end
 
   def scholarship?
