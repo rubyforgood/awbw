@@ -3,10 +3,19 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer"]
 
+  initialize() {
+    this.boundRecalculate = () => this.recalculate()
+  }
+
   connect() {
-    this.element.addEventListener("cocoon:after-insert", () => this.recalculate())
-    this.element.addEventListener("cocoon:after-remove", () => this.recalculate())
+    this.element.addEventListener("cocoon:after-insert", this.boundRecalculate)
+    this.element.addEventListener("cocoon:after-remove", this.boundRecalculate)
     this.element.dataset.affiliationDatesReady = ""
+  }
+
+  affiliationsContainerTargetConnected(target) {
+    target.addEventListener("cocoon:after-insert", this.boundRecalculate)
+    target.addEventListener("cocoon:after-remove", this.boundRecalculate)
   }
 
   recalculate() {

@@ -59,8 +59,10 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
     expect(affiliated).to have_text("May 2019")
 
-    remove_links = all("a", text: "Remove")
-    remove_links.first.click
+    within("[data-affiliation-dates-target='affiliationsContainer']") do
+      remove_links = all("a", text: "Remove")
+      remove_links.first.click
+    end
 
     expect(affiliated).to have_text("Sep 2021", wait: 5)
   end
