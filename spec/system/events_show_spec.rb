@@ -31,7 +31,6 @@ RSpec.describe "Event show page", type: :system do
       visit event_path(event)
 
       expect(page).to have_text("My Event")
-      expect(page).to have_button("Register") # register still visible
     end
 
     it "blocks guests from non-public events" do
@@ -40,6 +39,39 @@ RSpec.describe "Event show page", type: :system do
       visit event_path(event)
 
       expect(page).to have_current_path(root_path)
+    end
+
+    context "when event has a public registration form" do
+      before { event.update!(public_registration_enabled: true) }
+
+      it "shows register link to public registration" do
+        visit event_path(event)
+
+        expect(page).to have_link("Register", href: new_event_public_registration_path(event))
+      end
+    end
+
+    context "when event has no public registration form" do
+      it "does not show a register button" do
+        visit event_path(event)
+
+        expect(page).not_to have_button("Register")
+        expect(page).not_to have_link("Register")
+      end
+    end
+
+    context "when event has public_registration_enabled but no form" do
+      before do
+        event.update!(public_registration_enabled: true)
+        event.forms.destroy_all
+      end
+
+      it "does not show a register button" do
+        visit event_path(event)
+
+        expect(page).not_to have_button("Register")
+        expect(page).not_to have_link("Register")
+      end
     end
   end
 
@@ -326,7 +358,7 @@ RSpec.describe "Event show page", type: :system do
   describe "registration button updates via Turbo", js: true do
     before { driven_by(:selenium_chrome_headless) }
 
-    it "updates Register to De-register and shows badge without full page reload" do
+    it "updates Register to De-register and shows clickable registration link without full page reload" do
       sign_in(user)
       visit event_path(event)
 
@@ -338,8 +370,11 @@ RSpec.describe "Event show page", type: :system do
       # Turbo stream replaces the registration section; we stay on the event page
       expect(page).to have_current_path(event_path(event))
       expect(page).to have_button("De-register")
-      expect(page).to have_text("You are registered!")
       expect(page).not_to have_button("Register")
+
+      # "You are registered!" is a clickable link to the registration show page
+      registration = EventRegistration.last
+      expect(page).to have_link("You are registered!", href: event_registration_path(registration))
     end
 
     it "updates De-register back to Register after de-registering" do

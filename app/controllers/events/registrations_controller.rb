@@ -1,5 +1,6 @@
 module Events
   class RegistrationsController < ApplicationController
+    before_action :authenticate_user!
     before_action :set_event
     before_action :set_registrant
 
