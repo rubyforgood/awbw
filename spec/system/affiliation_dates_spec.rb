@@ -50,8 +50,12 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
     expect(facilitator).to have_text("Mar 2020")
 
-    start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
-    set_date_input(start_inputs.first, "2019-07-01")
+    # Find the Facilitator affiliation's start_date input specifically
+    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+      f.find("textarea[name*='title']").value.include?("Facilitator")
+    }
+    start_input = facilitator_row.find("input[name*='start_date']")
+    set_date_input(start_input, "2019-07-01")
 
     expect(facilitator).to have_text("Jul 2019", wait: 5)
   end
@@ -90,8 +94,11 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
     expect(affiliated).to have_text("Mar 2020")
 
-    remove_links = all("a", text: "Remove")
-    remove_links.first.click
+    # Remove the Facilitator affiliation (start Mar 2020), leaving Volunteer (start Jun 2022)
+    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+      f.find("textarea[name*='title']").value.include?("Facilitator")
+    }
+    facilitator_row.find("a", text: "Remove").click
 
     expect(affiliated).to have_text("Jun 2022", wait: 5)
   end
