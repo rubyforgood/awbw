@@ -88,7 +88,7 @@ class User < ApplicationRecord
     if params[:access] == "true"
       results = results.has_access
     elsif params[:access] == "false"
-      results = results.where("inactive = ? OR locked_at IS NOT NULL OR confirmed_at IS NULL", true)
+      results = results.where("users.inactive = ? OR users.locked_at IS NOT NULL OR users.confirmed_at IS NULL", true)
     end
     results
   end
