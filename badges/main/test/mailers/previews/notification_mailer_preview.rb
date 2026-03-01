@@ -19,6 +19,26 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.event_registration_confirmation_fyi(notification)
   end
 
+  def event_registration_cancelled_fyi
+    event_registration =
+      EventRegistration.first ||
+        EventRegistration.create!(
+          event: Event.first || raise("Need an Event"),
+          registrant: User.first || raise("Need a User")
+        )
+
+    notification = find_valid_notification("event_registration_cancelled_fyi") ||
+      Notification.create!(
+        noticeable: event_registration,
+        notification_type: 1,
+        kind: "event_registration_cancelled_fyi",
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+      )
+
+    NotificationMailer.event_registration_cancelled_fyi(notification)
+  end
+
   def idea_submitted
     noticeable = StoryIdea.first || WorkshopVariationIdea.first
     user = noticeable&.created_by || User.first

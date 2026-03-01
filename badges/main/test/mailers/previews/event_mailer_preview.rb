@@ -4,6 +4,12 @@ class EventMailerPreview < ActionMailer::Preview
     EventMailer.event_registration_confirmation(event_registration)
   end
 
+  def event_registration_cancelled
+    event_registration = sample_event_registration
+    event_registration.status = "cancelled"
+    EventMailer.event_registration_cancelled(event_registration)
+  end
+
   private
 
   def sample_event_registration

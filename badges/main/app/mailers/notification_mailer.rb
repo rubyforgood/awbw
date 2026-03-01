@@ -16,6 +16,16 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def event_registration_cancelled_fyi(notification)
+    @event_registration = notification.noticeable
+    @event = @event_registration.event.decorate
+    @person = @event_registration.registrant
+    @notification_type = "Event registration cancellation"
+
+    mail(
+      subject: "#{FYI_PREFIX} Event registration cancelled by #{@person.full_name} for #{@event.title}"
+    )
+  end
 
   def idea_submitted(notification)
     @notification = notification

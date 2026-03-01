@@ -21,6 +21,8 @@ class Notification < ApplicationRecord
 
     event_registration_confirmation
     event_registration_confirmation_fyi
+    event_registration_cancelled
+    event_registration_cancelled_fyi
     idea_submitted
     idea_submitted_fyi
     report_submitted
