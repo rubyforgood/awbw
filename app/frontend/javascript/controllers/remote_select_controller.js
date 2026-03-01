@@ -22,7 +22,10 @@ export default class extends Controller {
         }
         fetch(url)
           .then((r) => r.json())
-          .then((json) => callback(json))
+          .then((json) => {
+            callback(json);
+            this.updateScrollHint();
+          })
           .catch(() => callback());
       },
     });
@@ -51,23 +54,38 @@ export default class extends Controller {
       }
       .ts-dropdown-content {
         max-height: 400px !important;
-        overflow-y: scroll !important;
-        scrollbar-width: thin;
-        scrollbar-color: #9ca3af #f3f4f6;
+        overflow-y: auto !important;
       }
-      .ts-dropdown-content::-webkit-scrollbar {
-        width: 6px;
-        -webkit-appearance: none;
-      }
-      .ts-dropdown-content::-webkit-scrollbar-thumb {
-        background-color: #9ca3af;
-        border-radius: 3px;
-      }
-      .ts-dropdown-content::-webkit-scrollbar-track {
-        background-color: #f3f4f6;
+      .ts-dropdown .scroll-hint {
+        text-align: center;
+        padding: 4px 0;
+        color: #9ca3af;
+        font-size: 0.75rem;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
       }
     `;
     document.head.appendChild(style);
+  }
+
+  updateScrollHint() {
+    requestAnimationFrame(() => {
+      const dropdown = this.select.dropdown;
+      if (!dropdown) return;
+
+      const content = dropdown.querySelector(".ts-dropdown-content");
+      if (!content) return;
+
+      const existing = dropdown.querySelector(".scroll-hint");
+      if (existing) existing.remove();
+
+      if (content.scrollHeight > content.clientHeight) {
+        const hint = document.createElement("div");
+        hint.className = "scroll-hint";
+        hint.textContent = `Scroll for more results`;
+        dropdown.appendChild(hint);
+      }
+    });
   }
 
   disconnect() {
