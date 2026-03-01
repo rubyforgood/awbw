@@ -423,8 +423,10 @@ RSpec.describe "Event show page", type: :system do
       expect(page).to have_current_path(event_path(event))
       expect(page).not_to have_button("Register")
 
-      # "View Registration" is a clickable link to the registration show page
+      # Wait for the Turbo stream to render the link before querying the DB
+      expect(page).to have_link("View Registration")
       registration = EventRegistration.last
+      expect(registration).to be_present
       expect(page).to have_link("View Registration", href: registration_ticket_path(registration.slug))
     end
   end
