@@ -1033,6 +1033,19 @@ if lisa_w && roundtable
   registrations_data << { person: lisa_w, event: roundtable, status: "incomplete_attendance" }
 end
 
+# --- People with multiple active affiliations — ensures org snapshots get exercised ---
+mariana_j = Person.find_by(first_name: "Mariana", last_name: "Johnson")
+samuel_s = Person.find_by(first_name: "Samuel", last_name: "Smith")
+lisa_wn = Person.find_by(first_name: "Lisa", last_name: "Williamson")
+kim_dv = Person.find_by(first_name: "Kim", last_name: "Davidson")
+sarah_d = Person.find_by(first_name: "Sarah", last_name: "Davis")
+
+{ mariana_j => youth_day, samuel_s => mindful_art, lisa_wn => virtual_session,
+  kim_dv => family_day, sarah_d => roundtable }.each do |person, evt|
+  next unless person && evt
+  registrations_data << { person: person, event: evt, status: "registered" }
+end
+
 # --- Wellness Day gets extra registrations (popular free event, short form) ---
 if wellness_day
   [ sarah_s, jessica_b, lisa_w, kim_d ].compact.each do |person|
