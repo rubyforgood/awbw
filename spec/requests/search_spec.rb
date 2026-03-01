@@ -91,6 +91,25 @@ RSpec.describe "Search", type: :request do
         expect(match["label"]).to include("fay@backup.com")
       end
 
+      it "returns results matched by email_2 even when label shows a different email" do
+        user_with_alt = create(:user, email: "primary@corp.com")
+        user_with_alt.person.update!(email: "work@corp.com", email_2: "secret@hidden.org")
+        get "/search/person", params: { q: "secret@hidden" }
+        json = JSON.parse(response.body)
+        match = json.find { |r| r["id"] == user_with_alt.person.id }
+        expect(match).to be_present
+        expect(match["label"]).not_to include("secret@hidden")
+      end
+
+      it "returns results matched by user email even when label shows person email" do
+        person = create(:person, first_name: "Gina", last_name: "Reyes", email: "gina@personal.com", user: nil)
+        login_user = create(:user, email: "greyes@company.com", person: person)
+        get "/search/person", params: { q: "greyes@company" }
+        json = JSON.parse(response.body)
+        match = json.find { |r| r["id"] == person.id }
+        expect(match).to be_present
+      end
+
       it "handles multi-word queries" do
         get "/search/person", params: { q: "Alice Smith" }
         json = JSON.parse(response.body)
