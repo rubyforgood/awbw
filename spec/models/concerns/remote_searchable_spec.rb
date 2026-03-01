@@ -34,7 +34,7 @@ RSpec.describe RemoteSearchable, type: :model do
 
       it "matches user email" do
         user = create(:user, email: "unique-login@corp.com")
-        person = user.person
+        person = create(:person, first_name: "Zara", last_name: "Test", user: user, created_by: admin, updated_by: admin)
         results = Person.remote_search("unique-login@corp")
         expect(results).to include(person)
       end

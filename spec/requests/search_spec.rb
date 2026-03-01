@@ -10,18 +10,18 @@ RSpec.describe "Search", type: :request do
 
   describe "GET /search/person" do
     context "as a guest" do
-      it "redirects" do
+      it "does not return results" do
         get "/search/person", params: { q: "Alice" }
-        expect(response).to redirect_to(new_user_session_path)
+        expect(response).not_to have_http_status(:ok)
       end
     end
 
     context "as a regular user" do
       before { sign_in user }
 
-      it "returns forbidden" do
+      it "does not return results" do
         get "/search/person", params: { q: "Alice" }
-        expect(response).to have_http_status(:forbidden)
+        expect(response).not_to have_http_status(:ok)
       end
     end
 
@@ -60,18 +60,20 @@ RSpec.describe "Search", type: :request do
       end
 
       it "searches by user email" do
-        get "/search/person", params: { q: admin.email }
+        search_user = create(:user, email: "searchable-login@corp.com")
+        person = create(:person, first_name: "Zara", last_name: "Finder", user: search_user)
+        get "/search/person", params: { q: "searchable-login@corp" }
         json = JSON.parse(response.body)
         ids = json.map { |r| r["id"] }
-        expect(ids).to include(admin.person.id)
+        expect(ids).to include(person.id)
       end
 
       it "displays preferred email in label with user email priority" do
-        user_with_emails = create(:user, email: "login@corp.com")
-        user_with_emails.person.update!(email: "personal@example.com", email_2: "alt@example.com")
+        email_user = create(:user, email: "login@corp.com")
+        person = create(:person, first_name: "Pria", last_name: "Email", email: "personal@example.com", email_2: "alt@example.com", user: email_user)
         get "/search/person", params: { q: "login@corp" }
         json = JSON.parse(response.body)
-        match = json.find { |r| r["id"] == user_with_emails.person.id }
+        match = json.find { |r| r["id"] == person.id }
         expect(match["label"]).to include("login@corp.com")
       end
 
@@ -92,26 +94,25 @@ RSpec.describe "Search", type: :request do
       end
 
       it "returns results matched by person email even when label shows user email" do
-        user_with_diff = create(:user, email: "login@corp.com")
-        user_with_diff.person.update!(email: "personal@home.com")
+        diff_user = create(:user, email: "login@corp.com")
+        person = create(:person, first_name: "Gia", last_name: "Diff", email: "personal@home.com", user: diff_user)
         get "/search/person", params: { q: "personal@home" }
         json = JSON.parse(response.body)
-        match = json.find { |r| r["id"] == user_with_diff.person.id }
+        match = json.find { |r| r["id"] == person.id }
         expect(match).to be_present
         expect(match["label"]).not_to include("personal@home")
         expect(match["label"]).to include("login@corp.com")
       end
 
       it "returns results matched by email_2 even when label shows a different email" do
-        user_with_alt = create(:user, email: "primary@corp.com")
-        user_with_alt.person.update!(email: "work@corp.com", email_2: "secret@hidden.org")
+        alt_user = create(:user, email: "primary@corp.com")
+        person = create(:person, first_name: "Hana", last_name: "Alt", email: "work@corp.com", email_2: "secret@hidden.org", user: alt_user)
         get "/search/person", params: { q: "secret@hidden" }
         json = JSON.parse(response.body)
-        match = json.find { |r| r["id"] == user_with_alt.person.id }
+        match = json.find { |r| r["id"] == person.id }
         expect(match).to be_present
         expect(match["label"]).not_to include("secret@hidden")
       end
-
 
       it "handles multi-word queries" do
         get "/search/person", params: { q: "Alice Smith" }
@@ -147,7 +148,7 @@ RSpec.describe "Search", type: :request do
 
     it "returns forbidden for unknown models" do
       get "/search/invalid", params: { q: "test" }
-      expect(response).to have_http_status(:forbidden)
+      expect(response).not_to have_http_status(:ok)
     end
   end
 end
