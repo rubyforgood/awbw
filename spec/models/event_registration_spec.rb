@@ -228,6 +228,37 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "cancellation emails" do
+    it "sends cancellation emails when status changes to cancelled" do
+      reg = create(:event_registration, status: "registered")
+
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: "event_registration_cancelled", recipient_role: :person)
+      )
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: "event_registration_cancelled_fyi", recipient_role: :admin)
+      )
+
+      reg.update!(status: "cancelled")
+    end
+
+    it "does not send emails when status changes to something other than cancelled" do
+      reg = create(:event_registration, status: "registered")
+
+      expect(NotificationServices::CreateNotification).not_to receive(:call)
+
+      reg.update!(status: "attended")
+    end
+
+    it "does not send emails when a non-status attribute changes" do
+      reg = create(:event_registration, status: "cancelled")
+
+      expect(NotificationServices::CreateNotification).not_to receive(:call)
+
+      reg.update!(scholarship_recipient: true)
+    end
+  end
+
   describe "slug" do
     it "generates a slug on create" do
       registration = create(:event_registration)

@@ -18,4 +18,23 @@ class EventMailer < ApplicationMailer
       subject: "AWBW Portal: Event registration confirmed for #{@event.title}"
     )
   end
+
+  def event_registration_cancelled(event_registration)
+    @event_registration = event_registration
+    @event = event_registration.event.decorate
+    @person = event_registration.registrant
+
+    @notification_type = "Event registration cancellation"
+
+    @time_zone = @person.user&.time_zone || Time.zone.name
+    @event_url = event_url(@event, reg: @event_registration.slug)
+    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+
+    mail(
+      to: @person.preferred_email,
+      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      subject: "AWBW Portal: Event registration cancelled for #{@event.title}"
+    )
+  end
 end

@@ -1,0 +1,55 @@
+<% profile_url = person_url(@person) %>
+
+<p style="margin-bottom: 6px;">
+  Event Registration Cancelled
+</p>
+
+<h1 style="margin: 0;">
+  <strong><%= @person.full_name %></strong>
+  (<%= @person.preferred_email %>)
+</h1>
+
+<p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
+  Cancelled on
+  <%= Time.current
+                   .in_time_zone("Pacific Time (US & Canada)")
+                   .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+</p>
+
+<div style="text-align: center; background-color: #f3f4f6; border-radius: 6px; padding: 24px; margin: 16px 0;">
+  <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
+    <p style="font-size: 14px; font-weight: 600; color: #374151; margin: 0 0 4px; font-family: 'Telefon Bold', sans-serif;">
+      <%= @event.pre_title %>
+    </p>
+  <% end %>
+
+  <h2 style="font-size: 28px; font-weight: bold; color: #166534; margin: 0 0 16px; font-family: Lato, sans-serif;">
+    <%= @event.title %>
+  </h2>
+
+  <p style="font-size: 22px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
+    <%= @event.times(display_day: true, display_date: true) %>
+  </p>
+
+  <% if @event.location.present? %>
+    <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
+      <%= @event.location.name %>
+    </p>
+  <% end %>
+</div>
+
+<p>
+  <a href="<%= profile_url %>"
+     style="display:inline-block;background:#e5e7eb;color:#111827;
+       text-decoration:none;padding:10px 16px;border-radius:6px;
+       font-weight:bold;">
+    View profile
+  </a>
+
+  <a href="<%= event_url(@event) %>"
+     style="display:inline-block;background:#e5e7eb;color:#111827;
+       text-decoration:none;padding:10px 16px;border-radius:6px;
+       font-weight:bold;">
+    View event
+  </a>
+</p>

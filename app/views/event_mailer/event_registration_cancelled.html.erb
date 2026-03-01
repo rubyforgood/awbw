@@ -1,0 +1,41 @@
+<h1>Event registration cancelled</h1>
+
+<div style="margin-top: 36px; text-align: left;">
+  <p>
+    Hello <strong><%= @person.full_name %></strong>,
+  </p>
+
+  <p>
+    Your registration for the following <%= @organization_name %> event has been cancelled:
+  </p>
+
+  <div style="text-align: center; background-color: #f3f4f6; border-radius: 6px; padding: 24px; margin: 16px 0;">
+    <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
+      <p style="font-size: 14px; font-weight: 600; color: #374151; margin: 0 0 4px; font-family: 'Telefon Bold', sans-serif;">
+        <%= @event.pre_title %>
+      </p>
+    <% end %>
+
+    <h2 style="font-size: 28px; font-weight: bold; color: #166534; margin: 0 0 16px; font-family: Lato, sans-serif;">
+      <%= @event.title %>
+    </h2>
+
+    <p style="font-size: 22px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
+      <% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
+    </p>
+
+    <% if @event.location.present? %>
+      <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
+        <%= @event.location.name %>
+      </p>
+    <% end %>
+  </div>
+
+  <p>
+    If you cancelled by mistake, you can re-register on the event page.
+  </p>
+</div>
+
+<p>
+  <a href="<%= @event_url %>" class="button">View event</a>
+</p>

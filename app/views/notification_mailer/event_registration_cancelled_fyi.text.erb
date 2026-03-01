@@ -1,0 +1,32 @@
+<% profile_url = person_url(@person) %>
+
+Event Registration Cancelled
+==========================
+
+<%= @person.full_name %> (<%= @person.preferred_email %>)
+
+Cancelled on
+<%= Time.current
+                 .in_time_zone("Pacific Time (US & Canada)")
+                 .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+------------------------------------------------------------
+
+Event
+<%= @event.title %>
+
+Event date
+<%= @event.times(display_day: true, display_date: true) %>
+
+<% if @event.location.present? %>
+  Location
+  <%= @event.location.name %>
+<% end %>
+
+------------------------------------------------------------
+
+View profile:
+<%= profile_url %>
+
+View event:
+<%= event_url(@event) %>

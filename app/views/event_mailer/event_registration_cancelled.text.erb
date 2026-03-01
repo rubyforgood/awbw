@@ -1,0 +1,20 @@
+Event registration cancelled
+
+Hello <%= @person.full_name %>,
+
+Your registration for the following event has been cancelled:
+
+<% if @event.respond_to?(:pre_title) && @event.pre_title.present? %><%= @event.pre_title %>
+<% end %><%= @event.title %>
+<% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
+
+<% if @event.location.present? %>
+Location: <%= @event.location.name %>
+<% end %>
+
+If you cancelled by mistake, you can re-register on the event page:
+<%= @event_url %>
+
+--
+This is an automated message from <%= @organization_name %>.
+If you did not expect this message, you may ignore it.
