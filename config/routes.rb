@@ -60,8 +60,6 @@ Rails.application.routes.draw do
   get "tags/sectors", to: "tags#sectors", as: "tags_sectors"
   get "tags/categories", to: "tags#categories", as: "tags_categories"
 
-  get "image_migration_audit", to: "image_migration_audit#index"
-
   namespace :admin do
     get "/",                         to: "home#index" # admin home page
     get "activities/events",         to: "ahoy_activities#index", as: "activities_events"
