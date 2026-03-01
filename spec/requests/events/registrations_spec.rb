@@ -49,9 +49,8 @@ RSpec.describe "Events::Registrations", type: :request do
 
     context "with an invalid slug" do
       it "returns 404" do
-        expect {
-          get registration_ticket_path("nonexistent-slug")
-        }.to raise_error(ActiveRecord::RecordNotFound)
+        get registration_ticket_path("nonexistent-slug")
+        expect(response).to have_http_status(:not_found)
       end
     end
   end
@@ -160,18 +159,16 @@ RSpec.describe "Events::Registrations", type: :request do
     end
 
     it "returns 404 with an invalid slug" do
-      expect {
-        get event_public_registration_path(event, reg: "bogus-slug")
-      }.to raise_error(ActiveRecord::RecordNotFound)
+      get event_public_registration_path(event, reg: "bogus-slug")
+      expect(response).to have_http_status(:not_found)
     end
 
     it "returns 404 with a slug from a different event" do
       other_event = create(:event)
       other_registration = create(:event_registration, event: other_event, registrant: user.person)
 
-      expect {
-        get event_public_registration_path(event, reg: other_registration.slug)
-      }.to raise_error(ActiveRecord::RecordNotFound)
+      get event_public_registration_path(event, reg: other_registration.slug)
+      expect(response).to have_http_status(:not_found)
     end
 
     context "as a guest" do
