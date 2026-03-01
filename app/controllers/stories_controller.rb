@@ -129,6 +129,8 @@ class StoriesController < ApplicationController
     @story_ideas = authorized_scope(StoryIdea.includes(:created_by))
                             .references(:users)
                             .order(:created_at)
+    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
+    @users = User.has_access.includes(:person).left_joins(:person).order(Arel.sql("people.first_name IS NULL, LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)"))
     @windows_types = WindowsType.all
     @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
     @categories_grouped =
