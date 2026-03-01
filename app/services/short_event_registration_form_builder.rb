@@ -39,7 +39,7 @@ class ShortEventRegistrationFormBuilder
 
     position = add_field(form, position, "Are you interested in learning more about upcoming trainings or resources?",
                          :multiple_choice_checkbox,
-                         key: "training_interest", group: "qualitative", required: false,
+                         key: "training_interest", group: "qualitative", required: true,
                          options: [ "Yes", "Not right now" ])
 
     position = build_scholarship_fields(form, position)
