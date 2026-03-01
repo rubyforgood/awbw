@@ -48,7 +48,7 @@ class Event < ApplicationRecord
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
   scope :featured, -> { registerable.where(published: true, featured: true) } # overrides Publishable
-  scope :publicly_featured, -> { registerable.where(published: true, publicly_visible: true, publicly_featured: true) } # overrides Publishable
+  scope :publicly_featured, -> { where(published: true, publicly_visible: true, publicly_featured: true) } # overrides Featureable
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
 
   def self.search_by_params(params)

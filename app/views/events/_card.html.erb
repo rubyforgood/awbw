@@ -45,6 +45,7 @@
   </div>
 
   <!-- END title row -->
+  <% registered = current_user && event.actively_registered?(current_user.person) %>
   <!-- 2️⃣ TIMES + BUTTONS IN ONE ROW -->
   <div class="times-and-buttons flex flex-wrap items-center justify-between w-full gap-4">
     <!-- LEFT: Times -->
@@ -54,57 +55,57 @@
 
     <!-- RIGHT: Buttons + Registered -->
     <div class="flex items-center gap-3">
-      <% if current_user %>
-        <% registered = event.actively_registered?(current_user.person) %>
-        <% if allowed_to?(:edit?, event) %>
-          <%= link_to "Edit",
-                    edit_event_path(event),
-                    data: { turbo_frame: "_top"},
-                    class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
-        <% end %>
+      <% if allowed_to?(:edit?, event) %>
+        <%= link_to "Edit",
+                  edit_event_path(event),
+                  data: { turbo_frame: "_top" },
+                  class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+      <% end %>
 
-        <% if registered %>
-          <% registration = event.active_registration_for(current_user.person) %>
-          <%= link_to "View your registration", registration_ticket_path(registration.slug),
-                      class: "text-sm text-green-700 hover:text-green-900 underline" %>
-        <% elsif event.ended? %>
-          <span class="text-sm text-gray-500 italic">Event ended</span>
-          <% if allowed_to?(:manage?, event) %>
-            <%= button_to "Register",
-                        event_registrant_registration_path(event_id: event),
-                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-          <% end %>
-        <% elsif !event.published? %>
-          <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
-        <% elsif event.registerable? %>
+      <% if registered %>
+        <%= button_to "De-register",
+                    event_registrant_registration_path(event_id: event),
+                    method: :delete,
+                    data: { turbo_confirm: "Are you sure?" },
+                    class: "btn btn-secondary-outline" %>
+      <% elsif event.ended? %>
+        <span class="text-sm text-gray-500 italic">Event ended</span>
+        <% if allowed_to?(:manage?, event) %>
+          <%= button_to "Register",
+                      event_registrant_registration_path(event_id: event),
+                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% end %>
+      <% elsif !event.published? %>
+        <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
+      <% elsif event.registerable? %>
+        <% if user_signed_in? %>
           <%= button_to "Register",
                       event_registrant_registration_path(event_id: event),
                       class: "btn btn-primary-outline" %>
-        <% else %>
-          <span class="text-sm text-gray-500 italic">Registration closed</span>
+        <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
+          <%= link_to "Register",
+                      new_event_public_registration_path(event),
+                      class: "btn btn-primary-outline" %>
         <% end %>
+      <% else %>
+        <span class="text-sm text-gray-500 italic">Registration closed</span>
+      <% end %>
 
-      <% elsif event.registerable? && event.object.forms.exists?(name: "Public Registration") %>
-        <%= link_to "Register",
-                    new_event_public_registration_path(event),
-                    data: { turbo_frame: "_top" },
-                    class: "btn btn-primary-outline" %>
+      <% if registered %>
+        <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full"> Registered </span>
       <% end %>
     </div>
   </div>
-  <% if current_user %>
-    <% registered ||= event.actively_registered?(current_user.person) %>
-    <!-- 4️⃣ FULL-WIDTH CALENDAR LINKS ROW -->
-    <% if registered %>
-      <div class="flex flex-col items-center mt-4 pt-3 border-t border-gray-100">
-        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
-          Add to Your Calendar
-        </p>
+  <!-- 4️⃣ FULL-WIDTH CALENDAR LINKS ROW -->
+  <% if registered %>
+    <div class="flex flex-col items-center mt-4 pt-3 border-t border-gray-100">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+        Add to Your Calendar
+      </p>
 
-        <div class="social-links flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium">
-          <%= event.calendar_links %>
-        </div>
+      <div class="social-links flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium">
+        <%= event.calendar_links %>
       </div>
-    <% end %>
+    </div>
   <% end %>
 <% end %>
