@@ -49,22 +49,12 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration
 
     if @event_registration.save
-      NotificationServices::CreateNotification.call(
-        noticeable: @event_registration,
-        kind: "event_registration_confirmation",
-        recipient_role: :person,
-        recipient_email: @event_registration.registrant.preferred_email,
-        notification_type: 0)
-      NotificationServices::CreateNotification.call(
-        noticeable: @event_registration,
-        kind: "event_registration_confirmation_fyi",
-        recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-        notification_type: 0)
-
       respond_to do |format|
         format.html {
-          if params.dig(:event_registration, :event_id).present?
+          if current_user.super_user?
+            return_to = params.dig(:event_registration, :event_id).present? ? "manage" : "ticket"
+            redirect_to confirm_event_registration_path(@event_registration, return_to: return_to)
+          elsif params.dig(:event_registration, :event_id).present?
             redirect_to manage_event_path(@event_registration.event),
               notice: "Registration created."
           else
@@ -113,6 +103,35 @@ class EventRegistrationsController < ApplicationController
           render :edit, status: :unprocessable_content
         end
       end
+    end
+  end
+
+  def confirm
+    @event_registration = EventRegistration.includes(registrant: :user, event: :location).find(params[:id])
+    authorize! @event_registration, to: :confirm?
+    @person = @event_registration.registrant
+    @user = @person.user
+    @return_to = params[:return_to]
+  end
+
+  def process_confirm
+    @event_registration = EventRegistration.includes(registrant: :user).find(params[:id])
+    authorize! @event_registration, to: :process_confirm?
+
+    result = EventRegistrationServices::ProcessConfirmation.call(
+      event_registration: @event_registration,
+      person: @event_registration.registrant,
+      create_user: params[:create_user] == "1",
+      send_invite: params[:send_invite] == "1",
+      send_confirmation_email: params[:send_confirmation_email] == "1",
+      send_admin_fyi: params[:send_admin_fyi] == "1",
+      current_user: current_user
+    )
+
+    if params[:return_to] == "manage"
+      redirect_to manage_event_path(@event_registration.event), notice: result.summary
+    else
+      redirect_to registration_ticket_path(@event_registration.slug), notice: result.summary
     end
   end
 
