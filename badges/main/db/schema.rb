@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_120200) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_143000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -406,6 +406,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_120200) do
     t.index ["event_id", "form_id", "role"], name: "index_event_forms_on_event_id_and_form_id_and_role", unique: true
     t.index ["event_id"], name: "index_event_forms_on_event_id"
     t.index ["form_id"], name: "index_event_forms_on_form_id"
+  end
+
+  create_table "event_registration_organizations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_registration_id", null: false
+    t.integer "organization_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_registration_id", "organization_id"], name: "idx_event_reg_orgs_on_registration_and_org", unique: true
+    t.index ["event_registration_id"], name: "idx_on_event_registration_id_806bdcd019"
+    t.index ["organization_id"], name: "index_event_registration_organizations_on_organization_id"
   end
 
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1342,6 +1352,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_120200) do
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "event_forms", "events"
   add_foreign_key "event_forms", "forms"
+  add_foreign_key "event_registration_organizations", "event_registrations"
+  add_foreign_key "event_registration_organizations", "organizations"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "people", column: "registrant_id"
   add_foreign_key "events", "locations"

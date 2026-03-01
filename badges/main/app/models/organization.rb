@@ -7,6 +7,8 @@ class Organization < ApplicationRecord
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :affiliations, dependent: :restrict_with_error
+  has_many :event_registration_organizations, dependent: :restrict_with_error
+  has_many :event_registrations, through: :event_registration_organizations
   has_many :people, through: :affiliations
   has_many :users, through: :people
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy

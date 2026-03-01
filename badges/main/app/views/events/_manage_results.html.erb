@@ -52,20 +52,12 @@
                   </div>
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% orgs = person.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq %>
-                  <% if orgs.any? %>
-                    <div class="flex flex-wrap gap-2">
-                      <% orgs.first(3).each do |org| %>
-                        <%= link_to org.name, organization_path(org),
-                            data: { turbo_frame: "_top" },
-                            class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:organizations, intensity: 100)} #{DomainTheme.text_class_for(:organizations)} #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)}" %>
+                  <% if registration.organizations.any? %>
+                    <ul class="space-y-0.5">
+                      <% registration.organizations.each do |org| %>
+                        <li><%= org.name %></li>
                       <% end %>
-                      <% if orgs.size > 3 %>
-                        <%= link_to "+#{orgs.size - 3}", person_path(person),
-                            data: { turbo_frame: "_top" },
-                            class: "inline-block px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700" %>
-                      <% end %>
-                    </div>
+                    </ul>
                   <% else %>
                     <span class="text-gray-400">—</span>
                   <% end %>

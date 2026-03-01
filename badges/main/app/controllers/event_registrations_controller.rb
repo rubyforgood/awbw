@@ -159,14 +159,15 @@ class EventRegistrationsController < ApplicationController
   private
 
   def set_event_registration
-    @event_registration = EventRegistration.includes(:registrant, { event: [ :location, :event_forms ] }, comments: [ :created_by, :updated_by ]).find(params[:id])
+    @event_registration = EventRegistration.includes({ registrant: { affiliations: :organization } }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
   end
 
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
-      :scholarship_recipient, :scholarship_tasks_completed,
+      :scholarship_requested, :scholarship_recipient, :scholarship_tasks_completed,
+      organization_ids: [],
       comments_attributes: [ :id, :body, :_destroy ]
     )
   end
