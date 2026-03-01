@@ -1,12 +1,17 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:users) %> border border-gray-200 rounded-xl shadow p-6">
-        <div class="flex items-center justify-between mb-3">
-          <h1 class="text-2xl font-semibold text-gray-900">New <%= @user.class.model_name.human.downcase %></h1>
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+      <!-- User account header banner -->
+      <div class="<%= DomainTheme.bg_class_for(:users, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:users, intensity: 300) %> px-8 py-3">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:users, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:users, intensity: 900) %> uppercase tracking-wide">New User</span>
         </div>
+      </div>
+      <div class="<%= DomainTheme.bg_class_for(:users) %> p-4 sm:p-8">
 
-        <div class="bg-white rounded p-6">
-          <div class="mt-4">
-            <%= render "form", user: @user %>
-          </div>
-        </div>
+        <%= render "form", user: @user %>
+
+      </div>
 </div>

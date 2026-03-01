@@ -1,7 +1,7 @@
-<%= form_with url: users_path,
-              method: :get,
-              local: true,
-              html: { id: "filter-form", class: "w-full" } do |f| %>
+<%= form_tag(users_path, method: :get,
+  data: { controller: "collection", turbo_frame: "users_results" },
+  autocomplete: "off",
+  class: "w-full") do %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-end">
     <!-- Search -->
     <div>
@@ -10,12 +10,9 @@
         <%= text_field_tag :search, params[:search],
                            class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                                  focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           placeholder: "Type and hit Enter",
-                           onkeypress: "if(event.key === 'Enter'){ this.form.submit(); }" %>
-
+                           placeholder: "Name, email, or phone" %>
         <button type="submit"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
-                onclick="this.closest('form').submit()">
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
           <i class="fa fa-search"></i>
         </button>
       </div>
@@ -30,8 +27,7 @@
                                          ["No access", "false"]],
                                         params[:access]),
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                           focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10",
-                     onchange: "this.form.submit()" %>
+                           focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10" %>
     </div>
 
     <!-- Admin -->
@@ -43,16 +39,14 @@
                                          ["Regular users", false]],
                                         params[:super_user]),
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                           focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10",
-                     onchange: "this.form.submit()" %>
+                           focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none pe-10" %>
     </div>
 
     <!-- Clear filters -->
     <div class="flex sm:justify-end items-end">
-      <%= link_to 'Clear filters', users_path,
+      <%= link_to "Clear filters", users_path,
                   class: "btn btn-utility-outline",
                   data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
 <% end %>
-
