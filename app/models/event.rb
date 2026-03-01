@@ -136,6 +136,7 @@ class Event < ApplicationRecord
 
   def registration_form_required_when_publicly_registerable
     return unless public_registration_enabled?
+    return if will_save_change_to_public_registration_enabled?
     return if event_forms.registration.exists?
 
     errors.add(:public_registration_enabled, "requires a registration form to be selected")

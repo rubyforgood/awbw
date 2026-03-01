@@ -50,8 +50,8 @@ RSpec.describe "Event registration show page", type: :system do
 
   describe "view registration form link" do
     it "links to form show with slug param" do
-      EventRegistrationFormBuilder.build!(event)
-      form = event.forms.find_by(name: "Public Registration")
+      ExtendedEventRegistrationFormBuilder.build!(event)
+      form = event.registration_form
       form.person_forms.create!(person: user.person)
 
       sign_in(user)

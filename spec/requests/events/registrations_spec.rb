@@ -148,8 +148,8 @@ RSpec.describe "Events::Registrations", type: :request do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     before do
-      EventRegistrationFormBuilder.build!(event)
-      form = event.forms.find_by(name: "Public Registration")
+      ExtendedEventRegistrationFormBuilder.build!(event)
+      form = event.registration_form
       form.person_forms.create!(person: user.person)
     end
 
