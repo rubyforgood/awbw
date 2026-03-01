@@ -639,12 +639,12 @@ test_people = [
 ]
 
 test_people.each do |data|
-  next if Person.exists?(
+  next if Person.where(
     "LOWER(first_name) = ? AND LOWER(last_name) = ? AND LOWER(COALESCE(email, '')) = ?",
     data[:first_name].downcase,
     data[:last_name].downcase,
     (data[:email] || "").downcase
-  )
+  ).exists?
 
   person_attrs = {
     first_name: data[:first_name],
