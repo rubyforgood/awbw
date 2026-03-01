@@ -15,8 +15,8 @@ export default class extends Controller {
         if (!query.length) return callback();
 
         this.select.clearOptions();
-        let url = `/search/${this.modelValue}?q=${encodeURIComponent(query)}`;
 
+        let url = `/search/${this.modelValue}?q=${encodeURIComponent(query)}`;
         if (this.hasExcludeValue && this.excludeValue) {
           url += `&exclude=${encodeURIComponent(this.excludeValue)}`;
         }
