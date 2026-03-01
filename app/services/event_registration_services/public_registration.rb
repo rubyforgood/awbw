@@ -256,7 +256,7 @@ module EventRegistrationServices
     def save_form_fields(person_form)
       @form.form_fields.where(status: :active).find_each do |field|
         next if field.group_header?
-        next if field.field_key == "primary_email_confirmation"
+        next if field.field_key == "confirm_email"
 
         raw_value = @form_params[field.id.to_s]
         text = if raw_value.is_a?(Array)
