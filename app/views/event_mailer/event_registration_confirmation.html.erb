@@ -50,10 +50,10 @@
     <% end %>
   </div>
 
-  <% if @event.detail.present? %>
+  <% if @event.rhino_description.present? %>
     <span style="padding-bottom: 12px"><strong>Details</strong></span><br>
     <p>
-      <%= simple_format(@event.detail) %>
+      <%= simple_format(@event.rhino_description.to_plain_text) %>
     </p>
     <hr style="margin: 24px 0;">
   <% end %>
