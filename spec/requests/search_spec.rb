@@ -44,11 +44,18 @@ RSpec.describe "Search", type: :request do
         expect(labels).not_to include(a_string_including("Carol"))
       end
 
-      it "searches by email" do
+      it "searches by person email" do
         get "/search/person", params: { q: "carol@test" }
         json = JSON.parse(response.body)
         expect(json.length).to eq(1)
         expect(json.first["label"]).to include("Carol")
+      end
+
+      it "searches by user email" do
+        get "/search/person", params: { q: admin.email }
+        json = JSON.parse(response.body)
+        ids = json.map { |r| r["id"] }
+        expect(ids).to include(admin.person.id)
       end
 
       it "handles multi-word queries" do

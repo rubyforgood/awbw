@@ -187,6 +187,24 @@ class Person < ApplicationRecord
 
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2
 
+  def self.remote_search(query)
+    return none if query.blank?
+
+    terms = query.split
+    scope = left_joins(:user)
+
+    terms.each_with_index do |term, i|
+      pattern_key = :"pattern_#{i}"
+      conditions = remote_search_columns
+        .map { |col| "#{table_name}.#{col} LIKE :#{pattern_key}" }
+        .push("users.email LIKE :#{pattern_key}")
+        .join(" OR ")
+      scope = scope.where(conditions, pattern_key => "%#{term}%")
+    end
+
+    scope.distinct
+  end
+
   def remote_search_label
     {
       id: id,

@@ -26,6 +26,19 @@ RSpec.describe RemoteSearchable, type: :model do
         expect(results).not_to include(alice, bob)
       end
 
+      it "matches email_2" do
+        person = create(:person, first_name: "Dana", last_name: "White", email: nil, email_2: "dana@secondary.org", created_by: admin, updated_by: admin)
+        results = Person.remote_search("dana@secondary")
+        expect(results).to include(person)
+      end
+
+      it "matches user email" do
+        user = create(:user, email: "unique-login@corp.com")
+        person = user.person
+        results = Person.remote_search("unique-login@corp")
+        expect(results).to include(person)
+      end
+
       it "matches partial strings" do
         expect(Person.remote_search("ali")).to include(alice)
       end
