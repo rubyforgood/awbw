@@ -48,16 +48,9 @@
             <div class="py-3 flex items-baseline gap-4">
               <dt class="text-gray-500 font-medium w-28 shrink-0">Resource</dt>
               <dd class="text-gray-900">
-                <%
-                  resource_path = begin
-                    polymorphic_path(@event.resource_type.constantize.find(@event.resource_id))
-                  rescue
-                    nil
-                  end
-                %>
-                <% if resource_path %>
+                <% if @resource_path %>
                   <%= link_to "#{@event.resource_type}.find(#{@event.resource_id})",
-                              resource_path,
+                              @resource_path,
                               class: "text-indigo-600 hover:underline" %>
                 <% else %>
                   <%= @event.resource_type %>.find(<%= @event.resource_id %>)
@@ -87,19 +80,8 @@
               <div class="py-3 flex items-baseline gap-4">
                 <dt class="text-sm font-medium text-gray-500 w-36 shrink-0"><%= key %></dt>
                 <dd class="text-sm text-gray-900">
-                  <% if key == "resource_title" && @event.resource_type.present? %>
-                    <%
-                      title_resource_path = begin
-                        polymorphic_path(@event.resource_type.constantize.find(@event.resource_id))
-                      rescue
-                        nil
-                      end
-                    %>
-                    <% if title_resource_path %>
-                      <%= link_to value.to_s.delete('"'), title_resource_path, class: "text-indigo-600 hover:underline" %>
-                    <% else %>
-                      <%= value.to_s.delete('"') %>
-                    <% end %>
+                  <% if key == "resource_title" && @resource_path %>
+                    <%= link_to value.to_s.delete('"'), @resource_path, class: "text-indigo-600 hover:underline" %>
                   <% elsif value.nil? %>
                     <span class="text-gray-400 italic">nil</span>
                   <% elsif value.is_a?(Hash) || value.is_a?(Array) %>

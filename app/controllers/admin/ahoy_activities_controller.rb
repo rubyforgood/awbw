@@ -69,6 +69,7 @@ module Admin
     def show
       authorize! :ahoy_activity, to: :show?
       @event = Ahoy::Event.includes(:user, :visit).find(params[:id])
+      @resource_path = safe_resource_path(@event.resource_type, @event.resource_id)
     end
 
     def visits
@@ -389,6 +390,18 @@ module Admin
       else
         nil # all_time
       end
+    end
+
+    def safe_resource_path(resource_type, resource_id)
+      return nil if resource_type.blank? || resource_id.blank?
+
+      klass = resource_type.safe_constantize
+      return nil unless klass && klass < ApplicationRecord
+
+      record = klass.find_by(id: resource_id)
+      record ? polymorphic_path(record) : nil
+    rescue NameError, NoMethodError
+      nil
     end
 
     def safe_json_parse(json)
