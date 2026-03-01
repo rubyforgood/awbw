@@ -10,6 +10,10 @@ class UserPolicy < ApplicationPolicy
   def destroy? = record.persisted? && admin? && record.person_id.blank? && !has_ahoy_records?
   def toggle_lock_status? = admin?
   def confirm_email? = admin?
+  def confirm_email_change? = admin?
+  def process_email_change? = admin?
+  def confirm_email_manual? = admin?
+  def process_email_manual? = admin?
   def send_welcome_instructions? = admin?
   def search? = admin?
   def change_password? = authenticated?

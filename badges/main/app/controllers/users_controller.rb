@@ -1,7 +1,9 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy,
                                    :toggle_lock_status, :confirm_email,
-                                   :send_welcome_instructions, :send_reset_password_instructions ]
+                                   :send_welcome_instructions, :send_reset_password_instructions,
+                                   :confirm_email_change, :process_email_change,
+                                   :confirm_email_manual, :process_email_manual ]
 
   def index
     authorize!
@@ -128,11 +130,18 @@ class UsersController < ApplicationController
     @user.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @user.comments.select(&:changed?).each { |c| c.updated_by = current_user }
 
+    # Suppress Devise's automatic reconfirmation email so the interstitial can control it
+    @user.skip_confirmation_notification!
+
     if @user.save
       bypass_sign_in(@user) if @user == current_user
-      notice = "User was successfully updated."
-      notice += " A confirmation email has been sent to #{@user.unconfirmed_email}." if @user.unconfirmed_email.present? && @user.saved_change_to_unconfirmed_email?
-      redirect_to @user, notice: notice
+
+      if current_user.super_user? && @user.saved_change_to_unconfirmed_email? && @user.unconfirmed_email.present?
+        redirect_to confirm_email_change_user_path(@user)
+        return
+      end
+
+      redirect_to @user, notice: "User was successfully updated."
     else
       flash[:alert] = "Unable to update user."
       set_form_variables
@@ -231,6 +240,46 @@ class UsersController < ApplicationController
       format.turbo_stream { flash.now[:notice] = message }
       format.html { redirect_to edit_user_path(@user), notice: message }
     end
+  end
+
+  # ---------------------------------------------------------
+  # EMAIL CHANGE INTERSTITIAL
+  # ---------------------------------------------------------
+
+  def confirm_email_change
+    authorize! @user, to: :confirm_email_change?
+  end
+
+  def process_email_change
+    authorize! @user, to: :process_email_change?
+
+    result = UserServices::ProcessEmailChange.call(
+      user: @user,
+      send_confirmation: params[:send_confirmation] == "1",
+      current_user: current_user
+    )
+
+    redirect_to @user, notice: result.summary
+  end
+
+  # ---------------------------------------------------------
+  # MANUAL EMAIL CONFIRMATION INTERSTITIAL
+  # ---------------------------------------------------------
+
+  def confirm_email_manual
+    authorize! @user, to: :confirm_email_manual?
+  end
+
+  def process_email_manual
+    authorize! @user, to: :process_email_manual?
+
+    result = UserServices::ProcessEmailManualConfirm.call(
+      user: @user,
+      action: params[:confirm_action],
+      current_user: current_user
+    )
+
+    redirect_to @user, notice: result.summary
   end
 
   # ---------------------------------------------------------
