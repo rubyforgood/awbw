@@ -341,7 +341,7 @@
       </div>
     </div>
 
-    <% if @event.persisted? && allowed_to?(:manage?, @event) %>
+    <% if allowed_to?(:manage?, @event) %>
       <div class="admin-only registration-form-section" data-controller="dropdown">
         <button
           type="button"

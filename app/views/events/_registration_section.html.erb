@@ -17,8 +17,7 @@
     <% elsif registered %>
     <% elsif slug_cancelled && event.registerable? %>
       <%= button_to "Register again", registration_reactivate_path(slug_registration.slug),
-                    class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
-                    style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
+                    class: "text-sm text-gray-500 hover:text-blue-600 underline bg-transparent border-0 cursor-pointer p-0" %>
     <% elsif !registered && !slug_registered %>
       <% if !event.published? %>
         <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>

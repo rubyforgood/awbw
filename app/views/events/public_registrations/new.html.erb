@@ -1,7 +1,10 @@
 <% content_for(:page_bg_class, "public") %>
 
+<div class="flex flex-wrap items-center gap-2 mb-4">
+  <%= link_to "← Back to Event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+</div>
+
 <div class="max-w-2xl mx-auto py-8 px-4">
-  <%= link_to "← Back to Event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block" %>
 
   <%# ---- EVENT HEADER ---- %>
   <div class="text-center mb-8">
@@ -23,12 +26,6 @@
         <div class="text-base text-gray-700"><%= @event.location.name %></div>
       <% end %>
     </div>
-  </div>
-
-  <div class="mb-4">
-    <%= link_to event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
-      &larr; Back to Event
-    <% end %>
   </div>
 
   <%# ---- REGISTRATION FORM CARD ---- %>
