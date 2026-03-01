@@ -192,7 +192,7 @@
                   %>
                   <div class="hidden group-hover:block absolute z-50 right-0 top-full bg-gray-900 text-gray-100 text-xs rounded-lg shadow-lg px-3 py-3 max-h-64 overflow-y-auto" style="width: 400px;">
                     <% display_props.each do |key, value| %>
-                      <div class="py-1"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value.to_s.delete('"') %></div>
+                      <div class="py-1"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value.nil? ? "nil" : value.to_s.delete('"') %></div>
                     <% end %>
                   </div>
                 <% else %>

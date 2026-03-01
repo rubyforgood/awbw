@@ -100,6 +100,8 @@
                     <% else %>
                       <%= value.to_s.delete('"') %>
                     <% end %>
+                  <% elsif value.nil? %>
+                    <span class="text-gray-400 italic">nil</span>
                   <% elsif value.is_a?(Hash) || value.is_a?(Array) %>
                     <pre class="bg-gray-50 rounded-lg p-3 overflow-x-auto text-xs"><%= JSON.pretty_generate(value).delete('"') %></pre>
                   <% else %>
