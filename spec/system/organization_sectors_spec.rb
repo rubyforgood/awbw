@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Navbar avatar behavior", type: :system do
+RSpec.describe "Organization sector displays", type: :system do
   let!(:organization) do
     direct_sector_1 = create(:sector, name: "Direct Sector 1")
     direct_sector_2 = create(:sector, name: "Direct Sector 2")
