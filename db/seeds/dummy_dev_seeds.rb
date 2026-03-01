@@ -663,7 +663,8 @@ test_people.each do |data|
       first_name: data[:first_name],
       last_name: data[:last_name],
       password: "password",
-      password_confirmation: "password"
+      password_confirmation: "password",
+      confirmed_at: Time.current
     )
 
     unless user.person.present?
