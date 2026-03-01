@@ -48,7 +48,7 @@
       %>
 
       <% @form_fields.each do |field| %>
-        <% next if field.field_key == "primary_email_confirmation" %>
+        <% next if field.field_key == "confirm_email" %>
         <% next if field.field_key.present? && rendered_keys[field.field_key] %>
 
         <% if field.group_header? %>
