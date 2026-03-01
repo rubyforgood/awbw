@@ -97,10 +97,13 @@ class EventsController < ApplicationController
     success = false
 
     Event.transaction do
+      assign_event_forms(@event)
+      @event.event_forms.reset
       if @event.update(event_params)
         assign_associations(@event)
-        assign_event_forms(@event)
         success = true
+      else
+        raise ActiveRecord::Rollback
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
       Rails.logger.error "Event update failed: #{e.class} - #{e.message}"

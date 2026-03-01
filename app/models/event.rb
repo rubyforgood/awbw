@@ -33,6 +33,7 @@ class Event < ApplicationRecord
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :published, in: [ true, false ]
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
+  validate :registration_form_required_when_publicly_registerable, on: :update
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -132,6 +133,13 @@ class Event < ApplicationRecord
   end
 
   private
+
+  def registration_form_required_when_publicly_registerable
+    return unless public_registration_enabled?
+    return if event_forms.registration.exists?
+
+    errors.add(:public_registration_enabled, "requires a registration form to be selected")
+  end
 
   def public_registration_just_enabled?
     public_registration_enabled? && saved_change_to_public_registration_enabled?
