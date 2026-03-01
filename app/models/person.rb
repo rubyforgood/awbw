@@ -185,7 +185,7 @@ class Person < ApplicationRecord
     user&.email.presence || email.presence || email_2.presence
   end
 
-  remote_searchable_by :first_name, :last_name
+  remote_searchable_by :first_name, :last_name, :email, :email_2
 
   def remote_search_label
     {
