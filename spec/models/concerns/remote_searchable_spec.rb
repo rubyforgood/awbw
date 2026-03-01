@@ -54,6 +54,14 @@ RSpec.describe RemoteSearchable, type: :model do
         expect(results).not_to include(bob, carol)
       end
 
+      it "matches names containing spaces" do
+        mary_ann = create(:person, first_name: "Mary Ann", last_name: "De La Cruz", email: "ma@example.com", created_by: admin, updated_by: admin)
+
+        expect(Person.remote_search("Mary Ann")).to include(mary_ann)
+        expect(Person.remote_search("Ann Cruz")).to include(mary_ann)
+        expect(Person.remote_search("De La")).to include(mary_ann)
+      end
+
       it "requires all terms to match" do
         results = Person.remote_search("Alice Jones")
         expect(results).not_to include(alice, carol)
