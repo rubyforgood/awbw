@@ -101,6 +101,7 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create ]
   end
+  resources :payments
   resources :events do
     member do
       get :manage

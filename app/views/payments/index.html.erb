@@ -1,0 +1,92 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:payments) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">
+        Payments (<%= @payments_count %>)
+      </h1>
+      <div class="flex gap-2">
+        <% if allowed_to?(:new?, Payment) %>
+          <%= link_to "New payment", new_payment_path,
+              class: "admin-only bg-green-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Filter form -->
+    <%= render "search_boxes" %>
+
+    <div class="rounded-xl bg-white p-6">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse border border-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payer</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Event</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Amount</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Date</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 whitespace-nowrap w-px">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-200">
+            <% @payments.each do |payment| %>
+              <tr id="<%= dom_id(payment) %>" class="hover:bg-gray-50 transition-colors duration-150">
+                <td class="px-4 py-2 text-sm text-gray-800 align-top">
+                  <% if payment.payer %>
+                    <%= person_profile_button(payment.payer, subtitle: payment.organization&.name) %>
+                  <% else %>
+                    <span class="text-gray-400">--</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-2 text-sm text-gray-800 align-top">
+                  <% if payment.event_registrations.any? %>
+                    <div class="space-y-1">
+                      <% payment.event_registrations.each do |er| %>
+                        <div>
+                          <%= link_to er.event.title, event_path(er.event),
+                              class: "text-blue-700 hover:text-blue-900 underline" %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="text-gray-400">--</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-2 text-sm text-gray-800 align-top font-medium" style="padding-top: 1.25rem;">
+                  <%= payment.decorate.formatted_amount %>
+                </td>
+                <td class="px-4 py-2 text-sm align-top" style="padding-top: 1.25rem;">
+                  <%= payment.decorate.status_badge %>
+                </td>
+                <td class="px-4 py-2 text-sm text-gray-800 align-top" style="padding-top: 1.25rem;">
+                  <%= payment.created_at.strftime("%B %d, %Y") %>
+                </td>
+                <td class="px-4 py-2 text-center align-top" style="padding-top: 1.25rem;">
+                  <div class="flex items-center justify-center gap-2">
+                    <%= link_to "View", payment_path(payment), class: "btn btn-secondary-outline" %>
+                    <%= link_to "Edit", edit_payment_path(payment), class: "btn btn-secondary-outline" %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty state -->
+      <% unless @payments.any? %>
+        <p class="text-gray-500 text-center py-6">No payments found.</p>
+      <% end %>
+
+      <!-- Pagination -->
+      <div class="mt-6 flex justify-center">
+        <div class="pagination">
+          <%= tailwind_paginate @payments %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

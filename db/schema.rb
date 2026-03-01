@@ -421,6 +421,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.bigint "payment_id"
     t.bigint "registrant_id", null: false
     t.boolean "scholarship_recipient", default: false, null: false
     t.boolean "scholarship_requested", default: false, null: false
@@ -429,6 +430,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
+    t.index ["payment_id"], name: "index_event_registrations_on_payment_id"
     t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
     t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
@@ -680,10 +682,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
     t.bigint "event_id"
     t.string "failure_code"
     t.string "failure_message"
-    t.bigint "payable_id", null: false
-    t.string "payable_type", null: false
+    t.integer "organization_id"
     t.bigint "payer_id", null: false
-    t.string "payer_type", null: false
     t.string "payment_type", default: "stripe", null: false
     t.string "status", null: false
     t.string "stripe_charge_id"
@@ -691,9 +691,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
     t.string "stripe_payment_intent_id"
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_payments_on_event_id"
-    t.index ["payable_type", "payable_id", "status"], name: "index_payments_on_payable_type_and_payable_id_and_status"
-    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable"
-    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer"
+    t.index ["organization_id"], name: "index_payments_on_organization_id"
+    t.index ["payer_id"], name: "index_payments_on_payer_id"
     t.index ["stripe_charge_id"], name: "index_payments_on_stripe_charge_id", unique: true
     t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id", unique: true
   end
@@ -1358,6 +1357,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
   add_foreign_key "event_registration_organizations", "event_registrations"
   add_foreign_key "event_registration_organizations", "organizations"
   add_foreign_key "event_registrations", "events"
+  add_foreign_key "event_registrations", "payments"
   add_foreign_key "event_registrations", "people", column: "registrant_id"
   add_foreign_key "events", "locations"
   add_foreign_key "events", "users", column: "created_by_id"
@@ -1374,6 +1374,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"
   add_foreign_key "payments", "events"
+  add_foreign_key "payments", "organizations"
+  add_foreign_key "payments", "people", column: "payer_id"
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "person_form_form_fields", "form_fields"

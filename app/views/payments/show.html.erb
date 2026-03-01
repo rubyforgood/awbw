@@ -1,0 +1,97 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="flex flex-wrap justify-end gap-2 mb-4">
+  <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  <%= link_to "Payments", payments_path, class: "admin-only bg-green-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+</div>
+
+<div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Payment Details</h1>
+    <div class="flex items-center gap-2">
+      <% if allowed_to?(:edit?, @payment) %>
+        <%= link_to "Edit", edit_payment_path(@payment), class: "btn btn-primary-outline" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="mb-3">
+      <p class="font-bold text-gray-700">Amount:</p>
+      <p class="text-gray-900"><%= @payment.decorate.formatted_amount %></p>
+    </div>
+    <div class="mb-3">
+      <p class="font-bold text-gray-700">Status:</p>
+      <p class="text-gray-900"><%= @payment.decorate.status_badge %></p>
+    </div>
+    <div class="mb-3">
+      <p class="font-bold text-gray-700">Currency:</p>
+      <p class="text-gray-900"><%= @payment.currency.upcase %></p>
+    </div>
+    <% if @payment.stripe_payment_intent_id.present? %>
+      <div class="mb-3">
+        <p class="font-bold text-gray-700">Stripe Payment Intent:</p>
+        <p class="text-gray-900 text-xs font-mono"><%= @payment.stripe_payment_intent_id %></p>
+      </div>
+    <% end %>
+
+    <% if @payment.stripe_charge_id.present? %>
+      <div class="mb-3">
+        <p class="font-bold text-gray-700">Stripe Charge ID:</p>
+        <p class="text-gray-900 text-xs font-mono"><%= @payment.stripe_charge_id %></p>
+      </div>
+    <% end %>
+
+    <% if @payment.payer %>
+      <div class="mb-3">
+        <p class="font-bold text-gray-700">Payer:</p>
+        <p class="text-gray-900">
+          <%= link_to @payment.payer.full_name,
+                      person_path(@payment.payer),
+                      class: "text-blue-700 hover:text-blue-900 underline" %>
+        </p>
+      </div>
+    <% end %>
+
+    <% if @payment.organization %>
+      <div class="mb-3">
+        <p class="font-bold text-gray-700">Organization:</p>
+        <p class="text-gray-900">
+          <%= link_to @payment.organization.name,
+                      organization_path(@payment.organization),
+                      class: "text-blue-700 hover:text-blue-900 underline" %>
+        </p>
+      </div>
+    <% end %>
+
+    <% if @payment.event_registrations.any? %>
+      <div class="mb-3 md:col-span-2">
+        <p class="font-bold text-gray-700">Event Registrations:</p>
+        <ul class="mt-1 space-y-1">
+          <% @payment.event_registrations.includes(:registrant, :event).each do |er| %>
+            <li class="text-gray-900">
+              <%= link_to er.registrant&.full_name, person_path(er.registrant), class: "text-blue-700 hover:text-blue-900 underline" %>
+              &mdash;
+              <%= link_to er.event&.title, event_path(er.event), class: "text-blue-700 hover:text-blue-900 underline" %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <% if @payment.failure_code.present? %>
+      <div class="mb-3 md:col-span-2">
+        <p class="font-bold text-red-700">Failure:</p>
+        <p class="text-red-900"><%= @payment.failure_code %>: <%= @payment.failure_message %></p>
+      </div>
+    <% end %>
+
+    <div class="mb-3">
+      <p class="font-bold text-gray-700">Created:</p>
+      <p class="text-gray-900"><%= @payment.created_at.strftime("%B %d, %Y %l:%M %p") %></p>
+    </div>
+    <div class="mb-3">
+      <p class="font-bold text-gray-700">Updated:</p>
+      <p class="text-gray-900"><%= @payment.updated_at.strftime("%B %d, %Y %l:%M %p") %></p>
+    </div>
+  </div>
+</div>

@@ -219,6 +219,51 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /manage" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders manage page" do
+        get manage_event_path(event)
+        expect(response).to have_http_status(:ok)
+      end
+
+      context "with a paid event" do
+        let(:paid_event) { create(:event, cost_cents: 5000) }
+        let(:registrant) { create(:person) }
+        let!(:payment) { create(:payment, payer: registrant, status: "succeeded") }
+        let!(:registration) do
+          create(:event_registration, event: paid_event, registrant: registrant, payment: payment)
+        end
+
+        it "shows payment status linking to filtered payments" do
+          get manage_event_path(paid_event)
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("Payment status")
+          expect(response.body).to include(payments_path(payer_id: registrant.id))
+          expect(response.body).to include("Succeeded")
+        end
+
+        it "shows 'No payment' for registrations without payment" do
+          unpaid_registration = create(:event_registration, event: paid_event)
+          get manage_event_path(paid_event)
+          expect(response.body).to include("No payment")
+        end
+      end
+
+      context "with a free event" do
+        let(:free_event) { create(:event, cost_cents: 0) }
+        let!(:registration) { create(:event_registration, event: free_event) }
+
+        it "does not show payment status column" do
+          get manage_event_path(free_event)
+          expect(response).to have_http_status(:ok)
+          expect(response.body).not_to include("Payment status")
+        end
+      end
+    end
+  end
+
   describe "DELETE /destroy" do
     context "as admin" do
       before { sign_in admin }

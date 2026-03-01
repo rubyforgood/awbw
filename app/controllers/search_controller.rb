@@ -35,10 +35,12 @@ class SearchController < ApplicationController
 
   def allowed_model(model_param)
     {
-      "person"   => Person,
-      "user"     => User,
-      "workshop" => Workshop,
-      "organization" => Organization
+      "person"             => Person,
+      "user"               => User,
+      "workshop"           => Workshop,
+      "organization"       => Organization,
+      "event"              => Event,
+      "event_registration" => EventRegistration
     }[model_param]
   end
 

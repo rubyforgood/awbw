@@ -1449,3 +1449,282 @@ if amy && priya
            priya.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
   puts "  #{shared.size} bookmarks shared between both users"
 end
+
+puts "Creating Wellness Day Event with custom registration form…"
+wellness_event = Event.find_or_create_by!(title: "A Year of Healing and Rebuilding Together Wellness Day") do |event|
+  event.start_date = 3.months.from_now
+  event.end_date = 3.months.from_now + 4.hours
+  event.registration_close_date = 3.months.from_now - 1.day
+  event.published = true
+  event.publicly_visible = true
+  event.publicly_featured = true
+  event.featured = true
+  event.public_registration_enabled = false
+  event.cost = 0
+  event.created_by = User.find_by(email: "umberto.user@example.com")
+end
+
+# Rebuild the registration form from scratch so it always matches the seed definition
+old_form = wellness_event.forms.find_by(name: EventRegistrationFormBuilder::FORM_NAME)
+if old_form
+  old_form.person_forms.destroy_all
+  old_form.destroy!
+end
+
+form = wellness_event.forms.create!(name: EventRegistrationFormBuilder::FORM_NAME)
+position = 0
+
+# --- Name ---
+position += 1
+form.form_fields.create!(
+  question: "First Name", answer_type: :free_form_input_one_line, status: :active,
+  position: position, is_required: true, field_key: "first_name", field_group: "contact"
+)
+
+position += 1
+form.form_fields.create!(
+  question: "Last Name", answer_type: :free_form_input_one_line, status: :active,
+  position: position, is_required: true, field_key: "last_name", field_group: "contact"
+)
+
+# --- Email ---
+position += 1
+form.form_fields.create!(
+  question: "Enter Email", answer_type: :free_form_input_one_line, status: :active,
+  position: position, is_required: true, field_key: "primary_email", field_group: "contact"
+)
+
+position += 1
+form.form_fields.create!(
+  question: "Confirm Email", answer_type: :free_form_input_one_line, status: :active,
+  position: position, is_required: true, field_key: "confirm_email", field_group: "contact"
+)
+
+# --- Consent ---
+position += 1
+consent_field = form.form_fields.create!(
+  question: "Consent", answer_type: :multiple_choice_checkbox, status: :active,
+  position: position, is_required: true, field_key: "consent", field_group: "consent",
+  instructional_hint: "By submitting this form, I consent to receive updates from A Window Between Worlds, " \
+    "including information about this event as well as upcoming events, training opportunities, resources, " \
+    "impact stories, and ways to support our mission. I understand I can unsubscribe at any time."
+)
+
+ao = AnswerOption.find_or_create_by!(name: "I agree to receive email communications from A Window Between Worlds.") do |a|
+  a.position = 0
+end
+consent_field.form_field_answer_options.create!(answer_option: ao)
+
+# --- How did you hear about this event? ---
+position += 1
+referral_field = form.form_fields.create!(
+  question: "How did you hear about this event?", answer_type: :multiple_choice_checkbox, status: :active,
+  position: position, is_required: true, field_key: "referral_source", field_group: "qualitative"
+)
+
+[ "AWBW Email", "Facebook", "Instagram", "LinkedIn", "Online Search", "Word of Mouth", "Other" ].each_with_index do |opt, idx|
+  ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+  referral_field.form_field_answer_options.create!(answer_option: ao)
+end
+
+# --- Training interest ---
+position += 1
+interest_field = form.form_fields.create!(
+  question: "Are you interested in learning more about upcoming trainings or resources?",
+  answer_type: :multiple_choice_checkbox, status: :active,
+  position: position, is_required: false, field_key: "training_interest", field_group: "qualitative"
+)
+
+[ "Yes", "Not right now" ].each_with_index do |opt, idx|
+  ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+  interest_field.form_field_answer_options.create!(answer_option: ao)
+end
+
+# Enable public registration after form is built (avoids triggering the default form builder)
+wellness_event.update!(public_registration_enabled: true) unless wellness_event.public_registration_enabled?
+
+puts "Creating Event Registrations and Payments…"
+events = Event.all.to_a
+people = Person.all.to_a
+
+if events.any? && people.size >= 3
+  # Register people for some events — leave some events with no registrations
+  events_with_registrations = events.first(7)
+
+  events_with_registrations.each do |event|
+    registrants = people.sample(rand(2..5))
+    registrants.each do |person|
+      EventRegistration.where(event: event, registrant: person).first_or_create!(
+        status: EventRegistration::ATTENDANCE_STATUSES.sample
+      )
+    end
+  end
+
+  # Create payments — most succeeded, a few other statuses
+  registrations = EventRegistration.includes(:registrant, :event).to_a
+
+  # Group registrations by payer, then create payments — some covering multiple registrations
+  registrations_by_payer = registrations.group_by(&:registrant)
+  registrations_by_payer.each do |payer, payer_regs|
+    unpaid = payer_regs.select { |er| er.payment.blank? }
+    next if unpaid.empty?
+
+    if unpaid.size >= 2 && rand < 0.5
+      # Bundle multiple registrations under one payment
+      batch = unpaid.first(rand(2..3))
+      total = batch.sum { |er| er.event.cost_cents.to_i.nonzero? || 5000 }
+      payment = Payment.create!(
+        payer: payer,
+        amount_cents: total,
+        currency: "usd",
+        status: "succeeded",
+        payment_type: "stripe",
+        stripe_payment_intent_id: "pi_seed_#{SecureRandom.hex(12)}"
+      )
+      batch.each { |er| er.update!(payment: payment) }
+      unpaid -= batch
+    end
+
+    # Remaining registrations get individual payments
+    unpaid.each do |er|
+      payment = Payment.create!(
+        payer: payer,
+        amount_cents: er.event.cost_cents.to_i.nonzero? || [ 2500, 5000, 7500, 10000, 15000 ].sample,
+        currency: "usd",
+        status: "succeeded",
+        payment_type: "stripe",
+        stripe_payment_intent_id: "pi_seed_#{SecureRandom.hex(12)}"
+      )
+      er.update!(payment: payment)
+    end
+  end
+
+  # A scholarship payment
+  Payment.create!(
+    payer: people.sample,
+    amount_cents: 5000,
+    currency: "usd",
+    status: "succeeded",
+    payment_type: "scholarship"
+  )
+
+  # A check payment
+  Payment.create!(
+    payer: people.sample,
+    amount_cents: 7500,
+    currency: "usd",
+    status: "succeeded",
+    payment_type: "check"
+  )
+
+  # A pending payment
+  if registrations.size >= 3
+    er = registrations.find { |r| r.payment.blank? } || registrations.last
+    pending_payment = Payment.create!(
+      payer: er.registrant,
+      amount_cents: 7500,
+      currency: "usd",
+      status: "pending",
+      payment_type: "stripe",
+      stripe_payment_intent_id: "pi_seed_#{SecureRandom.hex(12)}"
+    )
+    er.update!(payment: pending_payment) if er.payment.blank?
+  end
+
+  # A failed payment (standalone)
+  Payment.create!(
+    payer: people.sample,
+    amount_cents: 10000,
+    currency: "usd",
+    status: "failed",
+    payment_type: "stripe",
+    failure_code: "card_declined",
+    failure_message: "Your card was declined.",
+    stripe_payment_intent_id: "pi_seed_#{SecureRandom.hex(12)}"
+  )
+
+  # A refunded payment (standalone)
+  Payment.create!(
+    payer: people.sample,
+    amount_cents: 5000,
+    currency: "usd",
+    status: "refunded",
+    payment_type: "stripe",
+    stripe_payment_intent_id: "pi_seed_#{SecureRandom.hex(12)}"
+  )
+
+  puts "  #{EventRegistration.count} event registrations"
+  puts "  #{Payment.count} payments"
+  puts "  #{Event.where.not(id: EventRegistration.select(:event_id)).count} events with no registrations"
+
+  # Enable public registration on some events to create forms, then add form submissions
+  puts "Creating Event Registration Form Submissions…"
+  events_with_forms = events_with_registrations.first(4)
+  events_with_forms.each do |event|
+    event.update!(public_registration_enabled: true) unless event.public_registration_enabled?
+  end
+
+  form_submission_responses = {
+    "first_name"            => ->(p) { p.first_name },
+    "last_name"             => ->(p) { p.last_name },
+    "nickname"              => ->(p) { [ nil, p.first_name[0..2] ].sample },
+    "pronouns"              => ->(_) { %w[she/her he/him they/them].sample },
+    "primary_email"         => ->(p) { p.email || Faker::Internet.email },
+    "primary_email_type"    => ->(_) { %w[Personal Work].sample },
+    "secondary_email"       => ->(_) { [ nil, nil, Faker::Internet.email ].sample },
+    "secondary_email_type"  => ->(_) { [ nil, "Personal", "Work" ].sample },
+    "mailing_street"        => ->(_) { Faker::Address.street_address },
+    "mailing_city"          => ->(_) { Faker::Address.city },
+    "mailing_state"         => ->(_) { Faker::Address.state_abbr },
+    "mailing_zip"           => ->(_) { Faker::Address.zip_code },
+    "phone"                 => ->(_) { Faker::PhoneNumber.phone_number },
+    "phone_type"            => ->(_) { %w[Mobile Home Work].sample },
+    "agency_name"           => ->(_) { [ nil, Faker::Company.name ].sample },
+    "agency_position"       => ->(_) { [ nil, "Program Director", "Case Manager", "Counselor" ].sample },
+    "agency_street"         => ->(_) { [ nil, Faker::Address.street_address ].sample },
+    "agency_city"           => ->(_) { [ nil, Faker::Address.city ].sample },
+    "agency_state"          => ->(_) { [ nil, Faker::Address.state_abbr ].sample },
+    "agency_zip"            => ->(_) { [ nil, Faker::Address.zip_code ].sample },
+    "agency_type"           => ->(_) { [ nil, "Domestic Violence", "Homeless Shelter", "School", "Community Center" ].sample },
+    "agency_website"        => ->(_) { [ nil, Faker::Internet.url ].sample },
+    "racial_ethnic_identity" => ->(_) { [ nil, "Latino/a", "Black/African American", "White", "Asian", "Multiracial" ].sample },
+    "referral_source"       => ->(_) { [ "AWBW website", "Colleague recommendation", "Social media", "Conference" ].sample },
+    "training_motivation"   => ->(_) { [ "Want to bring art workshops to my shelter", "Looking for new facilitation techniques", "Passionate about creative healing" ].sample },
+    "number_of_attendees"   => ->(_) { rand(1..3).to_s },
+    "payment_method"        => ->(_) { [ "Credit Card", "Check", "Purchase Order" ].sample }
+  }
+
+  submission_count = 0
+  events_with_forms.each do |event|
+    form = event.forms.find_by(name: EventRegistrationFormBuilder::FORM_NAME)
+    next unless form
+
+    # Add form submissions for roughly half the event's registrations
+    event_regs = event.event_registrations.includes(:registrant).to_a
+    regs_with_submissions = event_regs.sample([ (event_regs.size / 2.0).ceil, 1 ].max)
+
+    regs_with_submissions.each do |er|
+      person = er.registrant
+      next unless person
+      next if PersonForm.exists?(person: person, form: form)
+
+      person_form = PersonForm.create!(person: person, form: form)
+
+      form.form_fields.where.not(answer_type: :group_header).find_each do |field|
+        response_fn = form_submission_responses[field.field_key]
+        text = response_fn ? response_fn.call(person) : Faker::Lorem.sentence
+        next if text.nil?
+
+        PersonFormFormField.create!(
+          person_form: person_form,
+          form_field: field,
+          text: text.to_s
+        )
+      end
+
+      submission_count += 1
+    end
+  end
+
+  puts "  #{submission_count} event registration form submissions"
+end

@@ -4,9 +4,10 @@ RSpec.describe Payment, type: :model do
   describe "associations" do
     subject { create(:payment) }
 
-    it { should belong_to(:payer).required }
-    it { should belong_to(:payable).required }
+    it { should belong_to(:payer).class_name("Person").required }
     it { should belong_to(:event).optional }
+    it { should belong_to(:organization).optional }
+    it { should have_many(:event_registrations).dependent(:nullify) }
   end
 
   describe "validations" do
@@ -36,7 +37,7 @@ RSpec.describe Payment, type: :model do
     describe "with create subject for uniqueness" do
       subject { create(:payment) }
 
-      it { should validate_uniqueness_of(:stripe_payment_intent_id).case_insensitive }
+      it { should validate_uniqueness_of(:stripe_payment_intent_id).case_insensitive.allow_nil }
       it { should validate_uniqueness_of(:stripe_charge_id).case_insensitive.allow_nil }
     end
 
@@ -73,20 +74,6 @@ RSpec.describe Payment, type: :model do
   end
 
   describe "scopes" do
-    let(:user) { create(:user) }
-    let(:event1) { create(:event) }
-    let(:event2) { create(:event) }
-
-    describe ".for_payable" do
-      let!(:payment1) { create(:payment, payable: event1) }
-      let!(:payment2) { create(:payment, payable: event2) }
-
-      it "returns payments for the specified payable" do
-        expect(Payment.for_payable(event1)).to include(payment1)
-        expect(Payment.for_payable(event1)).not_to include(payment2)
-      end
-    end
-
     describe ".successful" do
       let!(:succeeded_payment) { create(:payment, status: "succeeded") }
       let!(:pending_payment) { create(:payment, status: "pending") }

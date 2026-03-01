@@ -1,5 +1,5 @@
 class Event < ApplicationRecord
-  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
+  include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable
   include ActionText::Attachable
 
   has_rich_text :rhino_header
@@ -131,6 +131,8 @@ class Event < ApplicationRecord
   def to_partial_path
     "events/registration_button"
   end
+
+  remote_searchable_by :title
 
   private
 

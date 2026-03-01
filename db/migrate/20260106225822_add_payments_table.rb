@@ -25,5 +25,7 @@ class AddPaymentsTable < ActiveRecord::Migration[8.1]
     add_index :payments, [ :payer_type, :payer_id ]
     add_index :payments, [ :payable_type, :payable_id ]
     add_index :payments, [ :payable_type, :payable_id, :status ]
+
+    add_reference :event_registrations, :payment, null: true, foreign_key: true
   end
 end

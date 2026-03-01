@@ -25,6 +25,7 @@ module DomainTheme
     workshop_variation_ideas: :purple,
     story_ideas:              :rose,
     event_registrations:      :blue,
+    payments:                 :green,
 
     banners:                  :yellow,
     users:                    :fuchsia,

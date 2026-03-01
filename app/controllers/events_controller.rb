@@ -39,7 +39,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :manage?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:payments, :comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
+      .includes(:payment, :comments, :organizations, registrant: [ :user, :contact_methods, { affiliations: :organization }, { avatar_attachment: :blob } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.attendance_status(params[:attendance_status]) if params[:attendance_status].present?

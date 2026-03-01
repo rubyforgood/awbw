@@ -5,9 +5,7 @@ class EventRegistration < ApplicationRecord
   has_many :event_registration_organizations, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations
-  has_many :payments, as: :payable
-
-  before_destroy :create_refund_payments
+  belongs_to :payment, optional: true
 
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
@@ -56,6 +54,18 @@ class EventRegistration < ApplicationRecord
       .distinct
   }
 
+  def self.remote_search(query)
+    return none if query.blank?
+
+    pattern = "%#{query}%"
+    joins(:registrant, :event)
+      .where(
+        "LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :pattern
+         OR LOWER(events.title) LIKE :pattern",
+        pattern: pattern.downcase
+      )
+  end
+
   def self.search_by_params(params)
     registrations = is_a?(ActiveRecord::Relation) ? self : all
     if params[:registrant_id].present?
@@ -79,6 +89,10 @@ class EventRegistration < ApplicationRecord
     status.in?(ACTIVE_STATUSES)
   end
 
+  def remote_search_label
+    { id: id, label: "#{registrant&.full_name} — #{event&.title}" }
+  end
+
   def checked_in?
     # checked_in_at.present?
   end
@@ -87,33 +101,17 @@ class EventRegistration < ApplicationRecord
     paid_in_full?
   end
 
-  # Sum of successful payment amounts, using preloaded collection when available
-  def successful_payments_total_cents
-    if payments.loaded?
-      payments.select(&:succeeded?).sum(&:amount_cents)
-    else
-      payments.successful.sum(:amount_cents)
-    end
-  end
-
-  # True if event is free, scholarship recipient, or total successful payments >= event.cost_cents
+  # True if event is free, scholarship recipient, or associated payment succeeded and covers cost
   def paid_in_full?
     return true if event.cost_cents.to_i <= 0
     return true if scholarship_recipient?
-    successful_payments_total_cents >= event.cost_cents.to_i
-  end
+    return false unless payment&.status == "succeeded"
 
-  def scholarship?
-    payments.scholarships.exists?
-  end
-
-  def scholarship_tasks_met?
-    return true unless scholarship?
-    scholarship_tasks_completed?
+    payment.amount_cents >= event.cost_cents.to_i
   end
 
   def joinable?
-    active? && paid? && scholarship_tasks_met?
+    active? && paid?
   end
 
   def attendance_status_label
@@ -136,19 +134,6 @@ class EventRegistration < ApplicationRecord
     end
   end
 
-  def create_refund_payments
-    paid_cents = payments.successful.sum(:amount_cents)
-    return if paid_cents <= 0
-
-    payments.create!(
-      amount_cents: -paid_cents,
-      payer: registrant,
-      event: event,
-      payment_type: "refund",
-      status: "refunded",
-      currency: "usd"
-    )
-  end
 
   def generate_slug
     loop do

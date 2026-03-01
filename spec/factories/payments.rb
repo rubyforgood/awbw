@@ -1,8 +1,6 @@
 FactoryBot.define do
   factory :payment do
-    # Polymorphic associations
-    association :payer, factory: :user
-    association :payable, factory: :event
+    association :payer, factory: :person
 
     # Required attributes
     amount_cents { 1000 } # $10.00
@@ -48,6 +46,10 @@ FactoryBot.define do
 
     trait :with_charge_id do
       stripe_charge_id { "ch_#{SecureRandom.hex(24)}" }
+    end
+
+    trait :with_organization do
+      association :organization
     end
 
     trait :scholarship do

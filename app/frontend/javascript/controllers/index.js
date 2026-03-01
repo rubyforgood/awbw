@@ -51,6 +51,9 @@ application.register("org-toggle", OrgToggleController)
 import PaginatedFieldsController from "./paginated_fields_controller"
 application.register("paginated-fields", PaginatedFieldsController)
 
+import PaymentRegistrationsController from "./payment_registrations_controller"
+application.register("payment-registrations", PaymentRegistrationsController)
+
 import PasswordToggleController from "./password_toggle_controller"
 application.register("password-toggle", PasswordToggleController)
 
