@@ -14,19 +14,18 @@ module RemoteSearchable
       return none if query.blank?
       raise "remote_searchable_by not defined for #{name}" if remote_search_columns.empty?
 
-      words = query.split.flat_map { |w| w.split(/[\s\-]+/) }.reject(&:blank?)
-      return none if words.blank?
+      terms = query.split
+      scope = all
 
-      conditions = words.each_with_index.map do |word, i|
-        bind_var = "pattern_#{i}".to_sym
-        column_conditions = remote_search_columns.map { |column| "#{table_name}.#{column} LIKE :#{bind_var}" }
-        "(#{column_conditions.join(' OR ')})"
+      terms.each_with_index do |term, i|
+        pattern_key = :"pattern_#{i}"
+        conditions = remote_search_columns
+          .map { |column| "#{table_name}.#{column} LIKE :#{pattern_key}" }
+          .join(" OR ")
+        scope = scope.where(conditions, pattern_key => "%#{term}%")
       end
-      bindings = words.each_with_index.each_with_object({}) do |(word, i), hash|
-        hash["pattern_#{i}".to_sym] = "%#{word}%"
-      end
-      where(conditions.join(" AND "), bindings)
-        .order(remote_search_columns.index_with { :asc })
+
+      scope
     end
   end
 
