@@ -46,5 +46,4 @@ RSpec.describe EventMailer, type: :mailer do
       end
     end
   end
-
 end
