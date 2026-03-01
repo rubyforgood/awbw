@@ -15,7 +15,7 @@ module OrganizationHelper
     hover_title = [ organization.name, subtitle ].compact_blank.join(" — ")
 
     link_to organization_path(organization),
-            data: data,
+            data: { turbo_prefetch: false }.merge(data),
             title: hover_title,
             class: "group relative flex items-center gap-2
                     w-full px-4 py-2
