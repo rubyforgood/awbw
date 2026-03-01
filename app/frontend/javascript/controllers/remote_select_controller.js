@@ -4,8 +4,12 @@ import TomSelect from "tom-select";
 export default class extends Controller {
   static values = { model: String, exclude: String };
 
+  get personModel() {
+    return this.modelValue === "person" || this.modelValue === "user";
+  }
+
   connect() {
-    this.select = new TomSelect(this.element, {
+    const options = {
       valueField: "id",
       labelField: "label",
       searchField: "label",
@@ -28,7 +32,20 @@ export default class extends Controller {
           })
           .catch(() => callback());
       },
-    });
+    };
+
+    if (this.personModel) {
+      const renderFn = (data, escape) => {
+        const match = data.label.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+        if (match) {
+          return `<div><span style="font-weight:600;color:#111827">${escape(match[1].trim())}</span> <span style="color:#9ca3af">(${escape(match[2])})</span></div>`;
+        }
+        return `<div><span style="font-weight:600;color:#111827">${escape(data.label)}</span></div>`;
+      };
+      options.render = { option: renderFn, item: renderFn };
+    }
+
+    this.select = new TomSelect(this.element, options);
     // Inject CSS to remove some default tom-select styles -might be a better way to do this.
     const style = document.createElement("style");
     style.textContent = `
