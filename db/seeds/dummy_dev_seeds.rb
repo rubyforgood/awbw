@@ -566,7 +566,7 @@ puts "Creating Persons and Affiliations for seed users…"
   )
 end
 
-puts "Creating 50 test people for remote search testing…"
+puts "Creating People…"
 admin_user = User.find_by(email: "umberto.user@example.com")
 orgs = Organization.all.to_a
 
