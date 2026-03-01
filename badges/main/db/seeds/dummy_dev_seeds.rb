@@ -943,7 +943,237 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
   end
 end
 
+puts "Creating Event Registrations…"
 
+# Key people for named scenarios
+amy_person = User.find_by(email: "amy.user@example.com")&.person
+maria_j = Person.find_by(first_name: "Maria", last_name: "Johnson")
+anna_g = Person.find_by(first_name: "Anna", last_name: "Garcia")
+sarah_s = Person.find_by(first_name: "Sarah", last_name: "Smith")
+lisa_w = Person.find_by(first_name: "Lisa", last_name: "Williams")
+jessica_b = Person.find_by(first_name: "Jessica", last_name: "Brown")
+kim_d = Person.find_by(first_name: "Kim", last_name: "Davis")
+rosa_dlc = Person.find_by(first_name: "Rosa", last_name: "De La Cruz")
+mario_j = Person.find_by(first_name: "Mario", last_name: "Johnson") # no user
+angel_g = Person.find_by(first_name: "Angel", last_name: "Garcia") # no user
+linda_w = Person.find_by(first_name: "Linda", last_name: "Williams") # no user
+
+# Events by name for clarity
+facilitator_training = Event.find_by(title: "AWBW Facilitator Training")
+trauma_training = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practices")
+wellness_day = Event.find_by(title: "A Year of Healing and Rebuilding Together Wellness Day")
+youth_day = Event.find_by(title: "Youth Creativity Day")
+mindful_art = Event.find_by(title: "Mindful Art for Survivors Workshop")
+virtual_session = Event.find_by(title: "Art as Healing: Virtual Group Session")
+roundtable = Event.find_by(title: "Leaders in Creativity: Facilitator Roundtable")
+family_day = Event.find_by(title: "Family Creative Expression Day")
+# "Community Open Studio Night" and "Annual Celebration of Voices" have no registration forms — left with zero registrations
+
+registrations_data = []
+
+# --- Facilitator Training: multiple registrations from different people, extended form ---
+# Amy: registered, with form submission, scholarship recipient
+# Maria Johnson: registered, with form submission (has user)
+# Anna Garcia: attended, with form submission (has user)
+# Mario Johnson: registered, no form submission (no user)
+# Kim Davis: cancelled (has user)
+if facilitator_training
+  [
+    { person: amy_person, status: "registered", scholarship_recipient: true, scholarship_tasks_completed: false },
+    { person: maria_j, status: "registered" },
+    { person: anna_g, status: "attended" },
+    { person: mario_j, status: "registered" },
+    { person: kim_d, status: "cancelled" }
+  ].each do |data|
+    next unless data[:person]
+    registrations_data << data.merge(event: facilitator_training)
+  end
+end
+
+# --- Trauma Training: extended form, scholarship ---
+# Sarah Smith: registered with form (has user)
+# Jessica Brown: registered with form, scholarship (has user)
+# Angel Garcia: registered, no form (no user)
+# Linda Williams: no_show (no user)
+if trauma_training
+  [
+    { person: sarah_s, status: "registered" },
+    { person: jessica_b, status: "registered", scholarship_recipient: true, scholarship_tasks_completed: true },
+    { person: angel_g, status: "registered" },
+    { person: linda_w, status: "no_show" }
+  ].each do |data|
+    next unless data[:person]
+    registrations_data << data.merge(event: trauma_training)
+  end
+end
+
+# --- Amy registered to multiple events (person registered across events) ---
+if amy_person
+  [ wellness_day, mindful_art, virtual_session ].compact.each do |evt|
+    registrations_data << { person: amy_person, event: evt, status: "registered" }
+  end
+end
+
+# --- Maria Johnson also registered to multiple events ---
+if maria_j
+  [ wellness_day, youth_day ].compact.each do |evt|
+    registrations_data << { person: maria_j, event: evt, status: "registered" }
+  end
+end
+
+# --- Rosa De La Cruz registered to a couple events (has user) ---
+if rosa_dlc
+  [ wellness_day, family_day ].compact.each do |evt|
+    registrations_data << { person: rosa_dlc, event: evt, status: "registered" }
+  end
+end
+
+# --- Lisa Williams: incomplete_attendance on one event ---
+if lisa_w && roundtable
+  registrations_data << { person: lisa_w, event: roundtable, status: "incomplete_attendance" }
+end
+
+# --- Wellness Day gets extra registrations (popular free event, short form) ---
+if wellness_day
+  [ sarah_s, jessica_b, lisa_w, kim_d ].compact.each do |person|
+    registrations_data << { person: person, event: wellness_day, status: "registered" }
+  end
+end
+
+# Create all registrations
+registrations_data.each do |data|
+  next unless data[:event] && data[:person]
+  next if EventRegistration.exists?(event: data[:event], registrant: data[:person])
+
+  EventRegistration.create!(
+    event: data[:event],
+    registrant: data[:person],
+    status: data[:status] || "registered",
+    scholarship_recipient: data[:scholarship_recipient] || false,
+    scholarship_tasks_completed: data[:scholarship_tasks_completed] || false,
+    scholarship_requested: data[:scholarship_recipient] || false
+  )
+end
+
+puts "Creating Registration Form Submissions…"
+# Create person_form records linking registrants to their event's registration form.
+# This simulates people who filled out the registration form.
+form_submissions = []
+
+# Facilitator Training (extended form) — some registrants filled it out, one didn't
+if facilitator_training
+  reg_form = facilitator_training.registration_form
+  if reg_form
+    # People with users who filled out the form
+    [ amy_person, maria_j, anna_g ].compact.each do |person|
+      form_submissions << { person: person, form: reg_form }
+    end
+    # Mario Johnson (no user) did NOT fill out the form — registration without form submission
+  end
+
+  # Amy also filled out the scholarship form
+  scholarship_f = facilitator_training.scholarship_form
+  if scholarship_f && amy_person
+    form_submissions << { person: amy_person, form: scholarship_f }
+  end
+end
+
+# Trauma Training (extended form)
+if trauma_training
+  reg_form = trauma_training.registration_form
+  if reg_form
+    # Sarah Smith (has user) and Jessica Brown (has user) filled out forms
+    [ sarah_s, jessica_b ].compact.each do |person|
+      form_submissions << { person: person, form: reg_form }
+    end
+    # Angel Garcia (no user) filled out the form — person without user + form
+    form_submissions << { person: angel_g, form: reg_form } if angel_g
+    # Linda Williams (no user) did NOT fill out the form
+  end
+
+  # Jessica filled out the scholarship form
+  scholarship_f = trauma_training.scholarship_form
+  if scholarship_f && jessica_b
+    form_submissions << { person: jessica_b, form: scholarship_f }
+  end
+end
+
+# Wellness Day (short form) — most filled it out
+if wellness_day
+  reg_form = wellness_day.registration_form
+  if reg_form
+    # People with users
+    [ amy_person, maria_j, sarah_s, jessica_b, kim_d ].compact.each do |person|
+      form_submissions << { person: person, form: reg_form }
+    end
+    # Rosa (has user) filled it out too
+    form_submissions << { person: rosa_dlc, form: reg_form } if rosa_dlc
+    # Lisa Williams (has user) registered but didn't fill out the form — person with user + no form
+  end
+end
+
+# Mindful Art (short form, has scholarship) — Amy filled out both
+if mindful_art
+  reg_form = mindful_art.registration_form
+  form_submissions << { person: amy_person, form: reg_form } if reg_form && amy_person
+
+  scholarship_f = mindful_art.scholarship_form
+  form_submissions << { person: amy_person, form: scholarship_f } if scholarship_f && amy_person
+end
+
+# Youth Day (short form) — Maria filled it out
+if youth_day
+  reg_form = youth_day.registration_form
+  form_submissions << { person: maria_j, form: reg_form } if reg_form && maria_j
+end
+
+# Virtual Session (short form) — Amy (has user) registered but no form submission — person with user + no form
+# Family Day (short form) — Rosa filled it out
+if family_day
+  reg_form = family_day.registration_form
+  form_submissions << { person: rosa_dlc, form: reg_form } if reg_form && rosa_dlc
+end
+
+# Create all form submissions with sample field responses
+form_submissions.each do |data|
+  next unless data[:person] && data[:form]
+  next if PersonForm.exists?(person: data[:person], form: data[:form])
+
+  pf = PersonForm.create!(person: data[:person], form: data[:form])
+
+  # Fill in required text fields with sample data
+  data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
+    sample_text = case field.field_key
+    when "first_name" then data[:person].first_name
+    when "last_name" then data[:person].last_name
+    when "primary_email", "enter_email", "confirm_email" then data[:person].preferred_email || "sample@example.com"
+    when "phone" then "(555) #{rand(100..999)}-#{rand(1000..9999)}"
+    when "street_address", "agency_street_address" then Faker::Address.street_address
+    when "city", "agency_city" then Faker::Address.city
+    when "state_province", "agency_state_province" then Faker::Address.state_abbr
+    when "zip_postal_code", "agency_zip_postal_code" then Faker::Address.zip_code
+    when "agency_organization_name" then Faker::Company.name
+    when "position_title" then "Facilitator"
+    when "agency_website" then "https://example.org"
+    when "racial_ethnic_identity" then "Prefer not to say"
+    when "secondary_email" then data[:person].email_2
+    when "preferred_nickname" then data[:person].first_name
+    when "pronouns" then [ "she/her", "he/him", "they/them" ].sample
+    else
+      if field.answer_type == "free_form_input_paragraph"
+        Faker::Lorem.paragraph(sentence_count: 3)
+      else
+        Faker::Lorem.word.capitalize
+      end
+    end
+
+    PersonFormFormField.create!(
+      person_form: pf,
+      form_field: field,
+      text: sample_text.to_s
+    )
+  end
+end
 
 puts "Creating Resources…"
 10.times do |i|
