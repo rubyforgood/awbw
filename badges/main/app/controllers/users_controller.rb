@@ -5,12 +5,19 @@ class UsersController < ApplicationController
 
   def index
     authorize!
-    per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(User.includes(:created_by, :updated_by,
-                                                person: { avatar_attachment: :blob }))
-    filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
-    @users_count = filtered.count
-    @users = filtered.paginate(page: params[:page], per_page: per_page)
+
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      base_scope = authorized_scope(User.includes(:created_by, :updated_by,
+                                                  person: { avatar_attachment: :blob }))
+      filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
+      @users_count = filtered.count
+      @users = filtered.paginate(page: params[:page], per_page: per_page)
+
+      render :users_results
+    else
+      render :index
+    end
   end
 
   def show
@@ -33,6 +40,19 @@ class UsersController < ApplicationController
       .includes(:user)
       .order(time: :desc)
       .paginate(page: params[:page], per_page: 10)
+
+    # Fall back to ahoy events for created_by/updated_by if not set on the model
+    unless @user.created_by
+      create_event = Ahoy::Event.where(name: "create.user", resource_type: "User", resource_id: @user.id)
+                                .order(time: :asc).first
+      @created_by_fallback = create_event&.user
+    end
+
+    unless @user.updated_by
+      update_event = Ahoy::Event.where(name: "update.user", resource_type: "User", resource_id: @user.id)
+                                .order(time: :desc).first
+      @updated_by_fallback = update_event&.user
+    end
   end
 
   def new
