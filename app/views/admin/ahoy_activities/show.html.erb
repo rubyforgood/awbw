@@ -96,14 +96,14 @@
                       end
                     %>
                     <% if title_resource_path %>
-                      <%= link_to value, title_resource_path, class: "text-indigo-600 hover:underline" %>
+                      <%= link_to value.to_s.delete('"'), title_resource_path, class: "text-indigo-600 hover:underline" %>
                     <% else %>
-                      <%= value %>
+                      <%= value.to_s.delete('"') %>
                     <% end %>
                   <% elsif value.is_a?(Hash) || value.is_a?(Array) %>
-                    <pre class="bg-gray-50 rounded-lg p-3 overflow-x-auto text-xs"><%= JSON.pretty_generate(value) %></pre>
+                    <pre class="bg-gray-50 rounded-lg p-3 overflow-x-auto text-xs"><%= JSON.pretty_generate(value).delete('"') %></pre>
                   <% else %>
-                    <%= value %>
+                    <%= value.to_s.delete('"') %>
                   <% end %>
                 </dd>
               </div>
