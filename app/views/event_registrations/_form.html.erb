@@ -85,6 +85,9 @@
         </div>
 
         <div class="flex-1 mb-4 md:mb-0">
+          <% if f.object.scholarship_requested? %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mb-2">Scholarship requested</span>
+          <% end %>
           <%= f.input :scholarship_recipient, as: :boolean %>
           <%= f.input :scholarship_tasks_completed, as: :boolean, label: "Scholarship tasks completed" %>
         </div>

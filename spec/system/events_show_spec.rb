@@ -42,7 +42,10 @@ RSpec.describe "Event show page", type: :system do
     end
 
     context "when event has a public registration form" do
-      before { event.update!(public_registration_enabled: true) }
+      before do
+        create(:form, name: ShortEventRegistrationFormBuilder::FORM_NAME)
+        event.update!(public_registration_enabled: true)
+      end
 
       it "shows register link to public registration" do
         visit event_path(event)
@@ -63,7 +66,7 @@ RSpec.describe "Event show page", type: :system do
     context "when event has public_registration_enabled but no form" do
       before do
         event.update!(public_registration_enabled: true)
-        event.forms.destroy_all
+        event.event_forms.destroy_all
       end
 
       it "does not show a register button" do

@@ -54,6 +54,10 @@
 
       <%= form_with url: event_public_registration_path(@event), method: :post, local: true, class: "space-y-2" do |f| %>
 
+        <% if @scholarship %>
+          <input type="hidden" name="scholarship" value="1">
+        <% end %>
+
         <%# Honeypot %>
         <div class="hidden" aria-hidden="true">
           <input type="text" name="public_registration[website_url]" tabindex="-1" autocomplete="off">

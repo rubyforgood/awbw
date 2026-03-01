@@ -1,12 +1,21 @@
-class EventRegistrationFormBuilder
-  FORM_NAME = "Public Registration"
+class ExtendedEventRegistrationFormBuilder
+  FORM_NAME = "Extended Event Registration"
+
+  def self.build_standalone!(include_contact_fields: true)
+    form = Form.create!(name: FORM_NAME)
+    new(nil, include_contact_fields:).build_fields!(form)
+    form
+  end
 
   def self.build!(event, include_contact_fields: true)
-    new(event, include_contact_fields:).build!
+    form = Form.create!(name: FORM_NAME)
+    new(event, include_contact_fields:).build_fields!(form)
+    EventForm.create!(event: event, form: form, role: "registration") if event
+    form
   end
 
   def self.copy!(from_form:, to_event:)
-    new_form = to_event.forms.create!(
+    new_form = Form.create!(
       name: from_form.name,
       form_builder_id: from_form.form_builder_id
     )
@@ -29,16 +38,16 @@ class EventRegistrationFormBuilder
       end
     end
 
+    EventForm.create!(event: to_event, form: new_form, role: "registration")
     new_form
   end
 
-  def initialize(event, include_contact_fields: true)
+  def initialize(event = nil, include_contact_fields: true)
     @event = event
     @include_contact_fields = include_contact_fields
   end
 
-  def build!
-    form = @event.forms.create!(name: FORM_NAME)
+  def build_fields!(form)
     position = 0
 
     if @include_contact_fields
@@ -48,6 +57,7 @@ class EventRegistrationFormBuilder
     position = build_background_fields(form, position)
     position = build_professional_fields(form, position)
     position = build_qualitative_fields(form, position)
+    position = build_scholarship_fields(form, position)
     build_payment_fields(form, position)
 
     form
@@ -86,6 +96,9 @@ class EventRegistrationFormBuilder
                          key: "mailing_state", group: "contact", required: true)
     position = add_field(form, position, "Zip / Postal Code", :free_form_input_one_line,
                          key: "mailing_zip", group: "contact", required: true)
+    position = add_field(form, position, "Mailing Address Type", :multiple_choice_radio,
+                         key: "mailing_address_type", group: "contact", required: true,
+                         options: %w[Work Personal])
 
     position = add_field(form, position, "Phone", :free_form_input_one_line,
                          key: "phone", group: "contact", required: true)
@@ -135,9 +148,16 @@ class EventRegistrationFormBuilder
     position = add_field(form, position, "Primary Service Area(s)", :multiple_choice_checkbox,
                          key: "primary_service_area", group: "professional", required: false,
                          hint: "Select all that apply. These represent the sectors you primarily serve.")
-    position = add_field(form, position, "Workshop Environments", :multiple_choice_checkbox,
-                         key: "workshop_environments", group: "professional", required: false,
-                         hint: "Select all settings where you facilitate or plan to facilitate workshops.")
+    position = add_field(form, position, "Workshop Settings", :multiple_choice_checkbox,
+                         key: "workshop_settings", group: "professional", required: false,
+                         hint: "Select all settings where you facilitate or plan to facilitate workshops.",
+                         options: [
+                           "Clinical", "Educational", "Events / conferences",
+                           "Faith-based", "Home visits", "Hospitals",
+                           "Law enforcement / court / legal", "Outreach",
+                           "Prisons / jails", "Private practice", "Residential",
+                           "Virtually", "With staff", "Other"
+                         ])
     position = add_field(form, position, "Client Life Experiences", :multiple_choice_checkbox,
                          key: "client_life_experiences", group: "professional", required: false,
                          hint: "Select all that describe the populations you work with.")
@@ -158,6 +178,30 @@ class EventRegistrationFormBuilder
     position = add_field(form, position, "Are you interested in learning more about upcoming trainings or resources?", :multiple_choice_radio,
                          key: "interested_in_more", group: "qualitative", required: true,
                          options: %w[Yes No])
+
+    position
+  end
+
+  def build_scholarship_fields(form, position)
+    position = add_header(form, position, "Scholarship Application", group: "scholarship")
+
+    position = add_field(form, position,
+                         "I / my agency cannot afford the full training cost and need a scholarship to attend.",
+                         :multiple_choice_checkbox,
+                         key: "scholarship_eligibility", group: "scholarship", required: true,
+                         options: [ "Yes" ])
+    position = add_field(form, position,
+                         "How will what you gain from this training directly impact the people you serve?",
+                         :free_form_input_paragraph,
+                         key: "impact_description", group: "scholarship", required: true,
+                         hint: "Please describe in 3-5+ sentences.")
+    position = add_field(form, position,
+                         "Please describe one way in which you plan to use art workshops and how you envision it will help.",
+                         :free_form_input_paragraph,
+                         key: "implementation_plan", group: "scholarship", required: true,
+                         hint: "Please describe in 3-5+ sentences.")
+    position = add_field(form, position, "Anything else you'd like to share with us?", :free_form_input_paragraph,
+                         key: "additional_comments", group: "scholarship", required: false)
 
     position
   end

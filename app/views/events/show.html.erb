@@ -12,7 +12,7 @@
   <div class="ml-auto flex flex-wrap gap-2">
   <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
   <%= link_to "Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-  <% if allowed_to?(:manage?, @event) && @event.object.forms.exists?(name: "Public Registration") %>
+  <% if allowed_to?(:manage?, @event) && @event.object.event_forms.registration.exists? %>
     <%= link_to "Register (as visitor)", new_event_public_registration_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
   <% end %>
   <% if allowed_to?(:edit?, @event) %>

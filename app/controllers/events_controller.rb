@@ -69,6 +69,7 @@ class EventsController < ApplicationController
     Event.transaction do
       if @event.save
         assign_associations(@event)
+        assign_event_forms(@event)
         if params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@event)
         end
@@ -98,6 +99,7 @@ class EventsController < ApplicationController
     Event.transaction do
       if @event.update(event_params)
         assign_associations(@event)
+        assign_event_forms(@event)
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
@@ -131,11 +133,11 @@ class EventsController < ApplicationController
     authorize! @event, to: :manage?
 
     source_event = Event.find(params[:source_event_id])
-    source_form = source_event.forms.find_by(name: EventRegistrationFormBuilder::FORM_NAME)
+    source_form = source_event.registration_form
 
     if source_form
-      EventRegistrationFormBuilder.copy!(from_form: source_form, to_event: @event)
-      redirect_to edit_event_path(@event), notice: "Registration form copied successfully."
+      @event.event_forms.find_or_create_by!(form: source_form, role: "registration")
+      redirect_to edit_event_path(@event), notice: "Registration form linked successfully."
     else
       redirect_to edit_event_path(@event), alert: "Source event has no registration form."
     end
@@ -176,11 +178,38 @@ class EventsController < ApplicationController
     ]
   end
 
+  def assign_event_forms(event)
+    form_id = params.dig(:event, :registration_form_id)
+    return unless form_id
+
+    if form_id.blank?
+      event.event_forms.registration.destroy_all
+    else
+      form = Form.standalone.find_by(id: form_id)
+      return unless form
+
+      existing = event.event_forms.registration.first
+      if existing
+        existing.update!(form: form) unless existing.form_id == form.id.to_i
+      else
+        event.event_forms.create!(form: form, role: "registration")
+      end
+    end
+
+    scholarship_form = Form.standalone.find_by(name: ScholarshipApplicationFormBuilder::FORM_NAME)
+    if scholarship_form && event.cost_cents.to_i > 0
+      event.event_forms.find_or_create_by!(form: scholarship_form, role: "scholarship")
+    elsif event.cost_cents.to_i == 0
+      event.event_forms.scholarship.destroy_all
+    end
+  end
+
   def set_form_variables
     @event = @event.decorate
     @event.build_primary_asset if @event.primary_asset.blank?
     @event.gallery_assets.build
     @locations = Location.order(:city, :state)
+    @registration_forms = Form.standalone.where(scholarship_application: false).order(:name)
     @categories_grouped =
       Category
         .includes(:category_type)

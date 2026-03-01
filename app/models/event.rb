@@ -10,7 +10,7 @@ class Event < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
   has_many :payments
-  has_many :forms, as: :owner, dependent: :destroy
+  has_many :event_forms, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
@@ -21,6 +21,7 @@ class Event < ApplicationRecord
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
   # has_many through
+  has_many :forms, through: :event_forms
   has_many :registrants, through: :event_registrations, class_name: "Person"
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
@@ -56,6 +57,14 @@ class Event < ApplicationRecord
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     stories
+  end
+
+  def registration_form
+    forms.find_by(event_forms: { role: "registration" })
+  end
+
+  def scholarship_form
+    forms.find_by(event_forms: { role: "scholarship" })
   end
 
   def active_registration_for(person)
@@ -129,8 +138,12 @@ class Event < ApplicationRecord
   end
 
   def build_public_registration_form
-    return if forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)
+    return if event_forms.registration.exists?
 
-    EventRegistrationFormBuilder.build!(self)
+    form_name = title&.match?(/training/i) ? ExtendedEventRegistrationFormBuilder::FORM_NAME : ShortEventRegistrationFormBuilder::FORM_NAME
+    form = Form.standalone.find_by(name: form_name)
+    return unless form
+
+    event_forms.create!(form: form, role: "registration")
   end
 end

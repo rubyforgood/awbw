@@ -48,7 +48,7 @@
                       <td class="px-4 py-2 text-sm text-gray-800 align-top">
                         <div class="flex items-center gap-2">
                           <%= person_profile_button(event_registration.registrant) %>
-                          <% reg_form = event_registration.event.forms.find_by(name: "Public Registration") %>
+                          <% reg_form = event_registration.event.registration_form %>
                           <% if reg_form && reg_form.user_forms.exists?(user: event_registration.registrant&.user) %>
                             <i class="fa-solid fa-file-lines text-green-600 shrink-0" title="Completed registration form"></i>
                           <% elsif reg_form %>
