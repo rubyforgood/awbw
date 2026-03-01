@@ -694,7 +694,7 @@ Person.where(
     Affiliation.create!(
       person: person,
       organization: org,
-      position: [ :leader, :volunteer, :staff ].sample,
+      position: [ :default, :liaison, :leader, :assistant ].sample,
       start_date: rand(1..5).years.ago.to_date,
       inactive: [ false, false, false, true ].sample
     )
