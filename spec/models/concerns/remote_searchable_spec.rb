@@ -48,6 +48,12 @@ RSpec.describe RemoteSearchable, type: :model do
         expect(results).not_to include(bob)
       end
 
+      it "matches partial terms across columns" do
+        results = Person.remote_search("ali smi")
+        expect(results).to include(alice)
+        expect(results).not_to include(bob, carol)
+      end
+
       it "requires all terms to match" do
         results = Person.remote_search("Alice Jones")
         expect(results).not_to include(alice, carol)
