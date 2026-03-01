@@ -34,19 +34,6 @@
         <% end %>
       </div>
 
-      <% if @user.unconfirmed_email.present? %>
-        <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
-            <span class="font-medium text-yellow-800">Email change pending confirmation</span>
-          </div>
-          <p class="text-sm text-yellow-700 mt-1">
-            A confirmation email was sent to <strong><%= @user.unconfirmed_email %></strong>.
-            The current email will remain <strong><%= @user.email %></strong> until confirmed.
-          </p>
-        </div>
-      <% end %>
-
       <!-- Identity header -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <div class="flex items-center gap-4">
@@ -60,7 +47,7 @@
                           class: "w-14 h-14 rounded-full object-cover border border-dashed border-gray-300 shrink-0" %>
           <% end %>
 
-          <div>
+          <div class="flex-1 min-w-0">
             <h2 class="font-bold text-2xl text-gray-900">
               <%= @user.email %>
               <% if @user.super_user? %>
@@ -78,6 +65,18 @@
               </p>
             <% end %>
           </div>
+
+          <% if @user.unconfirmed_email.present? %>
+            <div class="bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2 text-right shrink-0">
+              <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-sm"></i>
+                <span class="text-sm font-medium text-yellow-800">Email change pending</span>
+              </div>
+              <p class="text-xs text-yellow-700 mt-0.5">
+                Change to <strong><%= @user.unconfirmed_email %></strong> awaiting confirmation
+              </p>
+            </div>
+          <% end %>
         </div>
       </div>
 
