@@ -50,12 +50,14 @@ export default class extends Controller {
         padding: 0 !important;
       }
       .ts-dropdown-content {
-        max-height: 400px;
-        overflow-y: auto;
+        max-height: 400px !important;
+        overflow-y: scroll !important;
         scrollbar-width: thin;
+        scrollbar-color: #9ca3af #f3f4f6;
       }
       .ts-dropdown-content::-webkit-scrollbar {
         width: 6px;
+        -webkit-appearance: none;
       }
       .ts-dropdown-content::-webkit-scrollbar-thumb {
         background-color: #9ca3af;
