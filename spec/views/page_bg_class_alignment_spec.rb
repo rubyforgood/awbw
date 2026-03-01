@@ -168,7 +168,9 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/registrations/show.html.erb"        => "public",
 
     # ─── admin-only confirm/interstitial ───
-    "app/views/event_registrations/confirm.html.erb"     => "admin-only bg-blue-100"
+    "app/views/event_registrations/confirm.html.erb"     => "admin-only bg-blue-100",
+    "app/views/users/confirm_email_change.html.erb"      => "admin-only bg-blue-100",
+    "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100"
   }.freeze
 
   EXPECTED_MAPPINGS.each do |view_path, expected_bg_class|

@@ -56,7 +56,7 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
     end
 
     context "with a pending email change" do
-      let(:user) { create(:user, :confirmed) }
+      let(:user) { create(:user) }
       let(:new_email) { "newemail@example.com" }
 
       before do
