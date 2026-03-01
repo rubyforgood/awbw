@@ -126,12 +126,15 @@
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete", @event_registration, class: "btn btn-danger-outline",
-                    data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
+        <%= link_to "Delete", event_registration_path(@event_registration, return_to: params[:return_to].presence), class: "btn btn-danger-outline",
+                    data: { turbo: true, turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
-      <%= link_to "Cancel",
-                  (allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path),
-                  class: "btn btn-secondary-outline" %>
+      <% cancel_path = case params[:return_to]
+                       when "manage" then manage_event_path(event_registration.event)
+                       when "index" then event_registrations_path
+                       else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
+                       end %>
+      <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   </div>
