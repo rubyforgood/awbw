@@ -9,13 +9,16 @@ export default class extends Controller {
       valueField: "id",
       labelField: "label",
       searchField: "label",
+      score: () => () => 1,
       create: false,
       load: (query, callback) => {
         if (!query.length) return callback();
 
-        let url = `/search/${this.modelValue}?q=${encodeURIComponent(query)}`
+        this.select.clearOptions();
+        let url = `/search/${this.modelValue}?q=${encodeURIComponent(query)}`;
+
         if (this.hasExcludeValue && this.excludeValue) {
-          url += `&exclude=${encodeURIComponent(this.excludeValue)}`
+          url += `&exclude=${encodeURIComponent(this.excludeValue)}`;
         }
         fetch(url)
           .then((r) => r.json())
