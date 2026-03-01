@@ -1,0 +1,51 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:users) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="max-w-2xl mx-auto">
+    <div class="flex items-center mb-6">
+      <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-yellow-100">
+        <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <h1 class="ml-3 text-xl font-semibold text-gray-900">Email change saved</h1>
+    </div>
+
+    <div class="bg-white rounded-lg p-4 mb-6">
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        <dt class="text-gray-500">User</dt>
+        <dd class="text-gray-900 font-medium"><%= @user.name %></dd>
+        <dt class="text-gray-500">Current email</dt>
+        <dd class="text-gray-900"><%= @user.email %></dd>
+        <dt class="text-gray-500">New email (pending)</dt>
+        <dd class="text-gray-900 font-medium"><%= @user.unconfirmed_email %></dd>
+      </dl>
+    </div>
+
+    <p class="text-sm text-gray-600 mb-4">
+      The new email has been saved but requires confirmation. The user's current email
+      will remain <strong><%= @user.email %></strong> until they confirm the new address.
+    </p>
+
+    <%= form_with url: process_email_change_user_path(@user),
+                  method: :post,
+                  data: { turbo: false },
+                  class: "space-y-3" do %>
+
+      <label class="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+        <%= check_box_tag :send_confirmation, "1", true, class: "mt-0.5" %>
+        <div>
+          <span class="text-sm font-medium text-gray-900">Send confirmation email</span>
+          <p class="text-xs text-gray-500">
+            Sends a confirmation email to <strong><%= @user.unconfirmed_email %></strong> so the user can verify their new address
+          </p>
+        </div>
+      </label>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+        <%= link_to "Skip", user_path(@user), class: "btn btn-secondary-outline" %>
+        <button type="submit" class="btn btn-primary">Continue</button>
+      </div>
+    <% end %>
+  </div>
+</div>

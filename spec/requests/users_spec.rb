@@ -224,8 +224,13 @@ RSpec.describe "/users", type: :request do
           expect(user.unconfirmed_email).to eq(new_attributes[:email])
         end
 
-        it "redirects to the updated user" do
+        it "redirects to email change interstitial when email changes" do
           patch user_url(user), params: { user: new_attributes }
+          expect(response).to redirect_to(confirm_email_change_user_path(user))
+        end
+
+        it "redirects to the updated user when email does not change" do
+          patch user_url(user), params: { user: { time_zone: "Eastern Time (US & Canada)" } }
           expect(response).to redirect_to(user_url(user))
         end
 
@@ -397,6 +402,119 @@ RSpec.describe "/users", type: :request do
         post confirm_email_user_url(user)
         user.reload
         expect(user.confirmed_at).to be_nil
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  # ---------------------------------------
+  # EMAIL CHANGE INTERSTITIAL
+  # ---------------------------------------
+  describe "GET /confirm_email_change" do
+    let(:user) { create(:user) }
+
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders the email change interstitial" do
+        user.update_columns(unconfirmed_email: "new@example.com")
+        get confirm_email_change_user_path(user)
+        expect(response).to have_http_status(:success)
+      end
+    end
+
+    context "as regular_user" do
+      before { sign_in regular_user }
+
+      it "redirects to root" do
+        get confirm_email_change_user_path(user)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "POST /process_email_change" do
+    let(:user) { create(:user) }
+
+    context "as admin" do
+      before do
+        sign_in admin
+        user.update_columns(unconfirmed_email: "new@example.com")
+      end
+
+      it "sends confirmation email when selected" do
+        post process_email_change_user_path(user), params: { send_confirmation: "1" }
+        expect(response).to redirect_to(user_path(user))
+        expect(flash[:notice]).to include("confirmation email has been sent")
+      end
+
+      it "skips confirmation email when not selected" do
+        post process_email_change_user_path(user)
+        expect(response).to redirect_to(user_path(user))
+        expect(flash[:notice]).to eq("User was successfully updated.")
+      end
+    end
+
+    context "as regular_user" do
+      before { sign_in regular_user }
+
+      it "redirects to root" do
+        post process_email_change_user_path(user)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  # ---------------------------------------
+  # MANUAL EMAIL CONFIRMATION INTERSTITIAL
+  # ---------------------------------------
+  describe "GET /confirm_email_manual" do
+    let(:user) { create(:user, confirmed_at: nil) }
+
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders the manual confirmation interstitial" do
+        get confirm_email_manual_user_path(user)
+        expect(response).to have_http_status(:success)
+      end
+    end
+
+    context "as regular_user" do
+      before { sign_in regular_user }
+
+      it "redirects to root" do
+        get confirm_email_manual_user_path(user)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "POST /process_email_manual" do
+    let(:user) { create(:user, confirmed_at: nil) }
+
+    context "as admin" do
+      before { sign_in admin }
+
+      it "manually confirms email" do
+        post process_email_manual_user_path(user), params: { confirm_action: "confirm" }
+        user.reload
+        expect(user.confirmed_at).not_to be_nil
+        expect(flash[:notice]).to include("manually confirmed")
+      end
+
+      it "resends confirmation email" do
+        post process_email_manual_user_path(user), params: { confirm_action: "resend" }
+        expect(response).to redirect_to(user_path(user))
+        expect(flash[:notice]).to include("Confirmation email has been resent")
+      end
+    end
+
+    context "as regular_user" do
+      before { sign_in regular_user }
+
+      it "redirects to root" do
+        post process_email_manual_user_path(user), params: { confirm_action: "confirm" }
         expect(response).to redirect_to(root_path)
       end
     end

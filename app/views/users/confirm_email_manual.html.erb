@@ -1,0 +1,93 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% pending_email_change = @user.unconfirmed_email.present? %>
+<% target_email = pending_email_change ? @user.unconfirmed_email : @user.email %>
+<div class="<%= DomainTheme.bg_class_for(:users) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="max-w-2xl mx-auto">
+    <div class="flex items-center mb-6">
+      <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
+        <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h1 class="ml-3 text-xl font-semibold text-gray-900">Confirm email</h1>
+    </div>
+
+    <div class="bg-white rounded-lg p-4 mb-6">
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        <dt class="text-gray-500">User</dt>
+        <dd class="text-gray-900 font-medium"><%= @user.name %></dd>
+        <dt class="text-gray-500">Current email</dt>
+        <dd class="text-gray-900"><%= @user.email %></dd>
+        <% if pending_email_change %>
+          <dt class="text-gray-500">Pending email</dt>
+          <dd class="text-gray-900 font-medium"><%= @user.unconfirmed_email %></dd>
+        <% end %>
+        <dt class="text-gray-500">Status</dt>
+        <dd>
+          <% if pending_email_change %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+              Email change pending
+            </span>
+          <% else %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+              Unconfirmed
+            </span>
+          <% end %>
+        </dd>
+      </dl>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div class="flex items-start gap-2">
+        <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+        <div class="text-sm text-blue-800">
+          <p class="font-medium">Recommendation: Resend the confirmation email</p>
+          <p class="mt-1">
+            It's best to have the user confirm their own email address so we know they
+            can receive messages from the Portal. Only use manual confirmation when the
+            user cannot complete confirmation themselves.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-3">
+      <%= form_with url: process_email_manual_user_path(@user),
+                    method: :post,
+                    data: { turbo: false } do %>
+        <%= hidden_field_tag :confirm_action, "resend" %>
+        <button type="submit" class="w-full flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer text-left">
+          <i class="fa-solid fa-paper-plane text-blue-500 mt-0.5"></i>
+          <div>
+            <span class="text-sm font-medium text-gray-900">Resend confirmation email</span>
+            <p class="text-xs text-gray-500">Sends a new confirmation email to <%= target_email %></p>
+          </div>
+        </button>
+      <% end %>
+
+      <%= form_with url: process_email_manual_user_path(@user),
+                    method: :post,
+                    data: { turbo: false } do %>
+        <%= hidden_field_tag :confirm_action, "confirm" %>
+        <button type="submit" class="w-full flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer text-left">
+          <i class="fa-solid fa-check-circle text-yellow-500 mt-0.5"></i>
+          <div>
+            <span class="text-sm font-medium text-gray-900">Manually confirm email</span>
+            <p class="text-xs text-gray-500">
+              <% if pending_email_change %>
+                Immediately confirms the email change to <%= @user.unconfirmed_email %> without user action
+              <% else %>
+                Immediately marks the email as confirmed without user action
+              <% end %>
+            </p>
+          </div>
+        </button>
+      <% end %>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+        <%= link_to "Cancel", edit_user_path(@user), class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -41,6 +41,10 @@ Rails.application.routes.draw do
       post :send_welcome_instructions
       post :toggle_lock_status
       post :confirm_email
+      get :confirm_email_change
+      post :process_email_change
+      get :confirm_email_manual
+      post :process_email_manual
     end
     resources :comments, only: [ :index, :create ]
   end
