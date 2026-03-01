@@ -814,6 +814,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_230836) do
     t.index ["organization_id"], name: "index_reports_on_organization_id"
     t.index ["owner_type", "owner_id"], name: "index_reports_on_owner_type_and_owner_id"
     t.index ["type", "date"], name: "index_reports_on_type_and_date"
+    t.index ["type", "organization_id"], name: "index_reports_on_type_and_organization_id"
     t.index ["windows_type_id"], name: "index_reports_on_windows_type_id"
     t.index ["workshop_id"], name: "index_reports_on_workshop_id"
   end
