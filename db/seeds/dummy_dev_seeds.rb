@@ -691,9 +691,14 @@ Person.where(
     next unless org
     next if person.affiliations.exists?(organization: org)
 
+    title = [
+      "Facilitator", "Lead Facilitator", "Co-Facilitator",
+      "Assistant Facilitator", "Volunteer", "Board Member"
+    ].sample
     Affiliation.create!(
       person: person,
       organization: org,
+      title: title,
       position: [ :default, :liaison, :leader, :assistant ].sample,
       start_date: rand(1..5).years.ago.to_date,
       inactive: [ false, false, false, true ].sample
