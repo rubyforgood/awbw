@@ -45,19 +45,17 @@
   </div>
 
   <!-- END title row -->
-  <%# disabled until we add visitor registration %>
-  <% if current_user %>
-    <% registered = event.actively_registered?(current_user.person) %>
-    <!-- 2️⃣ TIMES + BUTTONS IN ONE ROW -->
-    <div class="times-and-buttons flex flex-wrap items-center justify-between w-full gap-4">
-      <!-- LEFT: Times -->
-      <div class="text-sm text-gray-700 leading-tight whitespace-pre-line">
-        <%= event.times(display_day: true, display_date: true).html_safe %>
-      </div>
+  <!-- 2️⃣ TIMES + BUTTONS IN ONE ROW -->
+  <div class="times-and-buttons flex flex-wrap items-center justify-between w-full gap-4">
+    <!-- LEFT: Times -->
+    <div class="text-sm text-gray-700 leading-tight whitespace-pre-line">
+      <%= event.times(display_day: true, display_date: true).html_safe %>
+    </div>
 
-      <!-- RIGHT: Buttons + Registered -->
-
-      <div class="flex items-center gap-3">
+    <!-- RIGHT: Buttons + Registered -->
+    <div class="flex items-center gap-3">
+      <% if current_user %>
+        <% registered = event.actively_registered?(current_user.person) %>
         <% if allowed_to?(:edit?, event) %>
           <%= link_to "Edit",
                     edit_event_path(event),
@@ -66,11 +64,9 @@
         <% end %>
 
         <% if registered %>
-          <%= button_to "De-register",
-                      event_registrant_registration_path(event_id: event),
-                      method: :delete,
-                      data: { turbo_confirm: "Are you sure?" },
-                      class: "btn btn-secondary-outline" %>
+          <% registration = event.active_registration_for(current_user.person) %>
+          <%= link_to "View your registration", registration_ticket_path(registration.slug),
+                      class: "text-sm text-green-700 hover:text-green-900 underline" %>
         <% elsif event.ended? %>
           <span class="text-sm text-gray-500 italic">Event ended</span>
           <% if allowed_to?(:manage?, event) %>
@@ -88,11 +84,16 @@
           <span class="text-sm text-gray-500 italic">Registration closed</span>
         <% end %>
 
-        <% if registered %>
-          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full"> Registered </span>
-        <% end %>
-      </div>
+      <% elsif event.registerable? && event.object.forms.exists?(name: "Public Registration") %>
+        <%= link_to "Register",
+                    new_event_public_registration_path(event),
+                    data: { turbo_frame: "_top" },
+                    class: "btn btn-primary-outline" %>
+      <% end %>
     </div>
+  </div>
+  <% if current_user %>
+    <% registered ||= event.actively_registered?(current_user.person) %>
     <!-- 4️⃣ FULL-WIDTH CALENDAR LINKS ROW -->
     <% if registered %>
       <div class="flex flex-col items-center mt-4 pt-3 border-t border-gray-100">
