@@ -50,41 +50,15 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "#scholarship?" do
-    it "returns true when registration has a scholarship payment" do
+  describe "#scholarship_recipient?" do
+    it "returns true when scholarship_recipient is true" do
+      reg = create(:event_registration, :scholarship)
+      expect(reg).to be_scholarship_recipient
+    end
+
+    it "returns false when scholarship_recipient is false" do
       reg = create(:event_registration)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: reg.registrant.user, amount_cents: 1099)
-      expect(reg).to be_scholarship
-    end
-
-    it "returns false when registration has only stripe payments" do
-      reg = create(:event_registration)
-      create(:payment, :succeeded, payable: reg, payer: reg.registrant.user, amount_cents: 1099)
-      expect(reg).not_to be_scholarship
-    end
-
-    it "returns false when registration has no payments" do
-      reg = create(:event_registration)
-      expect(reg).not_to be_scholarship
-    end
-  end
-
-  describe "#scholarship_tasks_met?" do
-    it "returns true when no scholarship payment exists" do
-      reg = create(:event_registration)
-      expect(reg.scholarship_tasks_met?).to be true
-    end
-
-    it "returns false when scholarship exists but tasks not completed" do
-      reg = create(:event_registration, scholarship_tasks_completed: false)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: reg.registrant.user, amount_cents: 1099)
-      expect(reg.scholarship_tasks_met?).to be false
-    end
-
-    it "returns true when scholarship exists and tasks completed" do
-      reg = create(:event_registration, scholarship_tasks_completed: true)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: reg.registrant.user, amount_cents: 1099)
-      expect(reg.scholarship_tasks_met?).to be true
+      expect(reg).not_to be_scholarship_recipient
     end
   end
 
@@ -92,15 +66,15 @@ RSpec.describe EventRegistration, type: :model do
     let(:event) { create(:event, cost_cents: 1099) }
     let(:user) { create(:user, :with_person) }
 
-    it "returns true for active, paid, non-scholarship registration" do
-      reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1099)
+    it "returns true for active, paid registration" do
+      payment = create(:payment, :succeeded, payer: user.person, amount_cents: 1099)
+      reg = create(:event_registration, event: event, registrant: user.person, payment: payment)
       expect(reg).to be_joinable
     end
 
     it "returns false when not active" do
-      reg = create(:event_registration, event: event, registrant: user.person, status: "cancelled")
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1099)
+      payment = create(:payment, :succeeded, payer: user.person, amount_cents: 1099)
+      reg = create(:event_registration, event: event, registrant: user.person, status: "cancelled", payment: payment)
       expect(reg).not_to be_joinable
     end
 
@@ -109,36 +83,20 @@ RSpec.describe EventRegistration, type: :model do
       expect(reg).not_to be_joinable
     end
 
-    it "returns false for scholarship with tasks not completed" do
-      reg = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: false)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: user, amount_cents: 1099)
-      expect(reg).not_to be_joinable
+    it "returns true for scholarship recipient with tasks completed" do
+      reg = create(:event_registration, :scholarship, event: event, registrant: user.person)
+      expect(reg).to be_joinable
     end
 
-    it "returns true for scholarship with tasks completed" do
-      reg = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: user, amount_cents: 1099)
-      expect(reg).to be_joinable
+    it "returns false for scholarship recipient with tasks not completed" do
+      reg = create(:event_registration, event: event, registrant: user.person, scholarship_recipient: true, scholarship_tasks_completed: false)
+      expect(reg).not_to be_joinable
     end
 
     it "returns true for free event with active registration" do
       free_event = create(:event, cost_cents: 0)
       reg = create(:event_registration, event: free_event, registrant: user.person)
       expect(reg).to be_joinable
-    end
-
-    it "returns true for partial scholarship + partial payment covering full cost" do
-      reg = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: user, amount_cents: 500)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 599)
-      expect(reg).to be_joinable
-    end
-
-    it "returns false for partial scholarship + partial payment not covering full cost" do
-      reg = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: user, amount_cents: 500)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 100)
-      expect(reg).not_to be_joinable
     end
   end
 
@@ -157,43 +115,27 @@ RSpec.describe EventRegistration, type: :model do
       expect(reg).to be_paid_in_full
     end
 
-    it "returns true when payments cover cost" do
-      reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1000)
+    it "returns true when payment covers cost" do
+      payment = create(:payment, :succeeded, payer: user.person, amount_cents: 1000)
+      reg = create(:event_registration, event: event, registrant: user.person, payment: payment)
       expect(reg).to be_paid_in_full
     end
 
-    it "returns false when payments are insufficient" do
-      reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 500)
+    it "returns false when payment is insufficient" do
+      payment = create(:payment, :succeeded, payer: user.person, amount_cents: 500)
+      reg = create(:event_registration, event: event, registrant: user.person, payment: payment)
       expect(reg).not_to be_paid_in_full
     end
 
-    it "returns correct result when payments are preloaded" do
-      reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1000)
-
-      preloaded = EventRegistration.includes(:payments).find(reg.id)
-      expect(preloaded.payments).to be_loaded
-      expect(preloaded).to be_paid_in_full
+    it "returns false when payment is not succeeded" do
+      payment = create(:payment, :pending, payer: user.person, amount_cents: 1000)
+      reg = create(:event_registration, event: event, registrant: user.person, payment: payment)
+      expect(reg).not_to be_paid_in_full
     end
 
-    it "returns correct result when preloaded payments are insufficient" do
+    it "returns false when no payment exists" do
       reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 500)
-
-      preloaded = EventRegistration.includes(:payments).find(reg.id)
-      expect(preloaded.payments).to be_loaded
-      expect(preloaded).not_to be_paid_in_full
-    end
-
-    it "ignores non-succeeded payments when preloaded" do
-      reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, payable: reg, payer: user, amount_cents: 1000, status: "pending")
-
-      preloaded = EventRegistration.includes(:payments).find(reg.id)
-      expect(preloaded.payments).to be_loaded
-      expect(preloaded).not_to be_paid_in_full
+      expect(reg).not_to be_paid_in_full
     end
   end
 

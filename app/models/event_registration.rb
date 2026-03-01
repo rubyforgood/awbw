@@ -111,7 +111,10 @@ class EventRegistration < ApplicationRecord
   end
 
   def joinable?
-    active? && paid?
+    return false unless active? && paid?
+    return scholarship_tasks_completed? if scholarship_recipient?
+
+    true
   end
 
   def attendance_status_label

@@ -335,8 +335,8 @@ RSpec.describe "Event show page", type: :system do
 
     context "user registered and paid for a paid event" do
       before do
-        registration = create(:event_registration, event: event, registrant: user.person)
-        create(:payment, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+        payment = create(:payment, :succeeded, payer: user.person, amount_cents: event.cost_cents)
+        create(:event_registration, event: event, registrant: user.person, payment: payment)
       end
 
       it "shows linked 'Join on' domain" do
@@ -362,8 +362,7 @@ RSpec.describe "Event show page", type: :system do
 
     context "user has full scholarship with tasks completed" do
       before do
-        registration = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
-        create(:payment, :scholarship, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+        create(:event_registration, :scholarship, event: event, registrant: user.person)
       end
 
       it "shows linked 'Join on' domain" do
@@ -376,8 +375,7 @@ RSpec.describe "Event show page", type: :system do
 
     context "user has scholarship but tasks not completed" do
       before do
-        registration = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: false)
-        create(:payment, :scholarship, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+        create(:event_registration, event: event, registrant: user.person, scholarship_recipient: true, scholarship_tasks_completed: false)
       end
 
       it "does not show the join link" do
@@ -391,8 +389,8 @@ RSpec.describe "Event show page", type: :system do
     context "autoshow_videoconference_link is false" do
       before do
         event.update!(autoshow_videoconference_link: false)
-        registration = create(:event_registration, event: event, registrant: user.person)
-        create(:payment, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+        payment = create(:payment, :succeeded, payer: user.person, amount_cents: event.cost_cents)
+        create(:event_registration, event: event, registrant: user.person, payment: payment)
       end
 
       it "hides the join link even when joinable" do
