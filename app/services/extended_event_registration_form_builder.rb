@@ -58,7 +58,8 @@ class ExtendedEventRegistrationFormBuilder
     position = build_professional_fields(form, position)
     position = build_qualitative_fields(form, position)
     position = build_scholarship_fields(form, position)
-    build_payment_fields(form, position)
+    position = build_payment_fields(form, position)
+    build_consent_fields(form, position)
 
     form
   end
@@ -78,6 +79,8 @@ class ExtendedEventRegistrationFormBuilder
                          key: "pronouns", group: "contact", required: false)
     position = add_field(form, position, "Primary Email", :free_form_input_one_line,
                          key: "primary_email", group: "contact", required: true)
+    position = add_field(form, position, "Confirm Primary Email", :free_form_input_one_line,
+                         key: "primary_email_confirmation", group: "contact", required: true)
     position = add_field(form, position, "Primary Email Type", :multiple_choice_radio,
                          key: "primary_email_type", group: "contact", required: true,
                          options: %w[Personal Work])
@@ -90,15 +93,15 @@ class ExtendedEventRegistrationFormBuilder
     position = add_header(form, position, "Mailing Address", group: "contact")
     position = add_field(form, position, "Street Address", :free_form_input_one_line,
                          key: "mailing_street", group: "contact", required: true)
+    position = add_field(form, position, "Address Type", :multiple_choice_radio,
+                         key: "mailing_address_type", group: "contact", required: true,
+                         options: %w[Home Work])
     position = add_field(form, position, "City", :free_form_input_one_line,
                          key: "mailing_city", group: "contact", required: true)
     position = add_field(form, position, "State / Province", :free_form_input_one_line,
                          key: "mailing_state", group: "contact", required: true)
     position = add_field(form, position, "Zip / Postal Code", :free_form_input_one_line,
                          key: "mailing_zip", group: "contact", required: true)
-    position = add_field(form, position, "Mailing Address Type", :multiple_choice_radio,
-                         key: "mailing_address_type", group: "contact", required: true,
-                         options: %w[Work Personal])
 
     position = add_field(form, position, "Phone", :free_form_input_one_line,
                          key: "phone", group: "contact", required: true)
@@ -216,6 +219,18 @@ class ExtendedEventRegistrationFormBuilder
     position = add_field(form, position, "Payment Method", :multiple_choice_radio,
                          key: "payment_method", group: "payment", required: true,
                          options: [ "Credit Card", "Check", "Purchase Order", "Other" ])
+
+    position
+  end
+
+  def build_consent_fields(form, position)
+    position = add_header(form, position, "Consent", group: "consent")
+    position = add_field(form, position,
+                         "I agree to receive email communications from A Window Between Worlds.",
+                         :multiple_choice_radio,
+                         key: "communication_consent", group: "consent", required: true,
+                         hint: "By submitting this form, I consent to receive updates from A Window Between Worlds, including information about this event as well as upcoming events, training opportunities, resources, impact stories, and ways to support our mission. I understand I can unsubscribe at any time.",
+                         options: %w[Yes No])
 
     position
   end

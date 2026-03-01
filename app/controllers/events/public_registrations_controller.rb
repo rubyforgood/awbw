@@ -147,7 +147,7 @@ module Events
 
         if field.number_integer? && value.to_s !~ /\A\d+\z/
           errors[field.id] = "must be a whole number"
-        elsif field.field_key&.match?(/email(?!_type)/) && value.to_s !~ /\A[^@\s]+@[^@\s]+\z/
+        elsif field.field_key&.match?(/email(?!_type|_confirmation)/) && value.to_s !~ /\A[^@\s]+@[^@\s]+\z/
           errors[field.id] = "must be a valid email address"
         end
       end

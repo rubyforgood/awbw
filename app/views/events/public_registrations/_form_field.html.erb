@@ -1,4 +1,4 @@
-<%# locals: (field:, value: nil) %>
+<%# locals: (field:, value: nil, label: nil) %>
 <% return if field.group_header? %>
 
 <% error = @field_errors&.dig(field.id) %>
@@ -6,7 +6,7 @@
 
 <div class="mb-5">
   <label class="block text-sm font-medium text-gray-700 mb-1" for="public_registration_form_fields_<%= field.id %>">
-    <%= field.question %>
+    <%= label || field.question %>
     <% if field.is_required %>
       <span class="text-red-500">*</span>
     <% end %>
