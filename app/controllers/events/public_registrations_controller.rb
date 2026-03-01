@@ -66,7 +66,15 @@ module Events
     def show
       authorize! :public_registration, to: :show?
 
-      registration = EventRegistration.find_by!(slug: params[:reg], event_id: @event.id)
+      if params[:reg].present?
+        registration = EventRegistration.find_by!(slug: params[:reg], event_id: @event.id)
+        person = registration.registrant
+      elsif params[:person_id].present?
+        person = Person.find(params[:person_id])
+      else
+        redirect_to event_path(@event), alert: "Registration not found."
+        return
+      end
 
       @form = registration_form
       unless @form
@@ -74,7 +82,7 @@ module Events
         return
       end
 
-      @person_form = @form.person_forms.find_by(person: registration.registrant)
+      @person_form = @form.person_forms.find_by(person: person)
       unless @person_form
         redirect_to event_path(@event), alert: "No registration form submission found."
         return

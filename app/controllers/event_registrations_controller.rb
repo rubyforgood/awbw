@@ -30,7 +30,12 @@ class EventRegistrationsController < ApplicationController
 
   def show
     authorize! @event_registration
-    redirect_to registration_ticket_path(@event_registration.slug), status: :moved_permanently
+
+    if @event_registration.slug.present?
+      redirect_to registration_ticket_path(@event_registration.slug), status: :moved_permanently
+    else
+      redirect_to edit_event_registration_path(@event_registration)
+    end
   end
 
   def new
