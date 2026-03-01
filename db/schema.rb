@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_134201) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_230836) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -403,11 +403,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_134201) do
     t.bigint "registrant_id", null: false
     t.boolean "scholarship_recipient", default: false, null: false
     t.boolean "scholarship_tasks_completed", default: false, null: false
+    t.string "slug"
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
     t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
+    t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
   end
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -812,7 +814,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_134201) do
     t.index ["organization_id"], name: "index_reports_on_organization_id"
     t.index ["owner_type", "owner_id"], name: "index_reports_on_owner_type_and_owner_id"
     t.index ["type", "date"], name: "index_reports_on_type_and_date"
-    t.index ["type", "organization_id"], name: "index_reports_on_type_and_organization_id"
     t.index ["windows_type_id"], name: "index_reports_on_windows_type_id"
     t.index ["workshop_id"], name: "index_reports_on_workshop_id"
   end

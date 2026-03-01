@@ -155,6 +155,9 @@ class EventRegistrationFormBuilder
                          key: "referral_source", group: "qualitative", required: false)
     position = add_field(form, position, "What motivates you to attend this training?", :free_form_input_paragraph,
                          key: "training_motivation", group: "qualitative", required: false)
+    position = add_field(form, position, "Are you interested in learning more about upcoming trainings or resources?", :multiple_choice_radio,
+                         key: "interested_in_more", group: "qualitative", required: true,
+                         options: %w[Yes No])
 
     position
   end

@@ -1,7 +1,7 @@
 class EventRegistrationsController < ApplicationController
   require "csv"
 
-  skip_before_action :authenticate_user!, only: [ :show ]
+  # show redirects to slug URL; kept for backwards compatibility
   before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -30,6 +30,7 @@ class EventRegistrationsController < ApplicationController
 
   def show
     authorize! @event_registration
+    redirect_to registration_ticket_path(@event_registration.slug), status: :moved_permanently
   end
 
   def new
@@ -67,7 +68,7 @@ class EventRegistrationsController < ApplicationController
             redirect_to manage_event_path(@event_registration.event),
               notice: "Registration created."
           else
-            redirect_to @event_registration,
+            redirect_to registration_ticket_path(@event_registration.slug),
               notice: "Registration created."
           end
         }
@@ -100,7 +101,7 @@ class EventRegistrationsController < ApplicationController
           if params[:return_to] == "manage"
             redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
           else
-            redirect_to @event_registration, notice: "Registration was successfully updated.", status: :see_other
+            redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
           end
         }
       end

@@ -1,8 +1,41 @@
 module Events
   class RegistrationsController < ApplicationController
-    before_action :authenticate_user!
-    before_action :set_event
-    before_action :set_registrant
+    before_action :authenticate_user!, only: [ :create, :destroy ]
+    before_action :set_event, only: [ :create, :destroy ]
+    before_action :set_registrant, only: [ :create, :destroy ]
+    before_action :set_event_registration, only: [ :show, :resend_confirmation, :cancel, :reactivate ]
+
+    def show
+      authorize! @event_registration, to: :show_public?
+    end
+
+    def resend_confirmation
+      authorize! @event_registration, to: :show_public?
+      EventMailer.event_registration_confirmation(@event_registration).deliver_later
+      redirect_to registration_ticket_path(@event_registration.slug), notice: "Confirmation email sent."
+    end
+
+    def cancel
+      authorize! @event_registration, to: :show_public?
+
+      if @event_registration.active?
+        @event_registration.update!(status: "cancelled")
+        redirect_to registration_ticket_path(@event_registration.slug), notice: "Your registration has been cancelled."
+      else
+        redirect_to registration_ticket_path(@event_registration.slug), alert: "Registration is already cancelled."
+      end
+    end
+
+    def reactivate
+      authorize! @event_registration, to: :show_public?
+
+      if @event_registration.status == "cancelled"
+        @event_registration.update!(status: "registered")
+        redirect_to registration_ticket_path(@event_registration.slug), notice: "Your registration has been reactivated."
+      else
+        redirect_to registration_ticket_path(@event_registration.slug), alert: "Registration is not cancelled."
+      end
+    end
 
     def create
       @event_registration = @event.event_registrations.new(registrant: @registrant)
@@ -12,7 +45,7 @@ module Events
         success = "You have successfully registered for this event."
         respond_to do |format|
           format.turbo_stream { flash.now[:notice] = success }
-          format.html { redirect_to @event_registration, notice: success }
+          format.html { redirect_to registration_ticket_path(@event_registration.slug), notice: success }
         end
       else
         error = @event_registration.errors.full_messages.to_sentence
@@ -77,6 +110,10 @@ module Events
       )
       current_user.update!(person: person)
       person
+    end
+
+    def set_event_registration
+      @event_registration = EventRegistration.find_by!(slug: params[:slug])
     end
   end
 end

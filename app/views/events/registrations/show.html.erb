@@ -1,0 +1,8 @@
+<% content_for(:page_bg_class, "public") %>
+<div class="flex flex-wrap justify-end gap-2 mb-4">
+  <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  <% if allowed_to?(:index?, EventRegistration) %>
+    <%= link_to "Manage Registrants", manage_event_path(@event_registration.event), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  <% end %>
+</div>
+<%= render "event_registrations/ticket", event_registration: @event_registration %>

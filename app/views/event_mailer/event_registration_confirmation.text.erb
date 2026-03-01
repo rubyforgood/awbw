@@ -25,6 +25,9 @@ Videoconference URL: <%= @event.videoconference_url %>
   <%= @event.detail %>
 <% end %>
 
+View your registration:
+<%= registration_ticket_url(@event_registration.slug) %>
+
 View the event page:
 <%= @event_url %>
 

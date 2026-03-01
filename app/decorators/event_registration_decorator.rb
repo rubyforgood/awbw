@@ -6,6 +6,10 @@ class EventRegistrationDecorator < ApplicationDecorator
   def detail(length: nil)
   end
 
+  def link_target
+    h.registration_ticket_path(slug)
+  end
+
   def default_display_image
     return event.primary_asset.file if event.respond_to?(:primary_asset) && event.primary_asset&.file&.attached?
     "theme_default.png"

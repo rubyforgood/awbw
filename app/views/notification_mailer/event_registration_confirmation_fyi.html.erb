@@ -52,7 +52,7 @@
 
 <p>
   <%= link_to "View registration",
-              event_registration_url(@event_registration),
+              registration_ticket_url(@event_registration.slug),
               style: "display:inline-block;
                       padding:10px 16px;
                       background:#2563eb;
@@ -69,7 +69,7 @@
   </a>
 
 
-  <a href="<%= event_url(@event) %>"
+  <a href="<%= event_url(@event, reg: @event_registration.slug) %>"
      style="display:inline-block;background:#e5e7eb;color:#111827;
        text-decoration:none;padding:10px 16px;border-radius:6px;
        font-weight:bold;">

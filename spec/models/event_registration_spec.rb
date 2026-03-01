@@ -227,4 +227,24 @@ RSpec.describe EventRegistration, type: :model do
       expect(results).not_to include(reg_bob_music)
     end
   end
+
+  describe "slug" do
+    it "generates a slug on create" do
+      registration = create(:event_registration)
+      expect(registration.slug).to be_present
+      expect(registration.slug.length).to eq(22)
+    end
+
+    it "does not change slug on update" do
+      registration = create(:event_registration)
+      original_slug = registration.slug
+      registration.update!(status: "attended")
+      expect(registration.reload.slug).to eq(original_slug)
+    end
+
+    it "generates unique slugs" do
+      slugs = 10.times.map { create(:event_registration).slug }
+      expect(slugs.uniq.size).to eq(10)
+    end
+  end
 end

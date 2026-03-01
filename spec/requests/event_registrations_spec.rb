@@ -78,7 +78,7 @@ RSpec.describe "EventRegistrations", type: :request do
         patch event_registration_path(existing_registration),
               params: { event_registration: { event_id: new_event.id } }
 
-        expect(response).to redirect_to(event_registration_path(existing_registration))
+        expect(response).to redirect_to(registration_ticket_path(existing_registration.slug))
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
     end
@@ -105,6 +105,13 @@ RSpec.describe "EventRegistrations", type: :request do
     describe "GET /event_registrations" do
       it "redirects to root" do
         get event_registrations_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET /event_registrations/:id (admin-only show)" do
+      it "redirects to root (unauthorized)" do
+        get event_registration_path(existing_registration)
         expect(response).to redirect_to(root_path)
       end
     end
@@ -157,7 +164,7 @@ RSpec.describe "EventRegistrations", type: :request do
               params: { event_registration: { status: "cancelled" } }
 
         expect(existing_registration.reload.status).to eq("cancelled")
-        expect(response).to redirect_to(event_registration_path(existing_registration))
+        expect(response).to redirect_to(registration_ticket_path(existing_registration.slug))
         expect(flash[:notice]).to eq("Registration was successfully updated.")
       end
 
