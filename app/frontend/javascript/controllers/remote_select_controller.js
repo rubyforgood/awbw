@@ -49,6 +49,9 @@ export default class extends Controller {
         margin: 0 !important;            /* Remove padding/margin from selected items */
         padding: 0 !important;
       }
+      .ts-dropdown-content {
+        max-height: 400px;
+      }
     `;
     document.head.appendChild(style);
   }
