@@ -56,27 +56,15 @@ class EventRegistrationsController < ApplicationController
     if @event_registration.save
       respond_to do |format|
         format.html {
-          if current_user.super_user?
-            return_to = params.dig(:event_registration, :event_id).present? ? "manage" : "ticket"
-            redirect_to confirm_event_registration_path(@event_registration, return_to: return_to)
-          elsif params.dig(:event_registration, :event_id).present?
-            redirect_to manage_event_path(@event_registration.event),
-              notice: "Registration created."
-          else
-            redirect_to registration_ticket_path(@event_registration.slug),
-              notice: "Registration created."
-          end
+          redirect_to confirm_event_registration_path(@event_registration, return_to: params[:return_to])
         }
       end
     else
       respond_to do |format|
         format.html {
-          if @event_registration.event_id.present?
-            redirect_to manage_event_path(@event_registration.event),
-              alert: @event_registration.errors.full_messages.to_sentence
-          else
-            redirect_to event_registrations_path,
-              alert: @event_registration.errors.full_messages.to_sentence
+          case params[:return_to]
+          when "manage" then redirect_to manage_event_path(@event_registration.event), alert: @event_registration.errors.full_messages.to_sentence
+          else redirect_to event_registrations_path, alert: @event_registration.errors.full_messages.to_sentence
           end
         }
       end
@@ -93,10 +81,10 @@ class EventRegistrationsController < ApplicationController
       respond_to do |format|
         format.turbo_stream
         format.html {
-          if params[:return_to] == "manage"
-            redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
-          else
-            redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
+          case params[:return_to]
+          when "manage" then redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+          when "index" then redirect_to event_registrations_path, notice: "Registration was successfully updated.", status: :see_other
+          else redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
           end
         }
       end
@@ -133,22 +121,26 @@ class EventRegistrationsController < ApplicationController
       current_user: current_user
     )
 
-    if params[:return_to] == "manage"
-      redirect_to manage_event_path(@event_registration.event), notice: result.summary
-    else
-      redirect_to registration_ticket_path(@event_registration.slug), notice: result.summary
+    case params[:return_to]
+    when "manage" then redirect_to manage_event_path(@event_registration.event), notice: result.summary
+    when "index" then redirect_to event_registrations_path, notice: result.summary
+    else redirect_to registration_ticket_path(@event_registration.slug), notice: result.summary
     end
   end
 
   def destroy
     authorize! @event_registration
+    event = @event_registration.event
     if @event_registration.destroy
       flash[:notice] = "Registration deleted."
-
     else
       flash[:alert] = @event_registration.errors.full_messages.to_sentence
     end
-    redirect_to event_registrations_path
+
+    case params[:return_to]
+    when "manage" then redirect_to manage_event_path(event)
+    else redirect_to event_registrations_path
+    end
   end
 
   # Optional hooks for setting variables for forms or index
