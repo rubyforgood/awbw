@@ -23,23 +23,21 @@ class UsersController < ApplicationController
   def show
     authorize! @user
     @user = User.find(params[:id]).decorate
+
+    if turbo_frame_request? && params[:section] == "account_activity"
+      @account_events = account_events_for(@user, search: params[:search], by_user_id: params[:by_user_id])
+                          .paginate(page: params[:page], per_page: 10)
+      by_user_options = account_event_user_options(@user)
+      render partial: "users/sections/account_activity",
+             locals: { user: @user, account_events: @account_events, by_user_options: by_user_options }
+      return
+    end
+
     @comments = @user.comments.includes(:created_by).newest_first.paginate(page: params[:comments_page], per_page: 5)
 
-    user_auth_events = Ahoy::Event
-      .where("name LIKE 'auth.%' OR name LIKE 'update.user'")
-      .where(
-        "(CAST(JSON_EXTRACT(properties, '$.record_id') AS UNSIGNED) = :id AND JSON_UNQUOTE(JSON_EXTRACT(properties, '$.record_type')) = 'User') OR " \
-        "(CAST(JSON_EXTRACT(properties, '$.resource_id') AS UNSIGNED) = :id AND JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_type')) = 'User')",
-        id: @user.id
-      )
-
+    user_auth_events = user_auth_events_base(@user)
     @last_admin_event = user_auth_events.where(name: %w[auth.admin_granted auth.admin_revoked]).order(time: :desc).first
     @last_lock_event = user_auth_events.where(name: %w[auth.account_locked auth.account_unlocked]).order(time: :desc).first
-
-    @account_events = user_auth_events
-      .includes(:user)
-      .order(time: :desc)
-      .paginate(page: params[:page], per_page: 10)
 
     # Fall back to ahoy events for created_by/updated_by if not set on the model
     unless @user.created_by
@@ -270,6 +268,32 @@ class UsersController < ApplicationController
     @user.person.affiliations.first || @user.person.affiliations.build if @user.person
     organizations = authorized_scope(Organization.all)
     @organizations_array = organizations.order(:name).pluck(:name, :id)
+  end
+
+  def user_auth_events_base(user)
+    Ahoy::Event
+      .where("name LIKE 'auth.%' OR name LIKE 'update.user'")
+      .where(
+        "(CAST(JSON_EXTRACT(properties, '$.record_id') AS UNSIGNED) = :id AND JSON_UNQUOTE(JSON_EXTRACT(properties, '$.record_type')) = 'User') OR " \
+        "(CAST(JSON_EXTRACT(properties, '$.resource_id') AS UNSIGNED) = :id AND JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_type')) = 'User')",
+        id: user.id
+      )
+  end
+
+  def account_events_for(user, search: nil, by_user_id: nil)
+    scope = user_auth_events_base(user).includes(:user).order(time: :desc)
+    if search.present?
+      q = "%#{search}%"
+      scope = scope.where("ahoy_events.name LIKE :q OR CAST(ahoy_events.properties AS CHAR) LIKE :q", q: q)
+    end
+    scope = scope.where(user_id: by_user_id) if by_user_id.present?
+    scope
+  end
+
+  def account_event_user_options(user)
+    User.where(super_user: true).or(User.where(id: user.id))
+        .order(:first_name, :last_name)
+        .map { |u| [ u.name, u.id ] }
   end
 
   def password_param
