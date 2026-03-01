@@ -15,16 +15,32 @@ module TitleDisplayHelper
       )
     end
 
-    # --- Public badge (authenticated only) ---
+    # --- Public + Featured badges (grouped on same row) ---
+    visibility_badges = []
+
     if user_signed_in? && !home_page &&
        record.respond_to?(:publicly_visible?) && record.publicly_visible?
       icon = content_tag(:span, content_tag(:i, "", class: "fa-solid fa-globe"), class: "inline-flex justify-center w-5")
-      fragments << content_tag(
+      visibility_badges << content_tag(
         :span,
         icon + content_tag(:span, "Public", class: "ml-1"),
         class: "inline-flex items-center pl-2 pr-3 py-0.5 rounded-full
               text-sm font-medium bg-violet-100 text-violet-800 whitespace-nowrap"
       )
+    end
+
+    if user_signed_in? && !home_page && record.respond_to?(:featured?) && record.featured?
+      icon = content_tag(:span, "🌟", class: "inline-flex justify-center w-5")
+      visibility_badges << content_tag(
+        :span,
+        icon + content_tag(:span, "Featured", class: "ml-1"),
+        class: "inline-flex items-center pl-2 pr-3 py-0.5 rounded-full
+              text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap"
+      )
+    end
+
+    if visibility_badges.any?
+      fragments << content_tag(:span, safe_join(visibility_badges, " "), class: "inline-flex items-center gap-2 flex-nowrap")
     end
 
     # --- Publicly Featured badge ---
@@ -36,17 +52,6 @@ module TitleDisplayHelper
         icon + content_tag(:span, label, class: "ml-1"),
         class: "inline-flex items-center pl-2 pr-3 py-0.5 rounded-full
               text-sm font-medium bg-purple-100 text-purple-800 whitespace-nowrap"
-      )
-    end
-
-    # --- Featured badge (authenticated only) ---
-    if user_signed_in? && !home_page && record.respond_to?(:featured?) && record.featured?
-      icon = content_tag(:span, "🌟", class: "inline-flex justify-center w-5")
-      fragments << content_tag(
-        :span,
-        icon + content_tag(:span, "Featured", class: "ml-1"),
-        class: "inline-flex items-center pl-2 pr-3 py-0.5 rounded-full
-              text-sm font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap"
       )
     end
 

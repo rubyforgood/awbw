@@ -195,6 +195,31 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
+    context "when a cancelled registration exists" do
+      let!(:cancelled_registration) do
+        create(:event_registration, event: event, registrant: user.person, status: "cancelled")
+      end
+
+      it "reactivates the existing registration instead of creating a new one" do
+        expect {
+          post event_registrant_registration_path(event_id: event.id),
+            headers: turbo_headers
+        }.not_to change(EventRegistration, :count)
+
+        expect(cancelled_registration.reload.status).to eq("registered")
+        expect(response).to have_http_status(:ok)
+        expect(flash.now[:notice]).to eq("Your registration has been reactivated.")
+      end
+
+      it "reactivates via HTML format and redirects to ticket" do
+        post event_registrant_registration_path(event_id: event.id)
+
+        expect(cancelled_registration.reload.status).to eq("registered")
+        expect(response).to redirect_to(registration_ticket_path(cancelled_registration.slug))
+        expect(flash[:notice]).to eq("Your registration has been reactivated.")
+      end
+    end
+
     context "when creation fails" do
       before do
         allow_any_instance_of(EventRegistration)

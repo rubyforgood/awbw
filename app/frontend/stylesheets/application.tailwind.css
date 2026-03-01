@@ -243,6 +243,11 @@ textarea.comment-truncated:focus {
   background-color: white !important;
 }
 
+.event-view-registration-btn:hover {
+  color: rgb(22, 101, 52) !important;
+  background-color: white !important;
+}
+
 .event-deregister-btn:hover {
   background-color: rgb(170, 46, 0) !important;
   color: white !important;
