@@ -1,0 +1,116 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900">Event Detail</h1>
+        <%= link_to "Back to Events",
+                    admin_activities_events_path,
+                    class: "text-indigo-600 hover:underline text-sm" %>
+      </div>
+
+      <!-- Event Info -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
+        <dl class="divide-y divide-gray-100 text-sm">
+          <div class="py-3 flex items-baseline gap-4">
+            <dt class="text-gray-500 font-medium w-28 shrink-0">Event Name</dt>
+            <dd class="text-gray-900"><%= @event.name %></dd>
+          </div>
+
+          <div class="py-3 flex items-baseline gap-4">
+            <dt class="text-gray-500 font-medium w-28 shrink-0">Time</dt>
+            <dd class="text-gray-900"><%= @event.time.in_time_zone.strftime("%Y-%m-%d %H:%M:%S %Z") %></dd>
+          </div>
+
+          <div class="py-3 flex items-baseline gap-4">
+            <dt class="text-gray-500 font-medium w-28 shrink-0">User</dt>
+            <dd>
+              <% if @event.user %>
+                <%= link_to @event.user.full_name,
+                            user_path(@event.user),
+                            class: "text-indigo-600 hover:underline" %>
+              <% else %>
+                <span class="text-gray-400 italic">Guest</span>
+              <% end %>
+            </dd>
+          </div>
+
+          <div class="py-3 flex items-baseline gap-4">
+            <dt class="text-gray-500 font-medium w-28 shrink-0">Visit ID</dt>
+            <dd>
+              <%= link_to @event.visit_id,
+                          admin_activities_visits_path(visit_id: @event.visit_id),
+                          class: "text-indigo-600 hover:underline" %>
+            </dd>
+          </div>
+
+          <% if @event.resource_type.present? %>
+            <div class="py-3 flex items-baseline gap-4">
+              <dt class="text-gray-500 font-medium w-28 shrink-0">Resource</dt>
+              <dd class="text-gray-900">
+                <%
+                  resource_path = begin
+                    polymorphic_path(@event.resource_type.constantize.find(@event.resource_id))
+                  rescue
+                    nil
+                  end
+                %>
+                <% if resource_path %>
+                  <%= link_to "#{@event.resource_type}.find(#{@event.resource_id})",
+                              resource_path,
+                              class: "text-indigo-600 hover:underline" %>
+                <% else %>
+                  <%= @event.resource_type %>.find(<%= @event.resource_id %>)
+                <% end %>
+              </dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+
+      <!-- Properties -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Properties</h2>
+
+        <% if @event.properties.present? && @event.properties.any? %>
+          <%
+            # Show resource_title first, then remaining props
+            ordered_keys = []
+            ordered_keys << "resource_title" if @event.properties.key?("resource_title")
+            @event.properties.each_key do |k|
+              ordered_keys << k unless k == "resource_title"
+            end
+          %>
+          <dl class="divide-y divide-gray-100">
+            <% ordered_keys.each do |key|
+              value = @event.properties[key] %>
+              <div class="py-3 flex items-baseline gap-4">
+                <dt class="text-sm font-medium text-gray-500 w-36 shrink-0"><%= key %></dt>
+                <dd class="text-sm text-gray-900">
+                  <% if key == "resource_title" && @event.resource_type.present? %>
+                    <%
+                      title_resource_path = begin
+                        polymorphic_path(@event.resource_type.constantize.find(@event.resource_id))
+                      rescue
+                        nil
+                      end
+                    %>
+                    <% if title_resource_path %>
+                      <%= link_to value, title_resource_path, class: "text-indigo-600 hover:underline" %>
+                    <% else %>
+                      <%= value %>
+                    <% end %>
+                  <% elsif value.is_a?(Hash) || value.is_a?(Array) %>
+                    <pre class="bg-gray-50 rounded-lg p-3 overflow-x-auto text-xs"><%= JSON.pretty_generate(value) %></pre>
+                  <% else %>
+                    <%= value %>
+                  <% end %>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        <% else %>
+          <p class="text-gray-400 italic text-sm">No properties</p>
+        <% end %>
+      </div>
+</div>

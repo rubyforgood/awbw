@@ -66,6 +66,11 @@ module Admin
       @events = scope.paginate(page: page, per_page: per_page)
     end
 
+    def show
+      authorize! :ahoy_activity, to: :show?
+      @event = Ahoy::Event.includes(:user, :visit).find(params[:id])
+    end
+
     def visits
       authorize! :ahoy_activity, to: :visits?
 

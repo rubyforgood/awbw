@@ -61,6 +61,7 @@ Rails.application.routes.draw do
   namespace :admin do
     get "/",                         to: "home#index" # admin home page
     get "activities/events",         to: "ahoy_activities#index", as: "activities_events"
+    get "activities/events/:id",    to: "ahoy_activities#show", as: "activities_event"
     get "activities/visits",         to: "ahoy_activities#visits", as: "activities_visits"
     get "activities/charts",         to: "ahoy_activities#charts", as: "activities_charts"
     get "activities/counts",         to: "analytics#index", as: "activities_counts"

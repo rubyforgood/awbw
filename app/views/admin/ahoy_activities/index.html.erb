@@ -121,16 +121,16 @@
       </div>
 
       <!-- Events Table -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
         <table class="min-w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
           <tr>
-            <th class="px-4 py-3 text-left">Time</th>
+            <th class="px-4 py-3 text-left rounded-tl-xl">Time</th>
             <th class="px-4 py-3 text-left">Event</th>
             <th class="px-4 py-3 text-left">Resource</th>
             <th class="px-4 py-3 text-left">User</th>
             <th class="px-4 py-3 text-left">Visit ID</th>
-            <th class="px-4 py-3 text-left">Properties</th>
+            <th class="px-4 py-3 text-left rounded-tr-xl">Properties</th>
           </tr>
           </thead>
 
@@ -165,12 +165,34 @@
 
               <td class="px-4 py-3 text-gray-500 relative group">
                 <% if event.properties.present? && event.properties.any? %>
-                  <span class="cursor-default text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded">
+                  <%= link_to admin_activities_event_path(event),
+                              class: "cursor-default text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100" do %>
                     <%= event.properties.size %> <%= "prop".pluralize(event.properties.size) %>
-                  </span>
-                  <div class="hidden group-hover:block absolute z-50 left-0 top-full mt-1 bg-gray-900 text-gray-100 text-xs rounded-lg shadow-lg p-3 max-w-sm whitespace-pre-wrap">
-                    <% event.properties.each do |key, value| %>
-                      <div class="mb-1 last:mb-0"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value.is_a?(Hash) ? value.to_json : value %></div>
+                  <% end %>
+                  <%
+                    props = event.properties.dup
+                    display_props = []
+                    # Combine polymorphic _type/_id pairs
+                    props.keys.select { |k| k.end_with?("_type") }.each do |type_key|
+                      prefix = type_key.chomp("_type")
+                      id_key = "#{prefix}_id"
+                      if props.key?(id_key)
+                        display_props << [prefix, "#{props[type_key]}.find(#{props[id_key]})"]
+                        props.delete(type_key)
+                        props.delete(id_key)
+                      end
+                    end
+                    # Show resource_title first, then remaining props
+                    if props.key?("resource_title")
+                      display_props.unshift(["resource_title", props.delete("resource_title")])
+                    end
+                    props.each do |key, value|
+                      display_props << [key, value.is_a?(Hash) ? value.to_json : value]
+                    end
+                  %>
+                  <div class="hidden group-hover:block absolute z-50 right-0 top-full bg-gray-900 text-gray-100 text-xs rounded-lg shadow-lg px-3 py-3 max-h-64 overflow-y-auto" style="width: 400px;">
+                    <% display_props.each do |key, value| %>
+                      <div class="py-1"><span class="text-indigo-300 font-semibold"><%= key %>:</span> <%= value %></div>
                     <% end %>
                   </div>
                 <% else %>
