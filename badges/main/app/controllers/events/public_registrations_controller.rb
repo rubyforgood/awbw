@@ -18,7 +18,8 @@ module Events
         return
       end
 
-      @form_fields = @form.form_fields.where(status: :active).reorder(position: :asc)
+      @form_fields = visible_form_fields
+      @scholarship = scholarship_mode?
       @event = @event.decorate
     end
 
@@ -35,7 +36,8 @@ module Events
 
       @field_errors = validate_required_fields(form_params)
       if @field_errors.any?
-        @form_fields = @form.form_fields.where(status: :active).reorder(position: :asc)
+        @form_fields = visible_form_fields
+        @scholarship = scholarship_mode?
         @event = @event.decorate
         render :new, status: :unprocessable_content
         return
@@ -46,14 +48,15 @@ module Events
       result = EventRegistrationServices::PublicRegistration.call(
         event: @event,
         form: @form,
-        form_params: form_params
+        form_params: form_params,
+        scholarship_requested: scholarship_mode?
       )
 
       if result.success?
         redirect_to registration_ticket_path(result.event_registration.slug),
                     notice: "You have been successfully registered!"
       else
-        @form_fields = @form.form_fields.where(status: :active).reorder(position: :asc)
+        @form_fields = visible_form_fields
         @event = @event.decorate
         flash.now[:alert] = result.errors.join(", ")
         render :new, status: :unprocessable_content
@@ -63,7 +66,15 @@ module Events
     def show
       authorize! :public_registration, to: :show?
 
-      registration = EventRegistration.find_by!(slug: params[:reg], event_id: @event.id)
+      if params[:reg].present?
+        registration = EventRegistration.find_by!(slug: params[:reg], event_id: @event.id)
+        person = registration.registrant
+      elsif params[:person_id].present?
+        person = Person.find(params[:person_id])
+      else
+        redirect_to event_path(@event), alert: "Registration not found."
+        return
+      end
 
       @form = registration_form
       unless @form
@@ -71,7 +82,7 @@ module Events
         return
       end
 
-      @person_form = @form.person_forms.find_by(person: registration.registrant)
+      @person_form = @form.person_forms.find_by(person: person)
       unless @person_form
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
@@ -89,7 +100,21 @@ module Events
     end
 
     def registration_form
-      @event.forms.find_by(name: EventRegistrationFormBuilder::FORM_NAME)
+      @event.registration_form
+    end
+
+    def scholarship_mode?
+      params[:scholarship].present?
+    end
+
+    def visible_form_fields
+      scope = @form.form_fields.where(status: :active)
+      if scholarship_mode?
+        scope = scope.where.not(field_group: "payment")
+      else
+        scope = scope.where.not(field_group: "scholarship")
+      end
+      scope.reorder(position: :asc)
     end
 
     def ensure_registerable
@@ -100,7 +125,7 @@ module Events
 
     def validate_required_fields(form_params)
       errors = {}
-      fields = @form.form_fields.where(status: :active)
+      fields = visible_form_fields
       fields_by_key = fields.select { |f| f.field_key.present? }.index_by(&:field_key)
 
       fields.find_each do |field|

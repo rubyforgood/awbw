@@ -10,7 +10,7 @@ class Event < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
   has_many :payments
-  has_many :forms, as: :owner, dependent: :destroy
+  has_many :event_forms, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
@@ -21,6 +21,7 @@ class Event < ApplicationRecord
            as: :owner, class_name: "GalleryAsset", dependent: :destroy
   has_many :assets, as: :owner, dependent: :destroy
   # has_many through
+  has_many :forms, through: :event_forms
   has_many :registrants, through: :event_registrations, class_name: "Person"
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
@@ -32,6 +33,7 @@ class Event < ApplicationRecord
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :published, in: [ true, false ]
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
+  validate :registration_form_required_when_publicly_registerable, on: :update
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -46,7 +48,7 @@ class Event < ApplicationRecord
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
   scope :featured, -> { registerable.where(published: true, featured: true) } # overrides Publishable
-  scope :publicly_featured, -> { registerable.where(published: true, publicly_visible: true, publicly_featured: true) } # overrides Publishable
+  scope :publicly_featured, -> { where(published: true, publicly_visible: true, publicly_featured: true) } # overrides Featureable
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
 
   def self.search_by_params(params)
@@ -56,6 +58,14 @@ class Event < ApplicationRecord
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     stories
+  end
+
+  def registration_form
+    forms.find_by(event_forms: { role: "registration" })
+  end
+
+  def scholarship_form
+    forms.find_by(event_forms: { role: "scholarship" })
   end
 
   def active_registration_for(person)
@@ -124,13 +134,25 @@ class Event < ApplicationRecord
 
   private
 
+  def registration_form_required_when_publicly_registerable
+    return unless public_registration_enabled?
+    return if will_save_change_to_public_registration_enabled?
+    return if event_forms.registration.exists?
+
+    errors.add(:public_registration_enabled, "requires a registration form to be selected")
+  end
+
   def public_registration_just_enabled?
     public_registration_enabled? && saved_change_to_public_registration_enabled?
   end
 
   def build_public_registration_form
-    return if forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)
+    return if event_forms.registration.exists?
 
-    EventRegistrationFormBuilder.build!(self)
+    form_name = title&.match?(/training/i) ? ExtendedEventRegistrationFormBuilder::FORM_NAME : ShortEventRegistrationFormBuilder::FORM_NAME
+    form = Form.standalone.find_by(name: form_name)
+    return unless form
+
+    event_forms.create!(form: form, role: "registration")
   end
 end

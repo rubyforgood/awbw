@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_230836) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_120200) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -397,11 +397,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_230836) do
     t.index ["contactable_type", "contactable_id"], name: "index_contact_methods_on_contactable"
   end
 
+  create_table "event_forms", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.integer "form_id", null: false
+    t.string "role", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "form_id", "role"], name: "index_event_forms_on_event_id_and_form_id_and_role", unique: true
+    t.index ["event_id"], name: "index_event_forms_on_event_id"
+    t.index ["form_id"], name: "index_event_forms_on_form_id"
+  end
+
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_id"
     t.bigint "registrant_id", null: false
     t.boolean "scholarship_recipient", default: false, null: false
+    t.boolean "scholarship_requested", default: false, null: false
     t.boolean "scholarship_tasks_completed", default: false, null: false
     t.string "slug"
     t.string "status", default: "registered", null: false
@@ -512,8 +524,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_230836) do
     t.datetime "created_at", precision: nil, null: false
     t.integer "form_builder_id"
     t.string "name"
-    t.integer "owner_id", null: false
-    t.string "owner_type", null: false
+    t.integer "owner_id"
+    t.string "owner_type"
     t.boolean "scholarship_application", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
@@ -1328,6 +1340,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_230836) do
   add_foreign_key "community_news", "users", column: "updated_by_id"
   add_foreign_key "community_news", "windows_types"
   add_foreign_key "contact_methods", "addresses"
+  add_foreign_key "event_forms", "events"
+  add_foreign_key "event_forms", "forms"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "people", column: "registrant_id"
   add_foreign_key "events", "locations"

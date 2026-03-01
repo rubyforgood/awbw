@@ -4,7 +4,9 @@ RSpec.describe Form do
   # pending "add some examples to (or delete) #{__FILE__}"
 
   describe 'associations' do
-    it { should belong_to(:owner) } # Polymorphic
+    it { should belong_to(:owner).optional } # Polymorphic, optional for standalone forms
+    it { should have_many(:event_forms).dependent(:destroy) }
+    it { should have_many(:events).through(:event_forms) }
     it { should have_many(:form_fields).dependent(:destroy).inverse_of(:form) }
     it { should have_many(:user_forms) }
     it { should have_many(:reports) } # As :owner

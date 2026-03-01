@@ -242,4 +242,54 @@ RSpec.describe "Events", type: :request do
       end
     end
   end
+
+  describe "GET /events/:id/manage" do
+    let(:person) { create(:person) }
+    let!(:registration) { create(:event_registration, event: event, registrant: person) }
+
+    before { sign_in admin }
+
+    context "registration form icon" do
+      let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
+
+      it "shows green icon when person submitted the current registration form" do
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        create(:person_form, person: person, form: reg_form)
+
+        get manage_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('fa-solid fa-file-lines')
+      end
+
+      it "shows gray icon when person has not submitted any form" do
+        create(:event_form, event: event, form: reg_form, role: "registration")
+
+        get manage_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('fa-regular fa-file-lines')
+      end
+
+      it "shows green icon when person submitted a non-registration form for the event" do
+        scholarship_form = create(:form, :standalone, name: "Scholarship Form")
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        create(:event_form, event: event, form: scholarship_form, role: "scholarship")
+        create(:person_form, person: person, form: scholarship_form)
+
+        get manage_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('fa-solid fa-file-lines')
+        expect(response.body).not_to include('fa-regular fa-file-lines')
+      end
+
+      it "does not show any form icon when event has no forms" do
+        get manage_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include('fa-file-lines')
+      end
+    end
+  end
 end

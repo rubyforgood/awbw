@@ -49,6 +49,46 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(data_rows).to include(expected_row)
       end
 
+      context "registration form icon" do
+        let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
+        let(:person) { existing_registration.registrant }
+
+        it "shows green icon when person submitted the current registration form" do
+          create(:event_form, event: event, form: reg_form, role: "registration")
+          create(:person_form, person: person, form: reg_form)
+
+          get event_registrations_path
+
+          expect(response.body).to include("fa-solid fa-file-lines")
+        end
+
+        it "shows gray icon when person has not submitted any form" do
+          create(:event_form, event: event, form: reg_form, role: "registration")
+
+          get event_registrations_path
+
+          expect(response.body).to include("fa-regular fa-file-lines")
+        end
+
+        it "shows green icon when person submitted a non-registration form for the event" do
+          scholarship_form = create(:form, :standalone, name: "Scholarship Form")
+          create(:event_form, event: event, form: reg_form, role: "registration")
+          create(:event_form, event: event, form: scholarship_form, role: "scholarship")
+          create(:person_form, person: person, form: scholarship_form)
+
+          get event_registrations_path
+
+          expect(response.body).to include("fa-solid fa-file-lines")
+          expect(response.body).not_to include("fa-regular fa-file-lines")
+        end
+
+        it "does not show any form icon when event has no forms" do
+          get event_registrations_path
+
+          expect(response.body).not_to include("fa-file-lines")
+        end
+      end
+
       it "paginates results" do
         additional = create_list(:event_registration, 3)
 

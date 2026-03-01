@@ -10,7 +10,7 @@ class EventRegistrationsController < ApplicationController
     base_scope = authorized_scope(EventRegistration.all)
     filtered = base_scope.search_by_params(params)
     @event_registrations_count = filtered.size
-    @event_registrations = filtered.includes(registrant: [ :user, { avatar_attachment: :blob } ], event: :forms).paginate(page: params[:page], per_page: per_page)
+    @event_registrations = filtered.includes(registrant: [ :user, { avatar_attachment: :blob } ], event: :event_forms).paginate(page: params[:page], per_page: per_page)
     @events = Event.order(start_date: :desc)
     @filtered_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
     @registrants = authorized_scope(Person.left_joins(:user))
@@ -30,7 +30,12 @@ class EventRegistrationsController < ApplicationController
 
   def show
     authorize! @event_registration
-    redirect_to registration_ticket_path(@event_registration.slug), status: :moved_permanently
+
+    if @event_registration.slug.present?
+      redirect_to registration_ticket_path(@event_registration.slug), status: :moved_permanently
+    else
+      redirect_to edit_event_registration_path(@event_registration)
+    end
   end
 
   def new
@@ -162,7 +167,7 @@ class EventRegistrationsController < ApplicationController
   private
 
   def set_event_registration
-    @event_registration = EventRegistration.includes(:registrant, { event: [ :location, :forms ] }, comments: [ :created_by, :updated_by ]).find(params[:id])
+    @event_registration = EventRegistration.includes(:registrant, { event: [ :location, :event_forms ] }, comments: [ :created_by, :updated_by ]).find(params[:id])
   end
 
   # Strong parameters

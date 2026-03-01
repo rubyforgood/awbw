@@ -3,6 +3,8 @@
     <p class="text-sm text-gray-500 px-6 py-4 border-b border-gray-100">
       <%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %>
     </p>
+    <% event_form_ids = @event.form_ids %>
+    <% form_submissions = event_form_ids.any? ? PersonForm.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse border border-gray-200">
@@ -26,6 +28,20 @@
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
                   <div class="flex items-center gap-1">
                     <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                    <% if event_form_ids.any? && (submissions = form_submissions[person.id]) %>
+                      <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
+                      <% tooltip_parts = submissions.map { |name, ts| "#{name} — Submitted #{ts.strftime('%B %d, %Y at %l:%M %P')}" } %>
+                      <% tooltip_parts << "Scholarship requested" if registration.scholarship_requested? %>
+                      <%= link_to event_public_registration_path(@event, **form_show_params),
+                                  class: "text-green-600 hover:text-green-800",
+                                  title: tooltip_parts.join("\n"),
+                                  target: "_blank",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fa-solid fa-file-lines"></i>
+                      <% end %>
+                    <% elsif event_form_ids.any? %>
+                      <i class="fa-regular fa-file-lines text-gray-300" title="No registration form submitted"></i>
+                    <% end %>
                     <% if registration.comments.any? %>
                       <% latest_comment = registration.comments.first %>
                       <i class="fa-solid fa-message text-purple-400" title="<%= registration.comments.size %> comment<%= 's' if registration.comments.size != 1 %> — Latest (<%= latest_comment.created_at.strftime('%Y-%m-%d') %>): <%= latest_comment.body.truncate(100) %>"></i>

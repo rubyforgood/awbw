@@ -874,45 +874,73 @@ puts "Creating Stories…"
 end
 
 
-puts "Creating Events…"
-[
-  "Healing Through Art: Spring Community Gathering",
-  "Facilitator Training: Trauma-Informed Art Practices",
-  "Youth Creativity Day",
-  "Mindful Art for Survivors Workshop",
-  "Community Open Studio Night",
-  "Annual Celebration of Voices",
-  "Art as Healing: Virtual Group Session",
-  "Leaders in Creativity: Facilitator Roundtable",
-  "Family Creative Expression Day",
-  "Creative Safety & Support Workshop"
-].each_with_index do |title, i|
-  start_date = Time.current + rand(5..60).days
-  end_date   = start_date + rand(1..3).hours
-  registration_close = start_date - rand(2..10).days
+puts "Creating Events with shared forms…"
+admin_user = User.find_by(email: "umberto.user@example.com")
+long_form = Form.standalone.find_by!(name: ExtendedEventRegistrationFormBuilder::FORM_NAME)
+short_form = Form.standalone.find_by!(name: ShortEventRegistrationFormBuilder::FORM_NAME)
+scholarship_form = Form.standalone.find_by!(name: ScholarshipApplicationFormBuilder::FORM_NAME)
 
-  visibility = if i < 3
-    { published: true, featured: true }
-  elsif i < 6
-    { published: true, publicly_visible: true, publicly_featured: true }
-  else
-    { published: [ true, true, false ].sample, featured: [ true, false ].sample,
-      publicly_visible: [ true, false ].sample, publicly_featured: [ true, false ].sample }
-  end
+# Each entry: [title, form_type, cost_cents, scholarship?, visibility]
+# form_type: :long, :short, or :none
+dev_events = [
+  [ "AWBW Facilitator Training", :long, 15_000, true,
+    { published: true, featured: true, publicly_visible: true } ],
+  [ "Facilitator Training: Trauma-Informed Art Practices", :long, 12_000, true,
+    { published: true, featured: true } ],
+  [ "A Year of Healing and Rebuilding Together Wellness Day", :short, 0, false,
+    { published: true, publicly_visible: true, publicly_featured: true, featured: true } ],
+  [ "Youth Creativity Day", :short, 0, false,
+    { published: true, publicly_visible: true, publicly_featured: true } ],
+  [ "Mindful Art for Survivors Workshop", :short, 5_000, true,
+    { published: true, publicly_visible: true, publicly_featured: true } ],
+  [ "Community Open Studio Night", :none, 0, false,
+    { published: true, featured: true } ],
+  [ "Annual Celebration of Voices", :none, 0, false,
+    { published: true, publicly_visible: true } ],
+  [ "Art as Healing: Virtual Group Session", :short, 0, false,
+    { published: true, featured: true } ],
+  [ "Leaders in Creativity: Facilitator Roundtable", :short, 0, false,
+    { published: true, publicly_visible: true } ],
+  [ "Family Creative Expression Day", :short, 0, false,
+    { published: true, publicly_visible: true, publicly_featured: true } ],
+  [ "Creative Safety & Support Workshop", :short, 2_500, true,
+    { published: true, featured: true } ],
+  [ "Healing Through Art: Spring Community Gathering", :short, 0, false,
+    { published: true, publicly_visible: true } ]
+]
+
+dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visibility), i|
+  start_date = Time.current + (5 + i * 5).days
+  end_date = start_date + rand(2..4).hours
+  registration_close = start_date - rand(2..7).days
+  registerable = form_type != :none
 
   desc_content = Faker::Lorem.paragraph(sentence_count: 6)
-  Event.where(title: title,
-              start_date: start_date,
-              end_date: end_date,)
-       .first_or_create!(
-    description: desc_content,
-    rhino_description: desc_content,
-    registration_close_date: registration_close,
-    created_by_id: User.first&.id,
-    created_at: Time.current - rand(10..90).days,
-    updated_at: Time.current - rand(1..30).days,
-    **visibility
-  )
+  event = Event.find_or_create_by!(title: title) do |e|
+    e.description = desc_content
+    e.rhino_description = desc_content
+    e.start_date = start_date
+    e.end_date = end_date
+    e.registration_close_date = registration_close
+    e.cost_cents = cost_cents
+    e.public_registration_enabled = false
+    e.created_by = admin_user
+    visibility.each { |k, v| e.send(:"#{k}=", v) }
+  end
+
+  if registerable
+    reg_form = form_type == :long ? long_form : short_form
+    EventForm.find_or_create_by!(event: event, role: "registration") do |ef|
+      ef.form = reg_form
+    end
+    event.update!(public_registration_enabled: true) unless event.public_registration_enabled?
+  end
+
+  if scholarship
+    EventForm.find_or_create_by!(event: event, role: "scholarship") do |ef|
+      ef.form = scholarship_form
+    end
+  end
 end
 
 
@@ -1099,109 +1127,3 @@ puts "Creating Tutorials…"
 ].each do |tutorial_data|
   Tutorial.where(title: tutorial_data[:title]).first_or_create!(tutorial_data)
 end
-
-puts "Creating registerable Event with registration form…"
-Event.find_or_create_by!(title: "AWBW Facilitator Training") do |event|
-  event.start_date = 2.months.from_now
-  event.end_date = 2.months.from_now + 3.hours
-  event.registration_close_date = 2.months.from_now - 1.day
-  event.published = true
-  event.publicly_visible = true
-  event.featured = true
-  event.public_registration_enabled = true
-  event.cost = 150
-  event.created_by = User.find_by(email: "umberto.user@example.com")
-end
-
-puts "Creating Wellness Day Event with custom registration form…"
-wellness_event = Event.find_or_create_by!(title: "A Year of Healing and Rebuilding Together Wellness Day") do |event|
-  event.start_date = 3.months.from_now
-  event.end_date = 3.months.from_now + 4.hours
-  event.registration_close_date = 3.months.from_now - 1.day
-  event.published = true
-  event.publicly_visible = true
-  event.publicly_featured = true
-  event.featured = true
-  event.public_registration_enabled = false
-  event.cost = 0
-  event.created_by = User.find_by(email: "umberto.user@example.com")
-end
-
-# Rebuild the registration form from scratch so it always matches the seed definition
-old_form = wellness_event.forms.find_by(name: EventRegistrationFormBuilder::FORM_NAME)
-if old_form
-  old_form.person_forms.destroy_all
-  old_form.destroy!
-end
-
-form = wellness_event.forms.create!(name: EventRegistrationFormBuilder::FORM_NAME)
-position = 0
-
-# --- Name ---
-position += 1
-form.form_fields.create!(
-  question: "First Name", answer_type: :free_form_input_one_line, status: :active,
-  position: position, is_required: true, field_key: "first_name", field_group: "contact"
-)
-
-position += 1
-form.form_fields.create!(
-  question: "Last Name", answer_type: :free_form_input_one_line, status: :active,
-  position: position, is_required: true, field_key: "last_name", field_group: "contact"
-)
-
-# --- Email ---
-position += 1
-form.form_fields.create!(
-  question: "Enter Email", answer_type: :free_form_input_one_line, status: :active,
-  position: position, is_required: true, field_key: "primary_email", field_group: "contact"
-)
-
-position += 1
-form.form_fields.create!(
-  question: "Confirm Email", answer_type: :free_form_input_one_line, status: :active,
-  position: position, is_required: true, field_key: "confirm_email", field_group: "contact"
-)
-
-# --- Consent ---
-position += 1
-consent_field = form.form_fields.create!(
-  question: "Consent", answer_type: :multiple_choice_checkbox, status: :active,
-  position: position, is_required: true, field_key: "consent", field_group: "consent",
-  instructional_hint: "By submitting this form, I consent to receive updates from A Window Between Worlds, " \
-    "including information about this event as well as upcoming events, training opportunities, resources, " \
-    "impact stories, and ways to support our mission. I understand I can unsubscribe at any time."
-)
-
-ao = AnswerOption.find_or_create_by!(name: "I agree to receive email communications from A Window Between Worlds.") do |a|
-  a.position = 0
-end
-consent_field.form_field_answer_options.create!(answer_option: ao)
-
-# --- How did you hear about this event? ---
-position += 1
-referral_field = form.form_fields.create!(
-  question: "How did you hear about this event?", answer_type: :multiple_choice_checkbox, status: :active,
-  position: position, is_required: true, field_key: "referral_source", field_group: "qualitative"
-)
-
-[ "AWBW Email", "Facebook", "Instagram", "LinkedIn", "Online Search", "Word of Mouth", "Other" ].each_with_index do |opt, idx|
-  ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
-  referral_field.form_field_answer_options.create!(answer_option: ao)
-end
-
-# --- Training interest ---
-position += 1
-interest_field = form.form_fields.create!(
-  question: "Are you interested in learning more about upcoming trainings or resources?",
-  answer_type: :multiple_choice_checkbox, status: :active,
-  position: position, is_required: false, field_key: "training_interest", field_group: "qualitative"
-)
-
-[ "Yes", "Not right now" ].each_with_index do |opt, idx|
-  ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
-  interest_field.form_field_answer_options.create!(answer_option: ao)
-end
-
-# Enable public registration after form is built (avoids triggering the default form builder)
-wellness_event.update!(public_registration_enabled: true) unless wellness_event.public_registration_enabled?
