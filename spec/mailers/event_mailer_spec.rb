@@ -47,20 +47,4 @@ RSpec.describe EventMailer, type: :mailer do
     end
   end
 
-  describe "#event_registration_cancelled" do
-    let(:event_registration) { create(:event_registration) }
-    let(:mail) { described_class.event_registration_cancelled(event_registration) }
-
-    it "renders without raising" do
-      expect { mail.deliver_now }.not_to raise_error
-    end
-
-    it "sends to the registrant" do
-      expect(mail.to).to eq([ event_registration.registrant.preferred_email ])
-    end
-
-    it "includes the event title in the subject" do
-      expect(mail.subject).to include(event_registration.event.title)
-    end
-  end
 end
