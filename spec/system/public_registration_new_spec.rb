@@ -14,7 +14,7 @@ RSpec.describe "Public registration new page", type: :system do
 
   before do
     driven_by(:rack_test)
-    EventRegistrationFormBuilder.build!(event)
+    ExtendedEventRegistrationFormBuilder.build!(event)
   end
 
   describe "back to event link" do

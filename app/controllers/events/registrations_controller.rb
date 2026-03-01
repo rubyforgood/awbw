@@ -38,6 +38,19 @@ module Events
     end
 
     def create
+      existing = @event.event_registrations.find_by(registrant: @registrant)
+
+      if existing&.status == "cancelled"
+        authorize! existing
+        existing.update!(status: "registered")
+        success = "Your registration has been reactivated."
+        respond_to do |format|
+          format.turbo_stream { flash.now[:notice] = success }
+          format.html { redirect_to registration_ticket_path(existing.slug), notice: success }
+        end
+        return
+      end
+
       @event_registration = @event.event_registrations.new(registrant: @registrant)
       authorize! @event_registration
 

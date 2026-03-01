@@ -16,8 +16,9 @@
       <% if allowed_to?(:edit?, @event) %>
         <%= link_to "Edit", edit_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <%= link_to "New registration", new_event_registration_path(event_id: @event.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-        <% if @event.forms.exists?(name: "Public Registration") %>
+        <% if @event.event_forms.registration.exists? %>
           <%= link_to "Public registration", new_event_public_registration_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1", target: "_blank" %>
+          <%= link_to "Scholarship version", new_event_public_registration_path(@event, scholarship: 1), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1", target: "_blank" %>
         <% end %>
       <% end %>
     </div>

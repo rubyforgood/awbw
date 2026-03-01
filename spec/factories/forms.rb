@@ -1,8 +1,13 @@
 FactoryBot.define do
   factory :form do
-    association :owner, factory: :user
+    name { "Test Form" }
 
-    # Add other attributes if needed based on schema
-    # name { "Default Form Name" } # Name seems to be method-generated
+    trait :standalone do
+      owner { nil }
+    end
+
+    trait :with_owner do
+      association :owner, factory: :user
+    end
   end
 end

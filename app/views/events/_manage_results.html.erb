@@ -3,6 +3,8 @@
     <p class="text-sm text-gray-500 px-6 py-4 border-b border-gray-100">
       <%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %>
     </p>
+    <% reg_form = @event.registration_form %>
+    <% form_submissions = reg_form ? reg_form.person_forms.where(person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at).to_h : {} %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse border border-gray-200">
@@ -26,6 +28,19 @@
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
                   <div class="flex items-center gap-1">
                     <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                    <% if reg_form && form_submissions.key?(person.id) %>
+                      <% submitted_at = form_submissions[person.id] %>
+                      <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
+                      <%= link_to event_public_registration_path(@event, **form_show_params),
+                                  class: "text-green-600 hover:text-green-800",
+                                  title: "#{reg_form.name} — Submitted #{submitted_at.strftime('%B %d, %Y at %l:%M %P')}#{' — Scholarship requested' if registration.scholarship_requested?}",
+                                  target: "_blank",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fa-solid fa-file-lines"></i>
+                      <% end %>
+                    <% elsif reg_form %>
+                      <i class="fa-regular fa-file-lines text-gray-300" title="No registration form submitted"></i>
+                    <% end %>
                     <% if registration.comments.any? %>
                       <% latest_comment = registration.comments.first %>
                       <i class="fa-solid fa-message text-purple-400" title="<%= registration.comments.size %> comment<%= 's' if registration.comments.size != 1 %> — Latest (<%= latest_comment.created_at.strftime('%Y-%m-%d') %>): <%= latest_comment.body.truncate(100) %>"></i>

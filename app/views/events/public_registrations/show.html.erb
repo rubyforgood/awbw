@@ -1,22 +1,19 @@
 <% content_for(:page_bg_class, "public") %>
 
-<div class="max-w-2xl mx-auto py-8 px-4">
+<% reg = @person_form.person.event_registrations.find_by(event: @event) %>
+<% back_path = reg&.slug.present? ? registration_ticket_path(reg.slug) : event_path(@event) %>
+<div class="flex flex-wrap items-center gap-2 mb-4">
+  <%= link_to "← Back to Registration", back_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+</div>
 
-  <%# ---- BACK LINK ---- %>
-  <div class="mb-4">
-    <% reg = @person_form.person.event_registrations.find_by(event: @event) %>
-    <%= link_to registration_ticket_path(reg.slug),
-                class: "text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Back to Registration
-    <% end %>
-  </div>
+<div class="max-w-2xl mx-auto py-8 px-4">
 
   <%# ---- FORM RESPONSES CARD ---- %>
   <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
 
     <%# Card Header %>
     <div class="bg-blue-900 text-white px-6 py-4">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-8">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto") %>
         </div>

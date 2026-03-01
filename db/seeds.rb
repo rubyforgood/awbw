@@ -269,20 +269,15 @@ workshop_env_type.update!(display_text: "Workshop Environments", story_specific:
   cat.update!(published: true) unless cat.published?
 end
 
-puts "Creating registerable Event with registration form…"
-reg_event = Event.find_or_create_by!(title: "AWBW Facilitator Training") do |event|
-  event.start_date = 2.months.from_now
-  event.end_date = 2.months.from_now + 3.hours
-  event.registration_close_date = 2.months.from_now - 1.day
-  event.published = true
-  event.publicly_visible = true
-  event.featured = true
-  event.public_registration_enabled = true
-  event.cost = 150
-  event.created_by = User.find_by(email: "umberto.user@example.com")
+puts "Creating standalone registration forms…"
+unless Form.standalone.exists?(name: ShortEventRegistrationFormBuilder::FORM_NAME)
+  ShortEventRegistrationFormBuilder.build_standalone!
 end
 
-puts "Creating Scholarship Application form on the same event…"
-unless reg_event.forms.exists?(name: ScholarshipApplicationFormBuilder::FORM_NAME)
-  ScholarshipApplicationFormBuilder.build!(reg_event)
+unless Form.standalone.exists?(name: ExtendedEventRegistrationFormBuilder::FORM_NAME)
+  ExtendedEventRegistrationFormBuilder.build_standalone!
+end
+
+unless Form.standalone.exists?(name: ScholarshipApplicationFormBuilder::FORM_NAME)
+  ScholarshipApplicationFormBuilder.build_standalone!
 end

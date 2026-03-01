@@ -121,28 +121,62 @@ RSpec.describe Event, type: :model do
   end
 
   describe "#build_public_registration_form" do
-    it "builds a registration form when public_registration_enabled is set on create" do
+    let!(:default_form) { create(:form, name: ShortEventRegistrationFormBuilder::FORM_NAME) }
+    let!(:extended_form) { create(:form, name: ExtendedEventRegistrationFormBuilder::FORM_NAME) }
+
+    it "links the default registration form by default" do
       event = create(:event, public_registration_enabled: true)
-      expect(event.forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)).to be true
+      expect(event.event_forms.registration.exists?).to be true
+      expect(event.registration_form).to eq(default_form)
     end
 
-    it "does not build a registration form when public_registration_enabled is false" do
+    it "links the extended registration form when title contains training" do
+      event = create(:event, title: "Facilitator Training", public_registration_enabled: true)
+      expect(event.event_forms.registration.exists?).to be true
+      expect(event.registration_form).to eq(extended_form)
+    end
+
+    it "does not link a form when public_registration_enabled is false" do
       event = create(:event, public_registration_enabled: false)
-      expect(event.forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)).to be false
+      expect(event.event_forms.registration.exists?).to be false
     end
 
-    it "builds a registration form when toggled to true on update" do
+    it "links a form when toggled to true on update" do
       event = create(:event, public_registration_enabled: false)
       event.update!(public_registration_enabled: true)
-      expect(event.forms.exists?(name: EventRegistrationFormBuilder::FORM_NAME)).to be true
+      expect(event.event_forms.registration.exists?).to be true
+      expect(event.registration_form).to eq(default_form)
     end
 
-    it "does not duplicate the form if one already exists" do
+    it "does not duplicate the link if one already exists" do
       event = create(:event, public_registration_enabled: true)
-      expect(event.forms.where(name: EventRegistrationFormBuilder::FORM_NAME).count).to eq(1)
+      expect(event.event_forms.registration.count).to eq(1)
 
       event.update!(title: "Updated title")
-      expect(event.forms.where(name: EventRegistrationFormBuilder::FORM_NAME).count).to eq(1)
+      expect(event.event_forms.registration.count).to eq(1)
+    end
+  end
+
+  describe "#registration_form" do
+    it "returns the form linked with registration role" do
+      form = create(:form, name: "My Registration")
+      event = create(:event)
+      create(:event_form, event: event, form: form, role: "registration")
+      expect(event.registration_form).to eq(form)
+    end
+
+    it "returns nil when no registration form is linked" do
+      event = create(:event)
+      expect(event.registration_form).to be_nil
+    end
+  end
+
+  describe "#scholarship_form" do
+    it "returns the form linked with scholarship role" do
+      form = create(:form, name: "Scholarship App")
+      event = create(:event)
+      create(:event_form, event: event, form: form, role: "scholarship")
+      expect(event.scholarship_form).to eq(form)
     end
   end
 

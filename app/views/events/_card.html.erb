@@ -2,14 +2,14 @@
 
 <%= tag.div id: dom_id(event, :card),
             class: "relative bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md
-  transition p-4 flex flex-col gap-4" do %>
+  transition p-4 flex flex-col gap-4 h-full" do %>
   <!-- Bookmark -->
   <div class="absolute top-3 right-3 z-20">
     <%= render "bookmarks/editable_bookmark_icon", resource: event.object %>
   </div>
 
   <!-- 1️⃣ Thumbnail + Title Row -->
-  <div class="flex flex-col md:flex-row gap-2">
+  <div class="flex flex-col md:flex-row gap-2 flex-1">
     <!-- Thumbnail -->
     <%= render "assets/display_image",
                resource: event,
@@ -28,83 +28,58 @@
     </div>
   </div>
 
-<div class="flex flex-col gap-2 flex-1 min-w-0 pr-1 mr-4 mt-1">
-  <div class="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">
-    <%= event.rhino_description.to_plain_text %>
-  </div>
-</div>
-
-  <!-- Location + Virtual event label -->
-  <div class="flex flex-wrap items-center gap-x-3 text-sm text-gray-500">
-    <% if event.location.present? %>
-      <span><%= event.location.name %></span>
-    <% end %>
-    <% if event.autoshow_videoconference_label && event.videoconference_label.present? %>
-      <span><%= event.videoconference_label %></span>
-    <% end %>
-  </div>
-
-  <!-- END title row -->
-  <!-- 2️⃣ TIMES + BUTTONS IN ONE ROW -->
-  <div class="times-and-buttons flex flex-wrap items-center justify-between w-full gap-4">
-    <!-- LEFT: Times -->
-    <div class="text-sm text-gray-700 leading-tight whitespace-pre-line">
-      <%= event.times(display_day: true, display_date: true).html_safe %>
+  <!-- Location + Times + Buttons (bottom-aligned group) -->
+  <% registered = current_user && event.actively_registered?(current_user.person) %>
+  <div class="mt-auto flex flex-col gap-4">
+    <div class="text-sm text-gray-700 leading-none">
+      <% if event.location.present? %>
+        <span><%= event.location.name %></span>
+      <% end %>
+      <% if event.autoshow_videoconference_label && event.videoconference_label.present? %>
+        <span><%= event.videoconference_label %></span>
+      <% end %>
+      <div class="mt-1"><%= event.times(display_day: true, display_date: true).html_safe %></div>
     </div>
 
-    <!-- RIGHT: Buttons + Registered -->
     <div class="flex items-center gap-3">
-      <% if current_user %>
-        <% registered = event.actively_registered?(current_user.person) %>
-        <% if allowed_to?(:edit?, event) %>
-          <%= link_to "Edit",
-                    edit_event_path(event),
-                    data: { turbo_frame: "_top"},
-                    class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
-        <% end %>
+    <% if allowed_to?(:edit?, event) %>
+      <%= link_to "Edit",
+                edit_event_path(event),
+                data: { turbo_frame: "_top" },
+                class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% end %>
 
-        <% if registered %>
-          <% registration = event.active_registration_for(current_user.person) %>
-          <%= link_to "View your registration", registration_ticket_path(registration.slug),
-                      class: "text-sm text-green-700 hover:text-green-900 underline" %>
-        <% elsif event.ended? %>
-          <span class="text-sm text-gray-500 italic">Event ended</span>
-          <% if allowed_to?(:manage?, event) %>
-            <%= button_to "Register",
-                        event_registrant_registration_path(event_id: event),
-                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-          <% end %>
-        <% elsif !event.published? %>
-          <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
-        <% elsif event.registerable? %>
-          <%= button_to "Register",
-                      event_registrant_registration_path(event_id: event),
-                      class: "btn btn-primary-outline" %>
-        <% else %>
-          <span class="text-sm text-gray-500 italic">Registration closed</span>
-        <% end %>
-
-      <% elsif event.registerable? && event.object.forms.exists?(name: "Public Registration") %>
+    <% if registered %>
+      <% registration = event.active_registration_for(current_user.person) %>
+      <%= link_to "View registration", registration_ticket_path(registration.slug),
+                  data: { turbo_frame: "_top" },
+                  class: "btn px-3 py-2 text-xs uppercase leading-tight text-white hover:bg-white event-view-registration-btn",
+                  style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 2px solid rgb(22, 101, 52);" %>
+    <% elsif event.ended? %>
+      <span class="text-sm text-gray-500 italic">Event ended</span>
+      <% if allowed_to?(:manage?, event) %>
+        <%= button_to "Register",
+                    event_registrant_registration_path(event_id: event),
+                    class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+      <% end %>
+    <% elsif !event.published? %>
+      <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
+    <% elsif event.registerable? %>
+      <% if user_signed_in? %>
+        <%= button_to "Register",
+                    event_registrant_registration_path(event_id: event),
+                    class: "btn px-3 py-2 text-xs uppercase leading-tight hover:text-white hover:bg-orange-700",
+                    style: "font-family: 'Telefon Bold', sans-serif; color: rgb(170, 46, 0); border: 2px solid rgb(170, 46, 0);" %>
+      <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
         <%= link_to "Register",
                     new_event_public_registration_path(event),
                     data: { turbo_frame: "_top" },
-                    class: "btn btn-primary-outline" %>
+                    class: "btn px-3 py-2 text-xs uppercase leading-tight hover:text-white hover:bg-orange-700",
+                    style: "font-family: 'Telefon Bold', sans-serif; color: rgb(170, 46, 0); border: 2px solid rgb(170, 46, 0);" %>
       <% end %>
+    <% else %>
+      <span class="text-sm text-gray-500 italic">Registration closed</span>
+    <% end %>
     </div>
   </div>
-  <% if current_user %>
-    <% registered ||= event.actively_registered?(current_user.person) %>
-    <!-- 4️⃣ FULL-WIDTH CALENDAR LINKS ROW -->
-    <% if registered %>
-      <div class="flex flex-col items-center mt-4 pt-3 border-t border-gray-100">
-        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
-          Add to Your Calendar
-        </p>
-
-        <div class="social-links flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium">
-          <%= event.calendar_links %>
-        </div>
-      </div>
-    <% end %>
-  <% end %>
 <% end %>

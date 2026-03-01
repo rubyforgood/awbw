@@ -50,14 +50,14 @@ RSpec.describe "Event registration show page", type: :system do
 
   describe "view registration form link" do
     it "links to form show with slug param" do
-      EventRegistrationFormBuilder.build!(event)
-      form = event.forms.find_by(name: "Public Registration")
+      ExtendedEventRegistrationFormBuilder.build!(event)
+      form = event.registration_form
       form.person_forms.create!(person: user.person)
 
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_link("View registration form",
+      expect(page).to have_link("View registration details",
         href: event_public_registration_path(event, reg: registration.slug))
     end
   end
@@ -71,13 +71,13 @@ RSpec.describe "Event registration show page", type: :system do
       expect(page).to have_button("Cancel registration")
     end
 
-    it "shows resend but not cancel for cancelled registration" do
+    it "hides resend and cancel for cancelled registration" do
       registration.update!(status: "cancelled")
 
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_button("Resend confirmation email")
+      expect(page).not_to have_button("Resend confirmation email")
       expect(page).not_to have_button("Cancel registration")
     end
   end

@@ -2,14 +2,15 @@ module EventRegistrationServices
   class PublicRegistration
     Result = Struct.new(:success?, :event_registration, :errors, keyword_init: true)
 
-    def self.call(event:, form:, form_params:)
-      new(event:, form:, form_params:).call
+    def self.call(event:, form:, form_params:, scholarship_requested: false)
+      new(event:, form:, form_params:, scholarship_requested:).call
     end
 
-    def initialize(event:, form:, form_params:)
+    def initialize(event:, form:, form_params:, scholarship_requested: false)
       @event = event
       @form = form
       @form_params = form_params
+      @scholarship_requested = scholarship_requested
       @errors = []
     end
 
@@ -28,6 +29,7 @@ module EventRegistrationServices
 
         existing = @event.event_registrations.find_by(registrant: person)
         if existing
+          existing.update!(scholarship_requested: true) if @scholarship_requested
           update_person_form(person)
           return Result.new(success?: true, event_registration: existing, errors: [])
         end
@@ -229,7 +231,10 @@ module EventRegistrationServices
     end
 
     def create_event_registration(person)
-      @event.event_registrations.create!(registrant: person)
+      @event.event_registrations.create!(
+        registrant: person,
+        scholarship_requested: @scholarship_requested
+      )
     end
 
     def create_person_form(person)

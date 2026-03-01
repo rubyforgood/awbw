@@ -9,6 +9,7 @@ RSpec.describe "events/new", type: :view do
     assign(:locations, [ location ])
     assign(:sectors, [])
     assign(:categories_grouped, [])
+    assign(:registration_forms, [])
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
     allow(view).to receive(:allowed_to?).and_return(true)
   end
