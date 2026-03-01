@@ -23,7 +23,7 @@ class SearchController < ApplicationController
       records = records.where.not(id: exclude_ids)
     end
 
-    records = records.limit(25)
+    records = records.order(Arel.sql(model_class.remote_search_columns.first)).limit(25)
 
     labels = records.map(&:remote_search_label)
     labels = model_class.resolve_duplicate_labels(labels) if model_class.respond_to?(:resolve_duplicate_labels)
