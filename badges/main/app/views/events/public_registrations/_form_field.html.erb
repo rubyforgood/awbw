@@ -67,7 +67,7 @@
                  name="<%= field_name %>"
                  value="<%= ffao.answer_option.name %>"
                  class="text-blue-600 focus:ring-blue-500"
-                 <%= "checked" if value == ffao.answer_option.name %>
+                 <%= "checked" if value == ffao.answer_option.name || (value.blank? && field.field_key == "interested_in_more" && ffao.answer_option.name == "Yes") %>
                  <%= "required" if field.is_required %>>
           <%= ffao.answer_option.name %>
         </label>

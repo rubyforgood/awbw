@@ -1,7 +1,7 @@
 class EventRegistrationsController < ApplicationController
   require "csv"
 
-  skip_before_action :authenticate_user!, only: [ :show ]
+  # show redirects to slug URL; kept for backwards compatibility
   before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -30,6 +30,7 @@ class EventRegistrationsController < ApplicationController
 
   def show
     authorize! @event_registration
+    redirect_to registration_ticket_path(@event_registration.slug), status: :moved_permanently
   end
 
   def new
@@ -67,7 +68,7 @@ class EventRegistrationsController < ApplicationController
             redirect_to manage_event_path(@event_registration.event),
               notice: "Registration created."
           else
-            redirect_to @event_registration,
+            redirect_to registration_ticket_path(@event_registration.slug),
               notice: "Registration created."
           end
         }
@@ -100,7 +101,7 @@ class EventRegistrationsController < ApplicationController
           if params[:return_to] == "manage"
             redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
           else
-            redirect_to @event_registration, notice: "Registration was successfully updated.", status: :see_other
+            redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
           end
         }
       end
@@ -148,7 +149,8 @@ class EventRegistrationsController < ApplicationController
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
-      :event_id, :registrant_id, :status, :scholarship_tasks_completed,
+      :event_id, :registrant_id, :status,
+      :scholarship_recipient, :scholarship_tasks_completed,
       comments_attributes: [ :id, :body, :_destroy ]
     )
   end
@@ -163,7 +165,7 @@ class EventRegistrationsController < ApplicationController
 
   def csv_export(registrations)
     CSV.generate(headers: true) do |csv|
-      csv << [ "First name", "Last name", "Email", "Event" ]
+      csv << [ "First name", "Last name", "Email", "Event", "Scholarship recipient", "Scholarship tasks completed" ]
       registrations.find_each do |er|
         r = er.registrant
         e = er.event
@@ -171,7 +173,9 @@ class EventRegistrationsController < ApplicationController
           r&.first_name.to_s,
           r&.last_name.to_s,
           r&.preferred_email.to_s,
-          e&.title.to_s
+          e&.title.to_s,
+          er.scholarship_recipient? ? "Yes" : "No",
+          er.scholarship_tasks_completed? ? "Yes" : "No"
         ]
       end
     end

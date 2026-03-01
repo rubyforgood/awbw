@@ -150,6 +150,11 @@ RSpec.describe EventRegistration, type: :model do
       expect(reg).to be_paid_in_full
     end
 
+    it "returns true when registrant is a scholarship recipient" do
+      reg = create(:event_registration, :scholarship, event: event, registrant: user.person)
+      expect(reg).to be_paid_in_full
+    end
+
     it "returns true when payments cover cost" do
       reg = create(:event_registration, event: event, registrant: user.person)
       create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1000)
@@ -220,6 +225,26 @@ RSpec.describe EventRegistration, type: :model do
       results = EventRegistration.search_by_params(registrant_id: person_alice.id, event_id: event_art.id)
       expect(results).to include(reg_alice_art)
       expect(results).not_to include(reg_bob_music)
+    end
+  end
+
+  describe "slug" do
+    it "generates a slug on create" do
+      registration = create(:event_registration)
+      expect(registration.slug).to be_present
+      expect(registration.slug.length).to eq(22)
+    end
+
+    it "does not change slug on update" do
+      registration = create(:event_registration)
+      original_slug = registration.slug
+      registration.update!(status: "attended")
+      expect(registration.reload.slug).to eq(original_slug)
+    end
+
+    it "generates unique slugs" do
+      slugs = 10.times.map { create(:event_registration).slug }
+      expect(slugs.uniq.size).to eq(10)
     end
   end
 end

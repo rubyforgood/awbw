@@ -46,7 +46,7 @@ class OrganizationsController < ApplicationController
     @organizations = Organization.where(id: @organization.id)
     @per_page = params[:per_page] || 10
     @workshop_logs_unpaginated = workshop_logs
-                                 .includes(:created_by, :workshop, :windows_type)
+                                 .includes(:workshop, :windows_type, created_by: :person)
                                  .order(date: :desc, created_at: :desc)
     @workshop_logs_count = @workshop_logs_unpaginated.count
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
@@ -62,14 +62,12 @@ class OrganizationsController < ApplicationController
     ) || [ 0, 0, 0, 0, 0, 0 ]
 
     # Cache filter options to avoid duplicate queries
-    logged_workshop_ids = workshop_logs.where.not(workshop_id: nil).distinct.pluck(:workshop_id)
     @workshops = Workshop.joins(:windows_type)
-                         .where(id: logged_workshop_ids)
+                         .where(id: workshop_logs.where.not(workshop_id: nil).select(:workshop_id))
                          .select("workshops.id, workshops.title, workshops.windows_type_id, windows_types.name")
                          .order("workshops.title ASC, windows_types.name ASC")
-    logged_user_ids = workshop_logs.where.not(created_by_id: nil).distinct.pluck(:created_by_id)
-    @users = User.where(id: logged_user_ids)
-                  .includes(:person)
+    @users = User.where(id: workshop_logs.where.not(created_by_id: nil).select(:created_by_id))
+                  .joins(:person)
                   .select("users.id, users.person_id, users.email, people.first_name, people.last_name")
                   .order("people.first_name, people.last_name")
   end

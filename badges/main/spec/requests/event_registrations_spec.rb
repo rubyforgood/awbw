@@ -33,7 +33,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         rows = CSV.parse(response.body)
         expect(rows.size).to be >= 1
-        expect(rows.first).to eq([ "First name", "Last name", "Email", "Event" ])
+        expect(rows.first).to eq([ "First name", "Last name", "Email", "Event", "Scholarship recipient", "Scholarship tasks completed" ])
 
         data_rows = rows.drop(1)
         expect(data_rows).not_to be_empty
@@ -42,7 +42,9 @@ RSpec.describe "EventRegistrations", type: :request do
           person.first_name.to_s,
           person.last_name.to_s,
           person.preferred_email.to_s,
-          event.title.to_s
+          event.title.to_s,
+          "No",
+          "No"
         ]
         expect(data_rows).to include(expected_row)
       end
@@ -76,7 +78,7 @@ RSpec.describe "EventRegistrations", type: :request do
         patch event_registration_path(existing_registration),
               params: { event_registration: { event_id: new_event.id } }
 
-        expect(response).to redirect_to(event_registration_path(existing_registration))
+        expect(response).to redirect_to(registration_ticket_path(existing_registration.slug))
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
     end
@@ -103,6 +105,13 @@ RSpec.describe "EventRegistrations", type: :request do
     describe "GET /event_registrations" do
       it "redirects to root" do
         get event_registrations_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET /event_registrations/:id (admin-only show)" do
+      it "redirects to root (unauthorized)" do
+        get event_registration_path(existing_registration)
         expect(response).to redirect_to(root_path)
       end
     end
@@ -155,7 +164,7 @@ RSpec.describe "EventRegistrations", type: :request do
               params: { event_registration: { status: "cancelled" } }
 
         expect(existing_registration.reload.status).to eq("cancelled")
-        expect(response).to redirect_to(event_registration_path(existing_registration))
+        expect(response).to redirect_to(registration_ticket_path(existing_registration.slug))
         expect(flash[:notice]).to eq("Registration was successfully updated.")
       end
 

@@ -146,7 +146,7 @@ class EventsController < ApplicationController
   def event_registrations_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
-    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Payment status", "Payment total" ]
+    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Payment total" ]
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
         csv_out << event_registration_csv_row(registration, cost_required)
@@ -169,6 +169,8 @@ class EventsController < ApplicationController
       person.preferred_email.presence || "",
       person.phone_number.presence || "",
       org_names.presence || "",
+      registration.scholarship_recipient? ? "Yes" : "No",
+      registration.scholarship_tasks_completed? ? "Yes" : "No",
       payment_status,
       payment_total
     ]

@@ -88,10 +88,14 @@ class WorkshopLogsController < ApplicationController
   end
 
   def show
-    @workshop_log = WorkshopLog.find(params[:id]).decorate
+    @workshop_log = WorkshopLog.includes(
+      :organization, :windows_type, { created_by: :person },
+      { quotes: :workshop },
+      { gallery_assets: { file_attachment: :blob } }
+    ).find(params[:id]).decorate
     authorize! @workshop_log
     @workshop     = @workshop_log.workshop&.decorate
-    @answers      = @workshop_log.report_form_field_answers
+    @answers      = @workshop_log.report_form_field_answers.includes(:form_field)
     @updated_by   = Ahoy::Event.where(resource_type: "WorkshopLog", resource_id: @workshop_log.id)
                                 .where("name LIKE 'update.%'")
                                 .order(time: :desc)
@@ -131,7 +135,7 @@ class WorkshopLogsController < ApplicationController
     end
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
-    @users = scoped_users.or(User.where(id: @workshop_logs_unpaginated.pluck(:created_by_id)))
+    @users = scoped_users.or(User.where(id: @workshop_logs_unpaginated.select(:created_by_id)))
                                 .joins(:person)
                                 .distinct
                                 .select("users.id, users.email, users.person_id, people.first_name, people.last_name")

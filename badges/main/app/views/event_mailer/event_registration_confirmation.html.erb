@@ -65,7 +65,7 @@
 
 <p>
   <% if @event_registration.persisted? %>
-    <a href="<%= event_registration_url(@event_registration) %>" class="button">View registration</a>
+    <a href="<%= registration_ticket_url(@event_registration.slug) %>" class="button">View registration</a>
   <% end %>
   <a href="<%= @event_url %>" class="button">View event</a>
 </p>

@@ -36,11 +36,11 @@ Event date
 ------------------------------------------------------------
 
 View registration:
-<%= event_registration_url(@event_registration) if @event_registration.present? %>
+<%= registration_ticket_url(@event_registration.slug) if @event_registration.present? %>
 
 View profile:
 <%= profile_url %>
 
 View event:
-<%= event_url(@event) %>
+<%= event_url(@event, reg: @event_registration.slug) %>
 
