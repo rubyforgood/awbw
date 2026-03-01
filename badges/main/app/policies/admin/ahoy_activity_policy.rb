@@ -6,6 +6,10 @@ module Admin
       admin?
     end
 
+    def show?
+      admin?
+    end
+
     def charts?
       admin?
     end

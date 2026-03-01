@@ -86,6 +86,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     # custom actions
     "app/views/admin/home/index.html.erb"              => "admin-only bg-blue-100",
     "app/views/admin/ahoy_activities/charts.html.erb"  => "admin-only bg-blue-100",
+    "app/views/admin/ahoy_activities/show.html.erb"    => "admin-only bg-blue-100",
     "app/views/admin/ahoy_activities/visits.html.erb"  => "admin-only bg-blue-100",
     "app/views/admin/ahoy_activities/index.html.erb"   => "admin-only bg-blue-100",
     "app/views/admin/analytics/index.html.erb"         => "admin-only bg-blue-100",
