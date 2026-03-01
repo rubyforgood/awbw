@@ -745,7 +745,7 @@ puts "Creating CommunityNews…"
                 )
 end
 
-puts "Creating new StoryIdeas…"
+puts "Creating StoryIdeas…"
 10.times do |i|
   body_content = Faker::Lorem.paragraph(sentence_count: 10)
   StoryIdea.create!(
@@ -917,7 +917,7 @@ end
 
 
 
-puts "Creating new Resources…"
+puts "Creating Resources…"
 10.times do |i|
   kind = Resource::PUBLISHED_KINDS.sample
 
