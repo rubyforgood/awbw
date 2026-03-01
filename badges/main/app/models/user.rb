@@ -15,7 +15,6 @@ class User < ApplicationRecord
   after_update :sync_email_to_person
   after_update :track_lock_change
   after_update :track_admin_change
-  after_update :track_name_change
   after_update :track_inactive_change
   after_update :track_password_reset_sent
 
@@ -324,22 +323,6 @@ class User < ApplicationRecord
 
   def track_welcome_completion
     track_auth_event("auth.account_setup_completed")
-  end
-
-  def track_name_change
-    return unless saved_change_to_first_name? || saved_change_to_last_name?
-    props = {}
-    if saved_change_to_first_name?
-      from, to = saved_change_to_first_name
-      props[:first_name_from] = from
-      props[:first_name_to] = to
-    end
-    if saved_change_to_last_name?
-      from, to = saved_change_to_last_name
-      props[:last_name_from] = from
-      props[:last_name_to] = to
-    end
-    track_auth_event("auth.name_changed", props)
   end
 
   def track_inactive_change
