@@ -74,6 +74,7 @@
             { keys: %w[nickname pronouns], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
             email_row,
             { keys: %w[secondary_email secondary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "secondary_email" => "md:col-span-2" } },
+            { keys: %w[mailing_street mailing_address_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
             { keys: %w[mailing_city mailing_state mailing_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
             { keys: %w[phone phone_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
             { keys: %w[agency_name agency_position], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
@@ -86,6 +87,13 @@
 
           fields_by_key = @form_fields.select(&:field_key).index_by(&:field_key)
           rendered_keys = {}
+
+          has_secondary_email = fields_by_key["secondary_email"].present?
+          email_label_overrides = if has_secondary_email
+            {}
+          else
+            { "primary_email" => "Email", "primary_email_confirmation" => "Confirm Email", "primary_email_type" => "Email Type" }
+          end
         %>
 
         <% @form_fields.each do |field| %>
@@ -103,12 +111,13 @@
                 <% rendered_keys[key] = true %>
                 <% span = group.dig(:spans, key) %>
                 <% submitted_value = params.dig(:public_registration, :form_fields, row_field.id.to_s) %>
+                <% label_override = email_label_overrides[key] %>
                 <% if span %>
                   <div class="<%= span %>">
-                    <%= render "events/public_registrations/form_field", field: row_field, value: submitted_value %>
+                    <%= render "events/public_registrations/form_field", field: row_field, value: submitted_value, label: label_override %>
                   </div>
                 <% else %>
-                  <%= render "events/public_registrations/form_field", field: row_field, value: submitted_value %>
+                  <%= render "events/public_registrations/form_field", field: row_field, value: submitted_value, label: label_override %>
                 <% end %>
               <% end %>
             </div>

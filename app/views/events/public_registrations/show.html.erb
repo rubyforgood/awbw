@@ -32,6 +32,7 @@
           { keys: %w[nickname pronouns], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
           { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } },
           { keys: %w[secondary_email secondary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "secondary_email" => "md:col-span-2" } },
+          { keys: %w[mailing_street mailing_address_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
           { keys: %w[mailing_city mailing_state mailing_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
           { keys: %w[phone phone_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
           { keys: %w[agency_name agency_position], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
@@ -47,6 +48,7 @@
       %>
 
       <% @form_fields.each do |field| %>
+        <% next if field.field_key == "primary_email_confirmation" %>
         <% next if field.field_key.present? && rendered_keys[field.field_key] %>
 
         <% if field.group_header? %>

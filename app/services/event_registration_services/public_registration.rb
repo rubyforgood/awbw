@@ -123,7 +123,7 @@ module EventRegistrationServices
         state: new_state,
         zip_code: field_value("mailing_zip"),
         locality: "Unknown",
-        address_type: "mailing",
+        address_type: field_value("mailing_address_type")&.downcase || "mailing",
         primary: true
       )
     end
@@ -252,6 +252,7 @@ module EventRegistrationServices
     def save_form_fields(person_form)
       @form.form_fields.where(status: :active).find_each do |field|
         next if field.group_header?
+        next if field.field_key == "primary_email_confirmation"
 
         raw_value = @form_params[field.id.to_s]
         text = if raw_value.is_a?(Array)
