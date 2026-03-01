@@ -51,6 +51,18 @@ export default class extends Controller {
       }
       .ts-dropdown-content {
         max-height: 400px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+      }
+      .ts-dropdown-content::-webkit-scrollbar {
+        width: 6px;
+      }
+      .ts-dropdown-content::-webkit-scrollbar-thumb {
+        background-color: #9ca3af;
+        border-radius: 3px;
+      }
+      .ts-dropdown-content::-webkit-scrollbar-track {
+        background-color: #f3f4f6;
       }
     `;
     document.head.appendChild(style);
