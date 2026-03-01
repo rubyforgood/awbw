@@ -7,6 +7,8 @@ RSpec.describe EventRegistration, type: :model do
     it { should belong_to(:event).required }
     it { should belong_to(:registrant).required }
     it { should have_many(:comments).dependent(:destroy) }
+    it { should have_many(:event_registration_organizations).dependent(:destroy) }
+    it { should have_many(:organizations).through(:event_registration_organizations) }
   end
 
   describe "#active?" do
@@ -256,6 +258,52 @@ RSpec.describe EventRegistration, type: :model do
       expect(NotificationServices::CreateNotification).not_to receive(:call)
 
       reg.update!(scholarship_recipient: true)
+    end
+  end
+
+  describe "snapshot_registrant_organizations" do
+    it "copies active affiliations to the registration on create" do
+      org = create(:organization)
+      person = create(:person)
+      create(:affiliation, person: person, organization: org)
+
+      reg = create(:event_registration, registrant: person)
+      expect(reg.organizations).to include(org)
+    end
+
+    it "copies multiple active affiliations" do
+      org1 = create(:organization)
+      org2 = create(:organization)
+      person = create(:person)
+      create(:affiliation, person: person, organization: org1)
+      create(:affiliation, person: person, organization: org2)
+
+      reg = create(:event_registration, registrant: person)
+      expect(reg.organizations).to contain_exactly(org1, org2)
+    end
+
+    it "skips inactive affiliations" do
+      org = create(:organization)
+      person = create(:person)
+      create(:affiliation, person: person, organization: org, inactive: true)
+
+      reg = create(:event_registration, registrant: person)
+      expect(reg.organizations).to be_empty
+    end
+
+    it "skips affiliations with past end dates" do
+      org = create(:organization)
+      person = create(:person)
+      create(:affiliation, person: person, organization: org, end_date: 1.day.ago)
+
+      reg = create(:event_registration, registrant: person)
+      expect(reg.organizations).to be_empty
+    end
+
+    it "creates no records when registrant has no affiliations" do
+      person = create(:person)
+      reg = create(:event_registration, registrant: person)
+      expect(reg.organizations).to be_empty
     end
   end
 

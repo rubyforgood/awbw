@@ -2,7 +2,7 @@
   <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
   <%= render 'shared/errors', resource: event_registration if event_registration.errors.any? %>
 
-  <div class="p-3">
+  <div class="p-3" data-controller="org-toggle">
     <div class="flex flex-col md:flex-row md:space-x-4">
       <div class="flex-1 mb-4 md:mb-0">
         <% if f.object.persisted? %>
@@ -25,10 +25,16 @@
       <div class="flex-1 mb-4 md:mb-0">
         <% if f.object.persisted? %>
           <label class="block text-sm font-medium text-gray-700 mb-1">Registrant</label>
-          <div class="py-2 flex flex-wrap items-center gap-2">
+          <div class="py-2">
             <%= person_profile_button(f.object.registrant, subtitle: f.object.registrant.preferred_email) %>
-            <% f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.each do |org| %>
-              <%= organization_profile_button(org) %>
+            <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
+            <% connected_org_ids = f.object.organizations.map(&:id) %>
+            <% if active_orgs.any? %>
+              <p class="text-xs text-gray-500 mt-1">
+                <% active_orgs.each_with_index do |org, i| %>
+                  <%= org.name %><% unless connected_org_ids.include?(org.id) %><button type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 ml-0.5 cursor-pointer" title="Add to registration" data-action="click->org-toggle#add" data-org-id="<%= org.id %>" data-org-name="<%= org.name %>">+</button><% end %><%= ", " unless i == active_orgs.size - 1 %>
+                <% end %>
+              </p>
             <% end %>
           </div>
         <% else %>
@@ -61,6 +67,26 @@
                       selected: f.object.status %>
         </div>
 
+        <div class="flex-1 mb-4 md:mb-0" data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Organizations represented by this registration</label>
+          <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
+            <% f.object.organizations.sort_by(&:name).each do |org| %>
+              <label class="inline-flex items-center gap-1 px-4 py-1 rounded-full text-xs border cursor-pointer transition-colors bg-red-50 border-red-200 text-red-400 line-through has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-200 has-[:checked]:text-emerald-800 has-[:checked]:no-underline">
+                <input type="checkbox"
+                       name="event_registration[organization_ids][]"
+                       value="<%= org.id %>"
+                       checked
+                       class="sr-only">
+                <span><%= org.name %></span>
+                <span class="text-xs opacity-50">&times;</span>
+              </label>
+            <% end %>
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Click to toggle. Crossed-out organizations will be removed on save.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col md:flex-row md:space-x-4 mt-4">
         <div class="flex-1 mb-4 md:mb-0">
           <label class="block text-sm font-medium text-gray-700 mb-1">Payment status</label>
           <% if f.object.event.cost_cents.to_i > 0 %>
@@ -79,17 +105,15 @@
           <% else %>
             <p class="py-2 text-sm text-gray-500">Free event</p>
           <% end %>
-          <% if f.object.scholarship? %>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Scholarship recipient</span>
-          <% end %>
         </div>
 
         <div class="flex-1 mb-4 md:mb-0">
-          <% if f.object.scholarship_requested? %>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mb-2">Scholarship requested</span>
-          <% end %>
-          <%= f.input :scholarship_recipient, as: :boolean %>
-          <%= f.input :scholarship_tasks_completed, as: :boolean, label: "Scholarship tasks completed" %>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <div class="font-semibold text-sm text-gray-700 mb-2">Scholarship</div>
+            <%= f.input :scholarship_requested, as: :boolean %>
+            <%= f.input :scholarship_recipient, as: :boolean %>
+            <%= f.input :scholarship_tasks_completed, as: :boolean, label: "Scholarship tasks completed" %>
+          </div>
         </div>
       </div>
     <% end %>
