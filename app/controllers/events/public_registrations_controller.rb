@@ -50,7 +50,7 @@ module Events
       )
 
       if result.success?
-        redirect_to event_registration_path(result.event_registration),
+        redirect_to registration_ticket_path(result.event_registration.slug),
                     notice: "You have been successfully registered!"
       else
         @form_fields = @form.form_fields.where(status: :active).reorder(position: :asc)
@@ -63,14 +63,15 @@ module Events
     def show
       authorize! :public_registration, to: :show?
 
+      registration = EventRegistration.find_by!(slug: params[:reg], event_id: @event.id)
+
       @form = registration_form
       unless @form
         redirect_to event_path(@event), alert: "Registration form not found."
         return
       end
 
-
-      @person_form = @form.person_forms.find_by(person: params[:person_id])
+      @person_form = @form.person_forms.find_by(person: registration.registrant)
       unless @person_form
         redirect_to event_path(@event), alert: "No registration form submission found."
         return

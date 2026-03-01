@@ -1,6 +1,9 @@
 <% instance ||= 1 %>
 <% button_text ||= "Register" %>
 <% registered = event.actively_registered?(current_user&.person) %>
+<% slug_registration = params[:reg].present? ? EventRegistration.find_by(slug: params[:reg], event_id: event.id) : nil %>
+<% slug_registered = slug_registration&.active? %>
+<% slug_cancelled = slug_registration.present? && slug_registration.status == "cancelled" %>
 <%= tag.div id: dom_id(event.object, "registration_section_#{instance}"), class: "registration-section flex flex-col items-center gap-4 mb-6" do %>
   <!-- BUTTONS -->
   <div class="flex flex-wrap items-center justify-center gap-3">
@@ -12,40 +15,41 @@
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
       <% end %>
     <% elsif registered %>
-      <%= button_to "De-register",
-                    event_registrant_registration_path(event_id: event),
-                    method: :delete,
-                    data: { turbo_confirm: "Are you sure?" },
-                    class: "btn px-10 py-2 text-2xl uppercase bg-white event-deregister-btn",
-                    style: "font-family: 'Telefon Bold', sans-serif; color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
-    <% elsif !event.published? %>
-      <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
-    <% elsif event.registerable? %>
-      <% if user_signed_in? %>
-        <%= button_to button_text,
-                      event_registrant_registration_path(event_id: event),
-                      class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
-                      style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
-      <% elsif event.object.forms.exists?(name: "Public Registration") %>
-        <%= link_to button_text,
-                    new_event_public_registration_path(event),
+    <% elsif slug_cancelled && event.registerable? %>
+      <%= button_to "Register again", registration_reactivate_path(slug_registration.slug),
                     class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
                     style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
+    <% elsif !registered && !slug_registered %>
+      <% if !event.published? %>
+        <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
+      <% elsif event.registerable? %>
+        <% if user_signed_in? %>
+          <%= button_to button_text,
+                        event_registrant_registration_path(event_id: event),
+                        class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
+                        style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
+        <% elsif event.object.forms.exists?(name: "Public Registration") %>
+          <%= link_to button_text,
+                      new_event_public_registration_path(event),
+                      class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
+                      style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
+        <% end %>
+      <% else %>
+        <span class="text-2xl font-bold text-blue-400 italic">Registration closed</span>
       <% end %>
-    <% else %>
-      <span class="text-2xl font-bold text-blue-400 italic">Registration closed</span>
     <% end %>
 
     <% if registered %>
       <% registration = event.active_registration_for(current_user&.person) %>
-      <%= link_to event_registration_path(registration),
-                  class: "text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full hover:bg-green-200" do %>
-        You are registered!
-      <% end %>
+      <%= link_to "View your registration", registration_ticket_path(registration.slug),
+                  class: "text-sm text-green-700 hover:text-green-900 underline" %>
+    <% elsif slug_registered %>
+      <%= link_to "View your registration", registration_ticket_path(slug_registration.slug),
+                  class: "text-sm text-green-700 hover:text-green-900 underline" %>
     <% end %>
   </div>
 
-  <% if registered %>
+  <% if registered || slug_registered %>
     <!-- CALENDAR LINKS -->
     <div class="flex flex-col items-center">
       <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">

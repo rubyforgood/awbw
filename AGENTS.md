@@ -114,7 +114,7 @@ AWBW Portal (Rails 8.1)
 - **Root level** (~48 controllers): Workshops, stories, resources, events, people, organizations, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`api/v1/`**: ApiController base, Authentications, Workshops, Quotes, Resources
-- **`events/`**: Registrations sub-resource
+- **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
 
 ### Base Controller Pattern
