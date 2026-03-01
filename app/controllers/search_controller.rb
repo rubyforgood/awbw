@@ -3,7 +3,10 @@ class SearchController < ApplicationController
 
   def index
     model_class = allowed_model(params[:model])
-    return head :forbidden unless model_class
+    unless model_class
+      skip_verify_authorized!
+      return head :forbidden
+    end
 
     authorize! model_class, to: :search?
 
@@ -13,14 +16,14 @@ class SearchController < ApplicationController
     records = authorized_scope(
       model_class.remote_search(query),
      **scope_options_for(model_class)
-    )
+    ).includes(:user) if model_class == Person
 
     if params[:exclude].present?
       exclude_ids = params[:exclude].split(",").map(&:to_i)
       records = records.where.not(id: exclude_ids)
     end
 
-    records = records.limit(10)
+    records = records.limit(25)
 
     render json: records.map(&:remote_search_label)
   end
@@ -38,7 +41,7 @@ class SearchController < ApplicationController
 
   def scope_options_for(model_class)
     options = {}
-    options[:as] = :affiliated if model_class == Organization
+    # options[:as] = :affiliated if model_class == Organization
     # Add more options here in the future if needed
     options
   end
