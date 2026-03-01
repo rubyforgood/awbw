@@ -7,6 +7,8 @@
               <%= EventRegistration.model_name.human.pluralize %> (<%= @event_registrations_count %>)
             </h1>
             <div class="flex gap-2">
+              <%= link_to "Events", events_path,
+                          class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
               <%= link_to "Export CSV",
                           event_registrations_path(request.query_parameters.merge(format: :csv)),
                           class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>

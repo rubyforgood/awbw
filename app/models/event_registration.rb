@@ -2,7 +2,9 @@ class EventRegistration < ApplicationRecord
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  has_many :event_registration_organizations, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
+  has_many :organizations, through: :event_registration_organizations
   has_many :payments, as: :payable
 
   before_destroy :create_refund_payments
@@ -10,6 +12,7 @@ class EventRegistration < ApplicationRecord
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
   before_create :generate_slug
+  after_create :snapshot_registrant_organizations
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
@@ -126,6 +129,12 @@ class EventRegistration < ApplicationRecord
   end
 
   private
+
+  def snapshot_registrant_organizations
+    registrant.affiliations.active.includes(:organization).find_each do |aff|
+      event_registration_organizations.create(organization: aff.organization)
+    end
+  end
 
   def create_refund_payments
     paid_cents = payments.successful.sum(:amount_cents)

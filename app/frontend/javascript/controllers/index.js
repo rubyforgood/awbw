@@ -45,6 +45,9 @@ application.register("inactive-toggle", InactiveToggleController)
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
 
+import OrgToggleController from "./org_toggle_controller"
+application.register("org-toggle", OrgToggleController)
+
 import PaginatedFieldsController from "./paginated_fields_controller"
 application.register("paginated-fields", PaginatedFieldsController)
 
