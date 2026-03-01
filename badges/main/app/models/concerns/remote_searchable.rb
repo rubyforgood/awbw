@@ -26,6 +26,7 @@ module RemoteSearchable
         hash["pattern_#{i}".to_sym] = "%#{word}%"
       end
       where(conditions.join(" AND "), bindings)
+        .order(remote_search_columns.index_with { :asc })
     end
   end
 
