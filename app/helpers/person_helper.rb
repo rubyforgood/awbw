@@ -16,7 +16,7 @@ module PersonHelper
     hover_title = [ full_name, subtitle ].compact_blank.join(" — ")
 
     link_to person_path(person),
-            data: data,
+            data: { turbo_prefetch: false }.merge(data),
             title: hover_title,
             class: "group relative flex items-center gap-2
                     w-full px-4 py-2
