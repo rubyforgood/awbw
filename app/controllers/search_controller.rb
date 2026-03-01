@@ -16,7 +16,7 @@ class SearchController < ApplicationController
     records = authorized_scope(
       model_class.remote_search(query),
      **scope_options_for(model_class)
-    ).includes(:user) if model_class == Person
+    )
 
     if params[:exclude].present?
       exclude_ids = params[:exclude].split(",").map(&:to_i)
