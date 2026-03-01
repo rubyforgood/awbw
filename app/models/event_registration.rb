@@ -10,6 +10,7 @@ class EventRegistration < ApplicationRecord
   accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
   before_create :generate_slug
+  after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
@@ -145,5 +146,30 @@ class EventRegistration < ApplicationRecord
       self.slug = SecureRandom.urlsafe_base64(16)
       break unless EventRegistration.exists?(slug: slug)
     end
+  end
+
+  def status_changed_to_cancelled?
+    saved_change_to_status? && status == "cancelled"
+  end
+
+  def send_cancellation_emails
+    email = registrant&.preferred_email
+    return if email.blank?
+
+    NotificationServices::CreateNotification.call(
+      noticeable: self,
+      kind: "event_registration_cancelled",
+      recipient_role: :person,
+      recipient_email: email,
+      notification_type: 1
+    )
+
+    NotificationServices::CreateNotification.call(
+      noticeable: self,
+      kind: "event_registration_cancelled_fyi",
+      recipient_role: :admin,
+      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      notification_type: 1
+    )
   end
 end
