@@ -90,6 +90,10 @@ Rails.application.routes.draw do
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
   resources :event_registrations do
+    member do
+      get :confirm
+      post :process_confirm
+    end
     resources :comments, only: [ :index, :create ]
   end
   resources :events do
