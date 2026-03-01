@@ -41,7 +41,7 @@
       <div class="mt-1"><%= event.times(display_day: true, display_date: true).html_safe %></div>
     </div>
 
-    <div class="flex items-center justify-end gap-3">
+    <div class="flex items-center gap-3">
     <% if allowed_to?(:edit?, event) %>
       <%= link_to "Edit",
                 edit_event_path(event),
