@@ -51,11 +51,44 @@ RSpec.describe "Search", type: :request do
         expect(json.first["label"]).to include("Carol")
       end
 
+      it "searches by email_2" do
+        person = create(:person, first_name: "Dana", last_name: "White", email: nil, email_2: "dana@secondary.org")
+        get "/search/person", params: { q: "dana@secondary" }
+        json = JSON.parse(response.body)
+        ids = json.map { |r| r["id"] }
+        expect(ids).to include(person.id)
+      end
+
       it "searches by user email" do
         get "/search/person", params: { q: admin.email }
         json = JSON.parse(response.body)
         ids = json.map { |r| r["id"] }
         expect(ids).to include(admin.person.id)
+      end
+
+      it "displays preferred email in label with user email priority" do
+        user_with_emails = create(:user, email: "login@corp.com")
+        user_with_emails.person.update!(email: "personal@example.com", email_2: "alt@example.com")
+        get "/search/person", params: { q: "login@corp" }
+        json = JSON.parse(response.body)
+        match = json.find { |r| r["id"] == user_with_emails.person.id }
+        expect(match["label"]).to include("login@corp.com")
+      end
+
+      it "falls back to person email when no user email" do
+        person = create(:person, first_name: "Eve", last_name: "Nolan", email: "eve@personal.com", user: nil)
+        get "/search/person", params: { q: "Eve" }
+        json = JSON.parse(response.body)
+        match = json.find { |r| r["id"] == person.id }
+        expect(match["label"]).to include("eve@personal.com")
+      end
+
+      it "falls back to email_2 when no user or person email" do
+        person = create(:person, first_name: "Fay", last_name: "Park", email: nil, email_2: "fay@backup.com", user: nil)
+        get "/search/person", params: { q: "Fay" }
+        json = JSON.parse(response.body)
+        match = json.find { |r| r["id"] == person.id }
+        expect(match["label"]).to include("fay@backup.com")
       end
 
       it "handles multi-word queries" do
