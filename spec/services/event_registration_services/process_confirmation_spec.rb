@@ -30,6 +30,8 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
       let(:registration) { create(:event_registration, event: event, registrant: person) }
 
       it "creates a user account for a person without one" do
+        registration # force lazy let evaluation
+        admin
         person.user.destroy!
         person.reload
 
@@ -52,6 +54,9 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
       end
 
       it "does nothing when person already has a user" do
+        registration # force lazy let evaluation
+        admin
+
         expect {
           described_class.call(
             event_registration: registration,
@@ -216,6 +221,8 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
       let(:registration) { create(:event_registration, event: event, registrant: person) }
 
       it "sends both emails without touching user accounts" do
+        registration # force lazy let evaluation
+        admin
         allow(NotificationServices::CreateNotification).to receive(:call)
 
         expect {
