@@ -68,7 +68,7 @@ RSpec.describe "EventRegistrations", type: :request do
       it "creates registration and redirects admin to confirm page" do
         expect {
           post event_registrations_path,
-               params: { event_registration: { event_id: event.id, registrant_id: admin.person.id } }
+               params: { return_to: "manage", event_registration: { event_id: event.id, registrant_id: admin.person.id } }
         }.to change(EventRegistration, :count).by(1)
 
         registration = EventRegistration.last
@@ -233,7 +233,7 @@ RSpec.describe "EventRegistrations", type: :request do
                  }
           }.not_to change(EventRegistration, :count)
 
-          expect(response).to redirect_to(manage_event_path(event))
+          expect(response).to redirect_to(event_registrations_path)
           expect(flash[:alert]).to be_present
         end
       end
