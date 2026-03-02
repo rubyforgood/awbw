@@ -11,7 +11,7 @@ module Events
 
     def resend_confirmation
       authorize! @event_registration, to: :show_public?
-      EventMailer.event_registration_confirmation(@event_registration).deliver_later
+      send_registration_notifications(@event_registration)
       redirect_to registration_ticket_path(@event_registration.slug), notice: "Confirmation email sent."
     end
 
@@ -43,6 +43,7 @@ module Events
       if existing&.status == "cancelled"
         authorize! existing
         existing.update!(status: "registered")
+        send_registration_notifications(existing)
         success = "Your registration has been reactivated."
         respond_to do |format|
           format.turbo_stream { flash.now[:notice] = success }
@@ -55,6 +56,7 @@ module Events
       authorize! @event_registration
 
       if @event_registration.save
+        send_registration_notifications(@event_registration)
         success = "You have successfully registered for this event."
         respond_to do |format|
           format.turbo_stream { flash.now[:notice] = success }
@@ -100,6 +102,27 @@ module Events
     end
 
     private
+
+    def send_registration_notifications(event_registration)
+      registrant_email = event_registration.registrant.preferred_email
+      return if registrant_email.blank?
+
+      NotificationServices::CreateNotification.call(
+        noticeable: event_registration,
+        kind: :event_registration_confirmation,
+        recipient_role: :person,
+        recipient_email: registrant_email,
+        notification_type: 0
+      )
+
+      NotificationServices::CreateNotification.call(
+        noticeable: event_registration,
+        kind: :event_registration_confirmation_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0
+      )
+    end
 
     def set_event
       @event = Event.find(params[:event_id])
