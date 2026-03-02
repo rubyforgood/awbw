@@ -44,14 +44,16 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <% if allowed_to?(:manage?, Workshop) %>
-        <div class="admin-only bg-blue-100 p-3 flex gap-x-2 items-center">
-          <%= f.input :full_name, as: :text,
-                      label: "Author's name",
-                      hint: "Display name",
-                      input_html: {
-                        rows: 1,
-                        class: "block w-full rounded-md border-gray-300 shadow-sm
-                        focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+        <div class="admin-only bg-blue-100 p-3 space-y-4">
+          <% if f.object.full_name.present? && params[:admin] == "true" %>
+            <%= f.input :full_name, as: :text,
+                        label: "Author's name",
+                        hint: "Display name",
+                        input_html: {
+                          rows: 1,
+                          class: "block w-full rounded-md border-gray-300 shadow-sm
+                          focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+          <% end %>
 
           <div data-controller="searchable-select" data-searchable-select-mode-value="person">
             <%= f.input :created_by_id,
@@ -74,7 +76,7 @@
                       label: "Author credit preference",
                       hint: "Controls how the author's name is displayed" %>
         </div>
-        <div class="admin-only bg-blue-100 flex p-3 gap-x-2 items-center">
+        <div class="admin-only bg-blue-100 p-3 space-y-4">
           <%= f.input :workshop_idea_id,
                       as: :select,
                       label: "Workshop Idea parent",
