@@ -63,13 +63,20 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-2 text-sm">
-                  <% if registration.scholarship_recipient? %>
+                  <% if registration.scholarship_requested? && registration.scholarship_recipient? && registration.scholarship_tasks_completed? %>
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-800">
                       <i class="fa-solid fa-graduation-cap"></i>
-                      Scholarship
-                      <% if registration.scholarship_tasks_completed? %>
-                        <i class="fa-solid fa-circle-check"></i>
-                      <% end %>
+                      Completed
+                    </span>
+                  <% elsif registration.scholarship_requested? && registration.scholarship_recipient? %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
+                      <i class="fa-solid fa-graduation-cap"></i>
+                      Approved
+                    </span>
+                  <% elsif registration.scholarship_requested? %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-amber-100 text-amber-800">
+                      <i class="fa-solid fa-graduation-cap"></i>
+                      Requested
                     </span>
                   <% else %>
                     <span class="text-gray-400">—</span>
