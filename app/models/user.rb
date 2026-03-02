@@ -19,7 +19,6 @@ class User < ApplicationRecord
   after_update :track_password_reset_sent
 
   before_destroy :track_account_deleted
-  before_destroy :reassign_reports_and_logs_to_orphaned_user
 
   # Associations
   belongs_to :person, optional: true
@@ -171,6 +170,18 @@ class User < ApplicationRecord
     end
   end
 
+  def deletable?
+    !reports.exists? &&
+      !workshop_logs.exists? &&
+      !resources.exists? &&
+      !workshops.exists? &&
+      !stories_as_creator.exists? &&
+      !story_ideas_as_creator.exists? &&
+      !workshop_ideas_as_creator.exists? &&
+      !workshop_variations_as_creator.exists? &&
+      !workshop_variation_ideas_creator.exists?
+  end
+
   def name
     person ? person.name : email
   end
@@ -243,16 +254,6 @@ class User < ApplicationRecord
     errors.add(:person_id, "cannot be removed once set")
   end
 
-  def reassign_reports_and_logs_to_orphaned_user
-    orphaned_user = User.find_by(email: "orphaned_reports@awbw.org")
-    return unless orphaned_user
-
-    # Reassign reports
-    reports.update_all(created_by_id: orphaned_user.id)
-
-    # Reassign workshop_logs
-    workshop_logs.update_all(created_by_id: orphaned_user.id)
-  end
 
   def after_confirmation
     super
