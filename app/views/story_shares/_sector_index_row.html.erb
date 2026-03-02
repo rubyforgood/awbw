@@ -14,7 +14,7 @@
     </p>
 
     <p class="mt-6 text-gray-700 leading-relaxed">
-      <%= truncate(strip_tags(story.body.to_s), length: 280) %>
+      <%= truncate(story.rhino_body.to_plain_text, length: 280) %>
     </p>
 
     <div class="mt-6">

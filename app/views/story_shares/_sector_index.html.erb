@@ -41,7 +41,7 @@
               </p>
 
               <p class="text-sm text-gray-700 line-clamp-3 flex-grow">
-                <%= truncate(strip_tags(story.body.to_s), length: 140) %>
+                <%= truncate(story.rhino_body.to_plain_text, length: 140) %>
               </p>
 
               <div class="mt-4">
