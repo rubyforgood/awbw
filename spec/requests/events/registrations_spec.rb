@@ -58,11 +58,14 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "POST /registration/:slug/resend_confirmation" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "sends confirmation email and redirects back" do
+    it "creates notification records and redirects back" do
       expect {
         post registration_resend_confirmation_path(registration.slug)
-      }.to have_enqueued_mail(EventMailer, :event_registration_confirmation)
+      }.to change(Notification, :count).by(2)
 
+      expect(Notification.last(2).map(&:kind)).to match_array(
+        %w[event_registration_confirmation event_registration_confirmation_fyi]
+      )
       expect(response).to redirect_to(registration_ticket_path(registration.slug))
       expect(flash[:notice]).to eq("Confirmation email sent.")
     end
@@ -70,10 +73,10 @@ RSpec.describe "Events::Registrations", type: :request do
     context "as a guest" do
       before { sign_out user }
 
-      it "sends confirmation email (slug is authorization)" do
+      it "creates notification records (slug is authorization)" do
         expect {
           post registration_resend_confirmation_path(registration.slug)
-        }.to have_enqueued_mail(EventMailer, :event_registration_confirmation)
+        }.to change(Notification, :count).by(2)
 
         expect(response).to redirect_to(registration_ticket_path(registration.slug))
       end
@@ -193,6 +196,17 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(response.media_type).to eq("text/vnd.turbo-stream.html")
         expect(flash.now[:notice]).to eq("You have successfully registered for this event.")
       end
+
+      it "creates notification records" do
+        expect {
+          post event_registrant_registration_path(event_id: event.id),
+            headers: turbo_headers
+        }.to change(Notification, :count).by(2)
+
+        expect(Notification.last(2).map(&:kind)).to match_array(
+          %w[event_registration_confirmation event_registration_confirmation_fyi]
+        )
+      end
     end
 
     context "when a cancelled registration exists" do
@@ -209,6 +223,17 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(cancelled_registration.reload.status).to eq("registered")
         expect(response).to have_http_status(:ok)
         expect(flash.now[:notice]).to eq("Your registration has been reactivated.")
+      end
+
+      it "creates notification records on reactivation" do
+        expect {
+          post event_registrant_registration_path(event_id: event.id),
+            headers: turbo_headers
+        }.to change(Notification, :count).by(2)
+
+        expect(Notification.last(2).map(&:kind)).to match_array(
+          %w[event_registration_confirmation event_registration_confirmation_fyi]
+        )
       end
 
       it "reactivates via HTML format and redirects to ticket" do
