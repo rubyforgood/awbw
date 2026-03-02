@@ -73,7 +73,7 @@ class ResourcesController < ApplicationController
         assign_associations(@resource)
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Resource create failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
@@ -99,7 +99,7 @@ class ResourcesController < ApplicationController
         assign_associations(@resource)
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Resource update failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end

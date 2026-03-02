@@ -35,7 +35,7 @@ class WorkshopVariationsController < ApplicationController
         end
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       log_workshop_error("creation", e)
       raise ActiveRecord::Rollback
     end

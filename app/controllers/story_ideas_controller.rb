@@ -59,7 +59,7 @@ class StoryIdeasController < ApplicationController
           notification_type: 0)
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "StoryIdea create failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
@@ -88,7 +88,7 @@ class StoryIdeasController < ApplicationController
         assign_associations(@story_idea)
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "StoryIdea update failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end

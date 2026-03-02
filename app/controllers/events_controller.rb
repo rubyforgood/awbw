@@ -75,7 +75,7 @@ class EventsController < ApplicationController
         end
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Event create failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
@@ -105,7 +105,7 @@ class EventsController < ApplicationController
       else
         raise ActiveRecord::Rollback
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Event update failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
