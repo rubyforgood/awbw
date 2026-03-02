@@ -55,7 +55,7 @@
                   <% if registration.organizations.any? %>
                     <ul class="space-y-0.5">
                       <% registration.organizations.each do |org| %>
-                        <li><%= org.name %></li>
+                        <li title="<%= org.name %>"><%= truncate(org.name, length: 10) %></li>
                       <% end %>
                     </ul>
                   <% else %>
@@ -63,13 +63,20 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-2 text-sm">
-                  <% if registration.scholarship_recipient? %>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-800">
-                      <i class="fa-solid fa-graduation-cap"></i>
-                      Scholarship
-                      <% if registration.scholarship_tasks_completed? %>
-                        <i class="fa-solid fa-circle-check"></i>
-                      <% end %>
+                  <% if registration.scholarship_requested? && registration.scholarship_recipient? && registration.scholarship_tasks_completed? %>
+                    <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200" title="Scholarship completed">
+                      <i class="fas fa-graduation-cap"></i>
+                      <span>Completed</span>
+                    </span>
+                  <% elsif registration.scholarship_requested? && registration.scholarship_recipient? %>
+                    <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-blue-50 text-blue-700 border-blue-200" title="Scholarship approved">
+                      <i class="fas fa-graduation-cap"></i>
+                      <span>Approved</span>
+                    </span>
+                  <% elsif registration.scholarship_requested? %>
+                    <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200" title="Scholarship requested">
+                      <i class="fas fa-graduation-cap"></i>
+                      <span>Requested</span>
                     </span>
                   <% else %>
                     <span class="text-gray-400">—</span>
@@ -77,15 +84,20 @@
                 </td>
                 <% if @event.cost_cents.to_i > 0 %>
                   <td class="px-4 py-2 text-sm">
-                    <% if registration.paid_in_full? %>
+                    <% if registration.scholarship_recipient? && registration.successful_payments_total_cents <= 0 %>
                       <span class="text-gray-400">—</span>
+                    <% elsif registration.paid_in_full? %>
+                      <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200">
+                        <i class="fas fa-circle-check"></i>
+                        <span>Paid</span>
+                      </span>
                     <% else %>
-                      <span class="font-medium text-amber-700">Not paid in full</span>
                       <% paid_cents = registration.successful_payments_total_cents %>
-                      <% if paid_cents > 0 %>
-                        <% due_cents = @event.cost_cents - paid_cents %>
-                        <p class="text-xs text-gray-500 mt-0.5">$<%= "%.2f" % (paid_cents / 100.0) %> paid &middot; $<%= "%.2f" % (due_cents / 100.0) %> due</p>
-                      <% end %>
+                      <% due_cents = @event.cost_cents - paid_cents %>
+                      <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200" title="<%= "$%.2f paid" % (paid_cents / 100.0) if paid_cents > 0 %>">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <span>$<%= "%.2f" % (due_cents / 100.0) %> due</span>
+                      </span>
                     <% end %>
                   </td>
                 <% end %>

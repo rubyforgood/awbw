@@ -52,7 +52,7 @@
       <%= form_with url: event_public_registration_path(@event), method: :post, local: true, class: "space-y-2" do |f| %>
 
         <% if @scholarship %>
-          <input type="hidden" name="scholarship" value="1">
+          <input type="hidden" name="scholarship_requested" value="true">
         <% end %>
 
         <%# Honeypot %>
