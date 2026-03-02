@@ -41,8 +41,9 @@
               </td>
               <td class="px-4 py-2 text-sm text-gray-800 font-semibold" title="<%= workshop_variation.name %>"><%= truncate(workshop_variation.name, length: 30) %></td>
               <td class="px-4 py-2 text-sm text-gray-600">
-                <span title="<%= strip_tags(workshop_variation.body) %>">
-                  <%= truncate(strip_tags(workshop_variation.body), length: 30) %>
+                <% plain = workshop_variation.rhino_body.to_plain_text %>
+                <span title="<%= plain %>">
+                  <%= truncate(plain, length: 30) %>
                 </span>
               </td>
               <td class="px-4 py-2 text-sm text-gray-800 text-center">
