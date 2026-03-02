@@ -12,7 +12,7 @@
 
   <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
     <div class="font-semibold text-gray-900 mb-2">
-      <h1 class="text-3xl tracking-tight"><%= @workshop_log.workshop&.title || "Workshop Log" %></h1>
+      <h1 class="text-3xl tracking-tight"><%= @workshop_log.workshop&.title || @workshop_log.external_workshop_title || "Workshop Log" %></h1>
     </div>
 
     <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm text-gray-600">
@@ -49,8 +49,18 @@
             <%= link_to @workshop_log.workshop.title, workshop_path(@workshop_log.workshop),
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}" %>
+            <% if @workshop_log.external_workshop_title.present? %>
+              <span class="text-sm text-gray-500"><%= @workshop_log.external_workshop_title %></span>
+            <% end %>
+          <% elsif @workshop_log.workshop %>
+            <%= @workshop_log.workshop.title %>
+            <% if @workshop_log.external_workshop_title.present? %>
+              <span class="text-sm text-gray-500"><%= @workshop_log.external_workshop_title %></span>
+            <% end %>
+          <% elsif @workshop_log.external_workshop_title.present? %>
+            <%= @workshop_log.external_workshop_title %>
           <% else %>
-            <%= @workshop_log.workshop&.title || "—" %>
+            —
           <% end %>
           <br><span class="text-gray-400"><%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %></span>
         </div>
