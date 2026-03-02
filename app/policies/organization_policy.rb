@@ -27,7 +27,7 @@ class OrganizationPolicy < ApplicationPolicy
   end
 
   relation_scope(:affiliated) do |relation|
-    next relation.active if admin?
+    next relation if admin?
     next relation.none unless user&.person_id
 
     relation.joins(:affiliations)

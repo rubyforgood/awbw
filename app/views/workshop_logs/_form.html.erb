@@ -36,7 +36,7 @@
       </div>
 
       <div class="flex-1 mb-4 md:mb-0">
-        <% if current_user.person&.affiliations&.count != 1 %>
+        <% if allowed_to?(:index?, Organization) || current_user.person&.affiliations&.count != 1 %>
           <%= f.input :organization_id,
                     as: :select,
                     collection: @organizations,
