@@ -10,11 +10,11 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def edit?
-    admin? || owner?
+    admin?
   end
 
   def update?
-    admin? || owner?
+    admin?
   end
 
   def destroy?
