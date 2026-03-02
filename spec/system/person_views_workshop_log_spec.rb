@@ -81,9 +81,8 @@ RSpec.describe "Viewing a workshop log", type: :system do
     it "displays the external title next to the Workshop label" do
       visit workshop_log_path(workshop_log)
 
-      within("div", text: "Workshop:") do
-        expect(page).to have_text("Community Mural Project")
-      end
+      workshop_div = find("span", text: "Workshop:").ancestor("div", match: :first)
+      expect(workshop_div).to have_text("Community Mural Project")
     end
   end
 
@@ -113,10 +112,9 @@ RSpec.describe "Viewing a workshop log", type: :system do
     it "displays both the workshop chip and external title" do
       visit workshop_log_path(workshop_log)
 
-      within("div", text: "Workshop:") do
-        expect(page).to have_text("Healing Through Art")
-        expect(page).to have_text("Guest-led Session")
-      end
+      workshop_div = find("span", text: "Workshop:").ancestor("div", match: :first)
+      expect(workshop_div).to have_text("Healing Through Art")
+      expect(workshop_div).to have_text("Guest-led Session")
     end
   end
 
