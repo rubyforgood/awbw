@@ -2,7 +2,8 @@ class StoryDecorator < ApplicationDecorator
   include ::Linkable
 
   def detail(length: 50)
-    body&.truncate(length)
+    text = rhino_body&.to_plain_text
+    length ? text&.truncate(length) : text
   end
 
   def external_url

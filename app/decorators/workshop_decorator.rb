@@ -99,9 +99,10 @@ class WorkshopDecorator < ApplicationDecorator
   end
 
   def spanish_field_values
-    display_spanish_fields.map do |field|
-      workshop.send(field) unless workshop.send(field).blank?
-    end.compact
+    display_spanish_fields.filter_map do |field|
+      value = workshop.send(:"rhino_#{field}")
+      value unless value.blank?
+    end
   end
 
 
@@ -154,10 +155,10 @@ class WorkshopDecorator < ApplicationDecorator
   private
 
   def html_content
-    Nokogiri::HTML("#{objective} #{materials} #{timeframe} #{setup} #{workshop.introduction}")
+    Nokogiri::HTML("#{rhino_objective} #{rhino_materials} #{timeframe} #{rhino_setup} #{rhino_introduction}")
   end
 
   def html_objective
-    Nokogiri::HTML(objective)
+    Nokogiri::HTML(rhino_objective.to_s)
   end
 end
