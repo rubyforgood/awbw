@@ -32,6 +32,18 @@ This is a Rails 8.1.0 application built with:
 
 For detailed setup and development instructions, please see our [CONTRIBUTING.md](CONTRIBUTING.md) guide.
 
+## Production Maintenance
+
+### Featured workshops not showing on the home page
+
+Featured workshop IDs are cached for up to 1 year. The cache auto-invalidates when a workshop's `featured`, `publicly_featured`, or `published` flags change, but stale data can persist if the invalidation races with the save transaction. To force a refresh, visit:
+
+```
+/?bust_cache=true
+```
+
+This clears and repopulates the cache for all users.
+
 ## Orphaned Reports
 
 When users are deleted from the system, their reports are automatically assigned to a special 
