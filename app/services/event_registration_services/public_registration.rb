@@ -30,6 +30,10 @@ module EventRegistrationServices
         existing = @event.event_registrations.find_by(registrant: person)
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
+          if existing.status == "cancelled"
+            existing.update!(status: "registered")
+            send_notifications(existing)
+          end
           update_person_form(person)
           return Result.new(success?: true, event_registration: existing, errors: [])
         end
