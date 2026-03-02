@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Navbar avatar behavior", type: :system do
-  let(:user) { create(:user) }
+  let(:user) { create(:user, :admin) }
   let!(:person) { create(:person, user: user) }
 
   before do
