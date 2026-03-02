@@ -74,6 +74,11 @@
                               confirm_email_manual_user_path(@user),
                               class: "btn btn-warning-outline text-sm" %>
                 <% end %>
+                <%= button_to "Send reset password email",
+                              send_reset_password_instructions_user_path(@user),
+                              method: :post,
+                              form_class: "inline",
+                              class: "btn btn-secondary-outline text-sm" %>
                 <% unless @user.confirmed_at.present? %>
                   <%= button_to "Resend invite email",
                                 send_welcome_instructions_user_path(@user),
@@ -81,11 +86,6 @@
                                 form_class: "inline",
                                 class: "btn btn-secondary-outline text-sm" %>
                 <% end %>
-                <%= button_to "Send reset password email",
-                              send_reset_password_instructions_user_path(@user),
-                              method: :post,
-                              form_class: "inline",
-                              class: "btn btn-secondary-outline text-sm" %>
                 <% if current_user == @user %>
                   <%= link_to "Change password",
                               change_password_path,

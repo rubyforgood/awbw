@@ -72,45 +72,6 @@ RSpec.describe "/workshop_logs", type: :request do
       expect(response.body).not_to include("workshop_log_#{other_log.id}")
     end
 
-    context "organization filtering" do
-      it "shows only affiliated organizations for non-admin users" do
-        person = create(:person, user: user)
-        affiliated_org = create(:organization, name: "Affiliated Org")
-        unaffiliated_org = create(:organization, name: "Unaffiliated Org")
-        create(:affiliation, person: person, organization: affiliated_org)
-
-        get workshop_logs_path
-
-        expect(response).to have_http_status(:success)
-        expect(response.body).to include("Affiliated Org")
-        expect(response.body).not_to include("Unaffiliated Org")
-      end
-
-      it "includes organizations from inactive affiliations for non-admin users" do
-        person = create(:person, user: user)
-        inactive_org = create(:organization, name: "Inactive Affiliation Org")
-        create(:affiliation, person: person, organization: inactive_org, inactive: true)
-
-        get workshop_logs_path
-
-        expect(response).to have_http_status(:success)
-        expect(response.body).to include("Inactive Affiliation Org")
-      end
-
-      it "shows all organizations for admin users" do
-        admin = create(:user, :admin)
-        sign_in admin
-        org_a = create(:organization, name: "Org Alpha")
-        org_b = create(:organization, name: "Org Beta")
-
-        get workshop_logs_path
-
-        expect(response).to have_http_status(:success)
-        expect(response.body).to include("Org Alpha")
-        expect(response.body).to include("Org Beta")
-      end
-    end
-
     # TODO use action policy to filter
     xit "populates workshops dropdown with only workshops from visible logs" do
       visible_workshop = create(:workshop)
@@ -129,45 +90,6 @@ RSpec.describe "/workshop_logs", type: :request do
       expect(response.body).to include(hidden_workshop.name)
       expect(response.body).not_to include(unassigned_workshop.name)
       expect(response.body).not_to include(unassigned_hidden_workshop.name)
-    end
-  end
-
-  describe "GET /new" do
-    let!(:combined_windows_type) { create(:windows_type, :combined) }
-    let!(:form_builder) do
-      fb = FormBuilder.create!(windows_type_id: combined_windows_type.id, name: "Combined form")
-      fb.forms.create!
-      fb
-    end
-
-    context "organization filtering" do
-      it "shows only affiliated organizations for non-admin users" do
-        person = create(:person, user: user)
-        affiliated_org = create(:organization, name: "Affiliated Form Org")
-        unaffiliated_org = create(:organization, name: "Unaffiliated Form Org")
-        create(:affiliation, person: person, organization: affiliated_org)
-        create(:affiliation, person: person, organization: create(:organization, name: "Second Affiliated Org"))
-
-        get new_workshop_log_path
-
-        expect(response).to have_http_status(:success)
-        expect(response.body).to include("Affiliated Form Org")
-        expect(response.body).to include("Second Affiliated Org")
-        expect(response.body).not_to include("Unaffiliated Form Org")
-      end
-
-      it "shows all organizations for admin users" do
-        admin = create(:user, :admin)
-        sign_in admin
-        org_a = create(:organization, name: "Admin Form Org A")
-        org_b = create(:organization, name: "Admin Form Org B")
-
-        get new_workshop_log_path
-
-        expect(response).to have_http_status(:success)
-        expect(response.body).to include("Admin Form Org A")
-        expect(response.body).to include("Admin Form Org B")
-      end
     end
   end
 

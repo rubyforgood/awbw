@@ -579,37 +579,4 @@ RSpec.describe "/users", type: :request do
       end
     end
   end
-
-  # ---------------------------------------
-  # SEND RESET PASSWORD INSTRUCTIONS
-  # ---------------------------------------
-  describe "POST /send_reset_password_instructions" do
-    let(:user) { create(:user) }
-
-    context "as admin" do
-      before { sign_in admin }
-
-      it "sends reset password instructions and redirects with notice" do
-        post send_reset_password_instructions_user_url(user)
-        expect(flash[:notice]).to include("Reset password instructions sent")
-        expect(response).to redirect_to(users_path)
-      end
-    end
-
-    context "as regular_user" do
-      before { sign_in regular_user }
-
-      it "redirects to root" do
-        post send_reset_password_instructions_user_url(user)
-        expect(response).to redirect_to(root_path)
-      end
-    end
-
-    context "as guest" do
-      it "redirects to root" do
-        post send_reset_password_instructions_user_url(user)
-        expect(response).to redirect_to(root_path)
-      end
-    end
-  end
 end

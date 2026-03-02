@@ -5,9 +5,7 @@ Hello <%= @user.name %>,
 Thank you for submitting your workshop log. We have received it and will review it shortly.
 
 <% if @report.present? %>
-<% if @noticeable.workshop.present? %>Workshop: <%= @noticeable.workshop&.title %>
-<% end %><% if @noticeable.external_workshop_title.present? %>External title: <%= @noticeable.external_workshop_title %>
-<% end %>
+Workshop: <%= @noticeable.workshop&.title %>
 <% if @noticeable.windows_type.present? %>Sector: <%= @noticeable.windows_type.short_name %><% end %>
 Submitted on <%= @noticeable.created_at
                             .in_time_zone("Pacific Time (US & Canada)")

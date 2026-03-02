@@ -79,38 +79,13 @@ RSpec.describe NotificationMailer, type: :mailer do
   end
 
   describe "#workshop_log_submitted_fyi" do
-    context "with a workshop" do
-      let(:workshop_log) { create(:workshop_log) }
-      let(:notification) { create(:notification, kind: "workshop_log_submitted_fyi", noticeable: workshop_log) }
+    let(:workshop_log) { create(:workshop_log) }
+    let(:notification) { create(:notification, kind: "workshop_log_submitted_fyi", noticeable: workshop_log) }
 
-      it "renders without raising" do
-        expect {
-          described_class.workshop_log_submitted_fyi(notification).deliver_now
-        }.not_to raise_error
-      end
-
-      it "includes the workshop title" do
-        mail = described_class.workshop_log_submitted_fyi(notification)
-        expect(mail.body.encoded).to include(workshop_log.workshop.title)
-      end
-    end
-
-    context "without a workshop (external title only)" do
-      let(:workshop_log) do
-        create(:workshop_log, workshop: nil, owner: nil, external_workshop_title: "Community Art Session")
-      end
-      let(:notification) { create(:notification, kind: "workshop_log_submitted_fyi", noticeable: workshop_log) }
-
-      it "renders without raising" do
-        expect {
-          described_class.workshop_log_submitted_fyi(notification).deliver_now
-        }.not_to raise_error
-      end
-
-      it "includes the external title" do
-        mail = described_class.workshop_log_submitted_fyi(notification)
-        expect(mail.body.encoded).to include("Community Art Session")
-      end
+    it "renders without raising" do
+      expect {
+        described_class.workshop_log_submitted_fyi(notification).deliver_now
+      }.not_to raise_error
     end
   end
 
@@ -142,51 +117,21 @@ RSpec.describe NotificationMailer, type: :mailer do
 
   describe "#workshop_log_submitted" do
     let(:user) { create(:user) }
-
-    context "with a workshop" do
-      let(:workshop_log) { create(:workshop_log, created_by: user) }
-      let(:notification) do
-        create(:notification, kind: "workshop_log_submitted", noticeable: workshop_log,
-               recipient_role: "person", recipient_email: user.email)
-      end
-
-      it "renders without raising" do
-        expect {
-          described_class.workshop_log_submitted(notification).deliver_now
-        }.not_to raise_error
-      end
-
-      it "sends to the submitter" do
-        mail = described_class.workshop_log_submitted(notification)
-        expect(mail.to).to eq([ user.email ])
-      end
-
-      it "includes the workshop title" do
-        mail = described_class.workshop_log_submitted(notification)
-        expect(mail.body.encoded).to include(workshop_log.workshop.title)
-      end
+    let(:workshop_log) { create(:workshop_log, created_by: user) }
+    let(:notification) do
+      create(:notification, kind: "workshop_log_submitted", noticeable: workshop_log,
+             recipient_role: "person", recipient_email: user.email)
     end
 
-    context "without a workshop (external title only)" do
-      let(:workshop_log) do
-        create(:workshop_log, created_by: user, workshop: nil, owner: nil,
-               external_workshop_title: "Community Art Session")
-      end
-      let(:notification) do
-        create(:notification, kind: "workshop_log_submitted", noticeable: workshop_log,
-               recipient_role: "person", recipient_email: user.email)
-      end
+    it "renders without raising" do
+      expect {
+        described_class.workshop_log_submitted(notification).deliver_now
+      }.not_to raise_error
+    end
 
-      it "renders without raising" do
-        expect {
-          described_class.workshop_log_submitted(notification).deliver_now
-        }.not_to raise_error
-      end
-
-      it "includes the external title" do
-        mail = described_class.workshop_log_submitted(notification)
-        expect(mail.body.encoded).to include("Community Art Session")
-      end
+    it "sends to the submitter" do
+      mail = described_class.workshop_log_submitted(notification)
+      expect(mail.to).to eq([ user.email ])
     end
   end
 
