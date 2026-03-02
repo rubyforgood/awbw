@@ -25,6 +25,23 @@ RSpec.describe "/workshop_logs", type: :request do
     }
   end
 
+  let(:external_title_attributes) do
+    {
+      date: Date.current,
+      workshop_id: nil,
+      external_workshop_title: "Community Art Workshop",
+      organization_id: organization.id,
+      windows_type_id: windows_type.id,
+      created_by_id: user.id,
+      children_first_time: 1,
+      children_ongoing: 2,
+      teens_first_time: 0,
+      teens_ongoing: 0,
+      adults_first_time: 0,
+      adults_ongoing: 3
+    }
+  end
+
   let(:invalid_attributes) do
     {
       date: nil,
@@ -85,6 +102,19 @@ RSpec.describe "/workshop_logs", type: :request do
           }
         }.to change(WorkshopLog, :count).by(1)
 
+        expect(response).to have_http_status(:redirect)
+      end
+
+      it "creates a WorkshopLog with external_workshop_title and no workshop" do
+        expect {
+          post workshop_logs_path, params: {
+            workshop_log: external_title_attributes
+          }
+        }.to change(WorkshopLog, :count).by(1)
+
+        log = WorkshopLog.last
+        expect(log.workshop_id).to be_nil
+        expect(log.external_workshop_title).to eq("Community Art Workshop")
         expect(response).to have_http_status(:redirect)
       end
 
