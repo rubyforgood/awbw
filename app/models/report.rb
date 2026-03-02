@@ -3,7 +3,7 @@ class Report < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :organization
   belongs_to :windows_type
-  belongs_to :workshop
+  belongs_to :workshop, optional: true
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy, autosave: false
