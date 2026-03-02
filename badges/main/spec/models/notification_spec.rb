@@ -90,6 +90,49 @@ RSpec.describe Notification do
     end
   end
 
+  describe "#failed?" do
+    it "returns true when error_at is present and not delivered" do
+      notification = create(:notification, error_at: Time.current, delivered_at: nil)
+
+      expect(notification.failed?).to be true
+    end
+
+    it "returns false when delivered even with error_at" do
+      notification = create(:notification, error_at: Time.current, delivered_at: Time.current)
+
+      expect(notification.failed?).to be false
+    end
+
+    it "returns false when no error_at" do
+      notification = create(:notification, error_at: nil, delivered_at: nil)
+
+      expect(notification.failed?).to be false
+    end
+  end
+
+  describe "#record_error!" do
+    it "stores exception details on the notification" do
+      notification = create(:notification)
+      error = StandardError.new("SMTP connection refused")
+
+      notification.record_error!(error)
+      notification.reload
+
+      expect(notification.error_message).to eq("SMTP connection refused")
+      expect(notification.error_class).to eq("StandardError")
+      expect(notification.error_at).to be_present
+    end
+
+    it "truncates long error messages" do
+      notification = create(:notification)
+      error = StandardError.new("x" * 600)
+
+      notification.record_error!(error)
+
+      expect(notification.error_message.length).to be <= 500
+    end
+  end
+
   describe '.search_by_params' do
     let!(:notification_alice) { create(:notification, recipient_email: 'alice@example.com', email_subject: 'Welcome to AWBW') }
     let!(:notification_bob) { create(:notification, recipient_email: 'bob@example.com', email_subject: 'Password Reset') }

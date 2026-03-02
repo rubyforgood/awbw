@@ -35,5 +35,8 @@ class NotificationMailerJob < ApplicationJob
         mail: mailer
       ) if persist_delivered_email
     end
+  rescue => e
+    notification&.record_error!(e)
+    raise
   end
 end

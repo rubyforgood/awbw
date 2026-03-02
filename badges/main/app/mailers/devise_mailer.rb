@@ -61,9 +61,8 @@ class DeviseMailer < Devise::Mailer
     return unless @mail && @record
 
     kind = notification_kind_for_devise_action[action_name]
-    return unless kind # don't create fyi emails for Devise mailers you don’t care about
+    return unless kind # don’t create fyi emails for Devise mailers you don’t care about
 
-    puts "=====DeviseMailer FYI: #{kind}"
     notification = NotificationServices::CreateNotification.call(
       noticeable: @record,
       recipient_role: :person,
@@ -79,8 +78,10 @@ class DeviseMailer < Devise::Mailer
     )
 
     notify_admin_if_needed(kind)
+  rescue => e
+    Rails.logger.error("DeviseMailer#create_notification_record failed: #{e.message}")
+    notification&.record_error!(e) if notification&.persisted?
   end
-
 
   def notify_admin_if_needed(kind)
     if kind == "reset_password"
