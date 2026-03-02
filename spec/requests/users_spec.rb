@@ -286,6 +286,15 @@ RSpec.describe "/users", type: :request do
         delete user_url(user)
         expect(response).to redirect_to(users_url)
       end
+
+      it "does not destroy a user with created records and shows alert" do
+        create(:workshop, created_by: user)
+        expect {
+          delete user_url(user)
+        }.not_to change(User, :count)
+        expect(response).to redirect_to(user_url(user))
+        expect(flash[:alert]).to be_present
+      end
     end
 
     context "as regular_user" do
