@@ -17,6 +17,9 @@ class User < ApplicationRecord
   after_update :track_admin_change
   after_update :track_inactive_change
   after_update :track_password_reset_sent
+  after_update :track_password_changed
+
+  after_commit :create_email_changed_notification, on: :update
 
   before_destroy :track_account_deleted
 
@@ -341,10 +344,29 @@ class User < ApplicationRecord
     track_auth_event("auth.password_reset_sent", { sent_at: reset_password_sent_at })
   end
 
+  def track_password_changed
+    return unless saved_change_to_encrypted_password?
+    track_auth_event("auth.password_changed")
+  end
+
   def sync_email_to_person
     return unless saved_change_to_email? && person.present?
 
     person.update(email: email)
+  end
+
+  def create_email_changed_notification
+    return unless previous_changes.key?("email")
+
+    _from, to = previous_changes["email"]
+    NotificationServices::CreateNotification.call(
+      noticeable: self,
+      recipient_role: :person,
+      recipient_email: to,
+      kind: :account_email_changed,
+      notification_type: 1,
+      deliver: false
+    )
   end
 
   def sync_locked_at_from_locked
