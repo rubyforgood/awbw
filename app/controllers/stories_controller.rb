@@ -75,7 +75,7 @@ class StoriesController < ApplicationController
         end
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Story create failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
@@ -101,7 +101,7 @@ class StoriesController < ApplicationController
         end
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Story update failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
