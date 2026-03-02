@@ -84,7 +84,9 @@
                 </td>
                 <% if @event.cost_cents.to_i > 0 %>
                   <td class="px-4 py-2 text-sm">
-                    <% if registration.paid_in_full? %>
+                    <% if registration.scholarship_recipient? && registration.successful_payments_total_cents <= 0 %>
+                      <span class="text-gray-400">—</span>
+                    <% elsif registration.paid_in_full? %>
                       <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200">
                         <i class="fas fa-circle-check"></i>
                         <span>Paid</span>
