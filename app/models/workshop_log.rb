@@ -4,6 +4,7 @@ class WorkshopLog < Report
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
             :children_first_time, :teens_first_time, :adults_first_time,
             numericality: { greater_than_or_equal_to: 0, only_integer: true }
+  validate :workshop_or_external_title_present
 
   # Callbacks
   after_save :update_owner_and_date
@@ -136,6 +137,11 @@ class WorkshopLog < Report
   end
 
   private
+
+  def workshop_or_external_title_present
+    return if workshop_id.present? || external_workshop_title.present?
+    errors.add(:base, "Please select a workshop or provide an external workshop title")
+  end
 
   def update_workshop_log_count
     return unless owner
