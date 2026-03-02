@@ -17,11 +17,17 @@ Submitted on
 <% if @report.present? %>
   WORKSHOP LOG DETAILS
 
+  <% if @noticeable.workshop.present? %>
   Workshop:
   <%= @noticeable.workshop.title %>
+  <% end %>
+  <% if @noticeable.external_workshop_title.present? %>
+  External title:
+  <%= @noticeable.external_workshop_title %>
+  <% end %>
 
   Sector:
-  <%= @noticeable.windows_type.short_name %>
+  <%= @noticeable.windows_type_name %>
 
 
   PARTICIPANTS
