@@ -55,7 +55,7 @@
                   <% if registration.organizations.any? %>
                     <ul class="space-y-0.5">
                       <% registration.organizations.each do |org| %>
-                        <li><%= org.name %></li>
+                        <li title="<%= org.name %>"><%= truncate(org.name, length: 10) %></li>
                       <% end %>
                     </ul>
                   <% else %>
