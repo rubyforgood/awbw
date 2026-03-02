@@ -122,7 +122,6 @@ RSpec.describe "Workshops", type: :system do
         select adult_window.short_name, from: 'workshop_windows_type_id'
         find("#workshop_published", visible: :all).check
         find('#body-button').click
-        fill_in 'workshop_full_name', with: 'Jane Doe'
 
         click_on 'Submit'
 

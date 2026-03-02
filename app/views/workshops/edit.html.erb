@@ -16,11 +16,5 @@
           <%= render "form", workshop: @workshop %>
           <%= render "shared/audit_info", resource: @workshop %>
         </div>
-      <% if params[:admin] == 'true' %>
-        <div class="my-4"><%= render "assets/form", owner: @workshop %></div>
-        <%= turbo_frame_tag "editor_assets_lazy", src: edit_workshop_path(@workshop) do %>
-          <%= render "shared/loading" %>
-        <% end %>
-      <% end %>
     </div>
 </div>
