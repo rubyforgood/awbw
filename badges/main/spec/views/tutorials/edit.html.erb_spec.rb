@@ -29,7 +29,7 @@ RSpec.describe "tutorials/edit", type: :view do
 
     assert_select "form[action=?][method=?]", tutorial_path(tutorial), "post" do
       assert_select "textarea[name=?]", "tutorial[title]"
-      assert_select "textarea[name=?]", "tutorial[body]"
+      assert_select "input[name=?][type=?]", "tutorial[rhino_body]", "hidden"
       assert_select "input[name=?][type=checkbox]", "tutorial[published]"
       assert_select "input[name=?][type=checkbox]", "tutorial[featured]"
       assert_select "input[name=?]", "tutorial[position]"

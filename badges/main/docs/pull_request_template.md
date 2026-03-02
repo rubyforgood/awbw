@@ -16,5 +16,4 @@ Closes [link an issue or remove this line]
 ### Anything else to add?
 <!-- Any alternative approaches you considered? Special notes for reviewers? -->
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
