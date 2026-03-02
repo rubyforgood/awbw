@@ -109,7 +109,7 @@ module Events
     end
 
     def scholarship_mode?
-      params[:scholarship].present?
+      params[:scholarship_requested] == "true"
     end
 
     def visible_form_fields
