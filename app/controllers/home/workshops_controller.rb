@@ -2,7 +2,9 @@ module Home
   class WorkshopsController < ApplicationController
     def index
       authorize! :home
-      Rails.cache.delete("featured_and_publicly_featured_workshop_ids") if params[:bust_cache] == "true"
+      if params[:bust_cache] == "true" && current_user&.super_user?
+        Rails.cache.delete("featured_and_publicly_featured_workshop_ids")
+      end
 
       ids = Rails.cache.fetch("featured_and_publicly_featured_workshop_ids", expires_in: 1.year) do
         Workshop.featured_or_publicly_featured.pluck(:id)

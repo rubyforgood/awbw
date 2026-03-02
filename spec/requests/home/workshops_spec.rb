@@ -26,21 +26,27 @@ RSpec.describe "/home/workshops", type: :request do
     end
 
     context "with bust_cache=true" do
-      it "clears and repopulates the featured workshop cache" do
+      let(:admin) { create(:user, :admin) }
+
+      before do
         # Prime the cache with no featured workshops
         get home_workshops_path
-        expect(response.body).to include("No workshops available right now.")
-
         # Feature a workshop after the cache is set
         create(:workshop, :published, featured: true, windows_type: windows_type)
+      end
 
-        # Without bust_cache, stale cache returns no workshops
-        get home_workshops_path
-        expect(response.body).to include("No workshops available right now.")
+      it "clears the cache for admins" do
+        sign_in admin
 
-        # With bust_cache=true, the cache is cleared and workshops appear
         get home_workshops_path, params: { bust_cache: "true" }
+
         expect(response.body).not_to include("No workshops available right now.")
+      end
+
+      it "does not clear the cache for non-admins" do
+        get home_workshops_path, params: { bust_cache: "true" }
+
+        expect(response.body).to include("No workshops available right now.")
       end
     end
   end
