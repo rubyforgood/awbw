@@ -274,7 +274,7 @@ RSpec.describe User do
     end
 
     it "returns false when user has created reports" do
-      report = create(:report)
+      report = create(:report, workshop: create(:workshop))
       expect(report.created_by.deletable?).to be false
     end
 
