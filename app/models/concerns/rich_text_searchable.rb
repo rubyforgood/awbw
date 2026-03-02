@@ -11,7 +11,7 @@ module RichTextSearchable
       join_condition = rich_texts[:record_id].eq(table[:id])
                        .and(rich_texts[:record_type].eq(name)) # polymorphic record_type = model name
 
-      joins(table.join(rich_texts, Arel::Nodes::InnerJoin).on(join_condition).join_sources)
+      joins(table.join(rich_texts, Arel::Nodes::OuterJoin).on(join_condition).join_sources)
     end
   end
 end
