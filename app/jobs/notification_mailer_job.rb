@@ -26,10 +26,6 @@ class NotificationMailerJob < ApplicationJob
 
       mailer.deliver_now
 
-      if mailer.body.blank?
-        Rails.logger.warn("WARNING: Mailer body is empty for Notification #{notification.id} (#{notification.kind})")
-      end
-
       NotificationServices::PersistDeliveredEmail.call(
         notification: notification,
         mail: mailer
