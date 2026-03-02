@@ -71,6 +71,7 @@ module Events
         person = registration.registrant
       elsif params[:person_id].present?
         person = Person.find(params[:person_id])
+        registration = @event.event_registrations.find_by(registrant: person)
       else
         redirect_to event_path(@event), alert: "Registration not found."
         return
@@ -88,7 +89,11 @@ module Events
         return
       end
 
-      @form_fields = @form.form_fields.where(status: :active).reorder(position: :asc)
+      @form_fields = if registration&.scholarship_requested?
+        @form.form_fields.where(status: :active).where.not(field_group: "payment").reorder(position: :asc)
+      else
+        @form.form_fields.where(status: :active).where.not(field_group: "scholarship").reorder(position: :asc)
+      end
       @responses = @person_form.person_form_form_fields.index_by(&:form_field_id)
       @event = @event.decorate
     end
