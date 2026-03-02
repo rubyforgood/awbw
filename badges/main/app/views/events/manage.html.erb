@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
     <div>
       <%= link_to "← Event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block" %>
@@ -18,7 +18,7 @@
         <%= link_to "New registration", new_event_registration_path(event_id: @event.id, return_to: "manage"), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% if @event.event_forms.registration.exists? %>
           <%= link_to "Public registration", new_event_public_registration_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1", target: "_blank" %>
-          <%= link_to "Scholarship version", new_event_public_registration_path(@event, scholarship: 1), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1", target: "_blank" %>
+          <%= link_to "Scholarship version", new_event_public_registration_path(@event, scholarship_requested: true), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1", target: "_blank" %>
         <% end %>
       <% end %>
     </div>
