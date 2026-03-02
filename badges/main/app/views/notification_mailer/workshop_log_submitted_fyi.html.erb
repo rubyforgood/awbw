@@ -32,14 +32,23 @@
         WorkshopLog details
       </h2>
 
-      <div class="text-align: left;">
-        <span style="color:#6b7280;">Workshop:</span>
-        <%= @noticeable.workshop.title %>
-      </div>
+      <% if @noticeable.workshop.present? %>
+        <div class="text-align: left;">
+          <span style="color:#6b7280;">Workshop:</span>
+          <%= @noticeable.workshop&.title %>
+        </div>
+      <% end %>
+
+      <% if @noticeable.external_workshop_title.present? %>
+        <div class="text-align: left;">
+          <span style="color:#6b7280;">External title:</span>
+          <%= @noticeable.external_workshop_title %>
+        </div>
+      <% end %>
 
       <div class="text-align: left;">
         <span style="color:#6b7280;">Sector:</span>
-        <%= @noticeable.windows_type.short_name %>
+        <%= @noticeable.windows_type_name %>
       </div>
 
       <h3 style="margin-top: 36px; margin-bottom: 8px; text-align:left;">
