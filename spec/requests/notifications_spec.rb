@@ -85,6 +85,16 @@ RSpec.describe "Notifications", type: :request do
         follow_redirect!
         expect(response.body).to include("Notification email has been resent successfully")
       end
+
+      it "denies resending Devise-originated notifications" do
+        devise_notification = create(:notification, kind: "account_confirmation", recipient_email: regular_user.email)
+
+        expect {
+          post resend_notification_path(devise_notification)
+        }.not_to change(Notification, :count)
+
+        expect(response).to redirect_to(root_path)
+      end
     end
 
     context "as a regular user" do

@@ -57,6 +57,13 @@ RSpec.describe NotificationPolicy, type: :policy do
       it { is_expected.to be_allowed_to(:resend?) }
     end
 
+    context "with admin user and Devise-originated notification" do
+      let(:devise_notification) { build_stubbed :notification, kind: "account_confirmation" }
+      subject { policy_for(record: devise_notification, user: admin_user) }
+
+      it { is_expected.not_to be_allowed_to(:resend?) }
+    end
+
     context "with owner user" do
       subject { policy_for(record: notification, user: regular_user) }
 

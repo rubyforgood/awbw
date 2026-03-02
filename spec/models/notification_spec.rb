@@ -8,6 +8,22 @@ RSpec.describe Notification do
     it { should have_many(:child_notifications).class_name('Notification').with_foreign_key(:parent_notification_id) }
   end
 
+  describe "#resendable?" do
+    it "returns true for notification kinds handled by the mailer job" do
+      notification = build(:notification, kind: "reset_password_fyi")
+
+      expect(notification.resendable?).to be true
+    end
+
+    it "returns false for Devise-originated kinds that require tokens" do
+      Notification::DEVISE_KINDS.each do |devise_kind|
+        notification = build(:notification, kind: devise_kind)
+
+        expect(notification.resendable?).to be(false), "Expected #{devise_kind} to not be resendable"
+      end
+    end
+  end
+
   describe '#resend?' do
     it 'returns true when notification has a parent' do
       parent = create(:notification)

@@ -31,6 +31,15 @@ class Notification < ApplicationRecord
     workshop_log_submitted_fyi
   ].freeze
 
+  # Devise-originated kinds that require security tokens and cannot be resent
+  # through the notification system. Admins should use Devise's own resend
+  # mechanisms (e.g. ProcessEmailManualConfirm) for these.
+  DEVISE_KINDS = %w[
+    account_confirmation
+    reset_password
+    welcome_instructions
+  ].freeze
+
   RECIPIENT_ROLES = %w[
     admin
     person
@@ -59,6 +68,10 @@ class Notification < ApplicationRecord
     stories = stories.participant_name(params[:participant_name]) if params[:participant_name].present?
     stories = stories.subject_line(params[:subject_line]) if params[:subject_line].present?
     stories
+  end
+
+  def resendable?
+    !kind.in?(DEVISE_KINDS)
   end
 
   def delivered?
