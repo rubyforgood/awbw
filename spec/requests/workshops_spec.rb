@@ -100,4 +100,45 @@ RSpec.describe "/workshops", type: :request do
       end
     end
   end
+
+  # --- RECORD NOT UNIQUE HANDLING -----------------------------------------------
+  describe "RecordNotUnique handling" do
+    let(:admin) { create(:user, :admin) }
+
+    before { sign_in admin }
+
+    describe "POST /create" do
+      it "handles RecordNotUnique gracefully" do
+        allow_any_instance_of(Workshop).to receive(:save).and_raise(
+          ActiveRecord::RecordNotUnique.new("Duplicate entry")
+        )
+
+        expect {
+          post workshops_url, params: {
+            workshop: { title: "Test Workshop", category_ids: [ "" ] }
+          }
+        }.not_to change(Workshop, :count)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Unable to save the workshop")
+      end
+    end
+
+    describe "PATCH /update" do
+      it "handles RecordNotUnique gracefully" do
+        workshop = create(:workshop)
+
+        allow_any_instance_of(Workshop).to receive(:update).and_raise(
+          ActiveRecord::RecordNotUnique.new("Duplicate entry")
+        )
+
+        patch workshop_url(workshop), params: {
+          workshop: { title: "Updated Title", category_ids: [ "" ] }
+        }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Unable to update the workshop")
+      end
+    end
+  end
 end

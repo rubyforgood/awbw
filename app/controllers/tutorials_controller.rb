@@ -51,7 +51,7 @@ class TutorialsController < ApplicationController
         assign_associations(@tutorial)
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Tutorial create failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
@@ -75,7 +75,7 @@ class TutorialsController < ApplicationController
         assign_associations(@tutorial)
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Tutorial update failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
