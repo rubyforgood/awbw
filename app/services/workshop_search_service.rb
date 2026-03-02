@@ -156,7 +156,7 @@ class WorkshopSearchService
     return workshops if author_name.blank?
 
     sanitized = author_name.strip.gsub(/\s+/, "")
-    workshops.left_outer_joins(user: :person)
+    workshops.left_outer_joins(created_by: :person)
              .where(
                "LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
                 OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
