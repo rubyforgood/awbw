@@ -26,6 +26,11 @@
           <i class="fas fa-check-circle"></i>
           Delivered
         </span>
+      <% elsif @notification.failed? %>
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-100 text-red-700">
+          <i class="fas fa-exclamation-circle"></i>
+          Failed
+        </span>
       <% else %>
         <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-yellow-100 text-yellow-700">
           <i class="fas fa-clock"></i>
@@ -88,6 +93,26 @@
               &.strftime("%B %d, %Y %l:%M %p") || "Not sent" %>
         </dd>
       </div>
+
+      <% if @notification.failed? %>
+        <div class="flex items-start gap-4">
+          <dt class="w-28 text-gray-500">Error</dt>
+          <dd class="text-red-700">
+            <span class="font-medium"><%= @notification.error_class %></span>
+            <span class="text-gray-600">—</span>
+            <%= @notification.error_message %>
+          </dd>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <dt class="w-28 text-gray-500">Failed at</dt>
+          <dd class="text-gray-900">
+            <%= @notification.error_at
+                &.in_time_zone("Pacific Time (US & Canada)")
+                &.strftime("%B %d, %Y %l:%M %p") %>
+          </dd>
+        </div>
+      <% end %>
 
       <div class="flex items-start gap-4">
         <dt class="w-28 text-gray-500">Noticeable</dt>

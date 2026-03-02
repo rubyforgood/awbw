@@ -65,6 +65,18 @@ class Notification < ApplicationRecord
     delivered_at.present?
   end
 
+  def failed?
+    error_at.present? && !delivered?
+  end
+
+  def record_error!(exception)
+    update!(
+      error_message: exception.message.truncate(500),
+      error_class: exception.class.name,
+      error_at: Time.current
+    )
+  end
+
   def resend_count
     # If this notification has a root, use that; otherwise, this IS the root
     root_id = root_notification_id || id
