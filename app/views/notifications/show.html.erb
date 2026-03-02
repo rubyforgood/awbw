@@ -63,6 +63,12 @@
                       method: :post,
                       data: { turbo_confirm: "Are you sure you want to resend this notification email?" },
                       class: "admin-only bg-blue-100 btn btn-primary" %>
+      <% elsif !@notification.resendable? && allowed_to?(:index?) %>
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 text-gray-500 text-xs cursor-help"
+              title="This email was sent by Devise with a unique security token. To resend, use the user's confirmation or password reset actions instead.">
+          <i class="fas fa-ban"></i>
+          Not resendable
+        </span>
       <% end %>
     </div>
   </div>
