@@ -151,6 +151,8 @@ class UsersController < ApplicationController
     authorize! @user
     @user.destroy!
     redirect_to users_path, notice: "User was successfully destroyed."
+  rescue ActiveRecord::InvalidForeignKey
+    redirect_to @user, alert: "Unable to delete this user because they have associated records that cannot be removed."
   end
 
   # ---------------------------------------------------------

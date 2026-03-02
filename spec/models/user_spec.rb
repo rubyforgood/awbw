@@ -267,6 +267,28 @@ RSpec.describe User do
     end
   end
 
+  describe "#deletable?" do
+    it "returns true when user has no created records" do
+      user = create(:user)
+      expect(user.deletable?).to be true
+    end
+
+    it "returns false when user has created reports" do
+      report = create(:report)
+      expect(report.created_by.deletable?).to be false
+    end
+
+    it "returns false when user has created workshops" do
+      workshop = create(:workshop)
+      expect(workshop.created_by.deletable?).to be false
+    end
+
+    it "returns false when user has created resources" do
+      resource = create(:resource)
+      expect(resource.created_by.deletable?).to be false
+    end
+  end
+
   describe '.search_by_params' do
     let!(:admin_user) { create(:user, first_name: 'Alice', last_name: 'Admin', email: 'alice@example.com', super_user: true) }
     let!(:regular_user) { create(:user, first_name: 'Bob', last_name: 'Regular', email: 'bob@example.com', super_user: false) }
