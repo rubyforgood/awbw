@@ -19,7 +19,7 @@ Submitted on
 
   <% if @noticeable.workshop.present? %>
   Workshop:
-  <%= @noticeable.workshop.title %>
+  <%= @noticeable.workshop&.title %>
   <% end %>
   <% if @noticeable.external_workshop_title.present? %>
   External title:

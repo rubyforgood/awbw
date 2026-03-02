@@ -35,7 +35,7 @@
       <% if @noticeable.workshop.present? %>
         <div class="text-align: left;">
           <span style="color:#6b7280;">Workshop:</span>
-          <%= @noticeable.workshop.title %>
+          <%= @noticeable.workshop&.title %>
         </div>
       <% end %>
 
