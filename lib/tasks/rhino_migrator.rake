@@ -38,6 +38,12 @@ namespace :rhino_migrator do
   # ---------------------------------------------
 
   desc "Migrate WorkshopVariation body into ActionText"
+  task tutorial: :environment do
+    columns = [ :body ]
+    migrate_model!(Tutorial, columns)
+  end
+
+  desc "Migrate WorkshopVariation body into ActionText"
   task workshop_variation: :environment do
     columns = [ :body ]
     migrate_model!(WorkshopVariation, columns)
