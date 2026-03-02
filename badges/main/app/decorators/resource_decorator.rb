@@ -1,6 +1,7 @@
 class ResourceDecorator < ApplicationDecorator
   def detail(length: nil)
-    length ? body&.truncate(length) : body  # TODO - rename field
+    text = rhino_body&.to_plain_text
+    length ? text&.truncate(length) : text
   end
 
   def default_display_image
@@ -20,7 +21,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def truncated_text(ln = 100)
-    h.truncate(html.text.gsub(/(<[^>]+>)/, ""), length: ln)
+    h.truncate(rhino_body.to_plain_text, length: ln)
   end
 
   def display_title
@@ -28,7 +29,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def flex_text
-    h.truncate(html.text, length: 200)
+    h.truncate(rhino_body.to_plain_text, length: 200)
   end
 
   def breadcrumbs
@@ -44,7 +45,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def display_text
-    "<div class='reset-list-items'>#{text}</div>".html_safe
+    "<div class='reset-list-items'>#{rhino_body}</div>".html_safe
   end
 
   def card_class
@@ -58,7 +59,7 @@ class ResourceDecorator < ApplicationDecorator
   private
 
   def html
-    Nokogiri::HTML(text)
+    Nokogiri::HTML(rhino_body.to_s)
   end
 
   def type_link

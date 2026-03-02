@@ -9,7 +9,7 @@ RSpec.describe WorkshopLog do
 
   describe 'associations' do
     # Explicitly defined here
-    it { should belong_to(:workshop) }
+    it { should belong_to(:workshop).optional }
     it { should belong_to(:created_by) }
     it { should belong_to(:organization) } # Inherited via Report but also explicit?
     it { should have_many(:media_files) }
@@ -22,13 +22,21 @@ RSpec.describe WorkshopLog do
   end
 
   describe 'validations' do
-    # Inherited from Report
-    # Add specific WorkshopLog validations if any
-  end
+    it "is valid with a workshop_id" do
+      workshop_log = build(:workshop_log)
+      expect(workshop_log).to be_valid
+    end
 
-  it 'is valid with valid attributes' do
-    # Note: Factory needs associations uncommented for create
-    # expect(build(:workshop_log)).to be_valid
+    it "is valid with external_workshop_title and no workshop" do
+      workshop_log = build(:workshop_log, workshop: nil, owner: nil, external_workshop_title: "Community Art Workshop")
+      expect(workshop_log).to be_valid
+    end
+
+    it "is invalid without workshop_id or external_workshop_title" do
+      workshop_log = build(:workshop_log, workshop: nil, owner: nil, external_workshop_title: nil)
+      expect(workshop_log).not_to be_valid
+      expect(workshop_log.errors[:base]).to include("Please select a workshop or provide an external workshop title")
+    end
   end
 
   describe '#workshop_title' do

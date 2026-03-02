@@ -43,7 +43,10 @@ class Story < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :published, person_first: "people.first_name", person_last: "people.last_name"
+    attributes all: [ :title, :published ]
+    attributes :title, :published
+    attributes person_first: "people.first_name", person_last: "people.last_name"
+    options :all, type: :text, default: true, default_operator: :or
 
     scope { join_rich_texts.left_joins(created_by: :person) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"

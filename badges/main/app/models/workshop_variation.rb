@@ -1,9 +1,14 @@
 class WorkshopVariation < ApplicationRecord
   include AuthorCreditable
-  include Publishable, Trendable
+  include Publishable, Trendable, RichTextSearchable
   include SearchCop
   search_scope :search do
-    attributes :name, :body
+    attributes all: [ :name ]
+    options :all, type: :text, default: true, default_operator: :or
+
+    scope { join_rich_texts }
+    attributes action_text_body: "action_text_rich_texts.plain_text_body"
+    options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
   def self.search_by_params(params)
@@ -43,7 +48,7 @@ class WorkshopVariation < ApplicationRecord
   # See Publishable, Trendable
 
   def description
-    body
+    rhino_body.to_plain_text
   end
 
   def title

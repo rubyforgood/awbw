@@ -24,14 +24,18 @@ class Tutorial < ApplicationRecord
   # SearchCop
   include SearchCop
   search_scope :search do
-    attributes :title, :body
+    attributes all: [ :title, :body ]
+    options :all, type: :text, default: true, default_operator: :or
 
     scope { join_rich_texts }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
-  scope :body, ->(body) { where("body like ?", "%#{ body }%") }
+  scope :body, ->(body) {
+    left_joins(:rich_text_rhino_body)
+      .where("tutorials.body LIKE :q OR action_text_rich_texts.body LIKE :q", q: "%#{body}%")
+  }
   scope :title, ->(title) { where("title like ?", "%#{ title }%") }
   scope :tutorial_name, ->(tutorial_name) { title(tutorial_name) }
   scope :with_sector_ids, ->(sector_hash) {
@@ -51,9 +55,12 @@ class Tutorial < ApplicationRecord
   }
 
   scope :title_or_body, ->(term) {
-    pattern = "%#{term}%"
-    left_joins(:rich_text_rhino_body)
-      .where("tutorials.title LIKE :q OR tutorials.body LIKE :q OR action_text_rich_texts.body LIKE :q", q: pattern)
+    scope = left_joins(:rich_text_rhino_body)
+    term.split.each do |word|
+      pattern = "%#{word}%"
+      scope = scope.where("tutorials.title LIKE :q OR tutorials.body LIKE :q OR action_text_rich_texts.body LIKE :q", q: pattern)
+    end
+    scope
   }
 
   def self.search_by_params(params)

@@ -9,6 +9,7 @@ RSpec.describe "tutorials/show", type: :view do
     assign(:tutorial, Tutorial.create!(
       title: "Title",
       body: "MyText",
+      rhino_body: "MyText",
       featured: false,
       published: false,
       position: 2,

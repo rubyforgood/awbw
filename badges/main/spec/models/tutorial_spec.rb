@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe Tutorial, type: :model do
   describe '.search_by_params' do
-    let!(:published_tutorial) { create(:tutorial, :published, title: 'Getting Started Guide', body: 'Welcome to AWBW') }
-    let!(:draft_tutorial) { create(:tutorial, title: 'Advanced Workshop Tips', body: 'For experienced facilitators') }
+    let!(:published_tutorial) { create(:tutorial, :published, title: 'Getting Started Guide', rhino_body: 'Welcome to AWBW') }
+    let!(:draft_tutorial) { create(:tutorial, title: 'Advanced Workshop Tips', rhino_body: 'For experienced facilitators') }
 
     it 'returns all when no params' do
       results = Tutorial.search_by_params({})
