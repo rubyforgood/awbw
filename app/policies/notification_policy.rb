@@ -10,7 +10,7 @@ class NotificationPolicy < ApplicationPolicy
   end
 
   def resend?
-    admin?
+    admin? && record.resendable?
   end
 
   # Scoping
