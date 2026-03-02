@@ -71,7 +71,7 @@ class CommunityNewsController < ApplicationController
         end
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Community news create failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
@@ -95,7 +95,7 @@ class CommunityNewsController < ApplicationController
         assign_associations(@community_news)
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Community news update failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end

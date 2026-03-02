@@ -70,6 +70,11 @@ class WorkshopVariationIdeasController < ApplicationController
       set_form_variables
       render :new, status: :unprocessable_content
     end
+  rescue ActiveRecord::RecordNotUnique => e
+    Rails.logger.error "WorkshopVariationIdea create failed: #{e.class} - #{e.message}"
+    @workshop_variation_idea.errors.add(:base, "could not be saved due to a conflict. Please try again.")
+    set_form_variables
+    render :new, status: :unprocessable_content
   end
 
   def update
@@ -80,6 +85,11 @@ class WorkshopVariationIdeasController < ApplicationController
       set_form_variables
       render :edit, status: :unprocessable_content
     end
+  rescue ActiveRecord::RecordNotUnique => e
+    Rails.logger.error "WorkshopVariationIdea update failed: #{e.class} - #{e.message}"
+    @workshop_variation_idea.errors.add(:base, "could not be saved due to a conflict. Please try again.")
+    set_form_variables
+    render :edit, status: :unprocessable_content
   end
 
   def destroy

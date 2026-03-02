@@ -100,7 +100,7 @@ class WorkshopsController < ApplicationController
         end
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       log_workshop_error("creation", e)
       raise ActiveRecord::Rollback
     end
@@ -158,7 +158,7 @@ class WorkshopsController < ApplicationController
         assign_associations(@workshop)
         success = true
       end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       log_workshop_error("update", e)
       raise ActiveRecord::Rollback
     end

@@ -78,6 +78,18 @@ RSpec.describe "/workshop_ideas", type: :request do
 
         expect(response).to redirect_to(workshop_idea_path(WorkshopIdea.last))
       end
+
+      it "handles RecordNotUnique gracefully" do
+        allow_any_instance_of(WorkshopIdea).to receive(:save).and_raise(
+          ActiveRecord::RecordNotUnique.new("Duplicate entry")
+        )
+
+        expect {
+          post workshop_ideas_path, params: { workshop_idea: valid_attributes }
+        }.not_to change(WorkshopIdea, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
     end
 
     describe "PATCH /update" do
@@ -89,6 +101,19 @@ RSpec.describe "/workshop_ideas", type: :request do
 
         expect(idea.reload.title).to eq("Updated Title")
         expect(response).to redirect_to(workshop_idea_path(idea))
+      end
+
+      it "handles RecordNotUnique gracefully" do
+        idea = create(:workshop_idea, valid_attributes)
+
+        allow_any_instance_of(WorkshopIdea).to receive(:update).and_raise(
+          ActiveRecord::RecordNotUnique.new("Duplicate entry")
+        )
+
+        patch workshop_idea_path(idea),
+              params: { workshop_idea: { title: "Updated Title" } }
+
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
