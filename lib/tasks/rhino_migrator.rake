@@ -37,7 +37,7 @@ namespace :rhino_migrator do
   #   bundle exec rake rhino_migrator:all       # all models
   # ---------------------------------------------
 
-  desc "Migrate WorkshopVariation body into ActionText"
+  desc "Migrate Tutorial body into ActionText"
   task tutorial: :environment do
     columns = [ :body ]
     migrate_model!(Tutorial, columns)
