@@ -119,5 +119,38 @@ RSpec.describe Workshop do
     end
   end
 
+  describe "#remote_search_label" do
+    it "returns id and type_name as label" do
+      record = create(:workshop, title: "Art Therapy", windows_type: create(:windows_type, :children))
+
+      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy (CHILDREN) ##{record.id}" })
+    end
+
+    it "returns label without windows type when none is set" do
+      record = create(:workshop, title: "Art Therapy", windows_type: nil)
+
+      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy ##{record.id}" })
+    end
+  end
+
+  describe ".remote_search" do
+    it "finds workshops matching the query" do
+      matching = create(:workshop, title: "Healing Through Art")
+      create(:workshop, title: "Unrelated Workshop")
+
+      results = Workshop.remote_search("Healing")
+
+      expect(results).to contain_exactly(matching)
+    end
+
+    it "eager loads windows_type to avoid N+1" do
+      create(:workshop, title: "Healing Through Art")
+
+      results = Workshop.remote_search("Healing")
+
+      expect(results.eager_loading?).to be true
+    end
+  end
+
   # Add tests for scopes, methods like #rating, #log_count, SearchCop etc.
 end
