@@ -15,10 +15,10 @@
                   class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
     <% end %>
     <div class="ml-auto flex items-center gap-2">
-      <%= render "bookmarks/editable_bookmark_icon", resource: tutorial %>
       <%= link_to "View", tutorial_path(tutorial),
                     data: { turbo_frame: "_top"},
                     class: "btn btn-secondary-outline" %>
+      <%= render "bookmarks/editable_bookmark_icon", resource: tutorial %>
     </div>
   </header>
 
