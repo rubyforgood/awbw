@@ -54,13 +54,15 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Workshop:</span>
-          <% workshop_title = @story_idea.workshop&.title || @story_idea.external_workshop_title %>
           <% if @story_idea.workshop && allowed_to?(:show?, @story_idea.workshop) %>
-            <%= link_to workshop_title, workshop_path(@story_idea.workshop),
+            <%= link_to @story_idea.workshop.title, workshop_path(@story_idea.workshop),
                         data: { turbo_frame: "_top" },
                         class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}" %>
-          <% elsif workshop_title.present? %>
-            <%= workshop_title %>
+            <% if @story_idea.external_workshop_title.present? %>
+              / <%= @story_idea.external_workshop_title %>
+            <% end %>
+          <% elsif @story_idea.external_workshop_title.present? %>
+            <%= @story_idea.external_workshop_title %>
           <% else %>
             —
           <% end %>
