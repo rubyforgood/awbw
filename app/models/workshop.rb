@@ -331,7 +331,15 @@ class Workshop < ApplicationRecord
   end
 
   def remote_search_label
-    { id: id, label: type_name }
+    label = windows_type ? "#{title} (#{windows_type.short_name})" : title
+    { id: id, label: label }
+  end
+
+  def self.remote_search_labels(records)
+    labels = records.map(&:remote_search_label)
+    dupes = labels.group_by { |l| l[:label] }.select { |_, v| v.size > 1 }.keys.to_set
+    labels.each { |l| l[:label] = "#{l[:label]} ##{l[:id]}" if dupes.include?(l[:label]) }
+    labels
   end
 
   private

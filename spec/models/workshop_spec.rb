@@ -120,16 +120,46 @@ RSpec.describe Workshop do
   end
 
   describe "#remote_search_label" do
-    it "returns id and type_name as label" do
+    it "returns title with windows type short_name" do
       record = create(:workshop, title: "Art Therapy", windows_type: create(:windows_type, :children))
 
-      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy (CHILDREN) ##{record.id}" })
+      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy (CHILDREN)" })
     end
 
-    it "returns label without windows type when none is set" do
+    it "returns just the title when no windows type" do
       record = create(:workshop, title: "Art Therapy", windows_type: nil)
 
-      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy ##{record.id}" })
+      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy" })
+    end
+  end
+
+  describe ".remote_search_labels" do
+    it "omits id when labels are unique" do
+      wt = create(:windows_type, :adult)
+      w1 = create(:workshop, title: "Art Therapy", windows_type: wt)
+      w2 = create(:workshop, title: "Music Therapy", windows_type: wt)
+
+      labels = Workshop.remote_search_labels([ w1, w2 ])
+
+      expect(labels).to contain_exactly(
+        { id: w1.id, label: "Art Therapy (ADULT)" },
+        { id: w2.id, label: "Music Therapy (ADULT)" }
+      )
+    end
+
+    it "appends id only to duplicate labels" do
+      wt = create(:windows_type, :adult)
+      w1 = create(:workshop, title: "Art Therapy", windows_type: wt)
+      w2 = create(:workshop, title: "Art Therapy", windows_type: wt)
+      w3 = create(:workshop, title: "Music Therapy", windows_type: wt)
+
+      labels = Workshop.remote_search_labels([ w1, w2, w3 ])
+
+      expect(labels).to contain_exactly(
+        { id: w1.id, label: "Art Therapy (ADULT) ##{w1.id}" },
+        { id: w2.id, label: "Art Therapy (ADULT) ##{w2.id}" },
+        { id: w3.id, label: "Music Therapy (ADULT)" }
+      )
     end
   end
 

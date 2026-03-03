@@ -25,7 +25,7 @@ class SearchController < ApplicationController
 
     records = records.limit(25)
 
-    render json: records.map(&:remote_search_label)
+    render json: model_class.remote_search_labels(records)
   end
 
   private

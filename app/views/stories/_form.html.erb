@@ -50,7 +50,7 @@
 
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :workshop_id,
-                  collection: f.object.workshop.present? ? [[ f.object.workshop.type_name, f.object.workshop.id ]] : [],
+                  collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id ]] : [],
                   include_blank: true,
                   input_html: {
                     class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
