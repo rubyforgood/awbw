@@ -38,41 +38,26 @@ RSpec.describe Bookmark, type: :model do
   end
 
   describe ".bookmarkable_type_options" do
-    let(:admin_user) { build_stubbed(:user, super_user: true) }
-    let(:regular_user) { build_stubbed(:user, super_user: false) }
-
     it "never includes Report" do
-      options = Bookmark.bookmarkable_type_options(user: admin_user)
+      options = Bookmark.bookmarkable_type_options
       type_values = options.map(&:last)
       expect(type_values).not_to include("Report")
     end
 
-    it "includes WorkshopVariationIdea for admin users" do
-      options = Bookmark.bookmarkable_type_options(user: admin_user)
+    it "includes WorkshopVariationIdea" do
+      options = Bookmark.bookmarkable_type_options
       type_values = options.map(&:last)
       expect(type_values).to include("WorkshopVariationIdea")
     end
 
-    it "excludes WorkshopVariationIdea for regular users" do
-      options = Bookmark.bookmarkable_type_options(user: regular_user)
-      type_values = options.map(&:last)
-      expect(type_values).not_to include("WorkshopVariationIdea")
-    end
-
-    it "excludes WorkshopVariationIdea when no user is provided" do
-      options = Bookmark.bookmarkable_type_options(user: nil)
-      type_values = options.map(&:last)
-      expect(type_values).not_to include("WorkshopVariationIdea")
-    end
-
     it "uses model_name.human for labels" do
-      options = Bookmark.bookmarkable_type_options(user: admin_user)
+      options = Bookmark.bookmarkable_type_options
       tutorial_option = options.find { |_, value| value == "Tutorial" }
       expect(tutorial_option.first).to eq(Tutorial.model_name.human)
     end
 
     it "returns [label, value] pairs" do
-      options = Bookmark.bookmarkable_type_options(user: regular_user)
+      options = Bookmark.bookmarkable_type_options
       options.each do |option|
         expect(option).to be_an(Array)
         expect(option.length).to eq(2)
