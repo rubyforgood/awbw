@@ -58,6 +58,27 @@ RSpec.describe Bookmark, type: :model do
     end
   end
 
+  describe "tutorial bookmarks" do
+    let(:user) { create(:user) }
+    let!(:tutorial) { create(:tutorial, :published, title: "Getting Started") }
+    let!(:tutorial_bookmark) { create(:bookmark, user: user, bookmarkable: tutorial) }
+
+    it "filters by title matching tutorial" do
+      result = Bookmark.filter_by_params(title: "Getting")
+      expect(result).to include(tutorial_bookmark)
+    end
+
+    it "excludes non-matching tutorials in title filter" do
+      result = Bookmark.filter_by_params(title: "Nonexistent")
+      expect(result).not_to include(tutorial_bookmark)
+    end
+
+    it "includes tutorial bookmarks when sorting by title" do
+      result = Bookmark.search({}).sorted("title")
+      expect(result).to include(tutorial_bookmark)
+    end
+  end
+
   describe '.search' do
     let(:user) { create(:user) }
     let!(:workshop1) { create(:workshop, title: "Alpha", led_count: 15) }

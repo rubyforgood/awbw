@@ -14,9 +14,12 @@
                   data: {turbo_frame: "_top"},
                   class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
     <% end %>
-    <%= link_to "View", tutorial_path(tutorial),
-                  data: { turbo_frame: "_top"},
-                  class: "ml-auto btn btn-secondary-outline" %>
+    <div class="ml-auto flex items-center gap-2">
+      <%= render "bookmarks/editable_bookmark_icon", resource: tutorial %>
+      <%= link_to "View", tutorial_path(tutorial),
+                    data: { turbo_frame: "_top"},
+                    class: "btn btn-secondary-outline" %>
+    </div>
   </header>
 
   <!-- Embedded Video -->
