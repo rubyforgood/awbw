@@ -1,6 +1,6 @@
 class CategoryTypeDecorator < ApplicationDecorator
   def title
-    name.titleize
+    name.humanize
   end
 
   def detail(length: nil)

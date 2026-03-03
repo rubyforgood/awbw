@@ -17,6 +17,18 @@ RSpec.describe CategoryType do
     it { should validate_presence_of(:name) }
   end
 
+  describe '#display_label' do
+    it 'returns display_text when present' do
+      category_type = build(:category_type, name: "art_type", display_text: "Custom Label")
+      expect(category_type.display_label).to eq("Custom Label")
+    end
+
+    it 'returns sentence-cased name when display_text is blank' do
+      category_type = build(:category_type, name: "art_type", display_text: nil)
+      expect(category_type.display_label).to eq("Art type")
+    end
+  end
+
   describe 'scopes' do
     let!(:published_category_type) { create(:category_type, :published) }
     let!(:unpublished_category_type) { create(:category_type) }
