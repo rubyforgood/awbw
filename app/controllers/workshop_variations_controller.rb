@@ -111,7 +111,8 @@ class WorkshopVariationsController < ApplicationController
   def workshop_variation_params
     params.require(:workshop_variation).permit(
       [ :name, :rhino_body, :published, :publicly_visible, :position, :youtube_url, :created_by_id,
-        :organization_id, :workshop_id, :workshop_variation_idea_id, :author_credit_preference
+        :organization_id, :workshop_id, :workshop_variation_idea_id, :author_credit_preference,
+        :windows_type_id
       ]
     )
   end

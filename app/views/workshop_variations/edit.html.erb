@@ -4,7 +4,10 @@
     <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "View", workshop_variation_path(@workshop_variation), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
   </div>
-  <h1 class="text-2xl font-semibold text-gray-900 mb-4">Edit workshop variation</h1>
+  <h1 class="text-2xl font-semibold text-gray-900 mb-4">Edit workshop variation: <%= @workshop_variation.name %></h1>
+  <% if @workshop_variation.workshop.present? %>
+    <p class="text-sm text-gray-500 mb-4">Variant of workshop: <%= @workshop_variation.workshop.remote_search_label[:label] %></p>
+  <% end %>
 
   <div class="border-b border-gray-300 mb-6"></div>
 

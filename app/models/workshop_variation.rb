@@ -42,8 +42,6 @@ class WorkshopVariation < ApplicationRecord
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
 
-  delegate :windows_type, to: :workshop
-
   # Scopes
   # See Publishable, Trendable
 
