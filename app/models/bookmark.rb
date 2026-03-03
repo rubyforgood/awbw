@@ -2,8 +2,14 @@ class Bookmark < ApplicationRecord
   belongs_to :user
   belongs_to :bookmarkable, polymorphic: true
 
-  BOOKMARKABLE_MODELS = [ "CommunityNews", "Event", "Organization", "Person", "Resource", "Story", "StoryIdea",
-                          "Tutorial", "Workshop", "WorkshopIdea", "WorkshopLog", "WorkshopVariation" ]
+  BOOKMARKABLE_MODELS = %w[CommunityNews Event Organization Person Report Resource Story StoryIdea
+                           Tutorial Workshop WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea].freeze
+
+  DROPDOWN_MODELS = (BOOKMARKABLE_MODELS - %w[Report]).freeze
+
+  def self.bookmarkable_type_options(user: nil)
+    DROPDOWN_MODELS.map { |type| [ type.constantize.model_name.human, type ] }
+  end
 
   scope :for_workshops, -> { where(bookmarkable_type: "Workshop") }
   scope :bookmarkable_type, ->(bookmarkable_type) { bookmarkable_type.present? ? where(bookmarkable_type: bookmarkable_type) : all }
@@ -63,8 +69,11 @@ class Bookmark < ApplicationRecord
       LEFT JOIN tutorials           ON tutorials.id           = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
       LEFT JOIN workshops           ON workshops.id           = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'
       LEFT JOIN workshop_ideas      ON workshop_ideas.id      = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopIdea'
-      LEFT JOIN workshop_logs       ON workshop_logs.id       = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
-      LEFT JOIN workshop_variations ON workshop_variations.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariation'
+      LEFT JOIN workshop_logs            ON workshop_logs.id            = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
+      LEFT JOIN workshop_variations      ON workshop_variations.id      = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariation'
+      LEFT JOIN workshop_variation_ideas ON workshop_variation_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariationIdea'
+      LEFT JOIN tutorials                ON tutorials.id                = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
+      LEFT JOIN reports                  ON reports.id                  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Report'
     SQL
     bookmarks.order(Arel.sql(<<~SQL.squish)
       LOWER(
@@ -73,6 +82,7 @@ class Bookmark < ApplicationRecord
           events.title,
           CONCAT(people.first_name, ' ', people.last_name),
           organizations.name,
+          reports.type,
           resources.title,
           stories.title,
           story_ideas.title,
@@ -80,7 +90,8 @@ class Bookmark < ApplicationRecord
           workshops.title,
           workshop_ideas.title,
           DATE_FORMAT(workshop_logs.date, '%Y-%m-%d'),
-          workshop_variations.name
+          workshop_variations.name,
+          workshop_variation_ideas.name
         )
       ) ASC,
       bookmarks.created_at DESC
@@ -105,16 +116,21 @@ class Bookmark < ApplicationRecord
       LEFT JOIN workshop_ideas ON workshop_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopIdea'
       LEFT JOIN workshop_logs ON workshop_logs.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
       LEFT JOIN workshop_variations ON workshop_variations.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariation'
+      LEFT JOIN workshop_variation_ideas ON workshop_variation_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariationIdea'
+      LEFT JOIN tutorials ON tutorials.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
+      LEFT JOIN reports ON reports.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Report'
     SQL
 
     bookmarks.where(
       "community_news.title LIKE :title OR events.title LIKE :title OR people.first_name LIKE :title OR
        people.last_name LIKE :title OR organizations.name LIKE :title OR resources.title LIKE :title OR
-       stories.title LIKE :title OR tutorials.title LIKE :title OR workshops.title LIKE :title OR workshop_ideas.title LIKE :title OR
+       reports.type LIKE :title OR
+       stories.title LIKE :title OR workshops.title LIKE :title OR workshop_ideas.title LIKE :title OR
        story_ideas.body LIKE :title OR -- searching body for story ideas (title exists but isn't used in UI)
+       tutorials.title LIKE :title OR
        DATE_FORMAT(workshop_logs.date, '%Y-%m-%d') LIKE :title OR -- no title on workshop_logs
-       workshop_variations.name LIKE :title -- searching name for workshop variations (title doesn't exist)
-                            ",
+       workshop_variations.name LIKE :title OR
+       workshop_variation_ideas.name LIKE :title",
       title: "%#{title}%"
     )
   end
