@@ -72,7 +72,6 @@ class Bookmark < ApplicationRecord
       LEFT JOIN workshop_logs            ON workshop_logs.id            = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
       LEFT JOIN workshop_variations      ON workshop_variations.id      = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariation'
       LEFT JOIN workshop_variation_ideas ON workshop_variation_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariationIdea'
-      LEFT JOIN tutorials                ON tutorials.id                = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
       LEFT JOIN reports                  ON reports.id                  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Report'
     SQL
     bookmarks.order(Arel.sql(<<~SQL.squish)
@@ -117,7 +116,6 @@ class Bookmark < ApplicationRecord
       LEFT JOIN workshop_logs ON workshop_logs.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
       LEFT JOIN workshop_variations ON workshop_variations.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariation'
       LEFT JOIN workshop_variation_ideas ON workshop_variation_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariationIdea'
-      LEFT JOIN tutorials ON tutorials.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
       LEFT JOIN reports ON reports.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Report'
     SQL
 
