@@ -7,7 +7,7 @@ class Bookmark < ApplicationRecord
 
   DROPDOWN_MODELS = (BOOKMARKABLE_MODELS - %w[Report]).freeze
 
-  def self.bookmarkable_type_options(user: nil)
+  def self.bookmarkable_type_options
     DROPDOWN_MODELS.map { |type| [ type.constantize.model_name.human, type ] }
   end
 
