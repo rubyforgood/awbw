@@ -326,6 +326,14 @@ class Workshop < ApplicationRecord
 
   remote_searchable_by :title
 
+  def self.remote_search(query)
+    super.includes(:windows_type)
+  end
+
+  def remote_search_label
+    { id: id, label: type_name }
+  end
+
   private
 
   def assign_pending_associations

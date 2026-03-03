@@ -58,7 +58,7 @@
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :workshop_id,
-          collection: f.object.workshop.present? ? [[ f.object.workshop.title, f.object.workshop.id]] : [],
+          collection: f.object.workshop.present? ? [[ f.object.workshop.type_name, f.object.workshop.id]] : [],
           include_blank: true,
           required: true,
           input_html: {
