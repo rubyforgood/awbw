@@ -125,7 +125,7 @@ class StoriesController < ApplicationController
   def set_form_variables
     @story_idea = StoryIdea.find(params[:story_idea_id]) if params[:story_idea_id].present?
     @user = User.find(params[:user_id]) if params[:user_id].present?
-    @organizations = authorized_scope(Organization.all, as: :affiliated)
+    @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
     @story_ideas = authorized_scope(StoryIdea.includes(:created_by))
                             .references(:users)
                             .order(:created_at)
