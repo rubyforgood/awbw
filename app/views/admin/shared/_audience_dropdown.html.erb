@@ -1,0 +1,41 @@
+<%
+  default_audiences = %w[visitors users]
+  selected = Array(params[:audience]).reject(&:blank?).presence || default_audiences
+  auto_submit = local_assigns.fetch(:auto_submit, true)
+  stacked = local_assigns.fetch(:stacked, false)
+
+  labels_map = { "visitors" => "Visitors", "users" => "Users", "staff" => "Admins" }
+  button_label = if (selected & labels_map.keys).size == labels_map.size
+                   "All"
+                 else
+                   selected.filter_map { |v| labels_map[v] }.join(", ")
+                 end
+  dropdown_id = "audience-dropdown-#{SecureRandom.hex(4)}"
+%>
+<div class="<%= stacked ? "" : "flex items-center gap-2" %>">
+  <label class="<%= stacked ? "block text-sm font-medium text-gray-600 mb-1" : "text-sm font-medium text-gray-700" %>"><%= stacked ? "Audience" : "Audience:" %></label>
+  <div data-controller="dropdown" class="relative">
+    <button type="button"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"<%= dropdown_id %>":"hidden"}]'
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-transparent text-sm text-gray-700">
+      <span><%= button_label %></span>
+      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+
+    <div id="<%= dropdown_id %>"
+         data-dropdown-target="content"
+         class="hidden absolute z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3 min-w-[160px]">
+      <% labels_map.each do |value, label| %>
+        <label class="flex items-center gap-2 cursor-pointer py-1">
+          <%= check_box_tag "audience[]", value, selected.include?(value),
+                            onchange: (auto_submit ? "this.closest('form').submit()" : nil),
+                            class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+          <span class="text-sm text-gray-700"><%= label %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+</div>

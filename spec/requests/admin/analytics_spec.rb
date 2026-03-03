@@ -130,6 +130,18 @@ RSpec.describe "Admin::Analytics", type: :request do
         get index_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "shows Past month chip and Audience chips by default" do
+        get index_path
+        expect(response.body).to include("Past month")
+        expect(response.body).to include("Visitors")
+        expect(response.body).to include("Users")
+      end
+
+      it "renders successfully with audience filter" do
+        get index_path, params: { audience: %w[visitors users] }
+        expect(response).to have_http_status(:ok)
+      end
     end
 
     describe "POST /admin/activities/counts/print" do

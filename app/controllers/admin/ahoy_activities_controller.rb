@@ -45,14 +45,7 @@ module Admin
       end
 
       # Audience filter
-      case params[:audience]
-      when "visitors"
-        scope = scope.where(user_id: nil)
-      when "users"
-        scope = scope.joins(:user).where(users: { super_user: false })
-      when "staff"
-        scope = scope.joins(:user).where(users: { super_user: true })
-      end
+      scope = apply_audience_filter(scope)
 
       # Filter by resource type and ID
       if params[:resource_type].present?
@@ -94,6 +87,12 @@ module Admin
       if params[:visit_id].present?
         scope = scope.where(id: params[:visit_id])
       end
+
+      # Time period filter
+      scope = scope.where(started_at: time_range) if time_range
+
+      # Audience filter
+      scope = apply_audience_filter(scope)
 
       # Date filtering
       if params[:from].present?
@@ -273,7 +272,7 @@ module Admin
         .first(10).to_h
 
       # User signup trend
-      signup_range = time_range || 6.months.ago..Time.current
+      signup_range = time_range || (6.months.ago..Time.current)
       @user_signup_trend = User.where(created_at: signup_range).group_by_week(:created_at).count
 
       # Search-to-view conversion
@@ -345,40 +344,45 @@ module Admin
       end.reject { |s| s[:data].empty? }
     end
 
+    def selected_audiences
+      @selected_audiences ||= Array(params[:audience]).reject(&:blank?).presence || %w[visitors users]
+    end
+
     def scoped_visits
       scope = Ahoy::Visit.all
       scope = scope.where(started_at: time_range) if time_range
-
-      case params[:audience]
-      when "visitors"
-        scope = scope.where(user_id: nil)
-      when "users"
-        scope = scope.includes(:user).joins(:user).where(users: { super_user: false })
-      when "staff"
-        scope = scope.includes(:user).joins(:user).where(users: { super_user: true })
-      end
-
-      scope
+      apply_audience_filter(scope)
     end
 
     def scoped_events
       scope = Ahoy::Event.all
       scope = scope.where(time: time_range) if time_range
+      apply_audience_filter(scope)
+    end
 
-      case params[:audience]
-      when "visitors"
-        scope = scope.where(user_id: nil)
-      when "users"
-        scope = scope.includes(:user).joins(:user).where(users: { super_user: false })
-      when "staff"
-        scope = scope.includes(:user).joins(:user).where(users: { super_user: true })
+    def apply_audience_filter(scope)
+      audiences = selected_audiences
+      return scope if (audiences & %w[visitors users staff]).size == 3
+
+      allowed_user_ids = []
+      allowed_user_ids << nil if audiences.include?("visitors")
+
+      if audiences.include?("users")
+        allowed_user_ids.concat(User.where(super_user: false).pluck(:id))
       end
 
-      scope
+      if audiences.include?("staff")
+        allowed_user_ids.concat(User.where(super_user: true).pluck(:id))
+      end
+
+      return scope.none if allowed_user_ids.empty?
+
+      scope.where(user_id: allowed_user_ids)
     end
 
     def time_range
-      case params[:time_period]
+      period = params[:time_period].presence || "past_month"
+      case period
       when "past_day"
         1.day.ago..Time.current
       when "past_week"
@@ -387,8 +391,8 @@ module Admin
         1.month.ago..Time.current
       when "past_year"
         1.year.ago..Time.current
-      else
-        nil # all_time
+      when "all_time"
+        nil
       end
     end
 
