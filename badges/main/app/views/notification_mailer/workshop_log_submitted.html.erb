@@ -15,6 +15,12 @@
         <%= @noticeable.workshop&.title %>
       </h2>
 
+      <% if @noticeable.external_workshop_title.present? %>
+        <p style="font-size: 16px; color: #374151; margin: 0 0 4px;">
+          External title: <%= @noticeable.external_workshop_title %>
+        </p>
+      <% end %>
+
       <% if @noticeable.windows_type.present? %>
         <p style="font-size: 16px; color: #374151; margin: 0 0 4px;">
           <%= @noticeable.windows_type.short_name %>
