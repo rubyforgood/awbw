@@ -178,7 +178,7 @@ RSpec.describe Workshop do
 
       results = Workshop.remote_search("Healing")
 
-      expect(results.eager_loading?).to be true
+      expect(results.includes_values).to include(:windows_type)
     end
   end
 
