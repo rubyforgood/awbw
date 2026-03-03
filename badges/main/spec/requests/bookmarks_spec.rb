@@ -110,6 +110,13 @@ RSpec.describe "Bookmarks", type: :request do
       }.to change(Bookmark, :count).by(-1)
     end
 
+    it "renders unbookmarked state in turbo_stream after destroy" do
+      delete bookmark_path(bookmark), headers: turbo_headers
+
+      expect(response.body).to include("far fa-bookmark")
+      expect(response.body).not_to include("fas fa-bookmark")
+    end
+
     it "cannot destroy another user's bookmark" do
       expect {
         delete bookmark_path(other_bookmark)
