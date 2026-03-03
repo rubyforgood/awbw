@@ -103,6 +103,29 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
   context "as an admin" do
     before { sign_in admin }
 
+    describe "default filters" do
+      it "shows Past month chip and Audience chips on events page" do
+        get index_path
+        expect(response.body).to include("Past month")
+        expect(response.body).to include("Visitors")
+        expect(response.body).to include("Users")
+      end
+
+      it "shows Past month chip and Audience chips on visits page" do
+        get visits_path
+        expect(response.body).to include("Past month")
+        expect(response.body).to include("Visitors")
+        expect(response.body).to include("Users")
+      end
+
+      it "shows Past month chip and Audience chips on charts page" do
+        get charts_path
+        expect(response.body).to include("Past month")
+        expect(response.body).to include("Visitors")
+        expect(response.body).to include("Users")
+      end
+    end
+
     describe "GET /admin/activities" do
       it "renders ok" do
         get index_path

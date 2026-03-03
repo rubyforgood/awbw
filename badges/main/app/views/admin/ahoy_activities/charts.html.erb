@@ -4,35 +4,24 @@
         <h1 class="text-2xl font-semibold text-gray-900">Activities</h1>
         <%= form_with url: admin_activities_charts_path, method: :get, local: true,
                       class: "flex items-center gap-4" do %>
+          <%= render "admin/shared/audience_dropdown" %>
 
-          <label class="text-sm font-medium text-gray-700">Audience:</label>
-          <%= select_tag :audience,
-                         options_for_select(
-                           [
-                             ["All", "all"],
-                             ["Visitors (anon)", "visitors"],
-                             ["Users", "users"],
-                             ["Admins (staff)", "staff"]
-                           ],
-                           params[:audience] || "all"
-                         ),
-                         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
-                         onchange: "this.form.submit()" %>
-
-          <label class="text-sm font-medium text-gray-700">Time period:</label>
-          <%= select_tag :time_period,
-                         options_for_select(
-                           [
-                             ['All time', 'all_time'],
-                             ['Past day', 'past_day'],
-                             ['Past week', 'past_week'],
-                             ['Past month', 'past_month'],
-                             ['Past year', 'past_year']
-                           ],
-                           params[:time_period] || 'all_time'
-                         ),
-                         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm",
-                         onchange: "this.form.submit()" %>
+          <div class="flex items-center gap-2">
+            <label class="text-sm font-medium text-gray-700">Time period:</label>
+            <%= select_tag :time_period,
+                           options_for_select(
+                             [
+                               ['All time', 'all_time'],
+                               ['Past day', 'past_day'],
+                               ['Past week', 'past_week'],
+                               ['Past month', 'past_month'],
+                               ['Past year', 'past_year']
+                             ],
+                             params[:time_period] || 'past_month'
+                           ),
+                           class: "px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
+                           onchange: "this.form.submit()" %>
+          </div>
         <% end %>
       </div>
 

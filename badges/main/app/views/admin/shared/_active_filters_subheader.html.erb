@@ -1,18 +1,23 @@
 <%
-  time_label = case params[:time_period]
+  time_period = params[:time_period].presence || "past_month"
+  time_label = case time_period
                when "past_day"   then "Past day"
                when "past_week"  then "Past week"
                when "past_month" then "Past month"
                when "past_year"  then "Past year"
                end
 
-  audience_label = case params[:audience]
-                   when "visitors" then "Visitors (anon)"
-                   when "users"    then "Users"
-                   when "staff"    then "Admins (staff)"
-                   end
+  audience_labels_map = {
+    "visitors" => "Visitors",
+    "users"    => "Users",
+    "staff"    => "Admins"
+  }
+
+  default_audiences = %w[visitors users]
+  audience_values = Array(params[:audience]).reject(&:blank?).presence || default_audiences
+  audience_labels = audience_values.filter_map { |v| audience_labels_map[v] }
 %>
-<% if time_label || audience_label %>
+<% if time_label || audience_labels.any? %>
   <div class="flex items-center gap-2 mb-4 text-sm">
     <span class="text-gray-500">Filtering:</span>
     <% if time_label %>
@@ -20,9 +25,9 @@
         <%= time_label %>
       </span>
     <% end %>
-    <% if audience_label %>
-      <span class="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium">
-        <%= audience_label %>
+    <% audience_labels.each do |label| %>
+      <span class="inline-flex items-center px-3 py-1 rounded-full bg-pink-100 text-pink-800 font-medium">
+        <%= label %>
       </span>
     <% end %>
   </div>
