@@ -5,6 +5,7 @@ module Admin
 
     def index
       authorize! :analytics, to: :index?
+      @selected_audiences = Array(params[:audience]).reject(&:blank?).presence || %w[visitors users]
       time_scope = apply_time_filter(params[:time_period])
 
       # Query Ahoy events for view counts within the time period
@@ -35,7 +36,7 @@ module Admin
       @zero_engagement_resources = zero_engagement_for_model(Resource, time_scope).limit(10).decorate
 
       # Single query to get all event counts grouped by name
-      all_counts = time_scope.call(Ahoy::Event.all).group(:name).count
+      all_counts = time_scope.call(events_base_scope).group(:name).count
 
       @summary = {
         workshops: {
@@ -107,6 +108,25 @@ module Admin
 
     private
 
+    def events_base_scope
+      return Ahoy::Event.all if (@selected_audiences & %w[visitors users staff]).size == 3
+
+      allowed_user_ids = []
+      allowed_user_ids << nil if @selected_audiences.include?("visitors")
+
+      if @selected_audiences.include?("users")
+        allowed_user_ids.concat(User.where(super_user: false).pluck(:id))
+      end
+
+      if @selected_audiences.include?("staff")
+        allowed_user_ids.concat(User.where(super_user: true).pluck(:id))
+      end
+
+      return Ahoy::Event.none if allowed_user_ids.empty?
+
+      Ahoy::Event.where(user_id: allowed_user_ids)
+    end
+
     def apply_time_filter(time_period)
       time_ago = case time_period
       when "past_day"
@@ -148,7 +168,7 @@ module Admin
       event_name = "#{action}.#{model_class.table_name.singularize}"
       rid_sql = "JSON_UNQUOTE(JSON_EXTRACT(properties, '$.resource_id'))"
 
-      rows = time_scope.call(Ahoy::Event.where(name: event_name))
+      rows = time_scope.call(events_base_scope.where(name: event_name))
         .select(Arel.sql("#{rid_sql} AS rid, COUNT(*) AS cnt"))
         .group(Arel.sql(rid_sql))
         .order(Arel.sql("cnt DESC"))
@@ -173,7 +193,7 @@ module Admin
       table_name_singular = model_class.table_name.singularize
       event_name = "view.#{table_name_singular}"
       # Get IDs of resources that have been viewed in the time period
-      viewed_ids = Ahoy::Event
+      viewed_ids = events_base_scope
         .where(name: event_name)
         .then { |query| time_scope.call(query) }
         .distinct

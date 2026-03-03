@@ -3,19 +3,23 @@
   <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-semibold text-gray-900">Activities</h1>
 
-        <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
-          <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
-          <%= f.select :time_period,
-                       options_for_select([
-                         ['All time', 'all_time'],
-                         ['Past day', 'past_day'],
-                         ['Past week', 'past_week'],
-                         ['Past month', 'past_month'],
-                         ['Past year', 'past_year']
-                       ], params[:time_period] || 'all_time'),
-                       {},
-                       class: "px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
-                       onchange: "this.form.submit()" %>
+        <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-4" do |f| %>
+          <%= render "admin/shared/audience_dropdown" %>
+
+          <div class="flex items-center gap-2">
+            <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
+            <%= f.select :time_period,
+                         options_for_select([
+                           ['All time', 'all_time'],
+                           ['Past day', 'past_day'],
+                           ['Past week', 'past_week'],
+                           ['Past month', 'past_month'],
+                           ['Past year', 'past_year']
+                         ], params[:time_period] || 'past_month'),
+                         {},
+                         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-gray-700",
+                         onchange: "this.form.submit()" %>
+          </div>
         <% end %>
       </div>
 
