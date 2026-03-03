@@ -23,6 +23,38 @@ RSpec.describe "/faqs", type: :request do
   let!(:unpublished_faq) { create(:faq, question: "Unpublished FAQ", answer: "Unpublished FAQ Body") }
   let!(:public_faq) { create(:faq, :published, question: "Public FAQ", answer: "Public FAQ Body", publicly_visible: true) }
 
+  describe "Ahoy tracking" do
+    before { sign_in admin }
+
+    describe "GET /index" do
+      it "tracks a search event when a query param is present" do
+        expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
+          anything, Faq, params: anything, result_count: anything
+        )
+
+        get faqs_path, params: { query: "Published" }
+      end
+
+      it "calls track_index_intent even without search params" do
+        expect(Analytics::AhoyTracker).to receive(:track_index_intent).with(
+          anything, Faq, params: anything, result_count: anything
+        )
+
+        get faqs_path
+      end
+    end
+
+    describe "GET /show" do
+      it "tracks a view event" do
+        expect(Analytics::AhoyTracker).to receive(:track).with(
+          anything, :view, published_faq
+        )
+
+        get faq_path(published_faq)
+      end
+    end
+  end
+
   describe "GET /index" do
     context "as an admin" do
       before { sign_in admin }
