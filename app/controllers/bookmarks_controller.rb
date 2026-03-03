@@ -90,6 +90,7 @@ class BookmarksController < ApplicationController
     authorize! @bookmark
     if @bookmark
       @bookmark.destroy
+      current_user.bookmarks.reload
       @bookmarkable = @bookmark.bookmarkable
       respond_to do |format|
         format.html {
