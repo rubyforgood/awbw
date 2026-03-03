@@ -9,12 +9,14 @@
 
 @theme {
   --color-primary: #063b8d;
+  --color-accent: #aa2e00;
   --color-secondary: var(--color-gray-500);
   --color-danger: var(--color-red-500);
   --color-warning: var(--color-yellow-500);
   --color-info: var(--color-blue-500);
   --color-success: var(--color-green-500);
   --color-transparent: transparent;
+  --font-telefon: "Telefon Bold", sans-serif;
 }
 
 /* Font face declarations */
