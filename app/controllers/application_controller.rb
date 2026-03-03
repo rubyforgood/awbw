@@ -20,7 +20,7 @@ class ApplicationController < ActionController::Base
   private
 
   def after_sign_out_path_for(resource_or_scope)
-    if request.referrer&.include?("/users/change_password") # needed for custom "log out and reset it" flow
+    if params[:reset_password].present? # needed for custom "log out and reset it" flow
       new_user_password_path
     else
       root_path
