@@ -61,8 +61,8 @@
             <% if @story_idea.external_workshop_title.present? %>
               / <%= @story_idea.external_workshop_title %>
             <% end %>
-          <% elsif @story_idea.external_workshop_title.present? %>
-            <%= @story_idea.external_workshop_title %>
+          <% elsif @story_idea.workshop_title.present? %>
+            <%= @story_idea.workshop_title %>
           <% else %>
             —
           <% end %>
