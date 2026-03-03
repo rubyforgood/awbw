@@ -47,19 +47,8 @@ RSpec.describe DeviseMailer, type: :mailer do
       end
     end
 
-    context "when sending unlock instructions" do
-      let(:user) { create(:user, :locked, email: "locked@example.com") }
-
-      it "tracks auth.unlock_email_sent" do
-        expect(Analytics::AhoyTracker).to receive(:track_auth_event).with(
-          "auth.unlock_email_sent",
-          hash_including(record_id: user.id, record_type: "User"),
-          user: anything
-        )
-
-        described_class.unlock_instructions(user, token).deliver_now
-      end
-    end
+    # unlock_instructions not tested here — app uses unlock_strategy: :none
+    # so user_unlock_url route doesn't exist and the view can't render
   end
 
   describe "#create_notification_record" do
@@ -120,21 +109,7 @@ RSpec.describe DeviseMailer, type: :mailer do
       end
     end
 
-    context "when sending unlock instructions" do
-      let(:user) { create(:user, :locked, email: "locked@example.com") }
-
-      it "creates an account_unlock notification" do
-        expect(NotificationServices::CreateNotification).to receive(:call).with(
-          hash_including(
-            kind: "account_unlock",
-            recipient_role: :person,
-            recipient_email: user.email,
-            deliver: false
-          )
-        ).and_return(notification)
-
-        described_class.unlock_instructions(user, token).deliver_now
-      end
-    end
+    # unlock_instructions not tested here — app uses unlock_strategy: :none
+    # so user_unlock_url route doesn't exist and the view can't render
   end
 end
