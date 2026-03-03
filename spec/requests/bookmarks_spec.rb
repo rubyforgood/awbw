@@ -94,6 +94,26 @@ RSpec.describe "Bookmarks", type: :request do
 
       expect(response).to redirect_to(root_path)
     end
+
+    context "with tutorials" do
+      let(:tutorial) { create(:tutorial, :published) }
+
+      it "can create a tutorial bookmark" do
+        expect {
+          post bookmarks_path,
+               params: { bookmark: { bookmarkable_id: tutorial.id,
+                                     bookmarkable_type: "Tutorial" } },
+               headers: turbo_headers
+        }.to change(Bookmark, :count).by(1)
+      end
+
+      it "can destroy their own tutorial bookmark" do
+        tutorial_bookmark = create(:bookmark, user: regular_user, bookmarkable: tutorial)
+        expect {
+          delete bookmark_path(tutorial_bookmark), headers: turbo_headers
+        }.to change(Bookmark, :count).by(-1)
+      end
+    end
   end
 
   # ============================================================
