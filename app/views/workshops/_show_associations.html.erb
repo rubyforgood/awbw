@@ -8,7 +8,7 @@
           <h2 class="text-lg font-semibold mb-2">Variations of this Workshop</h2>
         </div>
         <div class="flex gap-2 justify-end">
-          <% if allowed_to?(:new?, WorkshopVariationIdea) && @workshop.persisted? %>
+          <% if allowed_to?(:new?, WorkshopVariation) && @workshop.persisted? %>
             <%= link_to "New variation",
                         new_workshop_variation_path(from: "workshop_show", workshop_id: workshop.id),
                         class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
