@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe "windows_types/index", type: :view do
   let(:admin) { create(:user, :admin) }
-  let(:windows_type1) { create(:windows_type, name: "Adult", short_name: "ADULT") }
-  let(:windows_type2) { create(:windows_type, name: "Children", short_name: "CHILDREN") }
+  let(:windows_type1) { create(:windows_type, name: "Adult", short_name: "Adult") }
+  let(:windows_type2) { create(:windows_type, name: "Children", short_name: "Children") }
 
   before(:each) do
     assign(:windows_types, paginated([ windows_type1, windows_type2 ]))

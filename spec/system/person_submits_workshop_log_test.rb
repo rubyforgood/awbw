@@ -8,7 +8,7 @@ RSpec.describe "People can submit a workshop log" do
         create(:person, user: @user)
 
         adult_window = create(:windows_type, :adult)
-        @windows_type = create(:windows_type, short_name: "COMBINED")
+        @windows_type = create(:windows_type, short_name: "Combined")
 
         @form_builder = FormBuilder.create!(windows_type_id: @windows_type.id, name: "The form")
         @form_builder.forms.create!

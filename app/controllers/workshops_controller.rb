@@ -45,7 +45,7 @@ class WorkshopsController < ApplicationController
     @total_ongoing    = logs.reduce(0) { |sum, l| sum += l.num_ongoing }
     @total_first_time = logs.reduce(0) { |sum, l| sum += l.num_first_time }
 
-    combined_windows_type = WindowsType.where(short_name: "COMBINED").first
+    combined_windows_type = WindowsType.where(short_name: "Combined").first
     @combined_workshop_logs = current_user.organization_workshop_logs(
       @report.date, combined_windows_type, current_user.agency_id
     )

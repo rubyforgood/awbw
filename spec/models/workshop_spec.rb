@@ -63,7 +63,7 @@ RSpec.describe Workshop do
     it 'returns title + windows type (when present) + # + id' do
       record = create(:workshop, title: 'The best workshop in the world', windows_type: create(:windows_type, :adult))
 
-      expect(record.type_name).to eq "The best workshop in the world (ADULT) ##{record.id}"
+      expect(record.type_name).to eq "The best workshop in the world (Adult) ##{record.id}"
     end
 
     it 'omits the windows type part when there is no windows_type' do
