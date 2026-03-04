@@ -1,4 +1,6 @@
 class WorkshopLog < Report
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+
   # Validations
   validates :date, presence: true
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
