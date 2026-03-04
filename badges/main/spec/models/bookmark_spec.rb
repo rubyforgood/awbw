@@ -7,6 +7,64 @@ RSpec.describe Bookmark, type: :model do
     it { should belong_to(:bookmarkable) } # Polymorphic
   end
 
+  describe "constants" do
+    describe "BOOKMARKABLE_MODELS" do
+      it "includes all expected model names" do
+        expect(Bookmark::BOOKMARKABLE_MODELS).to include(
+          "CommunityNews", "Event", "Organization", "Person", "Report",
+          "Resource", "Story", "StoryIdea", "Tutorial", "Workshop",
+          "WorkshopIdea", "WorkshopLog", "WorkshopVariation", "WorkshopVariationIdea"
+        )
+      end
+
+      it "is frozen" do
+        expect(Bookmark::BOOKMARKABLE_MODELS).to be_frozen
+      end
+    end
+
+    describe "DROPDOWN_MODELS" do
+      it "excludes Report" do
+        expect(Bookmark::DROPDOWN_MODELS).not_to include("Report")
+      end
+
+      it "is a subset of BOOKMARKABLE_MODELS" do
+        expect(Bookmark::DROPDOWN_MODELS - Bookmark::BOOKMARKABLE_MODELS).to be_empty
+      end
+
+      it "is frozen" do
+        expect(Bookmark::DROPDOWN_MODELS).to be_frozen
+      end
+    end
+  end
+
+  describe ".bookmarkable_type_options" do
+    it "never includes Report" do
+      options = Bookmark.bookmarkable_type_options
+      type_values = options.map(&:last)
+      expect(type_values).not_to include("Report")
+    end
+
+    it "includes WorkshopVariationIdea" do
+      options = Bookmark.bookmarkable_type_options
+      type_values = options.map(&:last)
+      expect(type_values).to include("WorkshopVariationIdea")
+    end
+
+    it "uses model_name.human for labels" do
+      options = Bookmark.bookmarkable_type_options
+      tutorial_option = options.find { |_, value| value == "Tutorial" }
+      expect(tutorial_option.first).to eq(Tutorial.model_name.human)
+    end
+
+    it "returns [label, value] pairs" do
+      options = Bookmark.bookmarkable_type_options
+      options.each do |option|
+        expect(option).to be_an(Array)
+        expect(option.length).to eq(2)
+      end
+    end
+  end
+
   describe 'validations' do
     it 'is valid with valid attributes' do
       user = build_stubbed(:user)

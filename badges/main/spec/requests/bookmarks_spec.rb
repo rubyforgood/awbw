@@ -90,6 +90,21 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "includes WorkshopVariationIdea in bookmark type dropdown" do
+      get personal_bookmarks_path
+      expect(response.body).to include("value=\"WorkshopVariationIdea\"")
+    end
+
+    it "does not include Report in bookmark type dropdown" do
+      get personal_bookmarks_path
+      expect(response.body).not_to include("value=\"Report\"")
+    end
+
+    it "includes Video (Tutorial) in bookmark type dropdown" do
+      get personal_bookmarks_path
+      expect(response.body).to include(Tutorial.model_name.human)
+    end
+
     it "cannot access tally index" do
       get tally_bookmarks_path
       expect(response).to redirect_to(root_path)
@@ -166,6 +181,16 @@ RSpec.describe "Bookmarks", type: :request do
     it "can access tally" do
       get tally_bookmarks_path
       expect(response).to have_http_status(:ok)
+    end
+
+    it "includes WorkshopVariationIdea in bookmark type dropdown" do
+      get bookmarks_path
+      expect(response.body).to include("value=\"WorkshopVariationIdea\"")
+    end
+
+    it "does not include Report in bookmark type dropdown" do
+      get bookmarks_path
+      expect(response.body).not_to include("value=\"Report\"")
     end
 
     it "can create bookmark" do
