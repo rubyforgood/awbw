@@ -51,10 +51,12 @@
 
     <% if registered %>
       <% registration = event.active_registration_for(current_user.person) %>
+      <% if registration&.slug.present? %>
       <%= link_to "View registration", registration_ticket_path(registration.slug),
                   data: { turbo_frame: "_top" },
                   class: "btn px-3 py-2 text-xs uppercase leading-tight text-white hover:bg-white event-view-registration-btn",
                   style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 2px solid rgb(22, 101, 52);" %>
+      <% end %>
     <% elsif event.ended? %>
       <span class="text-sm text-gray-500 italic">Event ended</span>
       <% if allowed_to?(:manage?, event) %>

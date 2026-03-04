@@ -1068,6 +1068,11 @@ registrations_data.each do |data|
   )
 end
 
+# Backfill slugs for any registrations created before the generate_slug callback existed
+EventRegistration.where(slug: nil).find_each do |reg|
+  reg.update!(slug: SecureRandom.urlsafe_base64(16))
+end
+
 puts "Creating Registration Form Submissions…"
 # Create person_form records linking registrants to their event's registration form.
 # This simulates people who filled out the registration form.
