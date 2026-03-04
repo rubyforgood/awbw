@@ -14,6 +14,6 @@ class CategoryType < ApplicationRecord
   scope :profile_specific, -> { where(profile_specific: true) }
 
   def display_label
-    display_text.presence || name.humanize
+    display_text.presence || name.underscore.humanize
   end
 end
