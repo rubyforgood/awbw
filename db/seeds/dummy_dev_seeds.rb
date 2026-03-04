@@ -1370,3 +1370,66 @@ puts "Creating Tutorials…"
 ].each do |tutorial_data|
   Tutorial.where(title: tutorial_data[:title]).first_or_create!(tutorial_data)
 end
+
+puts "Creating Bookmarks for seed users…"
+umberto = User.find_by(email: "umberto.user@example.com")
+amy = User.find_by(email: "amy.user@example.com")
+
+if umberto && amy
+  # Gather one record of each bookmarkable type
+  bookmarkable_records = {
+    "CommunityNews"       => CommunityNews.order(:id).first,
+    "Event"               => Event.order(:id).first,
+    "Organization"        => Organization.order(:id).first,
+    "Person"              => Person.where.not(id: [ umberto.person_id, amy.person_id ].compact).order(:id).first,
+    "Report"              => Report.order(:id).first,
+    "Resource"            => Resource.order(:id).first,
+    "Story"               => Story.order(:id).first,
+    "StoryIdea"           => StoryIdea.order(:id).first,
+    "Tutorial"            => Tutorial.order(:id).first,
+    "Workshop"            => Workshop.order(:id).first,
+    "WorkshopIdea"        => WorkshopIdea.order(:id).first,
+    "WorkshopLog"         => WorkshopLog.order(:id).first,
+    "WorkshopVariation"   => WorkshopVariation.order(:id).first,
+    "WorkshopVariationIdea" => WorkshopVariationIdea.order(:id).first
+  }.compact
+
+  # Second record of each type (for variety between users)
+  second_records = {
+    "CommunityNews"       => CommunityNews.order(:id).second,
+    "Event"               => Event.order(:id).second,
+    "Organization"        => Organization.order(:id).second,
+    "Person"              => Person.where.not(id: [ umberto.person_id, amy.person_id ].compact).order(:id).second,
+    "Resource"            => Resource.order(:id).second,
+    "Story"               => Story.order(:id).second,
+    "StoryIdea"           => StoryIdea.order(:id).second,
+    "Tutorial"            => Tutorial.order(:id).second,
+    "Workshop"            => Workshop.order(:id).second,
+    "WorkshopIdea"        => WorkshopIdea.order(:id).second,
+    "WorkshopLog"         => WorkshopLog.order(:id).second,
+    "WorkshopVariation"   => WorkshopVariation.order(:id).second,
+    "WorkshopVariationIdea" => WorkshopVariationIdea.order(:id).second
+  }.compact
+
+  # Give both users at least one bookmark of each type
+  [ umberto, amy ].each do |user|
+    bookmarkable_records.each do |_type, record|
+      user.bookmarks.find_or_create_by!(bookmarkable: record)
+    end
+  end
+
+  # Give each user a second unique bookmark of each type (where available)
+  second_records.each do |_type, record|
+    next unless record
+
+    umberto.bookmarks.find_or_create_by!(bookmarkable: record)
+    amy.bookmarks.find_or_create_by!(bookmarkable: record)
+  end
+
+  # The first set of bookmarkable_records are shared by both users (all 14 types),
+  # guaranteeing well over 3 items bookmarked by both.
+  puts "  Created #{umberto.bookmarks.count} bookmarks for Umberto, #{amy.bookmarks.count} for Amy"
+  shared = umberto.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id) &
+           amy.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
+  puts "  #{shared.size} bookmarks shared between both users"
+end
