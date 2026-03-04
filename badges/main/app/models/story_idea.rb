@@ -52,11 +52,13 @@ class StoryIdea < ApplicationRecord
   end
 
   def full_name
-    "#{created_at.strftime("%Y-%m-%d")} #{author_credit}: #{workshop_title}"
+    base = "#{created_at.strftime("%Y-%m-%d")} #{author_credit}"
+    title = workshop_title
+    title.present? ? "#{base}: #{title}" : base
   end
 
   def workshop_title
-    workshop&.title ||  "[#{external_workshop_title}]"
+    [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
   end
 
   def organization_name

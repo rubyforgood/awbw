@@ -24,6 +24,16 @@ RSpec.describe NotificationMailer, type: :mailer do
         }.not_to raise_error
       end
 
+      context "without a workshop or external title" do
+        let(:story_idea) { create(:story_idea, created_by: user, workshop: nil, external_workshop_title: nil) }
+
+        it "renders without raising" do
+          expect {
+            described_class.idea_submitted_fyi(notification).deliver_now
+          }.not_to raise_error
+        end
+      end
+
       context "with attachments" do
         let(:primary_asset) { create(:primary_asset, :with_file, owner: story_idea) }
         let(:gallery_asset) { create(:gallery_asset, :with_file, owner: story_idea) }
@@ -137,6 +147,16 @@ RSpec.describe NotificationMailer, type: :mailer do
       mail = described_class.idea_submitted(notification)
       expect(mail.body.encoded).to include("Submission received")
       expect(mail.body.encoded).to include("Thank you for your submission")
+    end
+
+    context "without a workshop or external title" do
+      let(:story_idea) { create(:story_idea, created_by: user, workshop: nil, external_workshop_title: nil) }
+
+      it "renders without raising" do
+        expect {
+          described_class.idea_submitted(notification).deliver_now
+        }.not_to raise_error
+      end
     end
   end
 

@@ -11,6 +11,6 @@ class StoryDecorator < ApplicationDecorator
   end
 
   def workshop_title
-    workshop&.title || external_workshop_title
+    [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
   end
 end
