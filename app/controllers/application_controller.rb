@@ -1,6 +1,4 @@
 class ApplicationController < ActionController::Base
-  rate_limit to: 300, within: 5.minutes
-
   before_action :authenticate_user!  # ensures only logged-in users can access pages
   before_action :set_current_user # for AhoyTrackable in models
   before_action :preload_current_user_associations
