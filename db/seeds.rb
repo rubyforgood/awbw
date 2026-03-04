@@ -419,7 +419,7 @@ category_type_categories.each do |category_type_name, category_name, _legacy_id|
 end
 
 puts "Setting AgeRange category positions…"
-age_range_order = ["3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family windows"]
+age_range_order = [ "3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family windows" ]
 age_range_order.each_with_index do |name, i|
   Category.where("LOWER(name) = LOWER(?)", name).update_all(position: i + 1)
 end

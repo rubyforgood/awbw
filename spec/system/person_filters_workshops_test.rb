@@ -41,7 +41,7 @@ RSpec.describe 'People can filter workshops using metadata' do
         expect(page).to have_content('The best workshop in the world')
         expect(page).to have_content('oh hello!')
         expect(page).to have_content('The best workshop on mars')
-        expect(page).to have_content('Windows Type')
+        expect(page).to have_content('Windows audience')
         expect(page).to have_content('Sector')
         expect(page).to have_content('Visibility')
       end
