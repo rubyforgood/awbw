@@ -3,6 +3,9 @@ class HomeController < ApplicationController
 
   def index
     authorize! :home
-    render :index
+
+    respond_to do |format|
+      format.html { render :index }
+    end
   end
 end
