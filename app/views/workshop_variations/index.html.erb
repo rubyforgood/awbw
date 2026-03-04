@@ -20,8 +20,8 @@
         <table class="table table-responsive table-bordered table-curved">
           <thead>
           <tr id="table-thead-tr">
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Workshop</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Variation name</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Workshop</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Author</th>
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Updated</th>
@@ -32,18 +32,18 @@
         <tbody class="divide-y divide-gray-100">
           <% @workshop_variations.each do |workshop_variation| %>
             <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <td class="px-4 py-2 text-sm text-gray-800 font-semibold" title="<%= workshop_variation.name %>"><%= link_to "#{truncate(workshop_variation.name, length: 30)} (#{workshop_variation.windows_type&.short_name || 'Combined'})#{' [UNPUBLISHED]' unless workshop_variation.published?}", workshop_variation_path(workshop_variation), class: "hover:text-blue-600 hover:underline" %></td>
               <td class="px-4 py-2 text-sm text-gray-800" title="<%= strip_tags(workshop_variation.workshop&.name) %>">
                 <% if workshop_variation.workshop %>
                   <%= link_to truncate(strip_tags(workshop_variation.workshop.name), length: 30),
                               workshop_path(workshop_variation.workshop),
-                              class: "btn btn-secondary-outline" %>
+                              class: "text-gray-500 hover:text-gray-700" %>
                 <% end %>
               </td>
-              <td class="px-4 py-2 text-sm text-gray-800 font-semibold" title="<%= workshop_variation.name %>"><%= truncate(workshop_variation.name, length: 30) %></td>
               <td class="px-4 py-2 text-sm text-gray-600">
                 <% plain = workshop_variation.rhino_body.to_plain_text %>
-                <span title="<%= plain %>">
-                  <%= truncate(plain, length: 30) %>
+                <span title="<%= truncate(plain, length: 500) %>">
+                  <%= truncate(plain, length: 80) %>
                 </span>
               </td>
               <td class="px-4 py-2 text-sm text-gray-800 text-center">

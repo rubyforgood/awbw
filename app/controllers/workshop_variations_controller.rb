@@ -102,10 +102,8 @@ class WorkshopVariationsController < ApplicationController
   # end
 
   def set_form_variables
-    @workshop = @workshop_variation.workshop || params[:workshop_id].present? &&
-      Workshop.where(id: params[:workshop_id]).last
-    @workshop_variation_idea = params[:workshop_variation_idea_id].present? &&
-      WorkshopVariationIdea.find_by(id: params[:workshop_variation_idea_id])
+    @workshop = @workshop_variation.workshop || (Workshop.find_by(id: params[:workshop_id]) if params[:workshop_id].present?)
+    @workshop_variation_idea = WorkshopVariationIdea.find_by(id: params[:workshop_variation_idea_id]) if params[:workshop_variation_idea_id].present?
   end
 
   def workshop_variation_params

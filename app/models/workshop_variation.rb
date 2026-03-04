@@ -37,6 +37,8 @@ class WorkshopVariation < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
+  validates :windows_type_id, presence: true
+  validates :author_credit_preference, presence: true
   validates :rhino_body, presence: true
 
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank

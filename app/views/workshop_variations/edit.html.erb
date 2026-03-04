@@ -6,10 +6,9 @@
   </div>
   <h1 class="text-2xl font-semibold text-gray-900 mb-4">Edit workshop variation: <%= @workshop_variation.name %></h1>
   <% if @workshop_variation.workshop.present? %>
-    <p class="text-sm text-gray-500 mb-4">Variant of workshop: <%= @workshop_variation.workshop.remote_search_label[:label] %></p>
+    <p class="mb-4">Workshop: <%= link_to("#{@workshop_variation.workshop.name} (#{@workshop_variation.workshop.windows_type&.short_name || 'Combined'})",
+                                        workshop_path(@workshop_variation.workshop), class: "btn btn-secondary-outline") %></p>
   <% end %>
-
-  <div class="border-b border-gray-300 mb-6"></div>
 
   <div class="mt-4">
     <%= render "form", workshop_variation: @workshop_variation %>

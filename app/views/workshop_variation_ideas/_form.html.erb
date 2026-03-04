@@ -31,6 +31,7 @@
             include_blank: true,
             required: true,
             input_html: {
+              class: "h-10 rounded-md",
               data: {
                 controller: "remote-select",
                 remote_select_model_value: "workshop"
@@ -72,7 +73,7 @@
                     label: "Variation name",
                     required: true,
                     disabled: promoted_to_variation,
-                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 #{('readonly' if promoted_to_variation)}" } %>
+                    input_html: { class: "block w-full h-10 rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 #{('readonly' if promoted_to_variation)}" } %>
       </div>
       <div class="w-full md:w-1/3">
         <%= f.input :windows_type_id,
@@ -83,7 +84,7 @@
                     collection: @windows_types, label_method: :short_name, value_method: :id,
                     disabled: promoted_to_variation,
                     input_html: {
-                      class: "#{'readonly' if promoted_to_variation} w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
+                      class: "#{'readonly' if promoted_to_variation} w-full h-10 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                     } %>
       </div>
     </div>
@@ -108,7 +109,7 @@
                   collection: AuthorCreditable::IDEA_FORM_OPTIONS,
                   include_blank: "Select a preference",
                   selected: f.object.author_credit_preference,
-                  input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+                  input_html: { class: "block w-full h-10 rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
       <%= f.input :youtube_url,
                   as: :text,
                   label: "YouTube link <span class='text-normal text-sm text-gray-400'>(optional)</span>".html_safe,
@@ -132,36 +133,11 @@
                     class: ("readonly" if promoted_to_variation)
                   } %>
     </div>
-    <% if allowed_to?(:manage?, WorkshopVariationIdea) || @user %>
-      <div class="flex flex-col md:flex-row md:space-x-4">
-        <div class="flex-1 mb-4 md:mb-0">
-          <% if promoted_to_variation %>
-            <div class="flex items-center space-x-2">
-              <label class="text-gray-700"> Promoted to Story </label>
-              <% f.object. workshop_variations.each do |workshop_variation| %>
-                <%= link_to workshop_variation.title, workshop_variation_path(workshop_variation), class: "btn btn-secondary-outline" %>
-              <% end %>
-            </div>
-          <% elsif allowed_to?(:manage?, WorkshopVariationIdea) && f.object.persisted? %>
-            <div class="admin-only bg-blue-100 p-3">
-              <%= link_to "Promote to Workshop Variation",
-                          new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),
-                          class: "btn btn-secondary-outline ms-2" %>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
     <%= render "shared/form_image_fields", f: f, include_primary_asset: false unless promoted_to_variation %>
     <div class="action-buttons mt-8 flex justify-center gap-3 pt-6">
-      <% if allowed_to?(:destroy?, f.object) && f.object. workshop_variations.none? && !promoted_to_variation %>
-        <span class="admin-only bg-blue-100 p-3">
-          <%= link_to "Promote to Workshop Variation",
-                      new_workshop_variation_path(workshop_variation_idea_id: f.object.id),
-                      class: "btn btn-secondary-outline" %>
-          <%= link_to "Delete", @workshop_variation_idea, class: "btn btn-danger-outline",
-                      data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
-        </span>
+      <% if allowed_to?(:destroy?, f.object) && f.object.workshop_variations.none? && !promoted_to_variation %>
+        <%= link_to "Delete", @workshop_variation_idea, class: "admin-only bg-blue-100 btn btn-danger-outline",
+                    data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
       <% cancel_path =
            if params[:workshop_id].present? && @workshop

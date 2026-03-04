@@ -555,14 +555,15 @@ variations = [
 ]
 
 # rubocop:enable Style/PercentLiteralDelimiters
-variations.each do |var_data|
+variations.each_with_index do |var_data, i|
   workshop = Workshop.find_by(title: var_data[:workshop_title])
   next unless workshop
 
   workshop.workshop_variations.where(name: var_data[:name]).first_or_create!(
     body: var_data[:rhino_body],
     rhino_body: var_data[:rhino_body],
-    position: var_data[:position]
+    position: var_data[:position],
+    published: i != variations.length - 1
   )
 end
 
@@ -830,6 +831,14 @@ puts "Creating WorkshopVariationIdeas…"
     created_at: Time.current - rand(1..90).days,
     updated_at: Time.current - rand(1..40).days
   )
+end
+
+puts "Linking some WorkshopVariations to WorkshopVariationIdeas…"
+WorkshopVariationIdea.all.sample(2).each do |idea|
+  variation = WorkshopVariation.where(workshop_variation_idea_id: nil).sample
+  next unless variation
+
+  variation.update!(workshop_variation_idea_id: idea.id)
 end
 
 puts "Creating WorkshopLogs…"
