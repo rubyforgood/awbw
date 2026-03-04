@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe WorkshopVariation do
+  it_behaves_like "author_creditable", factory: :workshop_variation
+
   describe 'associations' do
     it { should belong_to(:workshop).optional }
   end
