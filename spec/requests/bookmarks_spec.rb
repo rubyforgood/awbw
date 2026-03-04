@@ -105,6 +105,16 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response.body).to include(Tutorial.model_name.human)
     end
 
+    it "can access personal bookmarks sorted by title" do
+      get personal_bookmarks_path, params: { sort: "title" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "can access personal bookmarks with title filter and title sort" do
+      get personal_bookmarks_path, params: { sort: "title", title: "test" }
+      expect(response).to have_http_status(:ok)
+    end
+
     it "cannot access tally index" do
       get tally_bookmarks_path
       expect(response).to redirect_to(root_path)
@@ -170,6 +180,16 @@ RSpec.describe "Bookmarks", type: :request do
 
     it "can access global index" do
       get bookmarks_path
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "can access global index sorted by title" do
+      get bookmarks_path, params: { sort: "title" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "can access global index with title filter and title sort" do
+      get bookmarks_path, params: { sort: "title", title: "test" }
       expect(response).to have_http_status(:ok)
     end
 
