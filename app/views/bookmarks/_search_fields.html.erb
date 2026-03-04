@@ -1,4 +1,4 @@
-<div class="grid grid-cols-1 md:grid-cols-<%= allowed_to?(:index?, Bookmark) ? 5 : 4 %> gap-4 items-end mb-6">
+<div class="grid grid-cols-1 md:grid-cols-<%= action_name == "index" ? 5 : 4 %> gap-4 items-end mb-6">
   <!-- Title -->
   <div>
     <%= label_tag :title, "Title", class: "block text-sm font-medium text-gray-700 mb-1" %>
@@ -13,8 +13,8 @@
     </div>
   </div>
 
-  <!-- Created by (admin only — visible on index/tally, hidden on personal) -->
-  <% if allowed_to?(:index?, Bookmark) %>
+  <!-- Created by (index only) -->
+  <% if action_name == "index" %>
     <div>
       <%= label_tag :user_id, "Created by", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <div data-controller="searchable-select" data-searchable-select-mode-value="person">
