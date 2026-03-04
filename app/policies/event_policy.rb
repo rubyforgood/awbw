@@ -47,12 +47,11 @@ class EventPolicy < ApplicationPolicy
     next relation if admin?
 
     if authenticated?
-      active_statuses = EventRegistration::ACTIVE_STATUSES.map { |s| relation.connection.quote(s) }.join(", ")
       relation
         .joins(
           "LEFT OUTER JOIN event_registrations
              ON event_registrations.event_id = events.id
-             AND event_registrations.status IN (#{active_statuses})
+             AND event_registrations.status IN ('registered', 'attended', 'incomplete_attendance')
            LEFT OUTER JOIN people
              ON people.id = event_registrations.registrant_id"
         )

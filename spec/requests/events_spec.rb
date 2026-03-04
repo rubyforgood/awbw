@@ -30,9 +30,9 @@ RSpec.describe "Events", type: :request do
     end
 
     context "when user time_zone is set" do
-      # 19:00 UTC = 12:00 noon PT = 15:00 (3 pm) ET (June 15, 2025 with DST)
-      let(:utc_start) { Time.utc(2025, 6, 15, 19, 0, 0) }
-      let(:utc_end)   { Time.utc(2025, 6, 15, 20, 0, 0) }
+      # 19:00 UTC = 12:00 noon PT = 15:00 (3 pm) ET (June 15, 2031 with DST)
+      let(:utc_start) { Time.utc(2031, 6, 15, 19, 0, 0) }
+      let(:utc_end)   { Time.utc(2031, 6, 15, 20, 0, 0) }
       let!(:event_with_fixed_times) do
         create(:event, :published,
           start_date: utc_start,
