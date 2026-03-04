@@ -1,4 +1,4 @@
-<% show_created_by = allowed_to?(:index?, Bookmark) || params[:user_id].present? %>
+<% show_created_by = allowed_to?(:index?, Bookmark) && params[:user_id].present? %>
 <div class="grid grid-cols-1 md:grid-cols-<%= show_created_by ? 5 : 4 %> gap-4 items-end mb-6">
   <!-- Title -->
   <div>
