@@ -54,6 +54,9 @@
     <% end %>
 
     <% if registered %>
+      <% if ended %>
+        <span class="text-sm text-gray-500 italic">Event ended</span>
+      <% end %>
       <% registration = event.active_registration_for(current_user.person) %>
       <% if registration&.slug.present? %>
       <%= link_to "View registration", registration_ticket_path(registration.slug),
