@@ -53,6 +53,39 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(private_story.title)
       end
 
+      describe "external link handling" do
+        let(:turbo_headers) { { "Turbo-Frame" => "story_results" } }
+
+        let!(:external_story) do
+          create(:story, :published, title: "External Story", website_url: "https://example.com/article")
+        end
+
+        let!(:internal_story) do
+          create(:story, :published, title: "Internal Story", website_url: nil)
+        end
+
+        it "View button links to external URL for stories with website_url" do
+          get stories_url, params: {}, headers: turbo_headers
+          expect(response.body).to include('href="https://example.com/article"')
+        end
+
+        it "View button links to show page for stories without website_url" do
+          get stories_url, params: {}, headers: turbo_headers
+          expect(response.body).to include(%(href="#{story_path(internal_story)}"))
+        end
+
+        it "shows admin-only Details button for stories with external URL" do
+          get stories_url, params: {}, headers: turbo_headers
+          expect(response.body).to include(%(href="#{story_path(external_story, no_redirect: true)}"))
+          expect(response.body).to include("Details")
+        end
+
+        it "does not show Details button for stories without external URL" do
+          get stories_url, params: {}, headers: turbo_headers
+          expect(response.body).not_to include(%(href="#{story_path(internal_story, no_redirect: true)}"))
+        end
+      end
+
       describe "sorting" do
         let(:turbo_headers) { { "Turbo-Frame" => "story_results" } }
 
@@ -181,6 +214,13 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(published_story.title)
         expect(response.body).to include(public_story.title)
         expect(response.body).not_to include(private_story.title)
+      end
+
+      it "does not show Details button for external stories" do
+        external_story = create(:story, :published, title: "External Story", website_url: "https://example.com")
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        expect(response.body).not_to include("Details")
+        expect(response.body).to include('href="https://example.com"')
       end
     end
 
