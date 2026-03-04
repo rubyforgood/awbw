@@ -50,6 +50,25 @@ unless amy.person.present?
   amy.update!(person: person)
 end
 
+# Non-Admin 2
+priya = User.find_or_create_by!(email: "priya.user@example.com") do |user|
+  user.password = "password"
+  user.super_user = false
+  user.confirmed_at = Time.current
+end
+
+unless priya.person.present?
+  person = Person.create!(
+    first_name: "Priya",
+    last_name: "Sharma",
+    email: priya.email,
+    created_by: priya,
+    updated_by: priya,
+    profile_is_searchable: true
+  )
+  priya.update!(person: person)
+end
+
 # Orphaned
 User.find_or_create_by!(email: "orphaned_reports@awbw.org") do |user|
   user.first_name = "Orphaned Reports"
@@ -227,7 +246,7 @@ unless invited_no_person.confirmed_at.present?
 end
 
 # Only reset seed-user passwords, not every user in the database
-seed_emails = %w[umberto.user@example.com amy.user@example.com orphaned_reports@awbw.org]
+seed_emails = %w[umberto.user@example.com amy.user@example.com priya.user@example.com orphaned_reports@awbw.org]
 user_password = Devise::Encryptor.digest(User, "password")
 User.where(email: seed_emails).update_all(encrypted_password: user_password)
 

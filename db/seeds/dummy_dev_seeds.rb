@@ -541,7 +541,8 @@ end
 puts "Creating Persons and Affiliations for seed users…"
 [
   User.find_by(email: "umberto.user@example.com"),
-  User.find_by(email: "amy.user@example.com")
+  User.find_by(email: "amy.user@example.com"),
+  User.find_by(email: "priya.user@example.com")
 ].compact.each do |user|
   next if user.person.present?
 
@@ -1372,11 +1373,11 @@ puts "Creating Tutorials…"
 end
 
 puts "Creating Bookmarks for seed users…"
-umberto = User.find_by(email: "umberto.user@example.com")
 amy = User.find_by(email: "amy.user@example.com")
+priya = User.find_by(email: "priya.user@example.com")
 
-if umberto && amy
-  excluded_person_ids = [ umberto.person_id, amy.person_id ].compact
+if amy && priya
+  excluded_person_ids = [ amy.person_id, priya.person_id ].compact
 
   # Two records per bookmarkable type (where available)
   pairs = {
@@ -1396,23 +1397,22 @@ if umberto && amy
     "WorkshopVariationIdea" => WorkshopVariationIdea.order(:id).limit(2).to_a
   }.reject { |_, v| v.empty? }
 
-  # Split: Umberto gets first record, Amy gets second (or first if only one exists).
-  # For 3 types they both bookmark the same record to test shared/tally scenarios.
+  # 3 types are shared between Amy and Priya for tally testing
   shared_types = pairs.keys.first(3)
 
   pairs.each do |type, records|
     if shared_types.include?(type)
       # Both users bookmark the first record
-      [ umberto, amy ].each { |u| u.bookmarks.find_or_create_by!(bookmarkable: records.first) }
+      [ amy, priya ].each { |u| u.bookmarks.find_or_create_by!(bookmarkable: records.first) }
     else
-      # Each user gets a different record (Amy falls back to first if only one exists)
-      umberto.bookmarks.find_or_create_by!(bookmarkable: records.first)
-      amy.bookmarks.find_or_create_by!(bookmarkable: records.last)
+      # Each user gets a different record (Priya falls back to first if only one exists)
+      amy.bookmarks.find_or_create_by!(bookmarkable: records.first)
+      priya.bookmarks.find_or_create_by!(bookmarkable: records.last)
     end
   end
 
-  puts "  Created #{umberto.bookmarks.count} bookmarks for Umberto, #{amy.bookmarks.count} for Amy"
-  shared = umberto.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id) &
-           amy.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
+  puts "  Created #{amy.bookmarks.count} bookmarks for Amy, #{priya.bookmarks.count} for Priya"
+  shared = amy.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id) &
+           priya.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
   puts "  #{shared.size} bookmarks shared between both users"
 end
