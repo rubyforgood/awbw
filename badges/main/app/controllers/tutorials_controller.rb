@@ -7,7 +7,7 @@ class TutorialsController < ApplicationController
     authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 6
-      base_scope = authorized_scope(Tutorial.all)
+      base_scope = authorized_scope(Tutorial.includes(:bookmarks))
       filtered = base_scope.search_by_params(params)
 
       @count_display = filtered.size == base_scope.size ? base_scope.size : "#{filtered.count}/#{base_scope.count}"
