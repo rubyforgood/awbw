@@ -137,6 +137,30 @@ RSpec.describe Bookmark, type: :model do
     end
   end
 
+  describe ".filter_by_params with title and windows_type combined" do
+    let(:user) { create(:user) }
+    let!(:windows_type) { create(:windows_type, name: "COMBINED") }
+    let!(:resource) { create(:resource, title: "Test Resource", windows_type: windows_type) }
+    let!(:bookmark) { create(:bookmark, user: user, bookmarkable: resource) }
+
+    it "does not raise a duplicate table alias error" do
+      params = { title: "Test", windows_type: "Combined" }
+      expect { Bookmark.filter_by_params(params) }.not_to raise_error
+    end
+
+    it "returns matching bookmarks" do
+      params = { title: "Test", windows_type: "Combined" }
+      result = Bookmark.filter_by_params(params)
+      expect(result).to include(bookmark)
+    end
+
+    it "works when also sorting by title" do
+      params = { title: "Test", windows_type: "Combined" }
+      result = Bookmark.filter_by_params(params).sorted("title")
+      expect { result.length }.not_to raise_error
+    end
+  end
+
   describe '.search' do
     let(:user) { create(:user) }
     let!(:workshop1) { create(:workshop, title: "Alpha", led_count: 15) }
