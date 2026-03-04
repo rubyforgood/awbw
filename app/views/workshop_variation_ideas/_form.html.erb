@@ -22,29 +22,7 @@
       </div>
     <% end %>
     <%= render 'shared/errors', resource: workshop_variation_idea if workshop_variation_idea.errors.any? %>
-    <!-- Row 1: Name + Windows type -->
-    <div class="flex flex-col md:flex-row md:space-x-4 mb-6">
-      <div class="flex-1">
-        <%= f.input :name,
-                    label: "Variation name",
-                    required: true,
-                    disabled: promoted_to_variation,
-                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 #{('readonly' if promoted_to_variation)}" } %>
-      </div>
-      <div class="w-full md:w-1/3">
-        <%= f.input :windows_type_id,
-                    as: :select,
-                    required: true,
-                    label: "Windows audience",
-                    prompt: "Select audience",
-                    collection: @windows_types, label_method: :short_name, value_method: :id,
-                    disabled: promoted_to_variation,
-                    input_html: {
-                      class: "#{'readonly' if promoted_to_variation} block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    } %>
-      </div>
-    </div>
-    <!-- Row 2: Workshop + Organization -->
+    <!-- Workshop + Organization -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <div>
         <% if !promoted_to_variation && (params[:admin] == "true" || f.object.new_record?) %>
@@ -85,6 +63,29 @@
           <%= f.hidden_field :organization_id,
                              value: f.object.organization_id || current_user.person.primary_organization&.id %>
         <% end %>
+      </div>
+    </div>
+
+    <!-- Name + Windows type -->
+    <div class="flex flex-col md:flex-row md:space-x-4 mb-6">
+      <div class="flex-1">
+        <%= f.input :name,
+                    label: "Variation name",
+                    required: true,
+                    disabled: promoted_to_variation,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 #{('readonly' if promoted_to_variation)}" } %>
+      </div>
+      <div class="w-full md:w-1/3">
+        <%= f.input :windows_type_id,
+                    as: :select,
+                    required: true,
+                    label: "Windows audience",
+                    prompt: "Select audience",
+                    collection: @windows_types, label_method: :short_name, value_method: :id,
+                    disabled: promoted_to_variation,
+                    input_html: {
+                      class: "#{'readonly' if promoted_to_variation} block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    } %>
       </div>
     </div>
 
