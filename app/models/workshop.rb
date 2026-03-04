@@ -28,6 +28,7 @@ class Workshop < ApplicationRecord
   belongs_to :workshop_idea, optional: true
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error
@@ -135,6 +136,7 @@ class Workshop < ApplicationRecord
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true
   accepts_nested_attributes_for :workshop_variations, reject_if: proc { |object| object.nil? }
+  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
 
 
   # Scopes
