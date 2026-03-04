@@ -182,6 +182,37 @@ RSpec.describe "Event show page", type: :system do
         expect(page).not_to have_button("Register")
         expect(page).not_to have_button("De-register")
       end
+
+      it "shows 'View Registration' for registered user" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_text("Event ended")
+        expect(page).to have_text("View Registration")
+      end
+
+      it "hides calendar links" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_text("Add to Your Calendar")
+      end
+
+      it "blocks unregistered users" do
+        other_user = create(:user, :with_person)
+        sign_in(other_user)
+        visit event_path(event)
+
+        expect(page).to have_current_path(root_path)
+      end
+
+      it "allows admin to view" do
+        sign_in(admin)
+        visit event_path(event)
+
+        expect(page).to have_text("Event ended")
+        expect(page).to have_text("My Event")
+      end
     end
 
     context "guest with reg slug param" do

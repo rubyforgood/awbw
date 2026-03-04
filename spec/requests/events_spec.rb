@@ -63,6 +63,37 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /show" do
+    context "when event has ended" do
+      let(:ended_event) { create(:event, :published, :ended) }
+
+      it "allows admin to view" do
+        sign_in admin
+        get event_path(ended_event)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "allows registered user to view" do
+        user_with_person = create(:user, :with_person)
+        sign_in user_with_person
+        create(:event_registration, event: ended_event, registrant: user_with_person.person, status: "registered")
+        get event_path(ended_event)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "redirects unregistered user" do
+        sign_in user
+        get event_path(ended_event)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "redirects unauthenticated user" do
+        get event_path(ended_event)
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+  end
+
   describe "GET /new" do
     context "as admin" do
       it "renders successfully" do
