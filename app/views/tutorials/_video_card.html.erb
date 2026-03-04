@@ -1,9 +1,4 @@
-<div class="relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-  <!-- BOOKMARK -->
-  <div class="absolute top-3 right-3 z-20 cursor-pointer">
-    <%= render "bookmarks/editable_bookmark_icon", resource: tutorial.object %>
-  </div>
-
+<div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
   <% if tutorial.youtube_url.present? %>
     <div class="relative w-full overflow-hidden" style="padding-top: 56.25%;">
       <iframe
