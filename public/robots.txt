@@ -1,1 +1,12 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+User-agent: *
+Allow: /workshops
+Allow: /resources
+Allow: /stories
+Allow: /community_news
+Allow: /events
+Allow: /tutorials
+Allow: /faqs
+Allow: /contact_us
+Allow: /tags
+Allow: /story_shares
+Disallow: /
