@@ -5,7 +5,7 @@ class BookmarksController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page] || 25
     base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
-    filtered = base_scope.search(params).sorted(params[:sort])
+    filtered = base_scope.search(params)
 
     @bookmarks = filtered.paginate(page: params[:page], per_page: per_page).decorate
     @bookmarks_count = base_scope.length
@@ -26,7 +26,7 @@ class BookmarksController < ApplicationController
     @viewing_self = user == current_user
 
     base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
-    filtered = base_scope.search(params, user: user).sorted(params[:sort])
+    filtered = base_scope.search(params, user: user)
 
     @bookmarks_count = filtered.length
     @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)

@@ -132,7 +132,7 @@ RSpec.describe Bookmark, type: :model do
     end
 
     it "includes tutorial bookmarks when sorting by title" do
-      result = Bookmark.search({}).sorted("title")
+      result = Bookmark.sorted("title")
       expect(result).to include(tutorial_bookmark)
     end
   end
@@ -161,7 +161,7 @@ RSpec.describe Bookmark, type: :model do
     end
   end
 
-  describe '.search' do
+  describe ".search" do
     let(:user) { create(:user) }
     let!(:workshop1) { create(:workshop, title: "Alpha", led_count: 15) }
     let!(:workshop2) { create(:workshop, title: "Bravo", led_count: 10) }
@@ -173,33 +173,90 @@ RSpec.describe Bookmark, type: :model do
       create_list(:bookmark, 7, bookmarkable: workshop2, created_at: 4.days.ago)
     end
 
-    it 'sorts by newest-bookmarked by default' do
-      params = {}
-      result = Bookmark.search(params)
-      result = result.sorted(params[:sort])
+    it "sorts by newest-bookmarked by default" do
+      result = Bookmark.search({})
       expect(result.first.bookmarkable.title).to eq("Bravo")
     end
 
-    it 'sorts by title when sort=title' do
-      params = { sort: "title" }
-      result = Bookmark.search(params)
-      result = result.sorted(params[:sort])
+    it "sorts by title when sort=title" do
+      result = Bookmark.search({ sort: "title" })
       expect(result.first.bookmarkable).to eq(workshop1)
     end
 
-    it 'sorts by led count when sort=popularity' do
-      params = { sort: "popularity" }
-      result = Bookmark.search(params)
-      result = result.sorted(params[:sort])
+    it "sorts by popularity when sort=popularity" do
+      result = Bookmark.search({ sort: "popularity" })
       expect(result.first.bookmarkable).to eq(workshop2)
     end
 
-    it 'sorts by created_at when sort=newest' do
-      params = { sort: "newest" }
-      result = Bookmark.search(params)
-      result = result.sorted(params[:sort])
+    it "sorts by created_at when sort=newest" do
+      result = Bookmark.search({ sort: "newest" })
       expect(result.first.created_at).to eq(bookmark2.created_at)
       expect(result.first.bookmarkable).to eq(workshop2)
+    end
+
+    context "with title filter and title sort combined" do
+      it "does not produce duplicate table joins" do
+        expect {
+          Bookmark.search({ title: "Alpha", sort: "title" }).to_a
+        }.not_to raise_error
+      end
+
+      it "filters and sorts correctly" do
+        result = Bookmark.search({ title: "Alpha", sort: "title" })
+        expect(result.map(&:bookmarkable).uniq).to eq([ workshop1 ])
+      end
+    end
+
+    context "with title filter and newest sort" do
+      it "filters by title and sorts by newest" do
+        result = Bookmark.search({ title: "Bravo", sort: "newest" })
+        expect(result.map(&:bookmarkable).uniq).to eq([ workshop2 ])
+      end
+    end
+
+    context "with title filter and popularity sort" do
+      it "does not raise" do
+        expect {
+          Bookmark.search({ title: "Alpha", sort: "popularity" }).to_a
+        }.not_to raise_error
+      end
+    end
+
+    context "scoped to a user" do
+      it "returns only that user's bookmarks" do
+        result = Bookmark.search({}, user: user)
+        expect(result).to contain_exactly(bookmark1, bookmark2)
+      end
+
+      it "does not produce duplicate joins with title sort" do
+        expect {
+          Bookmark.search({ sort: "title" }, user: user).to_a
+        }.not_to raise_error
+      end
+
+      it "does not produce duplicate joins with title filter and title sort" do
+        expect {
+          Bookmark.search({ title: "Alpha", sort: "title" }, user: user).to_a
+        }.not_to raise_error
+      end
+    end
+  end
+
+  describe ".sorted" do
+    let(:user) { create(:user) }
+    let!(:workshop1) { create(:workshop, title: "Zebra") }
+    let!(:workshop2) { create(:workshop, title: "Apple") }
+    let!(:bookmark1) { create(:bookmark, user: user, bookmarkable: workshop1, created_at: 2.days.ago) }
+    let!(:bookmark2) { create(:bookmark, user: user, bookmarkable: workshop2, created_at: 1.day.ago) }
+
+    it "defaults to newest" do
+      result = Bookmark.sorted
+      expect(result.first).to eq(bookmark2)
+    end
+
+    it "sorts by title" do
+      result = Bookmark.sorted("title")
+      expect(result.first.bookmarkable).to eq(workshop2) # Apple before Zebra
     end
   end
 end
