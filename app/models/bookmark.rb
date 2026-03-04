@@ -57,40 +57,41 @@ class Bookmark < ApplicationRecord
     bookmarks
   end
 
+  # Use aliased table names (st_ prefix) to avoid conflicts with title scope's JOINs
   def self.sort_by_title
     bookmarks = self.joins(<<~SQL)
-      LEFT JOIN community_news      ON community_news.id      = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
-      LEFT JOIN events              ON events.id              = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
-      LEFT JOIN organizations       ON organizations.id       = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
-      LEFT JOIN people              ON people.id              = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Person'
-      LEFT JOIN resources           ON resources.id           = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
-      LEFT JOIN stories             ON stories.id             = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
-      LEFT JOIN story_ideas         ON story_ideas.id         = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'StoryIdea'
-      LEFT JOIN tutorials           ON tutorials.id           = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
-      LEFT JOIN workshops           ON workshops.id           = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'
-      LEFT JOIN workshop_ideas      ON workshop_ideas.id      = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopIdea'
-      LEFT JOIN workshop_logs            ON workshop_logs.id            = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
-      LEFT JOIN workshop_variations      ON workshop_variations.id      = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariation'
-      LEFT JOIN workshop_variation_ideas ON workshop_variation_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariationIdea'
-      LEFT JOIN reports                  ON reports.id                  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Report'
+      LEFT JOIN community_news      AS st_cn  ON st_cn.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
+      LEFT JOIN events              AS st_ev  ON st_ev.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
+      LEFT JOIN organizations       AS st_org ON st_org.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
+      LEFT JOIN people              AS st_ppl ON st_ppl.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Person'
+      LEFT JOIN resources           AS st_res ON st_res.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
+      LEFT JOIN stories             AS st_st  ON st_st.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
+      LEFT JOIN story_ideas         AS st_si  ON st_si.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'StoryIdea'
+      LEFT JOIN tutorials           AS st_tut ON st_tut.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
+      LEFT JOIN workshops           AS st_ws  ON st_ws.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'
+      LEFT JOIN workshop_ideas      AS st_wi  ON st_wi.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopIdea'
+      LEFT JOIN workshop_logs       AS st_wl  ON st_wl.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
+      LEFT JOIN workshop_variations AS st_wv  ON st_wv.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariation'
+      LEFT JOIN workshop_variation_ideas AS st_wvi ON st_wvi.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopVariationIdea'
+      LEFT JOIN reports             AS st_rpt ON st_rpt.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Report'
     SQL
     bookmarks.order(Arel.sql(<<~SQL.squish)
       LOWER(
         COALESCE(
-          community_news.title,
-          events.title,
-          CONCAT(people.first_name, ' ', people.last_name),
-          organizations.name,
-          reports.type,
-          resources.title,
-          stories.title,
-          story_ideas.title,
-          tutorials.title,
-          workshops.title,
-          workshop_ideas.title,
-          DATE_FORMAT(workshop_logs.date, '%Y-%m-%d'),
-          workshop_variations.name,
-          workshop_variation_ideas.name
+          st_cn.title,
+          st_ev.title,
+          CONCAT(st_ppl.first_name, ' ', st_ppl.last_name),
+          st_org.name,
+          st_rpt.type,
+          st_res.title,
+          st_st.title,
+          st_si.title,
+          st_tut.title,
+          st_ws.title,
+          st_wi.title,
+          DATE_FORMAT(st_wl.date, '%Y-%m-%d'),
+          st_wv.name,
+          st_wvi.name
         )
       ) ASC,
       bookmarks.created_at DESC
@@ -148,32 +149,22 @@ class Bookmark < ApplicationRecord
 
     pattern = "%#{normalized}%"
 
-    # Resources with a windows_type
-    resources = joins(
-      <<~SQL
-      INNER JOIN resources
-        ON resources.id = bookmarks.bookmarkable_id
+    # Use aliased table names to avoid conflicts with title scope's LEFT JOINs
+    joins(<<~SQL)
+      LEFT JOIN resources AS wt_resources
+        ON wt_resources.id = bookmarks.bookmarkable_id
        AND bookmarks.bookmarkable_type = 'Resource'
-      INNER JOIN windows_types
-        ON windows_types.id = resources.windows_type_id
-        AND resources.windows_type_id IS NOT NULL
-    SQL
-    ).where("windows_types.name LIKE ?", pattern)
-
-    # Workshops (optional windows_type)
-    workshops = joins(
-      <<~SQL
-      LEFT JOIN workshops
-        ON workshops.id = bookmarks.bookmarkable_id
+       AND wt_resources.windows_type_id IS NOT NULL
+      LEFT JOIN windows_types AS wt_res_types
+        ON wt_res_types.id = wt_resources.windows_type_id
+      LEFT JOIN workshops AS wt_workshops
+        ON wt_workshops.id = bookmarks.bookmarkable_id
        AND bookmarks.bookmarkable_type = 'Workshop'
-      LEFT JOIN windows_types
-        ON windows_types.id = workshops.windows_type_id
-        AND workshops.windows_type_id IS NOT NULL
+       AND wt_workshops.windows_type_id IS NOT NULL
+      LEFT JOIN windows_types AS wt_ws_types
+        ON wt_ws_types.id = wt_workshops.windows_type_id
     SQL
-    ).where("windows_types.name LIKE ?", pattern)
-
-    # Combine results in a single relation
-    self.where(id: resources.select(:id)).or(self.where(id: workshops.select(:id)))
+    .where("wt_res_types.name LIKE :pattern OR wt_ws_types.name LIKE :pattern", pattern: pattern)
   end
 
   def self.user_name(user_name)
