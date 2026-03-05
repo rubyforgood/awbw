@@ -133,13 +133,13 @@ RSpec.describe Workshop do
     end
   end
 
-  describe ".remote_search_labels" do
+  describe ".resolve_duplicate_labels" do
     it "omits id when labels are unique" do
       wt = create(:windows_type, :adult)
       w1 = create(:workshop, title: "Art Therapy", windows_type: wt)
       w2 = create(:workshop, title: "Music Therapy", windows_type: wt)
 
-      labels = Workshop.remote_search_labels([ w1, w2 ])
+      labels = Workshop.resolve_duplicate_labels([ w1, w2 ].map(&:remote_search_label))
 
       expect(labels).to contain_exactly(
         { id: w1.id, label: "Art Therapy (ADULT)" },
@@ -153,7 +153,7 @@ RSpec.describe Workshop do
       w2 = create(:workshop, title: "Art Therapy", windows_type: wt)
       w3 = create(:workshop, title: "Music Therapy", windows_type: wt)
 
-      labels = Workshop.remote_search_labels([ w1, w2, w3 ])
+      labels = Workshop.resolve_duplicate_labels([ w1, w2, w3 ].map(&:remote_search_label))
 
       expect(labels).to contain_exactly(
         { id: w1.id, label: "Art Therapy (ADULT) ##{w1.id}" },

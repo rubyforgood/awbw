@@ -10,10 +10,6 @@ module RemoteSearchable
       @remote_search_columns || []
     end
 
-    def remote_search_labels(records)
-      records.map(&:remote_search_label)
-    end
-
     def remote_search(query)
       return none if query.blank?
       raise "remote_searchable_by not defined for #{name}" if remote_search_columns.empty?
