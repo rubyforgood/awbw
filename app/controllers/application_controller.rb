@@ -17,6 +17,13 @@ class ApplicationController < ActionController::Base
     redirect_to root_path
   end
 
+  # Bots/crawlers requesting non-HTML formats (e.g. text/plain) trigger
+  # MissingTemplate errors because we only have .html.erb templates.
+  # Return 406 Not Acceptable instead of a 500 error.
+  rescue_from ActionView::MissingTemplate do
+    head :not_acceptable
+  end
+
   private
 
   def after_sign_out_path_for(resource_or_scope)
