@@ -199,8 +199,8 @@
 
     <% if allowed_to?(:manage?, Organization) %>
       <div class="admin-only bg-blue-100">
-        <%= f.input :internal_id,
-                    label: "Internal Organization ID",
+        <%= f.input :filemaker_code,
+                    label: "FileMaker Project ID",
                     input_html: {
                       class: "rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
