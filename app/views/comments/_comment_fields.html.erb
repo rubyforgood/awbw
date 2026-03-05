@@ -30,6 +30,7 @@
 <% updated_color = show_updated ? label_colors[(updated_user.id || 0) % label_colors.length] : nil %>
 <% current_color = label_colors[(current_user&.id || 0) % label_colors.length] %>
 <div class="nested-fields" data-paginated-fields-target="item">
+  <%= f.hidden_field :id if f.object.persisted? %>
   <% if f.object.persisted? %>
     <div class="comment-view flex items-center mb-3 pl-4 gap-x-1">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0">
