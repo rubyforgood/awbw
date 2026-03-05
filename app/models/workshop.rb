@@ -336,8 +336,8 @@ class Workshop < ApplicationRecord
   end
 
   def self.resolve_duplicate_labels(labels)
-    dupes = labels.group_by { |l| l[:label].downcase }.select { |_, v| v.size > 1 }.keys.to_set
-    labels.each { |l| l[:label] = "#{l[:label]} ##{l[:id]}" if dupes.include?(l[:label].downcase) }
+    dupes = labels.map { |l| l[:label].downcase.strip }.group_by { |l| l }.select { |_, v| v.size > 1 }.keys.to_set
+    labels.each { |l| l[:label] = "#{l[:label].strip} ##{l[:id]}" if dupes.include?(l[:label].downcase.strip) }
     labels
   end
 
