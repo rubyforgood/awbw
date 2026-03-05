@@ -322,6 +322,34 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   Workshop.where(title: workshop_data[:title]).first_or_create!(workshop_data)
 end
 
+# Duplicate-title workshops to exercise ID disambiguation in search
+[
+  {
+    title: "Healing Through Color",
+    windows_type: adult_wt,
+    full_name: "Maria Torres",
+    month: 3,
+    year: 2020,
+    description: "Uses color mixing and painting to help participants explore emotions and find calm. Participants create a personal color wheel that maps feelings to colors.",
+    published: true,
+    searchable: true,
+    created_by: admin_user
+  },
+  {
+    title: "Healing Through Color",
+    windows_type: adult_wt,
+    full_name: "James Whitfield",
+    month: 9,
+    year: 2022,
+    description: "A revised version exploring color as a pathway to emotional awareness. Participants blend watercolors while discussing how color connects to memory and healing.",
+    published: true,
+    searchable: true,
+    created_by: admin_user
+  }
+].each do |workshop_data|
+  Workshop.create!(workshop_data)
+end
+
 puts "Assigning workshop categories and sectors…"
 workshops = Workshop.all
 categories = Category.all.to_a

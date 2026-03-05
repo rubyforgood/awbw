@@ -25,7 +25,10 @@ class SearchController < ApplicationController
 
     records = records.limit(25)
 
-    render json: records.map(&:remote_search_label)
+    labels = records.map(&:remote_search_label)
+    labels = model_class.resolve_duplicate_labels(labels) if model_class.respond_to?(:resolve_duplicate_labels)
+
+    render json: labels
   end
 
   private
