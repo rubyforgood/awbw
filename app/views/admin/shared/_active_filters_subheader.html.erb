@@ -30,11 +30,6 @@
         <%= label %>
       </span>
     <% end %>
-    <% if params[:resource_name].present? %>
-      <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-medium">
-        Resource: <%= params[:resource_name] %>
-      </span>
-    <% end %>
     <% if params[:visit_id].present? %>
       <span class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">
         Visit: <%= params[:visit_id] %>

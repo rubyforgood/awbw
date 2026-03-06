@@ -44,15 +44,6 @@ module Admin
         scope = scope.where(visit_id: params[:visit_id])
       end
 
-      # Filter by resource name (resource_title in properties JSON)
-      if params[:resource_name].present?
-        term = Ahoy::Event.sanitize_sql_like(params[:resource_name])
-        scope = scope.where(
-          "ahoy_events.properties->>'$.resource_title' LIKE ?",
-          "%#{term}%"
-        )
-      end
-
       # Filter by props (full-text search across properties JSON)
       if params[:props].present?
         term = Ahoy::Event.sanitize_sql_like(params[:props])
