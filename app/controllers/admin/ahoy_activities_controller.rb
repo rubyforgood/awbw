@@ -48,7 +48,7 @@ module Admin
       if params[:resource_name].present?
         term = Ahoy::Event.sanitize_sql_like(params[:resource_name])
         scope = scope.where(
-          "JSON_UNQUOTE(JSON_EXTRACT(ahoy_events.properties, '$.resource_title')) LIKE ?",
+          "ahoy_events.properties->>'$.resource_title' LIKE ?",
           "%#{term}%"
         )
       end
