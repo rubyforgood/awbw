@@ -50,6 +50,8 @@
       <span class="text-sm text-gray-900 comment-body truncate" title="<%= f.object.body %>">
         <%= truncate(f.object.body, length: 135) %>
       </span>
+      <%= link_to_remove_association "Remove", f,
+            class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
     </div>
     <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1" style="display:none">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">

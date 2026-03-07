@@ -399,7 +399,7 @@ class PeopleController < ApplicationController
         :end_date,
         :_destroy
       ],
-      comments_attributes: [ :id, :body ],
+      comments_attributes: [ :id, :body, :_destroy ],
     )
   end
 end
