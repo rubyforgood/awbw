@@ -54,7 +54,10 @@ module Analytics
 
         controller.ahoy.track("filter.#{resource_name}", properties) if cleaned[:filters].present?
         controller.ahoy.track("search.#{resource_name}", properties) if cleaned[:keywords].present?
-        controller.ahoy.track("search_zero.#{resource_name}", properties) if cleaned[:keywords].present? && result_count.zero?
+        if cleaned[:keywords].present? && result_count.zero?
+          query = cleaned[:keywords][:full_text] || cleaned[:keywords][:title]
+          controller.ahoy.track("search_zero.#{resource_name}", properties.merge(query: query).compact)
+        end
       end
 
       private
@@ -171,9 +174,10 @@ module Analytics
           Array(raw["resource_kind"]).presence
 
         # ---- OTHER FILTERS ----
-        filters[:categories]   = raw["category_ids"]   if raw["category_ids"].present?
-        filters[:sectors]      = raw["sector_ids"]     if raw["sector_ids"].present?
-        filters[:windows_type] = raw["windows_type_ids"] if raw["windows_type_ids"].present?
+        # Forms may send as "category_ids" (edit form) or "categories" (filter form)
+        filters[:categories]   = raw["category_ids"].presence   || raw["categories"].presence
+        filters[:sectors]      = raw["sector_ids"].presence     || raw["sectors"].presence
+        filters[:windows_type] = raw["windows_type_ids"].presence || raw["windows_types"].presence
 
         filters.compact!
 
