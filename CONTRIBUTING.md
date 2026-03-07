@@ -78,7 +78,8 @@ Either option below will get you a working development environment. Pick whichev
 
 </details>
 
-### Database encoding
+<details>
+<summary><strong>Database encoding</strong></summary>
 
 Different schema encodings on Mac vs Linux (utf8mb4 vs utf8) were causing merge challenges in schema.rb.
 To ensure consistent encoding across environments, we have configured utf8mb4 encoding in multiple places:
@@ -92,6 +93,8 @@ You can override database settings by setting the `DATABASE_URL` environment var
 ```
 DATABASE_URL=trilogy://user:password@host:port/database?encoding=utf8mb4&collation=utf8mb4_unicode_ci
 ```
+
+</details>
 
 ## Dev seeds
 
@@ -116,7 +119,8 @@ These credentials work for local development:
 
 A [staging environment](https://awbw-staging-xzek4.ondigitalocean.app/) is also available — reach out to the repo maintainers if you need access.
 
-## Codespaces and Dev Container - EXPERIMENTAL 🛠️
+<details>
+<summary><strong>Codespaces and Dev Container (experimental)</strong></summary>
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/rubyforgood/awbw/tree/main?quickstart=1)
 
@@ -126,6 +130,8 @@ A [staging environment](https://awbw-staging-xzek4.ondigitalocean.app/) is also 
 2. Wait for the container to start. This will take a few (10-15) minutes since Ruby needs to be installed, the database needs to be created, and the `mise setup` script needs to run
 3. Run `mise server`. On the Ports tab, visit the forwarded port 3000 URL marked as Application to see the AWBW portal page.
 4. Login as a sample user with the default [credentials](#credentials).
+
+</details>
 
 ## Conductor (Parallel AI Workspaces) 🎼
 
