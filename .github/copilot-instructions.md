@@ -1,10 +1,11 @@
 # This project is a Ruby on Rails application.
+<!-- Keep code style rules in sync with CLAUDE.md -->
 
 # Code style requirements:
 - Use modern Ruby syntax
 - Prefer early returns and guard clauses
 - Avoid unnecessary and/or complex conditionals
-- Prefer enums and scopes over magic strings
+- Prefer constants and scopes over magic strings
 - Use safe navigation (`&.`) where appropriate
 - Use `presence` over blank checks
 - Use `Arel.sql` for raw SQL in order clauses

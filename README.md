@@ -1,7 +1,7 @@
 # awbw-portal
 ![Coverage](https://rubyforgood.github.io/awbw/badges/main/coverage_badge.svg)
 
-This project is the Portal for [A Windows Between Worlds](https://www.awbw.org). The Portal
+This project is the Portal for [A Window Between Worlds](https://www.awbw.org). The Portal
 offers a place for workshop leaders to find information about Workshops and Resources, 
 be informed of CommunityNews, Stories, and Events, and as the project evolves -- to connect with one another.
 
