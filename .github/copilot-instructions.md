@@ -1,5 +1,12 @@
 # This project is a Ruby on Rails application.
 
+# Frontend requirements:
+- Always use Stimulus for JavaScript behavior — do not write raw/inline JS or jQuery
+- Always use Tailwind CSS utility classes for styling — do not write custom CSS unless absolutely necessary
+- Prefer Turbo for navigation and form submissions before reaching for Stimulus
+- ES6+ syntax, ESM imports/exports
+- Stimulus controller naming: `[name]_controller.js`
+
 # Code style requirements:
 - Use modern Ruby syntax
 - Prefer early returns and guard clauses

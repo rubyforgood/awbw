@@ -208,6 +208,12 @@ end
 
 ## Frontend
 
+### Preferences
+
+- **Always use Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
+- **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
+- Prefer Turbo for navigation and form submissions before reaching for Stimulus
+
 ### Stimulus Controllers (32)
 
 Key controllers:
