@@ -43,6 +43,9 @@
         <div>
           <span class="font-semibold text-gray-700">Author credit:</span>
           <%= @story_idea.author_credit_preference&.humanize || "—" %>
+          <% if @story_idea.author_credit_preference.present? %>
+            <span class="text-gray-500">(<%= @story_idea.author_credit %>)</span>
+          <% end %>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Permission given:</span>
