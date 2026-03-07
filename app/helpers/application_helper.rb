@@ -215,4 +215,29 @@ module ApplicationHelper
     ]
     ActiveSupport::TimeZone.us_zones.select { |z| zone_names.include?(z.name) }.sort_by { |z| zone_names.index(z.name) }.map { |z| [ z.to_s, z.name ] }
   end
+
+  def hidden_fields_for_params(params_hash, prefix = nil)
+    return "".html_safe if params_hash.blank?
+
+    fields = []
+    params_hash.each do |key, value|
+      field_name = prefix ? "#{prefix}[#{key}]" : key.to_s
+
+      if value.is_a?(Hash)
+        fields << hidden_fields_for_params(value, field_name)
+      elsif value.is_a?(Array)
+        value.each_with_index do |item, index|
+          if item.is_a?(Hash)
+            fields << hidden_fields_for_params(item, "#{field_name}[#{index}]")
+          else
+            fields << tag(:input, type: "hidden", name: "#{field_name}[]", value: item)
+          end
+        end
+      else
+        fields << tag(:input, type: "hidden", name: field_name, value: value)
+      end
+    end
+
+    safe_join(fields)
+  end
 end

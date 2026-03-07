@@ -78,7 +78,15 @@ class UsersController < ApplicationController
         person_id = params[:person_id].presence || params.dig(:user, :person_id).presence || @user.person_id
         duplicates = find_duplicate_users(email, exclude_person_id: person_id)
         if duplicates.any?
-          redirect_to check_duplicates_users_path(email: email, person_id: person_id)
+          @email = email
+          @person_id = person_id
+          @duplicates = duplicates
+          @blocked = duplicates.any? { |d| d[:blocked] }
+          @stored_params = {
+            "user" => params[:user].to_unsafe_h,
+            "person_id" => params[:person_id].presence || params.dig(:user, :person_id).presence
+          }
+          render :check_duplicates
           return
         end
       end
@@ -112,6 +120,7 @@ class UsersController < ApplicationController
     @person_id = params[:person_id]
     @duplicates = find_duplicate_users(@email, exclude_person_id: @person_id)
     @blocked = @duplicates.any? { |d| d[:blocked] }
+    @stored_params = {}
   end
 
   def update

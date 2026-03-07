@@ -67,13 +67,21 @@
       <% end %>
 
       <div class="flex gap-3 justify-center">
-        <%= link_to "Go back", "javascript:history.back()", class: "btn btn-secondary-outline" %>
+        <%= link_to "Go back", new_user_path(@stored_params), class: "btn btn-secondary-outline" %>
 
         <% unless @blocked %>
           <%= form_with url: users_path, method: :post, data: { turbo: false } do %>
-            <input type="hidden" name="user[email]" value="<%= @email %>">
-            <% if @person_id.present? %>
-              <input type="hidden" name="person_id" value="<%= @person_id %>">
+            <% if @stored_params.present? && @stored_params["user"].present? %>
+              <%= hidden_fields_for_params(@stored_params.fetch("user", {}), "user") %>
+              <% person_id_value = @stored_params["person_id"].presence || @person_id %>
+              <% if person_id_value.present? %>
+                <input type="hidden" name="person_id" value="<%= person_id_value %>">
+              <% end %>
+            <% else %>
+              <input type="hidden" name="user[email]" value="<%= @email %>">
+              <% if @person_id.present? %>
+                <input type="hidden" name="person_id" value="<%= @person_id %>">
+              <% end %>
             <% end %>
             <input type="hidden" name="skip_duplicate_check" value="1">
             <button type="submit" class="btn btn-primary">Create anyway</button>

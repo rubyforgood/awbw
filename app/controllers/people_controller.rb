@@ -105,11 +105,13 @@ class PeopleController < ApplicationController
         @person.email
       )
       if duplicates.any?
-        redirect_to check_duplicates_people_path(
-          first_name: @person.first_name,
-          last_name: @person.last_name,
-          email: @person.email
-        )
+        @first_name = @person.first_name
+        @last_name = @person.last_name
+        @email = @person.email
+        @duplicates = duplicates
+        @blocked = duplicates.any? { |d| d[:blocked] }
+        @stored_params = params[:person].to_unsafe_h
+        render :check_duplicates
         return
       end
     end
@@ -162,6 +164,7 @@ class PeopleController < ApplicationController
     @email = params[:email]
     @duplicates = find_duplicate_people(@first_name, @last_name, @email)
     @blocked = @duplicates.any? { |d| d[:blocked] }
+    @stored_params = {}
   end
 
   private
