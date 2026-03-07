@@ -167,7 +167,7 @@ bundle exec bundle-audit check --update
 - Default branch is `main`
 - Commit messages should explain why, not what
 - CI runs via GitHub Actions (`.github/workflows/`)
-- **When rebasing onto main**, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts with your branch's changes. Pay special attention to schema or model changes (new fields, renamed columns, removed associations) that may affect views, partials, or CSS layouts in your branch
+- **When rebasing onto main**, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)
 
 ## PRs
 
