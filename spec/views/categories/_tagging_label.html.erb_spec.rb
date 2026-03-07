@@ -17,4 +17,25 @@ RSpec.describe "categories/_tagging_label", type: :view do
 
     expect(rendered).not_to include("Theme:")
   end
+
+  context "when spanish is true" do
+    it "shows Spanish name when present" do
+      category.update!(name_spanish: "Resiliencia")
+      type.update!(name_spanish: "Tema")
+
+      render partial: "categories/tagging_label",
+             locals: { category: category, spanish: true }
+
+      expect(rendered).to include("Tema:")
+      expect(rendered).to include("Resiliencia")
+    end
+
+    it "falls back to English name when Spanish name is blank" do
+      render partial: "categories/tagging_label",
+             locals: { category: category, spanish: true }
+
+      expect(rendered).to include("Theme:")
+      expect(rendered).to include("Resilience")
+    end
+  end
 end

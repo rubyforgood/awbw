@@ -369,6 +369,11 @@
         </button>
 
         <div id="translations" class="hidden border border-gray-300 p-4 rounded-b-md">
+          <div class="mb-4">
+            <%= f.input :title_spanish,
+                        label: "Title (Spanish)",
+                        input_html: { class: "form-control" } %>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <% @workshop.decorate.display_spanish_fields.each do |field| %>
               <%= rhino_editor(f, field, label: field.to_s.humanize) %>

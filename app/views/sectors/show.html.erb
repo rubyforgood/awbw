@@ -20,6 +20,10 @@
                 <p class="text-gray-900"><%= @sector.name %></p>
               </div>
               <div class="mb-3">
+                <p class="font-bold text-gray-700">Name (Spanish):</p>
+                <p class="text-gray-900"><%= @sector.name_spanish.presence || "--" %></p>
+              </div>
+              <div class="mb-3">
                 <p class="font-bold text-gray-700">Published:</p>
                 <p class="text-gray-900"><%= @sector.published? %></p>
               </div>

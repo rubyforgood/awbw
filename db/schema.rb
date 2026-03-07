@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_07_143000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -299,6 +299,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
     t.datetime "created_at", precision: nil, null: false
     t.integer "legacy_id"
     t.string "name", null: false
+    t.string "name_spanish"
     t.integer "position", null: false
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
@@ -322,6 +323,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
     t.string "display_text"
     t.string "legacy_id"
     t.string "name", null: false
+    t.string "name_spanish"
     t.boolean "profile_specific", default: false, null: false
     t.boolean "published", default: false, null: false
     t.boolean "story_specific", default: false, null: false
@@ -889,6 +891,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
   create_table "sectors", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.string "name", null: false
+    t.string "name_spanish"
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["name"], name: "index_sectors_on_name", unique: true

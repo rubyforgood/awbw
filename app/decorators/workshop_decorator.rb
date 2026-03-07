@@ -19,7 +19,7 @@ class WorkshopDecorator < ApplicationDecorator
   end
 
   def has_spanish_fields?
-    spanish_field_values.any?
+    title_spanish.present? || spanish_field_values.any?
   end
 
   def new?

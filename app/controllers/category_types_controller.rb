@@ -59,6 +59,6 @@ class CategoryTypesController < ApplicationController
   end
 
   def category_type_params
-    params.require(:category_type).permit(:name, :display_text, :published, :story_specific, :profile_specific)
+    params.require(:category_type).permit(:name, :name_spanish, :display_text, :published, :story_specific, :profile_specific)
   end
 end

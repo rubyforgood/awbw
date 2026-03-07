@@ -219,7 +219,7 @@ class WorkshopsController < ApplicationController
 
   def workshop_params
     params.require(:workshop).permit(
-      :title, :featured, :published,
+      :title, :title_spanish, :featured, :published,
       :full_name, :created_by_id, :windows_type_id, :workshop_idea_id, :author_credit_preference,
       :month, :year,
       :publicly_visible,

@@ -90,6 +90,8 @@
     <div class="mt-4 ml-2 default-link">
       <!-- English / Details -->
       <div id="english-content" data-tabs-target="tabContent">
+        <%= render "show_tags", workshop: workshop, spanish: false %>
+
         <% if content_has_value?(workshop.rhino_extra_field) %>
           <div class="text-sm mb-4"><%= workshop.rhino_extra_field %></div>
         <% end %>
@@ -154,6 +156,12 @@
       <% if workshop.has_spanish_fields? %>
         <!-- Spanish -->
         <div id="spanish-content" data-tabs-target="tabContent" class="hidden">
+          <% if workshop.title_spanish.present? %>
+            <h2 class="text-2xl font-bold text-gray-900 mb-4"><%= workshop.title_spanish %></h2>
+          <% end %>
+
+          <%= render "show_tags", workshop: workshop, spanish: true %>
+
           <% workshop_sections_spanish = { "Objetivo" => workshop.rhino_objective_spanish,
                                            "Rango de edad" => workshop.age_range_spanish,
                                            "Materiales" => workshop.rhino_materials_spanish,

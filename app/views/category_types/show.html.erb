@@ -41,6 +41,10 @@
           <span class="font-bold">Display text:</span>
           <span class="ml-1"><%= @category_type.display_text %></span>
         </p>
+        <p class="text-gray-700">
+          <span class="font-bold">Name (Spanish):</span>
+          <span class="ml-1"><%= @category_type.name_spanish.presence || "--" %></span>
+        </p>
       </div>
 
       <!-- Associated Categories -->
