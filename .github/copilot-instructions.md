@@ -58,5 +58,8 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - No parentheses around conditions: `if foo` not `if (foo)`
 - No semicolons to separate statements
 
+# PRs
+- On every push, update the PR title and description to reflect the current diff
+
 # Git
 - When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)

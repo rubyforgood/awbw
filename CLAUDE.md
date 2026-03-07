@@ -175,6 +175,7 @@ bundle exec bundle-audit check --update
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
+- **On every push**, update the PR title and description to reflect the current diff
 
 ## Quick Commands
 
