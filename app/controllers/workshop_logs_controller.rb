@@ -5,8 +5,7 @@ class WorkshopLogsController < ApplicationController
     authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, created_by: :person)
-                                             .where(type: "WorkshopLog"))
+    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, created_by: :person))
     filtered = base_scope.search(params)
     @workshop_logs_unpaginated  = filtered
     @workshop_logs = filtered.paginate(page: params[:page], per_page: @per_page)
@@ -105,7 +104,7 @@ class WorkshopLogsController < ApplicationController
   def edit
     @workshop_log = WorkshopLog.find(params[:id])
     authorize! @workshop_log
-    @workshop = @workshop_log.owner || Workshop.new(windows_type_id: @workshop_log.windows_type_id)
+    @workshop = @workshop_log.workshop || Workshop.new(windows_type_id: @workshop_log.windows_type_id)
 
     set_form_variables
   end
@@ -230,7 +229,7 @@ class WorkshopLogsController < ApplicationController
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :created_by_id, :organization_id, :date,
+      :adults_ongoing, :adults_first_time, :created_by_id, :organization_id, :date,
       :workshop_name, :workshop_id, :windows_type_id, :other_description, :external_workshop_title, # :user,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
@@ -239,7 +238,7 @@ class WorkshopLogsController < ApplicationController
         :id, :quotable_type, :quotable_id, :_destroy,
         quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
       report_form_field_answers_attributes: [ :id, :form_field_id, :answer_option_id,
-                                             :answer, :report_id, :_destroy ],
+                                             :answer, :workshop_log_id, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ])
   end
 end

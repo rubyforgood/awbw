@@ -42,7 +42,7 @@ class WorkshopLogCreationWizardController < ApplicationController
 
   def load_previous_report
     if id_param
-      @old_report = Report.find_by(id: id_param)
+      @old_report = WorkshopLog.find_by(id: id_param)
       date_array = @old_report.date.to_s.split("-")
       @date = date_array[1] + "-" + date_array[2] + "-" + date_array[0]
     end
@@ -50,9 +50,9 @@ class WorkshopLogCreationWizardController < ApplicationController
 
   def update_fill_out_form
     puts id_param
-    old_report = Report.find_by(id: id_param)
+    old_report = WorkshopLog.find_by(id: id_param)
     if old_report
-      ReportFormFieldAnswer.where(report: old_report).delete_all
+      ReportFormFieldAnswer.where(workshop_log: old_report).delete_all
       old_report.delete
     end
     find_or_build_workshop

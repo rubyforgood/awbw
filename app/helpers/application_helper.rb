@@ -62,9 +62,9 @@ module ApplicationHelper
       end
     end
 
-    if obj.type == "WorkshopLog"
+    if obj.is_a?(WorkshopLog)
       send("#{action}workshop_log_path", obj)
-    elsif obj.type != "WorkshopLog" and action == "edit_"
+    elsif !obj.is_a?(WorkshopLog) and action == "edit_"
       send("#{action}report_path", obj, form_builder_id: obj.form_builder,
            month: obj.date.month,
            year: obj.date.year)

@@ -1,7 +1,53 @@
-class WorkshopLog < Report
+class WorkshopLog < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :organization
+  belongs_to :windows_type
+  belongs_to :workshop, optional: true
+  has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy, autosave: false
+  has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
+  has_many :report_form_field_answers,
+           foreign_key: :workshop_log_id, inverse_of: :workshop_log,
+           dependent: :destroy
+  has_many :sectorable_items, as: :sectorable, dependent: :destroy
+
+  # Images
+  has_one_attached :image
+  has_one_attached :form_file
+
+  # Asset associations
+  has_many :media_files, dependent: :destroy
+  has_one :primary_asset, -> { where(type: "PrimaryAsset") },
+          as: :owner, class_name: "PrimaryAsset", dependent: :destroy
+  has_many :gallery_assets, -> { where(type: "GalleryAsset") },
+           as: :owner, class_name: "GalleryAsset", dependent: :destroy
+  has_many :assets, as: :owner, dependent: :destroy
+
+  # has_many through
+  has_many :form_fields, through: :form
+  has_many :all_quotable_item_quotes,
+           ->(wl) { where(quotable_id: wl.id, quotable_type: "WorkshopLog") },
+           class_name: "QuotableItemQuote",
+           inverse_of: :quotable
+  has_many :quotes, through: :all_quotable_item_quotes, dependent: :nullify
+  has_many :sectors, through: :sectorable_items, dependent: :destroy
+
+  # Nested attributes
+  accepts_nested_attributes_for :media_files, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :all_quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :report_form_field_answers,
+                                reject_if: proc { |object|
+                                  object["_create"].to_i == 0 && object["answer"].nil? }
 
   # Validations
+  FORM_FILE_CONTENT_TYPES = %w[application/pdf application/msword
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document application/vnd.ms-excel
+    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]
+  validates :form_file, content_type: FORM_FILE_CONTENT_TYPES
   validates :date, presence: true
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
             :children_first_time, :teens_first_time, :adults_first_time,
@@ -9,11 +55,37 @@ class WorkshopLog < Report
   validate :workshop_or_external_title_present
 
   # Callbacks
-  after_save :update_owner_and_date
-  after_save :update_workshop_log_count
+  before_save :set_has_attachment
+  after_create :set_windows_type
+  after_commit :update_workshop_log_count, on: [ :create, :update ]
 
   # Scopes
-  # See report.rb
+  scope :in_month, ->(date) { where(created_at: date.beginning_of_month..date.end_of_month) }
+  scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
+  scope :organization_id, ->(organization_id) { where(organization_id: organization_id) if organization_id.present? }
+  scope :organization_ids, ->(organization_ids) { where(organization_id: organization_ids) }
+  scope :created_by_id, ->(created_by_id) { where(created_by_id: created_by_id.to_i) if created_by_id.present? }
+  scope :month_and_year, ->(month_and_year) {
+    if month_and_year.present?
+      year, month = month_and_year.split("-").map(&:to_i)
+      where("EXTRACT(YEAR FROM COALESCE(workshop_logs.date, workshop_logs.created_at)) = ? AND
+               EXTRACT(MONTH FROM COALESCE(workshop_logs.date, workshop_logs.created_at)) = ?", year, month)
+    end }
+  scope :year, ->(year) {
+    if year.present?
+      where("EXTRACT(YEAR FROM COALESCE(workshop_logs.date, workshop_logs.created_at)) = ?", year.to_i)
+    end }
+  scope :ordered_by_date, -> { order(Arel.sql("COALESCE(workshop_logs.date, workshop_logs.created_at) DESC")) }
+
+  def self.search(params)
+    logs = is_a?(ActiveRecord::Relation) ? self : all
+    logs = logs.created_by_id(params[:created_by_id]) if params[:created_by_id].present?
+    logs = logs.month_and_year(params[:month_and_year]) if params[:month_and_year].present?
+    logs = logs.year(params[:year]) if params[:year].present?
+    logs = logs.workshop_id(params[:workshop_id]) if params[:workshop_id].present?
+    logs = logs.organization_id(params[:organization_id]) if params[:organization_id].present?
+    logs.ordered_by_date
+  end
 
   def name
     return "" unless created_by
@@ -25,7 +97,7 @@ class WorkshopLog < Report
   end
 
   def workshop_title
-    title = owner.nil? ? workshop_name : owner.title
+    title = workshop&.title.presence || workshop_name
     title = external_workshop_title if title.blank?
     return "" unless title
     title
@@ -41,16 +113,16 @@ class WorkshopLog < Report
 
   def type_title
     if windows_type
-      "#{windows_type_name} #{type}"
+      "#{windows_type_name} WorkshopLog"
     else
-      "#{type}"
+      "WorkshopLog"
     end
   end
 
   def title
-    workshop_title = owner.nil? ? workshop_name : owner.title
-    return unless workshop_title
-    "Workshop Log - #{workshop_title}"
+    wt = workshop&.title.presence || workshop_name
+    return unless wt
+    "Workshop Log - #{wt}"
   end
 
   def total_attendance
@@ -138,7 +210,41 @@ class WorkshopLog < Report
     )
   end
 
+  def delete_and_update_all(quotes_params, log_fields, image = nil)
+    unless image.blank?
+      self.image.destroy if self.image
+      self.image = Image.new(file: image)
+    end
+    save
+  end
+
+  def user_name
+    created_by.name
+  end
+
+  def display_date
+    created_at.strftime("%B %e, %Y")
+  end
+
+  def story?
+    false
+  end
+
+  def users_admin_type
+    "WorkshopLog - #{workshop ? workshop.communal_label(self) : "[ EMPTY ]"} - User: #{created_by.full_name if created_by}"
+  end
+
   private
+
+  def set_has_attachment
+    self.has_attachment = image&.file&.attached? || form_file&.attached? ||
+      media_files.any? { |media_file| media_file.file.attached? }
+  end
+
+  def set_windows_type
+    return unless organization && windows_type.nil?
+    update(windows_type_id: organization.windows_type.id)
+  end
 
   def workshop_or_external_title_present
     return if workshop.present? || external_workshop_title.present?
@@ -146,16 +252,8 @@ class WorkshopLog < Report
   end
 
   def update_workshop_log_count
-    return unless owner
-    new_led_count = owner.workshop_logs.size
-    owner.update(led_count: new_led_count)
-  end
-
-  def update_owner_and_date
-    changes = {}
-    changes[:date] = created_at if date.blank?
-    changes[:owner_id] = workshop_id if owner_id.blank?
-    changes[:owner_type] = "Workshop" if workshop_id
-    update_columns(changes) if changes.any?
+    return unless workshop
+    new_led_count = workshop.workshop_logs.size
+    workshop.update(led_count: new_led_count)
   end
 end
