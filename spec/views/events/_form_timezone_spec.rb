@@ -1,9 +1,9 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "events/_form timezone handling", type: :view do
   let(:user) { create(:user, time_zone: "Pacific Time (US & Canada)") }
   let(:location) { create(:location) }
-  
+
   before do
     assign(:locations, [ location ])
     assign(:sectors, [])
@@ -14,37 +14,36 @@ RSpec.describe "events/_form timezone handling", type: :view do
 
   context "when displaying datetime-local fields with user timezone" do
     let(:event) do
-      # Create event with specific UTC times
+      # Use January dates to avoid DST ambiguity (PST = UTC-8)
       create(:event,
-             start_date: Time.utc(2026, 3, 15, 20, 0), # 8:00 PM UTC
-             end_date: Time.utc(2026, 3, 15, 22, 0),   # 10:00 PM UTC
-             registration_close_date: Time.utc(2026, 3, 14, 20, 0)) # Day before, 8:00 PM UTC
+             start_date: Time.utc(2026, 1, 15, 20, 0),
+             end_date: Time.utc(2026, 1, 15, 22, 0),
+             registration_close_date: Time.utc(2026, 1, 14, 20, 0))
     end
 
-    it "converts times to user's timezone (Pacific)" do
+    it "converts times to user's timezone via around_action :set_time_zone_from_user" do
       assign(:event, event.decorate)
-      
-      # Mock Time.zone to return Pacific timezone (like ApplicationController does)
-      allow(Time).to receive(:zone).and_return(ActiveSupport::TimeZone["Pacific Time (US & Canada)"])
-      
-      render
-      
-      # Pacific Time is UTC-8, so 8 PM UTC = 12 PM Pacific
-      # The form should display "2026-03-15T12:00" not "2026-03-15T20:00"
-      expect(rendered).to have_selector(
-        "input[name='event[start_date]'][value='2026-03-15T12:00']"
-      )
-      
-      expect(rendered).to have_selector(
-        "input[name='event[end_date]'][value='2026-03-15T14:00']"
-      )
-      
-      expect(rendered).to have_selector(
-        "input[name='event[registration_close_date]'][value='2026-03-14T12:00']"
-      )
+
+      # Simulate the around_action :set_time_zone_from_user in ApplicationController
+      Time.use_zone(user.time_zone) do
+        render
+
+        # PST is UTC-8, so 20:00 UTC = 12:00 PST
+        expect(rendered).to have_selector(
+          "input[name='event[start_date]'][value='2026-01-15T12:00']"
+        )
+
+        expect(rendered).to have_selector(
+          "input[name='event[end_date]'][value='2026-01-15T14:00']"
+        )
+
+        expect(rendered).to have_selector(
+          "input[name='event[registration_close_date]'][value='2026-01-14T12:00']"
+        )
+      end
     end
   end
-  
+
   context "when event has nil registration_close_date" do
     let(:event) do
       create(:event,
@@ -52,21 +51,19 @@ RSpec.describe "events/_form timezone handling", type: :view do
              end_date: 3.days.from_now,
              registration_close_date: nil)
     end
-    
+
     it "handles nil registration_close_date gracefully" do
       assign(:event, event.decorate)
-      
-      allow(Time).to receive(:zone).and_return(ActiveSupport::TimeZone["Pacific Time (US & Canada)"])
-      
-      render
-      
-      # Should render all datetime input fields
-      expect(rendered).to have_selector("input[name='event[start_date]']")
-      expect(rendered).to have_selector("input[name='event[end_date]']")
-      expect(rendered).to have_selector("input[name='event[registration_close_date]']")
-      
-      # registration_close_date should have empty value when nil
-      expect(rendered).to have_selector("input[name='event[registration_close_date]'][value='']")
+
+      Time.use_zone(user.time_zone) do
+        render
+
+        expect(rendered).to have_selector("input[name='event[start_date]']")
+        expect(rendered).to have_selector("input[name='event[end_date]']")
+        expect(rendered).to have_selector("input[name='event[registration_close_date]']")
+
+        expect(rendered).to have_selector("input[name='event[registration_close_date]'][value='']")
+      end
     end
   end
 end
