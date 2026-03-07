@@ -59,4 +59,4 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - No semicolons to separate statements
 
 # Git
-- When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts with your branch's changes
+- When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts with your branch's changes. Pay special attention to schema or model changes (new fields, renamed columns, removed associations) that may affect views, partials, or CSS layouts in your branch
