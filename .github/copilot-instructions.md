@@ -57,3 +57,6 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Use `Foo.method` not `Foo::method` for method calls
 - No parentheses around conditions: `if foo` not `if (foo)`
 - No semicolons to separate statements
+
+# Git
+- When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts with your branch's changes

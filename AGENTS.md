@@ -319,6 +319,10 @@ RuboCop linting on PRs and pushes to main.
 | Positioning | Positioning gem for ordered records |
 | API | JWT tokens, Apipie docs, Rack CORS |
 
+## Git
+
+- When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts with your branch's changes
+
 ## Rake Tasks
 
 Located in `lib/tasks/` (~17 files). Notable:

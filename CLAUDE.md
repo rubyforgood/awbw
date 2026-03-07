@@ -167,6 +167,7 @@ bundle exec bundle-audit check --update
 - Default branch is `main`
 - Commit messages should explain why, not what
 - CI runs via GitHub Actions (`.github/workflows/`)
+- **When rebasing onto main**, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts with your branch's changes
 
 ## PRs
 
