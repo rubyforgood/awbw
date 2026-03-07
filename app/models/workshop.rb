@@ -14,7 +14,7 @@ class Workshop < ApplicationRecord
       :rhino_introduction, :rhino_opening_circle, :rhino_demonstration, :rhino_warm_up,
       :rhino_visualization, :rhino_creation, :rhino_closing, :rhino_notes, :rhino_tips,
       :rhino_misc1, :rhino_misc2, :rhino_extra_field, :rhino_objective_spanish,
-      :rhino_materials_spanish, :rhino_optional_materials_spanish, :rhino_age_range_spanish,
+      :rhino_materials_spanish, :rhino_optional_materials_spanish,
       :rhino_setup_spanish, :rhino_introduction_spanish, :rhino_opening_circle_spanish,
       :rhino_demonstration_spanish, :rhino_warm_up_spanish, :rhino_visualization_spanish,
       :rhino_creation_spanish, :rhino_closing_spanish, :rhino_notes_spanish,
@@ -97,7 +97,6 @@ class Workshop < ApplicationRecord
   has_rich_text :rhino_objective_spanish
   has_rich_text :rhino_materials_spanish
   has_rich_text :rhino_optional_materials_spanish
-  has_rich_text :rhino_age_range_spanish
   has_rich_text :rhino_setup_spanish
   has_rich_text :rhino_introduction_spanish
   has_rich_text :rhino_opening_circle_spanish
@@ -123,7 +122,6 @@ class Workshop < ApplicationRecord
   # Validations
   validates_presence_of :title
   # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
-  validates_length_of :age_range, maximum: 16
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
   # Nested attributes
