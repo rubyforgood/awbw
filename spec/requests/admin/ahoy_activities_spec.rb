@@ -213,6 +213,197 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         get charts_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "always renders chart titles even with no data" do
+        get charts_path, params: { time_period: "all_time" }
+        body = response.body
+
+        [
+          "Workshop Search: Category Types",
+          "Workshop Search: Categories",
+          "Workshop Search: Sectors",
+          "Workshop Search: Titles",
+          "Workshop Search: Authors",
+          "Workshop Search: Full-Text",
+          "Workshop Search: Windows Types",
+          "Workshop Search: No Results",
+          "Workshop Discovery Funnel",
+          "Content Types People View Most",
+          "Content Types Printed Most",
+          "How Users Discover Content",
+          "Search-to-View Conversion",
+          "User Signup Trend"
+        ].each do |title|
+          expect(body).to include(title), "Expected chart title '#{title}' to be present"
+        end
+      end
+    end
+
+    # ==============================================================
+    # Charts with populated data
+    # ==============================================================
+
+    describe "GET /admin/activities/charts with event data" do
+      let(:visit) { create(:ahoy_visit, user: user, started_at: 2.days.ago) }
+
+      let(:category_type) { create(:category_type, :published, name: "ArtType") }
+      let(:category)      { create(:category, :published, name: "Drawing", category_type: category_type) }
+      let(:sector)        { create(:sector, :published, name: "Domestic Violence") }
+      let(:windows_type)  { create(:windows_type, :adult) }
+
+      let!(:filter_event) do
+        create(
+          :ahoy_event,
+          name: "filter.workshops",
+          user: user,
+          visit: visit,
+          time: 2.days.ago,
+          properties: {
+            "resource_type" => "Workshop",
+            "result_count" => 5,
+            "filters" => {
+              "categories" => [ { "id" => category.id, "name" => category.name, "type" => category_type.name } ],
+              "sectors" => [ { "id" => sector.id, "name" => sector.name } ],
+              "windows_types" => [ { "id" => windows_type.id, "name" => windows_type.name } ]
+            }
+          }
+        )
+      end
+
+      let!(:search_event) do
+        create(
+          :ahoy_event,
+          name: "search.workshops",
+          user: user,
+          visit: visit,
+          time: 2.days.ago,
+          properties: {
+            "resource_type" => "Workshop",
+            "result_count" => 3,
+            "keywords" => { "title" => "self care", "author" => "fabian", "full_text" => "anxiety" },
+            "filters" => {
+              "categories" => [ { "id" => category.id, "name" => category.name, "type" => category_type.name } ],
+              "sectors" => [ { "id" => sector.id, "name" => sector.name } ],
+              "windows_types" => [ { "id" => windows_type.id, "name" => windows_type.name } ]
+            }
+          }
+        )
+      end
+
+      let!(:zero_result_event) do
+        create(
+          :ahoy_event,
+          name: "search_zero.workshops",
+          user: user,
+          visit: visit,
+          time: 2.days.ago,
+          properties: {
+            "resource_type" => "Workshop",
+            "result_count" => 0,
+            "query" => "music therapy",
+            "keywords" => { "full_text" => "music therapy" }
+          }
+        )
+      end
+
+      let!(:view_workshop_event) do
+        create(
+          :ahoy_event,
+          name: "view.workshop",
+          user: user,
+          visit: visit,
+          resource_type: "Workshop",
+          resource_id: 1,
+          time: 2.days.ago,
+          properties: { "resource_type" => "Workshop", "resource_id" => 1 }
+        )
+      end
+
+      let!(:view_resource_event) do
+        create(
+          :ahoy_event,
+          name: "view.resource",
+          user: user,
+          visit: visit,
+          resource_type: "Resource",
+          resource_id: 1,
+          time: 2.days.ago,
+          properties: { "resource_type" => "Resource", "resource_id" => 1 }
+        )
+      end
+
+      let!(:print_event) do
+        create(
+          :ahoy_event,
+          name: "print.workshop",
+          user: user,
+          visit: visit,
+          resource_type: "Workshop",
+          resource_id: 1,
+          time: 2.days.ago,
+          properties: { "resource_type" => "Workshop", "resource_id" => 1 }
+        )
+      end
+
+      let!(:tagging_event) do
+        create(
+          :ahoy_event,
+          name: "browse.taggings",
+          user: user,
+          visit: visit,
+          time: 2.days.ago,
+          properties: {
+            "sectors" => [ sector.name ],
+            "categories" => [ category.name ],
+            "page_result_count" => 10
+          }
+        )
+      end
+
+      it "renders charts page successfully" do
+        get charts_path, params: { time_period: "all_time" }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "populates workshop filter charts with category, sector, and windows type data" do
+        get charts_path, params: { time_period: "all_time" }
+        body = response.body
+
+        expect(body).to include(category_type.name)
+        expect(body).to include(category.name)
+        expect(body).to include(sector.name)
+        expect(body).to include(windows_type.short_name)
+      end
+
+      it "populates workshop keyword search charts" do
+        get charts_path, params: { time_period: "all_time" }
+        body = response.body
+
+        expect(body).to include("self care")
+        expect(body).to include("fabian")
+        expect(body).to include("anxiety")
+      end
+
+      it "populates zero-result search chart" do
+        get charts_path, params: { time_period: "all_time" }
+        expect(response.body).to include("music therapy")
+      end
+
+      it "populates content type view pie chart with multiple types" do
+        get charts_path, params: { time_period: "all_time" }
+        body = response.body
+
+        expect(body).to include("workshop")
+        expect(body).to include("resource")
+      end
+
+      it "populates tagging charts with sector and category names" do
+        get charts_path, params: { time_period: "all_time" }
+        body = response.body
+
+        expect(body).to include(sector.name)
+        expect(body).to include(category.name)
+      end
     end
   end
 end
