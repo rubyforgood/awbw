@@ -25,11 +25,8 @@ gem "cocoon", "~> 1.2.6"
 
 gem "wicked"
 gem "search_cop"
-gem "jwt", "~> 1.2.1"
 gem "httparty"
 gem "will_paginate", "~> 3.1.7"
-gem "apipie-rails", "~> 1.5.0"
-gem "rack-cors", require: "rack/cors"
 # gem "ckeditor", "~> 4.3.0" # removed given gh security scan results. still need a replacement.
 gem "image_processing"
 
