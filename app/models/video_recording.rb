@@ -1,5 +1,5 @@
 class VideoRecording < ApplicationRecord
-  self.table_name = 'video_recordings'
+  self.table_name = "video_recordings"
 
   include Featureable, Publishable, TagFilterable, Trendable, RichTextSearchable
 

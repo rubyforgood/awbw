@@ -43,7 +43,7 @@ class Tag
     tutorials: {
       icon: "🎬",
       path: -> { Rails.application.routes.url_helpers.tutorials_path },
-      klass: Tutorial
+      klass: VideoRecording
     }
   }.freeze
 
