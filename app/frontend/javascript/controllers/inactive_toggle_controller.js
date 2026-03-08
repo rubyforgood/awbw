@@ -14,18 +14,19 @@ function grayOut(el) {
 }
 
 export default class extends Controller {
-  connect() {
-    this.endDateInput = this.element.querySelector("input[type='date'][name*='end_date']");
-    this.titleInput = this.element.querySelector("textarea[name*='title']");
+  static targets = ["endDate", "title", "row", "button"]
 
+  connect() {
     // Save original classes for profile buttons and their styled children
     this._savedClasses = [];
-    this.element.querySelectorAll("a.group, a.group span").forEach((el) => {
-      this._savedClasses.push({ el, className: el.className });
+    this.buttonTargets.forEach((btn) => {
+      btn.querySelectorAll("a.group, a.group span").forEach((el) => {
+        this._savedClasses.push({ el, className: el.className });
+      });
     });
 
-    if (this.endDateInput) this.apply();
-    if (this.titleInput) this.updateBorder();
+    if (this.hasEndDateTarget) this.apply();
+    if (this.hasTitleTarget) this.updateBorder();
   }
 
   toggle() {
@@ -33,23 +34,25 @@ export default class extends Controller {
   }
 
   updateBorder() {
-    if (!this.titleInput) return;
-    const isFacilitator = this.titleInput.value.toLowerCase().includes("facilitator");
-    this.element.style.borderLeft = `4px solid ${isFacilitator ? "#e879f9" : "#d1d5db"}`;
+    if (!this.hasTitleTarget) return;
+    const isFacilitator = this.titleTarget.value.toLowerCase().includes("facilitator");
+    this.rowTarget.style.borderLeft = `4px solid ${isFacilitator ? "#e879f9" : "#d1d5db"}`;
   }
 
   apply() {
-    if (!this.endDateInput) return;
-    const value = this.endDateInput.value;
+    if (!this.hasEndDateTarget) return;
+    const value = this.endDateTarget.value;
     const isPast = value && new Date(value) < new Date(new Date().toDateString());
 
     if (isPast) {
-      this.element.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
-      this.element.classList.remove("bg-white", "border-gray-200");
-      this.element.querySelectorAll("a.group, a.group span").forEach((el) => grayOut(el));
+      this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
+      this.rowTarget.classList.remove("bg-white", "border-gray-200");
+      this.buttonTargets.forEach((btn) => {
+        btn.querySelectorAll("a.group, a.group span").forEach((el) => grayOut(el));
+      });
     } else {
-      this.element.classList.remove("bg-gray-100", "border-gray-300", "opacity-60");
-      this.element.classList.add("bg-white", "border-gray-200");
+      this.rowTarget.classList.remove("bg-gray-100", "border-gray-300", "opacity-60");
+      this.rowTarget.classList.add("bg-white", "border-gray-200");
       this._savedClasses.forEach(({ el, className }) => { el.className = className; });
     }
   }

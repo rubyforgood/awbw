@@ -153,6 +153,7 @@ bundle exec bundle-audit check --update
 - Controller naming: `[name]_controller.js`
 - Keep controllers focused and small
 - Use Tailwind CSS v4 utility classes
+- **Use Stimulus targets and data attributes** to reference DOM elements — avoid `this.element.querySelector` and direct DOM queries. Declare `static targets = [...]` and use `data-[controller]-target` attributes in views.
 
 ## Migrations
 
