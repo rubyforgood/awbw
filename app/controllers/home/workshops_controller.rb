@@ -2,7 +2,7 @@ module Home
   class WorkshopsController < ApplicationController
     def index
       authorize! :home
-      if params[:bust_cache] == "true" && current_user&.super_user?
+      if params[:bust_cache] == "true" && allowed_to?(:manage?, with: ApplicationPolicy)
         Rails.cache.delete("featured_and_publicly_featured_workshop_ids")
       end
 
