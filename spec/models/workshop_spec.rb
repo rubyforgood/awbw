@@ -63,7 +63,7 @@ RSpec.describe Workshop do
     it 'returns title + windows type (when present) + # + id' do
       record = create(:workshop, title: 'The best workshop in the world', windows_type: create(:windows_type, :adult))
 
-      expect(record.type_name).to eq "The best workshop in the world (ADULT) ##{record.id}"
+      expect(record.type_name).to eq "The best workshop in the world (Adult) ##{record.id}"
     end
 
     it 'omits the windows type part when there is no windows_type' do
@@ -95,7 +95,7 @@ RSpec.describe Workshop do
     it "returns title with windows type short_name" do
       record = create(:workshop, title: "Art Therapy", windows_type: create(:windows_type, :children))
 
-      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy (CHILDREN)" })
+      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy (Children)" })
     end
 
     it "returns just the title when no windows type" do
@@ -114,8 +114,8 @@ RSpec.describe Workshop do
       labels = Workshop.resolve_duplicate_labels([ w1, w2 ].map(&:remote_search_label))
 
       expect(labels).to contain_exactly(
-        { id: w1.id, label: "Art Therapy (ADULT)" },
-        { id: w2.id, label: "Music Therapy (ADULT)" }
+        { id: w1.id, label: "Art Therapy (Adult)" },
+        { id: w2.id, label: "Music Therapy (Adult)" }
       )
     end
 
@@ -128,9 +128,9 @@ RSpec.describe Workshop do
       labels = Workshop.resolve_duplicate_labels([ w1, w2, w3 ].map(&:remote_search_label))
 
       expect(labels).to contain_exactly(
-        { id: w1.id, label: "Art Therapy (ADULT) ##{w1.id}" },
-        { id: w2.id, label: "Art Therapy (ADULT) ##{w2.id}" },
-        { id: w3.id, label: "Music Therapy (ADULT)" }
+        { id: w1.id, label: "Art Therapy (Adult) ##{w1.id}" },
+        { id: w2.id, label: "Art Therapy (Adult) ##{w2.id}" },
+        { id: w3.id, label: "Music Therapy (Adult)" }
       )
     end
   end

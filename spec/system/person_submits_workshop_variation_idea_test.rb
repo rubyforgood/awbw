@@ -60,7 +60,7 @@ RSpec.describe "People can submit a workshop variation idea", type: :system do
 
       fill_in_variation_idea_form(
         workshop_title: "Healing Through Art",
-        windows_type_short_name: "ADULT",
+        windows_type_short_name: "Adult",
         organization: organization
       )
 
@@ -92,7 +92,7 @@ RSpec.describe "People can submit a workshop variation idea", type: :system do
 
       fill_in_variation_idea_form(
         workshop_title: "Creative Expression",
-        windows_type_short_name: "ADULT",
+        windows_type_short_name: "Adult",
         organization: organization
       )
 
@@ -125,7 +125,7 @@ RSpec.describe "People can submit a workshop variation idea", type: :system do
 
       fill_in_variation_idea_form(
         workshop_title: "Advanced Art Therapy",
-        windows_type_short_name: "ADULT",
+        windows_type_short_name: "Adult",
         organization: organization
       )
 
@@ -157,7 +157,7 @@ RSpec.describe "People can submit a workshop variation idea", type: :system do
 
       fill_in_variation_idea_form(
         workshop_title: "Mindful Drawing",
-        windows_type_short_name: "ADULT",
+        windows_type_short_name: "Adult",
         organization: organization
       )
 
@@ -187,7 +187,7 @@ RSpec.describe "People can submit a workshop variation idea", type: :system do
 
         fill_in "Variation name", with: "Single Org Variation"
         select_workshop_via_tom_select("Org Test Workshop")
-        select "ADULT", from: "workshop_variation_idea_windows_type_id"
+        select "Adult", from: "workshop_variation_idea_windows_type_id"
         fill_in_rhino_editor("<p>Variation for a single-org user.</p>")
         select "I would like my full name published with the story",
                from: "workshop_variation_idea_author_credit_preference"
@@ -215,7 +215,7 @@ RSpec.describe "People can submit a workshop variation idea", type: :system do
 
         fill_in "Variation name", with: "Multi Org Variation"
         select_workshop_via_tom_select("Org Test Workshop")
-        select "ADULT", from: "workshop_variation_idea_windows_type_id"
+        select "Adult", from: "workshop_variation_idea_windows_type_id"
         select_organization(organization)
         fill_in_rhino_editor("<p>Variation for a multi-org user.</p>")
         select "I would like my full name published with the story",
