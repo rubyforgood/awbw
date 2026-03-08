@@ -1365,7 +1365,7 @@ puts "Creating Tutorials…"
     publicly_visible: true,
     publicly_featured: true,
     position: 1,
-    is_tutorial: true,
+    is_instructional: true,
     is_podcast: false
   },
   {
@@ -1377,7 +1377,7 @@ puts "Creating Tutorials…"
     publicly_visible: true,
     publicly_featured: true,
     position: 2,
-    is_tutorial: true,
+    is_instructional: true,
     is_podcast: false
   },
   {
@@ -1389,7 +1389,7 @@ puts "Creating Tutorials…"
     publicly_visible: true,
     publicly_featured: true,
     position: 3,
-    is_tutorial: true,
+    is_instructional: true,
     is_podcast: false
   },
   {
@@ -1399,7 +1399,7 @@ puts "Creating Tutorials…"
     published: true,
     featured: true,
     position: 4,
-    is_tutorial: true,
+    is_instructional: true,
     is_podcast: false
   },
   {
@@ -1409,7 +1409,7 @@ puts "Creating Tutorials…"
     published: true,
     featured: true,
     position: 5,
-    is_tutorial: true,
+    is_instructional: true,
     is_podcast: false
   },
   {
@@ -1419,7 +1419,7 @@ puts "Creating Tutorials…"
     published: true,
     featured: true,
     position: 6,
-    is_tutorial: true,
+    is_instructional: true,
     is_podcast: false
   },
   {
@@ -1431,7 +1431,7 @@ puts "Creating Tutorials…"
     publicly_visible: true,
     publicly_featured: true,
     position: 7,
-    is_tutorial: false,
+    is_instructional: false,
     is_podcast: true
   },
   {
@@ -1442,7 +1442,7 @@ puts "Creating Tutorials…"
     featured: true,
     publicly_visible: true,
     position: 8,
-    is_tutorial: false,
+    is_instructional: false,
     is_podcast: true
   },
   {
@@ -1452,7 +1452,7 @@ puts "Creating Tutorials…"
     published: true,
     featured: false,
     position: 9,
-    is_tutorial: false,
+    is_instructional: false,
     is_podcast: true
   },
   {
@@ -1462,7 +1462,7 @@ puts "Creating Tutorials…"
     published: true,
     featured: true,
     position: 10,
-    is_tutorial: true,
+    is_instructional: true,
     is_podcast: true
   },
   {
@@ -1474,7 +1474,7 @@ puts "Creating Tutorials…"
     publicly_visible: true,
     publicly_featured: true,
     position: 11,
-    is_tutorial: true,
+    is_instructional: true,
     is_podcast: true
   },
   {
@@ -1484,7 +1484,7 @@ puts "Creating Tutorials…"
     published: true,
     featured: false,
     position: 12,
-    is_tutorial: false,
+    is_instructional: false,
     is_podcast: false
   },
   {
@@ -1494,7 +1494,7 @@ puts "Creating Tutorials…"
     published: true,
     featured: false,
     position: 13,
-    is_tutorial: false,
+    is_instructional: false,
     is_podcast: false
   }
 ].each do |video_data|
