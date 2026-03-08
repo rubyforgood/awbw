@@ -184,7 +184,7 @@ Rails.application.routes.draw do
     resources :stories, only: :index
     resources :community_news, only: :index
     resources :events, only: :index
-    resources :video_gallery, only: :index
+    resources :video_recordings, only: :index
   end
 
   root to: "home#index"

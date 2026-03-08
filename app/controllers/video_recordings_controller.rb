@@ -5,9 +5,12 @@ class VideoRecordingsController < ApplicationController
 
   def index
     authorize!
+    @video_type = params[:video_type].presence || "not_tutorials"
+    @hide_search = params[:hide_search].present?
+
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 6
-      base_scope = authorized_scope(VideoRecording.tutorials)
+      base_scope = filter_by_video_type(authorized_scope(VideoRecording.all))
       filtered = base_scope.search_by_params(params)
 
       @count_display = filtered.size == base_scope.size ? base_scope.size : "#{filtered.count}/#{base_scope.count}"
@@ -133,6 +136,17 @@ class VideoRecordingsController < ApplicationController
 
   def set_video_recording
     @video_recording = VideoRecording.find(params[:id])
+  end
+
+  def filter_by_video_type(scope)
+    case @video_type
+    when "tutorials"
+      scope.tutorials
+    when "not_tutorials"
+      scope.where(is_tutorial: false)
+    else
+      scope
+    end
   end
 
   # Strong parameters

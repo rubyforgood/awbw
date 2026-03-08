@@ -95,7 +95,7 @@
         <% end %>
       <% end %>
 
-      <%= link_to video_gallery_path,
+      <%= link_to video_recordings_path(video_type: "not_tutorials"),
                   class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
         <i class="fas fa-circle-play"></i>
         <span>Video Gallery</span>
@@ -213,7 +213,7 @@
         <span>Contact us</span>
       <% end %>
 
-      <%= link_to video_recordings_path,
+      <%= link_to video_recordings_path(video_type: "tutorials", hide_search: "true"),
                   class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
         <i class="fas fa-circle-play"></i>
         <span><%= VideoRecording.model_name.human(count: 2) %></span>

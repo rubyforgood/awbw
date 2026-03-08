@@ -4,6 +4,7 @@
                 method: :get,
                 data: { turbo_frame: "tutorials_results", controller: "searchable-checkbox" },
                 autocomplete: "off",
+                local: false,
                 class: "space-y-4" do |f| %>
     <div class="flex flex-wrap gap-4 items-end">
       <div class="flex-1 min-w-[200px]">
@@ -25,7 +26,7 @@
                    authenticated: user_signed_in?,
                    button_text: "All" %></div>
       <div><%= link_to "Clear filters",
-                  video_recordings_path,
+                  video_recordings_path(video_type: @video_type, hide_search: params[:hide_search]),
                   class: "btn btn-utility-outline whitespace-nowrap",
                   data: { action: "searchable-checkbox#clear collection#clearAndSubmit" } %></div>
     </div>
