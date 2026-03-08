@@ -1,7 +1,7 @@
 <div class="navbar-user-button relative" id="avatar" data-controller="dropdown">
   <% user = current_user %>
   <% person = user&.person %>
-  <% avatar_image = person&.avatar&.attached? ? person.avatar.variant(:thumbnail) : "missing.png" %>
+  <% has_avatar = person&.avatar&.attached? %>
 
   <button
     type="button"
@@ -12,9 +12,17 @@
     <span class="sr-only">Open user menu</span>
     <span class="absolute -inset-1.5"></span>
 
-    <%= image_tag avatar_image,
-                  id: "avatar-image",
-                  class: "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" %>
+    <% if has_avatar %>
+      <%= image_tag person.avatar.variant(:thumbnail),
+                    id: "avatar-image",
+                    class: "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" %>
+    <% else %>
+      <span id="avatar-image"
+            class="size-10 rounded-full bg-sky-200 text-sky-700 font-bold text-lg
+                   flex items-center justify-center border border-sky-300 shadow-sm">
+        <%= (person&.first_name.presence || user.first_name.presence || user.email).to_s.first.upcase %>
+      </span>
+    <% end %>
   </button>
 
   <!-- Dropdown menu -->

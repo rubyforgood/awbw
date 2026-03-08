@@ -41,7 +41,7 @@
           id: "#{param_name}_#{item.id}",
           class: "category-checkbox" %>
           <%= label_tag "#{param_name}_#{item.id}",
-          item.public_send(label_method).titleize,
+          item.public_send(label_method).humanize,
           class: "text-sm text-gray-700" %>
         </div>
       <% end %>

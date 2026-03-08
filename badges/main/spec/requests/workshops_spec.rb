@@ -128,7 +128,7 @@ RSpec.describe "/workshops", type: :request do
       it "handles RecordNotUnique gracefully" do
         workshop = create(:workshop)
 
-        allow_any_instance_of(Workshop).to receive(:update).and_raise(
+        allow_any_instance_of(Workshop).to receive(:save).and_raise(
           ActiveRecord::RecordNotUnique.new("Duplicate entry")
         )
 

@@ -22,7 +22,7 @@
         </div>
       </div>
 
-      <!-- Sectors & Windows Type -->
+      <!-- Sectors & Windows audience -->
       <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4 items-start">
         <div class="form-group space-y-4">
           <div class="font-semibold text-gray-700 mb-2">
@@ -50,7 +50,7 @@
 
         <div>
           <%= f.association :windows_type,
-                            label: "Windows Type",
+                            label: "Windows audience",
                             include_blank: true,
                             required: false,
                             input_html: {

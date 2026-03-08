@@ -302,10 +302,10 @@ puts "Creating CategoryTypes/Categories…"
 category_type_categories = [
   [ "AgeRange", "3-5" ],
   [ "AgeRange", "6-12" ],
-  [ "AgeRange", "Teen" ],
+  [ "AgeRange", "13-17" ],
   [ "AgeRange", "18+" ],
   [ "AgeRange", "Mixed-age groups" ],
-  [ "AgeRange", "Family Windows" ],
+  [ "AgeRange", "Family windows" ],
   # ["ArtType", "Boxes", 1],
   [ "ArtType", "Clay", 11 ],
   [ "ArtType", "Collage", 2 ],
@@ -416,6 +416,12 @@ category_type_categories.each do |category_type_name, category_name, _legacy_id|
     cat = ct.categories.create!(name: category_name, published: true)
   end
   cat.update!(published: true) unless cat.published?
+end
+
+puts "Setting AgeRange category positions…"
+age_range_order = [ "3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family windows" ]
+age_range_order.each_with_index do |name, i|
+  Category.where("LOWER(name) = LOWER(?)", name).update_all(position: i + 1)
 end
 
 puts "Creating StoryPopulation CategoryType…"

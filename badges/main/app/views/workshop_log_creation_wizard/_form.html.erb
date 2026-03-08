@@ -9,7 +9,7 @@
   <%= f.hidden_field :id %>
   <%= f.hidden_field :log_id, value: @old_report ? @old_report.id : nil %>
   <% if @windows_types && !workshop.id %>
-    <%= f.label 'New Workshop Windows Type', class: 'bold' %>
+    <%= f.label 'New workshop windows audience', class: 'bold' %>
     <%= f.select :windows_type_id, @windows_types.map { |wtype| [wtype.name, wtype.id]} %>
   <% end %>
   <br>

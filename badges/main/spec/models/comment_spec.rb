@@ -42,6 +42,13 @@ RSpec.describe Comment, type: :model do
       expect(comment.commentable).to eq(event_registration)
       expect(event_registration.comments).to include(comment)
     end
+
+    it 'can be associated with a Workshop' do
+      workshop = create(:workshop)
+      comment = create(:comment, commentable: workshop, body: "Workshop comment")
+      expect(comment.commentable).to eq(workshop)
+      expect(workshop.comments).to include(comment)
+    end
   end
 
   describe 'scopes' do

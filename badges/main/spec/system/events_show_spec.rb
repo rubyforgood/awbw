@@ -458,6 +458,7 @@ RSpec.describe "Event show page", type: :system do
       expect(page).not_to have_button("Register")
 
       # "View Registration" is a clickable link to the registration show page
+      expect(page).to have_link("View Registration")
       registration = EventRegistration.last
       expect(page).to have_link("View Registration", href: registration_ticket_path(registration.slug))
     end
