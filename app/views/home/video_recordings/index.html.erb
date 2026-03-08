@@ -6,7 +6,7 @@
       <% end %>
     </div>
     <div class="mt-6 text-right"><%= link_to "Browse all videos",
-                video_recordings_path(video_type: "not_tutorials"),
+                video_recordings_path(video_type: "all"),
                 data: { turbo_frame: "_top" },
                 class: "text-primary font-medium hover:underline" %></div>
   <% else %>
