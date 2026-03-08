@@ -42,7 +42,7 @@
                    authenticated: user_signed_in?,
                    button_text: "All" %></div>
       <div><%= link_to "Clear filters",
-                  video_recordings_path(video_type: @video_type, hide_search: params[:hide_search]),
+                  video_recordings_path(video_type: @video_type),
                   class: "btn btn-utility-outline whitespace-nowrap",
                   data: { action: "searchable-checkbox#clear collection#clearAndSubmit" } %></div>
     </div>
