@@ -40,9 +40,9 @@ class Tag
       path: -> { Rails.application.routes.url_helpers.quotes_path },
       klass: Quote
     },
-    tutorials: {
+    video_recordings: {
       icon: "🎬",
-      path: -> { Rails.application.routes.url_helpers.tutorials_path },
+      path: -> { Rails.application.routes.url_helpers.video_recordings_path },
       klass: VideoRecording
     }
   }.freeze

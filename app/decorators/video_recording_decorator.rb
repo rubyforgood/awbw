@@ -6,6 +6,3 @@ class VideoRecordingDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text
   end
 end
-
-# Backwards compatibility
-TutorialDecorator = VideoRecordingDecorator

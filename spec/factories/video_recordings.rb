@@ -44,10 +44,4 @@ FactoryBot.define do
       is_podcast { true }
     end
   end
-
-  # Backwards compatibility
-  factory :tutorial, class: 'VideoRecording', parent: :video_recording do
-    is_instructional { true }
-    is_podcast { false }
-  end
 end

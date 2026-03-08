@@ -82,6 +82,3 @@ class VideoRecording < ApplicationRecord
     resources
   end
 end
-
-# Backwards compatibility alias
-Tutorial = VideoRecording
