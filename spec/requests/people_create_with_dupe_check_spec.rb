@@ -54,6 +54,52 @@ RSpec.describe "POST /people with duplicate check", type: :request do
       expect(created.last_name).to eq("Doe")
       expect(created.bio).to eq("Full bio preserved")
     end
+
+    it "creates nested attributes when Create anyway is submitted" do
+      sector = create(:sector, published: true)
+
+      expect {
+        post people_path, params: {
+          skip_duplicate_check: "1",
+          person: {
+            first_name: "Jane",
+            last_name: "Doe",
+            email: "new@testmail.org",
+            created_by_id: admin.id,
+            updated_by_id: admin.id,
+            sectorable_items_attributes: { "0" => { sector_id: sector.id, is_leader: "1", _destroy: "false" } }
+          }
+        }
+      }.to change(Person, :count).by(1)
+
+      created = Person.last
+      expect(created.sectorable_items.count).to eq(1)
+      expect(created.sectorable_items.first.sector).to eq(sector)
+      expect(created.sectorable_items.first.is_leader).to be true
+    end
+  end
+
+  describe "POST /people/retry_new" do
+    let!(:sector) { create(:sector, published: true) }
+
+    it "re-renders the new form with nested attributes preserved" do
+      post retry_new_people_path, params: {
+        person: {
+          first_name: "Jane",
+          last_name: "Doe",
+          email: "new@testmail.org",
+          bio: "Test bio",
+          created_by_id: admin.id,
+          updated_by_id: admin.id,
+          sectorable_items_attributes: { "0" => { sector_id: sector.id, is_leader: "1", _destroy: "false" } }
+        }
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Jane")
+      expect(response.body).to include("Doe")
+      expect(response.body).to include(sector.name)
+    end
   end
 
   context "when no duplicates are found" do

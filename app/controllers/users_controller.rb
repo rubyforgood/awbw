@@ -61,6 +61,13 @@ class UsersController < ApplicationController
     set_form_variables
   end
 
+  def retry_new
+    @user = User.new(user_params)
+    authorize! @user
+    set_form_variables
+    render :new
+  end
+
   def edit
     @user = User.includes(comments: [ :created_by, :updated_by ]).find(params[:id])
     authorize! @user

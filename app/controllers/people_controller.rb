@@ -75,6 +75,13 @@ class PeopleController < ApplicationController
     set_form_variables
   end
 
+  def retry_new
+    @person = Person.new(person_params.except(:user_attributes))
+    authorize! @person
+    set_form_variables
+    render :new
+  end
+
   def edit
     @person = Person.includes(
       :user,

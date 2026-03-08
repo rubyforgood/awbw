@@ -68,7 +68,13 @@
 
       <div class="flex flex-col items-center gap-3">
         <div class="flex gap-3">
-          <%= link_to "Go back", "javascript:history.back()", class: "btn btn-secondary-outline" %>
+          <%= form_with url: retry_new_users_path, method: :post, data: { turbo: false } do %>
+            <%= hidden_fields_for_params(@stored_params, "user") %>
+            <% if @person_id.present? %>
+              <input type="hidden" name="person_id" value="<%= @person_id %>">
+            <% end %>
+            <button type="submit" class="btn btn-secondary-outline">Go back</button>
+          <% end %>
 
           <% unless @blocked %>
             <%= form_with url: users_path, method: :post, data: { turbo: false } do %>
