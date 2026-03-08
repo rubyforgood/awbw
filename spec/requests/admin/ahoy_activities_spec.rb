@@ -160,7 +160,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by event name" do
-        get index_path, params: { name: "auth.login", time_period: "all_time" }
+        get index_path, params: { event_name: "auth.login", time_period: "all_time" }
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("auth.login")
@@ -168,7 +168,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by partial event name" do
-        get index_path, params: { name: "bookmark", time_period: "all_time" }
+        get index_path, params: { event_name: "bookmark", time_period: "all_time" }
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("create.bookmark")

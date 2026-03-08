@@ -24,8 +24,8 @@ module Admin
       end
 
       # Filter by event name
-      if params[:name].present?
-        scope = scope.where("ahoy_events.name LIKE ?", "%#{Ahoy::Event.sanitize_sql_like(params[:name])}%")
+      if params[:event_name].present?
+        scope = scope.where("ahoy_events.name LIKE ?", "%#{Ahoy::Event.sanitize_sql_like(params[:event_name])}%")
       end
 
       # Filter by user (if viewing specific user activity)
