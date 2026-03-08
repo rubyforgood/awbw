@@ -39,9 +39,7 @@
       </div>
     </div>
 
-    <% unless @hide_search %>
-      <%= render "search_boxes" %>
-    <% end %>
+    <%= render "search_boxes" %>
 
     <% result_src = video_recordings_path + "?" + request.query_string %>
 

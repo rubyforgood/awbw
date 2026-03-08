@@ -5,8 +5,8 @@ class VideoRecordingsController < ApplicationController
 
   def index
     authorize!
-    @video_type = params[:video_type].presence || "not_tutorials"
     @hide_search = params[:hide_search].present?
+    @video_type = params[:video_type].presence || (@hide_search ? "tutorials" : "not_tutorials")
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 6
