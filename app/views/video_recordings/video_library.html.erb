@@ -1,0 +1,44 @@
+<% content_for(:page_bg_class, "public") %>
+<%= render "shared/public_welcome_banner" %>
+
+<div class="w-full max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tutorials) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="w-full">
+    <div class="flex items-start justify-between mb-6">
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">
+          Video Gallery
+        </h2>
+
+        <p class="text-gray-600 max-w-2xl">
+          <% if user_signed_in? %>
+            Inspiring videos from our community, podcasts, and featured content
+          <% else %>
+            A gallery of videos showcasing our community's impact and perspectives
+          <% end %>
+        </p>
+      </div>
+
+      <div class="text-right">
+        <% if allowed_to?(:new?, VideoRecording) %>
+          <%= link_to "New #{VideoRecording.model_name.human.downcase}",
+                       new_video_recording_path,
+                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "search_boxes" %>
+
+    <% result_src = video_library_path + "?" + request.query_string %>
+
+    <%= turbo_frame_tag "video_library_results", src: result_src  do %>
+      <div class="bg-white rounded-lg shadow-md p-6 mt-4 animate-pulse">
+        <div class="space-y-4">
+          <% 3.times do %>
+            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

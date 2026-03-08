@@ -1364,7 +1364,9 @@ puts "Creating Tutorials…"
     featured: true,
     publicly_visible: true,
     publicly_featured: true,
-    position: 1
+    position: 1,
+    is_tutorial: true,
+    is_podcast: false
   },
   {
     title: "Trauma-Informed Facilitation Basics",
@@ -1374,7 +1376,9 @@ puts "Creating Tutorials…"
     featured: true,
     publicly_visible: true,
     publicly_featured: true,
-    position: 2
+    position: 2,
+    is_tutorial: true,
+    is_podcast: false
   },
   {
     title: "Creating Safe Spaces for Art Expression",
@@ -1384,7 +1388,9 @@ puts "Creating Tutorials…"
     featured: true,
     publicly_visible: true,
     publicly_featured: true,
-    position: 3
+    position: 3,
+    is_tutorial: true,
+    is_podcast: false
   },
   {
     title: "Working with Children and Youth",
@@ -1392,7 +1398,9 @@ puts "Creating Tutorials…"
     youtube_url: "https://www.youtube.com/watch?v=kJQP7kiw5Fk",
     published: true,
     featured: true,
-    position: 4
+    position: 4,
+    is_tutorial: true,
+    is_podcast: false
   },
   {
     title: "Art Materials and Supply Management",
@@ -1400,7 +1408,9 @@ puts "Creating Tutorials…"
     youtube_url: "https://www.youtube.com/watch?v=RgKAFK5djSk",
     published: true,
     featured: true,
-    position: 5
+    position: 5,
+    is_tutorial: true,
+    is_podcast: false
   },
   {
     title: "Monthly Reporting Walkthrough",
@@ -1408,10 +1418,87 @@ puts "Creating Tutorials…"
     youtube_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
     published: true,
     featured: true,
-    position: 6
+    position: 6,
+    is_tutorial: true,
+    is_podcast: false
+  },
+  {
+    title: "Leadership Podcast: Stories from the Field",
+    rhino_body: "Hear from experienced workshop leaders about their journey and insights.",
+    youtube_url: "https://www.youtube.com/watch?v=test1234567",
+    published: true,
+    featured: true,
+    publicly_visible: true,
+    publicly_featured: true,
+    position: 7,
+    is_tutorial: false,
+    is_podcast: true
+  },
+  {
+    title: "Community Voices: Impact Stories",
+    rhino_body: "Inspiring stories from survivors and facilitators about the impact of AWBW programs.",
+    youtube_url: "https://www.youtube.com/watch?v=test2345678",
+    published: true,
+    featured: true,
+    publicly_visible: true,
+    position: 8,
+    is_tutorial: false,
+    is_podcast: true
+  },
+  {
+    title: "Art and Healing: A Conversation",
+    rhino_body: "A discussion with experts about the intersection of art, trauma, and healing.",
+    youtube_url: "https://www.youtube.com/watch?v=test3456789",
+    published: true,
+    featured: false,
+    position: 9,
+    is_tutorial: false,
+    is_podcast: true
+  },
+  {
+    title: "Workshop Highlights: Spring 2024",
+    rhino_body: "A collection of footage and stories from recent workshops across the network.",
+    youtube_url: "https://www.youtube.com/watch?v=testABCDEFG",
+    published: true,
+    featured: true,
+    position: 10,
+    is_tutorial: true,
+    is_podcast: true
+  },
+  {
+    title: "Organizational Highlights: AWBW 30 Years",
+    rhino_body: "A retrospective celebrating 30 years of AWBW's impact and growth.",
+    youtube_url: "https://www.youtube.com/watch?v=testXYZ1234",
+    published: true,
+    featured: true,
+    publicly_visible: true,
+    publicly_featured: true,
+    position: 11,
+    is_tutorial: true,
+    is_podcast: true
+  },
+  {
+    title: "Behind the Scenes: How We Organize",
+    rhino_body: "An inside look at the AWBW organization and our mission.",
+    youtube_url: "https://www.youtube.com/watch?v=testBEHIND1",
+    published: true,
+    featured: false,
+    position: 12,
+    is_tutorial: false,
+    is_podcast: false
+  },
+  {
+    title: "Partner Spotlight: Working Together",
+    rhino_body: "Featuring interviews with partner organizations and their work.",
+    youtube_url: "https://www.youtube.com/watch?v=testSPOTLI1",
+    published: true,
+    featured: false,
+    position: 13,
+    is_tutorial: false,
+    is_podcast: false
   }
-].each do |tutorial_data|
-  Tutorial.where(title: tutorial_data[:title]).first_or_create!(tutorial_data)
+].each do |video_data|
+  VideoRecording.where(title: video_data[:title]).first_or_create!(video_data)
 end
 
 puts "Creating Bookmarks for seed users…"

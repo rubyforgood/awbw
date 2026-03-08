@@ -48,7 +48,7 @@ class VideoRecordingsController < ApplicationController
   end
 
   def new
-    @video_recording = Tutorial.new.decorate
+    @video_recording = VideoRecording.new.decorate
     authorize! @video_recording
     set_form_variables
   end
@@ -60,7 +60,7 @@ class VideoRecordingsController < ApplicationController
   end
 
   def create
-    @video_recording = Tutorial.new(video_recording_params)
+    @video_recording = VideoRecording.new(video_recording_params)
     authorize! @video_recording
 
     success = false
@@ -111,7 +111,7 @@ class VideoRecordingsController < ApplicationController
   def destroy
     authorize! @video_recording
     @video_recording.destroy!
-    redirect_to tutorials_path, notice: "VideoRecording was successfully destroyed."
+    redirect_to video_recordings_path, notice: "VideoRecording was successfully destroyed."
   end
 
   # Optional hooks for setting variables for forms or index
