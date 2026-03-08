@@ -947,22 +947,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_180000) do
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
   end
 
-  create_table "tutorials", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "body"
-    t.datetime "created_at", null: false
-    t.boolean "featured", default: false, null: false
-    t.integer "position", default: 10, null: false
-    t.boolean "publicly_featured", default: false, null: false
-    t.boolean "publicly_visible", default: false, null: false
-    t.boolean "published", default: false, null: false
-    t.string "title", null: false
-    t.datetime "updated_at", null: false
-    t.string "youtube_url"
-    t.index ["featured"], name: "index_tutorials_on_featured"
-    t.index ["published"], name: "index_tutorials_on_published"
-    t.index ["title"], name: "index_tutorials_on_title", unique: true
-  end
-
   create_table "user_form_form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.integer "form_field_id", null: false
@@ -1056,6 +1040,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_180000) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
     t.index ["updated_by_id"], name: "index_users_on_updated_by_id"
     t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
+  end
+
+  create_table "video_recordings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.boolean "featured", default: false, null: false
+    t.boolean "is_podcast", default: false, null: false
+    t.boolean "is_tutorial", default: true, null: false
+    t.integer "position", default: 10, null: false
+    t.boolean "publicly_featured", default: false, null: false
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "youtube_url"
+    t.index ["featured"], name: "index_video_recordings_on_featured"
+    t.index ["is_podcast"], name: "index_video_recordings_on_is_podcast"
+    t.index ["is_tutorial"], name: "index_video_recordings_on_is_tutorial"
+    t.index ["published"], name: "index_video_recordings_on_published"
+    t.index ["title"], name: "index_video_recordings_on_title", unique: true
   end
 
   create_table "windows_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
