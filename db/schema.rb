@@ -1046,8 +1046,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_180000) do
     t.text "body"
     t.datetime "created_at", null: false
     t.boolean "featured", default: false, null: false
+    t.boolean "is_instructional", default: true, null: false
     t.boolean "is_podcast", default: false, null: false
-    t.boolean "is_tutorial", default: true, null: false
     t.integer "position", default: 10, null: false
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
@@ -1056,8 +1056,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_180000) do
     t.datetime "updated_at", null: false
     t.string "youtube_url"
     t.index ["featured"], name: "index_video_recordings_on_featured"
+    t.index ["is_instructional"], name: "index_video_recordings_on_is_instructional"
     t.index ["is_podcast"], name: "index_video_recordings_on_is_podcast"
-    t.index ["is_tutorial"], name: "index_video_recordings_on_is_tutorial"
     t.index ["published"], name: "index_video_recordings_on_published"
     t.index ["title"], name: "index_video_recordings_on_title", unique: true
   end
