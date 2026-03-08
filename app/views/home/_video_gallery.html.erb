@@ -6,7 +6,7 @@
                title: title,
                subtitle: "Inspiration in motion" %>
 
-    <%= turbo_frame_tag "home_video_gallery", src: home_video_gallery_index_path, loading: :lazy, data: { controller: "prefetch-lazy" } do %>
+    <%= turbo_frame_tag "home_video_gallery", src: home_video_recordings_index_path, loading: :lazy, data: { controller: "prefetch-lazy" } do %>
       <%= render "video_gallery_skeleton" %>
     <% end %>
   </div>
