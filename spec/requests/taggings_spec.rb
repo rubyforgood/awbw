@@ -14,7 +14,8 @@ RSpec.describe "Taggings index", type: :request do
   let!(:workshop) { create(:workshop, :published, title: "Art for Healing") }
 
   before do
-    # Make the sector + category actually appear via joins
+    # Make the sectors + category actually appear via joins
+    create(:sectorable_item, sector: sector_1, sectorable: workshop)
     create(:sectorable_item, sector: sector_2, sectorable: workshop)
     create(:categorizable_item, category: category, categorizable: workshop)
 
