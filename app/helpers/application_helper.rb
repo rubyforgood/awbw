@@ -590,4 +590,3 @@ module ApplicationHelper
     story_idea.workshop_id.nil? && story_idea.external_workshop_title.present?
   end
 end
-

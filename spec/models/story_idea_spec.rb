@@ -56,12 +56,12 @@ RSpec.describe StoryIdea, type: :model do
     end
 
     it "returns nil when both workshop and external_workshop_title are absent" do
-      idea = create(:story_idea, workshop: nil, external_workshop_title: nil)
+      idea = build(:story_idea, workshop: nil, external_workshop_title: nil)
       expect(idea.workshop_title).to be_nil
     end
 
     it "returns nil when external_workshop_title is blank" do
-      idea = create(:story_idea, workshop: nil, external_workshop_title: "")
+      idea = build(:story_idea, workshop: nil, external_workshop_title: "")
       expect(idea.workshop_title).to be_nil
     end
   end
@@ -74,7 +74,9 @@ RSpec.describe StoryIdea, type: :model do
     end
 
     it "omits workshop section when no workshop or external title" do
-      idea = create(:story_idea, workshop: nil, external_workshop_title: nil)
+      idea = create(:story_idea, workshop: nil, external_workshop_title: "Temp")
+      idea.update_column(:external_workshop_title, nil)
+      idea.reload
       expect(idea.full_name).not_to include(":")
       expect(idea.full_name).to include(idea.author_credit)
     end
