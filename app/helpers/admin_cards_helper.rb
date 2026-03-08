@@ -52,7 +52,7 @@ module AdminCardsHelper
                  intensity: 100,
                  title: "Sectors",
                  params: { published: true }),
-      custom_card("Windows types", windows_types_path, icon: "🪟")
+      custom_card("Windows audiences", windows_types_path, icon: "🪟")
     ]
   end
 

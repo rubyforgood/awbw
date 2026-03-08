@@ -226,10 +226,10 @@ RSpec.describe "stories/new", type: :view do
       expect(rendered).to include("Adults")
     end
 
-    it "displays general category type with titleized name" do
+    it "displays general category type with sentence-cased name" do
       render
 
-      expect(rendered).to include("Age Range")
+      expect(rendered).to include("Age range")
     end
 
     it "displays general category checkboxes" do
@@ -244,7 +244,7 @@ RSpec.describe "stories/new", type: :view do
       render
 
       population_pos = rendered.index("Who is this story about?")
-      age_range_pos = rendered.index("Age Range")
+      age_range_pos = rendered.index("Age range")
       expect(population_pos).to be < age_range_pos
     end
   end
