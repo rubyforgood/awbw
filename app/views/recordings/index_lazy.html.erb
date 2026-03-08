@@ -1,9 +1,9 @@
 <%= turbo_frame_tag "tutorials_results" do %>
   <div class="mt-4">
     <div class="overflow-x-auto">
-        <% if @youtube_videos.any? %>
+        <% if @video_recordings.any? %>
           <%= tag.div class: "grid grid-cols-1 lg:grid-cols-2 gap-4" do %>
-            <% @youtube_videos.each_with_index do |tutorial, idx| %>
+            <% @video_recordings.each_with_index do |tutorial, idx| %>
               <%= tag.div class: "bg-white shadow-md rounded-md pt-6 px-2 pb-2" do %>
                 <%= render "tutorial", tutorial: tutorial %>
               <% end %>
@@ -12,7 +12,7 @@
 
           <!-- Pagination -->
           <div class="pagination flex justify-center mt-12">
-            <%= tailwind_paginate @youtube_videos %>
+            <%= tailwind_paginate @video_recordings %>
           </div>
         <% else %>
           <div class="text-gray-500 italic">

@@ -159,9 +159,9 @@ Rails.application.routes.draw do
   resources :story_ideas
   resources :stories
   resources :story_shares, only: [ :index, :show ]
-  resources :youtube_videos
-  resources :tutorials, to: 'youtube_videos#index'
-  get "video_library", to: "youtube_videos#video_library", as: :video_library
+  resources :video_recordings
+  resources :tutorials, to: 'video_recordings#index'
+  get "video_library", to: "video_recordings#video_library", as: :video_library
   resources :user_forms
   resources :windows_types
   resources :workshop_ideas
