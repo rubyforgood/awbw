@@ -8,7 +8,13 @@ class EventPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || record.publicly_visible? || (authenticated? && record.published?)
+    return true if admin?
+
+    if record.ended?
+      authenticated? && record.published? && record.actively_registered?(user.person)
+    else
+      record.publicly_visible? || (authenticated? && record.published?)
+    end
   end
 
   def register?
@@ -39,15 +45,29 @@ class EventPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    if authenticated? # logged in users can see events they are registered for even if registration is closed
-      relation.left_outer_joins(:registrants)
-              .published
-              .where("registration_close_date IS NULL OR registration_close_date >= ? OR people.id = ?", Time.current, user.person_id)
-              .distinct
+
+    if authenticated?
+      relation
+        .joins(
+          "LEFT OUTER JOIN event_registrations
+             ON event_registrations.event_id = events.id
+             AND event_registrations.status IN ('registered', 'attended', 'incomplete_attendance')
+           LEFT OUTER JOIN people
+             ON people.id = event_registrations.registrant_id"
+        )
+        .published
+        .where(
+          "(events.end_date >= :now AND (events.registration_close_date IS NULL OR events.registration_close_date >= :now))
+           OR people.id = :person_id",
+          now: Time.current,
+          person_id: user.person_id
+        )
+        .distinct
     else
       relation.publicly_visible
               .published
-              .where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current)
+              .where("events.end_date >= ?", Time.current)
+              .where("events.registration_close_date IS NULL OR events.registration_close_date >= ?", Time.current)
     end
   end
 end
