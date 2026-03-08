@@ -1,17 +1,17 @@
-class RecordingsController < ApplicationController
+class YoutubeVideosController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
-  before_action :set_recording, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_youtube_video, only: [ :show, :edit, :update, :destroy ]
 
   def index
     authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 6
-      base_scope = authorized_scope(Recording.tutorials)
+      base_scope = authorized_scope(YoutubeVideo.tutorials)
       filtered = base_scope.search_by_params(params)
 
       @count_display = filtered.size == base_scope.size ? base_scope.size : "#{filtered.count}/#{base_scope.count}"
-      @recordings = filtered.order(:position).paginate(page: params[:page], per_page: per_page).decorate
+      @youtube_videos = filtered.order(:position).paginate(page: params[:page], per_page: per_page).decorate
 
       render :index_lazy
     else
@@ -26,7 +26,7 @@ class RecordingsController < ApplicationController
     authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 6
-      base_scope = authorized_scope(Recording.all)
+      base_scope = authorized_scope(YoutubeVideo.all)
       filtered = base_scope.search_by_params(params)
 
       @count_display = filtered.size == base_scope.size ? base_scope.size : "#{filtered.count}/#{base_scope.count}"
@@ -42,32 +42,32 @@ class RecordingsController < ApplicationController
   end
 
   def show
-    @recording = @recording.decorate
-    authorize! @recording
-    track_view(@recording)
+    @youtube_video = @youtube_video.decorate
+    authorize! @youtube_video
+    track_view(@youtube_video)
   end
 
   def new
-    @recording = Tutorial.new.decorate
-    authorize! @recording
+    @youtube_video = Tutorial.new.decorate
+    authorize! @youtube_video
     set_form_variables
   end
 
   def edit
-    @recording = @recording.decorate
-    authorize! @recording
+    @youtube_video = @youtube_video.decorate
+    authorize! @youtube_video
     set_form_variables
   end
 
   def create
-    @recording = Tutorial.new(recording_params)
-    authorize! @recording
+    @youtube_video = Tutorial.new(youtube_video_params)
+    authorize! @youtube_video
 
     success = false
 
-    Recording.transaction do
-      if @recording.save
-        assign_associations(@recording)
+    YoutubeVideo.transaction do
+      if @youtube_video.save
+        assign_associations(@youtube_video)
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
@@ -76,22 +76,22 @@ class RecordingsController < ApplicationController
     end
 
     if success
-      redirect_to @recording, notice: "Recording was successfully created."
+      redirect_to @youtube_video, notice: "YoutubeVideo was successfully created."
     else
-      @recording = @recording.decorate
+      @youtube_video = @youtube_video.decorate
       set_form_variables
       render :new, status: :unprocessable_content
     end
   end
 
   def update
-    authorize! @recording
+    authorize! @youtube_video
 
     success = false
 
-    Recording.transaction do
-      if @recording.update(recording_params)
-        assign_associations(@recording)
+    YoutubeVideo.transaction do
+      if @youtube_video.update(youtube_video_params)
+        assign_associations(@youtube_video)
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
@@ -100,24 +100,24 @@ class RecordingsController < ApplicationController
     end
 
     if success
-      redirect_to @recording, notice: "Recording was successfully updated.", status: :see_other
+      redirect_to @youtube_video, notice: "YoutubeVideo was successfully updated.", status: :see_other
     else
-      @recording = @recording.decorate
+      @youtube_video = @youtube_video.decorate
       set_form_variables
       render :edit, status: :unprocessable_content
     end
   end
 
   def destroy
-    authorize! @recording
-    @recording.destroy!
-    redirect_to tutorials_path, notice: "Recording was successfully destroyed."
+    authorize! @youtube_video
+    @youtube_video.destroy!
+    redirect_to tutorials_path, notice: "YoutubeVideo was successfully destroyed."
   end
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @recording.build_primary_asset if @recording.primary_asset.blank?
-    @recording.gallery_assets.build
+    @youtube_video.build_primary_asset if @youtube_video.primary_asset.blank?
+    @youtube_video.gallery_assets.build
     @categories_grouped =
       Category
         .includes(:category_type)
@@ -131,13 +131,13 @@ class RecordingsController < ApplicationController
 
   private
 
-  def set_recording
-    @recording = Recording.find(params[:id])
+  def set_youtube_video
+    @youtube_video = YoutubeVideo.find(params[:id])
   end
 
   # Strong parameters
-  def recording_params
-    params.require(:recording).permit(
+  def youtube_video_params
+    params.require(:youtube_video).permit(
       :title, :body, :rhino_body, :position, :youtube_url, :is_tutorial, :is_podcast,
       :featured, :published, :publicly_visible, :publicly_featured,
       category_ids: [],

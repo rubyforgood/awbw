@@ -1,5 +1,5 @@
-class Recording < ApplicationRecord
-  self.table_name = 'recordings'
+class YoutubeVideo < ApplicationRecord
+  self.table_name = 'youtube_videos'
 
   include Featureable, Publishable, TagFilterable, Trendable, RichTextSearchable
 
@@ -44,7 +44,7 @@ class Recording < ApplicationRecord
     ids = Array(sector_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:sectorable_items)
-      .where(sectorable_items: { sectorable_type: "Recording", sector_id: ids })
+      .where(sectorable_items: { sectorable_type: "YoutubeVideo", sector_id: ids })
       .distinct
   }
 
@@ -52,7 +52,7 @@ class Recording < ApplicationRecord
     ids = Array(category_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:categorizable_items)
-      .where(categorizable_items: { categorizable_type: "Recording", category_id: ids })
+      .where(categorizable_items: { categorizable_type: "YoutubeVideo", category_id: ids })
       .distinct
   }
 
@@ -84,4 +84,4 @@ class Recording < ApplicationRecord
 end
 
 # Backwards compatibility alias
-Tutorial = Recording
+Tutorial = YoutubeVideo

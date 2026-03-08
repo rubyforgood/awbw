@@ -213,10 +213,10 @@
         <span>Contact us</span>
       <% end %>
 
-      <%= link_to recordings_path,
+      <%= link_to youtube_videos_path,
                   class: "flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
         <i class="fas fa-circle-play"></i>
-        <span><%= Recording.model_name.human(count: 2) %></span>
+        <span><%= YoutubeVideo.model_name.human(count: 2) %></span>
       <% end %>
 
       <%= link_to "https://www.awbw.org", target: "_blank", rel: "noopener noreferrer",

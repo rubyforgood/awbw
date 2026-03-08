@@ -4,8 +4,8 @@ module Home
 
     def index
       authorize! :home
-      base = Recording.where.not(youtube_url: [ nil, "" ]).order(position: :asc, created_at: :desc)
-      @recordings = authorized_scope(base, with: HomePolicy).decorate
+      base = YoutubeVideo.where.not(youtube_url: [ nil, "" ]).order(position: :asc, created_at: :desc)
+      @youtube_videos = authorized_scope(base, with: HomePolicy).decorate
 
       render "home/video_library/index"
     end

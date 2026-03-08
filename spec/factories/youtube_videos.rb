@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :recording do
+  factory :youtube_video do
     title { "MyString" }
     body { "MyText" }
     featured { false }
@@ -46,7 +46,7 @@ FactoryBot.define do
   end
 
   # Backwards compatibility
-  factory :tutorial, class: 'Recording', parent: :recording do
+  factory :tutorial, class: 'YoutubeVideo', parent: :youtube_video do
     is_tutorial { true }
     is_podcast { false }
   end

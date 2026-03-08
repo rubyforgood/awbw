@@ -1,4 +1,4 @@
-class RecordingPolicy < ApplicationPolicy
+class YoutubeVideoPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   def index?
