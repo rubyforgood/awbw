@@ -5,7 +5,7 @@
          style="border-left: 4px solid <%= f.object.facilitator? ? '#e879f9' : '#d1d5db' %>"
          <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
          data-inactive-toggle-target="row">
-      <div style="width: 350px; min-width: 350px; flex-shrink: 0;" data-inactive-toggle-target="button">
+      <div style="width: 350px; min-width: 350px; flex-shrink: 0;" data-inactive-toggle-target="profileButton">
         <% if f.object.persisted? && f.object.person.present? %>
           <label class="block text-sm font-medium text-gray-700 mb-1">Person</label>
           <% show_email = f.object.person.profile_show_email? || allowed_to?(:manage?, Person) %>

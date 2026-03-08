@@ -15,12 +15,12 @@ function grayOut(el) {
 }
 
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "button"]
+  static targets = ["endDate", "title", "row", "profileButton"]
 
   connect() {
     // Save original classes for profile buttons and their styled children
     this._savedClasses = [];
-    this.buttonTargets.forEach((btn) => {
+    this.profileButtonTargets.forEach((btn) => {
       btn.querySelectorAll("a.group, a.group span").forEach((el) => {
         this._savedClasses.push({ el, className: el.className });
       });
@@ -48,7 +48,7 @@ export default class extends Controller {
     if (isPast) {
       this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
       this.rowTarget.classList.remove("bg-white", "border-gray-200");
-      this.buttonTargets.forEach((btn) => {
+      this.profileButtonTargets.forEach((btn) => {
         btn.querySelectorAll("a.group, a.group span").forEach((el) => grayOut(el));
       });
     } else {
