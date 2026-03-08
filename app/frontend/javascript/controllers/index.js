@@ -66,6 +66,9 @@ application.register("rhino-source", RhinoSourceController)
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)
 
+import SearchableCheckboxController from "./searchable_checkbox_controller"
+application.register("searchable-checkbox", SearchableCheckboxController)
+
 import SearchableSelectController from "./searchable_select_controller"
 application.register("searchable-select", SearchableSelectController)
 
@@ -98,3 +101,4 @@ application.register("toggle-user-icon", ToggleUserIconController)
 
 import RemoteSelectController from "./remote_select_controller"
 application.register("remote-select", RemoteSelectController)
+
