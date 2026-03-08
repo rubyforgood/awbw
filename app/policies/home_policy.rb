@@ -3,6 +3,10 @@ class HomePolicy < ApplicationPolicy
     true
   end
 
+  def home?
+    true
+  end
+
   relation_scope do |relation|
     if authenticated?
       relation.featured
