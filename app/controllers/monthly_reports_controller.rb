@@ -3,12 +3,12 @@
 class MonthlyReportsController < ApplicationController
   def monthly_select_type
     authorize! :monthly_report, to: :monthly_select_type?
-    check_feature_fag
+    check_feature_flag
   end
 
   def monthly
     authorize! :monthly_report, to: :monthly?
-    check_feature_fag
+    check_feature_flag
     return if performed?
 
     build_month_and_year
@@ -29,7 +29,7 @@ class MonthlyReportsController < ApplicationController
   end
 
   def create
-    check_feature_fag
+    check_feature_flag
     build_new_report
     authorize! @report
 
@@ -60,7 +60,7 @@ class MonthlyReportsController < ApplicationController
   end
 
   def edit
-    check_feature_fag
+    check_feature_flag
     build_month_and_year
     find_form_builder
     @report = Report.find(params[:id])
@@ -76,7 +76,7 @@ class MonthlyReportsController < ApplicationController
   end
 
   def update
-    check_feature_fag
+    check_feature_flag
     @report = MonthlyReport.find params[:id]
     authorize! @report
 
@@ -175,7 +175,7 @@ class MonthlyReportsController < ApplicationController
     @report.date = build_date
   end
 
-  def check_feature_fag
+  def check_feature_flag
     redirect_to "/" if show_feature?(:no_monthly_reports)
   end
 
