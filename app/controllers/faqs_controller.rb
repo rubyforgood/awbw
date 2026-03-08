@@ -1,4 +1,5 @@
 class FaqsController < ApplicationController
+  include AhoyTracking
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_faq, only: [ :show, :edit, :update, :destroy ]
 
@@ -8,10 +9,12 @@ class FaqsController < ApplicationController
     @faqs = faqs.search_by_params(params.to_unsafe_h.slice("query", "published"))
               .by_position
               .page(params[:page])
+    track_index_intent(Faq, @faqs, params)
   end
 
   def show
     authorize! @faq
+    track_view(@faq)
   end
 
   def new
