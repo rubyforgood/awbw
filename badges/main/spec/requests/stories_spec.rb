@@ -91,8 +91,8 @@ RSpec.describe "/stories", type: :request do
 
         let(:org_alpha) { create(:organization, name: "Alpha Org") }
         let(:org_zulu) { create(:organization, name: "Zulu Org") }
-        let(:wt_adult) { create(:windows_type, short_name: "ADULT") }
-        let(:wt_children) { create(:windows_type, short_name: "CHILDREN") }
+        let(:wt_adult) { create(:windows_type, short_name: "Adult") }
+        let(:wt_children) { create(:windows_type, short_name: "Children") }
         let(:ws_art) { create(:workshop, title: "Art Workshop") }
         let(:ws_music) { create(:workshop, title: "Music Workshop") }
 

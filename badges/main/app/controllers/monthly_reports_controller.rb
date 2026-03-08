@@ -209,7 +209,7 @@ class MonthlyReportsController < ApplicationController
   end
 
   def find_combined_workshop_logs(agency_id)
-    combined_windows_type = WindowsType.where(short_name: "COMBINED").first
+    combined_windows_type = WindowsType.where(short_name: "Combined").first
     @combined_workshop_logs = current_user.organization_workshop_logs(
     @report.date, combined_windows_type, agency_id)
   end

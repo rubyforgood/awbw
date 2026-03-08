@@ -273,7 +273,7 @@
       <% else %>
         <% f.object.affiliations.each do |affiliation| %>
           <div class="ps-6 mb-2">
-            <li><%= affiliation.title || affiliation.position %> - <%= affiliation.persisted? ? (link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline") : affiliation.organization&.name %></li>
+            <li><%= affiliation.title %> - <%= affiliation.persisted? ? (link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline") : affiliation.organization&.name %></li>
           </div>
         <% end %>
       <% end %>

@@ -8,7 +8,7 @@ class WorkshopLogCreationWizardController < ApplicationController
     authorize! :workshop_log_creation_wizard, to: :show?
     @user = current_user
     @agencies = current_user.organizations
-    windows_type_id = params[:windows_type_id] || WindowsType.where(short_name: "COMBINED")
+    windows_type_id = params[:windows_type_id] || WindowsType.where(short_name: "Combined")
     @windows_type = WindowsType.find(windows_type_id) if windows_type_id
     send(step)
     render_wizard
