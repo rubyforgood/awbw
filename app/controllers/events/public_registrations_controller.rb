@@ -80,7 +80,7 @@ module Events
           checkout_session = create_stripe_checkout_session(registration, result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
-          redirect_to registration_ticket_path(registration.slug),
+          redirect_to registration_ticket_path(registration.slug, reg: params[:reg].presence),
                       notice: "You have been successfully registered!"
         end
       else
@@ -165,8 +165,8 @@ module Events
           },
           quantity: 1
         } ],
-        success_url: registration_ticket_url(registration.slug, checkout: "success"),
-        cancel_url: registration_ticket_url(registration.slug, checkout: "cancelled")
+        success_url: registration_ticket_url(registration.slug, checkout: "success", reg: params[:reg].presence),
+        cancel_url: registration_ticket_url(registration.slug, checkout: "cancelled", reg: params[:reg].presence)
       )
 
       registration.update!(checkout_session_id: checkout_session.id)

@@ -1,4 +1,31 @@
 module EventsHelper
+  # Separates registration slugs packed into a single `?reg=` param so public
+  # (logged-out) users keep the "View registration" button lit across several
+  # events in one session. A period is used because it never appears in a
+  # urlsafe_base64 slug and stays unescaped in a URL, keeping it human-readable.
+  REG_PARAM_DELIMITER = "."
+
+  # The registration slugs carried in the current request's `?reg=` param.
+  def reg_param_slugs
+    params[:reg].to_s.split(REG_PARAM_DELIMITER)
+  end
+
+  # The registration for this event that the visitor has "unlocked" via their
+  # `?reg=` param, if any. Slugs are the authorization token, so no ownership
+  # check is needed. Returns nil when none of the param slugs belong to the event.
+  def reg_param_registration(event)
+    slugs = reg_param_slugs
+    return if slugs.empty?
+    EventRegistration.where(slug: slugs, event_id: event.id).first
+  end
+
+  # The current `?reg=` slug set with `slug` merged in, for forwarding onward
+  # links after a registration so the new event's button stays lit alongside
+  # any events registered earlier this session.
+  def reg_param_with(slug)
+    (reg_param_slugs << slug).uniq.join(REG_PARAM_DELIMITER)
+  end
+
   # Stable anchor id for a registrant's row on the Onboarding matrix, so back-links
   # from detail pages can scroll to (and highlight) the row they came from.
   def onboarding_row_id(record_or_id)

@@ -36,6 +36,33 @@ RSpec.describe "Events", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "shows a View registration link on the card when an active reg param is present" do
+      published_event = create(:event, :published)
+      sign_in user
+      registration = create(:event_registration, event: published_event, registrant: create(:person))
+      get events_path(reg: registration.slug)
+      expect(response.body).to include("href=\"#{registration_ticket_path(registration.slug)}\"")
+    end
+
+    it "does not show a View registration link for a cancelled reg param" do
+      published_event = create(:event, :published)
+      sign_in user
+      registration = create(:event_registration, event: published_event, registrant: create(:person), status: "cancelled")
+      get events_path(reg: registration.slug)
+      expect(response.body).not_to include("href=\"#{registration_ticket_path(registration.slug)}\"")
+    end
+
+    it "shows View registration links for several events packed into one reg param" do
+      event_a = create(:event, :published)
+      event_b = create(:event, :published)
+      sign_in user
+      reg_a = create(:event_registration, event: event_a, registrant: create(:person))
+      reg_b = create(:event_registration, event: event_b, registrant: create(:person))
+      get events_path(reg: "#{reg_a.slug}.#{reg_b.slug}")
+      expect(response.body).to include("href=\"#{registration_ticket_path(reg_a.slug)}\"")
+      expect(response.body).to include("href=\"#{registration_ticket_path(reg_b.slug)}\"")
+    end
+
     context "when user time_zone is set" do
       # 19:00 UTC = 12:00 noon PT = 15:00 (3 pm) ET (June 15, 2031 with DST)
       let(:utc_start) { Time.utc(2031, 6, 15, 19, 0, 0) }
@@ -71,6 +98,22 @@ RSpec.describe "Events", type: :request do
   end
 
   describe "GET /show" do
+    it "shows a View registration link when an active reg param is present" do
+      published_event = create(:event, :published)
+      sign_in user
+      registration = create(:event_registration, event: published_event, registrant: create(:person))
+      get event_path(published_event, reg: registration.slug)
+      expect(response.body).to include("href=\"#{registration_ticket_path(registration.slug)}\"")
+    end
+
+    it "does not show a View registration link for a cancelled reg param" do
+      published_event = create(:event, :published)
+      sign_in user
+      registration = create(:event_registration, event: published_event, registrant: create(:person), status: "cancelled")
+      get event_path(published_event, reg: registration.slug)
+      expect(response.body).not_to include("href=\"#{registration_ticket_path(registration.slug)}\"")
+    end
+
     context "when event has ended" do
       let(:ended_event) { create(:event, :published, :ended) }
 

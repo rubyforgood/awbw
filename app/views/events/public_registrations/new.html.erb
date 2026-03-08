@@ -94,7 +94,7 @@
         </div>
       <% end %>
 
-      <%= form_with url: event_public_registration_path(@event), method: :post, local: true, class: "space-y-2", data: { turbo: !@event.cost_cents.to_i.positive? } do |f| %>
+      <%= form_with url: event_public_registration_path(@event, reg: params[:reg].presence), method: :post, local: true, class: "space-y-2", data: { turbo: !@event.cost_cents.to_i.positive? } do |f| %>
 
         <% if @scholarship %>
           <input type="hidden" name="scholarship_requested" value="true">

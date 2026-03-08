@@ -18,6 +18,12 @@ RSpec.describe "Events::Registrations", type: :request do
         get registration_ticket_path(registration.slug)
         expect(response).to have_http_status(:success)
       end
+
+      it "merges this slug into the reg param on the back-to-event link" do
+        prior = create(:event_registration, registrant: create(:person))
+        get registration_ticket_path(registration.slug, reg: prior.slug)
+        expect(response.body).to include("reg=#{prior.slug}.#{registration.slug}")
+      end
     end
 
     context "as an admin" do

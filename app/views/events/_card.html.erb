@@ -24,7 +24,7 @@
 
     <!-- Title + badges -->
     <div class="flex flex-col gap-2 flex-1 min-w-0 pr-1 mr-4 mt-1">
-      <%= link_to event_path(event),
+      <%= link_to event_path(event, reg: params[:reg].presence),
                   class: "hover:underline block leading-tight",
                   data: { turbo_prefetch: false, turbo: false } do %>
         <%= title_with_badges(event).html_safe %>
@@ -34,6 +34,10 @@
 
   <!-- Location + Times + Buttons (bottom-aligned group) -->
   <% registered = current_user && event.actively_registered?(current_user.person) %>
+  <% unless registered
+       slug_registration = reg_param_registration(event)
+       slug_registered = slug_registration&.active?
+     end %>
   <div class="mt-auto flex flex-col gap-4">
     <div class="text-sm text-gray-700 leading-none">
       <% if event.location.present? %>
@@ -58,6 +62,11 @@
                   class: "btn px-3 py-2 text-xs uppercase leading-tight text-white hover:bg-white event-view-registration-btn",
                   style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 2px solid rgb(22, 101, 52);" %>
       <% end %>
+    <% elsif slug_registered %>
+      <%= link_to "View registration", registration_ticket_path(slug_registration.slug),
+                  data: { turbo_frame: "_top" },
+                  class: "btn px-3 py-2 text-xs uppercase leading-tight text-white hover:bg-white event-view-registration-btn",
+                  style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 2px solid rgb(22, 101, 52);" %>
     <% elsif event.ended? %>
       <span class="text-sm text-gray-500 italic">Event ended</span>
       <% if allowed_to?(:manage?, event) %>
@@ -82,7 +91,7 @@
         <% end %>
       <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
         <%= link_to "Register",
-                    new_event_public_registration_path(event),
+                    new_event_public_registration_path(event, reg: params[:reg].presence),
                     data: { turbo_frame: "_top" },
                     class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
       <% end %>

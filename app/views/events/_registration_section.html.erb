@@ -1,7 +1,7 @@
 <% instance ||= 1 %>
 <% button_text ||= "Register" %>
 <% registered = event.actively_registered?(current_user&.person) %>
-<% slug_registration = params[:reg].present? ? EventRegistration.find_by(slug: params[:reg], event_id: event.id) : nil %>
+<% slug_registration = reg_param_registration(event) %>
 <% slug_registered = slug_registration&.active? %>
 <% slug_cancelled = slug_registration.present? && slug_registration.status == "cancelled" %>
 <%= tag.div id: dom_id(event.object, "registration_section_#{instance}"), class: "registration-section flex flex-col items-center gap-4 mb-6" do %>
@@ -29,13 +29,13 @@
                           style: "font-family: 'Telefon Bold', sans-serif;" %>
           <% else %>
             <%= link_to button_text,
-                        new_event_public_registration_path(event),
+                        new_event_public_registration_path(event, reg: params[:reg].presence),
                         class: "btn btn-accent px-10 py-2 text-2xl uppercase",
                         style: "font-family: 'Telefon Bold', sans-serif;" %>
           <% end %>
         <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
           <%= link_to button_text,
-                      new_event_public_registration_path(event),
+                      new_event_public_registration_path(event, reg: params[:reg].presence),
                       class: "btn btn-accent px-10 py-2 text-2xl uppercase",
                       style: "font-family: 'Telefon Bold', sans-serif;" %>
         <% end %>
