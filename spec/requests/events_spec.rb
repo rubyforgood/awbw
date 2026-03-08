@@ -249,6 +249,60 @@ RSpec.describe "Events", type: :request do
 
     before { sign_in admin }
 
+    context "confirmed column toggle" do
+      it "renders the slide toggle for confirmed column" do
+        get manage_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('data-controller="column-toggle"')
+        expect(response.body).to include("Confirmed")
+      end
+
+      it "renders confirmed column header hidden by default" do
+        get manage_event_path(event)
+
+        expect(response.body).to include("data-column-toggle-col")
+      end
+
+      context "when registrant has a confirmed user" do
+        it "shows confirmed check icon" do
+          get manage_event_path(event)
+
+          expect(response.body).to include("fa-check-circle")
+        end
+      end
+
+      context "when registrant has an unconfirmed user with invite sent" do
+        let(:person) { create(:person, user: create(:user, :unconfirmed, welcome_instructions_sent_at: 1.day.ago)) }
+
+        it "shows clock icon" do
+          get manage_event_path(event)
+
+          expect(response.body).to include("fa-solid fa-clock")
+        end
+      end
+
+      context "when registrant has an unconfirmed user without invite" do
+        let(:person) { create(:person, user: create(:user, :unconfirmed)) }
+
+        it "shows invite button" do
+          get manage_event_path(event)
+
+          expect(response.body).to include("Invite")
+        end
+      end
+
+      context "when registrant has no user" do
+        let(:person) { create(:person, user: nil) }
+
+        it "shows create user link" do
+          get manage_event_path(event)
+
+          expect(response.body).to include("Create user")
+        end
+      end
+    end
+
     context "registration form icon" do
       let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
 
