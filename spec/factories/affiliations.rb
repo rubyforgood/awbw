@@ -3,6 +3,6 @@ FactoryBot.define do
     association :organization
     association :person
 
-    position { :default }
+    title { "Facilitator" }
   end
 end
