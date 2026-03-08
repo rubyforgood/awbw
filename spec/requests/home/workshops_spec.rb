@@ -40,8 +40,10 @@ RSpec.describe "/home/workshops", type: :request do
       before do
         # Prime the cache with no featured workshops
         get home_workshops_path
-        # Feature a workshop after the cache is set
+        # Feature a workshop — this triggers before_save which clears the cache,
+        # so we re-write stale (empty) data to simulate a race condition
         create(:workshop, :published, featured: true, windows_type: windows_type)
+        Rails.cache.write(cache_key, [], expires_in: 1.year)
       end
 
       it "clears the cache for admins" do
