@@ -9,5 +9,16 @@ FactoryBot.define do
     trait :with_owner do
       association :owner, factory: :user
     end
+
+    trait :with_fields do
+      after(:create) do |form|
+        create_list(:form_field, 3, form: form)
+      end
+    end
+
+    trait :scholarship do
+      scholarship_application { true }
+      name { "Scholarship Application" }
+    end
   end
 end

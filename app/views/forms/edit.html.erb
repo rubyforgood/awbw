@@ -1,0 +1,16 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:forms) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex flex-wrap justify-end gap-2 mb-4">
+    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "View", form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  </div>
+  <h1 class="text-2xl font-semibold text-gray-900 mb-3">Edit form</h1>
+
+  <div class="bg-white rounded p-6">
+    <div class="mt-4">
+      <%= render "form" %>
+      <%= render "shared/audit_info", resource: @form %>
+    </div>
+  </div>
+</div>
