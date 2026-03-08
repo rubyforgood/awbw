@@ -29,7 +29,7 @@
 
     <%= render "search_boxes" %>
 
-    <% result_src = tutorials_path + "?" + request.query_string %>
+    <% result_src = recordings_path + "?" + request.query_string %>
 
     <%= turbo_frame_tag "tutorials_results", src: result_src  do %>
       <div class="bg-white rounded-lg shadow-md p-6 mt-4 animate-pulse">

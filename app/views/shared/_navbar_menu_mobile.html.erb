@@ -76,6 +76,12 @@
             <span>Organizations</span>
           <% end %>
         <% end %>
+
+        <%= link_to video_library_path, class: "flex items-center px-4 py-2 text-sm text-white
+                    hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
+          <i class="fas fa-circle-play"></i>
+          <span>Video Library</span>
+        <% end %>
       </div>
     </div>
 
@@ -104,10 +110,10 @@
           <span>Contact us</span>
         <% end %>
 
-        <%= link_to tutorials_path, class: "flex items-center px-4 py-2 text-sm text-white
+        <%= link_to recordings_path, class: "flex items-center px-4 py-2 text-sm text-white
                     hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
           <i class="fas fa-circle-play"></i>
-          <span><%= Tutorial.model_name.human(count: 2) %></span>
+          <span><%= Recording.model_name.human(count: 2) %></span>
         <% end %>
 
         <%= link_to "https://www.awbw.org", target: "_blank", class: "flex items-center px-4 py-2 text-sm text-white

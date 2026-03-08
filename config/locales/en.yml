@@ -38,9 +38,12 @@ en:
       workshop_variation_idea:
         rhino_body: "Details"
     models:
+      recording:
+        one: "Recording"
+        other: "Recordings"
       tutorial:
         one: "Video"
-        other: "Video Gallery"
+        other: "Tutorials"
   helpers:
     submit:
       create: "Submit"

@@ -1,5 +1,5 @@
-<%= simple_form_for(@tutorial, html: { multipart: true }) do |f| %>
-  <%= render 'shared/errors', resource: @tutorial if @tutorial.errors.any? %>
+<%= simple_form_for(@recording, html: { multipart: true }) do |f| %>
+  <%= render 'shared/errors', resource: @recording if @recording.errors.any? %>
 
   <div class="p-3">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -9,6 +9,8 @@
                                   value: f.object.title } %>
       </div>
       <div class="admin-only bg-blue-100 rounded grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
+        <%= f.input :is_tutorial, as: :boolean %>
+        <%= f.input :is_podcast, as: :boolean %>
         <%= f.input :published, as: :boolean %>
         <%= f.input :featured, as: :boolean %>
         <%= f.input :publicly_visible, as: :boolean %>
@@ -82,10 +84,10 @@
                   class="
                     flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
                     rounded-lg shadow-sm hover:bg-gray-100 transition">
-                  <%= hidden_field_tag "tutorial[sector_ids][]", "" %>
-                  <%= check_box_tag "tutorial[sector_ids][]",
+                  <%= hidden_field_tag "recording[sector_ids][]", "" %>
+                  <%= check_box_tag "recording[sector_ids][]",
                                     sector.id,
-                                    @tutorial.sector_ids.include?(sector.id),
+                                    @recording.sector_ids.include?(sector.id),
                                     id: id,
                                     class: "h-4 w-4 text-blue-600 rounded" %>
 
@@ -110,10 +112,10 @@
                       class="
                         flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
                         border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                      <%= hidden_field_tag "tutorial[category_ids][]", "" %>
-                      <%= check_box_tag "tutorial[category_ids][]",
+                      <%= hidden_field_tag "recording[category_ids][]", "" %>
+                      <%= check_box_tag "recording[category_ids][]",
                                         category.id,
-                                        @tutorial.category_ids.include?(category.id),
+                                        @recording.category_ids.include?(category.id),
                                         id: id,
                                         class: "h-4 w-4 text-blue-600 rounded" %>
 
@@ -130,10 +132,10 @@
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete", @tutorial, class: "btn btn-danger-outline",
+        <%= link_to "Delete", @recording, class: "btn btn-danger-outline",
                     data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
-      <%= link_to "Cancel", tutorials_path, class: "btn btn-secondary-outline ms-2" %>
+      <%= link_to "Cancel", recordings_path, class: "btn btn-secondary-outline ms-2" %>
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   </div>
