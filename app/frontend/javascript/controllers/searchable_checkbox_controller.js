@@ -12,8 +12,7 @@ export default class extends Controller {
       if (select._tomSelect) return;
 
       select._tomSelect = new TomSelect(select, {
-        plugins: ["dropdown_input", "checkbox_options", "remove_button"],
-        create: false,
+        plugins: ["checkbox_options", "remove_button"],
         onChange: () => {
           this.element.requestSubmit();
         },
