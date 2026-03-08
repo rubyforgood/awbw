@@ -15,35 +15,31 @@
     <!-- Resource Card -->
     <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
       <div class="workshop">
-        Workshop: <%= link_to(@workshop_variation.workshop.name,
-                              workshop_path(@workshop_variation.workshop), class: "btn btn-secondary-outline") %>
+        Workshop: <%= link_to("#{@workshop_variation.workshop.name} (#{@workshop_variation.workshop.windows_type&.short_name || 'Combined'})",
+                               workshop_path(@workshop_variation.workshop), class: "btn btn-secondary-outline") %>
       </div>
 
+      <% if @workshop_variation.workshop_variation_idea.present? && allowed_to?(:edit?, @workshop_variation) %>
+        <div class="admin-only rounded-lg border border-purple-200 bg-purple-50 p-4">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-arrow-up-from-bracket text-purple-600"></i>
+            <span class="text-sm font-medium text-purple-800">Promoted from:</span>
+            <%= link_to @workshop_variation.workshop_variation_idea.name,
+                        workshop_variation_idea_path(@workshop_variation.workshop_variation_idea),
+                        class: "btn btn-secondary-outline text-sm" %>
+          </div>
+        </div>
+      <% end %>
+
       <!-- Title -->
-      <h2 class="text-3xl font-semibold text-gray-900">
-        <%= @workshop_variation.name %>
-        <% unless @workshop_variation.published? %>
-          <span class="text-lg font-normal text-red-500 mb-3">
-            [UNPUBLISHED]
-          </span>
-        <% end %>
-      </h2>
+      <%= title_with_badges(@workshop_variation, font_size: "text-3xl",
+                            record_title: "#{@workshop_variation.name} (#{@workshop_variation.windows_type&.short_name || 'Combined'})") %>
 
       <!-- Author and Date -->
       <div class="flex flex-col gap-1">
         <div class="flex items-center text-gray-600 text-sm gap-2">
           <span>
-            <% if @workshop_variation.author_credit_preference.present? %>
-              <%= @workshop_variation.author_credit %>
-            <% else %>
-              <% creator = @workshop_variation.created_by %>
-              <% display_name = @workshop_variation.workshop_variation_idea&.author_credit || creator&.name %>
-              <% if creator&.person && allowed_to?(:show?, creator.person, with: PersonPolicy) %>
-                <%= link_to display_name, person_path(creator.person), class: "text-blue-600 hover:underline" %>
-              <% else %>
-                <%= display_name %>
-              <% end %>
-            <% end %>
+            <%= @workshop_variation.author_credit %>
           </span>
           <span class="<%= "border-l border-gray-400 pl-2" if @workshop_variation.created_by.present? %>">
             <%= @workshop_variation.created_at.strftime('%B %e, %Y') %>
