@@ -27,6 +27,15 @@ RSpec.describe "/home/workshops", type: :request do
 
     context "with bust_cache=true" do
       let(:admin) { create(:user, :admin) }
+      let(:cache_key) { "featured_and_publicly_featured_workshop_ids" }
+
+      around do |example|
+        original_store = Rails.cache
+        Rails.cache = ActiveSupport::Cache::MemoryStore.new
+        example.run
+      ensure
+        Rails.cache = original_store
+      end
 
       before do
         # Prime the cache with no featured workshops
