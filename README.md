@@ -42,7 +42,7 @@ Featured workshop IDs are cached for up to 1 year. The cache auto-invalidates wh
 /?bust_cache=true
 ```
 
-This clears and repopulates the cache for all users.
+This clears and repopulates the cache for all users. Only site admins (users who pass the `ApplicationPolicy#manage?` check) can use this param.
 
 ## Orphaned Reports
 
