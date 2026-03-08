@@ -6,7 +6,7 @@ FactoryBot.define do
     published { false }
     position { 1 }
     youtube_url { "MyString" }
-    is_tutorial { true }
+    is_instructional { true }
     is_podcast { false }
 
     trait :featured do
@@ -30,24 +30,24 @@ FactoryBot.define do
     end
 
     trait :tutorial do
-      is_tutorial { true }
+      is_instructional { true }
       is_podcast { false }
     end
 
     trait :podcast do
-      is_tutorial { false }
+      is_instructional { false }
       is_podcast { true }
     end
 
     trait :both do
-      is_tutorial { true }
+      is_instructional { true }
       is_podcast { true }
     end
   end
 
   # Backwards compatibility
   factory :tutorial, class: 'VideoRecording', parent: :video_recording do
-    is_tutorial { true }
+    is_instructional { true }
     is_podcast { false }
   end
 end

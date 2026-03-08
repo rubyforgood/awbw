@@ -143,7 +143,7 @@ class VideoRecordingsController < ApplicationController
     when "tutorials"
       scope.tutorials
     when "not_tutorials"
-      scope.where(is_tutorial: false)
+      scope.where(is_instructional: false)
     else
       scope
     end
@@ -152,7 +152,7 @@ class VideoRecordingsController < ApplicationController
   # Strong parameters
   def video_recording_params
     params.require(:video_recording).permit(
-      :title, :body, :rhino_body, :position, :youtube_url, :is_tutorial, :is_podcast,
+      :title, :body, :rhino_body, :position, :youtube_url, :is_instructional, :is_podcast,
       :featured, :published, :publicly_visible, :publicly_featured,
       category_ids: [],
       sector_ids: [],

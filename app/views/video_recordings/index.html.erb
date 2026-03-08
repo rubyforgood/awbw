@@ -7,7 +7,7 @@
       <div class="pr-6">
         <h2 class="text-2xl font-semibold mb-2">
           <% if @video_type == "tutorials" %>
-            <%= Tutorial.model_name.human(count: 2) %>
+            Instructional videos
           <% else %>
             Video Gallery
           <% end %>
@@ -16,9 +16,9 @@
         <p class="text-gray-600 max-w-2xl">
           <% if @video_type == "tutorials" %>
             <% if user_signed_in? %>
-              Our library of step-by-step tutorials designed to support your journey
+              Our library of step-by-step instructional videos designed to support your journey
             <% else %>
-              Step-by-step tutorials to help you get the most out of our platform
+              Step-by-step instructional videos to help you get the most out of our platform
             <% end %>
           <% else %>
             <% if user_signed_in? %>
