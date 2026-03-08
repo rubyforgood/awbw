@@ -1,4 +1,6 @@
-class Tutorial < ApplicationRecord
+class Recording < ApplicationRecord
+  self.table_name = 'recordings'
+
   include Featureable, Publishable, TagFilterable, Trendable, RichTextSearchable
 
   has_rich_text :rhino_body
@@ -42,7 +44,7 @@ class Tutorial < ApplicationRecord
     ids = Array(sector_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:sectorable_items)
-      .where(sectorable_items: { sectorable_type: "Tutorial", sector_id: ids })
+      .where(sectorable_items: { sectorable_type: "Recording", sector_id: ids })
       .distinct
   }
 
@@ -50,7 +52,7 @@ class Tutorial < ApplicationRecord
     ids = Array(category_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:categorizable_items)
-      .where(categorizable_items: { categorizable_type: "Tutorial", category_id: ids })
+      .where(categorizable_items: { categorizable_type: "Recording", category_id: ids })
       .distinct
   }
 
@@ -80,3 +82,6 @@ class Tutorial < ApplicationRecord
     resources
   end
 end
+
+# Backwards compatibility alias
+Tutorial = Recording

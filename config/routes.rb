@@ -159,7 +159,9 @@ Rails.application.routes.draw do
   resources :story_ideas
   resources :stories
   resources :story_shares, only: [ :index, :show ]
-  resources :tutorials
+  resources :recordings
+  resources :tutorials, to: 'recordings#index'
+  get "video_library", to: "recordings#video_library", as: :video_library
   resources :user_forms
   resources :windows_types
   resources :workshop_ideas
@@ -182,7 +184,7 @@ Rails.application.routes.draw do
     resources :stories, only: :index
     resources :community_news, only: :index
     resources :events, only: :index
-    resources :video_gallery, only: :index
+    resources :video_library, only: :index
   end
 
   root to: "home#index"

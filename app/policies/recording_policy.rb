@@ -1,4 +1,4 @@
-class TutorialPolicy < ApplicationPolicy
+class RecordingPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   def index?
