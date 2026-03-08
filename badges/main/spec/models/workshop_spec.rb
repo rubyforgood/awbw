@@ -91,5 +91,68 @@ RSpec.describe Workshop do
 
   it_behaves_like "author_creditable", factory: :workshop
 
+  describe "#remote_search_label" do
+    it "returns title with windows type short_name" do
+      record = create(:workshop, title: "Art Therapy", windows_type: create(:windows_type, :children))
+
+      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy (CHILDREN)" })
+    end
+
+    it "returns just the title when no windows type" do
+      record = create(:workshop, title: "Art Therapy", windows_type: nil)
+
+      expect(record.remote_search_label).to eq({ id: record.id, label: "Art Therapy" })
+    end
+  end
+
+  describe ".resolve_duplicate_labels" do
+    it "omits id when labels are unique" do
+      wt = create(:windows_type, :adult)
+      w1 = create(:workshop, title: "Art Therapy", windows_type: wt)
+      w2 = create(:workshop, title: "Music Therapy", windows_type: wt)
+
+      labels = Workshop.resolve_duplicate_labels([ w1, w2 ].map(&:remote_search_label))
+
+      expect(labels).to contain_exactly(
+        { id: w1.id, label: "Art Therapy (ADULT)" },
+        { id: w2.id, label: "Music Therapy (ADULT)" }
+      )
+    end
+
+    it "appends id only to duplicate labels" do
+      wt = create(:windows_type, :adult)
+      w1 = create(:workshop, title: "Art Therapy", windows_type: wt)
+      w2 = create(:workshop, title: "Art Therapy", windows_type: wt)
+      w3 = create(:workshop, title: "Music Therapy", windows_type: wt)
+
+      labels = Workshop.resolve_duplicate_labels([ w1, w2, w3 ].map(&:remote_search_label))
+
+      expect(labels).to contain_exactly(
+        { id: w1.id, label: "Art Therapy (ADULT) ##{w1.id}" },
+        { id: w2.id, label: "Art Therapy (ADULT) ##{w2.id}" },
+        { id: w3.id, label: "Music Therapy (ADULT)" }
+      )
+    end
+  end
+
+  describe ".remote_search" do
+    it "finds workshops matching the query" do
+      matching = create(:workshop, title: "Healing Through Art")
+      create(:workshop, title: "Unrelated Workshop")
+
+      results = Workshop.remote_search("Healing")
+
+      expect(results).to contain_exactly(matching)
+    end
+
+    it "eager loads windows_type to avoid N+1" do
+      create(:workshop, title: "Healing Through Art")
+
+      results = Workshop.remote_search("Healing")
+
+      expect(results.includes_values).to include(:windows_type)
+    end
+  end
+
   # Add tests for scopes, methods like #rating, #log_count, SearchCop etc.
 end

@@ -58,9 +58,6 @@ FileUtils.chdir APP_ROOT do
   system! "bin/rails db:drop"
   system! "bin/rails db:create"
 
-  # puts "\n== Running SQL files in db/init =="
-  # Dir["db/init/*.sql"].sort.each { |file| run_sql_file(file) }
-
   puts "\n== Running Rails migrations and seeds =="
   system! "bin/rails db:migrate"
   system! "bin/rails db:seed"

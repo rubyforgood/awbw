@@ -17,7 +17,6 @@ gem "jbuilder", "~> 2.0"
 
 gem "devise", "~> 4.9.4"
 gem "draper"
-gem "kt-paperclip", "~> 7.1.1"
 gem "aws-sdk-s3"
 
 gem "puma", "~> 6.0" # Add Puma as the web server
