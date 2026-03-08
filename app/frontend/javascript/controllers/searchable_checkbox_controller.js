@@ -3,22 +3,30 @@ import TomSelect from "tom-select";
 import "tom-select/dist/css/tom-select.css";
 
 export default class extends Controller {
-  connect() {
-    if (this.element._tomSelect) return;
+  static targets = ["select"];
 
-    this.element._tomSelect = new TomSelect(this.element, {
-      plugins: ["dropdown_input", "checkbox_options", "remove_button"],
-      create: false,
-      onChange: () => {
-        this.element.closest("form")?.requestSubmit();
-      },
+  connect() {
+    if (!this.hasSelectTarget) return;
+
+    this.selectTargets.forEach((select) => {
+      if (select._tomSelect) return;
+
+      select._tomSelect = new TomSelect(select, {
+        plugins: ["dropdown_input", "checkbox_options", "remove_button"],
+        create: false,
+        onChange: () => {
+          this.element.requestSubmit();
+        },
+      });
     });
   }
 
   disconnect() {
-    if (this.element._tomSelect) {
-      this.element._tomSelect.destroy();
-      this.element._tomSelect = null;
-    }
+    this.selectTargets.forEach((select) => {
+      if (select._tomSelect) {
+        select._tomSelect.destroy();
+        select._tomSelect = null;
+      }
+    });
   }
 }
