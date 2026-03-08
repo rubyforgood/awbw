@@ -30,6 +30,7 @@
 <% updated_color = show_updated ? label_colors[(updated_user.id || 0) % label_colors.length] : nil %>
 <% current_color = label_colors[(current_user&.id || 0) % label_colors.length] %>
 <div class="nested-fields" data-paginated-fields-target="item">
+  <%= f.hidden_field :id if f.object.persisted? %>
   <% if f.object.persisted? %>
     <div class="comment-view flex items-center mb-3 pl-4 gap-x-1">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0">
@@ -37,14 +38,10 @@
       </span>
       <span class="inline-flex items-center gap-x-1 w-20 shrink-0">
         <% if show_updated %>
-          <% if created_initials.present? %>
-            <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= created_name %>"><%= created_initials %></span>
-          <% else %>
-          test
-          <% end %>
-          <span class="<%= updated_color[0] %> <%= updated_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="Edited by <%= updated_name %>"><%= updated_initials %></span>
+          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-1/2 text-center" title="<%= created_name %>"><%= created_initials.presence || "--" %></span>
+          <span class="<%= updated_color[0] %> <%= updated_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-1/2 text-center" title="Edited by <%= updated_name %>"><%= updated_initials.presence || "--" %></span>
         <% else %>
-          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "Unknown", length: 10, omission: "..") %></span>
+          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
         <% end %>
       </span>
       <span class="text-sm text-gray-900 comment-body truncate" title="<%= f.object.body %>">
@@ -57,12 +54,10 @@
       </span>
       <span class="inline-flex items-center gap-x-1 w-20 shrink-0 mt-2">
         <% if show_updated %>
-          <% if created_initials.present? %>
-            <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="<%= created_name %>"><%= created_initials %></span>
-          <% end %>
-          <span class="<%= updated_color[0] %> <%= updated_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default" title="Edited by <%= updated_name %>"><%= updated_initials %></span>
+          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-1/2 text-center" title="<%= created_name %>"><%= created_initials.presence || "--" %></span>
+          <span class="<%= updated_color[0] %> <%= updated_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-1/2 text-center" title="Edited by <%= updated_name %>"><%= updated_initials.presence || "--" %></span>
         <% else %>
-          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.to_s, length: 10, omission: "..") %></span>
+          <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
         <% end %>
       </span>
       <div class="grow">

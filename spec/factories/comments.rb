@@ -12,5 +12,9 @@ FactoryBot.define do
     trait :for_event_registration do
       association :commentable, factory: :event_registration
     end
+
+    trait :for_workshop do
+      association :commentable, factory: :workshop
+    end
   end
 end
