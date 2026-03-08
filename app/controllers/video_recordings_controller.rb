@@ -74,7 +74,7 @@ class VideoRecordingsController < ApplicationController
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
-      Rails.logger.error "Tutorial create failed: #{e.class} - #{e.message}"
+      Rails.logger.error "VideoRecording create failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
 
@@ -98,7 +98,7 @@ class VideoRecordingsController < ApplicationController
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
-      Rails.logger.error "Tutorial update failed: #{e.class} - #{e.message}"
+      Rails.logger.error "VideoRecording update failed: #{e.class} - #{e.message}"
       raise ActiveRecord::Rollback
     end
 

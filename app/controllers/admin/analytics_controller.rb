@@ -15,7 +15,7 @@ module Admin
       @most_viewed_community_news = decorate_with_counts(most_viewed_for_model(CommunityNews, time_scope), :view_count)
       @most_viewed_stories = decorate_with_counts(most_viewed_for_model(Story, time_scope), :view_count)
       @most_viewed_quotes = decorate_with_counts(most_viewed_for_model(Quote, time_scope), :view_count)
-      @most_viewed_tutorials = decorate_with_counts(most_viewed_for_model(Tutorial, time_scope), :view_count)
+      @most_viewed_video_recordings = decorate_with_counts(most_viewed_for_model(VideoRecording, time_scope), :view_count)
       @most_viewed_organizations = decorate_with_counts(most_viewed_for_model(Organization, time_scope), :view_count)
       @most_viewed_events = decorate_with_counts(most_viewed_for_model(Event, time_scope), :view_count)
       @most_viewed_people = decorate_with_counts(most_viewed_for_model(Person, time_scope), :view_count)

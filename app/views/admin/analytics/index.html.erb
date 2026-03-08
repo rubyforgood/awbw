@@ -209,11 +209,11 @@
             %>
 
             <%= render "admin/analytics/popular_list",
-                       title: Tutorial.model_name.human(count: 2),
-                       records: @most_viewed_tutorials,
-                       path_method: :tutorial_path,
+                       title: "Instructional videos",
+                       records: @most_viewed_video_recordings,
+                       path_method: :video_recording_path,
                        metric: :view_count,
-                       color: :tutorials
+                       color: :videos
             %>
           </div>
         </div>
