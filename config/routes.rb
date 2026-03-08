@@ -166,7 +166,9 @@ Rails.application.routes.draw do
   resources :workshop_log_creation_wizard
   resources :workshop_variation_ideas
   resources :workshop_variations
-  resources :workshops
+  resources :workshops do
+    resources :comments, only: [ :index, :create ]
+  end
 
   resources :workshop_mentions, only: [ :index ]
   resources :resource_mentions, only: [ :index ]
