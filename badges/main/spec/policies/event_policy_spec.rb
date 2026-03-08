@@ -6,6 +6,7 @@ RSpec.describe EventPolicy, type: :policy do
   let(:published_event) { build_stubbed :event, :published }
   let(:public_event) { build_stubbed :event, publicly_visible: true  }
   let(:unpublished_event) { build_stubbed :event, :unpublished }
+  let(:ended_event) { build_stubbed :event, :published, :ended }
   let(:open_registration_event) { build_stubbed :event, registration_close_date: 1.day.from_now }
   let(:closed_registration_event) { build_stubbed :event, registration_close_date: 1.day.ago }
 
@@ -51,6 +52,36 @@ RSpec.describe EventPolicy, type: :policy do
         subject { policy_for(record: public_event, user: nil) }
 
         it { is_expected.to be_allowed_to(:show?) }
+      end
+    end
+
+    context "when event has ended" do
+      context "with admin user" do
+        subject { policy_for(record: ended_event, user: admin_user) }
+
+        it { is_expected.to be_allowed_to(:show?) }
+      end
+
+      context "with registered user" do
+        subject { policy_for(record: ended_event, user: regular_user) }
+
+        before { allow(ended_event).to receive(:actively_registered?).with(regular_user.person).and_return(true) }
+
+        it { is_expected.to be_allowed_to(:show?) }
+      end
+
+      context "with unregistered user" do
+        subject { policy_for(record: ended_event, user: regular_user) }
+
+        before { allow(ended_event).to receive(:actively_registered?).with(regular_user.person).and_return(false) }
+
+        it { is_expected.not_to be_allowed_to(:show?) }
+      end
+
+      context "with no user" do
+        subject { policy_for(record: ended_event, user: nil) }
+
+        it { is_expected.not_to be_allowed_to(:show?) }
       end
     end
 
@@ -175,22 +206,27 @@ RSpec.describe EventPolicy, type: :policy do
     context "with regular user" do
       let(:policy) { policy_for(record: Event, user: regular_user) }
 
-      it "returns only visible events with open registration" do
+      it "returns only visible events with open registration or active registrations" do
         scope = policy.apply_scope(Event.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`events`.`published` = TRUE')
-        expect(scope.to_sql).to include('registration_close_date IS NULL OR registration_close_date >=')
-        expect(scope.to_sql).to include('LEFT OUTER JOIN `event_registrations`')
+        sql = scope.to_sql
+        expect(sql).to include('`events`.`published` = TRUE')
+        expect(sql).to include("events.end_date >=")
+        expect(sql).to include("events.registration_close_date IS NULL OR events.registration_close_date >=")
+        expect(sql).to include("LEFT OUTER JOIN event_registrations")
+        expect(sql).to include("event_registrations.status IN")
       end
     end
 
     context "with no user" do
       let(:policy) { policy_for(record: Event, user: nil) }
 
-      it "returns only visible events with open registration" do
+      it "excludes ended events and events with closed registration" do
         scope = policy.apply_scope(Event.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`events`.`published` = TRUE')
-        expect(scope.to_sql).to include('registration_close_date IS NULL OR registration_close_date >=')
-        expect(scope.to_sql).not_to include('LEFT OUTER JOIN `registrants`')
+        sql = scope.to_sql
+        expect(sql).to include('`events`.`published` = TRUE')
+        expect(sql).to include("events.end_date >=")
+        expect(sql).to include("events.registration_close_date IS NULL OR events.registration_close_date >=")
+        expect(sql).not_to include("LEFT OUTER JOIN")
       end
     end
   end
