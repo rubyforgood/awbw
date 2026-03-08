@@ -34,12 +34,12 @@ module EventRegistrationServices
             existing.update!(status: "registered")
             send_notifications(existing)
           end
-          update_person_form(person)
+          update_form_submission(person)
           return Result.new(success?: true, event_registration: existing, errors: [])
         end
 
         event_registration = create_event_registration(person)
-        create_person_form(person)
+        create_form_submission(person)
 
         send_notifications(event_registration)
 
@@ -241,20 +241,20 @@ module EventRegistrationServices
       )
     end
 
-    def create_person_form(person)
-      person_form = PersonForm.create!(person: person, form: @form)
-      save_form_fields(person_form)
-      person_form
+    def create_form_submission(person)
+      submission = FormSubmission.create!(person: person, form: @form)
+      save_form_answers(submission)
+      submission
     end
 
-    def update_person_form(person)
-      person_form = PersonForm.find_or_create_by!(person: person, form: @form)
-      save_form_fields(person_form)
-      person_form
+    def update_form_submission(person)
+      submission = FormSubmission.find_or_create_by!(person: person, form: @form)
+      save_form_answers(submission)
+      submission
     end
 
-    def save_form_fields(person_form)
-      @form.form_fields.where(status: :active).find_each do |field|
+    def save_form_answers(submission)
+      @form.form_fields.find_each do |field|
         next if field.group_header?
         next if field.field_key == "confirm_email"
 
@@ -265,8 +265,8 @@ module EventRegistrationServices
           raw_value.to_s
         end
 
-        record = person_form.person_form_form_fields.find_or_initialize_by(form_field: field)
-        record.update!(text: text)
+        record = submission.form_answers.find_or_initialize_by(form_field: field)
+        record.update!(text: text, question_text: field.question)
       end
     end
 

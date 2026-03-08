@@ -83,18 +83,14 @@ module Events
         return
       end
 
-      @person_form = @form.person_forms.find_by(person: person)
-      unless @person_form
+      @form_submission = @form.form_submissions.find_by(person: person)
+      unless @form_submission
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
       end
 
-      @form_fields = if registration&.scholarship_requested?
-        @form.form_fields.where(status: :active).where.not(field_group: "payment").reorder(position: :asc)
-      else
-        @form.form_fields.where(status: :active).where.not(field_group: "scholarship").reorder(position: :asc)
-      end
-      @responses = @person_form.person_form_form_fields.index_by(&:form_field_id)
+      @form_fields = @form.form_fields.reorder(position: :asc)
+      @responses = @form_submission.form_answers.index_by(&:form_field_id)
       @event = @event.decorate
     end
 
@@ -113,12 +109,32 @@ module Events
     end
 
     def visible_form_fields
-      scope = @form.form_fields.where(status: :active)
+      scope = @form.form_fields
       if scholarship_mode?
         scope = scope.where.not(field_group: "payment")
       else
         scope = scope.where.not(field_group: "scholarship")
       end
+
+      person = current_user&.person
+      if person
+        existing_submission = @form.form_submissions.find_by(person: person)
+        if existing_submission
+          answered_field_ids = existing_submission.form_answers
+                                                 .where.not(text: [ nil, "" ])
+                                                 .pluck(:form_field_id)
+
+          if @form.hide_answered_person_questions?
+            person_ids = answered_field_ids & @form.form_fields.where(field_group: "contact").ids
+            scope = scope.where.not(id: person_ids) if person_ids.any?
+          end
+
+          if @form.hide_answered_form_questions?
+            scope = scope.where.not(id: answered_field_ids) if answered_field_ids.any?
+          end
+        end
+      end
+
       scope.reorder(position: :asc)
     end
 

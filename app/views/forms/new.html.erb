@@ -1,0 +1,39 @@
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <h1 class="text-2xl font-semibold mb-6">New Form</h1>
+
+  <%= form_with url: forms_path, method: :post, class: "space-y-6" do |f| %>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Form Name</label>
+      <input type="text" name="name" value="<%= params[:name] %>"
+             class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm"
+             placeholder="e.g. Short Event Registration">
+    </div>
+
+    <fieldset>
+      <legend class="text-sm font-medium text-gray-700 mb-3">Select sections to include:</legend>
+      <div class="space-y-2">
+        <% FormBuilderService::SECTIONS.each do |key, section| %>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="sections[]" value="<%= key %>"
+                   class="rounded border-gray-300 text-blue-600"
+                   <%= "checked" if params.dig(:sections)&.include?(key.to_s) %>>
+            <span class="text-sm text-gray-800"><%= section[:label] %></span>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+
+    <div>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="scholarship_application" value="1"
+               class="rounded border-gray-300 text-blue-600">
+        <span class="text-sm text-gray-800">Scholarship application form</span>
+      </label>
+    </div>
+
+    <div class="flex gap-3">
+      <%= f.submit "Create Form", class: "btn btn-primary cursor-pointer" %>
+      <%= link_to "Cancel", forms_path, class: "btn btn-secondary-outline" %>
+    </div>
+  <% end %>
+</div>

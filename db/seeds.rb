@@ -472,14 +472,24 @@ workshop_env_type.update!(display_text: "Workshop Environments", story_specific:
 end
 
 puts "Creating standalone registration forms…"
-unless Form.standalone.exists?(name: ShortEventRegistrationFormBuilder::FORM_NAME)
-  ShortEventRegistrationFormBuilder.build_standalone!
+unless Form.standalone.exists?(name: "Short Event Registration")
+  FormBuilderService.new(
+    name: "Short Event Registration",
+    sections: %i[person_identifier consent event_feedback scholarship]
+  ).call
 end
 
-unless Form.standalone.exists?(name: ExtendedEventRegistrationFormBuilder::FORM_NAME)
-  ExtendedEventRegistrationFormBuilder.build_standalone!
+unless Form.standalone.exists?(name: "Extended Event Registration")
+  FormBuilderService.new(
+    name: "Extended Event Registration",
+    sections: %i[person_identifier person_contact_info person_background professional_info event_feedback scholarship payment consent]
+  ).call
 end
 
-unless Form.standalone.exists?(name: ScholarshipApplicationFormBuilder::FORM_NAME)
-  ScholarshipApplicationFormBuilder.build_standalone!
+unless Form.standalone.scholarship_application.exists?
+  FormBuilderService.new(
+    name: "Scholarship Application",
+    sections: %i[scholarship],
+    scholarship_application: true
+  ).call
 end

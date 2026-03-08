@@ -919,9 +919,9 @@ end
 
 puts "Creating Events with shared forms…"
 admin_user = User.find_by(email: "umberto.user@example.com")
-long_form = Form.standalone.find_by!(name: ExtendedEventRegistrationFormBuilder::FORM_NAME)
-short_form = Form.standalone.find_by!(name: ShortEventRegistrationFormBuilder::FORM_NAME)
-scholarship_form = Form.standalone.find_by!(name: ScholarshipApplicationFormBuilder::FORM_NAME)
+long_form = Form.standalone.find_by!(name: "Extended Event Registration")
+short_form = Form.standalone.find_by!(name: "Short Event Registration")
+scholarship_form = Form.standalone.scholarship_application.first!
 
 # Each entry: [title, form_type, cost_cents, scholarship?, visibility]
 # form_type: :long, :short, or :none

@@ -199,7 +199,7 @@ class EventsController < ApplicationController
       end
     end
 
-    scholarship_form = Form.standalone.find_by(name: ScholarshipApplicationFormBuilder::FORM_NAME)
+    scholarship_form = Form.standalone.scholarship_application.first
     if scholarship_form && event.cost_cents.to_i > 0
       event.event_forms.find_or_create_by!(form: scholarship_form, role: "scholarship")
     elsif event.cost_cents.to_i == 0

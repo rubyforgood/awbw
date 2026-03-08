@@ -121,8 +121,8 @@ RSpec.describe Event, type: :model do
   end
 
   describe "#build_public_registration_form" do
-    let!(:default_form) { create(:form, name: ShortEventRegistrationFormBuilder::FORM_NAME) }
-    let!(:extended_form) { create(:form, name: ExtendedEventRegistrationFormBuilder::FORM_NAME) }
+    let!(:default_form) { create(:form, name: "Short Event Registration") }
+    let!(:extended_form) { create(:form, name: "Extended Event Registration") }
 
     it "links the default registration form by default" do
       event = create(:event, public_registration_enabled: true)

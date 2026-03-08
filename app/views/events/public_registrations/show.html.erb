@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
 
-<% reg = @person_form.person.event_registrations.find_by(event: @event) %>
+<% reg = @form_submission.person.event_registrations.find_by(event: @event) %>
 <% back_path = reg&.slug.present? ? registration_ticket_path(reg.slug) : event_path(@event) %>
 <div class="flex flex-wrap items-center gap-2 mb-4">
   <%= link_to "← Back to Registration", back_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
@@ -84,7 +84,7 @@
 
       <div class="pt-4 border-t border-gray-200 mt-4">
         <p class="text-xs text-gray-500">
-          Submitted on <%= @person_form.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+          Submitted on <%= @form_submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
         </p>
       </div>
     </div>

@@ -151,9 +151,13 @@ RSpec.describe "Events::Registrations", type: :request do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     before do
-      ExtendedEventRegistrationFormBuilder.build!(event)
+      form = FormBuilderService.new(
+        name: "Extended Event Registration",
+        sections: %i[person_identifier person_contact_info person_background professional_info event_feedback scholarship payment consent]
+      ).call
+      EventForm.create!(event: event, form: form, role: "registration")
       form = event.registration_form
-      form.person_forms.create!(person: user.person)
+      form.form_submissions.create!(person: user.person)
     end
 
     it "allows access with a valid slug" do

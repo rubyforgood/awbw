@@ -14,7 +14,11 @@ RSpec.describe "Public registration new page", type: :system do
 
   before do
     driven_by(:rack_test)
-    ExtendedEventRegistrationFormBuilder.build!(event)
+    form = FormBuilderService.new(
+      name: "Extended Event Registration",
+      sections: %i[person_identifier person_contact_info person_background professional_info event_feedback scholarship payment consent]
+    ).call
+    EventForm.create!(event: event, form: form, role: "registration")
   end
 
   describe "back to event link" do

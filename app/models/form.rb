@@ -3,7 +3,7 @@ class Form < ApplicationRecord
   has_many :form_fields, dependent: :destroy, inverse_of: :form
   has_many :event_forms, dependent: :destroy
   has_many :user_forms
-  has_many :person_forms
+  has_many :form_submissions
   has_many :reports, as: :owner
   # has_many through
   has_many :events, through: :event_forms
