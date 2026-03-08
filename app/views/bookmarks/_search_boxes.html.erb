@@ -1,17 +1,14 @@
-<%= form_tag(bookmarks_path, method: :get, class: "space-y-4") do %>
+<%= form_with url: url,
+              method: :get,
+              data: { controller: "collection",
+                      turbo_frame: frame_id },
+              autocomplete: "off",
+              class: "space-y-4" do |f| %>
   <%= render "search_fields" %>
-
-  <!-- Sort options -->
-  <div class="mt-4 flex flex-wrap items-center gap-4 my-6">
-    <span class="font-semibold">Sort by:</span>
-    <div class="flex flex-wrap gap-2">
-      <%= render "sortable_fields", sortable_fields: @sortable_fields %>
-    </div>
-  </div>
 
   <!-- Clear filters -->
   <div class="flex sm:justify-end items-end">
-    <%= link_to "Clear filters", request.path,
+    <%= link_to "Clear filters", url,
                 class: "btn btn-utility",
                 data: { action: "collection#clearAndSubmit" } %>
   </div>

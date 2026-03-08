@@ -1,41 +1,48 @@
 class BookmarksController < ApplicationController
   before_action :set_breadcrumb
 
+  VALID_SORTS = %w[created_at title popularity].freeze
+
   def index
     authorize!
-    per_page = params[:number_of_items_per_page] || 25
-    base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
-    filtered = base_scope.search(params)
-
-    @bookmarks = filtered.paginate(page: params[:page], per_page: per_page).decorate
-    @bookmarks_count = base_scope.length
-    @windows_types_array = WindowsType::TYPES
-    set_index_variables
-    respond_to do |format|
-      format.html
-      format.js
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
+      filtered = base_scope.search(params)
+      @sort = VALID_SORTS.include?(params[:sort]) ? params[:sort] : "created_at"
+      @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+      filtered = filtered.sorted(@sort, @sort_direction)
+      @bookmarks = filtered.paginate(page: params[:page], per_page: per_page).decorate
+      @count_display = filtered.length == base_scope.length ? base_scope.length : "#{filtered.length}/#{base_scope.length}"
+      set_index_variables
+      render :index_lazy
+    else
+      set_index_variables
     end
   end
 
   def personal
     authorize!
-    per_page = params[:number_of_items_per_page] || 25
-    user = User.where(id: params[:user_id]).first if params[:user_id].present?
+    user = User.find_by(id: params[:user_id]) if params[:user_id].present?
     user ||= current_user
     @user_name = user.full_name if user
     @viewing_self = user == current_user
 
-    base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
-    filtered = base_scope.search(params, user: user)
-
-    @bookmarks_count = filtered.length
-    @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
-
-    set_index_variables
-
-    respond_to do |format|
-      format.html
-      format.js
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
+      filtered = base_scope.search(params, user: user)
+      @sort = VALID_SORTS.include?(params[:sort]) ? params[:sort] : "created_at"
+      @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+      filtered = filtered.sorted(@sort, @sort_direction)
+      user_base = base_scope.where(user: user)
+      @bookmarks_count = filtered.length
+      @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
+      @count_display = filtered.length == user_base.length ? user_base.length : "#{filtered.length}/#{user_base.length}"
+      set_index_variables
+      render :personal_lazy
+    else
+      set_index_variables
     end
   end
 
@@ -118,8 +125,6 @@ class BookmarksController < ApplicationController
 
   def load_workshop_data
     @quotes = @bookmarkable.quotes
-    # TODO not sure why we have this as there is no 'leader_spotlights' scope on woorkshops
-    # @leader_spotlights = @bookmarkable.leader_spotlights
     @workshop_variations = @bookmarkable.workshop_variations.decorate
     @sectors = @bookmarkable.sectors
   end
