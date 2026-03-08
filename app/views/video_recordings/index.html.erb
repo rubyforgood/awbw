@@ -6,7 +6,7 @@
     <div class="flex items-start justify-between mb-6">
       <div class="pr-6">
         <h2 class="text-2xl font-semibold mb-2">
-          <% if @video_type == "tutorials" %>
+          <% if @video_type == "instructional" %>
             Instructional videos
           <% else %>
             Video Gallery
@@ -14,7 +14,7 @@
         </h2>
 
         <p class="text-gray-600 max-w-2xl">
-          <% if @video_type == "tutorials" %>
+          <% if @video_type == "instructional" %>
             <% if user_signed_in? %>
               Our library of step-by-step instructional videos designed to support your journey
             <% else %>

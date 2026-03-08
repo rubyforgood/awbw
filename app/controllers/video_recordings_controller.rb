@@ -5,7 +5,7 @@ class VideoRecordingsController < ApplicationController
 
   def index
     authorize!
-    @video_type = params[:video_type].presence || "not_tutorials"
+    @video_type = params[:video_type].presence || "other"
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 6
@@ -139,9 +139,9 @@ class VideoRecordingsController < ApplicationController
 
   def filter_by_video_type(scope)
     case @video_type
-    when "tutorials"
+    when "instructional"
       scope.instructional
-    when "not_tutorials"
+    when "other"
       scope.where(is_instructional: false)
     else
       scope

@@ -16,7 +16,7 @@
           </div>
         <% else %>
           <div class="text-gray-500 italic">
-            <% if @video_type == "tutorials" %>
+            <% if @video_type == "instructional" %>
               No <%= VideoRecording.model_name.human(count: 2).downcase %> found matching your filters.
             <% else %>
               No videos found matching your filters.
