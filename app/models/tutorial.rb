@@ -46,8 +46,8 @@ class Tutorial < ApplicationRecord
       .distinct
   }
 
-  scope :with_category_ids, ->(category_hash) {
-    ids = category_hash.values.reject(&:blank?).map(&:to_i)
+  scope :with_category_ids, ->(category_ids) {
+    ids = Array(category_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:categorizable_items)
       .where(categorizable_items: { categorizable_type: "Tutorial", category_id: ids })
