@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "POST /users with duplicate check", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:person) { create(:person, :without_user) }
+  let(:person) { create(:person, user: nil) }
 
   before { sign_in admin }
 
