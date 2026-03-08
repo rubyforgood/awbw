@@ -210,6 +210,8 @@ module ApplicationHelper
     hash.each do |key, value|
       field_name = prefix ? "#{prefix}[#{key}]" : key.to_s
       case value
+      when ActionDispatch::Http::UploadedFile
+        next
       when Hash
         fields << hidden_fields_for_params(value, field_name)
       when Array
@@ -221,6 +223,7 @@ module ApplicationHelper
           end
         end
       else
+        next if key.to_s == "id" && value.blank?
         fields << tag.input(type: "hidden", name: field_name, value: value)
       end
     end
