@@ -14,5 +14,8 @@ class RefactorPaymentAssociations < ActiveRecord::Migration[8.1]
 
     # stripe_payment_intent_id is no longer required
     change_column_null :payments, :stripe_payment_intent_id, true
+
+    # EventRegistration belongs_to :payment (singular, direct FK)
+    add_reference :event_registrations, :payment, null: true, foreign_key: true
   end
 end

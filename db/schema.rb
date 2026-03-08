@@ -684,7 +684,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
     t.string "failure_message"
     t.integer "organization_id"
     t.bigint "payer_id", null: false
-    t.string "payment_type", default: "stripe", null: false
+    t.string "payment_type", default: "other", null: false
     t.string "status", null: false
     t.string "stripe_charge_id"
     t.json "stripe_metadata"
