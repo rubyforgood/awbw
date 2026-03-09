@@ -40,19 +40,19 @@ RSpec.describe "data:convert_age_ranges" do
     it "maps '5-12' to 3-5, 6-12" do
       workshop = create(:workshop, age_range: "5-12")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["3-5", "6-12"]
+      expect(age_range_category_names(workshop)).to eq [ "3-5", "6-12" ]
     end
 
     it "maps '6-14' to 6-12, 13-17" do
       workshop = create(:workshop, age_range: "6-14")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["13-17", "6-12"]
+      expect(age_range_category_names(workshop)).to eq [ "13-17", "6-12" ]
     end
 
     it "maps '3-99' to all age buckets" do
       workshop = create(:workshop, age_range: "3-99")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["13-17", "18+", "3-5", "6-12"]
+      expect(age_range_category_names(workshop)).to eq [ "13-17", "18+", "3-5", "6-12" ]
     end
   end
 
@@ -60,13 +60,13 @@ RSpec.describe "data:convert_age_ranges" do
     it "maps '5 and up' across all buckets" do
       workshop = create(:workshop, age_range: "5 and up")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["13-17", "18+", "3-5", "6-12"]
+      expect(age_range_category_names(workshop)).to eq [ "13-17", "18+", "3-5", "6-12" ]
     end
 
     it "maps '18+' to 18+" do
       workshop = create(:workshop, age_range: "18+")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["18+"]
+      expect(age_range_category_names(workshop)).to eq [ "18+" ]
     end
   end
 
@@ -74,25 +74,25 @@ RSpec.describe "data:convert_age_ranges" do
     it "maps 'adult' to 18+" do
       workshop = create(:workshop, age_range: "adult")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["18+"]
+      expect(age_range_category_names(workshop)).to eq [ "18+" ]
     end
 
     it "maps 'teen' to 13-17" do
       workshop = create(:workshop, age_range: "teen")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["13-17"]
+      expect(age_range_category_names(workshop)).to eq [ "13-17" ]
     end
 
     it "maps 'children' to 3-5, 6-12" do
       workshop = create(:workshop, age_range: "children")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["3-5", "6-12"]
+      expect(age_range_category_names(workshop)).to eq [ "3-5", "6-12" ]
     end
 
     it "maps 'all ages' to Mixed-age groups" do
       workshop = create(:workshop, age_range: "all ages")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["Mixed-age groups"]
+      expect(age_range_category_names(workshop)).to eq [ "Mixed-age groups" ]
     end
   end
 
@@ -100,13 +100,13 @@ RSpec.describe "data:convert_age_ranges" do
     it "maps '5 en adelante' from age_range_spanish" do
       workshop = create(:workshop, age_range: nil, age_range_spanish: "5 en adelante")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["13-17", "18+", "3-5", "6-12"]
+      expect(age_range_category_names(workshop)).to eq [ "13-17", "18+", "3-5", "6-12" ]
     end
 
     it "maps HTML-wrapped Spanish value" do
       workshop = create(:workshop, age_range: nil, age_range_spanish: "<div>18 y más</div>")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["18+"]
+      expect(age_range_category_names(workshop)).to eq [ "18+" ]
     end
   end
 
@@ -114,7 +114,7 @@ RSpec.describe "data:convert_age_ranges" do
     it "combines categories from both fields" do
       workshop = create(:workshop, age_range: "teen", age_range_spanish: "<p>18 y más</p>")
       run_task
-      expect(age_range_category_names(workshop)).to eq ["13-17", "18+"]
+      expect(age_range_category_names(workshop)).to eq [ "13-17", "18+" ]
     end
   end
 
@@ -141,7 +141,7 @@ RSpec.describe "data:convert_age_ranges" do
       run_task
       Rake::Task["data:convert_age_ranges"].reenable
       run_task
-      expect(age_range_category_names(workshop)).to eq ["6-12"]
+      expect(age_range_category_names(workshop)).to eq [ "6-12" ]
     end
   end
 

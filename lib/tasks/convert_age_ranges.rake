@@ -14,7 +14,7 @@ namespace :data do
     cat_mixed  = categories["mixed-age groups"]
     cat_family = categories["family windows"]
 
-    unless [cat_3_5, cat_6_12, cat_13_17, cat_18, cat_mixed, cat_family].all?
+    unless [ cat_3_5, cat_6_12, cat_13_17, cat_18, cat_mixed, cat_family ].all?
       abort "Missing AgeRange categories. Run seeds first. Need: 3-5, 6-12, 13-17, 18+, Mixed-age groups, Family Windows"
     end
 
@@ -127,8 +127,8 @@ namespace :data do
     nilled_es = 0
     unmatched = []
 
-    Workshop.where.not(age_range: [nil, ""]).or(
-      Workshop.where.not(age_range_spanish: [nil, ""])
+    Workshop.where.not(age_range: [ nil, "" ]).or(
+      Workshop.where.not(age_range_spanish: [ nil, "" ])
     ).find_each do |workshop|
       # --- Classify from both fields (union of matches) ---
       matched_from_en = classify.call(workshop.age_range)
