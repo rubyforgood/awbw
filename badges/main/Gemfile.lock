@@ -101,9 +101,6 @@ GEM
       activesupport (>= 7.1)
       device_detector (>= 1)
       safely_block (>= 0.4)
-    apipie-rails (1.5.0)
-      actionpack (>= 5.0)
-      activesupport (>= 5.0)
     ast (2.4.3)
     aws-eventstream (1.4.0)
     aws-partitions (1.1213.0)
@@ -276,7 +273,6 @@ GEM
       railties (>= 4.2.0)
       thor (>= 0.14, < 2.0)
     json (2.18.1)
-    jwt (1.2.1)
     language_server-protocol (3.17.0.5)
     launchy (3.1.1)
       addressable (~> 2.8)
@@ -556,9 +552,6 @@ GEM
     raabro (1.4.0)
     racc (1.8.1)
     rack (3.2.5)
-    rack-cors (3.0.0)
-      logger
-      rack (>= 3.0.14)
     rack-mini-profiler (4.0.1)
       rack (>= 1.2.0)
     rack-proxy (0.7.7)
@@ -772,7 +765,6 @@ DEPENDENCIES
   action_policy (~> 0.7.6)
   active_storage_validations (~> 3.0)
   ahoy_matey
-  apipie-rails (~> 1.5.0)
   aws-sdk-s3
   bcrypt (= 3.1.16)
   better_errors
@@ -801,7 +793,6 @@ DEPENDENCIES
   jbuilder (~> 2.0)
   jquery-rails
   json (>= 2.6, < 3)
-  jwt (~> 1.2.1)
   launchy
   listen
   maxmind-geoip2 (~> 1.5, >= 1.5.1)
@@ -814,7 +805,6 @@ DEPENDENCIES
   pry-coolline
   pry-rails
   puma (~> 6.0)
-  rack-cors
   rack-mini-profiler (~> 4.0)
   rails (~> 8.1.0)
   rspec-rails
@@ -854,7 +844,6 @@ CHECKSUMS
   activesupport (8.1.2) sha256=88842578ccd0d40f658289b0e8c842acfe9af751afee2e0744a7873f50b6fdae
   addressable (2.8.8) sha256=7c13b8f9536cf6364c03b9d417c19986019e28f7c00ac8132da4eb0fe393b057
   ahoy_matey (5.4.1) sha256=b9ccac7f497889de6982f1503b41a7e275c5a6e4e12a6947b418c69c2c2119b1
-  apipie-rails (1.5.0) sha256=92c0fba527978f1d151ae381dffdae34399d01e6a711daa8e14e522e51f8b444
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
   aws-eventstream (1.4.0) sha256=116bf85c436200d1060811e6f5d2d40c88f65448f2125bc77ffce5121e6e183b
   aws-partitions (1.1213.0) sha256=5ec132d91d44ef2702125b8f71f0e4fc2cd7de040e02c5d0aefb87219fd2e05e
@@ -936,7 +925,6 @@ CHECKSUMS
   jmespath (1.6.2) sha256=238d774a58723d6c090494c8879b5e9918c19485f7e840f2c1c7532cf84ebcb1
   jquery-rails (4.6.1) sha256=619f3496cdcdeaae1fd6dafa52dbac3fc45b745d4e09712da4184a16b3a8d9c0
   json (2.18.1) sha256=fe112755501b8d0466b5ada6cf50c8c3f41e897fa128ac5d263ec09eedc9f986
-  jwt (1.2.1) sha256=b0cfc9e85b2f851aa49931a4c07156127888fbf003e7ef971d4d6c2e91f98661
   language_server-protocol (3.17.0.5) sha256=fd1e39a51a28bf3eec959379985a72e296e9f9acfce46f6a79d31ca8760803cc
   launchy (3.1.1) sha256=72b847b5cc961589dde2c395af0108c86ff0119f42d4648d25b5440ebb10059e
   lint_roller (1.1.0) sha256=2c0c845b632a7d172cb849cc90c1bce937a28c5c8ccccb50dfd46a485003cc87
@@ -1044,7 +1032,6 @@ CHECKSUMS
   raabro (1.4.0) sha256=d4fa9ff5172391edb92b242eed8be802d1934b1464061ae5e70d80962c5da882
   racc (1.8.1) sha256=4a7f6929691dbec8b5209a0b373bc2614882b55fc5d2e447a21aaa691303d62f
   rack (3.2.5) sha256=4cbd0974c0b79f7a139b4812004a62e4c60b145cba76422e288ee670601ed6d3
-  rack-cors (3.0.0) sha256=7b95be61db39606906b61b83bd7203fa802b0ceaaad8fcb2fef39e097bf53f68
   rack-mini-profiler (4.0.1) sha256=485810c23211f908196c896ea10cad72ed68780ee2998bec1f1dfd7558263d78
   rack-proxy (0.7.7) sha256=446a4b57001022145d5c3ba73b775f66a2260eaf7420c6907483141900395c8a
   rack-session (2.1.1) sha256=0b6dc07dea7e4b583f58a48e8b806d4c9f1c6c9214ebc202ec94562cbea2e4e9

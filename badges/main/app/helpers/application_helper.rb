@@ -203,6 +203,33 @@ module ApplicationHelper
     "if(this.value){this.classList.remove('select-placeholder')}else{this.classList.add('select-placeholder')}"
   end
 
+  def hidden_fields_for_params(hash, prefix = nil)
+    return "".html_safe if hash.blank?
+
+    fields = []
+    hash.each do |key, value|
+      field_name = prefix ? "#{prefix}[#{key}]" : key.to_s
+      case value
+      when ActionDispatch::Http::UploadedFile
+        next
+      when Hash
+        fields << hidden_fields_for_params(value, field_name)
+      when Array
+        value.each_with_index do |item, i|
+          if item.is_a?(Hash)
+            fields << hidden_fields_for_params(item, "#{field_name}[#{i}]")
+          else
+            fields << tag.input(type: "hidden", name: "#{field_name}[]", value: item)
+          end
+        end
+      else
+        next if key.to_s == "id" && value.blank?
+        fields << tag.input(type: "hidden", name: field_name, value: value)
+      end
+    end
+    safe_join(fields)
+  end
+
   def us_time_zone_fundamentals
     zone_names = [
       "Eastern Time (US & Canada)",
