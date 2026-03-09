@@ -199,7 +199,7 @@ end
         :end_date,
         :_destroy
       ],
-      comments_attributes: [ :id, :body ],
+      comments_attributes: [ :id, :body, :_destroy ],
       addresses_attributes: [
         :id,
         :address_type,

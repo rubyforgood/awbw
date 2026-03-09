@@ -4,7 +4,7 @@ RSpec.describe Faq do
   # let(:faq) { build(:faq) } # Keep if needed
 
   describe "associations" do
-    # Add association tests if any
+    it { should have_many(:bookmarks).dependent(:destroy) }
   end
 
   describe "validations" do
