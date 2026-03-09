@@ -1,8 +1,18 @@
 <%= turbo_frame_tag :manage_results do %>
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
-    <p class="text-sm text-gray-500 px-6 py-4 border-b border-gray-100">
-      <%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %>
-    </p>
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-controller="column-toggle">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <p class="text-sm text-gray-500">
+        <%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %>
+      </p>
+      <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+        <span class="text-sm text-gray-500">Confirmed</span>
+        <input type="checkbox" data-column-toggle-target="toggle" data-action="column-toggle#toggle" class="sr-only">
+        <span class="relative inline-block w-9 h-5">
+          <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+          <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+        </span>
+      </label>
+    </div>
     <% event_form_ids = @event.form_ids %>
     <% form_submissions = event_form_ids.any? ? PersonForm.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
     <% if @event_registrations.any? %>
@@ -16,6 +26,7 @@
               <% if @event.cost_cents.to_i > 0 %>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
               <% end %>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col>Confirmed</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Attendance status</th>
               <th class="px-4 py-2"></th>
             </tr>
@@ -101,6 +112,16 @@
                     <% end %>
                   </td>
                 <% end %>
+                <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-col>
+                  <% if person.user.present? %>
+                    <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
+                  <% else %>
+                    <%= link_to "Create user",
+                                new_user_path(person_id: person.id),
+                                class: "btn btn-secondary-outline",
+                                data: { turbo_frame: "_top" } %>
+                  <% end %>
+                </td>
                 <td class="px-4 py-2 text-sm text-nowrap">
                   <%= render "event_registrations/attendance_status_badge", registration: registration %>
                 </td>
