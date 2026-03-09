@@ -563,7 +563,9 @@ variations.each do |var_data|
     body: var_data[:rhino_body],
     rhino_body: var_data[:rhino_body],
     position: var_data[:position],
-    published: [ true, true, false ].sample
+    published: [ true, true, false ].sample,
+    windows_type_id: [ adult_wt.id, children_wt.id, combined_wt.id ].sample,
+    author_credit_preference: "anonymous"
   )
 end
 
