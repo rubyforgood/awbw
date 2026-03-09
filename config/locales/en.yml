@@ -40,7 +40,7 @@ en:
     models:
       video_recording:
         one: "Video"
-        other: "Tutorials"
+        other: "Videos"
   helpers:
     submit:
       create: "Submit"
