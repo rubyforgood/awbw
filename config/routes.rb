@@ -160,6 +160,7 @@ Rails.application.routes.draw do
   resources :stories
   resources :story_shares, only: [ :index, :show ]
   resources :video_recordings
+  get "tutorials", to: "video_recordings#index"
   resources :user_forms
   resources :windows_types
   resources :workshop_ideas
