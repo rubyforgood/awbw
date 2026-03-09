@@ -8,13 +8,17 @@
                     input_html: { rows: 2,
                                   value: f.object.title } %>
       </div>
-      <div class="admin-only bg-blue-100 rounded grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
-        <%= f.input :is_instructional, as: :boolean %>
-        <%= f.input :is_podcast, as: :boolean %>
-        <%= f.input :published, as: :boolean %>
-        <%= f.input :featured, as: :boolean %>
-        <%= f.input :publicly_visible, as: :boolean %>
-        <%= f.input :publicly_featured, as: :boolean %>
+      <div class="admin-only bg-blue-100 rounded p-3 mt-6 md:mt-0">
+        <div class="grid grid-cols-2 items-center gap-2 mb-3">
+          <%= f.input :published, as: :boolean %>
+          <%= f.input :featured, as: :boolean %>
+          <%= f.input :publicly_visible, as: :boolean %>
+          <%= f.input :publicly_featured, as: :boolean %>
+        </div>
+        <div class="grid grid-cols-2 items-center gap-2">
+          <%= f.input :is_instructional, as: :boolean %>
+          <%= f.input :is_podcast, as: :boolean %>
+        </div>
       </div>
     </div>
 
