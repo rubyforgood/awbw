@@ -136,7 +136,7 @@ class Workshop < ApplicationRecord
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true
   accepts_nested_attributes_for :workshop_variations, reject_if: proc { |object| object.nil? }
-  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
 
   # Scopes
