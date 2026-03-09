@@ -96,7 +96,7 @@ module EventRegistrationServices
         email: email,
         email_type: email_type,
         email_2: field_value("secondary_email")&.strip,
-        email_2_type: field_value("secondary_email_type")&.downcase || "personal",
+        email_2_type: field_value("secondary_email_type")&.downcase,
       )
     end
 

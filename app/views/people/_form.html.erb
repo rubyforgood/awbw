@@ -145,14 +145,16 @@
                     label: "Primary email type",
                     as: :select,
                     collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                    selected: f.object.email_type || f.object.user&.email_type %>
+                    selected: f.object.email_type || f.object.user&.email_type,
+                    include_blank: true %>
 
         <%= f.input :email_2, label: "Secondary email" %>
 
         <%= f.input :email_2_type,
                     label: "Secondary email type",
                     as: :select,
-                    collection: Person::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
+                    collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                    include_blank: true %>
       </div>
     </div>
   </div>
