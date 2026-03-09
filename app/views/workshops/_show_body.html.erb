@@ -135,10 +135,10 @@
             <hr class="border-gray-300 mb-2">
 
             <div class="flex flex-wrap gap-4">
-                <%= render "assets/display_image", item: workshop.primary_asset, item_type: "Main" %>
+                <%= render "assets/display_image", item: workshop.primary_asset, item_type: "Main", link: true %>
 
                 <% workshop.gallery_assets.each_with_index do |gallery_assets, idx| %>
-                  <%= render "assets/display_image", item: gallery_assets, idx: idx %>
+                  <%= render "assets/display_image", item: gallery_assets, idx: idx, link: true %>
                 <% end %>
             </div>
           </div>
