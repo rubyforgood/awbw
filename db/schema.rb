@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -709,7 +709,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_180000) do
     t.string "display_name_preference"
     t.string "email"
     t.string "email_2"
-    t.string "email_2_type", default: "personal", null: false
+    t.string "email_2_type"
     t.string "email_type"
     t.string "facebook_url"
     t.string "first_name", null: false
@@ -992,7 +992,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_180000) do
     t.datetime "current_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
     t.string "email", default: "", null: false
-    t.string "email_type", default: "work", null: false
+    t.string "email_type"
     t.string "encrypted_password", default: "", null: false
     t.integer "failed_attempts", default: 0, null: false
     t.string "first_name", default: ""
