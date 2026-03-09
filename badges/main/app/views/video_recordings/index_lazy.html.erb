@@ -1,0 +1,24 @@
+<%= turbo_frame_tag "video_recordings_results" do %>
+  <div class="mt-4">
+    <% if @video_recordings.any? %>
+      <%= tag.div class: "grid grid-cols-1 lg:grid-cols-2 gap-6" do %>
+        <% @video_recordings.each do |video_recording| %>
+          <%= render "video_card", video_recording: video_recording %>
+        <% end %>
+      <% end %>
+
+      <!-- Pagination -->
+      <div class="pagination flex justify-center mt-12">
+        <%= tailwind_paginate @video_recordings %>
+      </div>
+    <% else %>
+      <div class="text-gray-500 italic">
+        <% if @video_type == "instructional" %>
+          No <%= VideoRecording.model_name.human(count: 2).downcase %> found matching your filters.
+        <% else %>
+          No videos found matching your filters.
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

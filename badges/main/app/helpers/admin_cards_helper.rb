@@ -13,7 +13,7 @@ module AdminCardsHelper
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime),
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
-      model_card(:tutorials, icon: "🎬", title: "Video Gallery"),
+      model_card(:video_recordings, icon: "🎬", title: "Video Gallery"),
       model_card(:banners, icon: "📣"),
       model_card(:community_news, icon: "📰"),
       model_card(:faqs, icon: "❔", title: "FAQs")

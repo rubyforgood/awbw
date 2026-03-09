@@ -555,16 +555,21 @@ variations = [
 ]
 
 # rubocop:enable Style/PercentLiteralDelimiters
-variations.each_with_index do |var_data, i|
+variations.each do |var_data|
   workshop = Workshop.find_by(title: var_data[:workshop_title])
   next unless workshop
 
-  workshop.workshop_variations.where(name: var_data[:name]).first_or_create!(
+  windows_type_id = [ adult_wt.id, children_wt.id, combined_wt.id ].sample
+  variation = workshop.workshop_variations.find_or_initialize_by(name: var_data[:name])
+  variation.assign_attributes(
     body: var_data[:rhino_body],
     rhino_body: var_data[:rhino_body],
     position: var_data[:position],
-    published: i != variations.length - 1
+    published: [ true, true, false ].sample,
+    windows_type_id: windows_type_id,
+    author_credit_preference: "anonymous"
   )
+  variation.save!
 end
 
 puts "Creating Persons and Affiliations for seed users…"
@@ -834,11 +839,11 @@ puts "Creating WorkshopVariationIdeas…"
 end
 
 puts "Linking some WorkshopVariations to WorkshopVariationIdeas…"
-WorkshopVariationIdea.all.sample(2).each do |idea|
+WorkshopVariationIdea.all.sample(2).each_with_index do |idea, i|
   variation = WorkshopVariation.where(workshop_variation_idea_id: nil).sample
   next unless variation
 
-  variation.update!(workshop_variation_idea_id: idea.id)
+  variation.update!(workshop_variation_idea_id: idea.id, published: i > 0)
 end
 
 puts "Creating WorkshopLogs…"
@@ -1364,7 +1369,9 @@ puts "Creating Tutorials…"
     featured: true,
     publicly_visible: true,
     publicly_featured: true,
-    position: 1
+    position: 1,
+    is_instructional: true,
+    is_podcast: false
   },
   {
     title: "Trauma-Informed Facilitation Basics",
@@ -1374,7 +1381,9 @@ puts "Creating Tutorials…"
     featured: true,
     publicly_visible: true,
     publicly_featured: true,
-    position: 2
+    position: 2,
+    is_instructional: true,
+    is_podcast: false
   },
   {
     title: "Creating Safe Spaces for Art Expression",
@@ -1384,7 +1393,9 @@ puts "Creating Tutorials…"
     featured: true,
     publicly_visible: true,
     publicly_featured: true,
-    position: 3
+    position: 3,
+    is_instructional: false,
+    is_podcast: false
   },
   {
     title: "Working with Children and Youth",
@@ -1392,7 +1403,9 @@ puts "Creating Tutorials…"
     youtube_url: "https://www.youtube.com/watch?v=kJQP7kiw5Fk",
     published: true,
     featured: true,
-    position: 4
+    position: 4,
+    is_instructional: false,
+    is_podcast: false
   },
   {
     title: "Art Materials and Supply Management",
@@ -1400,7 +1413,9 @@ puts "Creating Tutorials…"
     youtube_url: "https://www.youtube.com/watch?v=RgKAFK5djSk",
     published: true,
     featured: true,
-    position: 5
+    position: 5,
+    is_instructional: false,
+    is_podcast: false
   },
   {
     title: "Monthly Reporting Walkthrough",
@@ -1408,10 +1423,12 @@ puts "Creating Tutorials…"
     youtube_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
     published: true,
     featured: true,
-    position: 6
+    position: 6,
+    is_instructional: false,
+    is_podcast: false
   }
-].each do |tutorial_data|
-  Tutorial.where(title: tutorial_data[:title]).first_or_create!(tutorial_data)
+].each do |video_data|
+  VideoRecording.where(title: video_data[:title]).first_or_create!(video_data)
 end
 
 puts "Creating Bookmarks for seed users…"

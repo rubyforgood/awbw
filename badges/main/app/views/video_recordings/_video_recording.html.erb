@@ -1,0 +1,43 @@
+<article id="video-recording-<%= video_recording.id %>"
+         class="video-recording-block scroll-mt-24">
+
+  <header class="mb-4 flex w-full items-center gap-4">
+    <h2 class="text-2xl">
+      <%= link_to title_with_badges(video_recording, font_size: "text-2xl"),
+                  video_recording_path(video_recording),
+                  data: {turbo_frame: "_top"},
+                  class: "hover:underline" %>
+    </h2>
+    <% if allowed_to?(:edit?, video_recording) %>
+      <%= link_to "Edit",
+                  edit_video_recording_path(video_recording),
+                  data: {turbo_frame: "_top"},
+                  class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+    <% end %>
+    <div class="ml-auto flex items-center gap-2">
+      <%= render "bookmarks/editable_bookmark_icon", resource: video_recording %>
+      <%= link_to "View", video_recording_path(video_recording),
+                    data: { turbo_frame: "_top"},
+                    class: "btn btn-secondary-outline" %>
+    </div>
+  </header>
+
+  <!-- Embedded Video -->
+  <% if video_recording.youtube_url.present? %>
+    <div class="mb-2">
+      <div class="relative w-full overflow-hidden rounded-lg shadow-sm" style="padding-top: 56.25%;">
+        <iframe
+          src="<%= youtube_embed_url(video_recording.youtube_url) %>"
+          title="<%= video_recording.title %>"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          class="absolute inset-0 h-full w-full border-0">
+        </iframe>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Body -->
+  <%= video_recording.rhino_body %>
+
+</article>

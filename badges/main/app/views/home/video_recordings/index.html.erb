@@ -1,0 +1,15 @@
+<%= turbo_frame_tag "home_video_gallery" do %>
+  <% if @video_recordings&.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @video_recordings.each do |video_recording| %>
+        <%= render "video_recordings/video_card", video_recording: video_recording %>
+      <% end %>
+    </div>
+    <div class="mt-6 text-right"><%= link_to "Browse all videos",
+                video_recordings_path(video_type: "all"),
+                data: { turbo_frame: "_top" },
+                class: "text-primary font-medium hover:underline" %></div>
+  <% else %>
+    <p class="text-gray-500">No videos yet.</p>
+  <% end %>
+<% end %>

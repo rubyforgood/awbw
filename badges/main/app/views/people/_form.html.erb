@@ -145,14 +145,16 @@
                     label: "Primary email type",
                     as: :select,
                     collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                    selected: f.object.email_type || f.object.user&.email_type %>
+                    selected: f.object.email_type || f.object.user&.email_type,
+                    include_blank: true %>
 
         <%= f.input :email_2, label: "Secondary email" %>
 
         <%= f.input :email_2_type,
                     label: "Secondary email type",
                     as: :select,
-                    collection: Person::CONTACT_TYPES.compact.map{|type| [type.to_s.humanize, type]} %>
+                    collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                    include_blank: true %>
       </div>
     </div>
   </div>
@@ -164,7 +166,9 @@
       </div>
 
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-        <%= f.input :best_time_to_call %>
+        <% if @person.best_time_to_call.present? || params[:admin] == "true" %>
+          <%= f.input :best_time_to_call %>
+        <% end %>
 
         <%= f.simple_fields_for :contact_methods do |f| %>
           <%= render "contact_methods/contact_method_fields", f: f %>
