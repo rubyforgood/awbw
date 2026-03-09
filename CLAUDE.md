@@ -169,6 +169,8 @@ bundle exec bundle-audit check --update
 
 ## PRs
 
+- After completing work, **create a pull request** using `gh pr create`
+- Once the PR is created, **prepend the PR number to the branch name** (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
 - Use `docs/pull_request_template.md` for PR description structure
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
