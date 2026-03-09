@@ -494,6 +494,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
     t.datetime "updated_at", precision: nil, null: false
   end
 
+  create_table "form_answers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "form_field_id"
+    t.bigint "form_submission_id"
+    t.string "question_text"
+    t.text "text"
+    t.datetime "updated_at", null: false
+    t.index ["form_field_id"], name: "index_form_answers_on_form_field_id"
+    t.index ["form_submission_id"], name: "index_form_answers_on_form_submission_id"
+  end
+
   create_table "form_builders", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.text "description", size: :medium
@@ -532,13 +543,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
     t.index ["form_id"], name: "index_form_fields_on_form_id"
   end
 
+  create_table "form_submissions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "form_id"
+    t.bigint "person_id"
+    t.datetime "updated_at", null: false
+    t.index ["form_id"], name: "index_form_submissions_on_form_id"
+    t.index ["person_id"], name: "index_form_submissions_on_person_id"
+  end
+
   create_table "forms", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.integer "form_builder_id"
+    t.boolean "hide_answered_form_questions", default: false, null: false
+    t.boolean "hide_answered_person_questions", default: false, null: false
     t.string "name"
     t.integer "owner_id"
     t.string "owner_type"
     t.boolean "scholarship_application", default: false, null: false
+    t.json "sections"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
   end
@@ -750,25 +773,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
     t.integer "legacy_id"
     t.string "security_cat"
     t.datetime "updated_at", precision: nil, null: false
-  end
-
-  create_table "person_form_form_fields", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "form_field_id"
-    t.bigint "person_form_id"
-    t.text "text"
-    t.datetime "updated_at", null: false
-    t.index ["form_field_id"], name: "index_person_form_form_fields_on_form_field_id"
-    t.index ["person_form_id"], name: "index_person_form_form_fields_on_person_form_id"
-  end
-
-  create_table "person_forms", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "form_id"
-    t.bigint "person_id"
-    t.datetime "updated_at", null: false
-    t.index ["form_id"], name: "index_person_forms_on_form_id"
-    t.index ["person_id"], name: "index_person_forms_on_person_id"
   end
 
   create_table "quotable_item_quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1362,10 +1366,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
   add_foreign_key "event_registrations", "people", column: "registrant_id"
   add_foreign_key "events", "locations"
   add_foreign_key "events", "users", column: "created_by_id"
+  add_foreign_key "form_answers", "form_fields"
+  add_foreign_key "form_answers", "form_submissions"
   add_foreign_key "form_builders", "windows_types"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_fields", "forms"
+  add_foreign_key "form_submissions", "forms"
+  add_foreign_key "form_submissions", "people"
   add_foreign_key "forms", "form_builders"
   add_foreign_key "monthly_reports", "affiliations", column: "organization_user_id"
   add_foreign_key "monthly_reports", "organizations"
@@ -1377,10 +1385,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
   add_foreign_key "payments", "events"
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
-  add_foreign_key "person_form_form_fields", "form_fields"
-  add_foreign_key "person_form_form_fields", "person_forms"
-  add_foreign_key "person_forms", "forms"
-  add_foreign_key "person_forms", "people"
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "workshops"
   add_foreign_key "report_form_field_answers", "answer_options"

@@ -110,32 +110,67 @@ module Events
 
     def visible_form_fields
       scope = @form.form_fields
-      if scholarship_mode?
-        scope = scope.where.not(field_group: "payment")
-      else
+      unless scholarship_mode?
         scope = scope.where.not(field_group: "scholarship")
       end
 
       person = current_user&.person
       if person
-        existing_submission = @form.form_submissions.find_by(person: person)
-        if existing_submission
-          answered_field_ids = existing_submission.form_answers
-                                                 .where.not(text: [ nil, "" ])
-                                                 .pluck(:form_field_id)
-
-          if @form.hide_answered_person_questions?
-            person_ids = answered_field_ids & @form.form_fields.where(field_group: "contact").ids
-            scope = scope.where.not(id: person_ids) if person_ids.any?
+        if @form.hide_answered_person_questions?
+          known_keys = person_known_field_keys(person)
+          if known_keys.any?
+            known_ids = @form.form_fields
+                             .where(field_group: %w[person_identifier person_contact_info], field_key: known_keys)
+                             .ids
+            scope = scope.where.not(id: known_ids) if known_ids.any?
           end
 
-          if @form.hide_answered_form_questions?
+          # Background fields (e.g. ethnicity) are always hidden for logged-in users
+          # since Person doesn't store these — they're collected once per event
+          scope = scope.where.not(field_group: "background")
+        end
+
+        if @form.hide_answered_form_questions?
+          existing_submission = @form.form_submissions.find_by(person: person)
+          if existing_submission
+            answered_field_ids = existing_submission.form_answers
+                                                   .joins(:form_field)
+                                                   .where(form_fields: { field_group: %w[professional marketing] })
+                                                   .where.not(text: [ nil, "" ])
+                                                   .pluck(:form_field_id)
             scope = scope.where.not(id: answered_field_ids) if answered_field_ids.any?
           end
         end
       end
 
       scope.reorder(position: :asc)
+    end
+
+    def person_known_field_keys(person)
+      keys = []
+      keys << "first_name" if person.first_name.present?
+      keys << "last_name" if person.last_name.present?
+      keys << "primary_email" << "confirm_email" if person.email.present?
+      keys << "primary_email_type" if person.email_type.present?
+      keys << "nickname" if person.legal_first_name.present? || person.first_name.present?
+      keys << "pronouns" if person.pronouns.present?
+      keys << "secondary_email" if person.email_2.present?
+      keys << "secondary_email_type" if person.email_2_type.present?
+
+      if person.addresses.exists?
+        address = person.addresses.find_by(primary: true) || person.addresses.first
+        keys << "mailing_street" if address.street_address.present?
+        keys << "mailing_address_type" if address.address_type.present?
+        keys << "mailing_city" if address.city.present?
+        keys << "mailing_state" if address.state.present?
+        keys << "mailing_zip" if address.zip_code.present?
+      end
+
+      if person.contact_methods.where(kind: :phone).exists?
+        keys << "phone" << "phone_type"
+      end
+
+      keys
     end
 
     def ensure_registerable

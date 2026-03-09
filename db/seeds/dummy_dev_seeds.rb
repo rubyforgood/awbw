@@ -921,14 +921,14 @@ puts "Creating standalone registration forms…"
 unless Form.standalone.exists?(name: "Short Event Registration")
   FormBuilderService.new(
     name: "Short Event Registration",
-    sections: %i[person_identifier consent event_feedback scholarship]
+    sections: %i[person_identifier consent marketing scholarship]
   ).call
 end
 
 unless Form.standalone.exists?(name: "Extended Event Registration")
   FormBuilderService.new(
     name: "Extended Event Registration",
-    sections: %i[person_identifier person_contact_info person_background professional_info event_feedback scholarship payment consent]
+    sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
   ).call
 end
 

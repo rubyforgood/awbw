@@ -4,7 +4,7 @@ class FormBuilderService
     person_contact_info: { label: "Person contact info", method: :build_person_contact_info_fields },
     person_background: { label: "Person background", method: :build_person_background_fields },
     professional_info: { label: "Professional info", method: :build_professional_info_fields },
-    event_feedback: { label: "Event feedback", method: :build_event_feedback_fields },
+    marketing: { label: "Marketing", method: :build_marketing_fields },
     scholarship: { label: "Scholarship", method: :build_scholarship_fields },
     payment: { label: "Payment", method: :build_payment_fields },
     consent: { label: "Consent", method: :build_consent_fields },
@@ -43,7 +43,7 @@ class FormBuilderService
     ],
     person_background: %w[racial_ethnic_identity],
     professional_info: %w[primary_service_area workshop_environments client_life_experiences primary_age_group],
-    event_feedback: %w[referral_source training_motivation interested_in_more],
+    marketing: %w[referral_source training_motivation interested_in_more],
     scholarship: %w[scholarship_eligibility impact_description implementation_plan additional_comments],
     payment: %w[number_of_attendees payment_method],
     consent: %w[communication_consent],
@@ -56,7 +56,7 @@ class FormBuilderService
     person_contact_info: [ "Contact Information", "Mailing Address", "Agency / Organization Information" ],
     person_background: [ "Background Information" ],
     professional_info: [ "Professional Information" ],
-    event_feedback: [ "About You" ],
+    marketing: [ "Marketing" ],
     scholarship: [ "Scholarship Application" ],
     payment: [ "Payment Information" ],
     consent: [ "Consent" ],
@@ -142,73 +142,73 @@ class FormBuilderService
 
   def build_person_identifier_fields(form, position)
     position = add_field(form, position, "First Name", :free_form_input_one_line,
-                         key: "first_name", group: "contact", required: true)
+                         key: "first_name", group: "person_identifier", required: true)
     position = add_field(form, position, "Last Name", :free_form_input_one_line,
-                         key: "last_name", group: "contact", required: true)
+                         key: "last_name", group: "person_identifier", required: true)
     position = add_field(form, position, "Email", :free_form_input_one_line,
-                         key: "primary_email", group: "contact", required: true)
+                         key: "primary_email", group: "person_identifier", required: true)
     position = add_field(form, position, "Confirm Email", :free_form_input_one_line,
-                         key: "confirm_email", group: "contact", required: true)
+                         key: "confirm_email", group: "person_identifier", required: true)
     position
   end
 
   def build_person_contact_info_fields(form, position)
-    position = add_header(form, position, "Contact Information", group: "contact")
+    position = add_header(form, position, "Contact Information", group: "person_contact_info")
 
     position = add_field(form, position, "Primary Email Type", :multiple_choice_radio,
-                         key: "primary_email_type", group: "contact", required: true,
+                         key: "primary_email_type", group: "person_contact_info", required: true,
                          options: %w[Personal Work])
     position = add_field(form, position, "Preferred Nickname", :free_form_input_one_line,
-                         key: "nickname", group: "contact", required: false)
+                         key: "nickname", group: "person_contact_info", required: false)
     position = add_field(form, position, "Pronouns", :free_form_input_one_line,
-                         key: "pronouns", group: "contact", required: false)
+                         key: "pronouns", group: "person_contact_info", required: false)
     position = add_field(form, position, "Secondary Email", :free_form_input_one_line,
-                         key: "secondary_email", group: "contact", required: false)
+                         key: "secondary_email", group: "person_contact_info", required: false)
     position = add_field(form, position, "Secondary Email Type", :multiple_choice_radio,
-                         key: "secondary_email_type", group: "contact", required: false,
+                         key: "secondary_email_type", group: "person_contact_info", required: false,
                          options: %w[Personal Work])
 
-    position = add_header(form, position, "Mailing Address", group: "contact")
+    position = add_header(form, position, "Mailing Address", group: "person_contact_info")
     position = add_field(form, position, "Street Address", :free_form_input_one_line,
-                         key: "mailing_street", group: "contact", required: true)
+                         key: "mailing_street", group: "person_contact_info", required: true)
     position = add_field(form, position, "Address Type", :multiple_choice_radio,
-                         key: "mailing_address_type", group: "contact", required: true,
+                         key: "mailing_address_type", group: "person_contact_info", required: true,
                          options: %w[Home Work])
     position = add_field(form, position, "City", :free_form_input_one_line,
-                         key: "mailing_city", group: "contact", required: true)
+                         key: "mailing_city", group: "person_contact_info", required: true)
     position = add_field(form, position, "State / Province", :free_form_input_one_line,
-                         key: "mailing_state", group: "contact", required: true)
+                         key: "mailing_state", group: "person_contact_info", required: true)
     position = add_field(form, position, "Zip / Postal Code", :free_form_input_one_line,
-                         key: "mailing_zip", group: "contact", required: true)
+                         key: "mailing_zip", group: "person_contact_info", required: true)
 
     position = add_field(form, position, "Phone", :free_form_input_one_line,
-                         key: "phone", group: "contact", required: true)
+                         key: "phone", group: "person_contact_info", required: true)
     position = add_field(form, position, "Phone Type", :multiple_choice_radio,
-                         key: "phone_type", group: "contact", required: true,
+                         key: "phone_type", group: "person_contact_info", required: true,
                          options: %w[Mobile Home Work])
 
-    position = add_header(form, position, "Agency / Organization Information", group: "contact")
+    position = add_header(form, position, "Agency / Organization Information", group: "person_contact_info")
     position = add_field(form, position, "Agency / Organization Name", :free_form_input_one_line,
-                         key: "agency_name", group: "contact", required: false)
+                         key: "agency_name", group: "person_contact_info", required: false)
     position = add_field(form, position, "Position / Title", :free_form_input_one_line,
-                         key: "agency_position", group: "contact", required: false)
+                         key: "agency_position", group: "person_contact_info", required: false)
     position = add_field(form, position, "Agency Street Address", :free_form_input_one_line,
-                         key: "agency_street", group: "contact", required: false)
+                         key: "agency_street", group: "person_contact_info", required: false)
     position = add_field(form, position, "Agency City", :free_form_input_one_line,
-                         key: "agency_city", group: "contact", required: false)
+                         key: "agency_city", group: "person_contact_info", required: false)
     position = add_field(form, position, "Agency State / Province", :free_form_input_one_line,
-                         key: "agency_state", group: "contact", required: false)
+                         key: "agency_state", group: "person_contact_info", required: false)
     position = add_field(form, position, "Agency Zip / Postal Code", :free_form_input_one_line,
-                         key: "agency_zip", group: "contact", required: false)
+                         key: "agency_zip", group: "person_contact_info", required: false)
     position = add_field(form, position, "Agency Type", :multiple_choice_radio,
-                         key: "agency_type", group: "contact", required: false,
+                         key: "agency_type", group: "person_contact_info", required: false,
                          options: [
                            "Domestic Violence", "Homeless Shelter", "Hospital",
                            "Mental Health", "School", "After-School Program",
                            "Community Center", "Other"
                          ])
     position = add_field(form, position, "Agency Website", :free_form_input_one_line,
-                         key: "agency_website", group: "contact", required: false)
+                         key: "agency_website", group: "person_contact_info", required: false)
     position
   end
 
@@ -246,16 +246,16 @@ class FormBuilderService
     position
   end
 
-  def build_event_feedback_fields(form, position)
-    position = add_header(form, position, "About You", group: "event_feedback")
+  def build_marketing_fields(form, position)
+    position = add_header(form, position, "Marketing", group: "marketing")
 
     position = add_field(form, position, "How did you hear about this training?", :free_form_input_paragraph,
-                         key: "referral_source", group: "event_feedback", required: false)
+                         key: "referral_source", group: "marketing", required: false)
     position = add_field(form, position, "What motivates you to attend this training?", :free_form_input_paragraph,
-                         key: "training_motivation", group: "event_feedback", required: false)
+                         key: "training_motivation", group: "marketing", required: false)
     position = add_field(form, position, "Are you interested in learning more about upcoming trainings or resources?",
                          :multiple_choice_radio,
-                         key: "interested_in_more", group: "event_feedback", required: true,
+                         key: "interested_in_more", group: "marketing", required: true,
                          options: %w[Yes No])
     position
   end

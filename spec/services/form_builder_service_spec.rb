@@ -59,21 +59,21 @@ RSpec.describe FormBuilderService do
       end
     end
 
-    context "event_feedback section" do
-      let(:form) { described_class.new(name: "Test", sections: %i[event_feedback]).call }
-
-      it "creates feedback fields" do
-        keys = form.form_fields.pluck(:field_key).compact
-        expect(keys).to include("referral_source", "training_motivation", "interested_in_more")
-      end
-    end
-
     context "payment section" do
       let(:form) { described_class.new(name: "Test", sections: %i[payment]).call }
 
       it "creates payment fields" do
         keys = form.form_fields.pluck(:field_key).compact
         expect(keys).to include("number_of_attendees", "payment_method")
+      end
+    end
+
+    context "marketing section" do
+      let(:form) { described_class.new(name: "Test", sections: %i[marketing]).call }
+
+      it "creates marketing fields" do
+        keys = form.form_fields.pluck(:field_key).compact
+        expect(keys).to include("referral_source", "training_motivation", "interested_in_more")
       end
     end
 
@@ -90,7 +90,7 @@ RSpec.describe FormBuilderService do
       let(:form) do
         described_class.new(
           name: "Short Event Registration",
-          sections: %i[person_identifier consent event_feedback scholarship]
+          sections: %i[person_identifier consent marketing scholarship]
         ).call
       end
 
@@ -109,11 +109,11 @@ RSpec.describe FormBuilderService do
       let(:form) do
         described_class.new(
           name: "Extended Event Registration",
-          sections: %i[person_identifier person_contact_info person_background professional_info event_feedback scholarship payment consent]
+          sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
         ).call
       end
 
-      it "creates fields from all 8 sections" do
+      it "creates fields from all sections" do
         keys = form.form_fields.pluck(:field_key).compact
         expect(keys).to include(
           "first_name", "nickname", "racial_ethnic_identity",

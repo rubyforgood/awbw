@@ -16,7 +16,76 @@
     </div>
 
     <div class="px-6 py-6">
-      <p class="text-xs text-gray-400 mb-4">Preview only — form inputs are disabled.</p>
+      <%
+        form_sections = (@form.sections || []).map(&:to_s)
+        has_scholarship = form_sections.include?("scholarship")
+        has_person = form_sections.include?("person_identifier") || form_sections.include?("person_contact_info") || form_sections.include?("person_background")
+        has_professional = form_sections.include?("professional_info") || form_sections.include?("marketing")
+        has_conditions = has_scholarship || (has_person && @form.hide_answered_person_questions?) || (has_professional && @form.hide_answered_form_questions?)
+
+        preview_logged_in = params[:preview_logged_in].present?
+        preview_scholarship = params[:preview_scholarship].present?
+        preview_answered = params[:preview_answered].present?
+      %>
+
+      <div class="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-3 space-y-2">
+        <p class="text-xs font-medium text-blue-800">Preview mode</p>
+        <% if has_conditions %>
+          <p class="text-xs text-blue-600 mb-1">Toggle to simulate how the form appears under different conditions:</p>
+          <div class="flex flex-wrap gap-4">
+            <% if has_person && @form.hide_answered_person_questions? %>
+              <%
+                logged_in_params = request.query_parameters.dup
+                if preview_logged_in
+                  logged_in_params.delete("preview_logged_in")
+                else
+                  logged_in_params["preview_logged_in"] = "1"
+                end
+              %>
+              <%= link_to form_path(@form, logged_in_params), class: "flex items-center gap-2 no-underline" do %>
+                <span class="text-xs text-blue-700">User logged in</span>
+                <span class="relative inline-block w-7 h-4 rounded-full <%= preview_logged_in ? 'bg-blue-600' : 'bg-gray-300' %>">
+                  <span class="absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 <%= preview_logged_in ? 'translate-x-3' : 'translate-x-0' %>"></span>
+                </span>
+              <% end %>
+            <% end %>
+            <% if has_professional && @form.hide_answered_form_questions? %>
+              <%
+                answered_params = request.query_parameters.dup
+                if preview_answered
+                  answered_params.delete("preview_answered")
+                else
+                  answered_params["preview_answered"] = "1"
+                end
+              %>
+              <%= link_to form_path(@form, answered_params), class: "flex items-center gap-2 no-underline" do %>
+                <span class="text-xs text-blue-700">Answers on file</span>
+                <span class="relative inline-block w-7 h-4 rounded-full <%= preview_answered ? 'bg-blue-600' : 'bg-gray-300' %>">
+                  <span class="absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 <%= preview_answered ? 'translate-x-3' : 'translate-x-0' %>"></span>
+                </span>
+              <% end %>
+            <% end %>
+            <% if has_scholarship %>
+              <%
+                scholarship_params = request.query_parameters.dup
+                if preview_scholarship
+                  scholarship_params.delete("preview_scholarship")
+                else
+                  scholarship_params["preview_scholarship"] = "1"
+                end
+              %>
+              <%= link_to form_path(@form, scholarship_params), class: "flex items-center gap-2 no-underline" do %>
+                <span class="text-xs text-blue-700">Scholarship</span>
+                <span class="relative inline-block w-7 h-4 rounded-full <%= preview_scholarship ? 'bg-blue-600' : 'bg-gray-300' %>">
+                  <span class="absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 <%= preview_scholarship ? 'translate-x-3' : 'translate-x-0' %>"></span>
+                </span>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-xs text-blue-600">No conditional visibility configured. All fields always shown.</p>
+        <% end %>
+      </div>
 
       <%
         fields_by_key_check = @form_fields.select(&:field_key).index_by(&:field_key)

@@ -1,5 +1,5 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[show edit update destroy reorder_field edit_sections update_sections]
+  before_action :set_form, only: %i[show edit update destroy reorder_field reorder_fields edit_sections update_sections]
 
   def index
     authorize!
@@ -8,7 +8,7 @@ class FormsController < ApplicationController
 
   def show
     authorize! @form
-    @form_fields = @form.form_fields.reorder(position: :asc)
+    @form_fields = preview_form_fields
   end
 
   def new
@@ -81,10 +81,40 @@ class FormsController < ApplicationController
     head :ok
   end
 
+  def reorder_fields
+    authorize! @form
+    positions = JSON.parse(request.body.read)["positions"] || []
+    positions.each do |item|
+      @form.form_fields.where(id: item["id"]).update_all(position: item["position"])
+    end
+    head :ok
+  end
+
   private
 
   def set_form
     @form = Form.find(params[:id])
+  end
+
+  def preview_form_fields
+    scope = @form.form_fields
+    form_sections = (@form.sections || []).map(&:to_s)
+
+    if params[:preview_scholarship].present?
+      # Scholarship mode: show scholarship fields (and keep payment visible)
+    elsif form_sections.include?("scholarship")
+      scope = scope.where.not(field_group: "scholarship")
+    end
+
+    if params[:preview_logged_in].present? && @form.hide_answered_person_questions?
+      scope = scope.where.not(field_group: %w[person_identifier person_contact_info background])
+    end
+
+    if params[:preview_answered].present? && @form.hide_answered_form_questions?
+      scope = scope.where.not(field_group: %w[professional marketing])
+    end
+
+    scope.reorder(position: :asc)
   end
 
   def form_params

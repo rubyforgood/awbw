@@ -13,14 +13,14 @@
         <%= f.text_field :name, class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
       </div>
 
-      <div class="flex gap-6">
+      <div class="flex flex-wrap gap-x-6 gap-y-2">
         <label class="flex items-center gap-2 cursor-pointer">
           <%= f.check_box :hide_answered_person_questions, class: "rounded border-gray-300 text-blue-600" %>
-          <span class="text-sm text-gray-800">Hide already-answered person questions</span>
+          <span class="text-sm text-gray-800">Hide any answered person & organization questions</span>
         </label>
         <label class="flex items-center gap-2 cursor-pointer">
           <%= f.check_box :hide_answered_form_questions, class: "rounded border-gray-300 text-blue-600" %>
-          <span class="text-sm text-gray-800">Hide already-answered form questions</span>
+          <span class="text-sm text-gray-800">Hide any answered form questions</span>
         </label>
       </div>
     </div>
@@ -31,12 +31,50 @@
         <span class="text-sm text-gray-500"><%= @form_fields.size %> fields</span>
       </div>
 
-      <div data-controller="sortable" data-sortable-url-value="<%= reorder_field_form_path(@form, field_id: ":id") %>">
-        <% @form_fields.each_with_index do |field, index| %>
-          <%= f.fields_for :form_fields, field do |ff| %>
-            <%= render "form_field_row", ff: ff, field: field, index: index %>
-          <% end %>
+      <%
+        form_sections = (@form.sections || []).map(&:to_s)
+        has_scholarship = form_sections.include?("scholarship")
+        has_person = form_sections.include?("person_identifier") || form_sections.include?("person_contact_info") || form_sections.include?("person_background")
+        has_professional = form_sections.include?("professional_info") || form_sections.include?("marketing")
+        has_conditions = has_scholarship ||
+                         (has_person && @form.hide_answered_person_questions?) ||
+                         (has_professional && @form.hide_answered_form_questions?)
+      %>
+      <% if has_conditions %>
+        <div class="px-6 py-3 border-b border-gray-100">
+          <p class="text-xs font-medium text-gray-500 mb-1.5">Conditional visibility</p>
+          <div class="flex flex-wrap gap-x-4 gap-y-1">
+            <% if has_scholarship %>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Scholarship-only</span>
+                <span class="text-xs text-gray-500">Shown only when registering for scholarship</span>
+              </div>
+            <% end %>
+            <% if has_person && @form.hide_answered_person_questions? %>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Logged out only</span>
+                <span class="text-xs text-gray-500">Hidden for logged-in users</span>
+              </div>
+            <% end %>
+            <% if has_professional && @form.hide_answered_form_questions? %>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Answers on file</span>
+                <span class="text-xs text-gray-500">Hidden when info is already known</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <div data-controller="form-fields-sortable" data-form-fields-sortable-url-value="<%= reorder_fields_form_path(@form) %>">
+        <%= f.fields_for :form_fields, @form_fields do |ff| %>
+          <%= render "form_field_fields", f: ff %>
         <% end %>
+      </div>
+
+      <div class="px-6 py-3 border-t border-gray-100">
+        <%= link_to_add_association "+ Add field", f, :form_fields,
+              class: "text-sm text-blue-600 hover:text-blue-800 font-medium" %>
       </div>
     </div>
 
