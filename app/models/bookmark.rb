@@ -2,7 +2,7 @@ class Bookmark < ApplicationRecord
   belongs_to :user
   belongs_to :bookmarkable, polymorphic: true
 
-  BOOKMARKABLE_MODELS = %w[CommunityNews Event Organization Person Report Resource Story StoryIdea
+  BOOKMARKABLE_MODELS = %w[CommunityNews Event Faq Organization Person Report Resource Story StoryIdea
                            Tutorial Workshop WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea].freeze
 
   DROPDOWN_MODELS = (BOOKMARKABLE_MODELS - %w[Report]).freeze
@@ -62,6 +62,7 @@ class Bookmark < ApplicationRecord
     bookmarks = self.joins(<<~SQL)
       LEFT JOIN community_news      AS st_cn  ON st_cn.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
       LEFT JOIN events              AS st_ev  ON st_ev.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
+      LEFT JOIN faqs                AS st_faq ON st_faq.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Faq'
       LEFT JOIN organizations       AS st_org ON st_org.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
       LEFT JOIN people              AS st_ppl ON st_ppl.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Person'
       LEFT JOIN resources           AS st_res ON st_res.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
@@ -80,6 +81,7 @@ class Bookmark < ApplicationRecord
         COALESCE(
           st_cn.title,
           st_ev.title,
+          st_faq.question,
           CONCAT(st_ppl.first_name, ' ', st_ppl.last_name),
           st_org.name,
           st_rpt.type,
@@ -106,6 +108,7 @@ class Bookmark < ApplicationRecord
     bookmarks = bookmarks.joins(<<~SQL)
       LEFT JOIN community_news ON community_news.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'CommunityNews'
       LEFT JOIN events         ON events.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Event'
+      LEFT JOIN faqs           ON faqs.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Faq'
       LEFT JOIN organizations  ON organizations.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Organization'
       LEFT JOIN people         ON people.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Person'
       LEFT JOIN resources      ON resources.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
@@ -121,7 +124,7 @@ class Bookmark < ApplicationRecord
     SQL
 
     bookmarks.where(
-      "community_news.title LIKE :title OR events.title LIKE :title OR people.first_name LIKE :title OR
+      "community_news.title LIKE :title OR events.title LIKE :title OR faqs.question LIKE :title OR people.first_name LIKE :title OR
        people.last_name LIKE :title OR organizations.name LIKE :title OR resources.title LIKE :title OR
        reports.type LIKE :title OR
        stories.title LIKE :title OR workshops.title LIKE :title OR workshop_ideas.title LIKE :title OR

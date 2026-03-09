@@ -2,6 +2,8 @@ class Faq < ApplicationRecord
   include Publishable
   positioned
 
+  has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+
   # Validations
   validates_presence_of :question, :answer
 
