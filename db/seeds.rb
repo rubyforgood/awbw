@@ -1,3 +1,6 @@
+# Disable email delivery during seeding
+ActionMailer::Base.perform_deliveries = false
+
 puts "Creating Users…"
 
 # Helper: case-insensitive find-or-create by name
