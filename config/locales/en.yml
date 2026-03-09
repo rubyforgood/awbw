@@ -39,9 +39,6 @@ en:
         rhino_body: "Details"
     models:
       video_recording:
-        one: "VideoRecording"
-        other: "VideoRecordings"
-      tutorial:
         one: "Video"
         other: "Tutorials"
   helpers:
