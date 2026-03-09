@@ -19,18 +19,18 @@
                   data: { turbo_frame: "_top" } %>
     </div>
     <div class="flex flex-col gap-2 flex-shrink-0">
-      <%= render "bookmarks/editable_bookmark_icon", resource: video_recording %>
       <div class="flex gap-2">
-        <% if allowed_to?(:edit?, video_recording) %>
-          <%= link_to "Edit",
-                      edit_video_recording_path(video_recording),
-                      data: { turbo_frame: "_top" },
-                      class: "admin-only bg-blue-100 text-xs px-2 py-1 rounded" %>
-        <% end %>
         <%= link_to "View", video_recording_path(video_recording),
                     data: { turbo_frame: "_top" },
                     class: "text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-100" %>
+        <%= render "bookmarks/editable_bookmark_icon", resource: video_recording %>
       </div>
+      <% if allowed_to?(:edit?, video_recording) %>
+        <%= link_to "Edit",
+                    edit_video_recording_path(video_recording),
+                    data: { turbo_frame: "_top" },
+                    class: "admin-only bg-blue-100 text-xs px-2 py-1 rounded" %>
+      <% end %>
     </div>
   </div>
 </div>
