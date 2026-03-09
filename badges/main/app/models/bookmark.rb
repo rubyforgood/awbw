@@ -191,6 +191,22 @@ class Bookmark < ApplicationRecord
     )
   end
 
+  DISPLAY_ASSOCIATIONS = %i[primary_asset gallery_assets windows_type].freeze
+
+  # Preload display associations on already-loaded bookmarkables, grouped by type.
+  # Safe for polymorphic because each type only gets associations it actually has.
+  def self.preload_bookmarkable_associations(bookmarks)
+    bookmarks.group_by(&:bookmarkable_type).each do |type, typed_bookmarks|
+      klass = type.constantize
+      assocs = DISPLAY_ASSOCIATIONS.select { |a| klass.reflect_on_association(a) }
+      next if assocs.empty?
+
+      records = typed_bookmarks.map(&:bookmarkable)
+      ActiveRecord::Associations::Preloader.new(records: records, associations: assocs).call
+    end
+    bookmarks
+  end
+
   def primary_asset
     bookmarkable.respond_to?(:primary_asset) ? bookmarkable.primary_asset : nil
   end

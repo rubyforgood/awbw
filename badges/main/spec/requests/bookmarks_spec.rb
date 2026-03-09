@@ -195,6 +195,27 @@ RSpec.describe "Bookmarks", type: :request do
         }.to change(Bookmark, :count).by(-1)
       end
     end
+
+    context "with person and video_recording bookmarks" do
+      let(:person) { create(:person) }
+      let(:video_recording) { create(:video_recording, :published) }
+      let!(:person_bookmark) { create(:bookmark, user: regular_user, bookmarkable: person) }
+      let!(:video_bookmark) { create(:bookmark, user: regular_user, bookmarkable: video_recording) }
+
+      it "renders personal bookmarks with person bookmark via turbo frame" do
+        get personal_bookmarks_path,
+            headers: { "Turbo-Frame" => "personal_bookmarks_results" }
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(person.first_name)
+      end
+
+      it "renders personal bookmarks with video_recording bookmark via turbo frame" do
+        get personal_bookmarks_path,
+            headers: { "Turbo-Frame" => "personal_bookmarks_results" }
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(video_recording.title)
+      end
+    end
   end
 
   # ============================================================
@@ -296,6 +317,27 @@ RSpec.describe "Bookmarks", type: :request do
         expect {
           delete bookmark_path(video_recording_bookmark)
         }.to change(Bookmark, :count).by(-1)
+      end
+    end
+
+    context "with person and video_recording bookmarks" do
+      let(:person) { create(:person) }
+      let(:video_recording) { create(:video_recording, :published) }
+      let!(:person_bookmark) { create(:bookmark, user: regular_user, bookmarkable: person) }
+      let!(:video_bookmark) { create(:bookmark, user: admin, bookmarkable: video_recording) }
+
+      it "renders admin index with person bookmark via turbo frame" do
+        get bookmarks_path,
+            headers: { "Turbo-Frame" => "bookmarks_results" }
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(person.first_name)
+      end
+
+      it "renders admin index with video_recording bookmark via turbo frame" do
+        get bookmarks_path,
+            headers: { "Turbo-Frame" => "bookmarks_results" }
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(video_recording.title)
       end
     end
   end
