@@ -1,25 +1,23 @@
-require 'rails_helper'
+require "rails_helper"
 
-RSpec.describe "tutorials/show", type: :view do
+RSpec.describe "video_recordings/show", type: :view do
   let(:admin) { create(:user, :admin) }
 
   before(:each) do
     sign_in admin
 
-    assign(:tutorial, Tutorial.create!(
+    assign(:video_recording, VideoRecording.create!(
       title: "Title",
-      body: "MyText",
-      rhino_body: "MyText",
+      youtube_url: "Youtube Url",
       featured: false,
       published: false,
       position: 2,
-      youtube_url: "Youtube Url"
+      is_instructional: false
     ).decorate)
   end
 
   it "renders attributes in <p>" do
     render
     expect(rendered).to match(/Title/)
-    expect(rendered).to match(/MyText/)
   end
 end

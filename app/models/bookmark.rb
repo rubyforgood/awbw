@@ -2,8 +2,8 @@ class Bookmark < ApplicationRecord
   belongs_to :user
   belongs_to :bookmarkable, polymorphic: true
 
-  BOOKMARKABLE_MODELS = %w[CommunityNews Event Faq Organization Person Report Resource Story StoryIdea
-                           Tutorial Workshop WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea].freeze
+  BOOKMARKABLE_MODELS = %w[CommunityNews Event Organization Person Report Resource Story StoryIdea
+                           VideoRecording Workshop WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea].freeze
 
   DROPDOWN_MODELS = (BOOKMARKABLE_MODELS - %w[Report]).freeze
 
@@ -68,7 +68,7 @@ class Bookmark < ApplicationRecord
       LEFT JOIN resources           AS st_res ON st_res.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
       LEFT JOIN stories             AS st_st  ON st_st.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
       LEFT JOIN story_ideas         AS st_si  ON st_si.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'StoryIdea'
-      LEFT JOIN tutorials           AS st_tut ON st_tut.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
+      LEFT JOIN video_recordings    AS st_vr  ON st_vr.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'VideoRecording'
       LEFT JOIN workshops           AS st_ws  ON st_ws.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'
       LEFT JOIN workshop_ideas      AS st_wi  ON st_wi.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopIdea'
       LEFT JOIN workshop_logs       AS st_wl  ON st_wl.id  = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
@@ -88,7 +88,7 @@ class Bookmark < ApplicationRecord
           st_res.title,
           st_st.title,
           st_si.title,
-          st_tut.title,
+          st_vr.title,
           st_ws.title,
           st_wi.title,
           DATE_FORMAT(st_wl.date, '%Y-%m-%d'),
@@ -114,7 +114,7 @@ class Bookmark < ApplicationRecord
       LEFT JOIN resources      ON resources.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Resource'
       LEFT JOIN stories        ON stories.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Story'
       LEFT JOIN story_ideas    ON story_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'StoryIdea'
-      LEFT JOIN tutorials      ON tutorials.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Tutorial'
+      LEFT JOIN video_recordings ON video_recordings.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'VideoRecording'
       LEFT JOIN workshops      ON workshops.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'Workshop'
       LEFT JOIN workshop_ideas ON workshop_ideas.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopIdea'
       LEFT JOIN workshop_logs ON workshop_logs.id = bookmarks.bookmarkable_id AND bookmarks.bookmarkable_type = 'WorkshopLog'
@@ -129,7 +129,7 @@ class Bookmark < ApplicationRecord
        reports.type LIKE :title OR
        stories.title LIKE :title OR workshops.title LIKE :title OR workshop_ideas.title LIKE :title OR
        story_ideas.body LIKE :title OR -- searching body for story ideas (title exists but isn't used in UI)
-       tutorials.title LIKE :title OR
+       video_recordings.title LIKE :title OR
        DATE_FORMAT(workshop_logs.date, '%Y-%m-%d') LIKE :title OR -- no title on workshop_logs
        workshop_variations.name LIKE :title OR
        workshop_variation_ideas.name LIKE :title",

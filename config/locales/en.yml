@@ -38,9 +38,9 @@ en:
       workshop_variation_idea:
         rhino_body: "Details"
     models:
-      tutorial:
+      video_recording:
         one: "Video"
-        other: "Video Gallery"
+        other: "Videos"
   helpers:
     submit:
       create: "Submit"

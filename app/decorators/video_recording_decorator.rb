@@ -1,4 +1,4 @@
-class TutorialDecorator < ApplicationDecorator
+class VideoRecordingDecorator < ApplicationDecorator
   delegate_all
 
   def detail(length: nil)

@@ -1,11 +1,13 @@
 FactoryBot.define do
-  factory :tutorial do
+  factory :video_recording do
     title { "MyString" }
     body { "MyText" }
     featured { false }
     published { false }
     position { 1 }
     youtube_url { "MyString" }
+    is_instructional { true }
+    is_podcast { false }
 
     trait :featured do
       featured { true }
@@ -25,6 +27,20 @@ FactoryBot.define do
 
     trait :publicly_featured do
       publicly_featured { true }
+    end
+
+    trait :instructional do
+      is_instructional { true }
+    end
+
+    trait :podcast do
+      is_instructional { false }
+      is_podcast { true }
+    end
+
+    trait :both do
+      is_instructional { true }
+      is_podcast { true }
     end
   end
 end

@@ -1,9 +1,10 @@
 <!-- Filters -->
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg" data-controller="collection">
-  <%= form_with url: tutorials_path,
+  <%= form_with url: video_recordings_path,
                 method: :get,
-                data: { turbo_frame: "tutorials_results", controller: "searchable-checkbox" },
+                data: { turbo_frame: "video_recordings_results", controller: "searchable-checkbox" },
                 autocomplete: "off",
+                local: false,
                 class: "space-y-4" do |f| %>
     <div class="flex flex-wrap gap-4 items-end">
       <div class="flex-1 min-w-[200px]">
@@ -18,14 +19,32 @@
                          oninput: "this.form.requestSubmit()" %>
       </div>
 
+      <% if @video_type != "instructional" %>
+        <div class="flex-0 min-w-[180px]">
+          <label for="video_type" class="text-sm font-medium text-gray-500 mb-1">
+            Video type
+          </label>
+
+          <select id="video_type"
+                  name="video_type"
+                  onchange="this.form.requestSubmit()"
+                  class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                         focus:ring-blue-500 focus:border-blue-500">
+            <option value="all" <%= "selected" if @video_type == "all" %>>All videos</option>
+            <option value="instructional" <%= "selected" if @video_type == "instructional" %>>Instructional videos</option>
+            <option value="other" <%= "selected" if @video_type == "other" %>>Other videos</option>
+          </select>
+        </div>
+      <% end %>
+
       <!-- VISIBILITY -->
       <div class="min-w-[150px]"><%= render "shared/visibility_filter",
-                   model_class: Tutorial,
-                   admin: allowed_to?(:manage?, Tutorial),
+                   model_class: VideoRecording,
+                   admin: allowed_to?(:manage?, VideoRecording),
                    authenticated: user_signed_in?,
                    button_text: "All" %></div>
       <div><%= link_to "Clear filters",
-                  tutorials_path,
+                  video_recordings_path(video_type: @video_type),
                   class: "btn btn-utility-outline whitespace-nowrap",
                   data: { action: "searchable-checkbox#clear collection#clearAndSubmit" } %></div>
     </div>

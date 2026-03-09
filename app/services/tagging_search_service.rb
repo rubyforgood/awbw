@@ -79,13 +79,13 @@ class TaggingSearchService
                 .paginate(page: pages[:quotes] || 1, per_page: number_of_items_per_page)
                 .decorate,
 
-      tutorials: Tutorial
+      video_recordings: VideoRecording
                    .includes(:sectors, :categories, :primary_asset, :gallery_assets)
                    .published
                    .sector_names_all(sector_names_all)
                    .category_names_all(category_names_all)
                    .order(:position, :title)
-                   .paginate(page: pages[:tutorials] || 1, per_page: number_of_items_per_page)
+                   .paginate(page: pages[:video_recordings] || 1, per_page: number_of_items_per_page)
                    .decorate
     }
   end

@@ -12,7 +12,7 @@ RSpec.describe Bookmark, type: :model do
       it "includes all expected model names" do
         expect(Bookmark::BOOKMARKABLE_MODELS).to include(
           "CommunityNews", "Event", "Organization", "Person", "Report",
-          "Resource", "Story", "StoryIdea", "Tutorial", "Workshop",
+          "Resource", "Story", "StoryIdea", "VideoRecording", "Workshop",
           "WorkshopIdea", "WorkshopLog", "WorkshopVariation", "WorkshopVariationIdea"
         )
       end
@@ -52,8 +52,8 @@ RSpec.describe Bookmark, type: :model do
 
     it "uses model_name.human for labels" do
       options = Bookmark.bookmarkable_type_options
-      tutorial_option = options.find { |_, value| value == "Tutorial" }
-      expect(tutorial_option.first).to eq(Tutorial.model_name.human)
+      video_recording_option = options.find { |_, value| value == "VideoRecording" }
+      expect(video_recording_option.first).to eq(VideoRecording.model_name.human)
     end
 
     it "returns [label, value] pairs" do
@@ -116,24 +116,24 @@ RSpec.describe Bookmark, type: :model do
     end
   end
 
-  describe "tutorial bookmarks" do
+  describe "video_recording bookmarks" do
     let(:user) { create(:user) }
-    let!(:tutorial) { create(:tutorial, :published, title: "Getting Started") }
-    let!(:tutorial_bookmark) { create(:bookmark, user: user, bookmarkable: tutorial) }
+    let!(:video_recording) { create(:video_recording, :published, title: "Getting Started") }
+    let!(:video_recording_bookmark) { create(:bookmark, user: user, bookmarkable: video_recording) }
 
-    it "filters by title matching tutorial" do
+    it "filters by title matching video_recording" do
       result = Bookmark.filter_by_params(title: "Getting")
-      expect(result).to include(tutorial_bookmark)
+      expect(result).to include(video_recording_bookmark)
     end
 
-    it "excludes non-matching tutorials in title filter" do
+    it "excludes non-matching video_recordings in title filter" do
       result = Bookmark.filter_by_params(title: "Nonexistent")
-      expect(result).not_to include(tutorial_bookmark)
+      expect(result).not_to include(video_recording_bookmark)
     end
 
-    it "includes tutorial bookmarks when sorting by title" do
+    it "includes video_recording bookmarks when sorting by title" do
       result = Bookmark.sorted("title")
-      expect(result).to include(tutorial_bookmark)
+      expect(result).to include(video_recording_bookmark)
     end
   end
 

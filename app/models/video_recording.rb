@@ -1,4 +1,4 @@
-class Tutorial < ApplicationRecord
+class VideoRecording < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, RichTextSearchable
 
   has_rich_text :rhino_body
@@ -16,6 +16,7 @@ class Tutorial < ApplicationRecord
   has_many :assets, as: :owner, dependent: :destroy
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }
+  validates :youtube_url, presence: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
@@ -34,7 +35,7 @@ class Tutorial < ApplicationRecord
 
   scope :body, ->(body) {
     left_joins(:rich_text_rhino_body)
-      .where("tutorials.body LIKE :q OR action_text_rich_texts.body LIKE :q", q: "%#{body}%")
+      .where("video_recordings.body LIKE :q OR action_text_rich_texts.plain_text_body LIKE :q", q: "%#{body}%")
   }
   scope :title, ->(title) { where("title like ?", "%#{ title }%") }
   scope :tutorial_name, ->(tutorial_name) { title(tutorial_name) }
@@ -42,7 +43,7 @@ class Tutorial < ApplicationRecord
     ids = Array(sector_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:sectorable_items)
-      .where(sectorable_items: { sectorable_type: "Tutorial", sector_id: ids })
+      .where(sectorable_items: { sectorable_type: "VideoRecording", sector_id: ids })
       .distinct
   }
 
@@ -50,7 +51,7 @@ class Tutorial < ApplicationRecord
     ids = Array(category_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:categorizable_items)
-      .where(categorizable_items: { categorizable_type: "Tutorial", category_id: ids })
+      .where(categorizable_items: { categorizable_type: "VideoRecording", category_id: ids })
       .distinct
   }
 

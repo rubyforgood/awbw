@@ -1,3 +1,6 @@
+# Disable email delivery during seeding
+ActionMailer::Base.perform_deliveries = false
+
 puts "Creating Users…"
 
 # Helper: case-insensitive find-or-create by name
@@ -82,6 +85,7 @@ end
 invited = User.find_or_create_by!(email: "invited.pending@example.com") do |user|
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end
 unless invited.confirmed_at.present?
   invited.update_columns(
@@ -107,6 +111,7 @@ end
 confirmed_no_pw = User.find_or_create_by!(email: "confirmed.nopassword@example.com") do |user|
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end
 unless confirmed_no_pw.welcome_instructions_token.present?
   token = Devise.friendly_token
@@ -157,6 +162,7 @@ end
 never_invited = User.find_or_create_by!(email: "never.invited@example.com") do |user|
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end
 unless never_invited.welcome_instructions_sent_at.present?
   never_invited.update_columns(confirmed_at: nil)
@@ -177,6 +183,7 @@ end
 stale_invited = User.find_or_create_by!(email: "stale.invite@example.com") do |user|
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end
 unless stale_invited.confirmed_at.present?
   stale_invited.update_columns(
@@ -202,6 +209,7 @@ end
 recent_invited = User.find_or_create_by!(email: "recent.invite@example.com") do |user|
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end
 unless recent_invited.confirmed_at.present?
   recent_invited.update_columns(
@@ -227,6 +235,7 @@ end
 User.find_or_create_by!(email: "orphan.uninvited@example.com") do |user|
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end.tap do |u|
   u.update_columns(confirmed_at: nil) unless u.welcome_instructions_sent_at.present?
 end
@@ -235,6 +244,7 @@ end
 invited_no_person = User.find_or_create_by!(email: "invited.noperson@example.com") do |user|
   user.password = "password"
   user.super_user = false
+  user.confirmed_at = Time.current
 end
 unless invited_no_person.confirmed_at.present?
   invited_no_person.update_columns(

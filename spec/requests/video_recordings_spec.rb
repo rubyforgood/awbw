@@ -12,14 +12,14 @@ require 'rails_helper'
 # of tools you can use to make these specs even more expressive, but we're
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
-RSpec.describe "/tutorials", type: :request do
+RSpec.describe "/video_recordings", type: :request do
   # This should return the minimal set of attributes required to create a valid
-  # Tutorial. As you add validations to Tutorial, be sure to
+  # VideoRecording. As you add validations to VideoRecording, be sure to
   # adjust the attributes here as well.
   let(:valid_attributes) do
     {
       title: "How to Use the Home Page",
-      body: "<p>This tutorial walks through the main home page features.</p>",
+      body: "<p>This instructional video walks through the main home page features.</p>",
       youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     }
   end
@@ -40,58 +40,58 @@ RSpec.describe "/tutorials", type: :request do
 
   describe "GET /index" do
     it "renders a successful response" do
-      Tutorial.create! valid_attributes
-      get tutorials_url
+      VideoRecording.create! valid_attributes
+      get video_recordings_url
       expect(response).to be_successful
     end
   end
 
   describe "GET /show" do
     it "renders a successful response" do
-      tutorial = Tutorial.create! valid_attributes
-      get tutorial_url(tutorial)
+      video_recording = VideoRecording.create! valid_attributes
+      get video_recording_url(video_recording)
       expect(response).to be_successful
     end
   end
 
   describe "GET /new" do
     it "renders a successful response" do
-      get new_tutorial_url
+      get new_video_recording_url
       expect(response).to be_successful
     end
   end
 
   describe "GET /edit" do
     it "renders a successful response" do
-      tutorial = Tutorial.create! valid_attributes
-      get edit_tutorial_url(tutorial)
+      video_recording = VideoRecording.create! valid_attributes
+      get edit_video_recording_url(video_recording)
       expect(response).to be_successful
     end
   end
 
   describe "POST /create" do
     context "with valid parameters" do
-      it "creates a new Tutorial" do
+      it "creates a new VideoRecording" do
         expect {
-          post tutorials_url, params: { tutorial: valid_attributes }
-        }.to change(Tutorial, :count).by(1)
+          post video_recordings_url, params: { video_recording: valid_attributes }
+        }.to change(VideoRecording, :count).by(1)
       end
 
-      it "redirects to the created tutorial" do
-        post tutorials_url, params: { tutorial: valid_attributes }
-        expect(response).to redirect_to(tutorial_url(Tutorial.last))
+      it "redirects to the created video_recording" do
+        post video_recordings_url, params: { video_recording: valid_attributes }
+        expect(response).to redirect_to(video_recording_url(VideoRecording.last))
       end
     end
 
     context "with invalid parameters" do
-      it "does not create a new Tutorial" do
+      it "does not create a new VideoRecording" do
         expect {
-          post tutorials_url, params: { tutorial: invalid_attributes }
-        }.to change(Tutorial, :count).by(0)
+          post video_recordings_url, params: { video_recording: invalid_attributes }
+        }.to change(VideoRecording, :count).by(0)
       end
 
       it "renders a response with 422 status (i.e. to display the 'new' template)" do
-        post tutorials_url, params: { tutorial: invalid_attributes }
+        post video_recordings_url, params: { video_recording: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
       end
     end
@@ -105,42 +105,42 @@ RSpec.describe "/tutorials", type: :request do
         )
       end
 
-      it "updates the requested tutorial" do
-        tutorial = Tutorial.create! valid_attributes
-        patch tutorial_url(tutorial), params: { tutorial: new_attributes }
-        tutorial.reload
+      it "updates the requested video_recording" do
+        video_recording = VideoRecording.create! valid_attributes
+        patch video_recording_url(video_recording), params: { video_recording: new_attributes }
+        video_recording.reload
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the updated tutorial" do
-        tutorial = Tutorial.create! valid_attributes
-        patch tutorial_url(tutorial), params: { tutorial: new_attributes }
-        tutorial.reload
-        expect(response).to redirect_to(tutorial_url(tutorial))
+      it "redirects to the updated video_recording" do
+        video_recording = VideoRecording.create! valid_attributes
+        patch video_recording_url(video_recording), params: { video_recording: new_attributes }
+        video_recording.reload
+        expect(response).to redirect_to(video_recording_url(video_recording))
       end
     end
 
     context "with invalid parameters" do
       it "renders a response with 422 status (i.e. to display the 'edit' template)" do
-        tutorial = Tutorial.create! valid_attributes
-        patch tutorial_url(tutorial), params: { tutorial: invalid_attributes }
+        video_recording = VideoRecording.create! valid_attributes
+        patch video_recording_url(video_recording), params: { video_recording: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
       end
     end
   end
 
   describe "DELETE /destroy" do
-    it "destroys the requested tutorial" do
-      tutorial = Tutorial.create! valid_attributes
+    it "destroys the requested video_recording" do
+      video_recording = VideoRecording.create! valid_attributes
       expect {
-        delete tutorial_url(tutorial)
-      }.to change(Tutorial, :count).by(-1)
+        delete video_recording_url(video_recording)
+      }.to change(VideoRecording, :count).by(-1)
     end
 
-    it "redirects to the tutorials list" do
-      tutorial = Tutorial.create! valid_attributes
-      delete tutorial_url(tutorial)
-      expect(response).to redirect_to(tutorials_url)
+    it "redirects to the video_recordings list" do
+      video_recording = VideoRecording.create! valid_attributes
+      delete video_recording_url(video_recording)
+      expect(response).to redirect_to(video_recordings_url)
     end
   end
 end
