@@ -166,7 +166,9 @@
       </div>
 
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-        <%= f.input :best_time_to_call %>
+        <% if @person.best_time_to_call.present? || params[:admin] == "true" %>
+          <%= f.input :best_time_to_call %>
+        <% end %>
 
         <%= f.simple_fields_for :contact_methods do |f| %>
           <%= render "contact_methods/contact_method_fields", f: f %>
