@@ -1,4 +1,11 @@
 module AnalyticsHelper
+  def chart_card(title, &block)
+    content_tag(:div, class: "bg-white border border-gray-200 rounded-xl shadow-sm p-6") do
+      content_tag(:h3, title, class: "text-sm font-semibold text-gray-700 mb-2") +
+        capture(&block)
+    end
+  end
+
   def print_button(record,
                    printable_type: nil,
                    path: admin_analytics_print_path,
