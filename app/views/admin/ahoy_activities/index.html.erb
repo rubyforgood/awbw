@@ -135,8 +135,8 @@
       </div>
 
       <!-- Events Table -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
+        <table class="responsive-table min-w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
           <tr>
             <th class="px-4 py-3 text-left rounded-tl-xl">Time</th>
@@ -151,19 +151,19 @@
           <tbody class="divide-y divide-gray-100">
           <% @events.each do |event| %>
             <tr class="hover:bg-gray-50 transition">
-              <td class="px-4 py-3 whitespace-nowrap text-gray-500">
+              <td data-label="Time" class="px-4 py-3 whitespace-nowrap text-gray-500">
                 <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
               </td>
 
-              <td class="px-4 py-3 font-medium text-gray-900">
+              <td data-label="Event" class="px-4 py-3 font-medium text-gray-900">
                 <%= event.name %>
               </td>
 
-              <td class="px-4 py-3 text-gray-500">
+              <td data-label="Resource" class="px-4 py-3 text-gray-500">
                 <%= event.properties["resource_title"].presence || "—" %>
               </td>
 
-              <td class="px-4 py-3 text-gray-600">
+              <td data-label="User" class="px-4 py-3 text-gray-600">
                 <% if event.user %>
                   <%= link_to event.user.full_name,
                               user_path(event.user),
@@ -173,11 +173,11 @@
                 <% end %>
               </td>
 
-              <td class="px-4 py-3 text-gray-500">
+              <td data-label="Visit ID" class="px-4 py-3 text-gray-500">
                 <%= event.visit_id %>
               </td>
 
-              <td class="px-4 py-3 text-gray-500 relative group">
+              <td data-label="Properties" class="px-4 py-3 text-gray-500 relative group">
                 <% if event.properties.present? && event.properties.any? %>
                   <%= link_to admin_activities_event_path(event),
                               class: "cursor-default text-indigo-600 text-xs font-medium bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100" do %>
