@@ -1,6 +1,13 @@
 # This project is a Ruby on Rails application.
 <!-- Keep code style rules in sync with CLAUDE.md -->
 
+# Frontend requirements:
+- Strongly prefer Stimulus for JavaScript behavior — do not write raw/inline JS or jQuery
+- Always use Tailwind CSS utility classes for styling — do not write custom CSS unless absolutely necessary
+- Prefer Turbo for navigation and form submissions before reaching for Stimulus
+- ES6+ syntax, ESM imports/exports
+- Stimulus controller naming: `[name]_controller.js`
+
 # Code style requirements:
 - Use modern Ruby syntax
 - Prefer early returns and guard clauses
@@ -51,3 +58,9 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Use `Foo.method` not `Foo::method` for method calls
 - No parentheses around conditions: `if foo` not `if (foo)`
 - No semicolons to separate statements
+
+# PRs
+- On every push, update the PR title and description to reflect the current diff
+
+# Git
+- When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)
