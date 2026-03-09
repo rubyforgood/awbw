@@ -12,6 +12,10 @@
 - After completing work, create a pull request using `gh pr create`
 - Once the PR is created, prepend the PR number to the branch name (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
 
+# PRs
+- After completing work, create a pull request using `gh pr create`
+- Once the PR is created, prepend the PR number to the branch name (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
+
 # Code style requirements:
 - Use modern Ruby syntax
 - Prefer early returns and guard clauses
