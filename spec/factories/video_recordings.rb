@@ -29,9 +29,8 @@ FactoryBot.define do
       publicly_featured { true }
     end
 
-    trait :tutorial do
+    trait :instructional do
       is_instructional { true }
-      is_podcast { false }
     end
 
     trait :podcast do
