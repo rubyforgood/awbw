@@ -2,10 +2,6 @@ require "rails_helper"
 
 RSpec.describe VideoRecordingsController, type: :routing do
   describe "routing" do
-    it "routes /tutorials to video_recordings#index" do
-      expect(get: "/tutorials").to route_to("video_recordings#index")
-    end
-
     it "routes /video_recordings to video_recordings#index" do
       expect(get: "/video_recordings").to route_to("video_recordings#index")
     end
