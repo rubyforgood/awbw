@@ -1,7 +1,5 @@
-# Disable email delivery and Devise mailer during seeding
+# Disable email delivery during seeding
 ActionMailer::Base.perform_deliveries = false
-old_mailer = Devise.mailer
-Devise.mailer = "NullMailer"
 
 puts "Creating Users…"
 
@@ -478,6 +476,3 @@ end
 unless Form.standalone.exists?(name: ScholarshipApplicationFormBuilder::FORM_NAME)
   ScholarshipApplicationFormBuilder.build_standalone!
 end
-
-# Restore Devise mailer after seeding
-Devise.mailer = old_mailer
