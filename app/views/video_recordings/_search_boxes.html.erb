@@ -1,6 +1,6 @@
 <!-- Filters -->
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg" data-controller="collection">
-  <%= form_with url: tutorials_path,
+  <%= form_with url: video_recordings_path,
                 method: :get,
                 data: { turbo_frame: "video_recordings_results", controller: "searchable-checkbox" },
                 autocomplete: "off",
@@ -39,8 +39,8 @@
 
       <!-- VISIBILITY -->
       <div class="min-w-[150px]"><%= render "shared/visibility_filter",
-                   model_class: Tutorial,
-                   admin: allowed_to?(:manage?, Tutorial),
+                   model_class: VideoRecording,
+                   admin: allowed_to?(:manage?, VideoRecording),
                    authenticated: user_signed_in?,
                    button_text: "All" %></div>
       <div><%= link_to "Clear filters",
