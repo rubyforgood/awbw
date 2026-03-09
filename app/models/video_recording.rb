@@ -34,7 +34,7 @@ class VideoRecording < ApplicationRecord
 
   scope :body, ->(body) {
     left_joins(:rich_text_rhino_body)
-      .where("video_recordings.body LIKE :q OR action_text_rich_texts.body LIKE :q", q: "%#{body}%")
+      .where("video_recordings.body LIKE :q OR action_text_rich_texts.plain_text_body LIKE :q", q: "%#{body}%")
   }
   scope :title, ->(title) { where("title like ?", "%#{ title }%") }
   scope :tutorial_name, ->(tutorial_name) { title(tutorial_name) }
