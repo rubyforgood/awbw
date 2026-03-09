@@ -42,5 +42,14 @@
         <!-- Main Text -->
         <%= @tutorial.rhino_body %>
 
+        <!-- Back Button -->
+        <div class="mt-8">
+          <% if @video_recording.is_instructional? %>
+            <%= link_to "← Instructional videos", video_recordings_path(video_type: "instructional"), class: "text-blue-600 hover:text-blue-800" %>
+          <% else %>
+            <%= link_to "← Video gallery", video_recordings_path(video_type: "other"), class: "text-blue-600 hover:text-blue-800" %>
+          <% end %>
+        </div>
+
       </div>
 </div>
