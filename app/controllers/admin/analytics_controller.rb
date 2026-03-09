@@ -68,9 +68,9 @@ module Admin
           views: all_counts["view.quote"] || 0,
           prints: all_counts["print.quote"] || 0
         },
-        tutorials: {
-          views: all_counts["view.tutorial"] || 0,
-          prints: all_counts["print.tutorial"] || 0
+        video_recordings: {
+          views: all_counts["view.video_recording"] || 0,
+          prints: all_counts["print.video_recording"] || 0
         },
         organizations: {
           views: all_counts["view.organization"] || 0,

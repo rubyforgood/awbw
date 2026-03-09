@@ -16,7 +16,7 @@ class TaggingsController < ApplicationController
       people: params[:people_page],
       organizations: params[:organizations_page],
       quotes: params[:quotes_page],
-      tutorials: params[:tutorials_page]
+      video_recordings: params[:video_recordings_page]
     }
 
     @grouped_tagged_items = TaggingSearchService.call(

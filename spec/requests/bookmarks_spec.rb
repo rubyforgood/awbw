@@ -100,7 +100,7 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response.body).not_to include("value=\"Report\"")
     end
 
-    it "includes Video (Tutorial) in bookmark type dropdown" do
+    it "includes Video in bookmark type dropdown" do
       get personal_bookmarks_path
       expect(response.body).to include(VideoRecording.model_name.human)
     end
