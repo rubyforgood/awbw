@@ -8,6 +8,26 @@ RSpec.describe Notification do
     it { should have_many(:child_notifications).class_name('Notification').with_foreign_key(:parent_notification_id) }
   end
 
+  describe "KINDS" do
+    it "includes account_email_change_requested" do
+      expect(Notification::KINDS).to include("account_email_change_requested")
+    end
+
+    it "includes account_email_changed" do
+      expect(Notification::KINDS).to include("account_email_changed")
+    end
+
+    it "validates account_email_change_requested as a valid kind" do
+      notification = build(:notification, kind: "account_email_change_requested", recipient_role: "person")
+      expect(notification).to be_valid
+    end
+
+    it "validates account_email_changed as a valid kind" do
+      notification = build(:notification, kind: "account_email_changed", recipient_role: "person")
+      expect(notification).to be_valid
+    end
+  end
+
   describe "#resendable?" do
     it "returns true for notification kinds handled by the mailer job" do
       notification = build(:notification, kind: "reset_password_fyi")
