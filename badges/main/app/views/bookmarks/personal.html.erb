@@ -1,68 +1,18 @@
 <div class="max-w-6xl mx-auto px-4 py-8">
   <div class="max-w-6xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
     <h1 class="text-2xl font-semibold text-gray-900 mb-4">
-      <%= @viewing_self ? "My" : "#{@user_name}'s" %> Bookmarks (<%= @bookmarks_count %>)
+      <%= @viewing_self ? "My" : "#{@user_name}'s" %> Bookmarks
     </h1>
 
     <div class="mt-4 pt-4">
+      <%= render "search_boxes", url: personal_bookmarks_path, frame_id: "personal_bookmarks_results" %>
 
-      <!-- Filter form -->
-      <%= form_tag('/bookmarks/personal', method: :get, class: "space-y-4") do %>
-        <%= render "search_fields" %>
+      <%= render "bookmarks_count" %>
 
-        <div class="border-b border-gray-300 mb-6"></div>
-
-        <!-- Sort options -->
-        <div class="mt-4 flex flex-wrap items-center gap-4">
-          <span class="font-semibold">Sort by:</span>
-          <div class="flex flex-wrap gap-2">
-            <%= render 'sortable_fields', sortable_fields: @sortable_fields %>
-          </div>
-        </div>
+      <% result_src = personal_bookmarks_path + "?" + request.query_string %>
+      <%= turbo_frame_tag "personal_bookmarks_results", src: result_src do %>
+        <%= render "personal_results_skeleton" %>
       <% end %>
-
-      <div class="border-b border-gray-300 my-6"></div>
-
-      <!-- Bookmarks list -->
-      <div class="mt-6">
-        <% if @bookmarks.any? %>
-          <div id="bookmarks-list" class="space-y-4">
-            <% @bookmarks.each do |bookmark| %>
-              <%= render "bookmarks/personal_row",
-                         bookmark: bookmark,
-                         breadcrumb: "My Bookmarks",
-                         link_route: polymorphic_path(bookmark.bookmarkable) %>
-            <% end %>
-          </div>
-
-          <!-- Pagination -->
-          <div class="mt-6 flex justify-center">
-            <div class="pagination mt-6">
-              <%= tailwind_paginate @bookmarks %>
-            </div>
-          </div>
-        <% else %>
-          <p class="text-gray-600">Your search returned no results. Please try again.</p>
-        <% end %>
-      </div>
     </div>
   </div>
 </div>
-
-<script>
-    // Search icon click
-    document.querySelectorAll('.fa-search').forEach(icon => {
-        icon.closest('div').addEventListener('click', () => {
-            icon.closest('form').submit();
-        });
-    });
-
-    // Category checkboxes submit on change
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll(".category-checkbox").forEach(function(checkbox) {
-            checkbox.addEventListener("change", function() {
-                this.form.submit();
-            });
-        });
-    });
-</script>

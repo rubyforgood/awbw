@@ -1,0 +1,44 @@
+<%= turbo_stream.replace("bookmarks_count", partial: "bookmarks_count") %>
+<%
+  sort_base = params.permit(:keyword, :bookmarkable_type, :windows_type, :user_id, :number_of_items_per_page).to_h.symbolize_keys
+  sort_icon = ->(column) {
+    if @sort == column
+      @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
+    else
+      "fa-sort"
+    end
+  }
+%>
+<div class="<%= 'animate-fade blur-on-submit' if @bookmarks.any? %>">
+  <!-- Sort bar -->
+  <div class="flex flex-wrap items-center gap-4 mb-6">
+    <span class="font-semibold">Sort by:</span>
+    <% [ [ "created_at", "Newest" ], [ "title", "Title" ], [ "popularity", "Most Bookmarked" ] ].each do |col, label| %>
+      <%= link_to personal_bookmarks_path(sort_base.merge(sort: col, direction: (@sort == col && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+                  data: { turbo_frame: "personal_bookmarks_results" },
+                  class: "inline-flex items-center gap-1 text-sm font-medium #{@sort == col ? 'text-blue-700' : 'text-gray-600'} hover:text-gray-900" do %>
+        <%= label %>
+        <i class="fa-solid <%= sort_icon.call(col) %> text-xs opacity-70"></i>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="border-b border-gray-300 my-6"></div>
+
+  <% if @bookmarks.any? %>
+    <div id="bookmarks-list" class="space-y-4">
+      <% @bookmarks.each do |bookmark| %>
+        <%= render "bookmarks/personal_row",
+                   bookmark: bookmark,
+                   breadcrumb: "My Bookmarks",
+                   link_route: polymorphic_path(bookmark.bookmarkable) %>
+      <% end %>
+    </div>
+
+    <div class="mt-6 flex justify-center">
+      <div class="pagination mt-6"><%= tailwind_paginate @bookmarks %></div>
+    </div>
+  <% else %>
+    <p class="text-gray-600">Your search returned no results. Please try again.</p>
+  <% end %>
+</div>
