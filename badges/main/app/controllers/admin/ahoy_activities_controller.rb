@@ -23,6 +23,11 @@ module Admin
                             *prefixes.map { |p| "#{p}.%" })
       end
 
+      # Filter by event name
+      if params[:event_name].present?
+        scope = scope.where("ahoy_events.name LIKE ?", "%#{Ahoy::Event.sanitize_sql_like(params[:event_name])}%")
+      end
+
       # Filter by user (if viewing specific user activity)
       scope = scope.where(user: @users) if @users.present?
 

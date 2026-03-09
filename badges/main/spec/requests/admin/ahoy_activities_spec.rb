@@ -158,6 +158,22 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include("create.bookmark")
         expect(response.body).to include("auth.login")
       end
+
+      it "filters by event name" do
+        get index_path, params: { event_name: "auth.login", time_period: "all_time" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("auth.login")
+        expect(response.body).not_to include("create.bookmark")
+      end
+
+      it "filters by partial event name" do
+        get index_path, params: { event_name: "bookmark", time_period: "all_time" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("create.bookmark")
+        expect(response.body).not_to include("auth.login")
+      end
     end
 
     describe "GET /admin/activities/visits" do
