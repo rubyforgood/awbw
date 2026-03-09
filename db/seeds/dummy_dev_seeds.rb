@@ -4,9 +4,9 @@ inactive_status = OrganizationStatus.find_by!(name: "Inactive")
 pending_status = OrganizationStatus.find_by!(name: "Pending")
 suspended_status = OrganizationStatus.find_by!(name: "Suspended")
 
-adult_wt = WindowsType.find_by!(short_name: "Adult")
-children_wt = WindowsType.find_by!(short_name: "Children")
-combined_wt = WindowsType.find_by!(short_name: "Combined")
+adult_wt = WindowsType.find_by!(short_name: "ADULT")
+children_wt = WindowsType.find_by!(short_name: "CHILDREN")
+combined_wt = WindowsType.find_by!(short_name: "COMBINED")
 
 [
   { name: "1736 Family Crisis Center", organization_status: inactive_status, windows_type: adult_wt },
