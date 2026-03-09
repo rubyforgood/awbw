@@ -83,28 +83,8 @@ RSpec.describe Bookmark, type: :model do
     let!(:bookmark1) { create(:bookmark, user: user, bookmarkable: workshop1) }
     let!(:bookmark2) { create(:bookmark, user: user, bookmarkable: workshop2) }
 
-    it 'applies title correctly' do
-      params = { title: "Alpha" }
-      result = Bookmark.filter_by_params(params)
-      expect(result).to include(bookmark1)
-      expect(result).not_to include(bookmark2)
-    end
-
-    it 'applies query filter correctly' do
-      skip # filter_by_query is working in dev, but failing in test
-      params = { query: "Alice" }
-      result = Bookmark.filter_by_params(params)
-      expect(result).to include(bookmark1)
-      expect(result).not_to include(bookmark2)
-    end
-
-    it 'applies title filter, windows_type filter, and query filter correctly' do
-      skip # filter_by_query is working in dev, but failing in test
-      params = {
-        title: "Alpha",
-        windows_types: { "0" => "1" },
-        query: "Alice"
-      }
+    it 'applies keyword correctly' do
+      params = { keyword: "Alpha" }
       result = Bookmark.filter_by_params(params)
       expect(result).to include(bookmark1)
       expect(result).not_to include(bookmark2)
@@ -121,13 +101,13 @@ RSpec.describe Bookmark, type: :model do
     let!(:video_recording) { create(:video_recording, :published, title: "Getting Started") }
     let!(:video_recording_bookmark) { create(:bookmark, user: user, bookmarkable: video_recording) }
 
-    it "filters by title matching video_recording" do
-      result = Bookmark.filter_by_params(title: "Getting")
+    it "filters by keyword matching video_recording" do
+      result = Bookmark.filter_by_params(keyword: "Getting")
       expect(result).to include(video_recording_bookmark)
     end
 
-    it "excludes non-matching video_recordings in title filter" do
-      result = Bookmark.filter_by_params(title: "Nonexistent")
+    it "excludes non-matching video_recordings in keyword filter" do
+      result = Bookmark.filter_by_params(keyword: "Nonexistent")
       expect(result).not_to include(video_recording_bookmark)
     end
 
@@ -137,25 +117,25 @@ RSpec.describe Bookmark, type: :model do
     end
   end
 
-  describe ".filter_by_params with title and windows_type combined" do
+  describe ".filter_by_params with keyword and windows_type combined" do
     let(:user) { create(:user) }
     let!(:windows_type) { create(:windows_type, name: "COMBINED") }
     let!(:resource) { create(:resource, title: "Test Resource", windows_type: windows_type) }
     let!(:bookmark) { create(:bookmark, user: user, bookmarkable: resource) }
 
     it "does not raise a duplicate table alias error" do
-      params = { title: "Test", windows_type: "Combined" }
+      params = { keyword: "Test", windows_type: "Combined" }
       expect { Bookmark.filter_by_params(params) }.not_to raise_error
     end
 
     it "returns matching bookmarks" do
-      params = { title: "Test", windows_type: "Combined" }
+      params = { keyword: "Test", windows_type: "Combined" }
       result = Bookmark.filter_by_params(params)
       expect(result).to include(bookmark)
     end
 
     it "works when also sorting by title" do
-      params = { title: "Test", windows_type: "Combined" }
+      params = { keyword: "Test", windows_type: "Combined" }
       result = Bookmark.filter_by_params(params).sorted("title")
       expect { result.length }.not_to raise_error
     end
@@ -173,51 +153,35 @@ RSpec.describe Bookmark, type: :model do
       create_list(:bookmark, 7, bookmarkable: workshop2, created_at: 4.days.ago)
     end
 
-    it "sorts by newest-bookmarked by default" do
+    it "returns all bookmarks by default" do
       result = Bookmark.search({})
-      expect(result.first.bookmarkable.title).to eq("Bravo")
+      expect(result.count).to eq(14)
     end
 
-    it "sorts by title when sort=title" do
-      result = Bookmark.search({ sort: "title" })
-      expect(result.first.bookmarkable).to eq(workshop1)
-    end
-
-    it "sorts by popularity when sort=popularity" do
-      result = Bookmark.search({ sort: "popularity" })
-      expect(result.first.bookmarkable).to eq(workshop2)
-    end
-
-    it "sorts by created_at when sort=newest" do
-      result = Bookmark.search({ sort: "newest" })
-      expect(result.first.created_at).to eq(bookmark2.created_at)
-      expect(result.first.bookmarkable).to eq(workshop2)
-    end
-
-    context "with title filter and title sort combined" do
+    context "with keyword filter and title sort combined" do
       it "does not produce duplicate table joins" do
         expect {
-          Bookmark.search({ title: "Alpha", sort: "title" }).to_a
+          Bookmark.search({ keyword: "Alpha" }).sorted("title").to_a
         }.not_to raise_error
       end
 
       it "filters and sorts correctly" do
-        result = Bookmark.search({ title: "Alpha", sort: "title" })
+        result = Bookmark.search({ keyword: "Alpha" }).sorted("title")
         expect(result.map(&:bookmarkable).uniq).to eq([ workshop1 ])
       end
     end
 
-    context "with title filter and newest sort" do
-      it "filters by title and sorts by newest" do
-        result = Bookmark.search({ title: "Bravo", sort: "newest" })
+    context "with keyword filter and newest sort" do
+      it "filters by keyword and sorts by newest" do
+        result = Bookmark.search({ keyword: "Bravo" }).sorted("created_at")
         expect(result.map(&:bookmarkable).uniq).to eq([ workshop2 ])
       end
     end
 
-    context "with title filter and popularity sort" do
+    context "with keyword filter and popularity sort" do
       it "does not raise" do
         expect {
-          Bookmark.search({ title: "Alpha", sort: "popularity" }).to_a
+          Bookmark.search({ keyword: "Alpha" }).sorted("popularity").to_a
         }.not_to raise_error
       end
     end
@@ -230,14 +194,36 @@ RSpec.describe Bookmark, type: :model do
 
       it "does not produce duplicate joins with title sort" do
         expect {
-          Bookmark.search({ sort: "title" }, user: user).to_a
+          Bookmark.search({}, user: user).sorted("title").to_a
         }.not_to raise_error
       end
 
-      it "does not produce duplicate joins with title filter and title sort" do
+      it "does not produce duplicate joins with keyword filter and title sort" do
         expect {
-          Bookmark.search({ title: "Alpha", sort: "title" }, user: user).to_a
+          Bookmark.search({ keyword: "Alpha" }, user: user).sorted("title").to_a
         }.not_to raise_error
+      end
+    end
+  end
+
+  describe ".keyword" do
+    let(:user) { create(:user) }
+
+    context "with ActionText body content" do
+      let!(:news) { create(:community_news, title: "Newsletter", rhino_body: "This discusses healing through art therapy") }
+      let!(:news_bookmark) { create(:bookmark, user: user, bookmarkable: news) }
+      let!(:other_news) { create(:community_news, title: "Update") }
+      let!(:other_bookmark) { create(:bookmark, user: user, bookmarkable: other_news) }
+
+      it "matches ActionText body content" do
+        result = Bookmark.keyword("healing")
+        expect(result).to include(news_bookmark)
+        expect(result).not_to include(other_bookmark)
+      end
+
+      it "matches title as well as body" do
+        result = Bookmark.keyword("Newsletter")
+        expect(result).to include(news_bookmark)
       end
     end
   end
@@ -249,14 +235,24 @@ RSpec.describe Bookmark, type: :model do
     let!(:bookmark1) { create(:bookmark, user: user, bookmarkable: workshop1, created_at: 2.days.ago) }
     let!(:bookmark2) { create(:bookmark, user: user, bookmarkable: workshop2, created_at: 1.day.ago) }
 
-    it "defaults to newest" do
+    it "defaults to newest (desc)" do
       result = Bookmark.sorted
       expect(result.first).to eq(bookmark2)
     end
 
-    it "sorts by title" do
-      result = Bookmark.sorted("title")
+    it "sorts by title asc" do
+      result = Bookmark.sorted("title", "asc")
       expect(result.first.bookmarkable).to eq(workshop2) # Apple before Zebra
+    end
+
+    it "sorts by title desc" do
+      result = Bookmark.sorted("title", "desc")
+      expect(result.first.bookmarkable).to eq(workshop1) # Zebra before Apple
+    end
+
+    it "sorts by created_at asc" do
+      result = Bookmark.sorted("created_at", "asc")
+      expect(result.first).to eq(bookmark1)
     end
   end
 end

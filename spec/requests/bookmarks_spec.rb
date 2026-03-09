@@ -105,13 +105,39 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response.body).to include(VideoRecording.model_name.human)
     end
 
-    it "can access personal bookmarks sorted by title" do
-      get personal_bookmarks_path, params: { sort: "title" }
+    it "can access personal bookmarks sorted by title via turbo frame" do
+      get personal_bookmarks_path, params: { sort: "title" },
+          headers: { "Turbo-Frame" => "personal_bookmarks_results" }
       expect(response).to have_http_status(:ok)
     end
 
-    it "can access personal bookmarks with title filter and title sort" do
-      get personal_bookmarks_path, params: { sort: "title", title: "test" }
+    it "can access personal bookmarks with keyword filter and title sort via turbo frame" do
+      get personal_bookmarks_path, params: { sort: "title", keyword: "test" },
+          headers: { "Turbo-Frame" => "personal_bookmarks_results" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "renders shell page without results for non-turbo personal request" do
+      get personal_bookmarks_path
+      expect(response.body).to include("personal_bookmarks_results")
+      expect(response.body).to include("Keyword")
+    end
+
+    it "renders results for turbo frame personal request" do
+      get personal_bookmarks_path,
+          headers: { "Turbo-Frame" => "personal_bookmarks_results" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "can filter personal bookmarks by keyword via turbo frame" do
+      get personal_bookmarks_path, params: { keyword: workshop.title },
+          headers: { "Turbo-Frame" => "personal_bookmarks_results" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "can sort personal bookmarks by popularity via turbo frame" do
+      get personal_bookmarks_path, params: { sort: "popularity", direction: "desc" },
+          headers: { "Turbo-Frame" => "personal_bookmarks_results" }
       expect(response).to have_http_status(:ok)
     end
 
@@ -183,13 +209,39 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "can access global index sorted by title" do
-      get bookmarks_path, params: { sort: "title" }
+    it "can access global index sorted by title via turbo frame" do
+      get bookmarks_path, params: { sort: "title" },
+          headers: { "Turbo-Frame" => "bookmarks_results" }
       expect(response).to have_http_status(:ok)
     end
 
-    it "can access global index with title filter and title sort" do
-      get bookmarks_path, params: { sort: "title", title: "test" }
+    it "can access global index with keyword filter and title sort via turbo frame" do
+      get bookmarks_path, params: { sort: "title", keyword: "test" },
+          headers: { "Turbo-Frame" => "bookmarks_results" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "renders shell page for non-turbo index request" do
+      get bookmarks_path
+      expect(response.body).to include("bookmarks_results")
+      expect(response.body).to include("Keyword")
+    end
+
+    it "renders results for turbo frame index request" do
+      get bookmarks_path,
+          headers: { "Turbo-Frame" => "bookmarks_results" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "can filter index by keyword via turbo frame" do
+      get bookmarks_path, params: { keyword: workshop.title },
+          headers: { "Turbo-Frame" => "bookmarks_results" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "can sort index by popularity via turbo frame" do
+      get bookmarks_path, params: { sort: "popularity", direction: "asc" },
+          headers: { "Turbo-Frame" => "bookmarks_results" }
       expect(response).to have_http_status(:ok)
     end
 
