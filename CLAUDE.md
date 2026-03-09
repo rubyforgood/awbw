@@ -89,6 +89,14 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - **No parentheses around conditions:** `if foo` not `if (foo)`
 - **No semicolons** to separate statements
 
+## HTML/ERB Formatting
+
+### Tag Attributes
+- **Closing `>` on same line as last attribute** — do not put `>` on its own line
+- When attributes span multiple lines, keep the closing `>` with the last attribute
+- Good: `<div class="..." id="...">` or `<div class="...\n     id="...">`
+- Bad: `<div class="...\n     id="..."\n  >`
+
 ## Related Files
 
 When changing a model or controller, check whether these related files need updates:
