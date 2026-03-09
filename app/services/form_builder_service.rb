@@ -237,12 +237,12 @@ class FormBuilderService
     position = add_header(form, position, "Consent", group: "consent")
     position = add_field(form, position,
                          "I agree to receive email communications from A Window Between Worlds.",
-                         :multiple_choice_radio,
+                         :multiple_choice_checkbox,
                          key: "communication_consent", group: "consent", required: true,
                          hint: "By submitting this form, I consent to receive updates from A Window Between Worlds, " \
                                "including information about this event as well as upcoming events, training opportunities, resources, " \
                                "impact stories, and ways to support our mission. I understand I can unsubscribe at any time.",
-                         options: %w[Yes No])
+                         options: [ "Yes" ])
     position
   end
 
