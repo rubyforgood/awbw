@@ -58,7 +58,7 @@ class User < ApplicationRecord
   has_many :user_form_form_fields, through: :user_forms, dependent: :destroy
   # Nested attributes
   accepts_nested_attributes_for :user_forms
-  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
 
   before_validation :strip_whitespace

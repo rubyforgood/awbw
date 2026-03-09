@@ -48,7 +48,7 @@ class Organization < ApplicationRecord
   after_save :remove_duplicate_sectorable_items
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
-  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # SearchCop
   include SearchCop
