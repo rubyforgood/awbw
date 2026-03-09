@@ -1,0 +1,36 @@
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+    <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "Edit fields", edit_form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "View form", form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  </div>
+  <h1 class="text-2xl font-semibold mb-6">Edit Sections: <%= @form.display_name %></h1>
+
+  <% current_sections = (@form.sections || []).map(&:to_s) %>
+
+  <%= form_with url: update_sections_form_path(@form), method: :patch, class: "space-y-6" do |f| %>
+    <fieldset>
+      <legend class="text-sm font-medium text-gray-700 mb-3">Select sections to include:</legend>
+      <div class="space-y-2">
+        <% FormBuilderService::SECTIONS.each do |key, section| %>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="sections[]" value="<%= key %>"
+                   class="rounded border-gray-300 text-blue-600"
+                   <%= "checked" if current_sections.include?(key.to_s) %>>
+            <span class="text-sm text-gray-800"><%= section[:label] %></span>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+
+    <p class="text-xs text-gray-500">
+      Unchecking a section will remove its fields from the form. Checking a new section will add its default fields at the end.
+      Existing answers are preserved via question text snapshots.
+    </p>
+
+    <div class="flex gap-3">
+      <%= f.submit "Update Sections", class: "btn btn-primary cursor-pointer" %>
+      <%= link_to "Cancel", edit_form_path(@form), class: "btn btn-secondary-outline" %>
+    </div>
+  <% end %>
+</div>

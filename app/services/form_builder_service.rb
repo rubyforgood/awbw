@@ -33,6 +33,69 @@ class FormBuilderService
     form
   end
 
+  SECTION_FIELD_KEYS = {
+    person_identifier: %w[first_name last_name primary_email confirm_email],
+    person_contact_info: %w[
+      primary_email_type nickname pronouns secondary_email secondary_email_type
+      mailing_street mailing_address_type mailing_city mailing_state mailing_zip
+      phone phone_type agency_name agency_position agency_street agency_city
+      agency_state agency_zip agency_type agency_website
+    ],
+    person_background: %w[racial_ethnic_identity],
+    professional_info: %w[primary_service_area workshop_environments client_life_experiences primary_age_group],
+    event_feedback: %w[referral_source training_motivation interested_in_more],
+    scholarship: %w[scholarship_eligibility impact_description implementation_plan additional_comments],
+    payment: %w[number_of_attendees payment_method],
+    consent: %w[communication_consent],
+    post_event_feedback: %w[event_rating most_valuable improvement_suggestions]
+  }.freeze
+
+  # Update sections on an existing form: add new sections, remove unchecked ones
+  def self.update_sections!(form, new_sections)
+    new_sections = new_sections.map(&:to_sym)
+    old_sections = (form.sections || []).map(&:to_sym)
+
+    added = new_sections - old_sections
+    removed = old_sections - new_sections
+
+    # Remove fields belonging to removed sections
+    remaining_groups = new_sections.map { |k| SECTION_FIELD_GROUPS.fetch(k) }.uniq
+    removed.each do |key|
+      field_keys = SECTION_FIELD_KEYS.fetch(key)
+      form.form_fields.where(field_key: field_keys).destroy_all
+      # Only remove headers if no remaining section shares the same field_group
+      group = SECTION_FIELD_GROUPS.fetch(key)
+      unless remaining_groups.include?(group)
+        form.form_fields.where(field_key: nil, field_group: group, answer_type: :group_header).destroy_all
+      end
+    end
+
+    # Add fields for new sections at the end
+    if added.any?
+      max_position = form.form_fields.maximum(:position) || 0
+      builder = new(name: form.name, sections: added)
+      added.each do |key|
+        section = SECTIONS.fetch(key)
+        max_position = builder.send(section[:method], form, max_position)
+      end
+    end
+
+    form.update!(sections: new_sections.map(&:to_s))
+    form
+  end
+
+  SECTION_FIELD_GROUPS = {
+    person_identifier: "contact",
+    person_contact_info: "contact",
+    person_background: "background",
+    professional_info: "professional",
+    event_feedback: "event_feedback",
+    scholarship: "scholarship",
+    payment: "payment",
+    consent: "consent",
+    post_event_feedback: "post_event_feedback"
+  }.freeze
+
   private
 
   def add_header(form, position, title, group:)

@@ -1,5 +1,5 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[show edit update destroy reorder_field]
+  before_action :set_form, only: %i[show edit update destroy reorder_field edit_sections update_sections]
 
   def index
     authorize!
@@ -54,6 +54,24 @@ class FormsController < ApplicationController
     authorize! @form
     @form.destroy!
     redirect_to forms_path, notice: "Form deleted."
+  end
+
+  def edit_sections
+    authorize! @form
+  end
+
+  def update_sections
+    authorize! @form
+
+    sections = (params[:sections] || []).reject(&:blank?).map(&:to_sym)
+    if sections.empty?
+      flash.now[:alert] = "Please select at least one section."
+      render :edit_sections, status: :unprocessable_content
+      return
+    end
+
+    FormBuilderService.update_sections!(@form, sections)
+    redirect_to edit_form_path(@form), notice: "Sections updated."
   end
 
   def reorder_field

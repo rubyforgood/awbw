@@ -102,6 +102,8 @@ Rails.application.routes.draw do
   resources :forms do
     member do
       patch :reorder_field
+      get :edit_sections
+      patch :update_sections
     end
   end
   resources :events do
