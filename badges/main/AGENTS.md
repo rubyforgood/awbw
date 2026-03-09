@@ -206,6 +206,12 @@ end
 
 ## Frontend
 
+### Preferences
+
+- **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
+- **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
+- Prefer Turbo for navigation and form submissions before reaching for Stimulus
+
 ### Stimulus Controllers (32)
 
 Key controllers:
@@ -309,6 +315,14 @@ RuboCop linting on PRs and pushes to main.
 | Geocoding | Geocoder + MaxMind GeoIP2 |
 | Email styling | Premailer-rails (inline CSS) |
 | Positioning | Positioning gem for ordered records |
+
+## PRs
+
+- On every push, update the PR title and description to reflect the current diff
+
+## Git
+
+- When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)
 
 ## Rake Tasks
 
