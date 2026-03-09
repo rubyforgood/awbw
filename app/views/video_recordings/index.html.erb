@@ -20,7 +20,6 @@
             <% else %>
               Step-by-step instructional videos to help you get the most out of our platform
             <% end %>
-            <%= link_to "See all Videos", video_recordings_path(video_type: "other"), class: "text-sm text-gray-500 hover:text-gray-700 ml-2" %>
           <% else %>
             <% if user_signed_in? %>
               Explore videos from the community showcasing impact and inspiring stories
@@ -31,7 +30,10 @@
         </p>
       </div>
 
-      <div class="text-right">
+      <div class="text-right space-y-2">
+        <% if @video_type == "instructional" %>
+          <%= link_to "See all Videos", video_recordings_path(video_type: "other"), class: "block text-sm text-gray-500 hover:text-gray-700" %>
+        <% end %>
         <% if allowed_to?(:new?, VideoRecording) %>
           <%= link_to "New #{VideoRecording.model_name.human.downcase}",
                        new_video_recording_path,
