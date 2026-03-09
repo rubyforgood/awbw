@@ -559,14 +559,17 @@ variations.each do |var_data|
   workshop = Workshop.find_by(title: var_data[:workshop_title])
   next unless workshop
 
-  workshop.workshop_variations.where(name: var_data[:name]).first_or_create!(
+  windows_type_id = [ adult_wt.id, children_wt.id, combined_wt.id ].sample
+  variation = workshop.workshop_variations.find_or_initialize_by(name: var_data[:name])
+  variation.assign_attributes(
     body: var_data[:rhino_body],
     rhino_body: var_data[:rhino_body],
     position: var_data[:position],
     published: [ true, true, false ].sample,
-    windows_type_id: [ adult_wt.id, children_wt.id, combined_wt.id ].sample,
+    windows_type_id: windows_type_id,
     author_credit_preference: "anonymous"
   )
+  variation.save!
 end
 
 puts "Creating Persons and Affiliations for seed users…"
