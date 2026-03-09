@@ -1485,7 +1485,7 @@ ahoy_users = [
   nil # anonymous visitor
 ].compact
 
-cities = ["Los Angeles", "San Diego", "Portland", "Seattle", "Denver"]
+cities = [ "Los Angeles", "San Diego", "Portland", "Seattle", "Denver" ]
 browsers = %w[Chrome Safari Firefox Edge]
 devices = %w[Desktop Mobile Tablet]
 
@@ -1580,11 +1580,11 @@ seed_categories = Category.joins(:category_type).where(published: true).limit(15
 seed_sectors = Sector.where(published: true).limit(10).to_a
 seed_windows_types = WindowsType.all.to_a
 
-search_titles = ["self care", "container of feelings", "self-care", "resilience", "touchstones",
-                 "domestic violence", "grief", "personal needs flower", "butterfly", "may you be"]
-search_authors = ["fabian", "aaron", "power and control wheel", "aaron mason", "Janet Hughes"]
-search_full_texts = ["anxiety", "we rise", "luck", "collage", "mental wellness",
-                     "mental well-being", "friendship", "transforming", "north star"]
+search_titles = [ "self care", "container of feelings", "self-care", "resilience", "touchstones",
+                  "domestic violence", "grief", "personal needs flower", "butterfly", "may you be" ]
+search_authors = [ "fabian", "aaron", "power and control wheel", "aaron mason", "Janet Hughes" ]
+search_full_texts = [ "anxiety", "we rise", "luck", "collage", "mental wellness",
+                      "mental well-being", "friendship", "transforming", "north star" ]
 
 # Filter events with categories, sectors, and windows types
 12.times do
@@ -1636,9 +1636,9 @@ end
 end
 
 # ── search_zero.workshops events (populates "No Results" chart) ──
-zero_queries = ["watercolor techniques for teens", "music therapy", "yoga breathing",
-                "sand tray", "outdoor art", "digital collage", "puppet making 101",
-                "grief journaling advanced"]
+zero_queries = [ "watercolor techniques for teens", "music therapy", "yoga breathing",
+                 "sand tray", "outdoor art", "digital collage", "puppet making 101",
+                 "grief journaling advanced" ]
 zero_queries.each do |query|
   visit = ahoy_visits.sample
   rand(1..3).times do
@@ -1674,8 +1674,8 @@ end
 end
 
 # ── filter.resources / search.resources events ──
-resource_keywords = ["art supplies guide", "facilitator handbook", "trauma informed", "group activity",
-                     "healing through art", "coloring pages", "workshop template"]
+resource_keywords = [ "art supplies guide", "facilitator handbook", "trauma informed", "group activity",
+                      "healing through art", "coloring pages", "workshop template" ]
 resource_kinds = %w[pdf video link document]
 
 5.times do
