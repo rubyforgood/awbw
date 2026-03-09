@@ -19,7 +19,6 @@ module DomainTheme
     category_types:            :lime,
 
     faqs:                     :pink,
-    tutorials:                :cyan,
     video_recordings:         :cyan,
 
     workshop_ideas:           :indigo,
