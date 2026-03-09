@@ -142,8 +142,8 @@ RSpec.describe Workshop do
       labels = Workshop.resolve_duplicate_labels([ w1, w2 ].map(&:remote_search_label))
 
       expect(labels).to contain_exactly(
-        { id: w1.id, label: "Art Therapy (ADULT) ##{w1.id}" },
-        { id: w2.id, label: "art therapy (ADULT) ##{w2.id}" }
+        { id: w1.id, label: "Art Therapy (Adult) ##{w1.id}" },
+        { id: w2.id, label: "art therapy (Adult) ##{w2.id}" }
       )
     end
 
@@ -155,8 +155,8 @@ RSpec.describe Workshop do
       labels = Workshop.resolve_duplicate_labels([ w1, w2 ].map(&:remote_search_label))
 
       expect(labels).to contain_exactly(
-        { id: w1.id, label: "Art Therapy (ADULT) ##{w1.id}" },
-        { id: w2.id, label: "Art  Therapy (ADULT) ##{w2.id}" }
+        { id: w1.id, label: "Art Therapy (Adult) ##{w1.id}" },
+        { id: w2.id, label: "Art  Therapy (Adult) ##{w2.id}" }
       )
     end
   end
