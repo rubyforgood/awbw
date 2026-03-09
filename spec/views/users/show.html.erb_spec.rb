@@ -59,6 +59,43 @@ RSpec.describe "users/show", type: :view do
   end
 
   # --------------------------------------------------
+  # INVITE BUTTON
+  # --------------------------------------------------
+  context "when user is unconfirmed" do
+    let(:admin) { create(:user, :admin) }
+    let(:unconfirmed_user) do
+      create(:user, :unconfirmed, email: "unconfirmed@example.com")
+    end
+
+    before do
+      assign(:user, unconfirmed_user)
+      assign(:account_events, Ahoy::Event.none.paginate(page: 1))
+      assign(:comments, unconfirmed_user.comments.none.paginate(page: 1))
+      allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
+      render
+    end
+
+    it "shows invite button" do
+      expect(rendered).to have_button("Invite")
+    end
+  end
+
+  context "when user is confirmed" do
+    let(:admin) { create(:user, :admin) }
+
+    before do
+      allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
+      render
+    end
+
+    it "does not show invite button" do
+      expect(rendered).not_to have_button("Invite")
+    end
+  end
+
+  # --------------------------------------------------
   # NON-ADMIN VIEW
   # --------------------------------------------------
   context "when current user is not an admin" do
