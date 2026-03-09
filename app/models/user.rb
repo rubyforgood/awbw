@@ -49,7 +49,7 @@ class User < ApplicationRecord
   has_many :bookmarked_workshops, through: :bookmarks, source: :bookmarkable, source_type: "Workshop"
   has_many :bookmarked_resources, through: :bookmarks, source: :bookmarkable, source_type: "Resource"
   has_many :bookmarked_events, through: :bookmarks, source: :bookmarkable, source_type: "Event"
-  has_many :bookmarked_tutorials, through: :bookmarks, source: :bookmarkable, source_type: "VideoRecording"
+  has_many :bookmarked_video_recordings, through: :bookmarks, source: :bookmarkable, source_type: "VideoRecording"
 
   has_many :events, through: :event_registrations
   has_many :organizations, through: :person
