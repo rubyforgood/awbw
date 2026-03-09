@@ -1,6 +1,4 @@
 class VideoRecording < ApplicationRecord
-  self.table_name = "video_recordings"
-
   include Featureable, Publishable, TagFilterable, Trendable, RichTextSearchable
 
   has_rich_text :rhino_body
