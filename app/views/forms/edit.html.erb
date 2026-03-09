@@ -2,11 +2,7 @@
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-semibold">Edit: <%= @form.display_name %></h1>
     <div class="flex items-center gap-4">
-      <% preview_event = @form.events.first %>
-      <% if preview_event %>
-        <%= link_to "Preview form", new_event_public_registration_path(preview_event),
-                    class: "text-sm text-blue-600 hover:text-blue-800 underline", target: "_blank" %>
-      <% end %>
+      <%= link_to "View form", form_path(@form), class: "text-sm text-blue-600 hover:text-blue-800 underline" %>
       <%= link_to "← Back to Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     </div>
   </div>

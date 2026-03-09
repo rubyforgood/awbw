@@ -22,7 +22,8 @@
             <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= form.events.size %></td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_submissions.size %></td>
-            <td class="px-4 py-2 text-right text-sm">
+            <td class="px-4 py-2 text-right text-sm space-x-3">
+              <%= link_to "View", form_path(form), class: "text-blue-600 hover:text-blue-800 underline" %>
               <%= link_to "Edit", edit_form_path(form), class: "text-blue-600 hover:text-blue-800 underline" %>
             </td>
           </tr>

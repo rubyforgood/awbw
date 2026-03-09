@@ -99,7 +99,7 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create ]
   end
-  resources :forms, except: :show do
+  resources :forms do
     member do
       patch :reorder_field
     end

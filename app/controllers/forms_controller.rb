@@ -1,9 +1,14 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[edit update destroy reorder_field]
+  before_action :set_form, only: %i[show edit update destroy reorder_field]
 
   def index
     authorize!
     @forms = Form.standalone.order(:name)
+  end
+
+  def show
+    authorize! @form
+    @form_fields = @form.form_fields.reorder(position: :asc)
   end
 
   def new
