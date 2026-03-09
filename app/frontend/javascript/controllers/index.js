@@ -15,6 +15,9 @@ application.register("autosave", AutosaveController)
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
 
+import ChipSelectController from "./chip_select_controller"
+application.register("chip-select", ChipSelectController)
+
 import CocoonController from "./cocoon_controller"
 application.register("cocoon", CocoonController)
 
@@ -41,6 +44,9 @@ application.register("dropdown", DropdownController)
 
 import FilePreviewController from "./file_preview_controller"
 application.register("file-preview", FilePreviewController)
+
+import FormFieldsSortableController from "./form_fields_sortable_controller"
+application.register("form-fields-sortable", FormFieldsSortableController)
 
 import InactiveToggleController from "./inactive_toggle_controller"
 application.register("inactive-toggle", InactiveToggleController)
