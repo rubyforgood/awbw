@@ -1,8 +1,8 @@
 # awbw-portal
 ![Coverage](https://rubyforgood.github.io/awbw/badges/main/coverage_badge.svg)
 
-This project is the Portal for [A Windows Between Worlds](https://www.awbw.org). The Portal
-offers a place for workshop leaders to find information about Workshops and Resources, 
+This project is the Portal for [A Window Between Worlds](https://www.awbw.org). The Portal
+offers a place for workshop leaders to find information about Workshops and Resources,
 be informed of CommunityNews, Stories, and Events, and as the project evolves -- to connect with one another.
 
 ## Architecture Overview
@@ -43,9 +43,3 @@ Featured workshop IDs are cached for up to 1 year. The cache auto-invalidates wh
 ```
 
 This clears and repopulates the cache for all users. Only site admins (users who pass the `ApplicationPolicy#manage?` check) can use this param.
-
-## Orphaned Reports
-
-When users are deleted from the system, their reports are automatically assigned to a special 
-"orphaned reports user" account. To access these reports:
-- Email: <orphaned_reports@awbw.org>

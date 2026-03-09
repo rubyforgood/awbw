@@ -101,6 +101,7 @@ When changing a model or controller, check whether these related files need upda
 | Service | Service spec |
 | Decorator | Decorator spec |
 | Add/remove model, concern, service, or gem | AGENTS.md, `.github/copilot-instructions.md` |
+| Code style rules | `.github/copilot-instructions.md` (keep in sync) |
 
 ## Key Directories
 
