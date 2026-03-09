@@ -121,7 +121,7 @@ class VideoRecordingsController < ApplicationController
   def filter_by_video_type(scope)
     case @video_type
     when "instructional"
-      scope.instructional
+      scope.where(is_instructional: true)
     when "other"
       scope.where(is_instructional: false)
     else
