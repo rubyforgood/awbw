@@ -149,7 +149,7 @@ bundle exec bundle-audit check --update
 ## JavaScript
 
 - ES6+ syntax, ESM imports/exports
-- **Always use Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
+- **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 - Controller naming: `[name]_controller.js`
