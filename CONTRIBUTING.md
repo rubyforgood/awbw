@@ -116,6 +116,12 @@ These credentials work for local development:
 - User
   - email: <amy.user@example.com>
   - password: password
+- User
+  - email: <priya.user@example.com>
+  - password: password
+- Orphaned Reports
+  - email: <orphaned_reports@awbw.org>
+  - When users are deleted from the system, their reports are automatically reassigned to this account.
 
 A [staging environment](https://awbw-staging-xzek4.ondigitalocean.app/) is also available — reach out to the repo maintainers if you need access.
 
@@ -133,7 +139,8 @@ A [staging environment](https://awbw-staging-xzek4.ondigitalocean.app/) is also 
 
 </details>
 
-## Conductor (Parallel AI Workspaces) 🎼
+<details>
+<summary><strong>Conductor (parallel AI workspaces)</strong></summary>
 
 This project supports [Conductor](https://conductor.build) for running multiple coding agents in parallel. Each workspace gets its own port, database, and session cookie automatically.
 
@@ -150,6 +157,8 @@ Configuration lives in `conductor.json` at the project root.
 ```
 127.0.0.1	awbw.local
 ```
+
+</details>
 
 ## Troubleshooting 👷🏼‍♀️
 
