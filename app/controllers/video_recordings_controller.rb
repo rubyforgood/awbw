@@ -24,25 +24,6 @@ class VideoRecordingsController < ApplicationController
     end
   end
 
-  def video_library
-    authorize!
-    if turbo_frame_request?
-      per_page = params[:number_of_items_per_page].presence || 6
-      base_scope = authorized_scope(VideoRecording.where(is_instructional: false))
-      filtered = base_scope.search_by_params(params)
-
-      @count_display = filtered.size == base_scope.size ? base_scope.size : "#{filtered.count}/#{base_scope.count}"
-      @video_library = filtered.order(:position).paginate(page: params[:page], per_page: per_page).decorate
-
-      render :video_library_lazy
-    else
-      @sectors = Sector.published.order(:name)
-      @category_types = CategoryType.published.general.order(:name).decorate
-
-      render :video_library
-    end
-  end
-
   def show
     @video_recording = @video_recording.decorate
     authorize! @video_recording

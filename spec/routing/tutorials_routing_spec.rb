@@ -37,9 +37,5 @@ RSpec.describe VideoRecordingsController, type: :routing do
     it "routes DELETE /video_recordings/1 to video_recordings#destroy" do
       expect(delete: "/video_recordings/1").to route_to("video_recordings#destroy", id: "1")
     end
-
-    it "routes /video_library to video_recordings#video_library" do
-      expect(get: "/video_library").to route_to("video_recordings#video_library")
-    end
   end
 end
