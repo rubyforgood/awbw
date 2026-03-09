@@ -834,11 +834,11 @@ puts "Creating WorkshopVariationIdeas…"
 end
 
 puts "Linking some WorkshopVariations to WorkshopVariationIdeas…"
-WorkshopVariationIdea.all.sample(2).each do |idea|
+WorkshopVariationIdea.all.sample(2).each_with_index do |idea, i|
   variation = WorkshopVariation.where(workshop_variation_idea_id: nil).sample
   next unless variation
 
-  variation.update!(workshop_variation_idea_id: idea.id, published: true)
+  variation.update!(workshop_variation_idea_id: idea.id, published: i > 0)
 end
 
 puts "Creating WorkshopLogs…"
