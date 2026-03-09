@@ -225,7 +225,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
           "Workshop Search: Titles",
           "Workshop Search: Authors",
           "Workshop Search: Full-Text",
-          "Workshop Search: Windows Types",
+          "Workshop search: Windows audiences",
           "Workshop Search: No Results",
           "Workshop Discovery Funnel",
           "Content Types People View Most",
