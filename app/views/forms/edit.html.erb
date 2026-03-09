@@ -61,7 +61,7 @@
           </div>
           <div class="flex items-center gap-1.5">
             <span class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Answers on file</span>
-            <span class="text-xs text-gray-500">Hidden when info is already known</span>
+            <span class="text-xs text-gray-500">Hidden when answered on this event's forms; if "One-time", hidden when answered on any form</span>
           </div>
         </div>
       </div>
@@ -74,6 +74,8 @@
 
       <div class="px-6 py-3 border-t border-gray-100">
         <%= link_to_add_association "+ Add field", f, :form_fields,
+              data: { association_insertion_node: "[data-controller='form-fields-sortable']",
+                      association_insertion_method: "append" },
               class: "text-sm text-blue-600 hover:text-blue-800 font-medium" %>
       </div>
     </div>

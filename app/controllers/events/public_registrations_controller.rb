@@ -143,25 +143,47 @@ module Events
         end
 
         if @form.hide_answered_form_questions?
-          existing_submission = @form.form_submissions.find_by(person: person)
-          if existing_submission
-            answered_field_ids = existing_submission.form_answers
-                                                   .joins(:form_field)
-                                                   .where(form_fields: { visibility: :answers_on_file })
-                                                   .where.not(text: [ nil, "" ])
-                                                   .pluck(:form_field_id)
-            if answered_field_ids.any?
-              scope = scope.where.not(id: answered_field_ids)
+          answered_field_ids = []
 
-              # Hide section headers when all their non-header fields are answered
-              answered_groups = @form.form_fields.where(id: answered_field_ids)
-                                    .pluck(:field_group).uniq.compact
-              answered_groups.each do |group|
-                group_field_ids = @form.form_fields.where(field_group: group, visibility: :answers_on_file)
-                                      .where.not(answer_type: :group_header).ids
-                if group_field_ids.any? && (group_field_ids - answered_field_ids).empty?
-                  scope = scope.where.not(field_group: group, answer_type: :group_header, visibility: :answers_on_file)
-                end
+          # One-time fields: hide if answered on ANY form submission for this person
+          one_time_field_ids = @form.form_fields.where(visibility: :answers_on_file, one_time: true)
+                                   .where.not(answer_type: :group_header).ids
+          if one_time_field_ids.any?
+            answered_one_time = FormAnswer.joins(:form_submission)
+                                         .where(form_submissions: { person_id: person.id })
+                                         .where(form_field_id: one_time_field_ids)
+                                         .where.not(text: [ nil, "" ])
+                                         .pluck(:form_field_id)
+            answered_field_ids.concat(answered_one_time)
+          end
+
+          # Regular fields: hide if answered on forms within this event
+          event_form_ids = @event.forms.ids
+          event_submissions = FormSubmission.where(person: person, form_id: event_form_ids)
+          if event_submissions.exists?
+            regular_field_ids = @form.form_fields.where(visibility: :answers_on_file, one_time: false)
+                                     .where.not(answer_type: :group_header).ids
+            if regular_field_ids.any?
+              answered_regular = FormAnswer.where(form_submission: event_submissions)
+                                          .where(form_field_id: regular_field_ids)
+                                          .where.not(text: [ nil, "" ])
+                                          .pluck(:form_field_id)
+              answered_field_ids.concat(answered_regular)
+            end
+          end
+
+          answered_field_ids.uniq!
+          if answered_field_ids.any?
+            scope = scope.where.not(id: answered_field_ids)
+
+            # Hide section headers when all their non-header fields are answered
+            answered_groups = @form.form_fields.where(id: answered_field_ids)
+                                  .pluck(:field_group).uniq.compact
+            answered_groups.each do |group|
+              group_field_ids = @form.form_fields.where(field_group: group, visibility: :answers_on_file)
+                                    .where.not(answer_type: :group_header).ids
+              if group_field_ids.any? && (group_field_ids - answered_field_ids).empty?
+                scope = scope.where.not(field_group: group, answer_type: :group_header, visibility: :answers_on_file)
               end
             end
           end

@@ -32,49 +32,44 @@
             {},
             class: "text-xs rounded-full border px-2 py-0.5 cursor-pointer",
             data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
-      <span class="text-lg font-semibold text-gray-800"><%= field.question %></span>
-      <%= f.hidden_field :question %>
+      <%= f.text_field :question, class: "flex-1 text-lg font-semibold text-gray-800 rounded border-gray-300 shadow-sm px-2 py-1" %>
       <div class="ml-auto">
         <%= link_to_remove_association "Remove", f,
               class: "text-sm text-gray-400 hover:text-red-600 underline" %>
       </div>
     </div>
   <% else %>
-    <div class="flex-1 grid grid-cols-12 gap-3 items-center">
-      <div class="col-span-5 flex items-center gap-2">
-        <%= f.select :visibility, visibility_options,
-              {},
-              class: "text-xs rounded-full border px-2 py-0.5 shrink-0 cursor-pointer",
-              data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
-        <%= f.text_field :question, class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
-      </div>
-      <div class="col-span-3">
-        <%
-          type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_checkbox no_user_input group_header]
-          type_labels = {
-            "group_header" => "Section header",
-            "free_form_input_one_line" => "One line",
-            "free_form_input_paragraph" => "Paragraph",
-            "multiple_choice_radio" => "Multiple choice radio",
-            "multiple_choice_checkbox" => "Multiple choice checkbox",
-            "no_user_input" => "Informational-only"
-          }
-          type_options = type_order.map { |t| [ type_labels[t] || t.titleize.gsub("_", " "), t ] }
-        %>
-        <%= f.select :answer_type, type_options,
-              {},
-              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
-      </div>
-      <div class="col-span-2">
-        <label class="flex items-center gap-1 text-sm text-gray-600">
-          <%= f.check_box :is_required, class: "rounded border-gray-300 text-blue-600" %>
-          Required
-        </label>
-      </div>
-      <div class="col-span-2 text-right">
-        <%= link_to_remove_association "Remove", f,
-              class: "text-sm text-gray-400 hover:text-red-600 underline" %>
-      </div>
+    <div class="flex-1 flex flex-wrap items-center gap-2">
+      <%= f.select :visibility, visibility_options,
+            {},
+            class: "text-xs rounded-full border px-2 py-0.5 shrink-0 cursor-pointer",
+            data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
+      <%= f.text_field :question, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+      <%
+        type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_checkbox no_user_input group_header]
+        type_labels = {
+          "group_header" => "Section header",
+          "free_form_input_one_line" => "One line",
+          "free_form_input_paragraph" => "Paragraph",
+          "multiple_choice_radio" => "Multiple choice radio",
+          "multiple_choice_checkbox" => "Multiple choice checkbox",
+          "no_user_input" => "Informational-only"
+        }
+        type_options = type_order.map { |t| [ type_labels[t] || t.titleize.gsub("_", " "), t ] }
+      %>
+      <%= f.select :answer_type, type_options,
+            {},
+            class: "flex-[2_1_11rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+      <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0">
+        <%= f.check_box :is_required, class: "rounded border-gray-300 text-blue-600" %>
+        Required
+      </label>
+      <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0" title="Hide if already answered on any form (not just this event)">
+        <%= f.check_box :one_time, class: "rounded border-gray-300 text-amber-600" %>
+        One-time
+      </label>
+      <%= link_to_remove_association "Remove", f,
+            class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0 ml-auto" %>
     </div>
   <% end %>
 </div>

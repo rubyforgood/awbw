@@ -119,7 +119,7 @@ class FormsController < ApplicationController
       :name, :hide_answered_person_questions, :hide_answered_form_questions,
       form_fields_attributes: [
         :id, :question, :answer_type, :is_required, :instructional_hint,
-        :field_key, :field_group, :position, :visibility, :_destroy
+        :field_key, :field_group, :position, :visibility, :one_time, :_destroy
       ]
     )
   end

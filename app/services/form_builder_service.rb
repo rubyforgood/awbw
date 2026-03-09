@@ -110,6 +110,9 @@ class FormBuilderService
     "post_event_feedback" => :answers_on_file
   }.freeze
 
+  # Groups where answers carry across all events (ask once ever)
+  ONE_TIME_GROUPS = %w[professional background].freeze
+
   def add_header(form, position, title, group:)
     position += 1
     form.form_fields.create!(
@@ -120,7 +123,8 @@ class FormBuilderService
       is_required: false,
       field_key: nil,
       field_group: group,
-      visibility: GROUP_VISIBILITY.fetch(group, :always_ask)
+      visibility: GROUP_VISIBILITY.fetch(group, :always_ask),
+      one_time: ONE_TIME_GROUPS.include?(group)
     )
     position
   end
@@ -137,7 +141,8 @@ class FormBuilderService
       instructional_hint: hint,
       field_key: key,
       field_group: group,
-      visibility: GROUP_VISIBILITY.fetch(group, :always_ask)
+      visibility: GROUP_VISIBILITY.fetch(group, :always_ask),
+      one_time: ONE_TIME_GROUPS.include?(group)
     )
 
     if options.present?
