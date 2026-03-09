@@ -1,28 +1,24 @@
 <%= turbo_frame_tag "video_recordings_results" do %>
   <div class="mt-4">
-    <div class="overflow-x-auto">
-        <% if @video_recordings.any? %>
-          <%= tag.div class: "grid grid-cols-1 lg:grid-cols-2 gap-4" do %>
-            <% @video_recordings.each_with_index do |video_recording, idx| %>
-              <%= tag.div class: "bg-white shadow-md rounded-md pt-6 px-2 pb-2" do %>
-                <%= render "video_recording", video_recording: video_recording %>
-              <% end %>
-            <% end %>
-          <% end %>
+    <% if @video_recordings.any? %>
+      <%= tag.div class: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" do %>
+        <% @video_recordings.each do |video_recording| %>
+          <%= render "video_card", video_recording: video_recording %>
+        <% end %>
+      <% end %>
 
-          <!-- Pagination -->
-          <div class="pagination flex justify-center mt-12">
-            <%= tailwind_paginate @video_recordings %>
-          </div>
+      <!-- Pagination -->
+      <div class="pagination flex justify-center mt-12">
+        <%= tailwind_paginate @video_recordings %>
+      </div>
+    <% else %>
+      <div class="text-gray-500 italic">
+        <% if @video_type == "instructional" %>
+          No <%= VideoRecording.model_name.human(count: 2).downcase %> found matching your filters.
         <% else %>
-          <div class="text-gray-500 italic">
-            <% if @video_type == "instructional" %>
-              No <%= VideoRecording.model_name.human(count: 2).downcase %> found matching your filters.
-            <% else %>
-              No videos found matching your filters.
-            <% end %>
-          </div>
+          No videos found matching your filters.
         <% end %>
       </div>
+    <% end %>
   </div>
 <% end %>

@@ -13,9 +13,22 @@
   <% end %>
 
   <div class="p-4 flex items-start justify-between gap-2">
-    <%= link_to title_with_badges(video_recording), video_recording_path(video_recording),
-                class: "hover:text-primary",
-                data: { turbo_frame: "_top" } %>
-    <%= render "bookmarks/editable_bookmark_icon", resource: video_recording %>
+    <div class="flex-1">
+      <%= link_to title_with_badges(video_recording), video_recording_path(video_recording),
+                  class: "hover:text-primary",
+                  data: { turbo_frame: "_top" } %>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <% if allowed_to?(:edit?, video_recording) %>
+        <%= link_to "Edit",
+                    edit_video_recording_path(video_recording),
+                    data: { turbo_frame: "_top" },
+                    class: "admin-only bg-blue-100 text-xs px-2 py-1 rounded" %>
+      <% end %>
+      <%= link_to "View", video_recording_path(video_recording),
+                  data: { turbo_frame: "_top" },
+                  class: "text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-100" %>
+      <%= render "bookmarks/editable_bookmark_icon", resource: video_recording %>
+    </div>
   </div>
 </div>
