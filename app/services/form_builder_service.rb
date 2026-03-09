@@ -50,6 +50,19 @@ class FormBuilderService
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions]
   }.freeze
 
+  # Header questions created by each section's builder method
+  SECTION_HEADERS = {
+    person_identifier: [],
+    person_contact_info: [ "Contact Information", "Mailing Address", "Agency / Organization Information" ],
+    person_background: [ "Background Information" ],
+    professional_info: [ "Professional Information" ],
+    event_feedback: [ "About You" ],
+    scholarship: [ "Scholarship Application" ],
+    payment: [ "Payment Information" ],
+    consent: [ "Consent" ],
+    post_event_feedback: [ "Post-Event Feedback" ]
+  }.freeze
+
   # Update sections on an existing form: add new sections, remove unchecked ones
   def self.update_sections!(form, new_sections)
     new_sections = new_sections.map(&:to_sym)
@@ -58,15 +71,14 @@ class FormBuilderService
     added = new_sections - old_sections
     removed = old_sections - new_sections
 
-    # Remove fields belonging to removed sections
-    remaining_groups = new_sections.map { |k| SECTION_FIELD_GROUPS.fetch(k) }.uniq
+    # Remove fields and headers belonging to removed sections
     removed.each do |key|
       field_keys = SECTION_FIELD_KEYS.fetch(key)
       form.form_fields.where(field_key: field_keys).destroy_all
-      # Only remove headers if no remaining section shares the same field_group
-      group = SECTION_FIELD_GROUPS.fetch(key)
-      unless remaining_groups.include?(group)
-        form.form_fields.where(field_key: nil, field_group: group, answer_type: :group_header).destroy_all
+
+      headers = SECTION_HEADERS.fetch(key)
+      if headers.any?
+        form.form_fields.where(question: headers, answer_type: :group_header).destroy_all
       end
     end
 
@@ -83,18 +95,6 @@ class FormBuilderService
     form.update!(sections: new_sections.map(&:to_s))
     form
   end
-
-  SECTION_FIELD_GROUPS = {
-    person_identifier: "contact",
-    person_contact_info: "contact",
-    person_background: "background",
-    professional_info: "professional",
-    event_feedback: "event_feedback",
-    scholarship: "scholarship",
-    payment: "payment",
-    consent: "consent",
-    post_event_feedback: "post_event_feedback"
-  }.freeze
 
   private
 
