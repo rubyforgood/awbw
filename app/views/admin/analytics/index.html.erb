@@ -209,7 +209,7 @@
             %>
 
             <%= render "admin/analytics/popular_list",
-                       title: "Instructional videos",
+                       title: VideoRecording.model_name.human(count: 2),
                        records: @most_viewed_video_recordings,
                        path_method: :video_recording_path,
                        metric: :view_count,
