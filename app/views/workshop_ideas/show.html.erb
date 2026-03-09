@@ -32,6 +32,9 @@
         <div>
           <span class="font-semibold text-gray-700">Author credit:</span>
           <%= @workshop_idea.author_credit_preference&.humanize || "—" %>
+          <% if @workshop_idea.author_credit_preference.present? %>
+            <span class="text-gray-500">(<%= @workshop_idea.author_credit %>)</span>
+          <% end %>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Windows audience:</span>
