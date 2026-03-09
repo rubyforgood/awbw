@@ -19,21 +19,23 @@
                          oninput: "this.form.requestSubmit()" %>
       </div>
 
-      <div class="flex-0 min-w-[180px]">
-        <label for="video_type" class="text-sm font-medium text-gray-500 mb-1">
-          Video type
-        </label>
+      <% if @video_type != "instructional" %>
+        <div class="flex-0 min-w-[180px]">
+          <label for="video_type" class="text-sm font-medium text-gray-500 mb-1">
+            Video type
+          </label>
 
-        <select id="video_type"
-                name="video_type"
-                onchange="this.form.requestSubmit()"
-                class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                       focus:ring-blue-500 focus:border-blue-500">
-          <option value="all" <%= "selected" if @video_type == "all" %>>All videos</option>
-          <option value="instructional" <%= "selected" if @video_type == "instructional" %>>Instructional videos</option>
-          <option value="other" <%= "selected" if @video_type == "other" %>>Other videos</option>
-        </select>
-      </div>
+          <select id="video_type"
+                  name="video_type"
+                  onchange="this.form.requestSubmit()"
+                  class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                         focus:ring-blue-500 focus:border-blue-500">
+            <option value="all" <%= "selected" if @video_type == "all" %>>All videos</option>
+            <option value="instructional" <%= "selected" if @video_type == "instructional" %>>Instructional videos</option>
+            <option value="other" <%= "selected" if @video_type == "other" %>>Other videos</option>
+          </select>
+        </div>
+      <% end %>
 
       <!-- VISIBILITY -->
       <div class="min-w-[150px]"><%= render "shared/visibility_filter",
