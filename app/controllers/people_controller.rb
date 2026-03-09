@@ -134,7 +134,7 @@ class PeopleController < ApplicationController
 
     @person.assign_attributes(person_params)
     @person.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
-    @person.comments.select(&:changed?).each { |c| c.updated_by = current_user }
+    @person.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
     if @person.save
       assign_associations(@person) if params.dig(:person, :category_ids)
@@ -391,7 +391,6 @@ class PeopleController < ApplicationController
       affiliations_attributes: [
         :id,
         :organization_id,
-        :position,
         :title,
         :inactive,
         :primary_contact,

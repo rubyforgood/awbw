@@ -15,6 +15,12 @@ RSpec.describe 'Taggings multiselect filter', type: :system, js: true do
   let!(:category_trauma) { create(:category, :published, name: "Trauma", category_type: category_type_theme) }
 
   # Create workshops with tags
+  let!(:workshop_veterans) do
+    workshop = create(:workshop, :published, title: "Veterans Workshop")
+    create(:sectorable_item, sector: sector_veterans, sectorable: workshop)
+    workshop
+  end
+
   let!(:workshop_youth_healing) do
     workshop = create(:workshop, :published, title: "Youth Healing Workshop")
     create(:sectorable_item, sector: sector_youth, sectorable: workshop)

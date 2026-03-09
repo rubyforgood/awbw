@@ -17,7 +17,6 @@ gem "jbuilder", "~> 2.0"
 
 gem "devise", "~> 4.9.4"
 gem "draper"
-gem "kt-paperclip", "~> 7.1.1"
 gem "aws-sdk-s3"
 
 gem "puma", "~> 6.0" # Add Puma as the web server
@@ -26,11 +25,8 @@ gem "cocoon", "~> 1.2.6"
 
 gem "wicked"
 gem "search_cop"
-gem "jwt", "~> 1.2.1"
 gem "httparty"
 gem "will_paginate", "~> 3.1.7"
-gem "apipie-rails", "~> 1.5.0"
-gem "rack-cors", require: "rack/cors"
 # gem "ckeditor", "~> 4.3.0" # removed given gh security scan results. still need a replacement.
 gem "image_processing"
 

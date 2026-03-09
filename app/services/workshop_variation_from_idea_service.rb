@@ -18,7 +18,7 @@ class WorkshopVariationFromIdeaService
 
   def attributes_from_idea
     workshop_variation_idea.attributes.slice(
-      "name", "youtube_url", "position", "workshop_id", "author_credit_preference"
+      "name", "youtube_url", "position", "workshop_id", "windows_type_id", "organization_id", "author_credit_preference"
     ).merge(
       created_by_id: user.id,
       workshop_variation_idea_id: workshop_variation_idea.id,

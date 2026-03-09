@@ -336,4 +336,79 @@ RSpec.describe User do
       expect(results).not_to include(regular_user, inactive_user)
     end
   end
+
+  describe "#track_password_changed" do
+    let(:user) { create(:user, password: "original_password") }
+
+    it "tracks auth.password_changed when encrypted_password changes" do
+      expect(Analytics::LifecycleBuffer).to receive(:push).with(
+        hash_including(name: "auth.password_changed")
+      )
+
+      user.update!(password: "new_secure_password", password_confirmation: "new_secure_password")
+    end
+
+    it "does not track when other fields change" do
+      expect(Analytics::LifecycleBuffer).not_to receive(:push).with(
+        hash_including(name: "auth.password_changed")
+      )
+
+      user.update!(first_name: "Updated")
+    end
+  end
+
+  describe "#create_email_changed_notification" do
+    let(:user) { create(:user, email: "old@example.com") }
+
+    it "creates an account_email_changed notification when email changes" do
+      user.skip_reconfirmation!
+
+      expect {
+        user.update!(email: "changed@example.com")
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.last
+      expect(notification.kind).to eq("account_email_changed")
+      expect(notification.recipient_role).to eq("person")
+      expect(notification.recipient_email).to eq("changed@example.com")
+      expect(notification.noticeable).to eq(user)
+      expect(notification.delivered_at).to be_nil
+    end
+
+    it "does not create notification when email does not change" do
+      expect {
+        user.update!(first_name: "Updated")
+      }.not_to change(Notification, :count)
+    end
+  end
+
+  describe "#track_email_change" do
+    let(:user) { create(:user, email: "old@example.com") }
+
+    it "tracks auth.email_changed when email is confirmed" do
+      user.skip_reconfirmation!
+
+      expect(Analytics::LifecycleBuffer).to receive(:push).with(
+        hash_including(
+          name: "auth.email_changed",
+          properties: hash_including(changes: { email: { before: "old@example.com", after: "new@example.com" } })
+        )
+      )
+
+      user.update!(email: "new@example.com")
+    end
+
+    it "tracks auth.email_update_requested when unconfirmed_email is set" do
+      expect(Analytics::LifecycleBuffer).to receive(:push).with(
+        hash_including(
+          name: "auth.email_update_requested",
+          properties: hash_including(changes: { email: { before: "old@example.com", after: "pending@example.com" } })
+        )
+      )
+
+      user.email = "pending@example.com"
+      user.skip_confirmation_notification!
+      user.save!
+    end
+  end
 end

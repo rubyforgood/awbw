@@ -54,8 +54,9 @@ RSpec.describe "Navbar avatar behavior", type: :system do
       person.reload
       expect(person.avatar).not_to be_attached
 
-      avatar_img = find("#avatar-image")
-      expect(avatar_img[:src]).to include("missing")
+      avatar_el = find("#avatar-image")
+      expect(avatar_el.tag_name).to eq("span")
+      expect(avatar_el.text).to eq(person.first_name.first.upcase)
     end
   end
 end

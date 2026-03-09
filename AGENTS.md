@@ -34,7 +34,7 @@ AWBW Portal (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, api/v1/, events/) | ~66 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~61 files |
 | `app/views/` | ERB templates | ~434 files |
 | `app/decorators/` | Draper decorators for view logic | ~36 files |
 | `app/policies/` | ActionPolicy authorization rules | ~43 files |
@@ -113,7 +113,6 @@ AWBW Portal (Rails 8.1)
 
 - **Root level** (~48 controllers): Workshops, stories, resources, events, people, organizations, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
-- **`api/v1/`**: ApiController base, Authentications, Workshops, Quotes, Resources
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
 
@@ -153,7 +152,6 @@ end
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
-- `AuthenticationToken` — JWT token generation for API
 - `ModelDeduper` — Deduplication logic
 - `NotificationServices::CreateNotification` — Notification creation
 - `NotificationServices::PersistDeliveredEmail` — Email delivery tracking
@@ -311,7 +309,6 @@ RuboCop linting on PRs and pushes to main.
 | Geocoding | Geocoder + MaxMind GeoIP2 |
 | Email styling | Premailer-rails (inline CSS) |
 | Positioning | Positioning gem for ordered records |
-| API | JWT tokens, Apipie docs, Rack CORS |
 
 ## Rake Tasks
 

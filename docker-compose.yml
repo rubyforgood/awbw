@@ -8,7 +8,6 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./docker/mysql/charset.cnf:/etc/mysql/conf.d/charset.cnf:ro
-      - ./db/init:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
       MYSQL_DATABASE: awbw_development

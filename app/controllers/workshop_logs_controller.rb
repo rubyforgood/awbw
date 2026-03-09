@@ -192,7 +192,7 @@ class WorkshopLogsController < ApplicationController
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
 
     @windows_type_id = params[:windows_type_id].presence || @workshop.windows_type_id ||
-      WindowsType.where(short_name: "COMBINED").last.id
+      WindowsType.where(short_name: "Combined").last.id
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder
     if form

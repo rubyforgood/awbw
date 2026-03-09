@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_180000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1217,12 +1217,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "variation_id"
+    t.integer "windows_type_id"
     t.integer "workshop_id", null: false
     t.bigint "workshop_variation_idea_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
     t.index ["organization_id"], name: "index_workshop_variations_on_organization_id"
     t.index ["published"], name: "index_workshop_variations_on_published"
+    t.index ["windows_type_id"], name: "index_workshop_variations_on_windows_type_id"
     t.index ["workshop_id", "name"], name: "index_workshop_variations_on_workshop_id_and_name", unique: true
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
     t.index ["workshop_variation_idea_id"], name: "index_workshop_variations_on_workshop_variation_idea_id"
@@ -1433,6 +1435,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_150000) do
   add_foreign_key "workshop_variation_ideas", "workshops"
   add_foreign_key "workshop_variations", "organizations"
   add_foreign_key "workshop_variations", "users", column: "created_by_id"
+  add_foreign_key "workshop_variations", "windows_types"
   add_foreign_key "workshop_variations", "workshop_variation_ideas"
   add_foreign_key "workshop_variations", "workshops"
   add_foreign_key "workshops", "users", column: "created_by_id"

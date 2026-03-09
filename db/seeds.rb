@@ -252,11 +252,11 @@ User.where(email: seed_emails).update_all(encrypted_password: user_password)
 
 puts "Creating WindowsTypes…"
 adult_type = WindowsType.where(name: "ADULT WINDOWS")
-                        .first_or_create!(legacy_id: 1, short_name: "ADULT")
+                        .first_or_create!(legacy_id: 1, short_name: "Adult")
 childrens_type = WindowsType.where(name: "CHILDREN'S WINDOWS")
-                            .first_or_create!(legacy_id: 2, short_name: "CHILDREN")
+                            .first_or_create!(legacy_id: 2, short_name: "Children")
 combined_type = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS")
-                           .first_or_create!(legacy_id: 3, short_name: "COMBINED")
+                           .first_or_create!(legacy_id: 3, short_name: "Combined")
 
 puts "Creating FormBuilders…"
 FormBuilder.where(name: "Adult Monthly Report", windows_type: adult_type).first_or_create!(id: 4)
@@ -302,10 +302,10 @@ puts "Creating CategoryTypes/Categories…"
 category_type_categories = [
   [ "AgeRange", "3-5" ],
   [ "AgeRange", "6-12" ],
-  [ "AgeRange", "Teen" ],
+  [ "AgeRange", "13-17" ],
   [ "AgeRange", "18+" ],
   [ "AgeRange", "Mixed-age groups" ],
-  [ "AgeRange", "Family Windows" ],
+  [ "AgeRange", "Family windows" ],
   # ["ArtType", "Boxes", 1],
   [ "ArtType", "Clay", 11 ],
   [ "ArtType", "Collage", 2 ],
@@ -416,6 +416,12 @@ category_type_categories.each do |category_type_name, category_name, _legacy_id|
     cat = ct.categories.create!(name: category_name, published: true)
   end
   cat.update!(published: true) unless cat.published?
+end
+
+puts "Setting AgeRange category positions…"
+age_range_order = [ "3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family windows" ]
+age_range_order.each_with_index do |name, i|
+  Category.where("LOWER(name) = LOWER(?)", name).update_all(position: i + 1)
 end
 
 puts "Creating StoryPopulation CategoryType…"

@@ -29,6 +29,12 @@ FactoryBot.define do
       publicly_featured { true }
     end
 
+    trait :ended do
+      start_date { 14.days.ago }
+      end_date { 12.days.ago }
+      registration_close_date { 13.days.ago }
+    end
+
     trait :registration_closed do
       registration_close_date { 13.days.ago }
     end

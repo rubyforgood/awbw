@@ -6,7 +6,7 @@
                title: title,
                subtitle: "Spotlights from our curriculum" %>
 
-    <%= turbo_frame_tag "home_workshops", src: home_workshops_path do %>
+    <%= turbo_frame_tag "home_workshops", src: home_workshops_path(bust_cache: params[:bust_cache].presence) do %>
       <%= render "workshops_cards_skeleton" %>
     <% end %>
   </div>

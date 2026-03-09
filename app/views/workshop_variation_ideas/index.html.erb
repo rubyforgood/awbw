@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas, intensity: 200) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -20,42 +20,75 @@
           <table class="w-full border-collapse border border-gray-200">
             <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Main Image</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Name</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/4">Workshop</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Author</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Promoted?</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]"></th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Author</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Promoted to</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Updated</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]">Actions</th>
             </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-200">
             <% @workshop_variation_ideas.each do |workshop_variation_idea| %>
               <tr class="hover:bg-gray-50 transition-colors duration-150">
-                <td>
-                  <div class="p-3">
+                <td class="px-4 py-2">
+                  <div class="w-12 h-9 rounded bg-gray-200 overflow-hidden">
                     <%= render "assets/display_image",
                                resource: workshop_variation_idea,
-                               width: 18, height: 14,
-                               variant: :index,
-                               link_to_object: true,
-                               file: workshop_variation_idea.display_image %>
+                               width: 12, height: 9,
+                               link: false,
+                               link_to_object: false,
+                               file: workshop_variation_idea.display_image,
+                               variant: :gallery %>
                   </div>
                 </td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_variation_idea.name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_variation_idea.workshop.title %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_variation_idea.created_by.name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800 text-center">
-                  <% if workshop_variation_idea.workshop_variations.any? %>
-                    <span class='fa fa-check-circle text-green-500'></span>
-                  <% else %>
-                    <span>--</span>
+                <td class="px-4 py-2" title="<%= workshop_variation_idea.name %>">
+                  <div class="text-sm text-gray-800 font-semibold">
+                    <%= link_to truncate(workshop_variation_idea.name, length: 30),
+                                workshop_variation_idea_path(workshop_variation_idea),
+                                class: "hover:text-blue-600 hover:underline" %>
+                  </div>
+                  <% if workshop_variation_idea.workshop %>
+                    <div class="text-xs text-gray-400">
+                      <%= link_to truncate(strip_tags(workshop_variation_idea.workshop.name), length: 40),
+                                  workshop_path(workshop_variation_idea.workshop),
+                                  class: "hover:text-gray-600" %>
+                    </div>
                   <% end %>
                 </td>
-
-                <!-- Actions -->
-                <td class="px-4 py-2 flex justify-center gap-2">
-                  <%= link_to 'Edit', edit_workshop_variation_idea_path(workshop_variation_idea), class: "btn btn-secondary-outline" %>
+                <td class="px-4 py-2 text-sm text-gray-600">
+                  <% plain = workshop_variation_idea.rhino_body.to_plain_text %>
+                  <% if plain.present? %>
+                    <span title="<%= truncate(plain, length: 500) %>">
+                      <i class="fas fa-file-lines text-gray-400"></i>
+                    </span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-2 text-sm text-center">
+                  <% display_name = workshop_variation_idea.author_credit.presence || workshop_variation_idea.created_by&.name %>
+                  <% if workshop_variation_idea.created_by&.person %>
+                    <%= link_to display_name,
+                                person_path(workshop_variation_idea.created_by.person),
+                                class: "text-gray-500 hover:text-gray-700" %>
+                  <% elsif display_name %>
+                    <%= display_name %>
+                  <% end %>
+                </td>
+                <td class="px-4 py-2 text-sm text-center whitespace-nowrap">
+                  <% promoted_variation = workshop_variation_idea.workshop_variations.first %>
+                  <% if promoted_variation %>
+                    <%= link_to "Variation ##{promoted_variation.id}",
+                                workshop_variation_path(promoted_variation),
+                                class: "text-purple-600 hover:text-purple-800 hover:underline" %>
+                  <% else %>
+                    <span class="text-gray-300">--</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-2 text-sm text-gray-500 text-center whitespace-nowrap"><%= workshop_variation_idea.updated_at&.strftime("%m/%d/%y") %></td>
+                <td class="px-4 py-2 text-center whitespace-nowrap">
+                  <%= link_to "View", workshop_variation_idea_path(workshop_variation_idea), class: "btn btn-secondary-outline" %>
                 </td>
               </tr>
             <% end %>

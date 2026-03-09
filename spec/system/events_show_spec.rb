@@ -171,6 +171,7 @@ RSpec.describe "Event show page", type: :system do
     context "event ended" do
       before do
         event.update!(end_date: 1.day.ago)
+        create(:event_registration, event: event, registrant: user.person, status: "registered")
       end
 
       it "shows 'Event ended' and hides registration buttons" do
@@ -180,6 +181,37 @@ RSpec.describe "Event show page", type: :system do
         expect(page).to have_text("Event ended")
         expect(page).not_to have_button("Register")
         expect(page).not_to have_button("De-register")
+      end
+
+      it "shows 'View Registration' for registered user" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_text("Event ended")
+        expect(page).to have_text("View Registration")
+      end
+
+      it "hides calendar links" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).not_to have_text("Add to Your Calendar")
+      end
+
+      it "blocks unregistered users" do
+        other_user = create(:user, :with_person)
+        sign_in(other_user)
+        visit event_path(event)
+
+        expect(page).to have_current_path(root_path)
+      end
+
+      it "allows admin to view" do
+        sign_in(admin)
+        visit event_path(event)
+
+        expect(page).to have_text("Event ended")
+        expect(page).to have_text("My Event")
       end
     end
 
@@ -426,6 +458,7 @@ RSpec.describe "Event show page", type: :system do
       expect(page).not_to have_button("Register")
 
       # "View Registration" is a clickable link to the registration show page
+      expect(page).to have_link("View Registration")
       registration = EventRegistration.last
       expect(page).to have_link("View Registration", href: registration_ticket_path(registration.slug))
     end

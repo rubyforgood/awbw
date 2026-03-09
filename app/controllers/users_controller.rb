@@ -126,7 +126,7 @@ class UsersController < ApplicationController
     @user.assign_attributes(user_params.except(:password, :password_confirmation))
     @user.updated_by = current_user
     @user.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
-    @user.comments.select(&:changed?).each { |c| c.updated_by = current_user }
+    @user.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
     # Suppress Devise's automatic reconfirmation email so the interstitial can control it
     @user.skip_confirmation_notification!

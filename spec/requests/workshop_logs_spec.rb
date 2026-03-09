@@ -72,6 +72,91 @@ RSpec.describe "/workshop_logs", type: :request do
       expect(response.body).not_to include("workshop_log_#{other_log.id}")
     end
 
+    context "colleague workshop log visibility" do
+      it "shows workshop logs from colleagues in the same organization" do
+        shared_org = create(:organization, name: "Shared Org")
+        person = create(:person, user: user)
+        create(:affiliation, person: person, organization: shared_org)
+
+        colleague = create(:user)
+        colleague_person = create(:person, user: colleague)
+        create(:affiliation, person: colleague_person, organization: shared_org)
+
+        colleague_log = create(:workshop_log, valid_attributes.merge(
+          created_by_id: colleague.id,
+          organization_id: shared_org.id
+        ))
+
+        get workshop_logs_path
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("workshop_log_#{colleague_log.id}")
+      end
+
+      it "does not show workshop logs from unaffiliated organizations" do
+        my_org = create(:organization, name: "My Org")
+        person = create(:person, user: user)
+        create(:affiliation, person: person, organization: my_org)
+
+        other_org = create(:organization, name: "Other Org")
+        stranger = create(:user)
+        stranger_person = create(:person, user: stranger)
+        create(:affiliation, person: stranger_person, organization: other_org)
+
+        stranger_log = create(:workshop_log, valid_attributes.merge(
+          created_by_id: stranger.id,
+          organization_id: other_org.id
+        ))
+
+        get workshop_logs_path
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).not_to include("workshop_log_#{stranger_log.id}")
+      end
+    end
+
+    context "person filtering" do
+      it "shows only affiliated colleagues in the person dropdown for non-admin users" do
+        shared_org = create(:organization, name: "Shared Org")
+        person = create(:person, user: user, first_name: "Current", last_name: "Userface")
+        create(:affiliation, person: person, organization: shared_org)
+
+        colleague = create(:user)
+        colleague_person = create(:person, user: colleague, first_name: "Colleague", last_name: "Personface")
+        create(:affiliation, person: colleague_person, organization: shared_org)
+
+        unaffiliated_org = create(:organization, name: "Unaffiliated Org")
+        stranger = create(:user)
+        stranger_person = create(:person, user: stranger, first_name: "Stranger", last_name: "Dangerface")
+        create(:affiliation, person: stranger_person, organization: unaffiliated_org)
+
+        get workshop_logs_path
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Colleague Personface")
+        expect(response.body).not_to include("Stranger Dangerface")
+      end
+
+      it "shows all people with access for admin users" do
+        admin = create(:user, :admin)
+        sign_in admin
+
+        org_a = create(:organization)
+        person_a = create(:person, user: create(:user), first_name: "Alpha", last_name: "Userton")
+        create(:affiliation, person: person_a, organization: org_a)
+
+        org_b = create(:organization)
+        person_b = create(:person, user: create(:user), first_name: "Beta", last_name: "Userton")
+        create(:affiliation, person: person_b, organization: org_b)
+
+        get workshop_logs_path
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Alpha Userton")
+        expect(response.body).to include("Beta Userton")
+      end
+    end
+
     context "organization filtering" do
       it "shows only affiliated organizations for non-admin users" do
         person = create(:person, user: user)

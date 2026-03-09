@@ -17,7 +17,6 @@ Rails.application.routes.draw do
   resources :images, only: [ :show ]
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
-  apipie
   authenticate :user, ->(user) { user.super_user? } do
     mount Blazer::Engine, at: "blazer"
   end
@@ -59,8 +58,6 @@ Rails.application.routes.draw do
   get "tags", to: "tags#index", as: "tags"
   get "tags/sectors", to: "tags#sectors", as: "tags_sectors"
   get "tags/categories", to: "tags#categories", as: "tags_categories"
-
-  get "image_migration_audit", to: "image_migration_audit#index"
 
   namespace :admin do
     get "/",                         to: "home#index" # admin home page
@@ -168,20 +165,14 @@ Rails.application.routes.draw do
   resources :workshop_log_creation_wizard
   resources :workshop_variation_ideas
   resources :workshop_variations
-  resources :workshops
+  resources :workshops do
+    resources :comments, only: [ :index, :create ]
+  end
 
   resources :workshop_mentions, only: [ :index ]
   resources :resource_mentions, only: [ :index ]
   resources :rich_text_asset_mentions, only: [ :index ]
   resources :event_mentions, only: [ :index ]
-
-  namespace :api do
-    namespace :v1 do
-      resources :authentications, only: [ :create ]
-      resources :quotes
-      resources :bookmarks
-    end
-  end
 
   namespace :home do
     resources :workshops, only: :index

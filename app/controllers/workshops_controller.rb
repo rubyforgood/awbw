@@ -45,7 +45,7 @@ class WorkshopsController < ApplicationController
     @total_ongoing    = logs.reduce(0) { |sum, l| sum += l.num_ongoing }
     @total_first_time = logs.reduce(0) { |sum, l| sum += l.num_first_time }
 
-    combined_windows_type = WindowsType.where(short_name: "COMBINED").first
+    combined_windows_type = WindowsType.where(short_name: "Combined").first
     @combined_workshop_logs = current_user.organization_workshop_logs(
       @report.date, combined_windows_type, current_user.agency_id
     )
@@ -153,8 +153,12 @@ class WorkshopsController < ApplicationController
     authorize! @workshop
     success = false
 
+    @workshop.assign_attributes(workshop_params)
+    @workshop.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
+    @workshop.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
+
     Workshop.transaction do
-      if @workshop.update(workshop_params)
+      if @workshop.save
         assign_associations(@workshop)
         success = true
       end
@@ -288,7 +292,8 @@ class WorkshopsController < ApplicationController
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
-                                            :position, :_destroy ]
+                                            :position, :_destroy ],
+      comments_attributes: [ :id, :body ]
     )
   end
 end

@@ -34,7 +34,7 @@ RSpec.describe "Workshops", type: :system do
         fill_in 'query', with: 'best workshop'
 
         # Open the dropdown
-        click_on "Windows Audience"  # this clicks the <button> text/label
+        click_on "Windows audience"  # this clicks the <button> text/label
         check("windows_types_#{adult_window.id}")
 
         expect(page).to have_content(workshop_world.title)
@@ -74,7 +74,7 @@ RSpec.describe "Workshops", type: :system do
         expect(page).to have_content(workshop_adult.title)
 
         # Also check a windows type checkbox
-        click_on "Windows Audience"
+        click_on "Windows audience"
         check("windows_types_#{adult_window.id}")
         expect(page).to have_content(workshop_adult.title)
 
