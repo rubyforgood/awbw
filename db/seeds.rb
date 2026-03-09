@@ -1,5 +1,7 @@
-# Disable email delivery during seeding
+# Disable email delivery and Devise notifications during seeding
 ActionMailer::Base.perform_deliveries = false
+User.skip_confirmation!
+Person.skip_confirmation!
 
 puts "Creating Users…"
 
