@@ -13,6 +13,8 @@ class Notification < ApplicationRecord
     welcome_instructions
     account_confirmation
     account_confirmation_fyi
+    account_email_change_requested
+    account_email_changed
     account_confirmed
     account_confirmed_fyi
     account_unlock_fyi

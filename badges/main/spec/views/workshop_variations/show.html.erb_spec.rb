@@ -22,7 +22,7 @@ RSpec.describe "workshop_variations/show", type: :view do
     expect(rendered).to include(workshop_variation.name)
     expect(rendered).to include(workshop_variation.rhino_body.body.to_s)
     expect(rendered).to include(workshop.title)
-    expect(rendered).to include(user.name)
+    expect(rendered).to include(workshop_variation.author_credit)
   end
 
   context "when the workshop_variation has a youtube_url" do
@@ -39,7 +39,7 @@ RSpec.describe "workshop_variations/show", type: :view do
 
     it "displays an unpublished indicator" do
       render
-      expect(rendered).to include("[UNPUBLISHED]")
+      expect(rendered).to include("Unpublished")
     end
   end
 end

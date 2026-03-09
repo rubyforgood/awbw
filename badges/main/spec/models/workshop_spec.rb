@@ -133,6 +133,32 @@ RSpec.describe Workshop do
         { id: w3.id, label: "Music Therapy (Adult)" }
       )
     end
+
+    it "treats labels as duplicates regardless of case" do
+      wt = create(:windows_type, :adult)
+      w1 = create(:workshop, title: "Art Therapy", windows_type: wt)
+      w2 = create(:workshop, title: "art therapy", windows_type: wt)
+
+      labels = Workshop.resolve_duplicate_labels([ w1, w2 ].map(&:remote_search_label))
+
+      expect(labels).to contain_exactly(
+        { id: w1.id, label: "Art Therapy (Adult) ##{w1.id}" },
+        { id: w2.id, label: "art therapy (Adult) ##{w2.id}" }
+      )
+    end
+
+    it "treats labels as duplicates regardless of extra whitespace" do
+      wt = create(:windows_type, :adult)
+      w1 = create(:workshop, title: "Art Therapy", windows_type: wt)
+      w2 = create(:workshop, title: "Art  Therapy", windows_type: wt)
+
+      labels = Workshop.resolve_duplicate_labels([ w1, w2 ].map(&:remote_search_label))
+
+      expect(labels).to contain_exactly(
+        { id: w1.id, label: "Art Therapy (Adult) ##{w1.id}" },
+        { id: w2.id, label: "Art  Therapy (Adult) ##{w2.id}" }
+      )
+    end
   end
 
   describe ".remote_search" do

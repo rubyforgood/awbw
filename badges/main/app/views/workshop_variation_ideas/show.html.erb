@@ -1,6 +1,12 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
 <div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="flex flex-wrap justify-end gap-2 mb-4">
+    <% if @workshop_variation_idea.workshop_variations.any? %>
+      <% @workshop_variation_idea.workshop_variations.each do |workshop_variation| %>
+        <%= link_to "View Variation", workshop_variation_path(workshop_variation),
+                    class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+      <% end %>
+    <% end %>
     <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% if allowed_to?(:index?, WorkshopVariationIdea) %>
       <%= link_to "Workshop Variation Ideas", workshop_variation_ideas_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
@@ -16,15 +22,28 @@
       <h1 class="text-3xl tracking-tight"><%= @workshop_variation_idea.name %></h1>
     </div>
 
-    <% if @workshop_variation_idea.workshop_variations.any? %>
-      <div class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-        <i class="fas fa-arrow-up-from-bracket text-blue-600"></i>
-        <span class="text-sm font-medium text-blue-800">
-          Promoted to:
-          <% @workshop_variation_idea.workshop_variations.each do |variation| %>
-            <%= link_to variation.title, workshop_variation_path(variation), class: "underline hover:text-blue-600" %>
-          <% end %>
-        </span>
+    <% visible_variations = allowed_to?(:manage?, WorkshopVariation) ? @workshop_variation_idea.workshop_variations : @workshop_variation_idea.workshop_variations.where(published: true) %>
+    <% if visible_variations.any? %>
+      <div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-arrow-up-from-bracket text-purple-600"></i>
+          <span class="text-sm font-medium text-purple-800">
+            Promoted to:
+            <% visible_variations.each do |variation| %>
+              <%= link_to variation.title, workshop_variation_path(variation), class: "underline hover:text-purple-600" %>
+            <% end %>
+          </span>
+        </div>
+      </div>
+    <% elsif @workshop_variation_idea.persisted? && allowed_to?(:manage?, WorkshopVariation) %>
+      <div class="admin-only rounded-lg border border-purple-200 bg-purple-50 p-4">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-arrow-up-from-bracket text-purple-600"></i>
+          <span class="text-sm font-medium text-purple-800">This idea has not been promoted yet.</span>
+          <%= link_to "Promote to Workshop Variation",
+                      new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),
+                      class: "btn btn-secondary-outline text-sm" %>
+        </div>
       </div>
     <% end %>
 
@@ -56,9 +75,9 @@
         <div>
           <span class="font-semibold text-gray-700">Workshop:</span>
           <% if @workshop_variation_idea.workshop && allowed_to?(:show?, @workshop_variation_idea.workshop) %>
-            <%= link_to @workshop_variation_idea.workshop.title, workshop_path(@workshop_variation_idea.workshop),
-                        data: { turbo_frame: "_top" },
-                        class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}" %>
+            <%= link_to "#{@workshop_variation_idea.workshop.title} (#{@workshop_variation_idea.workshop.windows_type&.short_name || 'Combined'})",
+                        workshop_path(@workshop_variation_idea.workshop),
+                        class: "btn btn-secondary-outline text-sm" %>
           <% else %>
             <%= @workshop_variation_idea.workshop&.title || "—" %>
           <% end %>

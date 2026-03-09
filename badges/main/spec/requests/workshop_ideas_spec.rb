@@ -79,6 +79,23 @@ RSpec.describe "/workshop_ideas", type: :request do
         expect(response).to redirect_to(workshop_idea_path(WorkshopIdea.last))
       end
 
+      it "sends admin and submitter notifications" do
+        expect(NotificationServices::CreateNotification).to receive(:call).with(
+          hash_including(
+            kind: :idea_submitted,
+            recipient_role: :person
+          )
+        )
+        expect(NotificationServices::CreateNotification).to receive(:call).with(
+          hash_including(
+            kind: :idea_submitted_fyi,
+            recipient_role: :admin
+          )
+        )
+
+        post workshop_ideas_path, params: { workshop_idea: valid_attributes }
+      end
+
       it "handles RecordNotUnique gracefully" do
         allow_any_instance_of(WorkshopIdea).to receive(:save).and_raise(
           ActiveRecord::RecordNotUnique.new("Duplicate entry")

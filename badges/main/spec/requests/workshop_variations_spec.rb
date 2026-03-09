@@ -4,6 +4,7 @@ RSpec.describe "/workshop_variations", type: :request do
   let(:regular_user) { create(:user) }
   let(:admin)        { create(:user, super_user: true) }
   let(:workshop)     { create(:workshop, published: true) }
+  let(:windows_type) { create(:windows_type) }
 
   let(:valid_attributes) do
     {
@@ -11,6 +12,8 @@ RSpec.describe "/workshop_variations", type: :request do
       rhino_body: "<p>A therapeutic approach to art-making.</p>",
       youtube_url: "https://www.youtube.com/watch?v=example",
       workshop_id: workshop.id,
+      windows_type_id: windows_type.id,
+      author_credit_preference: "full_name",
       created_by_id: admin.id
     }
   end
@@ -18,7 +21,9 @@ RSpec.describe "/workshop_variations", type: :request do
   let(:invalid_attributes) do
     {
       name: "",
-      rhino_body: ""
+      rhino_body: "",
+      windows_type_id: nil,
+      author_credit_preference: ""
     }
   end
 
@@ -51,19 +56,22 @@ RSpec.describe "/workshop_variations", type: :request do
     end
 
     describe "POST /create from workshop_variation_idea" do
+      let(:promotion_params) do
+        {
+          name: workshop_variation_idea.name,
+          rhino_body: workshop_variation_idea.rhino_body.body,
+          youtube_url: workshop_variation_idea.youtube_url,
+          workshop_id: workshop_variation_idea.workshop_id,
+          windows_type_id: workshop_variation_idea.windows_type_id,
+          author_credit_preference: workshop_variation_idea.author_credit_preference,
+          workshop_variation_idea_id: workshop_variation_idea.id,
+          created_by_id: admin.id
+        }
+      end
+
       it "creates a WorkshopVariation linked to the idea" do
         expect {
-          post workshop_variations_path,
-               params: {
-                  workshop_variation: {
-                    name: workshop_variation_idea.name,
-                    rhino_body: workshop_variation_idea.rhino_body.body,
-                   youtube_url: workshop_variation_idea.youtube_url,
-                   workshop_id: workshop_variation_idea.workshop_id,
-                   workshop_variation_idea_id: workshop_variation_idea.id,
-                   created_by_id: admin.id
-                 }
-               }
+          post workshop_variations_path, params: { workshop_variation: promotion_params }
         }.to change(WorkshopVariation, :count).by(1)
 
         new_variation = WorkshopVariation.last
@@ -73,25 +81,25 @@ RSpec.describe "/workshop_variations", type: :request do
       end
 
       it "attaches assets from idea when promote_idea_assets is true" do
-        # Create an idea with a primary asset
         idea_with_asset = create(:workshop_variation_idea, workshop: workshop)
-        primary_asset = PrimaryAsset.create!(
+        PrimaryAsset.create!(
           owner: idea_with_asset,
           file: fixture_file_upload("spec/fixtures/files/sample.png", "image/png")
         )
 
+        idea_params = {
+          name: idea_with_asset.name,
+          rhino_body: idea_with_asset.rhino_body.body,
+          workshop_id: idea_with_asset.workshop_id,
+          windows_type_id: idea_with_asset.windows_type_id,
+          author_credit_preference: idea_with_asset.author_credit_preference,
+          workshop_variation_idea_id: idea_with_asset.id,
+          created_by_id: admin.id
+        }
+
         expect {
           post workshop_variations_path,
-               params: {
-                 workshop_variation: {
-                    name: idea_with_asset.name,
-                    rhino_body: idea_with_asset.rhino_body.body,
-                   workshop_id: idea_with_asset.workshop_id,
-                   workshop_variation_idea_id: idea_with_asset.id,
-                   created_by_id: admin.id
-                 },
-                 promote_idea_assets: "true"
-               }
+               params: { workshop_variation: idea_params, promote_idea_assets: "true" }
         }.to change(WorkshopVariation, :count).by(1)
 
         new_variation = WorkshopVariation.last
@@ -100,21 +108,22 @@ RSpec.describe "/workshop_variations", type: :request do
 
       it "does not duplicate assets if promote_idea_assets is false" do
         idea_with_asset = create(:workshop_variation_idea, workshop: workshop)
-        primary_asset = PrimaryAsset.create!(
+        PrimaryAsset.create!(
           owner: idea_with_asset,
           file: fixture_file_upload("spec/fixtures/files/sample.png", "image/png")
         )
 
-        post workshop_variations_path,
-             params: {
-               workshop_variation: {
-                  name: idea_with_asset.name,
-                  rhino_body: idea_with_asset.rhino_body.body,
-                 workshop_id: idea_with_asset.workshop_id,
-                 workshop_variation_idea_id: idea_with_asset.id,
-                 created_by_id: admin.id
-               }
-             }
+        idea_params = {
+          name: idea_with_asset.name,
+          rhino_body: idea_with_asset.rhino_body.body,
+          workshop_id: idea_with_asset.workshop_id,
+          windows_type_id: idea_with_asset.windows_type_id,
+          author_credit_preference: idea_with_asset.author_credit_preference,
+          workshop_variation_idea_id: idea_with_asset.id,
+          created_by_id: admin.id
+        }
+
+        post workshop_variations_path, params: { workshop_variation: idea_params }
 
         new_variation = WorkshopVariation.last
         expect(new_variation.assets.count).to eq(0)
@@ -126,9 +135,11 @@ RSpec.describe "/workshop_variations", type: :request do
         post workshop_variations_path,
              params: {
                workshop_variation: {
-                  name: workshop_variation_idea.name,
-                  rhino_body: workshop_variation_idea.rhino_body.body,
+                 name: workshop_variation_idea.name,
+                 rhino_body: workshop_variation_idea.rhino_body.body,
                  workshop_id: workshop_variation_idea.workshop_id,
+                 windows_type_id: workshop_variation_idea.windows_type_id,
+                 author_credit_preference: workshop_variation_idea.author_credit_preference,
                  workshop_variation_idea_id: workshop_variation_idea.id,
                  created_by_id: admin.id
                }
@@ -186,11 +197,40 @@ RSpec.describe "/workshop_variations", type: :request do
       end
     end
 
+    describe "GET /show" do
+      it "renders successfully" do
+        variation = create(:workshop_variation, valid_attributes)
+        get workshop_variation_path(variation)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "shows promoted from banner when linked to an idea" do
+        idea = create(:workshop_variation_idea, workshop: workshop)
+        variation = create(:workshop_variation, valid_attributes.merge(workshop_variation_idea_id: idea.id))
+        get workshop_variation_path(variation)
+        expect(response.body).to include("Promoted from:")
+        expect(response.body).to include(idea.name)
+      end
+
+      it "does not show promoted from banner when not linked" do
+        variation = create(:workshop_variation, valid_attributes)
+        get workshop_variation_path(variation)
+        expect(response.body).not_to include("Promoted from:")
+      end
+    end
+
     describe "GET /edit" do
       it "renders successfully" do
         variation = create(:workshop_variation, valid_attributes)
         get edit_workshop_variation_path(variation)
         expect(response).to have_http_status(:ok)
+      end
+
+      it "renders without error when no workshop_variation_idea_id param" do
+        variation = create(:workshop_variation, valid_attributes)
+        get edit_workshop_variation_path(variation)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Promoted from:")
       end
     end
 
