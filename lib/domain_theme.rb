@@ -20,6 +20,7 @@ module DomainTheme
 
     faqs:                     :pink,
     tutorials:                :cyan,
+    video_recordings:         :cyan,
 
     workshop_ideas:           :indigo,
     workshop_variation_ideas: :purple,
