@@ -7,12 +7,14 @@ class BookmarksController < ApplicationController
     authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
+      base_scope = authorized_scope(Bookmark.includes(:bookmarkable))
       filtered = base_scope.search(params)
       @sort = VALID_SORTS.include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
       filtered = filtered.sorted(@sort, @sort_direction)
-      @bookmarks = filtered.paginate(page: params[:page], per_page: per_page).decorate
+      @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
+      Bookmark.preload_bookmarkable_associations(@bookmarks)
+      @bookmarks = @bookmarks.decorate
       @count_display = filtered.length == base_scope.length ? base_scope.length : "#{filtered.length}/#{base_scope.length}"
       set_index_variables
       render :index_lazy
@@ -30,7 +32,7 @@ class BookmarksController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
+      base_scope = authorized_scope(Bookmark.includes(:bookmarkable))
       filtered = base_scope.search(params, user: user)
       @sort = VALID_SORTS.include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
@@ -38,6 +40,7 @@ class BookmarksController < ApplicationController
       user_base = base_scope.where(user: user)
       @bookmarks_count = filtered.length
       @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
+      Bookmark.preload_bookmarkable_associations(@bookmarks)
       @count_display = filtered.length == user_base.length ? user_base.length : "#{filtered.length}/#{user_base.length}"
       set_index_variables
       render :personal_lazy
