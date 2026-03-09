@@ -59,7 +59,7 @@ class VideoRecording < ApplicationRecord
     scope = left_joins(:rich_text_rhino_body)
     term.split.each do |word|
       pattern = "%#{word}%"
-      scope = scope.where("tutorials.title LIKE :q OR tutorials.body LIKE :q OR action_text_rich_texts.body LIKE :q", q: pattern)
+      scope = scope.where("video_recordings.title LIKE :q OR video_recordings.body LIKE :q OR action_text_rich_texts.body LIKE :q", q: pattern)
     end
     scope
   }
