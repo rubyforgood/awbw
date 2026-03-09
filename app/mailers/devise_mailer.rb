@@ -61,12 +61,20 @@ class DeviseMailer < Devise::Mailer
     return unless @mail && @record
 
     kind = notification_kind_for_devise_action[action_name]
+
+    # For email changes (reconfirmation), use account_email_change_requested instead
+    if action_name == "confirmation_instructions" && @record.try(:pending_reconfirmation?)
+      kind = "account_email_change_requested"
+    end
+
     return unless kind # don’t create fyi emails for Devise mailers you don’t care about
+
+    recipient_email = (kind == "account_email_change_requested") ? @record.unconfirmed_email : @record.email
 
     notification = NotificationServices::CreateNotification.call(
       noticeable: @record,
       recipient_role: :person,
-      recipient_email: @record.email,
+      recipient_email: recipient_email,
       kind: kind,
       notification_type: 1,
       deliver: false # Devise already sent the email, so no need to deliver via the job
@@ -104,6 +112,12 @@ class DeviseMailer < Devise::Mailer
       "confirmation_instructions" => "auth.confirmation_email_sent",
       "unlock_instructions" => "auth.unlock_email_sent"
     }[action_name]
+
+    # For email changes (reconfirmation), use a specific event name
+    if action_name == "confirmation_instructions" && @record.try(:pending_reconfirmation?)
+      event_name = "auth.email_change_requested_email_sent"
+    end
+
     return unless event_name
 
     Analytics::AhoyTracker.track_auth_event(

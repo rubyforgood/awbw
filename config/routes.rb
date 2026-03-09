@@ -17,7 +17,6 @@ Rails.application.routes.draw do
   resources :images, only: [ :show ]
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
-  apipie
   authenticate :user, ->(user) { user.super_user? } do
     mount Blazer::Engine, at: "blazer"
   end
@@ -174,14 +173,6 @@ Rails.application.routes.draw do
   resources :resource_mentions, only: [ :index ]
   resources :rich_text_asset_mentions, only: [ :index ]
   resources :event_mentions, only: [ :index ]
-
-  namespace :api do
-    namespace :v1 do
-      resources :authentications, only: [ :create ]
-      resources :quotes
-      resources :bookmarks
-    end
-  end
 
   namespace :home do
     resources :workshops, only: :index

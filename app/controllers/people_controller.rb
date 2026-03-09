@@ -391,7 +391,6 @@ class PeopleController < ApplicationController
       affiliations_attributes: [
         :id,
         :organization_id,
-        :position,
         :title,
         :inactive,
         :primary_contact,
@@ -399,7 +398,7 @@ class PeopleController < ApplicationController
         :end_date,
         :_destroy
       ],
-      comments_attributes: [ :id, :body ],
+      comments_attributes: [ :id, :body, :_destroy ],
     )
   end
 end

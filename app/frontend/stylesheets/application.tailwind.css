@@ -255,6 +255,49 @@ textarea.comment-truncated:focus {
   color: white !important;
 }
 
+/* Responsive table: Kevin Powell card-based approach for small screens */
+@media (max-width: 767px) {
+  .responsive-table thead {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
+
+  .responsive-table tbody {
+    display: block;
+  }
+
+  .responsive-table tr {
+    display: block;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 0.75rem 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .responsive-table td {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 0.5rem;
+    padding: 0.35rem 1rem;
+    text-align: left;
+    border: none;
+  }
+
+  .responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
 /* Turbo progress bar */
 .turbo-progress-bar {
   height: 7px;

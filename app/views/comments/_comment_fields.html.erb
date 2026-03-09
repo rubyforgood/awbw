@@ -66,6 +66,8 @@
                     as: :text,
                     input_html: { rows: 1, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm" } %>
       </div>
+      <%= link_to_remove_association "Remove", f,
+            class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap mt-2 shrink-0" %>
     </div>
   <% else %>
     <% current_first_name = current_user&.person&.first_name || current_user&.name.to_s.split.first %>

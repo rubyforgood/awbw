@@ -1,13 +1,10 @@
 <!-- Filters -->
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg"
-     data-controller="collection">
-
+<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg" data-controller="collection">
   <%= form_with url: tutorials_path,
                 method: :get,
-                data: { turbo_frame: "tutorials_results" },
+                data: { turbo_frame: "tutorials_results", controller: "searchable-checkbox" },
                 autocomplete: "off",
                 class: "space-y-4" do |f| %>
-
     <div class="flex flex-wrap gap-4 items-end">
       <div class="flex-1 min-w-[200px]">
         <%= f.label :search, "Title or body contains",
@@ -21,93 +18,45 @@
                          oninput: "this.form.requestSubmit()" %>
       </div>
 
-      <%# Sectors dropdown %>
-      <div class="relative">
-        <div data-controller="dropdown" class="inline-block w-full" data-dropdown-target="content">
-          <button
-            id="sectors-button"
-            type="button"
-            data-action="dropdown#toggle"
-            data-dropdown-payload-param='[{"sectors-dropdown":"hidden"},{"sectors-arrow":"rotate-180"},{"sectors-button":"rounded-md rounded-t-md"}]'
-            class="relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
-                   border border-gray-300 cursor-pointer flex justify-between items-center"
-          >
-            <label class="mb-0 font-medium text-gray-700">Sectors</label>
-            <i id="sectors-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
-          </button>
-
-          <div
-            id="sectors-dropdown"
-            class="absolute left-0 top-full min-w-max shadow-sm bg-white border border-t-0
-                   border-gray-300 rounded-b-md hidden z-40"
-          >
-            <% @sectors.each do |sector| %>
-              <div class="flex items-center gap-2 mb-1 px-4">
-                <%= check_box_tag "sectors[#{sector.id}]",
-                                  sector.id,
-                                  params.dig(:sectors, sector.id.to_s).to_s == sector.id.to_s,
-                                  id: "sectors_#{sector.id}",
-                                  class: "category-checkbox" %>
-                <%= label_tag "sectors_#{sector.id}",
-                              sector.name.titleize,
-                              class: "text-sm text-gray-700 whitespace-nowrap" %>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      </div>
-
-      <%# Categories dropdown %>
-      <div class="relative">
-        <div data-controller="dropdown" class="inline-block w-full" data-dropdown-target="content">
-          <button
-            id="categories-button"
-            type="button"
-            data-action="dropdown#toggle"
-            data-dropdown-payload-param='[{"categories-dropdown":"hidden"},{"categories-arrow":"rotate-180"},{"categories-button":"rounded-md rounded-t-md"}]'
-            class="relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
-                   border border-gray-300 cursor-pointer flex justify-between items-center"
-          >
-            <label class="mb-0 font-medium text-gray-700">Categories</label>
-            <i id="categories-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
-          </button>
-
-          <div
-            id="categories-dropdown"
-            class="absolute left-0 top-full min-w-max shadow-sm bg-white border border-t-0
-                   border-gray-300 rounded-b-md hidden z-40"
-          >
-            <% @category_types.each do |category_type| %>
-              <% category_type.categories.ordered_by_position_and_name.each do |category| %>
-                <div class="flex items-center gap-2 mb-1 px-4">
-                  <%= check_box_tag "categories[#{category.id}]",
-                                    category.id,
-                                    params.dig(:categories, category.id.to_s).to_s == category.id.to_s,
-                                    id: "category_#{category.id}",
-                                    class: "category-checkbox" %>
-                  <%= label_tag "category_#{category.id}",
-                                "#{category_type.title}: #{category.name}",
-                                class: "text-sm text-gray-700 whitespace-nowrap" %>
-                </div>
-              <% end %>
-            <% end %>
-          </div>
-        </div>
-      </div>
-
       <!-- VISIBILITY -->
-      <div class="min-w-[150px]">
-        <%= render "shared/visibility_filter",
+      <div class="min-w-[150px]"><%= render "shared/visibility_filter",
                    model_class: Tutorial,
                    admin: allowed_to?(:manage?, Tutorial),
                    authenticated: user_signed_in?,
-                   button_text: "All" %>
-      </div>
-
+                   button_text: "All" %></div>
       <div><%= link_to "Clear filters",
                   tutorials_path,
                   class: "btn btn-utility-outline whitespace-nowrap",
-                  data: { action: "collection#clearAndSubmit" } %></div>
+                  data: { action: "searchable-checkbox#clear collection#clearAndSubmit" } %></div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-4">
+      <%# Categories dropdown %>
+      <div class="w-full">
+        <label class="text-sm font-medium text-gray-500 mb-1 block" for="categories">Categories</label>
+
+        <%= select_tag "categories",
+                       options_for_select(
+                         @category_types.flat_map { |ct| ct.categories.ordered_by_position_and_name.map { |c| ["#{ct.title}: #{c.name}", c.id] } },
+                         Array(params[:categories]).map(&:to_i)
+                       ),
+                       multiple: true,
+                       include_blank: false,
+                       class: "w-full min-w-[200px]",
+                       data: { searchable_checkbox_target: "select" } %>
+      </div>
+
+      <%# Sectors dropdown %>
+      <div class="w-full">
+        <label class="text-sm font-medium text-gray-500 mb-1 block" for="sectors">Sectors</label>
+
+        <%= select_tag "sectors",
+                       options_from_collection_for_select(@sectors, :id, :name, Array(params[:sectors]).map(&:to_i)),
+                       multiple: true,
+                       include_blank: false,
+                       class: "w-full min-w-[200px]",
+                       data: { searchable_checkbox_target: "select" } %>
+      </div>
     </div>
   <% end %>
 </div>

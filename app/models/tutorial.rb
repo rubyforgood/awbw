@@ -38,16 +38,16 @@ class Tutorial < ApplicationRecord
   }
   scope :title, ->(title) { where("title like ?", "%#{ title }%") }
   scope :tutorial_name, ->(tutorial_name) { title(tutorial_name) }
-  scope :with_sector_ids, ->(sector_hash) {
-    ids = sector_hash.values.reject(&:blank?).map(&:to_i)
+  scope :with_sector_ids, ->(sector_ids) {
+    ids = Array(sector_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:sectorable_items)
       .where(sectorable_items: { sectorable_type: "Tutorial", sector_id: ids })
       .distinct
   }
 
-  scope :with_category_ids, ->(category_hash) {
-    ids = category_hash.values.reject(&:blank?).map(&:to_i)
+  scope :with_category_ids, ->(category_ids) {
+    ids = Array(category_ids).reject(&:blank?).map(&:to_i)
     return all if ids.empty?
     joins(:categorizable_items)
       .where(categorizable_items: { categorizable_type: "Tutorial", category_id: ids })

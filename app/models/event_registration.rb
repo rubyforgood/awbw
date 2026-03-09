@@ -9,7 +9,7 @@ class EventRegistration < ApplicationRecord
 
   before_destroy :create_refund_payments
 
-  accepts_nested_attributes_for :comments, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   before_create :generate_slug
   after_create :snapshot_registrant_organizations

@@ -5,17 +5,17 @@ FactoryBot.define do
 
     trait :adult do
       name { "ADULT WINDOWS" }
-      short_name { "ADULT" }
+      short_name { "Adult" }
     end
 
     trait :children do
       name { "CHILDREN'S WINDOWS" }
-      short_name { "CHILDREN" }
+      short_name { "Children" }
     end
 
     trait :combined do
       name { "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS" }
-      short_name { "COMBINED" }
+      short_name { "Combined" }
     end
   end
 end
