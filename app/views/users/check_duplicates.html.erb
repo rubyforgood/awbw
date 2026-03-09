@@ -66,19 +66,34 @@
         </p>
       <% end %>
 
-      <div class="flex gap-3 justify-center">
-        <%= link_to "Go back", "javascript:history.back()", class: "btn btn-secondary-outline" %>
-
-        <% unless @blocked %>
-          <%= form_with url: users_path, method: :post, data: { turbo: false } do %>
-            <input type="hidden" name="user[email]" value="<%= @email %>">
+      <div class="flex flex-col items-center gap-3">
+        <div class="flex gap-3">
+          <%= form_with url: retry_new_users_path, method: :post, data: { turbo: false } do %>
+            <%= hidden_fields_for_params(@stored_params, "user") %>
             <% if @person_id.present? %>
               <input type="hidden" name="person_id" value="<%= @person_id %>">
             <% end %>
-            <input type="hidden" name="skip_duplicate_check" value="1">
-            <button type="submit" class="btn btn-primary">Create anyway</button>
+            <button type="submit" class="btn btn-secondary-outline">Go back</button>
           <% end %>
-        <% end %>
+
+          <% unless @blocked %>
+            <%= form_with url: users_path, method: :post, data: { turbo: false } do %>
+              <%= hidden_fields_for_params(@stored_params, "user") %>
+              <% if @person_id.present? %>
+                <input type="hidden" name="person_id" value="<%= @person_id %>">
+              <% end %>
+              <input type="hidden" name="skip_duplicate_check" value="1">
+              <button type="submit" class="btn btn-primary">Create anyway</button>
+            <% end %>
+          <% end %>
+        </div>
+
+        <% shareable_url = check_duplicates_users_url(email: @email, person_id: @person_id) %>
+        <%= mail_to "",
+              "Ask a colleague",
+              subject: "Possible duplicate user: #{@email}",
+              body: "I'm trying to add a new user and found a possible duplicate. Can you take a look?\n\n#{shareable_url}",
+              class: "text-sm text-gray-500 hover:text-blue-600 underline" %>
       </div>
     </div>
   </div>

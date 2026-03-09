@@ -34,6 +34,7 @@ Rails.application.routes.draw do
   resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
     collection do
       get :check_duplicates
+      post :retry_new
     end
     member do
       post :send_reset_password_instructions
@@ -110,6 +111,7 @@ Rails.application.routes.draw do
   resources :people do
     collection do
       get :check_duplicates
+      post :retry_new
     end
     resources :comments, only: [ :index, :create ]
   end

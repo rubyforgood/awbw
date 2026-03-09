@@ -173,7 +173,6 @@ function globalClickHandler(e) {
 if (!globalListenerInstalled) {
   document.addEventListener("click", globalClickHandler, true);
   globalListenerInstalled = true;
-  console.log("[cocoon] click handler installed");
 }
 
 export default class extends Controller {
