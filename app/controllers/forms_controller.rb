@@ -98,20 +98,17 @@ class FormsController < ApplicationController
 
   def preview_form_fields
     scope = @form.form_fields
-    form_sections = (@form.sections || []).map(&:to_s)
 
-    if params[:preview_scholarship].present?
-      # Scholarship mode: show scholarship fields (and keep payment visible)
-    elsif form_sections.include?("scholarship")
-      scope = scope.where.not(field_group: "scholarship")
+    unless params[:preview_scholarship].present?
+      scope = scope.where.not(visibility: :scholarship_only)
     end
 
-    if params[:preview_logged_in].present? && @form.hide_answered_person_questions?
-      scope = scope.where.not(field_group: %w[person_identifier person_contact_info background])
+    if params[:preview_logged_in].present?
+      scope = scope.where.not(visibility: :logged_out_only)
     end
 
-    if params[:preview_answered].present? && @form.hide_answered_form_questions?
-      scope = scope.where.not(field_group: %w[professional marketing])
+    if params[:preview_answered].present?
+      scope = scope.where.not(visibility: :answers_on_file)
     end
 
     scope.reorder(position: :asc)
@@ -122,7 +119,7 @@ class FormsController < ApplicationController
       :name, :hide_answered_person_questions, :hide_answered_form_questions,
       form_fields_attributes: [
         :id, :question, :answer_type, :is_required, :instructional_hint,
-        :field_key, :field_group, :position, :_destroy
+        :field_key, :field_group, :position, :visibility, :_destroy
       ]
     )
   end

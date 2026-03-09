@@ -1,23 +1,21 @@
 <%
   field = f.object
-  conditions = []
-  form_sections = (@form.sections || []).map(&:to_s)
 
-  if field.field_group == "scholarship" && form_sections.include?("scholarship")
-    conditions << { label: "Scholarship-only", css: "bg-purple-100 text-purple-700" }
-  end
+  visibility_options = [
+    [ "Always ask", "always_ask" ],
+    [ "Scholarship-only", "scholarship_only" ],
+    [ "Logged out only", "logged_out_only" ],
+    [ "Answers on file", "answers_on_file" ]
+  ]
 
-  if %w[person_identifier person_contact_info background].include?(field.field_group) && @form.hide_answered_person_questions?
-    conditions << { label: "Logged out only", css: "bg-emerald-100 text-emerald-700" }
-  end
-
-  if %w[professional marketing].include?(field.field_group) && @form.hide_answered_form_questions? && !field.group_header?
-    conditions << { label: "Answers on file", css: "bg-amber-100 text-amber-700" }
-  end
-
-  indented = !field.group_header? && field.field_group.present?
+  visibility_styles = {
+    always_ask: "bg-white text-gray-600 border-gray-300",
+    scholarship_only: "bg-purple-100 text-purple-700 border-purple-200",
+    logged_out_only: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    answers_on_file: "bg-amber-100 text-amber-700 border-amber-200"
+  }
 %>
-<div class="nested-fields flex items-center gap-3 <%= indented ? 'pl-12 pr-6' : 'px-6' %> py-3 border-b border-gray-100 hover:bg-gray-50"
+<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> py-3 border-b border-gray-100 hover:bg-gray-50"
      data-sortable-id="<%= field.id %>"
      <% if field.field_group.present? %>data-field-group="<%= field.field_group %>"<% end %>
      <% if field.group_header? %>data-group-header<% end %>>
@@ -30,9 +28,10 @@
 
   <% if field.group_header? %>
     <div class="flex-1 flex items-center gap-3">
-      <% conditions.each do |c| %>
-        <span class="text-xs px-1.5 py-0.5 rounded-full <%= c[:css] %>"><%= c[:label] %></span>
-      <% end %>
+      <%= f.select :visibility, visibility_options,
+            {},
+            class: "text-xs rounded-full border px-2 py-0.5 cursor-pointer",
+            data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
       <span class="text-lg font-semibold text-gray-800"><%= field.question %></span>
       <%= f.hidden_field :question %>
       <div class="ml-auto">
@@ -43,14 +42,26 @@
   <% else %>
     <div class="flex-1 grid grid-cols-12 gap-3 items-center">
       <div class="col-span-5 flex items-center gap-2">
-        <% conditions.each do |c| %>
-          <span class="text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap <%= c[:css] %>"><%= c[:label] %></span>
-        <% end %>
+        <%= f.select :visibility, visibility_options,
+              {},
+              class: "text-xs rounded-full border px-2 py-0.5 shrink-0 cursor-pointer",
+              data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
         <%= f.text_field :question, class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
       </div>
       <div class="col-span-3">
-        <%= f.select :answer_type,
-              FormField.answer_types.keys.map { |t| [ t == "group_header" ? "Section header" : t.titleize.gsub("_", " "), t ] },
+        <%
+          type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_checkbox no_user_input group_header]
+          type_labels = {
+            "group_header" => "Section header",
+            "free_form_input_one_line" => "One line",
+            "free_form_input_paragraph" => "Paragraph",
+            "multiple_choice_radio" => "Multiple choice radio",
+            "multiple_choice_checkbox" => "Multiple choice checkbox",
+            "no_user_input" => "Informational-only"
+          }
+          type_options = type_order.map { |t| [ type_labels[t] || t.titleize.gsub("_", " "), t ] }
+        %>
+        <%= f.select :answer_type, type_options,
               {},
               class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
       </div>

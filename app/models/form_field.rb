@@ -12,6 +12,7 @@ class FormField < ApplicationRecord
 
   # Enum
   enum :status, [ :inactive, :active ]
+  enum :visibility, [ :always_ask, :scholarship_only, :logged_out_only, :answers_on_file ]
 
   # TODO: Rails 6.1 requires enums to be symbols
   # need additional refactoring in methods that call answer_type & answer_datatype to account for change to enum

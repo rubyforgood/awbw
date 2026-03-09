@@ -17,11 +17,10 @@
 
     <div class="px-6 py-6">
       <%
-        form_sections = (@form.sections || []).map(&:to_s)
-        has_scholarship = form_sections.include?("scholarship")
-        has_person = form_sections.include?("person_identifier") || form_sections.include?("person_contact_info") || form_sections.include?("person_background")
-        has_professional = form_sections.include?("professional_info") || form_sections.include?("marketing")
-        has_conditions = has_scholarship || (has_person && @form.hide_answered_person_questions?) || (has_professional && @form.hide_answered_form_questions?)
+        has_scholarship = @form.form_fields.where(visibility: :scholarship_only).exists?
+        has_logged_out = @form.form_fields.where(visibility: :logged_out_only).exists?
+        has_answers_on_file = @form.form_fields.where(visibility: :answers_on_file).exists?
+        has_conditions = has_scholarship || (has_logged_out && @form.hide_answered_person_questions?) || (has_answers_on_file && @form.hide_answered_form_questions?)
 
         preview_logged_in = params[:preview_logged_in].present?
         preview_scholarship = params[:preview_scholarship].present?
@@ -33,7 +32,7 @@
         <% if has_conditions %>
           <p class="text-xs text-blue-600 mb-1">Toggle to simulate how the form appears under different conditions:</p>
           <div class="flex flex-wrap gap-4">
-            <% if has_person && @form.hide_answered_person_questions? %>
+            <% if has_logged_out && @form.hide_answered_person_questions? %>
               <%
                 logged_in_params = request.query_parameters.dup
                 if preview_logged_in
@@ -49,7 +48,7 @@
                 </span>
               <% end %>
             <% end %>
-            <% if has_professional && @form.hide_answered_form_questions? %>
+            <% if has_answers_on_file && @form.hide_answered_form_questions? %>
               <%
                 answered_params = request.query_parameters.dup
                 if preview_answered

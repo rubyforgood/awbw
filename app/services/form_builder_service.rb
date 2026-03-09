@@ -98,6 +98,18 @@ class FormBuilderService
 
   private
 
+  GROUP_VISIBILITY = {
+    "person_identifier" => :logged_out_only,
+    "person_contact_info" => :logged_out_only,
+    "background" => :logged_out_only,
+    "professional" => :answers_on_file,
+    "marketing" => :answers_on_file,
+    "payment" => :answers_on_file,
+    "scholarship" => :scholarship_only,
+    "consent" => :answers_on_file,
+    "post_event_feedback" => :answers_on_file
+  }.freeze
+
   def add_header(form, position, title, group:)
     position += 1
     form.form_fields.create!(
@@ -107,7 +119,8 @@ class FormBuilderService
       position: position,
       is_required: false,
       field_key: nil,
-      field_group: group
+      field_group: group,
+      visibility: GROUP_VISIBILITY.fetch(group, :always_ask)
     )
     position
   end
@@ -123,7 +136,8 @@ class FormBuilderService
       is_required: required,
       instructional_hint: hint,
       field_key: key,
-      field_group: group
+      field_group: group,
+      visibility: GROUP_VISIBILITY.fetch(group, :always_ask)
     )
 
     if options.present?

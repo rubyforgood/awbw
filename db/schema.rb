@@ -538,6 +538,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
     t.string "question"
     t.integer "status", default: 1
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "visibility", default: 0, null: false
     t.index ["field_group"], name: "index_form_fields_on_field_group"
     t.index ["field_key"], name: "index_form_fields_on_field_key"
     t.index ["form_id"], name: "index_form_fields_on_form_id"

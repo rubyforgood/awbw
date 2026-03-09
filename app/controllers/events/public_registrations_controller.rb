@@ -110,8 +110,9 @@ module Events
 
     def visible_form_fields
       scope = @form.form_fields
+
       unless scholarship_mode?
-        scope = scope.where.not(field_group: "scholarship")
+        scope = scope.where.not(visibility: :scholarship_only)
       end
 
       person = current_user&.person
@@ -120,14 +121,25 @@ module Events
           known_keys = person_known_field_keys(person)
           if known_keys.any?
             known_ids = @form.form_fields
-                             .where(field_group: %w[person_identifier person_contact_info], field_key: known_keys)
+                             .where(visibility: :logged_out_only, field_key: known_keys)
                              .ids
             scope = scope.where.not(id: known_ids) if known_ids.any?
           end
 
-          # Background fields (e.g. ethnicity) are always hidden for logged-in users
-          # since Person doesn't store these — they're collected once per event
-          scope = scope.where.not(field_group: "background")
+          # Hide logged_out_only headers when all their non-header fields are hidden
+          logged_out_groups = @form.form_fields.where(visibility: :logged_out_only)
+                                  .where.not(answer_type: :group_header)
+                                  .pluck(:field_group).uniq.compact
+          logged_out_groups.each do |group|
+            group_field_ids = @form.form_fields.where(field_group: group, visibility: :logged_out_only)
+                                  .where.not(answer_type: :group_header).ids
+            if group_field_ids.any? && known_keys.any? && (group_field_ids - scope.where(id: group_field_ids).ids).any?
+              remaining = scope.where(id: group_field_ids).ids
+              if remaining.empty?
+                scope = scope.where.not(field_group: group, answer_type: :group_header, visibility: :logged_out_only)
+              end
+            end
+          end
         end
 
         if @form.hide_answered_form_questions?
@@ -135,10 +147,23 @@ module Events
           if existing_submission
             answered_field_ids = existing_submission.form_answers
                                                    .joins(:form_field)
-                                                   .where(form_fields: { field_group: %w[professional marketing] })
+                                                   .where(form_fields: { visibility: :answers_on_file })
                                                    .where.not(text: [ nil, "" ])
                                                    .pluck(:form_field_id)
-            scope = scope.where.not(id: answered_field_ids) if answered_field_ids.any?
+            if answered_field_ids.any?
+              scope = scope.where.not(id: answered_field_ids)
+
+              # Hide section headers when all their non-header fields are answered
+              answered_groups = @form.form_fields.where(id: answered_field_ids)
+                                    .pluck(:field_group).uniq.compact
+              answered_groups.each do |group|
+                group_field_ids = @form.form_fields.where(field_group: group, visibility: :answers_on_file)
+                                      .where.not(answer_type: :group_header).ids
+                if group_field_ids.any? && (group_field_ids - answered_field_ids).empty?
+                  scope = scope.where.not(field_group: group, answer_type: :group_header, visibility: :answers_on_file)
+                end
+              end
+            end
           end
         end
       end

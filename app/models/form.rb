@@ -9,7 +9,8 @@ class Form < ApplicationRecord
   has_many :events, through: :event_forms
 
   # Nested attributes
-  accepts_nested_attributes_for :form_fields, allow_destroy: true
+  accepts_nested_attributes_for :form_fields, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["question"].blank? && attrs["id"].blank? }
 
   scope :scholarship_application, -> { where(scholarship_application: true) }
   scope :standalone, -> { where(owner_id: nil, owner_type: nil) }
