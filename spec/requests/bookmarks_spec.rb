@@ -49,23 +49,23 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    context "with tutorials" do
-      let(:tutorial) { create(:tutorial, :published) }
+    context "with video_recordings" do
+      let(:video_recording) { create(:video_recording, :published) }
 
-      it "cannot create a tutorial bookmark" do
+      it "cannot create a video_recording bookmark" do
         expect {
           post bookmarks_path,
-               params: { bookmark: { bookmarkable_id: tutorial.id,
-                                     bookmarkable_type: "Tutorial" } }
+               params: { bookmark: { bookmarkable_id: video_recording.id,
+                                     bookmarkable_type: "VideoRecording" } }
         }.not_to change(Bookmark, :count)
 
         expect(response).to redirect_to(root_path)
       end
 
-      it "cannot destroy a tutorial bookmark" do
-        tutorial_bookmark = create(:bookmark, user: regular_user, bookmarkable: tutorial)
+      it "cannot destroy a video_recording bookmark" do
+        video_recording_bookmark = create(:bookmark, user: regular_user, bookmarkable: video_recording)
         expect {
-          delete bookmark_path(tutorial_bookmark)
+          delete bookmark_path(video_recording_bookmark)
         }.not_to change(Bookmark, :count)
 
         expect(response).to redirect_to(root_path)
@@ -102,7 +102,7 @@ RSpec.describe "Bookmarks", type: :request do
 
     it "includes Video (Tutorial) in bookmark type dropdown" do
       get personal_bookmarks_path
-      expect(response.body).to include(Tutorial.model_name.human)
+      expect(response.body).to include(VideoRecording.model_name.human)
     end
 
     it "can access personal bookmarks sorted by title" do
@@ -150,22 +150,22 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    context "with tutorials" do
-      let(:tutorial) { create(:tutorial, :published) }
+    context "with video_recordings" do
+      let(:video_recording) { create(:video_recording, :published) }
 
-      it "can create a tutorial bookmark" do
+      it "can create a video_recording bookmark" do
         expect {
           post bookmarks_path,
-               params: { bookmark: { bookmarkable_id: tutorial.id,
-                                     bookmarkable_type: "Tutorial" } },
+               params: { bookmark: { bookmarkable_id: video_recording.id,
+                                     bookmarkable_type: "VideoRecording" } },
                headers: turbo_headers
         }.to change(Bookmark, :count).by(1)
       end
 
-      it "can destroy their own tutorial bookmark" do
-        tutorial_bookmark = create(:bookmark, user: regular_user, bookmarkable: tutorial)
+      it "can destroy their own video_recording bookmark" do
+        video_recording_bookmark = create(:bookmark, user: regular_user, bookmarkable: video_recording)
         expect {
-          delete bookmark_path(tutorial_bookmark), headers: turbo_headers
+          delete bookmark_path(video_recording_bookmark), headers: turbo_headers
         }.to change(Bookmark, :count).by(-1)
       end
     end
@@ -227,22 +227,22 @@ RSpec.describe "Bookmarks", type: :request do
       }.to change(Bookmark, :count).by(-1)
     end
 
-    context "with tutorials" do
-      let(:tutorial) { create(:tutorial, :published) }
+    context "with video_recordings" do
+      let(:video_recording) { create(:video_recording, :published) }
 
-      it "can create a tutorial bookmark" do
+      it "can create a video_recording bookmark" do
         expect {
           post bookmarks_path,
-               params: { bookmark: { bookmarkable_id: tutorial.id,
-                                     bookmarkable_type: "Tutorial" } },
+               params: { bookmark: { bookmarkable_id: video_recording.id,
+                                     bookmarkable_type: "VideoRecording" } },
                headers: turbo_headers
         }.to change(Bookmark, :count).by(1)
       end
 
-      it "can destroy any tutorial bookmark" do
-        tutorial_bookmark = create(:bookmark, user: other_user, bookmarkable: tutorial)
+      it "can destroy any video_recording bookmark" do
+        video_recording_bookmark = create(:bookmark, user: other_user, bookmarkable: video_recording)
         expect {
-          delete bookmark_path(tutorial_bookmark)
+          delete bookmark_path(video_recording_bookmark)
         }.to change(Bookmark, :count).by(-1)
       end
     end
