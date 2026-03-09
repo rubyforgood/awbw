@@ -7,7 +7,7 @@ class BookmarksController < ApplicationController
     authorize!
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
+      base_scope = authorized_scope(Bookmark.includes(:bookmarkable))
       filtered = base_scope.search(params)
       @sort = VALID_SORTS.include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
@@ -30,7 +30,7 @@ class BookmarksController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(Bookmark.includes(bookmarkable: [ :primary_asset, :gallery_assets, :windows_type ]))
+      base_scope = authorized_scope(Bookmark.includes(:bookmarkable))
       filtered = base_scope.search(params, user: user)
       @sort = VALID_SORTS.include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
