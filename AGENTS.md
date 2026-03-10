@@ -1,10 +1,33 @@
 # AGENTS.md — AWBW Portal
 
-Architecture reference for AI agents working on the AWBW Portal codebase. For coding rules, conventions, and quick commands, see `CLAUDE.md` (single source of truth).
+Architecture reference for AI agents. For coding rules and conventions, see `CLAUDE.md` (single source of truth).
 
-## Project Summary
+## Project Overview
 
-AWBW Portal is a Rails 8.1 application (Ruby 4.0.1) for A Window Between Worlds — a platform where workshop leaders manage workshops, resources, community news, stories, and events. It uses MySQL, Vite, Tailwind CSS v4, and the Hotwire stack (Stimulus + Turbo).
+AWBW Portal is a Rails 8.1 application (Ruby 4.0.1) for A Window Between Worlds — a platform where workshop leaders manage workshops, resources, community news, stories, and events.
+
+## Tech Stack
+
+- **Backend:** Rails 8.1, Ruby 4.0.1, MySQL (via Trilogy adapter)
+- **Frontend:** Vite, Tailwind CSS v4, Stimulus, Turbo Rails
+- **Auth:** Devise with JWT token support
+- **Authorization:** ActionPolicy (app/policies/)
+- **Rich text:** ActionText with Rhino editor (TipTap-based)
+- **File uploads:** ActiveStorage with DigitalOcean Spaces
+- **Background jobs:** SolidQueue
+- **Caching:** SolidCache
+
+## Setup
+
+Full setup (bundle, npm, database create/migrate/seed):
+```
+bin/setup
+```
+
+If you just need frontend dependencies:
+```
+npm ci
+```
 
 ## Architecture Overview
 
@@ -287,6 +310,15 @@ Common factory traits across models:
 - `:publicly_visible`, `:publicly_featured`
 - `:admin` (User with super_user=true)
 - `:with_primary_asset`, `:with_gallery_assets`
+
+## Linting & Security
+
+```
+bundle exec rubocop        # lint
+bundle exec rubocop -a     # auto-fix
+bundle exec brakeman       # security scan
+bundle exec bundle-audit check --update
+```
 
 ## CI Pipeline (GitHub Actions)
 
