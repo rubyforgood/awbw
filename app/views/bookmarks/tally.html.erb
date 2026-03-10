@@ -3,7 +3,7 @@
       <h1 class="text-2xl font-bold mb-4">Bookmarks tally</h1>
 
       <!-- Filter form -->
-      <%= form_tag('/bookmarks/tally', method: :get, class: "space-y-4", data: { controller: "collection" }) do %>
+      <%= form_tag('/bookmarks/tally', method: :get, class: "space-y-4", data: { controller: "collection", action: "change->collection#handleChange input->collection#handleInput" }) do %>
         <%= render "search_fields" %>
       <% end %>
 
