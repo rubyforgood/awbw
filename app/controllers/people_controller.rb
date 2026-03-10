@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs ]
 
   def index
     authorize!
@@ -55,7 +55,7 @@ class PeopleController < ApplicationController
         @story_ideas = @person.user&.story_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
         render partial: "people/sections/story_ideas", locals: { person: @person, story_ideas: @story_ideas }
       when "workshop_logs"
-        @workshop_logs = @person.user&.workshop_logs&.order(date: :desc, created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        @workshop_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type)&.order(date: :desc, created_at: :desc) || WorkshopLog.none
         render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
       when "workshop_variation_ideas"
         @workshop_variation_ideas = @person.user&.workshop_variation_ideas_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
@@ -64,6 +64,17 @@ class PeopleController < ApplicationController
         @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/affiliations", locals: { person: @person, affiliations: @affiliations }
       end
+    end
+  end
+
+  def workshop_logs
+    authorize! @person
+    @person = @person.decorate
+    all_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type)&.order(date: :desc) || WorkshopLog.none
+    @grouped_logs = all_logs.group_by { |log| log.workshop_id || log.external_workshop_title }
+    @workshop_key = params[:workshop_key]
+    if @workshop_key.present?
+      @filtered_logs = @grouped_logs[@workshop_key.to_i.to_s == @workshop_key ? @workshop_key.to_i : @workshop_key] || []
     end
   end
 

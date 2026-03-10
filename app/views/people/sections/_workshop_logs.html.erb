@@ -11,13 +11,12 @@
       <span>Teens: <%= all_logs.sum(:teens_first_time) + all_logs.sum(:teens_ongoing) %></span>
       <span>Children: <%= all_logs.sum(:children_first_time) + all_logs.sum(:children_ongoing) %></span>
     </div>
+    <% grouped = workshop_logs.group_by { |log| log.workshop_id || log.external_workshop_title } %>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
-      <% workshop_logs.each do |workshop_log| %>
-        <%= render "people/sections/workshop_log_card", workshop_log: workshop_log %>
+      <% grouped.each do |key, logs| %>
+        <%= render "people/sections/workshop_log_grouped_card",
+                   person: person, logs: logs, workshop_key: key %>
       <% end %>
-    </div>
-    <div class="mt-6 flex justify-center">
-      <%= tailwind_paginate workshop_logs, params: { section: "workshop_logs" } %>
     </div>
   <% else %>
     <p class="text-gray-500 italic">No workshops logged yet.</p>

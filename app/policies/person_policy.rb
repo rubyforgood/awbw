@@ -9,6 +9,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def workshop_logs?
+    admin? || owner?
+  end
+
   def edit?
     admin?
   end
