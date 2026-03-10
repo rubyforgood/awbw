@@ -1,6 +1,6 @@
 # AGENTS.md — AWBW Portal
 
-Architecture reference for AI agents working on the AWBW Portal codebase. For coding rules and quick commands, see `CLAUDE.md`.
+Architecture reference for AI agents working on the AWBW Portal codebase. For coding rules, conventions, and quick commands, see `CLAUDE.md` (single source of truth).
 
 ## Project Summary
 
@@ -206,12 +206,6 @@ end
 
 ## Frontend
 
-### Preferences
-
-- **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
-- **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
-- Prefer Turbo for navigation and form submissions before reaching for Stimulus
-
 ### Stimulus Controllers
 
 Key controllers:
@@ -305,11 +299,6 @@ Common factory traits across models:
 
 RuboCop linting on PRs and pushes to main.
 
-## PR Workflow
-
-- After completing work, create a pull request using `gh pr create`
-- Once the PR is created, prepend the PR number to the branch name (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
-
 ## Key Library Usage
 
 | Need | Library |
@@ -327,15 +316,6 @@ RuboCop linting on PRs and pushes to main.
 | Geocoding | Geocoder + MaxMind GeoIP2 |
 | Email styling | Premailer-rails (inline CSS) |
 | Positioning | Positioning gem for ordered records |
-
-## PRs
-
-- On every push, update the PR title and content to reflect the current diff
-- On every push, update AI instruction files if the diff introduces changes that affect conventions, architecture, or file lists documented there
-
-## Git
-
-- When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)
 
 ## Rake Tasks
 
