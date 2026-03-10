@@ -10,7 +10,7 @@ When the user says "AI files" or "AI instructions", these are the files:
 |---|---|
 | `CLAUDE.md` | Coding rules and conventions (this file) |
 | `AGENTS.md` | Architecture reference + project details |
-| `.github/copilot-instructions.md` | Points Copilot to CLAUDE.md and AGENTS.md |
+| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
 | `ai/` | Shell script shortcuts for common dev tasks |
 
 ## Related Files
