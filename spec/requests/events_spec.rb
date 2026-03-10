@@ -292,7 +292,7 @@ RSpec.describe "Events", type: :request do
       it "renders confirmed column header hidden by default" do
         get manage_event_path(event)
 
-        expect(response.body).to include("data-column-toggle-col")
+        expect(response.body).to include('data-column-toggle-target="col"')
       end
 
       context "when registrant has a confirmed user" do
