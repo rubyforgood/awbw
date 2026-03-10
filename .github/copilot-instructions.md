@@ -1,9 +1,47 @@
-# This project is a Ruby on Rails application.
+# This is a Ruby on Rails application.
 <!-- Keep code style rules in sync with CLAUDE.md -->
 
 For project overview, tech stack, architecture reference (models, controllers, services, testing), and more, read `AGENTS.md`.
 
-# Code Style
+## Setup
+
+Full setup (bundle, npm, database create/migrate/seed):
+```
+bin/setup
+```
+
+If you just need frontend dependencies:
+```
+npm ci
+```
+
+## AI Instruction Files
+
+When the user says "AI files", "AI instructions", "tell AI to", or "remember to always", these are the files.
+If you notice the user repeatedly correcting the same pattern, suggest adding it to the AI files with a concrete proposal.
+
+| File | Purpose |
+|---|---|
+| `CLAUDE.md` | Coding rules and conventions (this file) |
+| `AGENTS.md` | Architecture reference + project details |
+| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
+| `ai/` | Shell script shortcuts for common dev tasks |
+
+## Related Files
+
+When changing a model or controller, check whether these related files need updates:
+
+| If you change... | Also check... |
+|---|---|
+| Model | Decorator, policy, factory, model spec |
+| Controller | Policy, request spec, routing spec, views |
+| View | System spec, Stimulus controller (if interactive) |
+| Service | Service spec |
+| Decorator | Decorator spec |
+| Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
+| Add/remove model, concern, service, or gem | AGENTS.md |
+
+## Code Style
 
 - Use modern Ruby syntax
 - Prefer early returns and guard clauses
@@ -13,54 +51,59 @@ For project overview, tech stack, architecture reference (models, controllers, s
 - Use `presence` over blank checks
 - Use `Arel.sql` for raw SQL in order clauses
 - Avoid `update_all` unless explicitly intended
-- Prefer service objects under app/services
+- Prefer service objects under app/services/
 - Prefer POROs over concerns when possible
 - Use `after_commit` instead of `after_save` for side effects
 
-# RuboCop (rubocop-rails-omakase)
+## RuboCop (rubocop-rails-omakase)
 
 This project uses rubocop-rails-omakase. All code MUST follow these rules:
 
-## Strings
-- Always use double quotes: `"foo"` not `'foo'`
+### Strings
+- **Always use double quotes** for strings: `"foo"` not `'foo'`
 
-## Spacing
-- Spaces inside array brackets: `[ a, b, c ]` not `[a, b, c]` (empty arrays: `[]`)
-- Spaces inside hash braces: `{ a: 1, b: 2 }` not `{a: 1}` (empty hashes: `{}`)
-- Spaces inside block braces: `foo { bar }` not `foo {bar}` (empty blocks: `foo { }`)
-- No spaces inside parens: `foo(bar)` not `foo( bar )`
-- No spaces inside reference brackets: `hash[:key]` not `hash[ :key ]`
-- Space before block braces: `foo { }` not `foo{ }`
+### Spacing
+- **Spaces inside array brackets:** `[ a, b, c ]` not `[a, b, c]` (empty arrays: `[]`)
+- **Spaces inside hash braces:** `{ a: 1, b: 2 }` not `{a: 1}` (empty hashes: `{}`)
+- **Spaces inside block braces:** `foo { bar }` not `foo {bar}` (empty blocks: `foo { }`)
+- **No spaces inside parens:** `foo(bar)` not `foo( bar )`
+- **No spaces inside reference brackets:** `hash[:key]` not `hash[ :key ]`
+- **Space before block braces:** `foo { }` not `foo{ }`
 
-## Commas
-- No trailing commas in arrays, hashes, or method arguments
+### Commas
+- **No trailing commas** in arrays, hashes, or method arguments
 
-## Indentation
-- 2-space indentation, no tabs
-- Consistent indentation at normal level — do NOT indent methods under `private`/`protected`
-- Align `end` with the variable in assignments
-- Align `when` with `end`, not with `case`
+### Indentation
+- **2-space indentation**, no tabs
+- **Consistent indentation** at normal level — do NOT indent methods under `private`/`protected`
+- **Align `end` with the variable** in assignments:
+  ```ruby
+  result = if condition
+    value
+  end
+  ```
+- **Align `when` with `end`**, not with `case`
 
-## Whitespace
-- No trailing whitespace on any line
-- No trailing blank lines at end of file
-- No empty lines inside class, module, method, or block bodies
+### Whitespace
+- **No trailing whitespace** on any line
+- **No trailing blank lines** at end of file
+- **No empty lines** inside class, module, method, or block bodies
 
-## Syntax
-- Use `%w[]` and `%i[]` with square bracket delimiters (not parens)
-- Use modern hash syntax: `{ key: value }` not `{ :key => value }`
-- No redundant returns — omit `return` on last expression
-- Use `flat_map` instead of `.map { }.flatten`
-- No redundant `.to_s` inside string interpolation
-- Use `Foo.method` not `Foo::method` for method calls
-- No parentheses around conditions: `if foo` not `if (foo)`
-- No semicolons to separate statements
+### Syntax
+- **Use `%w[]` and `%i[]`** with square bracket delimiters (not parens)
+- **Use modern hash syntax:** `{ key: value }` not `{ :key => value }`
+- **No redundant returns** — omit `return` on last expression
+- **Use `flat_map`** instead of `.map { }.flatten`
+- **No redundant `.to_s`** inside string interpolation
+- **Use `Foo.method`** not `Foo::method` for method calls
+- **No parentheses around conditions:** `if foo` not `if (foo)`
+- **No semicolons** to separate statements
 
-# HTML/ERB Formatting
+## HTML/ERB Formatting
 
-## Tag attributes
-- When a tag has long attributes, place the closing `>` on the same line as the last attribute
-- Do NOT put the closing `>` on its own line
+### Tag Attributes
+- **Closing `>` on same line as last attribute** — do not put `>` on its own line
+- When attributes span multiple lines, keep the closing `>` with the last attribute
 - Example (GOOD):
   ```erb
   <div class="relative z-10 w-full bg-white text-gray-800 py-2 px-4"
@@ -73,32 +116,71 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
   >
   ```
 
-# JavaScript
+## JavaScript
 
 - ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
 - Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
-- Strongly prefer Stimulus for JavaScript behavior — do not write raw/inline JS or jQuery
-- Always use Tailwind CSS utility classes for styling — do not write custom CSS unless absolutely necessary
-- Prefer Font Awesome (free) icons over inline SVGs — inline SVGs are acceptable when a specific icon design is preferred
+- **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
+- **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
+- **Prefer Font Awesome (free)** icons over inline SVGs — use `icon("fa-solid fa-foo")` helper. Inline SVGs are acceptable when a specific icon design is preferred.
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
-- Stimulus controller naming: `[name]_controller.js`
+- Controller naming: `[name]_controller.js`
+- Keep controllers focused and small
 
-# Stimulus conventions
-- Use `static targets` and `data-[controller]-target` — never `querySelector` or `getElementById` for elements that could be targets
-- Use `static values = { name: Type }` for state — not instance variables. Use `[name]ValueChanged()` for reactive updates
-- Use `data-action` attributes — not `addEventListener` in `connect()`. Omit default events (`click` for buttons, `input` for inputs, `submit` for forms, `change` for selects)
-- Use `@window`/`@document` suffixes for global events in data-action
-- Use action options (`:prevent`, `:stop`) instead of `event.preventDefault()` in methods
-- Use `static classes` when CSS classes should be configurable from HTML
-- Use `static outlets` for cross-controller communication instead of `getElementById`
-- Always clean up in `disconnect()` anything created in `connect()` (listeners, timers, observers)
-- Use `[name]TargetConnected`/`TargetDisconnected` for dynamic DOM (cocoon, Turbo)
-- Toggle `hidden` class instead of `style.display`. Use `class="hidden"` not `style="display:none"` in HTML
+### Stimulus Conventions
 
-# PRs
-- After completing work, create a pull request using `gh pr create`
-- Once the PR is created, prepend the PR number to the branch name (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
-- On every push, update the PR title and description to reflect the current diff
+Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introduction) and reference docs. Key rules:
 
-# Git
-- When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)
+**Targets over querySelector** — declare `static targets = [...]` and use `data-[controller]-target` attributes in views. Never use `this.element.querySelector` or `document.getElementById` to find elements that could be targets. Exception: elements outside the controller's scope (e.g., in a parent view).
+
+**Values API for state** — use `static values = { name: Type }` for any state that persists or drives UI. Do not store state in instance variables when a value would work. Use `[name]ValueChanged()` callbacks for reactive updates instead of manual syncing.
+
+**Actions over manual listeners** — use `data-action` attributes instead of `addEventListener` in `connect()`. Omit the event when it's the default for the element (`click` for buttons/links, `input` for inputs/textareas, `submit` for forms, `change` for selects). Use `@window` or `@document` suffixes for global events when possible (e.g., `resize@window->controller#layout`). Use action options like `:prevent` and `:stop` instead of calling `event.preventDefault()` in methods.
+
+**Classes API for CSS** — use `static classes = [...]` when CSS classes need to be configurable from HTML. For standard Tailwind utilities used internally (e.g., `"hidden"`), hardcoding is acceptable.
+
+**Outlets for cross-controller communication** — use `static outlets = [...]` to reference other controllers instead of `document.getElementById` or custom events when the relationship is stable.
+
+**Lifecycle discipline** — every listener, timer, or observer created in `connect()` must be cleaned up in `disconnect()`. Store bound handler references so they can be removed. Use `initialize()` for one-time setup (e.g., binding functions).
+
+**Target lifecycle callbacks** — use `[name]TargetConnected(element)` and `[name]TargetDisconnected(element)` to respond to dynamically added/removed targets (e.g., cocoon nested fields, Turbo streams).
+
+**Visibility** — toggle the `hidden` class via `classList.toggle("hidden", condition)` instead of setting `style.display`. Use `class="hidden"` in HTML for initial hidden state, not `style="display:none"`.
+
+## Migrations
+
+- Name migration files using **UTC timestamps** (e.g., `20260228143000`), not sequential numbers (e.g., `20260228000007`)
+- Multiple branches adding migrations on the same date will collide if they use sequential numbering
+
+## Git
+
+- Default branch is `main`
+- Commit messages should explain why, not what
+- CI runs via GitHub Actions (`.github/workflows/`)
+- **When rebasing onto main**, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)
+
+## PRs
+
+- **Push to a draft PR early** — push commits and create a draft PR (`gh pr create --draft`) as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
+- After completing work, **mark the PR ready** using `gh pr ready`
+- Once the PR is created, **prepend the PR number to the branch name** (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
+- Use `docs/pull_request_template.md` for PR description structure
+- Use bullet points, not paragraphs, when filling out each section
+- Description must explain why the change was made, not just what
+- Include screenshots for UI changes
+- **On every push**, update the PR title and content to reflect the current diff
+- **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
+
+## Quick Commands
+
+See `ai/` directory for executable scripts:
+
+| Command | What it does |
+|---|---|
+| `ai/test [args]` | Run RSpec |
+| `ai/lint` | Rubocop on all files |
+| `ai/lint --fix` | Auto-fix lint issues |
+| `ai/server` | Start dev services (web + vite) |
+| `ai/console` | Rails console |
+| `ai/routes -g pattern` | Search Rails routes |
+| `ai/db-migrate` | Run database migrations |

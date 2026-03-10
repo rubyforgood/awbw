@@ -104,8 +104,17 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 ### Tag Attributes
 - **Closing `>` on same line as last attribute** — do not put `>` on its own line
 - When attributes span multiple lines, keep the closing `>` with the last attribute
-- Good: `<div class="..." id="...">` or `<div class="...\n     id="...">`
-- Bad: `<div class="...\n     id="..."\n  >`
+- Example (GOOD):
+  ```erb
+  <div class="relative z-10 w-full bg-white text-gray-800 py-2 px-4"
+       id="dropdown">
+  ```
+- Example (BAD):
+  ```erb
+  <div class="relative z-10 w-full bg-white text-gray-800 py-2 px-4"
+       id="dropdown"
+  >
+  ```
 
 ## JavaScript
 
