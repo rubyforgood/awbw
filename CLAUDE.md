@@ -1,32 +1,35 @@
 # CLAUDE.md
 
-For architecture reference (models, controllers, services, testing), read `AGENTS.md`.
+## Architecture Reference
 
-## AI Instruction Files
+For detailed architecture, models, controllers, services, and testing structure, read `AGENTS.md`.
 
-When the user says "AI files", "AI instructions", "tell AI to", or "remember to always", these are the files.
-If you notice the user repeatedly correcting the same pattern, suggest adding it to the AI files with a concrete proposal.
+## Project Overview
 
-| File | Purpose |
-|---|---|
-| `CLAUDE.md` | Coding rules and conventions (this file) |
-| `AGENTS.md` | Architecture reference + project details |
-| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
-| `ai/` | Shell script shortcuts for common dev tasks |
+This is a Ruby on Rails 8.1 application (Ruby 4.0.1) — the Portal for A Window Between Worlds (AWBW). It manages workshops, resources, community news, stories, and events for workshop leaders.
 
-## Related Files
+## Tech Stack
 
-When changing a model or controller, check whether these related files need updates:
+- **Backend:** Rails 8.1, Ruby 4.0.1, MySQL (via Trilogy adapter)
+- **Frontend:** Vite, Tailwind CSS v4, Stimulus, Turbo Rails
+- **Auth:** Devise with JWT token support
+- **Authorization:** ActionPolicy (app/policies/)
+- **Rich text:** ActionText with Rhino editor (TipTap-based)
+- **File uploads:** ActiveStorage with DigitalOcean Spaces
+- **Background jobs:** SolidQueue
+- **Caching:** SolidCache
 
-| If you change... | Also check... |
-|---|---|
-| Model | Decorator, policy, factory, model spec |
-| Controller | Policy, request spec, routing spec, views |
-| View | System spec, Stimulus controller (if interactive) |
-| Service | Service spec |
-| Decorator | Decorator spec |
-| Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
-| Add/remove model, concern, service, or gem | AGENTS.md |
+## Setup
+
+Full setup (bundle, npm, database create/migrate/seed):
+```
+bin/setup
+```
+
+If you just need frontend dependencies:
+```
+npm ci
+```
 
 ## Code Style
 
@@ -94,36 +97,74 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Good: `<div class="..." id="...">` or `<div class="...\n     id="...">`
 - Bad: `<div class="...\n     id="..."\n  >`
 
+## Related Files
+
+When changing a model or controller, check whether these related files need updates:
+
+| If you change... | Also check... |
+|---|---|
+| Model | Decorator, policy, factory, model spec |
+| Controller | Policy, request spec, routing spec, views |
+| View | System spec, Stimulus controller (if interactive) |
+| Service | Service spec |
+| Decorator | Decorator spec |
+| Add/remove model, concern, service, or gem | AGENTS.md, `.github/copilot-instructions.md` |
+| Code style rules | `.github/copilot-instructions.md` (keep in sync) |
+
+## Key Directories
+
+- `app/services/` — Business logic service objects
+- `app/decorators/` — Draper decorators for view presentation
+- `app/policies/` — ActionPolicy authorization rules
+- `app/presenters/` — Presentation objects
+- `app/frontend/` — Vite/JS components (Stimulus controllers, etc.)
+
+## Testing
+
+- **Framework:** RSpec (`bundle exec rspec`)
+- **Factories:** FactoryBot (spec/factories/)
+- **Matchers:** Shoulda Matchers
+- **System tests:** Capybara with Selenium
+- **Coverage:** SimpleCov
+
+Run all tests:
+```
+bundle exec rspec
+```
+
+Run a single test file:
+```
+bundle exec rspec spec/models/some_model_spec.rb
+```
+
+## Linting
+
+```
+bundle exec rubocop
+```
+
+Auto-fix:
+```
+bundle exec rubocop -a
+```
+
+## Security Scanning
+
+```
+bundle exec brakeman
+bundle exec bundle-audit check --update
+```
+
 ## JavaScript
 
-- ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
-- Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
+- ES6+ syntax, ESM imports/exports
 - **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
-- **Prefer Font Awesome (free)** icons over inline SVGs — use `icon("fa-solid fa-foo")` helper. Inline SVGs are acceptable when a specific icon design is preferred.
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 - Controller naming: `[name]_controller.js`
 - Keep controllers focused and small
-
-### Stimulus Conventions
-
-Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introduction) and reference docs. Key rules:
-
-**Targets over querySelector** — declare `static targets = [...]` and use `data-[controller]-target` attributes in views. Never use `this.element.querySelector` or `document.getElementById` to find elements that could be targets. Exception: elements outside the controller's scope (e.g., in a parent view).
-
-**Values API for state** — use `static values = { name: Type }` for any state that persists or drives UI. Do not store state in instance variables when a value would work. Use `[name]ValueChanged()` callbacks for reactive updates instead of manual syncing.
-
-**Actions over manual listeners** — use `data-action` attributes instead of `addEventListener` in `connect()`. Omit the event when it's the default for the element (`click` for buttons/links, `input` for inputs/textareas, `submit` for forms, `change` for selects). Use `@window` or `@document` suffixes for global events when possible (e.g., `resize@window->controller#layout`). Use action options like `:prevent` and `:stop` instead of calling `event.preventDefault()` in methods.
-
-**Classes API for CSS** — use `static classes = [...]` when CSS classes need to be configurable from HTML. For standard Tailwind utilities used internally (e.g., `"hidden"`), hardcoding is acceptable.
-
-**Outlets for cross-controller communication** — use `static outlets = [...]` to reference other controllers instead of `document.getElementById` or custom events when the relationship is stable.
-
-**Lifecycle discipline** — every listener, timer, or observer created in `connect()` must be cleaned up in `disconnect()`. Store bound handler references so they can be removed. Use `initialize()` for one-time setup (e.g., binding functions).
-
-**Target lifecycle callbacks** — use `[name]TargetConnected(element)` and `[name]TargetDisconnected(element)` to respond to dynamically added/removed targets (e.g., cocoon nested fields, Turbo streams).
-
-**Visibility** — toggle the `hidden` class via `classList.toggle("hidden", condition)` instead of setting `style.display`. Use `class="hidden"` in HTML for initial hidden state, not `style="display:none"`.
+- **Use Stimulus targets and data attributes** to reference DOM elements — avoid `this.element.querySelector` and direct DOM queries. Declare `static targets = [...]` and use `data-[controller]-target` attributes in views.
+- **Use Stimulus shorthand action descriptors and shorthand pairs** — omit the event when it's the default for that element (e.g., `input` for `<input>`/`<textarea>`, `click` for `<button>`/`<a>`, `submit` for `<form>`). Write `controller#action` not `input->controller#action` on an input element. Only specify the event when using a non-default (e.g., `change->controller#action` on an input). See [Stimulus Actions](https://stimulus.hotwired.dev/reference/actions#event-shorthand).
 
 ## Migrations
 
@@ -139,15 +180,13 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
-- **Push to a draft PR early** — push commits and create a draft PR (`gh pr create --draft`) as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
-- After completing work, **mark the PR ready** using `gh pr ready`
+- After completing work, **create a pull request** using `gh pr create`
 - Once the PR is created, **prepend the PR number to the branch name** (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
 - Use `docs/pull_request_template.md` for PR description structure
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
-- **On every push**, update the PR title and content to reflect the current diff
-- **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
+- **On every push**, update the PR title and description to reflect the current diff
 
 ## Quick Commands
 
