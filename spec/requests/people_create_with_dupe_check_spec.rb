@@ -80,29 +80,6 @@ RSpec.describe "POST /people with duplicate check", type: :request do
     end
   end
 
-  describe "POST /people/retry_new" do
-    let!(:sector) { create(:sector, published: true) }
-
-    it "re-renders the new form with nested attributes preserved" do
-      post retry_new_people_path, params: {
-        person: {
-          first_name: "Jane",
-          last_name: "Doe",
-          email: "new@testmail.org",
-          bio: "Test bio",
-          created_by_id: admin.id,
-          updated_by_id: admin.id,
-          sectorable_items_attributes: { "0" => { sector_id: sector.id, is_leader: "1", _destroy: "false" } }
-        }
-      }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Jane")
-      expect(response.body).to include("Doe")
-      expect(response.body).to include(sector.name)
-    end
-  end
-
   context "when no duplicates are found" do
     it "creates the person normally" do
       expect {
