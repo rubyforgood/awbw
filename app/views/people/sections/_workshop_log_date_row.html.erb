@@ -19,7 +19,7 @@
     <% end %>
   </div>
   <% if show_actions %>
-    <div class="flex items-center gap-2 shrink-0">
+    <div class="flex items-center justify-center gap-2 shrink-0 w-20">
       <%= link_to "View", workshop_log_path(workshop_log),
                   data: { turbo_frame: "_top" },
                   class: "text-xs font-medium text-blue-600 hover:underline" %>
