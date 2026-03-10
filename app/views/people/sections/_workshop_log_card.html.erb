@@ -1,0 +1,43 @@
+<% decorated = workshop_log.decorate %>
+
+<div class="relative h-full">
+  <!-- BOOKMARK ICON -->
+  <div class="absolute top-3 right-3 z-30">
+    <%= render "bookmarks/editable_bookmark_icon", resource: workshop_log %>
+  </div>
+
+  <!-- CARD -->
+  <%= link_to decorated.link_target,
+              data: { turbo_frame: "_top" },
+              class: "block h-full bg-white border border-gray-200 rounded-xl shadow-sm
+                      hover:shadow-md transition-all overflow-hidden cursor-pointer" do %>
+    <div class="px-4 pt-4 pb-3">
+      <!-- TITLE -->
+      <div class="text-sm font-semibold text-gray-900 leading-tight pr-6 mb-1">
+        <%= workshop_log.workshop_title.presence || "Workshop Log ##{workshop_log.id}" %>
+      </div>
+
+      <!-- WINDOWS TYPE -->
+      <% if workshop_log.windows_type_name.present? %>
+        <div class="text-xs text-gray-500 mb-3"><%= workshop_log.windows_type_name %></div>
+      <% end %>
+
+      <!-- AGE GROUP TOTALS -->
+      <div class="flex gap-3 text-center mb-3">
+        <% { "Children" => workshop_log.children_first_time + workshop_log.children_ongoing,
+             "Teens" => workshop_log.teens_first_time + workshop_log.teens_ongoing,
+             "Adults" => workshop_log.adults_first_time + workshop_log.adults_ongoing }.each do |label, count| %>
+          <div class="flex-1 bg-gray-50 rounded-lg py-2 px-1">
+            <div class="text-lg font-bold text-gray-800"><%= count %></div>
+            <div class="text-xs text-gray-500"><%= label %></div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- WORKSHOP DATE -->
+      <div class="text-gray-400 text-xs">
+        <%= workshop_log.date&.strftime("%b %d, %Y") || workshop_log.created_at.strftime("%b %d, %Y") %>
+      </div>
+    </div>
+  <% end %>
+</div>
