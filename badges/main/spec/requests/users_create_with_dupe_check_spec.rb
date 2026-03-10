@@ -15,13 +15,13 @@ RSpec.describe "POST /users with duplicate check", type: :request do
       )
     end
 
-    it "renders the check_duplicates page instead of redirecting" do
+    it "renders the new form with duplicate warning instead of redirecting" do
       post users_path, params: {
         person_id: person.id,
         user: { email: "solo@testmail.org" }
       }
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Possible duplicate user")
       expect(response.body).to include("solo@testmail.org")
     end
@@ -53,12 +53,12 @@ RSpec.describe "POST /users with duplicate check", type: :request do
   context "when a user with matching email exists (blocked)" do
     let!(:existing_user) { create(:user, email: "taken@testmail.org") }
 
-    it "renders the check_duplicates page with block message" do
+    it "renders the new form with blocked message" do
       post users_path, params: {
         user: { email: "taken@testmail.org" }
       }
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Possible duplicate user")
       expect(response.body).not_to include("Create anyway")
     end

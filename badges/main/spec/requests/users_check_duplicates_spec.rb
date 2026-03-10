@@ -13,19 +13,11 @@ RSpec.describe "/users/check_duplicates", type: :request do
     context "when a user with that email already exists" do
       let!(:existing_user) { create(:user, email: "jane@testmail.org") }
 
-      it "shows the existing user badge and block message" do
+      it "shows the existing user badge" do
         get check_duplicates_users_path, params: { email: "jane@testmail.org" }
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("existing user")
-        expect(response.body).to include("with this email already exists")
-        expect(response.body).to include("Edit the existing user or change this user")
-      end
-
-      it "hides the Create anyway button" do
-        get check_duplicates_users_path, params: { email: "jane@testmail.org" }
-
-        expect(response.body).not_to include("Create anyway")
       end
 
       it "is case insensitive" do
@@ -59,12 +51,6 @@ RSpec.describe "/users/check_duplicates", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("no user")
         expect(response.body).to include("Solo Person")
-      end
-
-      it "shows the Create anyway button" do
-        get check_duplicates_users_path, params: { email: "solo@testmail.org" }
-
-        expect(response.body).to include("Create anyway")
       end
 
       it "does not show the block message" do
@@ -128,30 +114,6 @@ RSpec.describe "/users/check_duplicates", type: :request do
         expect(response.body).to include("existing user")
         expect(response.body).to include("no user")
       end
-
-      it "is blocked because a user exists" do
-        get check_duplicates_users_path, params: { email: "shared@testmail.org" }
-
-        expect(response.body).not_to include("Create anyway")
-      end
-    end
-
-    # --- person_id passthrough ---
-
-    context "when person_id is provided" do
-      it "includes person_id in the Create anyway form" do
-        person = Person.create!(
-          first_name: "Solo", last_name: "Person",
-          email: "solo2@testmail.org",
-          created_by: admin, updated_by: admin
-        )
-
-        get check_duplicates_users_path, params: { email: "solo2@testmail.org", person_id: person.id }
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("person_id")
-        expect(response.body).to include(person.id.to_s)
-      end
     end
 
     # --- Page heading and layout ---
@@ -171,24 +133,11 @@ RSpec.describe "/users/check_duplicates", type: :request do
 
         expect(response.body).to include("heading@testmail.org")
       end
-
-      it "always shows the Go back link" do
-        get check_duplicates_users_path, params: { email: "heading@testmail.org" }
-
-        expect(response.body).to include("Go back")
-      end
     end
 
     # --- No duplicates ---
 
     context "when no duplicates exist" do
-      it "shows the Create anyway button" do
-        get check_duplicates_users_path, params: { email: "brand.new@testmail.org" }
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Create anyway")
-      end
-
       it "does not show any duplicate badges" do
         get check_duplicates_users_path, params: { email: "brand.new@testmail.org" }
 

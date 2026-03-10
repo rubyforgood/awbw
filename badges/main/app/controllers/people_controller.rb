@@ -75,13 +75,6 @@ class PeopleController < ApplicationController
     set_form_variables
   end
 
-  def retry_new
-    @person = Person.new(person_params.except(:user_attributes))
-    authorize! @person
-    set_form_variables
-    render :new
-  end
-
   def edit
     @person = Person.includes(
       :user,
@@ -116,10 +109,11 @@ class PeopleController < ApplicationController
         @last_name = @person.last_name
         @email = @person.email
         @blocked = @duplicates.any? { |d| d[:blocked] }
-        raw_params = params[:person]&.to_unsafe_h || {}
-        @had_avatar = raw_params[:avatar].is_a?(ActionDispatch::Http::UploadedFile)
-        @stored_params = raw_params
-        render :check_duplicates
+        set_form_variables
+        respond_to do |format|
+          format.html { render :new, status: :unprocessable_content }
+          format.turbo_stream
+        end
         return
       end
     end
