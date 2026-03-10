@@ -21,7 +21,7 @@
       </h1>
     </div>
 
-    <% if @workshop_key.present? && @filtered_logs.present? %>
+    <% if @filtered_logs.present? %>
       <!-- Single workshop view -->
       <% first_log = @filtered_logs.first %>
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
@@ -45,6 +45,26 @@
         <% @filtered_logs.each do |log| %>
           <%= render "people/sections/workshop_log_date_row", workshop_log: log, show_actions: true %>
         <% end %>
+
+        <!-- Grand totals -->
+        <div class="grid grid-cols-7 gap-2 mt-3 pt-3 border-t border-gray-200">
+          <div class="rounded-lg py-2 px-2.5 text-center">
+            <div class="text-xs font-medium text-gray-500">Grand Total</div>
+          </div>
+          <div class="bg-purple-200 rounded-lg py-2 px-2.5 text-center">
+            <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum(&:total_attendance) %></div>
+          </div>
+          <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
+            <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.adults_first_time + l.adults_ongoing } %></div>
+          </div>
+          <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
+            <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.teens_first_time + l.teens_ongoing } %></div>
+          </div>
+          <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
+            <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.children_first_time + l.children_ongoing } %></div>
+          </div>
+          <div class="col-span-2"></div>
+        </div>
       </div>
     <% else %>
       <!-- All workshops grouped -->
@@ -52,7 +72,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <% @grouped_logs.each do |key, logs| %>
             <%= render "people/sections/workshop_log_grouped_card",
-                       person: @person, logs: logs, workshop_key: key %>
+                       person: @person, logs: logs %>
           <% end %>
         </div>
       <% else %>

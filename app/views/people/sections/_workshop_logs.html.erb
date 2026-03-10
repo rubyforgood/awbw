@@ -15,7 +15,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
       <% grouped.each do |key, logs| %>
         <%= render "people/sections/workshop_log_grouped_card",
-                   person: person, logs: logs, workshop_key: key %>
+                   person: person, logs: logs %>
       <% end %>
     </div>
   <% else %>

@@ -1,9 +1,10 @@
 <% first_log = logs.first %>
+<% link_params = first_log.workshop_id? ? { workshop_id: first_log.workshop_id } : { external_title: first_log.external_workshop_title } %>
 <div class="h-full bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md
             transition-all overflow-hidden">
   <div class="px-4 pt-4 pb-3">
     <!-- TITLE (links to grouped page) -->
-    <%= link_to workshop_logs_person_path(person, workshop_key: workshop_key),
+    <%= link_to workshop_logs_person_path(person, **link_params),
                 data: { turbo_frame: "_top" },
                 class: "text-sm font-semibold text-gray-900 leading-tight hover:underline" do %>
       <%= first_log.workshop_title.presence || "Workshop Log ##{first_log.id}" %>
