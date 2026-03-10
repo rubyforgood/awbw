@@ -48,19 +48,19 @@ AWBW Portal (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~78 files |
-| `app/services/` | Service objects for complex logic | ~15 files |
-| `app/jobs/` | SolidQueue background jobs | 2 files |
-| `app/models/concerns/` | Shared model modules | ~11 concerns |
+| `app/models/` | ActiveRecord models | ~66 files |
+| `app/services/` | Service objects for complex logic | ~21 files |
+| `app/jobs/` | SolidQueue background jobs | 3 files |
+| `app/models/concerns/` | Shared model modules | 12 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~61 files |
-| `app/views/` | ERB templates | ~434 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~63 files |
+| `app/views/` | ERB templates | ~465 files |
 | `app/decorators/` | Draper decorators for view logic | ~36 files |
-| `app/policies/` | ActionPolicy authorization rules | ~43 files |
+| `app/policies/` | ActionPolicy authorization rules | ~44 files |
 | `app/presenters/` | Presentation objects | 1 file |
 | `app/helpers/` | View helpers | ~19 files |
 | `app/mailers/` | ActionMailer classes | 6 files |
@@ -71,7 +71,7 @@ AWBW Portal (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (~32) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (34) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -81,7 +81,7 @@ AWBW Portal (Rails 8.1)
 |---|---|
 | `config/routes.rb` | All routes (single file) |
 | `config/database.yml` | MySQL via Trilogy adapter |
-| `config/initializers/` | ~32 initializer files |
+| `config/initializers/` | ~28 initializer files |
 | `.github/workflows/` | GitHub Actions CI |
 | `Procfile.dev` | Dev services: `vite` + `web` |
 | `ai/` | Shell script shortcuts for common dev tasks (see `ai/README.md`) |
@@ -118,23 +118,24 @@ AWBW Portal (Rails 8.1)
 
 | Concern | Purpose |
 |---|---|
+| `AhoyTrackable` | Event tracking integration |
+| `AuthorCreditable` | Author attribution |
 | `Featureable` | `featured`, `publicly_featured` scopes |
+| `Mentioner` | ActionText @mention extraction and grouping |
+| `NameFilterable` | Name-based filtering |
 | `Publishable` | `published`, `publicly_visible` scopes |
+| `PunctuationStrippable` | Strips punctuation from strings |
+| `RemoteSearchable` | AJAX remote search by column |
+| `RichTextSearchable` | Full-text search on ActionText rich_text fields |
 | `TagFilterable` | Scope-based filtering by tag names |
 | `Trendable` | Trending metrics tracking |
 | `WindowsTypeFilterable` | Filter by WindowsType association |
-| `RemoteSearchable` | AJAX remote search by column |
-| `RichTextSearchable` | Full-text search on ActionText rich_text fields |
-| `Mentioner` | ActionText @mention extraction and grouping |
-| `NameFilterable` | Name-based filtering |
-| `PunctuationStrippable` | Strips punctuation from strings |
-| `AhoyTrackable` | Event tracking integration |
 
 ## Controllers
 
 ### Namespaces
 
-- **Root level** (~48 controllers): Workshops, stories, resources, events, people, organizations, etc.
+- **Root level** (~51 controllers): Workshops, stories, resources, events, people, organizations, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -158,6 +159,7 @@ end
 - `AhoyTracking` — Event tracking integration
 - `Dedupable` — Data deduplication helpers
 - `ExternallyRedirectable` — External URL redirection
+- `TagAssignable` — Tag assignment helpers
 
 ## Services
 
@@ -176,8 +178,26 @@ end
 - `PersonFromUserService` — Create Person from User account
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
 - `ModelDeduper` — Deduplication logic
+- `RichTextMigrator` — Rich text migration utility
+- `DisplayImagePresenter` — Image display logic
+
+### Event Registrations
+
+- `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
+- `EventRegistrationServices::PublicRegistration` — Public registration handling
+- `ExtendedEventRegistrationFormBuilder` — Extended registration form builder
+- `ShortEventRegistrationFormBuilder` — Short registration form builder
+- `ScholarshipApplicationFormBuilder` — Scholarship form builder
+
+### Notifications
+
 - `NotificationServices::CreateNotification` — Notification creation
 - `NotificationServices::PersistDeliveredEmail` — Email delivery tracking
+
+### User Management
+
+- `UserServices::ProcessEmailChange` — Email change processing
+- `UserServices::ProcessEmailManualConfirm` — Manual email confirmation
 
 ## Decorators (Draper)
 
@@ -231,7 +251,8 @@ end
 
 ### Stimulus Controllers
 
-Key controllers:
+- `affiliation_dates` — Recalculate affiliation date ranges
+- `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
 - `carousel` — Swiper-based carousels
@@ -239,19 +260,31 @@ Key controllers:
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
 - `comment_edit_toggle` — Inline comment editing mode
+- `confirm_email` — Email confirmation UI
 - `dirty_form` — Unsaved changes detection
+- `dismiss` — Dismissable elements
 - `dropdown` — Dropdown menus with keyboard/click-outside handling
 - `file_preview` — File upload preview
 - `inactive_toggle` — Gray out expired affiliations
 - `optimistic_bookmark` — Instant bookmark UI feedback
+- `org_toggle` — Organization toggle UI
 - `paginated_fields` — Client-side pagination of nested fields
+- `password_toggle` — Show/hide password fields
+- `prefetch_lazy` — Prefetch lazy-loaded content
+- `print_options` — Print options toggle for analytics
 - `remote_select` — AJAX-powered select dropdown
+- `rhino_source` — Rich text editor integration
 - `searchable_checkbox` — TomSelect checkbox-style multi-select
 - `searchable_select` — Tom Select autocomplete
+- `share_url` — URL sharing/copying
 - `sortable` — Drag-drop sorting (SortableJS)
 - `tabs` — Tab panel navigation
+- `tag_link_loading` — Loading state for tag links
 - `tags_combination_highlight` — Highlight tags matching selected filters
-- `rhino_source` — Rich text editor integration
+- `tags_sync_list_heights` — Sync tag list column heights
+- `timeframe` — Date range filtering
+- `toggle_lock` — Lock/unlock toggle UI
+- `toggle_user_icon` — User icon visibility toggle
 
 ### JS Dependencies
 
@@ -277,17 +310,17 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 
 | Directory | Count | Purpose |
 |---|---|---|
-| `spec/models/` | ~54 | Model unit tests |
-| `spec/views/` | ~72 | View template tests |
-| `spec/requests/` | ~41 | HTTP request/integration tests |
-| `spec/system/` | ~30 | End-to-end browser tests (Capybara) |
+| `spec/models/` | ~58 | Model unit tests |
+| `spec/views/` | ~73 | View template tests |
+| `spec/requests/` | ~47 | HTTP request/integration tests |
+| `spec/system/` | ~25 | End-to-end browser tests (Capybara) |
 | `spec/routing/` | ~13 | Route definition tests |
 | `spec/policies/` | ~9 | Authorization policy tests |
-| `spec/decorators/` | ~8 | Decorator tests |
-| `spec/services/` | ~4 | Service object tests |
-| `spec/mailers/` | ~3 | Mailer tests |
-| `spec/helpers/` | ~2 | Helper tests |
-| `spec/factories/` | ~52 | FactoryBot factory definitions |
+| `spec/decorators/` | ~10 | Decorator tests |
+| `spec/services/` | ~12 | Service object tests |
+| `spec/mailers/` | ~5 | Mailer tests |
+| `spec/helpers/` | ~1 | Helper tests |
+| `spec/factories/` | ~53 | FactoryBot factory definitions |
 
 ### Configuration
 
@@ -351,7 +384,8 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (~17 files). Notable:
+Located in `lib/tasks/` (4 files):
 - `dev.rake` — Development database seeding from XML/CSV
-- `paperclip_to_active_storage.rake` — File upload migration
 - `rhino_migrator.rake` — Rich text editor migration
+- `attachment_report.rake` — Attachment reporting
+- `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
