@@ -24,6 +24,12 @@
       <div class="px-2.5 text-center text-xs font-medium text-gray-400">Children</div>
     </div>
 
+    <!-- TOTALS ROW (when multiple logs) -->
+    <% if logs.size > 1 %>
+      <%= render "people/sections/workshop_log_totals_row", logs: logs %>
+      <div class="mb-1 border-b border-gray-200"></div>
+    <% end %>
+
     <!-- DATE ROWS -->
     <% logs.each do |log| %>
       <%= render "people/sections/workshop_log_date_row", workshop_log: log %>

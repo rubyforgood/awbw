@@ -44,31 +44,15 @@
           <div class="shrink-0 w-20"></div>
         </div>
 
+        <!-- Grand totals (top) -->
+        <% if @filtered_logs.size > 1 %>
+          <%= render "people/sections/workshop_log_totals_row", logs: @filtered_logs, show_actions: true %>
+          <div class="mb-2 border-b border-gray-200"></div>
+        <% end %>
+
         <% @filtered_logs.each do |log| %>
           <%= render "people/sections/workshop_log_date_row", workshop_log: log, show_actions: true %>
         <% end %>
-
-        <!-- Grand totals -->
-        <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
-          <div class="grid grid-cols-5 gap-2 flex-1 min-w-0">
-            <div class="rounded-lg py-2 px-2.5 text-center">
-              <div class="text-xs font-medium text-gray-500">Grand Total</div>
-            </div>
-            <div class="bg-purple-200 rounded-lg py-2 px-2.5 text-center">
-              <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum(&:total_attendance) %></div>
-            </div>
-            <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
-              <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.adults_first_time + l.adults_ongoing } %></div>
-            </div>
-            <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
-              <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.teens_first_time + l.teens_ongoing } %></div>
-            </div>
-            <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
-              <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.children_first_time + l.children_ongoing } %></div>
-            </div>
-          </div>
-          <div class="shrink-0 w-20"></div>
-        </div>
       </div>
     <% else %>
       <!-- All workshops grouped -->
