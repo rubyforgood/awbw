@@ -17,12 +17,14 @@ RSpec.describe "People search", type: :request do
 
     it "returns all people when no filters are applied" do
       get people_path, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
       expect(response.body).to include("Alice")
       expect(response.body).to include("Bob")
     end
 
     it "filters by contact_info" do
       get people_path, params: { contact_info: "Alice" }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
     end

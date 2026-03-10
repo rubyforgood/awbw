@@ -37,8 +37,8 @@ RSpec.describe 'Reset password (person)', type: :system do
         click_link 'Log out and reset it.'
       end
 
-      # Confirm we are on the password reset page
-      expect(page).to have_current_path(new_user_password_path)
+      # Confirm we are on the password reset page — wait for navigation to complete
+      expect(page).to have_current_path(new_user_password_path, wait: 5)
       expect(page).to have_content('Forgot your password?')
 
       # Confirm user is logged out (nav shows Log In instead of avatar)

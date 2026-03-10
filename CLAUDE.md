@@ -127,6 +127,22 @@ When changing a model or controller, check whether these related files need upda
 - **System tests:** Capybara with Selenium
 - **Coverage:** SimpleCov
 
+### Red-Green-Refactor
+
+Follow test-driven development when building features or fixing bugs:
+
+1. **Red** — Write a failing test first that describes the expected behavior. Run it to confirm it fails for the right reason.
+2. **Green** — Write the minimum code to make the test pass. Don't over-engineer.
+3. **Refactor** — Clean up the implementation while keeping tests green.
+
+When fixing a bug, start by writing a test that reproduces the bug (red), then fix it (green). This prevents regressions.
+
+For new features, write tests at the appropriate level:
+- **Model/service changes** → model or service spec
+- **Controller/routing changes** → request spec
+- **User-facing behavior** → system spec
+- **Authorization changes** → policy spec
+
 Run all tests:
 ```
 bundle exec rspec
@@ -136,6 +152,28 @@ Run a single test file:
 ```
 bundle exec rspec spec/models/some_model_spec.rb
 ```
+
+### Writing Non-Flaky Tests
+
+#### System Tests (Capybara)
+
+- **Always wait for page state changes** — use Capybara's built-in waiting matchers (`have_content`, `have_css`, `have_current_path`) with explicit `wait:` when testing Turbo/Stimulus interactions
+- **Assert the positive case first** when waiting for async updates — `expect(page).not_to have_content(...)` does NOT wait; instead, first wait for a positive signal (e.g., `expect(page).to have_content(expected_text, wait: 5)`) then assert the negative
+- **Wait for navigation after form submissions** — after `click_button`, `accept_confirm`, or Turbo form submits, add `expect(page).to have_current_path(target_path, wait: 5)` before asserting page content
+- **Use `visible: :all`** for styled/hidden checkboxes — custom-styled inputs with `appearance-none` or `opacity-0` are not visible to Capybara by default; use `find("#element_id", visible: :all).check`
+- **Wait for Stimulus JS mutations** — after clicking a Stimulus action button, don't immediately check DOM changes; use the `eventually` matcher: `expect { element[:type] }.to eventually(eq("text"))`
+- **Scope interactions with `within`** — when a page has multiple identical components (e.g., multiple password-toggle wrappers), use `within(wrapper)` to avoid `match: :first` ambiguity
+- **Account for debounced form submissions** — the `collection_controller.js` debounces text input by 400ms; after `fill_in`, wait for the expected result before asserting
+- **Avoid rapid-fire form submissions in loops** — when testing multiple login attempts, add `expect(page).to have_current_path(path, wait: 5)` between iterations to ensure each page load completes
+
+#### Request Tests
+
+- **Always check `have_http_status(:ok)`** before asserting body content — this catches silent redirects or auth failures that produce empty/unexpected bodies
+- **Verify Turbo-Frame headers match** — when sending `Turbo-Frame` request headers, ensure the header value matches the `turbo_frame_tag` ID in the rendered template
+
+#### Model Tests
+
+- **ActionText body content in queries** — when testing scopes that JOIN on `action_text_rich_texts`, verify the ActionText record exists first (e.g., `expect(record.rhino_body.body.to_plain_text).to include("term")`) to catch factory/callback timing issues
 
 ## Linting
 

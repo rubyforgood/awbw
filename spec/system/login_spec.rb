@@ -42,11 +42,13 @@ RSpec.describe "User login", type: :system do
     it "warns on the last attempt then locks the account" do
       9.times do
         fill_in_login(user.email, "wrong_password")
+        expect(page).to have_current_path(new_user_session_path, wait: 5)
       end
 
       expect(page).to have_content(last_attempt_warning)
 
       fill_in_login(user.email, "wrong_password")
+      expect(page).to have_current_path(new_user_session_path, wait: 5)
 
       fill_in_login(user.email, password)
 
@@ -73,8 +75,8 @@ RSpec.describe "User login", type: :system do
     it "allows login successfully" do
       fill_in_login(user.email, password)
 
+      expect(page).to have_css("#avatar", wait: 5)
       expect(page).not_to have_content(generic_error)
-      expect(page).to have_css("#avatar")
     end
   end
 end

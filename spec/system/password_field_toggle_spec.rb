@@ -21,13 +21,19 @@ RSpec.describe "Password field toggle", type: :system do
     expect(page).to have_css("[data-action='password-toggle#toggle']", wait: 5)
 
     %w[user_password user_password_confirmation].each do |field_id|
-      password_field = find("input##{field_id}")
-      password_field.set("my_secure_password")
-      expect(password_field[:type]).to eq("password")
+      wrapper = find("input##{field_id}").ancestor("[data-controller='password-toggle']")
 
-      find(".toggle-password .fa-eye", match: :first).click
-      expect(password_field[:type]).to eq("text")
-      expect(password_field.value).to eq("my_secure_password")
+      within(wrapper) do
+        password_field = find("input[type='password']")
+        password_field.set("my_secure_password")
+        expect(password_field[:type]).to eq("password")
+
+        find("[data-action='password-toggle#toggle']").click
+
+        # Wait for Stimulus to mutate the input type
+        expect { password_field[:type] }.to eventually(eq("text"))
+        expect(password_field.value).to eq("my_secure_password")
+      end
     end
   end
 

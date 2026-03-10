@@ -64,6 +64,15 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - No parentheses around conditions: `if foo` not `if (foo)`
 - No semicolons to separate statements
 
+# Testing — Avoiding Flaky Tests
+- In system tests, always wait for page state changes using Capybara waiting matchers with `wait: 5` for Turbo/Stimulus interactions
+- Assert positive cases first (e.g., `have_content`) before negative cases (`not_to have_content`) — negative matchers don't wait
+- Use `visible: :all` for custom-styled checkboxes with `appearance-none` or `opacity-0`
+- Use `eventually` matcher for Stimulus JS mutations: `expect { element[:type] }.to eventually(eq("text"))`
+- Wait for navigation after form submissions: `expect(page).to have_current_path(path, wait: 5)`
+- In request tests, check `have_http_status(:ok)` before asserting body content
+- The `collection_controller.js` debounces text input by 400ms; account for this in system tests
+
 # Git
 - When rebasing onto main, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)
 

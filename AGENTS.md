@@ -287,6 +287,10 @@ Common factory traits across models:
 - `:admin` (User with super_user=true)
 - `:with_primary_asset`, `:with_gallery_assets`
 
+### Avoiding Flaky Tests
+
+See `CLAUDE.md` → "Writing Non-Flaky Tests" for the full rules. Key points: this project uses Hotwire (Turbo + Stimulus) heavily, so most flakiness comes from async timing — always use `wait:` with Capybara matchers, assert positive before negative, use `visible: :all` for custom-styled checkboxes, and use the `eventually` matcher for Stimulus JS mutations.
+
 ## CI Pipeline (GitHub Actions)
 
 ### ci.yml

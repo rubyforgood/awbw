@@ -31,15 +31,19 @@ RSpec.describe "Workshops", type: :system do
 
         visit workshops_path
 
+        # Wait for lazy-loaded turbo frame to finish rendering initial results
+        expect(page).to have_content(workshop_world.title, wait: 5)
+
         fill_in 'query', with: 'best workshop'
 
-        # Open the dropdown
-        click_on "Windows audience"  # this clicks the <button> text/label
+        # Open the dropdown and check the checkbox — checkbox change triggers form submit
+        click_on "Windows audience"
         check("windows_types_#{adult_window.id}")
 
+        # Wait for Turbo to update results after auto-submit
+        expect(page).not_to have_content(workshop_hello.title, wait: 5)
         expect(page).to have_content(workshop_world.title)
         expect(page).to have_content(workshop_mars.title)
-        expect(page).not_to have_content(workshop_hello.title)
       end
 
       it 'User clears checkbox and text filters and sees all results again' do
@@ -63,10 +67,10 @@ RSpec.describe "Workshops", type: :system do
         expect(page).to have_content(workshop_adult.title)
         expect(page).to have_content(workshop_child.title)
 
-        # Filter by text
+        # Filter by text — debounced submit fires after 400ms
         fill_in 'title', with: 'Adult'
+        expect(page).not_to have_content(workshop_child.title, wait: 5)
         expect(page).to have_content(workshop_adult.title)
-        expect(page).not_to have_content(workshop_child.title)
 
         # Also check a sector checkbox
         click_on "Sector"

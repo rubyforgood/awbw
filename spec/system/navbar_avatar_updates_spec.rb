@@ -46,7 +46,7 @@ RSpec.describe "Navbar avatar behavior", type: :system do
     it "removes the avatar and updates the navbar" do
       visit edit_person_path(person)
 
-      check "person__destroy"
+      find("#person__destroy", visible: :all).check
       click_button "Save changes"
 
       expect(page).to have_current_path(person_path(person), wait: 5)

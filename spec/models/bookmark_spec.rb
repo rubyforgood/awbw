@@ -216,6 +216,8 @@ RSpec.describe Bookmark, type: :model do
       let!(:other_bookmark) { create(:bookmark, user: user, bookmarkable: other_news) }
 
       it "matches ActionText body content" do
+        # Ensure ActionText record is persisted and queryable
+        expect(news.rhino_body.body.to_plain_text).to include("healing")
         result = Bookmark.keyword("healing")
         expect(result).to include(news_bookmark)
         expect(result).not_to include(other_bookmark)
