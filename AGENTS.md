@@ -239,7 +239,7 @@ end
 
 ## Mailers
 
-- `ApplicationMailer` — Base, from: `ENV["REPLY_TO_EMAIL"]` (programs@awbw.org)
+- `ApplicationMailer` — Base, from: `ENV["REPLY_TO_EMAIL"]`
 - `DeviseMailer` — Custom Devise emails
 - `EventMailer` — Event registration confirmations
 - `NotificationMailer` — Notification delivery
