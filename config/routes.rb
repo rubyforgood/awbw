@@ -110,7 +110,6 @@ Rails.application.routes.draw do
   resources :people do
     collection do
       get :check_duplicates
-      post :retry_new
     end
     resources :comments, only: [ :index, :create ]
   end
