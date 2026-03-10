@@ -1,23 +1,25 @@
 <% display_date = workshop_log.date || workshop_log.created_at %>
 <% show_actions = local_assigns.fetch(:show_actions, false) %>
-<div class="grid <%= show_actions ? "grid-cols-7" : "grid-cols-5" %> gap-2 mb-1">
-  <%= link_to workshop_log_path(workshop_log),
-              data: { turbo_frame: "_top" },
-              class: "rounded-lg py-2 px-2.5 text-center hover:bg-gray-100 hover:underline transition-colors" do %>
-    <div class="text-sm font-bold text-gray-800"><%= display_date.strftime("%b %-d") %></div>
-    <div class="text-xs text-gray-500"><%= display_date.strftime("%Y") %></div>
-  <% end %>
-  <% { "Total" => workshop_log.total_attendance,
-       "Adults" => workshop_log.adults_first_time + workshop_log.adults_ongoing,
-       "Teens" => workshop_log.teens_first_time + workshop_log.teens_ongoing,
-       "Children" => workshop_log.children_first_time + workshop_log.children_ongoing }.each do |label, count| %>
-    <div class="<%= label == "Total" ? "bg-purple-100" : "bg-purple-50" %> rounded-lg py-2 px-2.5 text-center">
-      <div class="text-xs text-gray-500 sm:hidden"><%= label %></div>
-      <div class="text-sm font-bold text-gray-800"><%= count %></div>
-    </div>
-  <% end %>
+<div class="flex items-center gap-2 mb-1">
+  <div class="grid grid-cols-5 gap-2 flex-1">
+    <%= link_to workshop_log_path(workshop_log),
+                data: { turbo_frame: "_top" },
+                class: "rounded-lg py-2 px-2.5 text-center hover:bg-gray-100 hover:underline transition-colors" do %>
+      <div class="text-sm font-bold text-gray-800"><%= display_date.strftime("%b %-d") %></div>
+      <div class="text-xs text-gray-500"><%= display_date.strftime("%Y") %></div>
+    <% end %>
+    <% { "Total" => workshop_log.total_attendance,
+         "Adults" => workshop_log.adults_first_time + workshop_log.adults_ongoing,
+         "Teens" => workshop_log.teens_first_time + workshop_log.teens_ongoing,
+         "Children" => workshop_log.children_first_time + workshop_log.children_ongoing }.each do |label, count| %>
+      <div class="<%= label == "Total" ? "bg-purple-100" : "bg-purple-50" %> rounded-lg py-2 px-2.5 text-center">
+        <div class="text-xs text-gray-500 sm:hidden"><%= label %></div>
+        <div class="text-sm font-bold text-gray-800"><%= count %></div>
+      </div>
+    <% end %>
+  </div>
   <% if show_actions %>
-    <div class="flex items-center justify-center gap-2 col-span-2">
+    <div class="flex items-center gap-2 shrink-0">
       <%= link_to "View", workshop_log_path(workshop_log),
                   data: { turbo_frame: "_top" },
                   class: "text-xs font-medium text-blue-600 hover:underline" %>
