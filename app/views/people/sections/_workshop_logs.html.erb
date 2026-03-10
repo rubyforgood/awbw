@@ -7,9 +7,9 @@
                    all_logs.sum(:teens_first_time) + all_logs.sum(:teens_ongoing) +
                    all_logs.sum(:adults_first_time) + all_logs.sum(:adults_ongoing) %>
       </span>
-      <span>Children: <%= all_logs.sum(:children_first_time) + all_logs.sum(:children_ongoing) %></span>
-      <span>Teens: <%= all_logs.sum(:teens_first_time) + all_logs.sum(:teens_ongoing) %></span>
       <span>Adults: <%= all_logs.sum(:adults_first_time) + all_logs.sum(:adults_ongoing) %></span>
+      <span>Teens: <%= all_logs.sum(:teens_first_time) + all_logs.sum(:teens_ongoing) %></span>
+      <span>Children: <%= all_logs.sum(:children_first_time) + all_logs.sum(:children_ongoing) %></span>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
       <% workshop_logs.each do |workshop_log| %>
