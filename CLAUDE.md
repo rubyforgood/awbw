@@ -1,4 +1,5 @@
 # CLAUDE.md
+<!-- Keep code style rules in sync with .github/copilot-instructions.md -->
 
 For architecture reference (models, controllers, services, testing), read `AGENTS.md`.
 
