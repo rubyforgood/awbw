@@ -33,16 +33,17 @@
         <% end %>
 
         <!-- Column headers -->
-        <div class="grid grid-cols-5 gap-2 mb-2">
+        <div class="grid grid-cols-7 gap-2 mb-2">
           <div class="px-2.5 text-center text-xs font-medium text-gray-400">Date</div>
           <div class="px-2.5 text-center text-xs font-medium text-gray-400">Total</div>
           <div class="px-2.5 text-center text-xs font-medium text-gray-400">Adults</div>
           <div class="px-2.5 text-center text-xs font-medium text-gray-400">Teens</div>
           <div class="px-2.5 text-center text-xs font-medium text-gray-400">Children</div>
+          <div class="col-span-2"></div>
         </div>
 
         <% @filtered_logs.each do |log| %>
-          <%= render "people/sections/workshop_log_date_row", workshop_log: log %>
+          <%= render "people/sections/workshop_log_date_row", workshop_log: log, show_actions: true %>
         <% end %>
       </div>
     <% else %>
