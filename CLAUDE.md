@@ -103,9 +103,9 @@ When the user says "AI files" or "AI instructions", these are the files:
 
 | File | Purpose |
 |---|---|
-| `CLAUDE.md` | Primary rules for Claude Code (this file) |
-| `AGENTS.md` | Architecture reference (models, controllers, services) |
-| `.github/copilot-instructions.md` | Rules for GitHub Copilot (keep in sync with CLAUDE.md) |
+| `CLAUDE.md` | Single source of truth for all coding rules and conventions (this file) |
+| `AGENTS.md` | Architecture reference (models, controllers, services) — defers to CLAUDE.md for rules |
+| `.github/copilot-instructions.md` | Points Copilot to CLAUDE.md and AGENTS.md |
 | `ai/` | Shell script shortcuts for common dev tasks |
 
 ## Related Files
@@ -119,8 +119,7 @@ When changing a model or controller, check whether these related files need upda
 | View | System spec, Stimulus controller (if interactive) |
 | Service | Service spec |
 | Decorator | Decorator spec |
-| Add/remove model, concern, service, or gem | AGENTS.md, `.github/copilot-instructions.md` |
-| Code style rules | `.github/copilot-instructions.md` (keep in sync) |
+| Add/remove model, concern, service, or gem | AGENTS.md |
 
 ## Key Directories
 
