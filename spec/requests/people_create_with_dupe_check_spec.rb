@@ -35,6 +35,18 @@ RSpec.describe "POST /people with duplicate check", type: :request do
       expect(response.body).to include("Create anyway")
     end
 
+    it "does not show Create anyway button when duplicate is blocked (same name and email)" do
+      post people_path, params: {
+        person: { first_name: "Jane", last_name: "Doe", email: "jane.doe@example.com", created_by_id: admin.id, updated_by_id: admin.id }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Possible duplicate person")
+      expect(response.body).to include("exact match")
+      expect(response.body).not_to include("Create anyway")
+      expect(response.body).not_to include("skip_duplicate_check")
+    end
+
     it "creates the person with all params when Create anyway is submitted" do
       expect {
         post people_path, params: {
