@@ -23,13 +23,13 @@
       <% end %>
 
       <!-- AGE GROUP TOTALS -->
-      <div class="flex gap-3 text-center mb-3">
+      <div class="flex flex-col gap-1.5 mb-3">
         <% { "Children" => workshop_log.children_first_time + workshop_log.children_ongoing,
              "Teens" => workshop_log.teens_first_time + workshop_log.teens_ongoing,
              "Adults" => workshop_log.adults_first_time + workshop_log.adults_ongoing }.each do |label, count| %>
-          <div class="flex-1 bg-gray-50 rounded-lg py-2 px-1">
-            <div class="text-lg font-bold text-gray-800"><%= count %></div>
-            <div class="text-xs text-gray-500"><%= label %></div>
+          <div class="flex items-center justify-between bg-gray-50 rounded-lg py-1.5 px-3">
+            <span class="text-xs text-gray-500"><%= label %></span>
+            <span class="text-sm font-bold text-gray-800"><%= count %></span>
           </div>
         <% end %>
       </div>
