@@ -7,17 +7,17 @@ RSpec.describe "POST /people with duplicate check", type: :request do
   before { sign_in admin }
 
   context "when duplicates are found" do
-    it "renders the check_duplicates page instead of redirecting" do
+    it "renders the new form with duplicate warning instead of redirecting" do
       post people_path, params: {
         person: { first_name: "Jane", last_name: "Doe", email: "new@testmail.org", created_by_id: admin.id, updated_by_id: admin.id }
       }
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Possible duplicate person")
       expect(response.body).to include("Jane Doe")
     end
 
-    it "preserves all form params in hidden fields for Create anyway" do
+    it "renders the new form with duplicate warning and checkbox" do
       post people_path, params: {
         person: {
           first_name: "Jane",
@@ -29,9 +29,22 @@ RSpec.describe "POST /people with duplicate check", type: :request do
         }
       }
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Test bio content")
       expect(response.body).to include("skip_duplicate_check")
+      expect(response.body).to include("Create anyway")
+    end
+
+    it "does not show Create anyway button when duplicate is blocked (same name and email)" do
+      post people_path, params: {
+        person: { first_name: "Jane", last_name: "Doe", email: "jane.doe@example.com", created_by_id: admin.id, updated_by_id: admin.id }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Possible duplicate person")
+      expect(response.body).to include("exact match")
+      expect(response.body).not_to include("Create anyway")
+      expect(response.body).not_to include("skip_duplicate_check")
     end
 
     it "creates the person with all params when Create anyway is submitted" do
@@ -76,29 +89,6 @@ RSpec.describe "POST /people with duplicate check", type: :request do
       expect(created.sectorable_items.count).to eq(1)
       expect(created.sectorable_items.first.sector).to eq(sector)
       expect(created.sectorable_items.first.is_leader).to be true
-    end
-  end
-
-  describe "POST /people/retry_new" do
-    let!(:sector) { create(:sector, published: true) }
-
-    it "re-renders the new form with nested attributes preserved" do
-      post retry_new_people_path, params: {
-        person: {
-          first_name: "Jane",
-          last_name: "Doe",
-          email: "new@testmail.org",
-          bio: "Test bio",
-          created_by_id: admin.id,
-          updated_by_id: admin.id,
-          sectorable_items_attributes: { "0" => { sector_id: sector.id, is_leader: "1", _destroy: "false" } }
-        }
-      }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Jane")
-      expect(response.body).to include("Doe")
-      expect(response.body).to include(sector.name)
     end
   end
 

@@ -1,6 +1,7 @@
 <%= simple_form_for @user, html: { multipart: true, class: "space-y-6",
                                           data: { controller: "dirty-form" } } do |f| %>
   <%= render "shared/errors", resource: @user if @user.errors.any? %>
+  <%= render "duplicate_users_warning" %>
   <%= f.hidden_field :person_id, value: @person&.id || f.object.person_id || params[:person_id] %>
 
   <!-- Account Details -->
