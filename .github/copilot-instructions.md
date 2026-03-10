@@ -1,4 +1,5 @@
-# Copilot Instructions
+# This project is a Ruby on Rails application.
+<!-- Keep code style rules in sync with CLAUDE.md -->
 
 Read `AGENTS.md` for architecture reference (models, controllers, services, testing structure).
 
