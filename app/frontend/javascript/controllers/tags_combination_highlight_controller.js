@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 // When sector/category checkboxes in "Explore by combination" are checked,
 // adds a highlight class to the corresponding tag block in the Sectors/Categories panels above.
-const HIGHLIGHT_CLASS = "tags-combination-selected"
+const highlightClass = "tags-combination-selected"
 
 export default class extends Controller {
   static targets = ["sectorInput", "categoryInput"]
@@ -37,7 +37,7 @@ export default class extends Controller {
     if (!frame) return
     frame.querySelectorAll("a[data-sector-name]").forEach(link => {
       const name = link.dataset.sectorName?.trim()
-      link.classList.toggle(HIGHLIGHT_CLASS, name && selected.includes(name))
+      link.classList.toggle(highlightClass, name && selected.includes(name))
     })
   }
 
@@ -49,7 +49,7 @@ export default class extends Controller {
     if (!frame) return
     frame.querySelectorAll("a[data-category-name]").forEach(link => {
       const name = link.dataset.categoryName?.trim()
-      link.classList.toggle(HIGHLIGHT_CLASS, name && selected.includes(name))
+      link.classList.toggle(highlightClass, name && selected.includes(name))
     })
   }
 }

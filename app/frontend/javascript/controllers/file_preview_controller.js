@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-const FILE_TYPE_ICONS = {
+const fileTypeIcons = {
     "application/pdf": "fa-regular fa-file-pdf",
     "application/msword": "fa-regular fa-file-word",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "fa-regular fa-file-word",
@@ -72,7 +72,7 @@ export default class extends Controller {
 
     showFileIcon(mimeType) {
         const placeholder = this.ensurePlaceholder()
-        const iconClass = FILE_TYPE_ICONS[mimeType] || "fa-regular fa-file"
+        const iconClass = fileTypeIcons[mimeType] || "fa-regular fa-file"
         placeholder.innerHTML = `<i class="${iconClass} text-5xl"></i>`
         placeholder.classList.remove("hidden")
 

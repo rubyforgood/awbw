@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus";
 import TomSelect from "tom-select";
 
-const STYLE_ID = "remote-select-overrides";
+const styleId = "remote-select-overrides";
 
 export default class extends Controller {
   static values = { model: String, exclude: String };
@@ -29,9 +29,9 @@ export default class extends Controller {
       },
     });
 
-    if (!document.getElementById(STYLE_ID)) {
+    if (!document.getElementById(styleId)) {
       const style = document.createElement("style");
-      style.id = STYLE_ID;
+      style.id = styleId;
       style.textContent = `
         .ts-control .ts-input {
           border: none !important;
