@@ -1,4 +1,4 @@
-# AGENTS.md — AWBW Portal
+# AGENTS.md
 
 Architecture reference for AI agents. For coding rules and conventions, see `CLAUDE.md` (single source of truth).
 
@@ -32,7 +32,7 @@ npm ci
 ## Architecture Overview
 
 ```
-AWBW Portal (Rails 8.1)
+This codebase (Rails 8.1)
 ├── Main app (app/)              — Workshops, resources, stories, events, people, organizations
 ├── Frontend                     — Stimulus + Turbo + Tailwind CSS v4 (Vite bundler)
 ├── Background jobs              — SolidQueue
