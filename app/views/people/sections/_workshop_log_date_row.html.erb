@@ -2,7 +2,7 @@
 <div class="grid grid-cols-5 gap-2 mb-1">
   <%= link_to workshop_log_path(workshop_log),
               data: { turbo_frame: "_top" },
-              class: "rounded-lg py-2 px-2.5 text-center hover:bg-gray-100 transition-colors" do %>
+              class: "rounded-lg py-2 px-2.5 text-center hover:bg-gray-100 hover:underline transition-colors" do %>
     <div class="text-sm font-bold text-gray-800"><%= display_date.strftime("%b %-d") %></div>
     <div class="text-xs text-gray-500"><%= display_date.strftime("%Y") %></div>
   <% end %>
