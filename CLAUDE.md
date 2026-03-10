@@ -1,35 +1,30 @@
 # CLAUDE.md
 
-## Architecture Reference
+For architecture reference (models, controllers, services, testing), read `AGENTS.md`.
 
-For detailed architecture, models, controllers, services, and testing structure, read `AGENTS.md`.
+## AI Instruction Files
 
-## Project Overview
+When the user says "AI files" or "AI instructions", these are the files:
 
-This is a Ruby on Rails 8.1 application (Ruby 4.0.1) — the Portal for A Window Between Worlds (AWBW). It manages workshops, resources, community news, stories, and events for workshop leaders.
+| File | Purpose |
+|---|---|
+| `CLAUDE.md` | Coding rules and conventions (this file) |
+| `AGENTS.md` | Architecture reference + project details |
+| `.github/copilot-instructions.md` | Points Copilot to CLAUDE.md and AGENTS.md |
+| `ai/` | Shell script shortcuts for common dev tasks |
 
-## Tech Stack
+## Related Files
 
-- **Backend:** Rails 8.1, Ruby 4.0.1, MySQL (via Trilogy adapter)
-- **Frontend:** Vite, Tailwind CSS v4, Stimulus, Turbo Rails
-- **Auth:** Devise with JWT token support
-- **Authorization:** ActionPolicy (app/policies/)
-- **Rich text:** ActionText with Rhino editor (TipTap-based)
-- **File uploads:** ActiveStorage with DigitalOcean Spaces
-- **Background jobs:** SolidQueue
-- **Caching:** SolidCache
+When changing a model or controller, check whether these related files need updates:
 
-## Setup
-
-Full setup (bundle, npm, database create/migrate/seed):
-```
-bin/setup
-```
-
-If you just need frontend dependencies:
-```
-npm ci
-```
+| If you change... | Also check... |
+|---|---|
+| Model | Decorator, policy, factory, model spec |
+| Controller | Policy, request spec, routing spec, views |
+| View | System spec, Stimulus controller (if interactive) |
+| Service | Service spec |
+| Decorator | Decorator spec |
+| Add/remove model, concern, service, or gem | AGENTS.md |
 
 ## Code Style
 
@@ -96,74 +91,6 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - When attributes span multiple lines, keep the closing `>` with the last attribute
 - Good: `<div class="..." id="...">` or `<div class="...\n     id="...">`
 - Bad: `<div class="...\n     id="..."\n  >`
-
-## AI Instruction Files
-
-When the user says "AI files" or "AI instructions", these are the files:
-
-| File | Purpose |
-|---|---|
-| `CLAUDE.md` | Single source of truth for all coding rules and conventions (this file) |
-| `AGENTS.md` | Architecture reference (models, controllers, services) — defers to CLAUDE.md for rules |
-| `.github/copilot-instructions.md` | Points Copilot to CLAUDE.md and AGENTS.md |
-| `ai/` | Shell script shortcuts for common dev tasks |
-
-## Related Files
-
-When changing a model or controller, check whether these related files need updates:
-
-| If you change... | Also check... |
-|---|---|
-| Model | Decorator, policy, factory, model spec |
-| Controller | Policy, request spec, routing spec, views |
-| View | System spec, Stimulus controller (if interactive) |
-| Service | Service spec |
-| Decorator | Decorator spec |
-| Add/remove model, concern, service, or gem | AGENTS.md |
-
-## Key Directories
-
-- `app/services/` — Business logic service objects
-- `app/decorators/` — Draper decorators for view presentation
-- `app/policies/` — ActionPolicy authorization rules
-- `app/presenters/` — Presentation objects
-- `app/frontend/` — Vite/JS components (Stimulus controllers, etc.)
-
-## Testing
-
-- **Framework:** RSpec (`bundle exec rspec`)
-- **Factories:** FactoryBot (spec/factories/)
-- **Matchers:** Shoulda Matchers
-- **System tests:** Capybara with Selenium
-- **Coverage:** SimpleCov
-
-Run all tests:
-```
-bundle exec rspec
-```
-
-Run a single test file:
-```
-bundle exec rspec spec/models/some_model_spec.rb
-```
-
-## Linting
-
-```
-bundle exec rubocop
-```
-
-Auto-fix:
-```
-bundle exec rubocop -a
-```
-
-## Security Scanning
-
-```
-bundle exec brakeman
-bundle exec bundle-audit check --update
-```
 
 ## JavaScript
 
