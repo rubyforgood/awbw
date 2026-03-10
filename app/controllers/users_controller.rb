@@ -81,7 +81,7 @@ class UsersController < ApplicationController
           @blocked = @duplicates.any? { |d| d[:blocked] }
           set_form_variables
           respond_to do |format|
-            format.html { render :check_duplicates, status: :unprocessable_content }
+            format.html { render :new, status: :unprocessable_content }
             format.turbo_stream
           end
           return
