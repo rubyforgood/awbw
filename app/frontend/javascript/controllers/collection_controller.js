@@ -3,32 +3,28 @@ import { Controller } from "@hotwired/stimulus";
 // Connects to data-controller="collection"
 export default class extends Controller {
   static classes = ["unselected", "selected"];
+  connect() {
+    this.element.addEventListener("change", (event) => {
+      const { type } = event.target;
 
-  handleChange(event) {
-    const { type } = event.target;
+      if (type === "checkbox") {
+        this.toggleClass(event.target);
+      }
 
-    if (type === "checkbox") {
-      this.toggleClass(event.target);
-    }
-
-    if (
-      type === "checkbox" ||
-      type === "radio" ||
-      type === "select-one" ||
-      type === "select-multiple"
-    ) {
-      this.submitForm();
-    }
-  }
-
-  handleInput(event) {
-    if (event.target.type === "text" || event.target.type === "search") {
-      this.debouncedSubmit();
-    }
-  }
-
-  disconnect() {
-    clearTimeout(this.timeout);
+      if (
+        type === "checkbox" ||
+        type === "radio" ||
+        type === "select-one" ||
+        type === "select-multiple"
+      ) {
+        this.submitForm();
+      }
+    });
+    this.element.addEventListener("input", (event) => {
+      if (event.target.type === "text") {
+        this.debouncedSubmit();
+      }
+    });
   }
 
   submitForm() {
@@ -47,10 +43,12 @@ export default class extends Controller {
     const button = el.closest("label");
     if (!button || !this.selectedClasses) return;
 
+    // Toggle selected classes
     this.selectedClasses.forEach((cls) => {
       button.classList.toggle(cls);
     });
 
+    // Toggle unselected classes
     this.unselectedClasses.forEach((cls) => {
       button.classList.toggle(cls);
     });

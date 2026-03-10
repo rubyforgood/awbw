@@ -2,12 +2,10 @@ import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
   static targets = ["item", "nav"];
-  static values = {
-    perPage: { type: Number, default: 10 },
-    currentPage: { type: Number, default: 1 }
-  };
+  static values = { perPage: { type: Number, default: 10 } };
 
   connect() {
+    this.currentPage = 1;
     this.render();
   }
 
@@ -22,30 +20,30 @@ export default class extends Controller {
   }
 
   next() {
-    if (this.currentPageValue < this.totalPages) {
-      this.currentPageValue++;
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
       this.render();
     }
   }
 
   previous() {
-    if (this.currentPageValue > 1) {
-      this.currentPageValue--;
+    if (this.currentPage > 1) {
+      this.currentPage--;
       this.render();
     }
   }
 
   render() {
     const items = this.visibleItems;
-    const start = (this.currentPageValue - 1) * this.perPageValue;
+    const start = (this.currentPage - 1) * this.perPageValue;
     const end = start + this.perPageValue;
 
     items.forEach((el, i) => {
       el.classList.toggle("hidden", i < start || i >= end);
     });
 
-    if (this.currentPageValue > this.totalPages) {
-      this.currentPageValue = this.totalPages;
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
       this.render();
       return;
     }
@@ -65,16 +63,16 @@ export default class extends Controller {
     this.navTarget.innerHTML = `
       <div class="flex items-center justify-center gap-3 mt-4">
         <button type="button" data-action="paginated-fields#previous"
-                class="px-3 py-1 border border-gray-200 rounded-md bg-white text-gray-500 hover:bg-gray-100 ${this.currentPageValue <= 1 ? 'opacity-30 cursor-default' : ''}"
-                ${this.currentPageValue <= 1 ? 'disabled' : ''}>
+                class="px-3 py-1 border border-gray-200 rounded-md bg-white text-gray-500 hover:bg-gray-100 ${this.currentPage <= 1 ? 'opacity-30 cursor-default' : ''}"
+                ${this.currentPage <= 1 ? 'disabled' : ''}>
           &laquo;
         </button>
         <span class="text-sm text-gray-600">
-          ${this.currentPageValue} / ${this.totalPages}
+          ${this.currentPage} / ${this.totalPages}
         </span>
         <button type="button" data-action="paginated-fields#next"
-                class="px-3 py-1 border border-gray-200 rounded-md bg-white text-gray-500 hover:bg-gray-100 ${this.currentPageValue >= this.totalPages ? 'opacity-30 cursor-default' : ''}"
-                ${this.currentPageValue >= this.totalPages ? 'disabled' : ''}>
+                class="px-3 py-1 border border-gray-200 rounded-md bg-white text-gray-500 hover:bg-gray-100 ${this.currentPage >= this.totalPages ? 'opacity-30 cursor-default' : ''}"
+                ${this.currentPage >= this.totalPages ? 'disabled' : ''}>
           &raquo;
         </button>
       </div>

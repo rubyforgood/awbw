@@ -3,7 +3,6 @@
   <%= form_with url: notifications_path,
                 method: :get,
                 data: {controller: "collection",
-                      action: "change->collection#handleChange input->collection#handleInput",
                       turbo_frame: "notifications_results" },
                       autocomplete: "off",
                 class: "flex flex-wrap gap-4" do |f| %>

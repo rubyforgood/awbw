@@ -9,7 +9,7 @@
     </div>
 
     <%= form_tag(user_path(user), method: :get,
-      data: { controller: "collection", action: "change->collection#handleChange input->collection#handleInput", turbo_frame: "account_activity_section" },
+      data: { controller: "collection", turbo_frame: "account_activity_section" },
       autocomplete: "off",
       class: "mb-4") do %>
       <%= hidden_field_tag :section, "account_activity" %>

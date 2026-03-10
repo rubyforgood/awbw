@@ -7,13 +7,16 @@ import { Controller } from "@hotwired/stimulus";
 //
 export default class extends Controller {
   static targets = ["editLabel", "viewLabel", "commentView", "commentEdit"];
-  static values = { editing: Boolean };
+
+  connect() {
+    this.editing = false;
+  }
 
   toggle() {
-    this.editingValue = !this.editingValue;
+    this.editing = !this.editing;
 
     // When leaving edit mode, sync textarea values to view display
-    if (!this.editingValue) {
+    if (!this.editing) {
       this.commentEditTargets.forEach((editDiv, i) => {
         const textarea = editDiv.querySelector("textarea");
         const viewBody = this.commentViewTargets[i]?.querySelector(".comment-body");
@@ -26,12 +29,12 @@ export default class extends Controller {
       });
     }
 
-    this.commentViewTargets.forEach((el) => el.classList.toggle("hidden", this.editingValue));
-    this.commentEditTargets.forEach((el) => el.classList.toggle("hidden", !this.editingValue));
+    this.commentViewTargets.forEach((el) => el.classList.toggle("hidden", this.editing));
+    this.commentEditTargets.forEach((el) => el.classList.toggle("hidden", !this.editing));
 
     if (this.hasEditLabelTarget && this.hasViewLabelTarget) {
-      this.editLabelTarget.classList.toggle("hidden", this.editingValue);
-      this.viewLabelTarget.classList.toggle("hidden", !this.editingValue);
+      this.editLabelTarget.classList.toggle("hidden", this.editing);
+      this.viewLabelTarget.classList.toggle("hidden", !this.editing);
     }
   }
 }

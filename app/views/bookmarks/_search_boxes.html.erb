@@ -1,7 +1,6 @@
 <%= form_with url: url,
               method: :get,
               data: { controller: "collection",
-                      action: "change->collection#handleChange input->collection#handleInput",
                       turbo_frame: frame_id },
               autocomplete: "off",
               class: "space-y-4" do |f| %>

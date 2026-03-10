@@ -1,5 +1,5 @@
 <%= form_with url: manage_event_path(@event), method: :get,
-  data: { controller: "collection", action: "change->collection#handleChange input->collection#handleInput", turbo_frame: "manage_results" },
+  data: { controller: "collection", turbo_frame: "manage_results" },
   autocomplete: "off",
   class: "flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-6" do %>
 

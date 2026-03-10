@@ -2,7 +2,6 @@
 <%= form_with url: community_news_index_path,
               method: :get,
               data: {controller: "collection",
-                    action: "change->collection#handleChange input->collection#handleInput",
                     turbo_frame: "community_news_results" },
                     autocomplete: "off",
               class: "space-y-2" do |f| %>
