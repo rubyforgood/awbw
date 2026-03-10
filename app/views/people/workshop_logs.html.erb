@@ -26,7 +26,12 @@
       <% first_log = @filtered_logs.first %>
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-1">
-          <%= first_log.workshop_title.presence || "Workshop Log" %>
+          <% if first_log.workshop.present? %>
+            <%= link_to first_log.workshop_title, workshop_path(first_log.workshop),
+                        class: "hover:underline", data: { turbo_frame: "_top" } %>
+          <% else %>
+            <%= first_log.workshop_title.presence || "Workshop Log" %>
+          <% end %>
         </h2>
         <% if first_log.windows_type_name.present? %>
           <div class="text-sm text-gray-500 mb-4"><%= first_log.windows_type_name %></div>
