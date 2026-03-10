@@ -135,7 +135,8 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
-- After completing work, **create a pull request** using `gh pr create`
+- **Push to a draft PR early** — push commits and create a draft PR (`gh pr create --draft`) as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
+- After completing work, **mark the PR ready** using `gh pr ready`
 - Once the PR is created, **prepend the PR number to the branch name** (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
 - Use `docs/pull_request_template.md` for PR description structure
 - Use bullet points, not paragraphs, when filling out each section
