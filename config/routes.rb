@@ -113,6 +113,9 @@ Rails.application.routes.draw do
       get :check_duplicates
       post :retry_new
     end
+    member do
+      get :workshop_logs
+    end
     resources :comments, only: [ :index, :create ]
   end
   resources :faqs

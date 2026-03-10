@@ -1,0 +1,62 @@
+<% content_for(:page_bg_class, "admin-or-owner-or-authsearchable") %>
+<div class="admin-or-owner border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Header -->
+  <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:people, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:people, intensity: 900) %> uppercase tracking-wide">Workshop Logs</span>
+    </div>
+  </div>
+
+  <div class="p-4 sm:p-8">
+    <!-- Back link + Person name -->
+    <div class="mb-6">
+      <%= link_to person_path(@person), class: "text-sm text-blue-600 hover:underline" do %>
+        &larr; Back to <%= @person.full_name %>
+      <% end %>
+      <h1 class="text-2xl font-bold text-gray-900 mt-2">
+        Workshop Logs for <%= @person.full_name %>
+      </h1>
+    </div>
+
+    <% if @workshop_key.present? && @filtered_logs.present? %>
+      <!-- Single workshop view -->
+      <% first_log = @filtered_logs.first %>
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-1">
+          <%= first_log.workshop_title.presence || "Workshop Log" %>
+        </h2>
+        <% if first_log.windows_type_name.present? %>
+          <div class="text-sm text-gray-500 mb-4"><%= first_log.windows_type_name %></div>
+        <% end %>
+
+        <!-- Column headers -->
+        <div class="grid grid-cols-5 gap-2 mb-2">
+          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Date</div>
+          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Total</div>
+          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Adults</div>
+          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Teens</div>
+          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Children</div>
+        </div>
+
+        <% @filtered_logs.each do |log| %>
+          <%= render "people/sections/workshop_log_date_row", workshop_log: log %>
+        <% end %>
+      </div>
+    <% else %>
+      <!-- All workshops grouped -->
+      <% if @grouped_logs.any? %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <% @grouped_logs.each do |key, logs| %>
+            <%= render "people/sections/workshop_log_grouped_card",
+                       person: @person, logs: logs, workshop_key: key %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-gray-500 italic">No workshops logged yet.</p>
+      <% end %>
+    <% end %>
+  </div>
+</div>
