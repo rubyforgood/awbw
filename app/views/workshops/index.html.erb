@@ -30,7 +30,8 @@
   <div class="w-full">
     <%= form_tag(workshops_path, method: :get,
                  data: {turbo_stream: true, turbo_frame: "workshop_results",
-                        controller: "collection share-url"}, autocomplete: "off", class: "space-y-6") do %>
+                        controller: "collection share-url",
+                        action: "change->collection#handleChange input->collection#handleInput"}, autocomplete: "off", class: "space-y-6") do %>
       <%= render "filters" %>
 
       <div><hr class="border-gray-300 my-6"></div>

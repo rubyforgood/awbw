@@ -1,6 +1,6 @@
 <div class="mb-4">
   <%= form_with url: organizations_path, method: :get,
-    data: { controller: "collection", turbo_frame: "organization_results" },
+    data: { controller: "collection", action: "change->collection#handleChange input->collection#handleInput", turbo_frame: "organization_results" },
     autocomplete: "off",
     class: "flex flex-wrap items-end gap-3" do %>
     <div>
