@@ -1,7 +1,7 @@
 # This is a Ruby on Rails application.
 <!-- Keep code style rules in sync with .github/copilot-instructions.md -->
 
-For architecture reference (models, controllers, services, testing), read `AGENTS.md`.
+For project overview, tech stack, architecture reference (models, controllers, services, testing), and more, read `AGENTS.md`.
 
 ## Setup
 
