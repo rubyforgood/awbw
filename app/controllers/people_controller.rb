@@ -116,10 +116,8 @@ class PeopleController < ApplicationController
         @last_name = @person.last_name
         @email = @person.email
         @blocked = @duplicates.any? { |d| d[:blocked] }
-        raw_params = params[:person]&.to_unsafe_h || {}
-        @had_avatar = raw_params[:avatar].is_a?(ActionDispatch::Http::UploadedFile)
-        @stored_params = raw_params
-        render :check_duplicates
+        set_form_variables
+        render :new, status: :unprocessable_content
         return
       end
     end
