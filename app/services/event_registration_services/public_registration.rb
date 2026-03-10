@@ -266,7 +266,7 @@ module EventRegistrationServices
         end
 
         record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(text: text, question_text: field.question)
+        record.update!(question_answer: text, question_text: field.question)
       end
     end
 

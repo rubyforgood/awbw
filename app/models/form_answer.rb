@@ -3,6 +3,6 @@ class FormAnswer < ApplicationRecord
   belongs_to :form_submission
 
   def name
-    "#{question_text.presence || form_field&.question}: #{text}"
+    "#{question_text.presence || form_field&.question}: #{question_answer}"
   end
 end

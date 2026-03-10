@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_09_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_09_150000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -498,8 +498,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_140000) do
     t.datetime "created_at", null: false
     t.integer "form_field_id"
     t.bigint "form_submission_id"
+    t.text "question_answer"
     t.string "question_text"
-    t.text "text"
     t.datetime "updated_at", null: false
     t.index ["form_field_id"], name: "index_form_answers_on_form_field_id"
     t.index ["form_submission_id"], name: "index_form_answers_on_form_submission_id"

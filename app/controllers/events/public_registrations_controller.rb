@@ -152,7 +152,7 @@ module Events
             answered_one_time = FormAnswer.joins(:form_submission)
                                          .where(form_submissions: { person_id: person.id })
                                          .where(form_field_id: one_time_field_ids)
-                                         .where.not(text: [ nil, "" ])
+                                         .where.not(question_answer: [ nil, "" ])
                                          .pluck(:form_field_id)
             answered_field_ids.concat(answered_one_time)
           end
@@ -166,7 +166,7 @@ module Events
             if regular_field_ids.any?
               answered_regular = FormAnswer.where(form_submission: event_submissions)
                                           .where(form_field_id: regular_field_ids)
-                                          .where.not(text: [ nil, "" ])
+                                          .where.not(question_answer: [ nil, "" ])
                                           .pluck(:form_field_id)
               answered_field_ids.concat(answered_regular)
             end
