@@ -1,17 +1,15 @@
 <%= simple_form_for @user, html: { multipart: true, class: "space-y-6",
                                           data: { controller: "dirty-form" } } do |f| %>
   <%= render "shared/errors", resource: @user if @user.errors.any? %>
+  <%= render "duplicate_users_warning" %>
   <%= f.hidden_field :person_id, value: @person&.id || f.object.person_id || params[:person_id] %>
-
   <!-- Account Details -->
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
     <h4 class="text-sm font-semibold uppercase text-gray-700 mb-4">Account Details</h4>
-
     <% if @person %>
       <%= f.hidden_field :first_name, value: @person.first_name %>
       <%= f.hidden_field :last_name, value: @person.last_name %>
     <% end %>
-
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div id="email_field_wrapper">
         <% if allowed_to?(:manage?, User) %>
@@ -30,7 +28,6 @@
           <p class="text-sm text-gray-500 mt-1">Only editable by admins</p>
         <% end %>
       </div>
-
       <% if allowed_to?(:manage?, User) %>
         <div>
           <label class="block font-medium text-gray-700 mb-2">Account flags</label>
@@ -65,7 +62,6 @@
       <% end %>
     </div>
   </div>
-
   <!-- Notes -->
   <% if allowed_to?(:manage?, User) %>
     <% if params[:admin].present? || f.object.comment.present? %>
@@ -84,7 +80,6 @@
       </div>
     <% end %>
   <% end %>
-
   <!-- Preferences -->
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
     <h4 class="text-sm font-semibold uppercase text-gray-700 mb-4">Preferences</h4>
@@ -107,21 +102,17 @@
                   wrapper_html: { class: "w-full max-w-md" } %>
     <% end %>
   </div>
-
   <% if f.object.persisted? %>
     <!-- Comments -->
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6" id="comments-section">
       <h4 class="text-sm font-semibold uppercase text-gray-700 mb-4">Comments</h4>
-
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm"
            data-controller="paginated-fields comment-edit-toggle"
            data-paginated-fields-per-page-value="5">
         <%= f.simple_fields_for :comments do |cf| %>
           <%= render "comments/comment_fields", f: cf %>
         <% end %>
-
         <div data-paginated-fields-target="nav"></div>
-
         <div class="flex items-center justify-between mt-3">
           <%= link_to_add_association "➕ Add Comment",
                                       f,
@@ -138,7 +129,6 @@
       </div>
     </div>
   <% end %>
-
   <div class="flex justify-center gap-3 pt-2">
     <% if allowed_to?(:destroy?, f.object) && f.object.deletable? %>
       <%= link_to "Delete", @user, class: "btn btn-danger-outline",

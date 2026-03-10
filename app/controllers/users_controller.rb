@@ -86,8 +86,11 @@ class UsersController < ApplicationController
         @duplicates = find_duplicate_users(@email, exclude_person_id: @person_id)
         if @duplicates.any?
           @blocked = @duplicates.any? { |d| d[:blocked] }
-          @stored_params = params[:user]&.to_unsafe_h || {}
-          render :check_duplicates
+          set_form_variables
+          respond_to do |format|
+            format.html { render :check_duplicates, status: :unprocessable_content }
+            format.turbo_stream
+          end
           return
         end
       end
@@ -121,7 +124,6 @@ class UsersController < ApplicationController
     @person_id = params[:person_id]
     @duplicates = find_duplicate_users(@email, exclude_person_id: @person_id)
     @blocked = @duplicates.any? { |d| d[:blocked] }
-    @stored_params = { email: @email }
   end
 
   def update

@@ -57,36 +57,7 @@
         <% end %>
       </ul>
 
-      <% if @blocked %>
-        <p class="text-sm text-red-600 font-medium mb-2">
-          An <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">existing user</span> with this email already exists.
-        </p>
-        <p class="text-sm text-gray-500 mb-6">
-          Edit the existing user or change this user's email.
-        </p>
-      <% end %>
-
       <div class="flex flex-col items-center gap-3">
-        <div class="flex gap-3">
-          <%= form_with url: retry_new_users_path, method: :post, data: { turbo: false } do %>
-            <%= hidden_fields_for_params(@stored_params, "user") %>
-            <% if @person_id.present? %>
-              <input type="hidden" name="person_id" value="<%= @person_id %>">
-            <% end %>
-            <button type="submit" class="btn btn-secondary-outline">Go back</button>
-          <% end %>
-
-          <% unless @blocked %>
-            <%= form_with url: users_path, method: :post, data: { turbo: false } do %>
-              <%= hidden_fields_for_params(@stored_params, "user") %>
-              <% if @person_id.present? %>
-                <input type="hidden" name="person_id" value="<%= @person_id %>">
-              <% end %>
-              <input type="hidden" name="skip_duplicate_check" value="1">
-              <button type="submit" class="btn btn-primary">Create anyway</button>
-            <% end %>
-          <% end %>
-        </div>
 
         <% shareable_url = check_duplicates_users_url(email: @email, person_id: @person_id) %>
         <%= mail_to "",
