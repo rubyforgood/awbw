@@ -63,7 +63,8 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 
 # JavaScript
 
-- ES6+ syntax, ESM imports/exports
+- ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
+- Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
 - Strongly prefer Stimulus for JavaScript behavior — do not write raw/inline JS or jQuery
 - Always use Tailwind CSS utility classes for styling — do not write custom CSS unless absolutely necessary
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
