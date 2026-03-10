@@ -203,6 +203,7 @@ bundle exec bundle-audit check --update
 - Keep controllers focused and small
 - **Use Stimulus targets and data attributes** to reference DOM elements — avoid `this.element.querySelector` and direct DOM queries. Declare `static targets = [...]` and use `data-[controller]-target` attributes in views.
 - **Use Stimulus shorthand action descriptors and shorthand pairs** — omit the event when it's the default for that element (e.g., `input` for `<input>`/`<textarea>`, `click` for `<button>`/`<a>`, `submit` for `<form>`). Write `controller#action` not `input->controller#action` on an input element. Only specify the event when using a non-default (e.g., `change->controller#action` on an input). See [Stimulus Actions](https://stimulus.hotwired.dev/reference/actions#event-shorthand).
+- **Use UTC methods for date-only strings** — `new Date("2024-03-01")` parses as UTC midnight; using `.getMonth()`/`.getFullYear()` converts to local time, causing off-by-one month errors in US timezones. Always use `.getUTCMonth()`/`.getUTCFullYear()` when formatting dates parsed from date-only strings (YYYY-MM-DD).
 
 ## Migrations
 

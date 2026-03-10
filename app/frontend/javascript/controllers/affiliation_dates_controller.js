@@ -92,7 +92,7 @@ export default class extends Controller {
 
   formatDate(date) {
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-    return `${months[date.getMonth()]} ${date.getFullYear()}`
+    return `${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`
   }
 
   updateDisplay(target, sinceDate, endDate) {
