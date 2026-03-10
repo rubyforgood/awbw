@@ -216,6 +216,7 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff
+- **On every push**, update AI instruction files if the diff introduces changes that affect conventions, architecture, or file lists documented there
 
 ## Quick Commands
 
