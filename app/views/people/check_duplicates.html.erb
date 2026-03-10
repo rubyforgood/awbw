@@ -64,9 +64,7 @@
             <div class="text-gray-500 text-xs mt-0.5">
               <% if dup[:labeled_emails].present? %>
                 <% dup[:labeled_emails].each_with_index do |entry, i| %>
-                  <span class="text-gray-400"><%= entry[:label] %>:</span>
-                  <%= entry[:value] %>
-                  <%= ", " unless i == dup[:labeled_emails].size - 1 %>
+                  <span class="text-gray-400"><%= entry[:label] %>:</span><%= entry[:value] %><%= ", " unless i == dup[:labeled_emails].size - 1 %>
                 <% end %>
               <% else %>
                 No email
