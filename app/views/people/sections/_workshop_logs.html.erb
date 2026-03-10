@@ -3,7 +3,7 @@
     <% all_logs = person.user&.workshop_logs || WorkshopLog.none %>
     <div class="flex flex-wrap items-center gap-3 mb-4 text-sm text-gray-600">
       <span class="font-semibold text-gray-800">
-        Total: <%= all_logs.sum(:children_first_time) + all_logs.sum(:children_ongoing) +
+        Total participants: <%= all_logs.sum(:children_first_time) + all_logs.sum(:children_ongoing) +
                    all_logs.sum(:teens_first_time) + all_logs.sum(:teens_ongoing) +
                    all_logs.sum(:adults_first_time) + all_logs.sum(:adults_ongoing) %>
       </span>
