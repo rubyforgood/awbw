@@ -33,13 +33,15 @@
         <% end %>
 
         <!-- Column headers -->
-        <div class="grid grid-cols-7 gap-2 mb-2">
-          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Date</div>
-          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Total</div>
-          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Adults</div>
-          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Teens</div>
-          <div class="px-2.5 text-center text-xs font-medium text-gray-400">Children</div>
-          <div class="col-span-2"></div>
+        <div class="flex items-center gap-2 mb-2">
+          <div class="grid grid-cols-5 gap-2 flex-1">
+            <div class="px-2.5 text-center text-xs font-medium text-gray-400">Date</div>
+            <div class="px-2.5 text-center text-xs font-medium text-gray-400">Total</div>
+            <div class="px-2.5 text-center text-xs font-medium text-gray-400">Adults</div>
+            <div class="px-2.5 text-center text-xs font-medium text-gray-400">Teens</div>
+            <div class="px-2.5 text-center text-xs font-medium text-gray-400">Children</div>
+          </div>
+          <div class="shrink-0 w-20"></div>
         </div>
 
         <% @filtered_logs.each do |log| %>
@@ -47,23 +49,25 @@
         <% end %>
 
         <!-- Grand totals -->
-        <div class="grid grid-cols-7 gap-2 mt-3 pt-3 border-t border-gray-200">
-          <div class="rounded-lg py-2 px-2.5 text-center">
-            <div class="text-xs font-medium text-gray-500">Grand Total</div>
+        <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
+          <div class="grid grid-cols-5 gap-2 flex-1">
+            <div class="rounded-lg py-2 px-2.5 text-center">
+              <div class="text-xs font-medium text-gray-500">Grand Total</div>
+            </div>
+            <div class="bg-purple-200 rounded-lg py-2 px-2.5 text-center">
+              <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum(&:total_attendance) %></div>
+            </div>
+            <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
+              <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.adults_first_time + l.adults_ongoing } %></div>
+            </div>
+            <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
+              <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.teens_first_time + l.teens_ongoing } %></div>
+            </div>
+            <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
+              <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.children_first_time + l.children_ongoing } %></div>
+            </div>
           </div>
-          <div class="bg-purple-200 rounded-lg py-2 px-2.5 text-center">
-            <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum(&:total_attendance) %></div>
-          </div>
-          <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
-            <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.adults_first_time + l.adults_ongoing } %></div>
-          </div>
-          <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
-            <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.teens_first_time + l.teens_ongoing } %></div>
-          </div>
-          <div class="bg-purple-100 rounded-lg py-2 px-2.5 text-center">
-            <div class="text-sm font-bold text-gray-800"><%= @filtered_logs.sum { |l| l.children_first_time + l.children_ongoing } %></div>
-          </div>
-          <div class="col-span-2"></div>
+          <div class="shrink-0 w-20"></div>
         </div>
       </div>
     <% else %>
