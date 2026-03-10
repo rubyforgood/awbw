@@ -72,9 +72,11 @@ class PeopleController < ApplicationController
     @person = @person.decorate
     all_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type)&.order(date: :desc) || WorkshopLog.none
     @grouped_logs = all_logs.group_by { |log| log.workshop_id || log.external_workshop_title }
-    @workshop_key = params[:workshop_key]
-    if @workshop_key.present?
-      @filtered_logs = @grouped_logs[@workshop_key.to_i.to_s == @workshop_key ? @workshop_key.to_i : @workshop_key] || []
+
+    if params[:workshop_id].present?
+      @filtered_logs = all_logs.select { |log| log.workshop_id == params[:workshop_id].to_i }
+    elsif params[:external_title].present?
+      @filtered_logs = all_logs.select { |log| log.external_workshop_title == params[:external_title] }
     end
   end
 
