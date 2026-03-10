@@ -30,6 +30,8 @@
                      name="sector_names_all[]"
                      value="<%= sector.name %>"
                      data-tags-sync-list-heights-target="sector"
+                     data-tags-combination-highlight-target="sectorInput"
+                     data-action="change->tags-combination-highlight#syncHighlights"
                      <%= "checked" if selected_sectors.include?(sector.name) %>
                      class="rounded border-gray-300 text-lime-600
                           focus:ring-lime-500" />
@@ -74,6 +76,8 @@
                      name="category_names_all[]"
                      value="<%= category.name %>"
                      data-tags-sync-list-heights-target="category"
+                     data-tags-combination-highlight-target="categoryInput"
+                     data-action="change->tags-combination-highlight#syncHighlights"
                      <%= "checked" if selected_categories.include?(category.name.downcase) %>
                      class="rounded border-gray-300 text-lime-600
                         focus:ring-lime-500" />

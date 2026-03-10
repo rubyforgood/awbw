@@ -30,13 +30,13 @@ module AnalyticsHelper
 
     toggle_div = if image_toggle
       tag.div(
-      id: "print-images-toggle",
       title: "With or without images",
-      class: "inline-flex items-center cursor-pointer select-none ml-2 border-l-2 pl-2"
+      class: "inline-flex items-center cursor-pointer select-none ml-2 border-l-2 pl-2",
+      data: { print_options_target: "toggle", action: "click->print-options#handleToggle" }
     ) do
       safe_join([
-        icon("image-check", class: "w-5 h-5 animate-fade", id: "image-check-icon"),
-        icon("image-x", class: "w-5 h-5 animate-fade hidden", id: "image-x-icon")
+        icon("image-check", class: "w-5 h-5 animate-fade", "data-print-options-target": "checkIcon"),
+        icon("image-x", class: "w-5 h-5 animate-fade hidden", "data-print-options-target": "xIcon")
       ])
     end
     end

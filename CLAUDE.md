@@ -1,7 +1,23 @@
-# This is a Ruby on Rails application.
-<!-- Keep code style rules in sync with .github/copilot-instructions.md -->
+# CLAUDE.md
 
-For project overview, tech stack, architecture reference (models, controllers, services, testing), and more, read `AGENTS.md`.
+## Architecture Reference
+
+For detailed architecture, models, controllers, services, and testing structure, read `AGENTS.md`.
+
+## Project Overview
+
+This is a Ruby on Rails 8.1 application (Ruby 4.0.1) — the Portal for A Window Between Worlds (AWBW). It manages workshops, resources, community news, stories, and events for workshop leaders.
+
+## Tech Stack
+
+- **Backend:** Rails 8.1, Ruby 4.0.1, MySQL (via Trilogy adapter)
+- **Frontend:** Vite, Tailwind CSS v4, Stimulus, Turbo Rails
+- **Auth:** Devise with JWT token support
+- **Authorization:** ActionPolicy (app/policies/)
+- **Rich text:** ActionText with Rhino editor (TipTap-based)
+- **File uploads:** ActiveStorage with DigitalOcean Spaces
+- **Background jobs:** SolidQueue
+- **Caching:** SolidCache
 
 ## Setup
 
@@ -14,32 +30,6 @@ If you just need frontend dependencies:
 ```
 npm ci
 ```
-
-## AI Instruction Files
-
-When the user says "AI files", "AI instructions", "tell AI to", or "remember to always", these are the files.
-If you notice the user repeatedly correcting the same pattern, suggest adding it to the AI files with a concrete proposal.
-
-| File | Purpose |
-|---|---|
-| `CLAUDE.md` | Coding rules and conventions (this file) |
-| `AGENTS.md` | Architecture reference + project details |
-| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
-| `ai/` | Shell script shortcuts for common dev tasks |
-
-## Related Files
-
-When changing a model or controller, check whether these related files need updates:
-
-| If you change... | Also check... |
-|---|---|
-| Model | Decorator, policy, factory, model spec |
-| Controller | Policy, request spec, routing spec, views |
-| View | System spec, Stimulus controller (if interactive) |
-| Service | Service spec |
-| Decorator | Decorator spec |
-| Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
-| Add/remove model, concern, service, or gem | AGENTS.md |
 
 ## Code Style
 
@@ -104,25 +94,83 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 ### Tag Attributes
 - **Closing `>` on same line as last attribute** — do not put `>` on its own line
 - When attributes span multiple lines, keep the closing `>` with the last attribute
-- Example (GOOD):
-  ```erb
-  <div class="relative z-10 w-full bg-white text-gray-800 py-2 px-4"
-       id="dropdown">
-  ```
-- Example (BAD):
-  ```erb
-  <div class="relative z-10 w-full bg-white text-gray-800 py-2 px-4"
-       id="dropdown"
-  >
-  ```
+- Good: `<div class="..." id="...">` or `<div class="...\n     id="...">`
+- Bad: `<div class="...\n     id="..."\n  >`
+
+## AI Instruction Files
+
+When the user says "AI files" or "AI instructions", these are the files:
+
+| File | Purpose |
+|---|---|
+| `CLAUDE.md` | Primary rules for Claude Code (this file) |
+| `AGENTS.md` | Architecture reference (models, controllers, services) |
+| `.github/copilot-instructions.md` | Rules for GitHub Copilot (keep in sync with CLAUDE.md) |
+| `ai/` | Shell script shortcuts for common dev tasks |
+
+## Related Files
+
+When changing a model or controller, check whether these related files need updates:
+
+| If you change... | Also check... |
+|---|---|
+| Model | Decorator, policy, factory, model spec |
+| Controller | Policy, request spec, routing spec, views |
+| View | System spec, Stimulus controller (if interactive) |
+| Service | Service spec |
+| Decorator | Decorator spec |
+| Add/remove model, concern, service, or gem | AGENTS.md, `.github/copilot-instructions.md` |
+| Code style rules | `.github/copilot-instructions.md` (keep in sync) |
+
+## Key Directories
+
+- `app/services/` — Business logic service objects
+- `app/decorators/` — Draper decorators for view presentation
+- `app/policies/` — ActionPolicy authorization rules
+- `app/presenters/` — Presentation objects
+- `app/frontend/` — Vite/JS components (Stimulus controllers, etc.)
+
+## Testing
+
+- **Framework:** RSpec (`bundle exec rspec`)
+- **Factories:** FactoryBot (spec/factories/)
+- **Matchers:** Shoulda Matchers
+- **System tests:** Capybara with Selenium
+- **Coverage:** SimpleCov
+
+Run all tests:
+```
+bundle exec rspec
+```
+
+Run a single test file:
+```
+bundle exec rspec spec/models/some_model_spec.rb
+```
+
+## Linting
+
+```
+bundle exec rubocop
+```
+
+Auto-fix:
+```
+bundle exec rubocop -a
+```
+
+## Security Scanning
+
+```
+bundle exec brakeman
+bundle exec bundle-audit check --update
+```
 
 ## JavaScript
 
-- ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
-- Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
+- ES6+ syntax, ESM imports/exports
 - **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
-- **Prefer Font Awesome (free)** icons over inline SVGs — use `icon("fa-solid fa-foo")` helper. Inline SVGs are acceptable when a specific icon design is preferred.
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 - Controller naming: `[name]_controller.js`
 - Keep controllers focused and small
@@ -161,15 +209,13 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
-- **Push to a draft PR early** — push commits and create a draft PR (`gh pr create --draft`) as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
-- After completing work, **mark the PR ready** using `gh pr ready`
+- After completing work, **create a pull request** using `gh pr create`
 - Once the PR is created, **prepend the PR number to the branch name** (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
 - Use `docs/pull_request_template.md` for PR description structure
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff
-- **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
 
 ## Quick Commands
 

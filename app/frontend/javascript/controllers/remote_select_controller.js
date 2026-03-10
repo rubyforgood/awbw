@@ -1,6 +1,8 @@
 import { Controller } from "@hotwired/stimulus";
 import TomSelect from "tom-select";
 
+const STYLE_ID = "remote-select-overrides";
+
 export default class extends Controller {
   static values = { model: String, exclude: String };
 
@@ -26,31 +28,33 @@ export default class extends Controller {
           .catch(() => callback());
       },
     });
-    // Inject CSS to remove some default tom-select styles -might be a better way to do this.
-    const style = document.createElement("style");
-    style.textContent = `
-      /* Remove border and shadow */
-      .ts-control .ts-input {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-        background: transparent !important;
-        padding: 0 !important;           /* Remove padding from input */
-        margin: 0 !important;            /* Remove margin if any */
-      }
-      .ts-control {
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;           /* Remove padding from container */
-        margin: 0 !important;
-        min-height: 0 !important;        /* Remove min-height TomSelect sets */
-      }
-      .ts-control .item {
-        margin: 0 !important;            /* Remove padding/margin from selected items */
-        padding: 0 !important;
-      }
-    `;
-    document.head.appendChild(style);
+
+    if (!document.getElementById(STYLE_ID)) {
+      const style = document.createElement("style");
+      style.id = STYLE_ID;
+      style.textContent = `
+        .ts-control .ts-input {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+          background: transparent !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+        .ts-control {
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          min-height: 0 !important;
+        }
+        .ts-control .item {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
   }
 
   disconnect() {

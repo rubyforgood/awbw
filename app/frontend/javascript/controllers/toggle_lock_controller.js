@@ -5,7 +5,7 @@ import { Controller } from "@hotwired/stimulus";
  *
  * Targets:
  *   checkbox  - the <input type="checkbox">
- *   icon      - lock icon elements (shown when checked, removed when unchecked)
+ *   icon      - lock icon elements (shown when checked, hidden when unchecked)
  *   labelText - the text span toggled between "Lock" / "Locked"
  */
 export default class extends Controller {
@@ -19,7 +19,7 @@ export default class extends Controller {
     }
 
     this.iconTargets.forEach((el) => {
-      el.style.display = locked ? "" : "none";
+      el.classList.toggle("hidden", !locked);
     });
   }
 }

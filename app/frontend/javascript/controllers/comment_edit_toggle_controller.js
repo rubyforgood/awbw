@@ -6,20 +6,17 @@ import { Controller } from "@hotwired/stimulus";
 // When exiting edit mode, syncs textarea values back to the truncated display.
 //
 export default class extends Controller {
-  static targets = ["editLabel", "viewLabel"];
-
-  connect() {
-    this.editing = false;
-  }
+  static targets = ["editLabel", "viewLabel", "commentView", "commentEdit"];
+  static values = { editing: Boolean };
 
   toggle() {
-    this.editing = !this.editing;
+    this.editingValue = !this.editingValue;
 
     // When leaving edit mode, sync textarea values to view display
-    if (!this.editing) {
-      this.element.querySelectorAll(".nested-fields").forEach((item) => {
-        const textarea = item.querySelector(".comment-edit textarea");
-        const viewBody = item.querySelector(".comment-view .comment-body");
+    if (!this.editingValue) {
+      this.commentEditTargets.forEach((editDiv, i) => {
+        const textarea = editDiv.querySelector("textarea");
+        const viewBody = this.commentViewTargets[i]?.querySelector(".comment-body");
         if (textarea && viewBody) {
           const text = textarea.value;
           viewBody.textContent =
@@ -29,16 +26,12 @@ export default class extends Controller {
       });
     }
 
-    this.element
-      .querySelectorAll(".comment-view")
-      .forEach((el) => (el.style.display = this.editing ? "none" : ""));
-    this.element
-      .querySelectorAll(".comment-edit")
-      .forEach((el) => (el.style.display = this.editing ? "" : "none"));
+    this.commentViewTargets.forEach((el) => el.classList.toggle("hidden", this.editingValue));
+    this.commentEditTargets.forEach((el) => el.classList.toggle("hidden", !this.editingValue));
 
     if (this.hasEditLabelTarget && this.hasViewLabelTarget) {
-      this.editLabelTarget.style.display = this.editing ? "none" : "";
-      this.viewLabelTarget.style.display = this.editing ? "" : "none";
+      this.editLabelTarget.classList.toggle("hidden", this.editingValue);
+      this.viewLabelTarget.classList.toggle("hidden", !this.editingValue);
     }
   }
 }

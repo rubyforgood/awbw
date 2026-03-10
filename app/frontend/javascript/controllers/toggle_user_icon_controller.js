@@ -22,7 +22,7 @@ export default class extends Controller {
     }
 
     this.lockIconTargets.forEach((el) => {
-      el.style.display = locked ? "" : "none";
+      el.classList.toggle("hidden", !locked);
     });
   }
 
@@ -30,7 +30,7 @@ export default class extends Controller {
     const admin = this.adminCheckboxTarget.checked;
 
     this.adminIconTargets.forEach((el) => {
-      el.style.display = admin ? "" : "none";
+      el.classList.toggle("hidden", !admin);
     });
   }
 }

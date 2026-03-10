@@ -66,9 +66,6 @@ application.register("print-options", PrintOptionsController)
 import RhinoSourceController from "./rhino_source_controller"
 application.register("rhino-source", RhinoSourceController)
 
-import SearchBoxController from "./search_box_controller"
-application.register("search-box", SearchBoxController)
-
 import SearchableCheckboxController from "./searchable_checkbox_controller"
 application.register("searchable-checkbox", SearchableCheckboxController)
 

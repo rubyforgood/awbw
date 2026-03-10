@@ -43,10 +43,8 @@
             <div class="flex-1 min-w-0">
               <h1 class="font-bold text-2xl text-gray-900">
                 <%= @user.email %>
-                <i class="fa-solid fa-user-shield text-blue-500 text-lg" data-toggle-user-icon-target="adminIcon"
-                   style="<%= 'display:none' unless @user.super_user? %>"></i>
-                <i class="fa-solid fa-lock text-red-500 text-lg" data-toggle-user-icon-target="lockIcon"
-                   style="<%= 'display:none' unless @user.locked_at.present? %>"></i>
+                <i class="fa-solid fa-user-shield text-blue-500 text-lg <%= 'hidden' unless @user.super_user? %>" data-toggle-user-icon-target="adminIcon"></i>
+                <i class="fa-solid fa-lock text-red-500 text-lg <%= 'hidden' unless @user.locked_at.present? %>" data-toggle-user-icon-target="lockIcon"></i>
               </h1>
               <% if @user.person %>
                 <p class="text-sm text-gray-500 mt-1">
