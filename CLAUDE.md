@@ -24,6 +24,7 @@ When changing a model or controller, check whether these related files need upda
 | View | System spec, Stimulus controller (if interactive) |
 | Service | Service spec |
 | Decorator | Decorator spec |
+| Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
 
 ## Code Style
