@@ -28,7 +28,7 @@
              "Children" => workshop_log.children_first_time + workshop_log.children_ongoing,
              "Teens" => workshop_log.teens_first_time + workshop_log.teens_ongoing,
              "Adults" => workshop_log.adults_first_time + workshop_log.adults_ongoing }.each do |label, count| %>
-          <div class="<%= label == "Total" ? "bg-gray-100" : "bg-gray-50" %> rounded-lg py-1.5 px-2.5 text-center">
+          <div class="<%= label == "Total" ? "bg-purple-100" : "bg-purple-50" %> rounded-lg py-1.5 px-2.5 text-center">
             <div class="text-xs text-gray-500"><%= label %></div>
             <div class="text-sm font-bold text-gray-800"><%= count %></div>
           </div>
