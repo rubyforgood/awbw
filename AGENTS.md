@@ -331,6 +331,7 @@ RuboCop linting on PRs and pushes to main.
 ## PRs
 
 - On every push, update the PR title and content to reflect the current diff
+- On every push, update AI instruction files if the diff introduces changes that affect conventions, architecture, or file lists documented there
 
 ## Git
 
@@ -342,4 +343,3 @@ Located in `lib/tasks/` (~17 files). Notable:
 - `dev.rake` — Development database seeding from XML/CSV
 - `paperclip_to_active_storage.rake` — File upload migration
 - `rhino_migrator.rake` — Rich text editor migration
-- `tag_deduping.rake` — Tag deduplication
