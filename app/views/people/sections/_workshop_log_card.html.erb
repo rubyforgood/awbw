@@ -22,14 +22,18 @@
         <div class="text-xs text-gray-500 mb-3"><%= workshop_log.windows_type_name %></div>
       <% end %>
 
-      <!-- AGE GROUP TOTALS -->
-      <div class="grid grid-cols-3 gap-2 mb-3">
+      <!-- PARTICIPANT COUNTS -->
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <div class="bg-gray-100 rounded-lg py-1.5 px-2.5">
+          <span class="text-xs text-gray-500">Total</span>
+          <span class="text-sm font-bold text-gray-800 ml-1"><%= workshop_log.total_attendance %></span>
+        </div>
         <% { "Children" => workshop_log.children_first_time + workshop_log.children_ongoing,
              "Teens" => workshop_log.teens_first_time + workshop_log.teens_ongoing,
              "Adults" => workshop_log.adults_first_time + workshop_log.adults_ongoing }.each do |label, count| %>
-          <div class="flex items-center justify-between bg-gray-50 rounded-lg py-1.5 px-2.5">
+          <div class="bg-gray-50 rounded-lg py-1.5 px-2.5">
             <span class="text-xs text-gray-500"><%= label %></span>
-            <span class="text-sm font-bold text-gray-800"><%= count %></span>
+            <span class="text-sm font-bold text-gray-800 ml-1"><%= count %></span>
           </div>
         <% end %>
       </div>
