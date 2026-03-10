@@ -165,6 +165,9 @@ bundle exec bundle-audit check --update
 - Keep controllers focused and small
 - **Use Stimulus targets and data attributes** to reference DOM elements — avoid `this.element.querySelector` and direct DOM queries. Declare `static targets = [...]` and use `data-[controller]-target` attributes in views.
 - **Use Stimulus shorthand action descriptors and shorthand pairs** — omit the event when it's the default for that element (e.g., `input` for `<input>`/`<textarea>`, `click` for `<button>`/`<a>`, `submit` for `<form>`). Write `controller#action` not `input->controller#action` on an input element. Only specify the event when using a non-default (e.g., `change->controller#action` on an input). See [Stimulus Actions](https://stimulus.hotwired.dev/reference/actions#event-shorthand).
+- **`this.element.addEventListener` in `connect()` is fine** when listening on the controller's root element (e.g., a form). This is equivalent to `data-action` but avoids adding HTML attributes to every view that uses the controller. Prefer `connect()` listeners for root-element events; use `data-action` for events on specific child elements.
+- **Use instance properties for internal state** — `this.open`, `this.editing`, `this.currentPage`. Reserve `static values` for state that needs to be reflected in or read from the DOM (e.g., configuration passed via `data-[controller]-[name]-value` attributes in HTML).
+- **Don't add guards or abstractions without a clear bug** — e.g., don't add duplicate-injection guards for style elements unless there's evidence of the bug occurring.
 
 ## Migrations
 
