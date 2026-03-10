@@ -22,8 +22,9 @@
         <div class="text-xs text-gray-500 mb-3"><%= workshop_log.windows_type_name %></div>
       <% end %>
 
-      <!-- PARTICIPANT COUNTS -->
-      <div class="grid grid-cols-4 gap-2 mb-3">
+      <!-- PARTICIPANT COUNTS + DATE -->
+      <% display_date = workshop_log.date || workshop_log.created_at %>
+      <div class="grid grid-cols-5 gap-2">
         <% { "Total" => workshop_log.total_attendance,
              "Adults" => workshop_log.adults_first_time + workshop_log.adults_ongoing,
              "Teens" => workshop_log.teens_first_time + workshop_log.teens_ongoing,
@@ -33,11 +34,10 @@
             <div class="text-sm font-bold text-gray-800"><%= count %></div>
           </div>
         <% end %>
-      </div>
-
-      <!-- WORKSHOP DATE -->
-      <div class="text-gray-400 text-xs">
-        <%= workshop_log.date&.strftime("%b %d, %Y") || workshop_log.created_at.strftime("%b %d, %Y") %>
+        <div class="rounded-lg py-2 px-2.5 text-center">
+          <div class="text-xs text-gray-500"><%= display_date.strftime("%b %-d") %></div>
+          <div class="text-sm font-bold text-gray-800"><%= display_date.strftime("%Y") %></div>
+        </div>
       </div>
     </div>
   <% end %>
