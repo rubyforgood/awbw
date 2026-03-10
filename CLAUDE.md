@@ -1,7 +1,19 @@
-# CLAUDE.md
+# This is a Ruby on Rails application.
 <!-- Keep code style rules in sync with .github/copilot-instructions.md -->
 
 For architecture reference (models, controllers, services, testing), read `AGENTS.md`.
+
+## Setup
+
+Full setup (bundle, npm, database create/migrate/seed):
+```
+bin/setup
+```
+
+If you just need frontend dependencies:
+```
+npm ci
+```
 
 ## AI Instruction Files
 
