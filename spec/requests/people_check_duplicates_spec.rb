@@ -32,7 +32,6 @@ RSpec.describe "/people/check_duplicates", type: :request do
 
         expect(response.body).to include("name match")
       end
-
     end
 
     # --- Nickname matching ---
