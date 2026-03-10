@@ -4,7 +4,8 @@ For architecture reference (models, controllers, services, testing), read `AGENT
 
 ## AI Instruction Files
 
-When the user says "AI files", "AI instructions", "tell AI to", or "remember to always", these are the files:
+When the user says "AI files", "AI instructions", "tell AI to", or "remember to always", these are the files.
+If you notice the user repeatedly correcting the same pattern, suggest adding it to the AI files with a concrete proposal.
 
 | File | Purpose |
 |---|---|
