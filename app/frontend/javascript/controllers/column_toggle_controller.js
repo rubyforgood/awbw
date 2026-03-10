@@ -4,11 +4,11 @@ import { Controller } from "@hotwired/stimulus"
 // Toggles visibility of table columns marked with a data attribute.
 
 export default class extends Controller {
-  static targets = ["toggle", "track", "knob"]
+  static targets = ["toggle", "track", "knob", "col"]
 
   toggle() {
     const checked = this.toggleTarget.checked
-    this.element.querySelectorAll("[data-column-toggle-col]").forEach((el) => {
+    this.colTargets.forEach((el) => {
       el.classList.toggle("hidden", !checked)
     })
 
@@ -17,7 +17,7 @@ export default class extends Controller {
       this.trackTarget.classList.toggle("bg-blue-600", checked)
     }
     if (this.hasKnobTarget) {
-      this.knobTarget.style.transform = checked ? "translateX(16px)" : ""
+      this.knobTarget.classList.toggle("translate-x-4", checked)
     }
   }
 }

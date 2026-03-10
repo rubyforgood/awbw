@@ -212,21 +212,28 @@ end
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 
-### Stimulus Controllers (32)
+### Stimulus Controllers
 
 Key controllers:
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
 - `carousel` — Swiper-based carousels
 - `cocoon` — Nested form handling (cocoon gem)
+- `collection` — Filter form auto-submit with debounce
+- `column_toggle` — Toggle table column visibility
+- `comment_edit_toggle` — Inline comment editing mode
 - `dirty_form` — Unsaved changes detection
 - `dropdown` — Dropdown menus with keyboard/click-outside handling
 - `file_preview` — File upload preview
+- `inactive_toggle` — Gray out expired affiliations
 - `optimistic_bookmark` — Instant bookmark UI feedback
+- `paginated_fields` — Client-side pagination of nested fields
 - `remote_select` — AJAX-powered select dropdown
+- `searchable_checkbox` — TomSelect checkbox-style multi-select
 - `searchable_select` — Tom Select autocomplete
 - `sortable` — Drag-drop sorting (SortableJS)
 - `tabs` — Tab panel navigation
+- `tags_combination_highlight` — Highlight tags matching selected filters
 - `rhino_source` — Rich text editor integration
 
 ### JS Dependencies
@@ -323,7 +330,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## PRs
 
-- On every push, update the PR title and description to reflect the current diff
+- On every push, update the PR title and content to reflect the current diff
 
 ## Git
 

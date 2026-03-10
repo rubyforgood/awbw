@@ -1,6 +1,10 @@
 import { Controller } from "@hotwired/stimulus";
 
 // Connects to data-controller="asset-picker"
+//
+// The heroImage, uploadProgress, and uploadProgressBar elements live outside
+// this controller's scope (in the parent view), so getElementById is used
+// intentionally rather than targets.
 export default class extends Controller {
   static targets = ["file"];
 

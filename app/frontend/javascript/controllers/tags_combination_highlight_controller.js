@@ -5,25 +5,19 @@ import { Controller } from "@hotwired/stimulus"
 const HIGHLIGHT_CLASS = "tags-combination-selected"
 
 export default class extends Controller {
+  static targets = ["sectorInput", "categoryInput"]
+
   connect() {
-    this.boundSync = this.syncHighlights.bind(this)
-    this.sectorInputs = () => this.element.querySelectorAll('input[name="sector_names_all[]"]')
-    this.categoryInputs = () => this.element.querySelectorAll('input[name="category_names_all[]"]')
-
-    this.sectorInputs().forEach(input => input.addEventListener("change", this.boundSync))
-    this.categoryInputs().forEach(input => input.addEventListener("change", this.boundSync))
-
+    this.handleFrameLoad = this.handleFrameLoad.bind(this)
     document.addEventListener("turbo:frame-load", this.handleFrameLoad)
     this.syncHighlights()
   }
 
   disconnect() {
-    this.sectorInputs().forEach(input => input.removeEventListener("change", this.boundSync))
-    this.categoryInputs().forEach(input => input.removeEventListener("change", this.boundSync))
     document.removeEventListener("turbo:frame-load", this.handleFrameLoad)
   }
 
-  handleFrameLoad = (event) => {
+  handleFrameLoad(event) {
     const frame = event?.detail?.frameElement
     if (frame?.id === "sectors_tags" || frame?.id === "categories_tags") {
       this.syncHighlights()
@@ -36,7 +30,7 @@ export default class extends Controller {
   }
 
   syncSectorHighlights() {
-    const selected = Array.from(this.sectorInputs())
+    const selected = this.sectorInputTargets
       .filter(el => el.checked)
       .map(el => el.value.trim())
     const frame = document.getElementById("sectors_tags")
@@ -48,7 +42,7 @@ export default class extends Controller {
   }
 
   syncCategoryHighlights() {
-    const selected = Array.from(this.categoryInputs())
+    const selected = this.categoryInputTargets
       .filter(el => el.checked)
       .map(el => el.value.trim())
     const frame = document.getElementById("categories_tags")

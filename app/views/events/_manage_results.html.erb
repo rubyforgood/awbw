@@ -26,7 +26,7 @@
               <% if @event.cost_cents.to_i > 0 %>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
               <% end %>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col>Confirmed</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-target="col">Confirmed</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Attendance status</th>
               <th class="px-4 py-2"></th>
             </tr>
@@ -112,7 +112,7 @@
                     <% end %>
                   </td>
                 <% end %>
-                <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-col>
+                <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-target="col">
                   <% if person.user.present? %>
                     <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
                   <% else %>

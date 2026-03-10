@@ -1,5 +1,6 @@
 <%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
-                                          data: { turbo: false, controller: "dirty-form affiliation-dates" } } do |f| %>
+                                          data: { turbo: false, controller: "dirty-form affiliation-dates",
+                                                  action: "input->dirty-form#markDirty change->dirty-form#markDirty cocoon:after-insert->dirty-form#markDirty cocoon:after-remove->dirty-form#markDirty submit->dirty-form#clearDirty" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
 
   <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
@@ -401,7 +402,7 @@
                   style="float:right"
                   data-action="click->comment-edit-toggle#toggle">
             <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
-            <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
+            <span data-comment-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
           </button>
           <%= link_to_add_association "➕ Add Comment",
                                       f,

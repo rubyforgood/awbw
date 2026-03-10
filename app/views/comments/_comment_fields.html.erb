@@ -32,7 +32,7 @@
 <div class="nested-fields" data-paginated-fields-target="item">
   <%= f.hidden_field :id if f.object.persisted? %>
   <% if f.object.persisted? %>
-    <div class="comment-view flex items-center mb-3 pl-4 gap-x-1">
+    <div class="comment-view flex items-center mb-3 pl-4 gap-x-1" data-comment-edit-toggle-target="commentView">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
@@ -48,7 +48,7 @@
         <%= truncate(f.object.body, length: 135) %>
       </span>
     </div>
-    <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1" style="display:none">
+    <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1 hidden" data-comment-edit-toggle-target="commentEdit">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>

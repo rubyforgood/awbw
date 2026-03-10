@@ -97,6 +97,17 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Good: `<div class="..." id="...">` or `<div class="...\n     id="...">`
 - Bad: `<div class="...\n     id="..."\n  >`
 
+## AI Instruction Files
+
+When the user says "AI files" or "AI instructions", these are the files:
+
+| File | Purpose |
+|---|---|
+| `CLAUDE.md` | Primary rules for Claude Code (this file) |
+| `AGENTS.md` | Architecture reference (models, controllers, services) |
+| `.github/copilot-instructions.md` | Rules for GitHub Copilot (keep in sync with CLAUDE.md) |
+| `ai/` | Shell script shortcuts for common dev tasks |
+
 ## Related Files
 
 When changing a model or controller, check whether these related files need updates:
@@ -163,8 +174,26 @@ bundle exec bundle-audit check --update
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 - Controller naming: `[name]_controller.js`
 - Keep controllers focused and small
-- **Use Stimulus targets and data attributes** to reference DOM elements — avoid `this.element.querySelector` and direct DOM queries. Declare `static targets = [...]` and use `data-[controller]-target` attributes in views.
-- **Use Stimulus shorthand action descriptors and shorthand pairs** — omit the event when it's the default for that element (e.g., `input` for `<input>`/`<textarea>`, `click` for `<button>`/`<a>`, `submit` for `<form>`). Write `controller#action` not `input->controller#action` on an input element. Only specify the event when using a non-default (e.g., `change->controller#action` on an input). See [Stimulus Actions](https://stimulus.hotwired.dev/reference/actions#event-shorthand).
+
+### Stimulus Conventions
+
+Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introduction) and reference docs. Key rules:
+
+**Targets over querySelector** — declare `static targets = [...]` and use `data-[controller]-target` attributes in views. Never use `this.element.querySelector` or `document.getElementById` to find elements that could be targets. Exception: elements outside the controller's scope (e.g., in a parent view).
+
+**Values API for state** — use `static values = { name: Type }` for any state that persists or drives UI. Do not store state in instance variables when a value would work. Use `[name]ValueChanged()` callbacks for reactive updates instead of manual syncing.
+
+**Actions over manual listeners** — use `data-action` attributes instead of `addEventListener` in `connect()`. Omit the event when it's the default for the element (`click` for buttons/links, `input` for inputs/textareas, `submit` for forms, `change` for selects). Use `@window` or `@document` suffixes for global events when possible (e.g., `resize@window->controller#layout`). Use action options like `:prevent` and `:stop` instead of calling `event.preventDefault()` in methods.
+
+**Classes API for CSS** — use `static classes = [...]` when CSS classes need to be configurable from HTML. For standard Tailwind utilities used internally (e.g., `"hidden"`), hardcoding is acceptable.
+
+**Outlets for cross-controller communication** — use `static outlets = [...]` to reference other controllers instead of `document.getElementById` or custom events when the relationship is stable.
+
+**Lifecycle discipline** — every listener, timer, or observer created in `connect()` must be cleaned up in `disconnect()`. Store bound handler references so they can be removed. Use `initialize()` for one-time setup (e.g., binding functions).
+
+**Target lifecycle callbacks** — use `[name]TargetConnected(element)` and `[name]TargetDisconnected(element)` to respond to dynamically added/removed targets (e.g., cocoon nested fields, Turbo streams).
+
+**Visibility** — toggle the `hidden` class via `classList.toggle("hidden", condition)` instead of setting `style.display`. Use `class="hidden"` in HTML for initial hidden state, not `style="display:none"`.
 
 ## Migrations
 
@@ -186,7 +215,7 @@ bundle exec bundle-audit check --update
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
-- **On every push**, update the PR title and description to reflect the current diff
+- **On every push**, update the PR title and content to reflect the current diff
 
 ## Quick Commands
 

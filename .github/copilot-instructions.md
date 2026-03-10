@@ -8,10 +8,22 @@
 - ES6+ syntax, ESM imports/exports
 - Stimulus controller naming: `[name]_controller.js`
 
+# Stimulus conventions:
+- Use `static targets` and `data-[controller]-target` — never `querySelector` or `getElementById` for elements that could be targets
+- Use `static values = { name: Type }` for state — not instance variables. Use `[name]ValueChanged()` for reactive updates
+- Use `data-action` attributes — not `addEventListener` in `connect()`. Omit default events (`click` for buttons, `input` for inputs, `submit` for forms, `change` for selects)
+- Use `@window`/`@document` suffixes for global events in data-action
+- Use action options (`:prevent`, `:stop`) instead of `event.preventDefault()` in methods
+- Use `static classes` when CSS classes should be configurable from HTML
+- Use `static outlets` for cross-controller communication instead of `getElementById`
+- Always clean up in `disconnect()` anything created in `connect()` (listeners, timers, observers)
+- Use `[name]TargetConnected`/`TargetDisconnected` for dynamic DOM (cocoon, Turbo)
+- Toggle `hidden` class instead of `style.display`. Use `class="hidden"` not `style="display:none"` in HTML
+
 # PRs
 - After completing work, create a pull request using `gh pr create`
 - Once the PR is created, prepend the PR number to the branch name (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
-- On every push, update the PR title and description to reflect the current diff
+- On every push, update the PR title and content to reflect the current diff
 
 # Code style requirements:
 - Use modern Ruby syntax

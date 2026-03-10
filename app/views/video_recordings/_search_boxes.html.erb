@@ -1,5 +1,7 @@
 <!-- Filters -->
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg" data-controller="collection">
+<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg"
+     data-controller="collection"
+     data-action="change->collection#handleChange input->collection#handleInput">
   <%= form_with url: video_recordings_path,
                 method: :get,
                 data: { turbo_frame: "video_recordings_results", controller: "searchable-checkbox" },
