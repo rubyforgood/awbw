@@ -117,7 +117,10 @@ class PeopleController < ApplicationController
         @email = @person.email
         @blocked = @duplicates.any? { |d| d[:blocked] }
         set_form_variables
-        render :new, status: :unprocessable_content
+        respond_to do |format|
+          format.html { render :new, status: :unprocessable_content }
+          format.turbo_stream
+        end
         return
       end
     end
