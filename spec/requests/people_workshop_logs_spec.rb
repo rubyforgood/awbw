@@ -14,7 +14,8 @@ RSpec.describe "People#workshop_logs", type: :request do
 
   def create_log(workshop, date:)
     create(:workshop_log,
-      workshop_id: workshop.id,
+      owner: workshop,
+      workshop: workshop,
       organization_id: organization.id,
       created_by_id: owner.id,
       date: date,
@@ -84,9 +85,9 @@ RSpec.describe "People#workshop_logs", type: :request do
     end
 
     context "when not signed in" do
-      it "redirects to sign in" do
+      it "denies access" do
         get workshop_logs_person_path(person)
-        expect(response).to redirect_to(new_user_session_path)
+        expect(response).to redirect_to(root_path)
       end
     end
   end
