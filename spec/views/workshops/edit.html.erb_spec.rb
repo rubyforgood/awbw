@@ -13,6 +13,7 @@ RSpec.describe "workshops/edit", type: :view do
     assign(:workshop_ideas, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
+    assign(:age_range_comments, [])
   end
 
   context "when user is an admin" do
@@ -33,6 +34,24 @@ RSpec.describe "workshops/edit", type: :view do
 
     it "displays the Delete button" do
       expect(rendered).to have_link("Delete", href: workshop_path(workshop))
+    end
+  end
+
+  context "when there are age range data comments" do
+    let(:age_range_type) { create(:category_type, name: "AgeRange", published: true) }
+    let(:category) { create(:category, name: "6-12", category_type: age_range_type, published: true) }
+    let(:comment) { create(:comment, commentable: workshop, body: "[AGE_RANGE_DATA] Auto-applied age range categories: 6-12 from age_range: '6-12'.") }
+
+    before do
+      allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
+      assign(:categories_grouped, [ [ age_range_type, [ category ] ] ])
+      assign(:age_range_comments, [ comment ])
+      render
+    end
+
+    it "displays the age range data comment" do
+      expect(rendered).to include("Auto-applied age range categories: 6-12")
     end
   end
 

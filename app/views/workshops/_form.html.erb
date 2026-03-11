@@ -335,6 +335,16 @@
                     </label>
                   <% end %>
                 </div>
+
+                <% if type.name == "AgeRange" && @age_range_comments.present? %>
+                  <div class="mt-3 space-y-2">
+                    <% @age_range_comments.each do |comment| %>
+                      <div class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
+                        <%= comment.body.gsub("[AGE_RANGE_DATA] ", "") %>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
             <% end %>
           </div>

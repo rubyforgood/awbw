@@ -212,6 +212,7 @@ class WorkshopsController < ApplicationController
         .sort_by { |type, _| type&.name.to_s.downcase }
 
     @sectors = Sector.published.order(:name)
+    @age_range_comments = @workshop.persisted? ? @workshop.comments.where("body LIKE ?", "%[AGE_RANGE_DATA]%") : []
 
     @workshop.build_primary_asset if @workshop.primary_asset.blank?
     @workshop.gallery_assets.build
