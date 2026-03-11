@@ -1140,7 +1140,7 @@ EventRegistration.where(slug: nil).find_each do |reg|
 end
 
 puts "Creating Registration Form Submissions…"
-# Create person_form records linking registrants to their event's registration form.
+# Create form_submission records linking registrants to their event's registration form.
 # This simulates people who filled out the registration form.
 form_submissions = []
 
@@ -1221,9 +1221,9 @@ end
 # Create all form submissions with sample field responses
 form_submissions.each do |data|
   next unless data[:person] && data[:form]
-  next if PersonForm.exists?(person: data[:person], form: data[:form])
+  next if FormSubmission.exists?(person: data[:person], form: data[:form])
 
-  pf = PersonForm.create!(person: data[:person], form: data[:form])
+  pf = FormSubmission.create!(person: data[:person], form: data[:form])
 
   # Fill in required text fields with sample data
   data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
@@ -1251,10 +1251,11 @@ form_submissions.each do |data|
       end
     end
 
-    PersonFormFormField.create!(
-      person_form: pf,
+    FormAnswer.create!(
+      form_submission: pf,
       form_field: field,
-      text: sample_text.to_s
+      submitted_answer: sample_text.to_s,
+      question_name_when_answered: field.name
     )
   end
 end

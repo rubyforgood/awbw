@@ -339,7 +339,7 @@ RSpec.describe "Events", type: :request do
 
       it "shows green icon when person submitted the current registration form" do
         create(:event_form, event: event, form: reg_form, role: "registration")
-        create(:person_form, person: person, form: reg_form)
+        create(:form_submission, person: person, form: reg_form)
 
         get manage_event_path(event)
 
@@ -360,7 +360,7 @@ RSpec.describe "Events", type: :request do
         scholarship_form = create(:form, :standalone, name: "Scholarship Form")
         create(:event_form, event: event, form: reg_form, role: "registration")
         create(:event_form, event: event, form: scholarship_form, role: "scholarship")
-        create(:person_form, person: person, form: scholarship_form)
+        create(:form_submission, person: person, form: scholarship_form)
 
         get manage_event_path(event)
 

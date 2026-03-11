@@ -31,11 +31,84 @@ RSpec.describe FormField do
     it { should define_enum_for(:input_type).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
   end
 
-  # it 'is valid with valid attributes' do
-  #   # Note: Factory needs form association uncommented for create
-  #   # expect(build(:form_field)).to be_valid
-  #   pending("Requires functional form factory and association uncommented")
-  # end
+  describe "enums" do
+    it { should define_enum_for(:visibility).with_values([ :always_ask, :scholarship_only, :logged_out_only, :answers_on_file ]) }
+  end
 
-  # Add tests for methods like #name, #multiple_choice?, #html_id, etc.
+  describe "#multiple_choice?" do
+    let(:form) { create(:form) }
+
+    it "returns true for checkbox fields" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_checkbox)
+      expect(field.multiple_choice?).to be true
+    end
+
+    it "returns true for radio fields" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
+      expect(field.multiple_choice?).to be true
+    end
+
+    it "returns false for text fields" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_one_line)
+      expect(field.multiple_choice?).to be false
+    end
+  end
+
+  describe "#html_input_type" do
+    let(:form) { create(:form) }
+
+    it "returns :text for one-line inputs" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_one_line)
+      expect(field.html_input_type).to eq(:text)
+    end
+
+    it "returns :textarea for paragraphs" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph)
+      expect(field.html_input_type).to eq(:textarea)
+    end
+
+    it "returns :checkbox for checkbox fields" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_checkbox)
+      expect(field.html_input_type).to eq(:checkbox)
+    end
+
+    it "returns :radio for radio fields" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
+      expect(field.html_input_type).to eq(:radio)
+    end
+
+    it "returns :label for no_user_input without children" do
+      field = build(:form_field, form: form, answer_type: :no_user_input)
+      expect(field.html_input_type).to eq(:label)
+    end
+
+    it "returns :label for group_header without children" do
+      field = build(:form_field, form: form, answer_type: :group_header)
+      expect(field.html_input_type).to eq(:label)
+    end
+  end
+
+  describe "#form_helper_type" do
+    let(:form) { create(:form) }
+
+    it "returns :text_field for one-line inputs" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_one_line)
+      expect(field.form_helper_type).to eq(:text_field)
+    end
+
+    it "returns :text_area for paragraphs" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph)
+      expect(field.form_helper_type).to eq(:text_area)
+    end
+
+    it "returns :check_box for checkbox fields" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_checkbox)
+      expect(field.form_helper_type).to eq(:check_box)
+    end
+
+    it "returns :radio_button for radio fields" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
+      expect(field.form_helper_type).to eq(:radio_button)
+    end
+  end
 end

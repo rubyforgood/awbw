@@ -46,26 +46,19 @@ class FormField < ApplicationRecord
   end
 
   def html_input_type
+    return :child unless parent_id.nil?
+
     case answer_type
-
-    when !self.parent_id.nil?
-      :child
-
-    when "free-form input - one line"
-      self.parent_id.nil? ? :text : :child
-
-    when "free-form input - paragraph"
+    when "free_form_input_one_line"
+      :text
+    when "free_form_input_paragraph"
       :textarea
-
-    when "multiple choice - checkbox"
+    when "multiple_choice_checkbox"
       :checkbox
-
-    when "multiple choice - radio"
+    when "multiple_choice_radio"
       :radio
-
-    when "no user input"
-      !self.childs.empty? ? :group_header : :label
-
+    when "no_user_input", "group_header"
+      childs.any? ? :group_header : :label
     else
       :hidden
     end
@@ -73,15 +66,15 @@ class FormField < ApplicationRecord
 
   def form_helper_type
     case answer_type
-    when "free-form input - one line"
+    when "free_form_input_one_line"
       :text_field
-    when "free-form input - paragraph"
+    when "free_form_input_paragraph"
       :text_area
-    when "multiple choice - checkbox"
+    when "multiple_choice_checkbox"
       :check_box
-    when "multiple choice - radio"
+    when "multiple_choice_radio"
       :radio_button
-    when "no user input"
+    when "no_user_input", "group_header"
       :label
     else
       :hidden_field

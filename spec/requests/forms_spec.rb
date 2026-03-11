@@ -77,5 +77,110 @@ RSpec.describe "Forms", type: :request do
       expect(form.reload.name).to eq("New Name")
       expect(response).to redirect_to(edit_form_path(form))
     end
+
+    it "updates hide_answered flags" do
+      form = create(:form, :standalone)
+      patch form_path(form), params: {
+        form: { hide_answered_person_questions: true, hide_answered_form_questions: true }
+      }
+      form.reload
+      expect(form.hide_answered_person_questions).to be true
+      expect(form.hide_answered_form_questions).to be true
+    end
+  end
+
+  describe "DELETE /forms/:id" do
+    before { sign_in admin }
+
+    it "destroys the form" do
+      form = create(:form, :standalone, name: "Doomed")
+      expect { delete form_path(form) }.to change(Form, :count).by(-1)
+      expect(response).to redirect_to(forms_path)
+    end
+  end
+
+  describe "GET /forms/:id" do
+    before { sign_in admin }
+
+    it "shows form preview" do
+      form = FormBuilderService.new(name: "Preview", sections: %i[person_identifier]).call
+      get form_path(form)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("First Name")
+    end
+
+    it "filters scholarship-only fields when toggle is off" do
+      form = FormBuilderService.new(name: "Full", sections: %i[person_identifier scholarship]).call
+      get form_path(form)
+      expect(response.body).not_to include("Scholarship Application")
+    end
+
+    it "shows scholarship fields when toggle is on" do
+      form = FormBuilderService.new(name: "Full", sections: %i[person_identifier scholarship]).call
+      get form_path(form, preview_scholarship: "1")
+      expect(response.body).to include("Scholarship Application")
+    end
+  end
+
+  describe "GET /forms/:id/edit_sections" do
+    before { sign_in admin }
+
+    it "shows section checkboxes for existing form" do
+      form = FormBuilderService.new(name: "Editable", sections: %i[person_identifier]).call
+      get edit_sections_form_path(form)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Person identifier")
+    end
+  end
+
+  describe "PATCH /forms/:id/update_sections" do
+    before { sign_in admin }
+
+    it "adds new sections to existing form" do
+      form = FormBuilderService.new(name: "Growing", sections: %i[person_identifier]).call
+      initial_count = form.form_fields.count
+
+      patch update_sections_form_path(form), params: {
+        sections: %w[person_identifier consent]
+      }
+
+      form.reload
+      expect(form.sections).to include("consent")
+      expect(form.form_fields.count).to be > initial_count
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "removes sections from existing form" do
+      form = FormBuilderService.new(name: "Shrinking", sections: %i[person_identifier consent]).call
+      patch update_sections_form_path(form), params: {
+        sections: %w[person_identifier]
+      }
+
+      form.reload
+      expect(form.sections).not_to include("consent")
+      expect(form.form_fields.where(section: "consent")).to be_empty
+    end
+
+    it "rejects empty sections" do
+      form = FormBuilderService.new(name: "Protected", sections: %i[person_identifier]).call
+      patch update_sections_form_path(form), params: { sections: [] }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "PUT /forms/:id/reorder_fields" do
+    before { sign_in admin }
+
+    it "reorders fields" do
+      form = FormBuilderService.new(name: "Reorder", sections: %i[person_identifier]).call
+      fields = form.form_fields.reorder(position: :asc)
+      new_positions = fields.map.with_index { |f, i| { id: f.id, position: fields.size - i } }
+
+      put reorder_fields_form_path(form),
+        params: { positions: new_positions }.to_json,
+        headers: { "Content-Type" => "application/json" }
+
+      expect(response).to have_http_status(:ok)
+    end
   end
 end

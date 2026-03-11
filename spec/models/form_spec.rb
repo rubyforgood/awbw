@@ -9,6 +9,7 @@ RSpec.describe Form do
     it { should have_many(:events).through(:event_forms) }
     it { should have_many(:form_fields).dependent(:destroy).inverse_of(:form) }
     it { should have_many(:user_forms) }
+    it { should have_many(:form_submissions) }
     it { should have_many(:reports) } # As :owner
 
     it { should accept_nested_attributes_for(:form_fields).allow_destroy(true) }
