@@ -54,22 +54,23 @@ unless amy.person.present?
 end
 
 # Non-Admin 2
-priya = User.find_or_create_by!(email: "priya.user@example.com") do |user|
+aisha = User.find_or_create_by!(email: "aisha.user@example.com") do |user|
   user.password = "password"
   user.super_user = false
   user.confirmed_at = Time.current
 end
 
-unless priya.person.present?
+unless aisha.person.present?
   person = Person.create!(
-    first_name: "Priya",
+    first_name: "Aisha",
     last_name: "Sharma",
-    email: priya.email,
-    created_by: priya,
-    updated_by: priya,
-    profile_is_searchable: true
+    email: aisha.email,
+    created_by: aisha,
+    updated_by: aisha,
+    profile_is_searchable: true,
+    profile_show_workshop_logs: true
   )
-  priya.update!(person: person)
+  aisha.update!(person: person)
 end
 
 # Orphaned
@@ -256,7 +257,7 @@ unless invited_no_person.confirmed_at.present?
 end
 
 # Only reset seed-user passwords, not every user in the database
-seed_emails = %w[umberto.user@example.com amy.user@example.com priya.user@example.com orphaned_reports@awbw.org]
+seed_emails = %w[umberto.user@example.com amy.user@example.com aisha.user@example.com orphaned_reports@awbw.org]
 user_password = Devise::Encryptor.digest(User, "password")
 User.where(email: seed_emails).update_all(encrypted_password: user_password)
 
@@ -286,7 +287,7 @@ awbw_org = Organization.find_or_create_by!(name: ENV.fetch("ORGANIZATION_NAME", 
   org.organization_status = OrganizationStatus.find_by!(name: "Active")
 end
 
-[ admin, amy, priya ].each do |user|
+[ admin, amy, aisha ].each do |user|
   next unless user.person.present? && user.person.affiliations.empty?
 
   Affiliation.create!(

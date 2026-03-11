@@ -258,9 +258,9 @@
                   <% end %>
                 </div>
               <% end %>
-              <!-- Workshop logs -->
+              <!-- Workshop logs (admin/owner only) -->
               <% if @person.profile_show_workshop_logs? %>
-                <div class="p-3">
+                <div id="workshop_logs" class="admin-or-owner p-3">
                   <h2 class="text-lg font-semibold text-gray-800 mb-3">Workshop logs submitted</h2>
                   <%= turbo_frame_tag "person_workshop_logs_section", src: person_path(@person, section: "workshop_logs"), loading: :lazy do %>
                     <p class="text-gray-500 italic">Loading workshop logs...</p>

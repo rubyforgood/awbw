@@ -1,4 +1,4 @@
-<% content_for(:page_bg_class, "admin-or-owner-or-authsearchable") %>
+<% content_for(:page_bg_class, "admin-or-owner") %>
 <div class="admin-or-owner border border-gray-200 rounded-xl shadow overflow-hidden">
   <!-- Header -->
   <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-8 py-3">
@@ -13,7 +13,7 @@
   <div class="p-4 sm:p-8">
     <!-- Back link + Person name -->
     <div class="mb-6">
-      <%= link_to person_path(@person), class: "text-sm text-blue-600 hover:underline" do %>
+      <%= link_to person_path(@person, anchor: "workshop_logs"), class: "text-sm text-blue-600 hover:underline" do %>
         &larr; Back to <%= @person.full_name %>
       <% end %>
       <h1 class="text-2xl font-bold text-gray-900 mt-2">
