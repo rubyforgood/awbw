@@ -50,7 +50,7 @@
         <%= truncate(f.object.body, length: 135) %>
       </span>
     </div>
-    <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1" style="display:none">
+    <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" style="display:none">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
