@@ -430,10 +430,12 @@ end
 
 puts "Setting AgeRange category positions…"
 age_range_order = [ "3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family Windows" ]
-# Clear positions first to avoid unique index conflicts
 age_range_type = CategoryType.find_by(name: "AgeRange")
 if age_range_type
-  age_range_type.categories.update_all(position: nil)
+  # Move to high positions first to avoid unique index conflicts on (category_type_id, position)
+  age_range_type.categories.each_with_index do |cat, i|
+    cat.update_columns(position: 1000 + i)
+  end
   age_range_order.each_with_index do |name, i|
     age_range_type.categories.where("LOWER(name) = LOWER(?)", name).update_all(position: i + 1)
   end
