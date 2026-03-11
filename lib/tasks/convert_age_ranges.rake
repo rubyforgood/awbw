@@ -60,13 +60,23 @@ namespace :data do
       elsif text =~ /(\d+)\s*(?:años? en adelante|años? y mayores)/
         low = $1.to_i
         high = 99
+      elsif text =~ /\b(\d{1,2})\s*(?:years?\s*old|años|year\s*olds?|yr\s*olds?)\b/
+        # Standalone age: "5 years old", "10 años"
+        low = $1.to_i
+        high = low
+      elsif text =~ /\A(\d{1,2})\z/
+        # Bare number: "5", "12"
+        low = $1.to_i
+        high = low
       end
 
       # Keyword-based detection
       has_adult = text.match?(/\badult|women|18\s*\+|18 and (up|older)/i)
       has_teen  = text.match?(/\bteen|tween|13\s*[-–&]\s*(18|19|up)|14-17|13\/18/i)
-      has_child = text.match?(/\bchild|elementary|preschool|school\s*age/i)
-      has_all   = text.match?(/\ball\s*age|\bany\s*age|\bany\b|\ball\b|\bmixed|family/i)
+      has_child = text.match?(/\bchild|elementary|school\s*age/i)
+      has_preschool = text.match?(/\bpreschool|pre-school|prek|pre-k|kinder/i)
+      has_all   = text.match?(/\ball\s*age|\bany\s*age|\bany\b|\ball\b|\bmixed|family|todas\s*las\s*edades/i)
+      has_youth = text.match?(/\byouth|young\s*people|jóvenes|jovenes/i)
 
       result = Set.new
 
@@ -85,9 +95,17 @@ namespace :data do
         result << cat_3_5
       end
 
-      result << cat_3_5 if text.match?(/\bpreschool\b/)
+      if has_preschool
+        result << cat_3_5
+      end
 
-      # Numeric range mapping
+      if has_youth && !low
+        result << cat_6_12
+        result << cat_13_17
+      end
+
+      # Numeric range mapping — include a bucket if the input range overlaps it.
+      # Bucket boundaries: 3-5, 6-12, 13-17, 18+
       if low && high
         result << cat_3_5   if low <= 5  && high >= 3
         result << cat_6_12  if low <= 12 && high >= 6
