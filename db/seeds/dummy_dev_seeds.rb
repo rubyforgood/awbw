@@ -914,26 +914,26 @@ end
 
 # A few logs for the admin user as well
 if WorkshopLog.where(created_by_id: User.first&.id).none?
-5.times do
-  workshop = Workshop.all.sample
-  next unless workshop
+  5.times do
+    workshop = Workshop.all.sample
+    next unless workshop
 
-  WorkshopLog.create!(
-    workshop_id: workshop.id,
-    organization_id: Organization.all.sample&.id,
-    windows_type_id: WindowsType.all.sample&.id,
-    created_by_id: User.first&.id,
-    date: Date.today - rand(1..90).days,
-    children_ongoing: rand(0..5),
-    teens_ongoing: rand(0..3),
-    adults_ongoing: rand(0..10),
-    children_first_time: rand(0..2),
-    teens_first_time: rand(0..2),
-    adults_first_time: rand(0..4),
-    created_at: Time.current - rand(1..90).days,
-    updated_at: Time.current - rand(1..40).days
-  )
-end
+    WorkshopLog.create!(
+      workshop_id: workshop.id,
+      organization_id: Organization.all.sample&.id,
+      windows_type_id: WindowsType.all.sample&.id,
+      created_by_id: User.first&.id,
+      date: Date.today - rand(1..90).days,
+      children_ongoing: rand(0..5),
+      teens_ongoing: rand(0..3),
+      adults_ongoing: rand(0..10),
+      children_first_time: rand(0..2),
+      teens_first_time: rand(0..2),
+      adults_first_time: rand(0..4),
+      created_at: Time.current - rand(1..90).days,
+      updated_at: Time.current - rand(1..40).days
+    )
+  end
 end
 
 puts "Creating Stories…"
