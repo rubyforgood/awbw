@@ -59,7 +59,7 @@ module EventRegistrationServices
     private
 
     def field_value(key)
-      field = @form.form_fields.find_by(field_key: key)
+      field = @form.form_fields.find_by(field_identifier: key)
       return nil unless field
       @form_params[field.id.to_s]
     end
@@ -226,8 +226,8 @@ module EventRegistrationServices
       end
     end
 
-    def collect_ids_from_checkboxes(field_key)
-      field = @form.form_fields.find_by(field_key: field_key)
+    def collect_ids_from_checkboxes(identifier)
+      field = @form.form_fields.find_by(field_identifier: identifier)
       return [] unless field
 
       value = @form_params[field.id.to_s]
@@ -256,7 +256,7 @@ module EventRegistrationServices
     def save_form_answers(submission)
       @form.form_fields.find_each do |field|
         next if field.group_header?
-        next if field.field_key == "confirm_email"
+        next if field.field_identifier == "confirm_email"
 
         raw_value = @form_params[field.id.to_s]
         text = if raw_value.is_a?(Array)
@@ -266,7 +266,7 @@ module EventRegistrationServices
         end
 
         record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(question_answer: text, question_text: field.question)
+        record.update!(submitted_answer: text, question_name_when_answered: field.name)
       end
     end
 

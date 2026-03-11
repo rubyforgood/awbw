@@ -5,8 +5,8 @@ import Sortable from "sortablejs"
 /**
  * Sortable controller for form field editing.
  *
- * Group-aware: dragging a group header also moves all fields
- * that share the same field_group.
+ * Section-aware: dragging a group header also moves all fields
+ * that share the same section.
  *
  * Usage:
  *   data-controller="form-fields-sortable"
@@ -15,7 +15,7 @@ import Sortable from "sortablejs"
  * Each item needs:
  *   data-sortable-id="<field_id>"
  *   data-sortable-handle  (on the drag handle element)
- *   data-field-group="<group_name>"  (optional)
+ *   data-section="<section_name>"  (optional)
  *   data-group-header       (on header rows)
  */
 export default class extends Controller {
@@ -35,13 +35,13 @@ export default class extends Controller {
   onEnd(event) {
     const { item } = event
 
-    // If a group header was moved, relocate its group members to follow it
+    // If a group header was moved, relocate its section members to follow it
     if (item.dataset.groupHeader !== undefined) {
-      const group = item.dataset.fieldGroup
+      const section = item.dataset.section
       const members = []
 
       for (const el of this.element.children) {
-        if (el !== item && el.dataset.fieldGroup === group && el.dataset.groupHeader === undefined) {
+        if (el !== item && el.dataset.section === section && el.dataset.groupHeader === undefined) {
           members.push(el)
         }
       }

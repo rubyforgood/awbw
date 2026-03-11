@@ -8,14 +8,12 @@ class FormField < ApplicationRecord
   has_many :answer_options, through: :form_field_answer_options
 
   # Validations
-  validates_presence_of :question
+  validates_presence_of :name
 
   # Enum
   enum :status, [ :inactive, :active ]
   enum :visibility, [ :always_ask, :scholarship_only, :logged_out_only, :answers_on_file ]
 
-  # TODO: Rails 6.1 requires enums to be symbols
-  # need additional refactoring in methods that call answer_type & answer_datatype to account for change to enum
   enum :answer_type, [
     :free_form_input_one_line,
     :free_form_input_paragraph,
@@ -25,7 +23,7 @@ class FormField < ApplicationRecord
     :group_header
   ]
 
-  enum :answer_datatype, [
+  enum :input_type, [
     :text_alphanumeric,
     :number_integer,
     :number_decimal,
@@ -39,16 +37,12 @@ class FormField < ApplicationRecord
   scope :published, -> { where(status: "active") }
 
   # Methods
-  def name
-    question
-  end
-
   def multiple_choice?
-    answer_type ? answer_type.include?("multiple choice") : false
+    answer_type ? answer_type.include?("multiple_choice") : false
   end
 
   def html_id
-    self.question.tr(" /#,')(.", "_").downcase
+    self.name.tr(" /#,')(.", "_").downcase
   end
 
   def html_input_type
@@ -77,9 +71,7 @@ class FormField < ApplicationRecord
     end
   end
 
-  # This one bellow should be removed and use
-  # html_input_type
-  def input_type
+  def form_helper_type
     case answer_type
     when "free-form input - one line"
       :text_field

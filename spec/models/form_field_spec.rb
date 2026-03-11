@@ -20,15 +20,15 @@ RSpec.describe FormField do
     subject do
       build(:form_field, form: create(:form))
     end
-    it { should validate_presence_of(:question) }
+    it { should validate_presence_of(:name) }
   end
 
   describe 'enums' do
     it { should define_enum_for(:status).with_values([ :inactive, :active ]) }
     it { should define_enum_for(:answer_type).with_values([ :free_form_input_one_line, :free_form_input_paragraph,
-                                                            :multiple_choice_radio, :no_user_input, :multiple_choice_checkbox,
-                                                            :group_header ]) }
-    it { should define_enum_for(:answer_datatype).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
+                                                           :multiple_choice_radio, :no_user_input, :multiple_choice_checkbox,
+                                                           :group_header ]) }
+    it { should define_enum_for(:input_type).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
   end
 
   # it 'is valid with valid attributes' do

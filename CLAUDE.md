@@ -168,8 +168,9 @@ bundle exec bundle-audit check --update
 
 ## Migrations
 
-- Name migration files using **UTC timestamps** (e.g., `20260228143000`), not sequential numbers (e.g., `20260228000007`)
-- Multiple branches adding migrations on the same date will collide if they use sequential numbering
+- Name migration files using **real UTC timestamps** with the current time (e.g., `20260228143052` for 14:30:52 UTC), not padded zeros (e.g., `20260228140000`) or sequential numbers (e.g., `20260228000007`)
+- The last 6 digits are HHMMSS — use the actual current time, not `000000` or rounded values
+- Multiple branches adding migrations on the same date will collide if they use sequential or zero-padded numbering
 
 ## Git
 

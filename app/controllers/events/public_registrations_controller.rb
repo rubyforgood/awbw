@@ -118,25 +118,25 @@ module Events
       person = current_user&.person
       if person
         if @form.hide_answered_person_questions?
-          known_keys = person_known_field_keys(person)
-          if known_keys.any?
+          known_identifiers = person_known_identifiers(person)
+          if known_identifiers.any?
             known_ids = @form.form_fields
-                             .where(visibility: :logged_out_only, field_key: known_keys)
+                             .where(visibility: :logged_out_only, field_identifier: known_identifiers)
                              .ids
             scope = scope.where.not(id: known_ids) if known_ids.any?
           end
 
           # Hide logged_out_only headers when all their non-header fields are hidden
-          logged_out_groups = @form.form_fields.where(visibility: :logged_out_only)
-                                  .where.not(answer_type: :group_header)
-                                  .pluck(:field_group).uniq.compact
-          logged_out_groups.each do |group|
-            group_field_ids = @form.form_fields.where(field_group: group, visibility: :logged_out_only)
-                                  .where.not(answer_type: :group_header).ids
-            if group_field_ids.any? && known_keys.any? && (group_field_ids - scope.where(id: group_field_ids).ids).any?
-              remaining = scope.where(id: group_field_ids).ids
+          logged_out_sections = @form.form_fields.where(visibility: :logged_out_only)
+                                    .where.not(answer_type: :group_header)
+                                    .pluck(:section).uniq.compact
+          logged_out_sections.each do |sect|
+            section_field_ids = @form.form_fields.where(section: sect, visibility: :logged_out_only)
+                                    .where.not(answer_type: :group_header).ids
+            if section_field_ids.any? && known_identifiers.any? && (section_field_ids - scope.where(id: section_field_ids).ids).any?
+              remaining = scope.where(id: section_field_ids).ids
               if remaining.empty?
-                scope = scope.where.not(field_group: group, answer_type: :group_header, visibility: :logged_out_only)
+                scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :logged_out_only)
               end
             end
           end
@@ -152,7 +152,7 @@ module Events
             answered_one_time = FormAnswer.joins(:form_submission)
                                          .where(form_submissions: { person_id: person.id })
                                          .where(form_field_id: one_time_field_ids)
-                                         .where.not(question_answer: [ nil, "" ])
+                                         .where.not(submitted_answer: [ nil, "" ])
                                          .pluck(:form_field_id)
             answered_field_ids.concat(answered_one_time)
           end
@@ -166,7 +166,7 @@ module Events
             if regular_field_ids.any?
               answered_regular = FormAnswer.where(form_submission: event_submissions)
                                           .where(form_field_id: regular_field_ids)
-                                          .where.not(question_answer: [ nil, "" ])
+                                          .where.not(submitted_answer: [ nil, "" ])
                                           .pluck(:form_field_id)
               answered_field_ids.concat(answered_regular)
             end
@@ -177,13 +177,13 @@ module Events
             scope = scope.where.not(id: answered_field_ids)
 
             # Hide section headers when all their non-header fields are answered
-            answered_groups = @form.form_fields.where(id: answered_field_ids)
-                                  .pluck(:field_group).uniq.compact
-            answered_groups.each do |group|
-              group_field_ids = @form.form_fields.where(field_group: group, visibility: :answers_on_file)
-                                    .where.not(answer_type: :group_header).ids
-              if group_field_ids.any? && (group_field_ids - answered_field_ids).empty?
-                scope = scope.where.not(field_group: group, answer_type: :group_header, visibility: :answers_on_file)
+            answered_sections = @form.form_fields.where(id: answered_field_ids)
+                                    .pluck(:section).uniq.compact
+            answered_sections.each do |sect|
+              section_field_ids = @form.form_fields.where(section: sect, visibility: :answers_on_file)
+                                      .where.not(answer_type: :group_header).ids
+              if section_field_ids.any? && (section_field_ids - answered_field_ids).empty?
+                scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :answers_on_file)
               end
             end
           end
@@ -193,7 +193,7 @@ module Events
       scope.reorder(position: :asc)
     end
 
-    def person_known_field_keys(person)
+    def person_known_identifiers(person)
       keys = []
       keys << "first_name" if person.first_name.present?
       keys << "last_name" if person.last_name.present?
@@ -229,14 +229,14 @@ module Events
     def validate_required_fields(form_params)
       errors = {}
       fields = visible_form_fields
-      fields_by_key = fields.select { |f| f.field_key.present? }.index_by(&:field_key)
+      fields_by_identifier = fields.select { |f| f.field_identifier.present? }.index_by(&:field_identifier)
 
       fields.find_each do |field|
         next if field.group_header?
 
         value = form_params[field.id.to_s]
 
-        if field.is_required && (value.blank? || (value.is_a?(Array) && value.reject(&:blank?).empty?))
+        if field.required && (value.blank? || (value.is_a?(Array) && value.reject(&:blank?).empty?))
           errors[field.id] = "can't be blank"
           next
         end
@@ -245,13 +245,13 @@ module Events
 
         if field.number_integer? && value.to_s !~ /\A\d+\z/
           errors[field.id] = "must be a whole number"
-        elsif field.field_key&.match?(/email(?!_type|_confirmation)/) && value.to_s !~ /\A[^@\s]+@[^@\s]+\z/
+        elsif field.field_identifier&.match?(/email(?!_type|_confirmation)/) && value.to_s !~ /\A[^@\s]+@[^@\s]+\z/
           errors[field.id] = "must be a valid email address"
         end
       end
 
-      confirm_field = fields_by_key["confirm_email"]
-      email_field = fields_by_key["primary_email"]
+      confirm_field = fields_by_identifier["confirm_email"]
+      email_field = fields_by_identifier["primary_email"]
       if confirm_field && email_field && errors[confirm_field.id].nil?
         confirm_value = form_params[confirm_field.id.to_s].to_s.strip
         email_value = form_params[email_field.id.to_s].to_s.strip

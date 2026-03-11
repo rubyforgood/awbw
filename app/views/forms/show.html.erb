@@ -87,10 +87,10 @@
       </div>
 
       <%
-        fields_by_key_check = @form_fields.select(&:field_key).index_by(&:field_key)
-        email_row = if fields_by_key_check["confirm_email"] && fields_by_key_check["primary_email_type"]
+        fields_by_id_check = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
+        email_row = if fields_by_id_check["confirm_email"] && fields_by_id_check["primary_email_type"]
           { keys: %w[primary_email confirm_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" }
-        elsif fields_by_key_check["confirm_email"]
+        elsif fields_by_id_check["confirm_email"]
           { keys: %w[primary_email confirm_email], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" }
         else
           { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } }
@@ -109,13 +109,13 @@
           { keys: %w[number_of_attendees payment_method], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
         ]
 
-        field_key_to_group = {}
-        row_groups.each { |g| g[:keys].each { |k| field_key_to_group[k] = g } }
+        identifier_to_group = {}
+        row_groups.each { |g| g[:keys].each { |k| identifier_to_group[k] = g } }
 
-        fields_by_key = @form_fields.select(&:field_key).index_by(&:field_key)
-        rendered_keys = {}
+        fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
+        rendered_ids = {}
 
-        has_secondary_email = fields_by_key["secondary_email"].present?
+        has_secondary_email = fields_by_identifier["secondary_email"].present?
         email_label_overrides = if has_secondary_email
           { "primary_email" => "Primary Email", "confirm_email" => "Confirm Primary Email", "primary_email_type" => "Primary Email Type" }
         else
@@ -125,18 +125,18 @@
 
       <fieldset disabled>
         <% @form_fields.each do |field| %>
-          <% next if field.field_key.present? && rendered_keys[field.field_key] %>
+          <% next if field.field_identifier.present? && rendered_ids[field.field_identifier] %>
 
           <% if field.group_header? %>
             <div class="pt-6 pb-2 border-b border-gray-200 mb-4">
-              <h3 class="text-lg font-semibold text-gray-800"><%= field.question %></h3>
+              <h3 class="text-lg font-semibold text-gray-800"><%= field.name %></h3>
             </div>
-          <% elsif (group = field.field_key.present? && field_key_to_group[field.field_key]) %>
+          <% elsif (group = field.field_identifier.present? && identifier_to_group[field.field_identifier]) %>
             <div class="<%= group[:grid] %>">
               <% group[:keys].each do |key| %>
-                <% row_field = fields_by_key[key] %>
+                <% row_field = fields_by_identifier[key] %>
                 <% next unless row_field %>
-                <% rendered_keys[key] = true %>
+                <% rendered_ids[key] = true %>
                 <% span = group.dig(:spans, key) %>
                 <% label_override = email_label_overrides[key] %>
                 <% if span %>

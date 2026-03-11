@@ -82,8 +82,8 @@ A monthly report has already been submitted for this month. Please contact your 
           $("#Total--First-Time-Participants").prop("readonly", true);
         </script>
 
-        <% if field.question == 'Share challenges for this month' ||
-      (field.question == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2)%>
+        <% if field.name == 'Share challenges for this month' ||
+      (field.name == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2)%>
           <!-- QUOTES -->
 
           <script>

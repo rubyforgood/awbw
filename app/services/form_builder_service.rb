@@ -33,7 +33,7 @@ class FormBuilderService
     form
   end
 
-  SECTION_FIELD_KEYS = {
+  SECTION_FIELD_IDENTIFIERS = {
     person_identifier: %w[first_name last_name primary_email confirm_email],
     person_contact_info: %w[
       primary_email_type nickname pronouns secondary_email secondary_email_type
@@ -73,12 +73,12 @@ class FormBuilderService
 
     # Remove fields and headers belonging to removed sections
     removed.each do |key|
-      field_keys = SECTION_FIELD_KEYS.fetch(key)
-      form.form_fields.where(field_key: field_keys).destroy_all
+      identifiers = SECTION_FIELD_IDENTIFIERS.fetch(key)
+      form.form_fields.where(field_identifier: identifiers).destroy_all
 
       headers = SECTION_HEADERS.fetch(key)
       if headers.any?
-        form.form_fields.where(question: headers, answer_type: :group_header).destroy_all
+        form.form_fields.where(name: headers, answer_type: :group_header).destroy_all
       end
     end
 
@@ -98,7 +98,7 @@ class FormBuilderService
 
   private
 
-  GROUP_VISIBILITY = {
+  SECTION_VISIBILITY = {
     "person_identifier" => :logged_out_only,
     "person_contact_info" => :logged_out_only,
     "background" => :logged_out_only,
@@ -110,39 +110,39 @@ class FormBuilderService
     "post_event_feedback" => :answers_on_file
   }.freeze
 
-  # Groups where answers carry across all events (ask once ever)
-  ONE_TIME_GROUPS = %w[professional background].freeze
+  # Sections where answers carry across all events (ask once ever)
+  ONE_TIME_SECTIONS = %w[professional background].freeze
 
   def add_header(form, position, title, group:)
     position += 1
     form.form_fields.create!(
-      question: title,
+      name: title,
       answer_type: :group_header,
       status: :active,
       position: position,
-      is_required: false,
-      field_key: nil,
-      field_group: group,
-      visibility: GROUP_VISIBILITY.fetch(group, :always_ask),
-      one_time: ONE_TIME_GROUPS.include?(group)
+      required: false,
+      field_identifier: nil,
+      section: group,
+      visibility: SECTION_VISIBILITY.fetch(group, :always_ask),
+      one_time: ONE_TIME_SECTIONS.include?(group)
     )
     position
   end
 
-  def add_field(form, position, question, answer_type, key:, group:, required: true, hint: nil, options: nil, datatype: nil)
+  def add_field(form, position, field_name, answer_type, key:, group:, required: true, hint: nil, options: nil, datatype: nil)
     position += 1
     field = form.form_fields.create!(
-      question: question,
+      name: field_name,
       answer_type: answer_type,
-      answer_datatype: datatype,
+      input_type: datatype,
       status: :active,
       position: position,
-      is_required: required,
-      instructional_hint: hint,
-      field_key: key,
-      field_group: group,
-      visibility: GROUP_VISIBILITY.fetch(group, :always_ask),
-      one_time: ONE_TIME_GROUPS.include?(group)
+      required: required,
+      hint_text: hint,
+      field_identifier: key,
+      section: group,
+      visibility: SECTION_VISIBILITY.fetch(group, :always_ask),
+      one_time: ONE_TIME_SECTIONS.include?(group)
     )
 
     if options.present?

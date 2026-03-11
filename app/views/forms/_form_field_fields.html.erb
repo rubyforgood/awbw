@@ -17,7 +17,7 @@
 %>
 <div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> py-3 border-b border-gray-100 hover:bg-gray-50"
      data-sortable-id="<%= field.id %>"
-     <% if field.field_group.present? %>data-field-group="<%= field.field_group %>"<% end %>
+     <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
      <% if field.group_header? %>data-group-header<% end %>>
   <div class="cursor-grab text-gray-400 hover:text-gray-600" data-sortable-handle>
     <i class="fa-solid fa-grip-vertical"></i>
@@ -32,7 +32,7 @@
             {},
             class: "text-xs rounded-full border px-2 py-0.5 cursor-pointer",
             data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
-      <%= f.text_field :question, class: "flex-1 text-lg font-semibold text-gray-800 rounded border-gray-300 shadow-sm px-2 py-1" %>
+      <%= f.text_field :name, class: "flex-1 text-lg font-semibold text-gray-800 rounded border-gray-300 shadow-sm px-2 py-1" %>
       <div class="ml-auto">
         <%= link_to_remove_association "Remove", f,
               class: "text-sm text-gray-400 hover:text-red-600 underline" %>
@@ -44,7 +44,7 @@
             {},
             class: "text-xs rounded-full border px-2 py-0.5 shrink-0 cursor-pointer",
             data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
-      <%= f.text_field :question, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+      <%= f.text_field :name, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
       <%
         type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_checkbox no_user_input group_header]
         type_labels = {
@@ -61,7 +61,7 @@
             {},
             class: "flex-[2_1_11rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
       <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0">
-        <%= f.check_box :is_required, class: "rounded border-gray-300 text-blue-600" %>
+        <%= f.check_box :required, class: "rounded border-gray-300 text-blue-600" %>
         Required
       </label>
       <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0" title="Hide if already answered on any form (not just this event)">
