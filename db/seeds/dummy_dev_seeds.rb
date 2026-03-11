@@ -1359,7 +1359,7 @@ faqs.each do |faq_data|
   end
 end
 
-puts "Creating Tutorials…"
+puts "Creating Video Recordings…"
 [
   {
     title: "Getting Started: Your First Workshop",
@@ -1425,7 +1425,7 @@ puts "Creating Tutorials…"
     featured: true,
     position: 6,
     is_instructional: false,
-    is_podcast: false
+    is_podcast: true
   }
 ].each do |video_data|
   VideoRecording.where(title: video_data[:title]).first_or_create!(video_data)
@@ -1448,7 +1448,7 @@ if amy && priya
     "Resource"             => Resource.order(:id).limit(2).to_a,
     "Story"                => Story.order(:id).limit(2).to_a,
     "StoryIdea"            => StoryIdea.order(:id).limit(2).to_a,
-    "Tutorial"             => Tutorial.order(:id).limit(2).to_a,
+    "VideoRecording"       => VideoRecording.order(:id).limit(2).to_a,
     "Workshop"             => Workshop.order(:id).limit(2).to_a,
     "WorkshopIdea"         => WorkshopIdea.order(:id).limit(2).to_a,
     "WorkshopLog"          => WorkshopLog.order(:id).limit(2).to_a,
@@ -1518,7 +1518,7 @@ view_targets = {
   "event" => Event.limit(3).to_a,
   "community_news" => CommunityNews.published.limit(3).to_a,
   "workshop_variation" => WorkshopVariation.published.limit(3).to_a,
-  "tutorial" => Tutorial.limit(3).to_a
+  "video_recording" => VideoRecording.limit(3).to_a
 }.reject { |_, v| v.empty? }
 
 # ── view.* events (populates "Content Types People View Most" pie chart) ──
