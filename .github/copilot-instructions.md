@@ -168,7 +168,7 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
-- **On every push**, update the PR title and content to reflect the current diff
+- **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
 - **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
 
 ## Quick Commands
