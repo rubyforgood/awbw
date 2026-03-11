@@ -429,9 +429,14 @@ category_type_categories.each do |category_type_name, category_name, _legacy_id|
 end
 
 puts "Setting AgeRange category positions…"
-age_range_order = [ "3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family windows" ]
-age_range_order.each_with_index do |name, i|
-  Category.where("LOWER(name) = LOWER(?)", name).update_all(position: i + 1)
+age_range_order = [ "3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family Windows" ]
+# Clear positions first to avoid unique index conflicts
+age_range_type = CategoryType.find_by(name: "AgeRange")
+if age_range_type
+  age_range_type.categories.update_all(position: nil)
+  age_range_order.each_with_index do |name, i|
+    age_range_type.categories.where("LOWER(name) = LOWER(?)", name).update_all(position: i + 1)
+  end
 end
 
 puts "Creating StoryPopulation CategoryType…"
