@@ -15,7 +15,7 @@ namespace :data do
     cat_family = categories["family windows"]
 
     unless [ cat_3_5, cat_6_12, cat_13_17, cat_18, cat_mixed, cat_family ].all?
-      abort "Missing AgeRange categories. Run seeds first. Need: 3-5, 6-12, 13-17, 18+, Mixed-age groups, Family Windows"
+      abort "Missing AgeRange categories. Run seeds first. Need: 3-5, 6-12, 13-17, 18+, Mixed-age groups, Family windows"
     end
 
     # Normalize free-text to plain lowercase string

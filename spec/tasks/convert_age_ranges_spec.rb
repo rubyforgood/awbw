@@ -22,7 +22,7 @@ RSpec.describe "data:convert_age_ranges" do
   let!(:cat_13_17) { create(:category, name: "13-17", category_type: age_range_type) }
   let!(:cat_18)    { create(:category, name: "18+", category_type: age_range_type) }
   let!(:cat_mixed) { create(:category, name: "Mixed-age groups", category_type: age_range_type) }
-  let!(:cat_family) { create(:category, name: "Family Windows", category_type: age_range_type) }
+  let!(:cat_family) { create(:category, name: "Family windows", category_type: age_range_type) }
 
   def run_task
     Rake::Task["data:convert_age_ranges"].invoke

@@ -315,7 +315,7 @@ category_type_categories = [
   [ "AgeRange", "13-17" ],
   [ "AgeRange", "18+" ],
   [ "AgeRange", "Mixed-age groups" ],
-  [ "AgeRange", "Family Windows" ],
+  [ "AgeRange", "Family windows" ],
   # ["ArtType", "Boxes", 1],
   [ "ArtType", "Clay", 11 ],
   [ "ArtType", "Collage", 2 ],
