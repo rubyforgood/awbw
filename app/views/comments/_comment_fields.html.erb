@@ -29,10 +29,11 @@
 <% created_color = label_colors[(created_user&.id || 0) % label_colors.length] %>
 <% updated_color = show_updated ? label_colors[(updated_user.id || 0) % label_colors.length] : nil %>
 <% current_color = label_colors[(current_user&.id || 0) % label_colors.length] %>
+<% is_age_range_data = f.object.persisted? && f.object.body&.include?("[AGE_RANGE_DATA]") %>
 <div class="nested-fields" data-paginated-fields-target="item">
   <%= f.hidden_field :id if f.object.persisted? %>
   <% if f.object.persisted? %>
-    <div class="comment-view flex items-center mb-3 pl-4 gap-x-1">
+    <div class="comment-view flex items-center mb-3 pl-4 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
@@ -44,11 +45,12 @@
           <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
         <% end %>
       </span>
-      <span class="text-sm text-gray-900 comment-body truncate" title="<%= f.object.body %>">
+      <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> comment-body truncate" title="<%= f.object.body %>">
+        <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i><% end %>
         <%= truncate(f.object.body, length: 135) %>
       </span>
     </div>
-    <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1" style="display:none">
+    <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" style="display:none">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
