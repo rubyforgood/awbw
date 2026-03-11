@@ -123,4 +123,59 @@ RSpec.describe FormBuilderService do
       end
     end
   end
+
+  describe ".update_sections!" do
+    it "adds new sections and their fields" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier]).call
+      initial_count = form.form_fields.count
+
+      described_class.update_sections!(form, %i[person_identifier consent])
+
+      form.reload
+      expect(form.sections).to eq(%w[person_identifier consent])
+      expect(form.form_fields.count).to be > initial_count
+      expect(form.form_fields.pluck(:field_identifier).compact).to include("communication_consent")
+    end
+
+    it "removes unchecked sections and their fields" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier consent]).call
+      expect(form.form_fields.where(section: "consent").count).to be > 0
+
+      described_class.update_sections!(form, %i[person_identifier])
+
+      form.reload
+      expect(form.sections).to eq(%w[person_identifier])
+      expect(form.form_fields.where(section: "consent")).to be_empty
+    end
+
+    it "removes section headers when a section is removed" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier scholarship]).call
+      expect(form.form_fields.where(answer_type: :group_header, name: "Scholarship Application")).to exist
+
+      described_class.update_sections!(form, %i[person_identifier])
+
+      form.reload
+      expect(form.form_fields.where(answer_type: :group_header, name: "Scholarship Application")).not_to exist
+    end
+
+    it "preserves existing fields when sections are unchanged" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier consent]).call
+      original_ids = form.form_fields.pluck(:id).sort
+
+      described_class.update_sections!(form, %i[person_identifier consent])
+
+      form.reload
+      expect(form.form_fields.pluck(:id).sort).to eq(original_ids)
+    end
+
+    it "appends new fields after existing ones" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier]).call
+      max_before = form.form_fields.maximum(:position)
+
+      described_class.update_sections!(form, %i[person_identifier consent])
+
+      new_fields = form.form_fields.where(section: "consent")
+      expect(new_fields.minimum(:position)).to be > max_before
+    end
+  end
 end
