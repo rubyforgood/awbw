@@ -315,7 +315,7 @@ category_type_categories = [
   [ "AgeRange", "13-17" ],
   [ "AgeRange", "18+" ],
   [ "AgeRange", "Mixed-age groups" ],
-  [ "AgeRange", "Family windows" ],
+  [ "AgeRange", "Family Windows" ],
   # ["ArtType", "Boxes", 1],
   [ "ArtType", "Clay", 11 ],
   [ "ArtType", "Collage", 2 ],
@@ -429,15 +429,7 @@ category_type_categories.each do |category_type_name, category_name, _legacy_id|
 end
 
 puts "Setting AgeRange category positions…"
-age_range_order = [ "3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family Windows" ]
-age_range_type = CategoryType.find_by(name: "AgeRange")
-if age_range_type
-  # Shift all AgeRange positions high in one query to avoid unique index conflicts
-  age_range_type.categories.update_all(Arel.sql("position = position + 10000"))
-  age_range_order.each_with_index do |name, i|
-    age_range_type.categories.where("LOWER(name) = LOWER(?)", name).update_all(position: i + 1)
-  end
-end
+Category.heal_position_column!
 
 puts "Creating StoryPopulation CategoryType…"
 story_population_type = find_or_create_by_name!(CategoryType, "StoryPopulation") do |ct|
