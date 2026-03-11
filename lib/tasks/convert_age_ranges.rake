@@ -215,13 +215,13 @@ namespace :data do
         end
       end
 
-      # --- Nil out columns that exactly match a category name ---
+      # --- Nil out columns that exactly match a category name or are junk ---
       updates = {}
-      if workshop.age_range.present? && exact_match.call(workshop.age_range)
+      if workshop.age_range.present? && (exact_match.call(workshop.age_range) || junk_value.call(workshop.age_range))
         updates[:age_range] = nil
         nilled_en += 1
       end
-      if workshop.age_range_spanish.present? && exact_match.call(workshop.age_range_spanish)
+      if workshop.age_range_spanish.present? && (exact_match.call(workshop.age_range_spanish) || junk_value.call(workshop.age_range_spanish))
         updates[:age_range_spanish] = nil
         nilled_es += 1
       end

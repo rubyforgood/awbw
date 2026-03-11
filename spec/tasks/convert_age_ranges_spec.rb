@@ -302,11 +302,11 @@ RSpec.describe "data:convert_age_ranges" do
   # --- Comments ---
 
   describe "comments" do
-    it "creates an auto-applied comment with [AGE_RANGE_DATA] tag" do
+    it "creates exactly one auto-applied comment with [AGE_RANGE_DATA] tag" do
       workshop = create(:workshop, age_range: "6-12")
       run_task
-      comment = workshop.reload.comments.first
-      expect(comment).to be_present
+      expect(workshop.reload.comments.count).to eq 1
+      comment = workshop.comments.first
       expect(comment.body).to include("[AGE_RANGE_DATA]")
       expect(comment.body).to include("Auto-applied age range categories: 6-12")
       expect(comment.body).to include("age_range: '6-12'")
@@ -321,11 +321,11 @@ RSpec.describe "data:convert_age_ranges" do
       expect(comment.body).to include("13-17")
     end
 
-    it "creates an unmatched comment with [AGE_RANGE_DATA] tag" do
+    it "creates exactly one unmatched comment with [AGE_RANGE_DATA] tag" do
       workshop = create(:workshop, age_range: "potato")
       run_task
-      comment = workshop.reload.comments.first
-      expect(comment).to be_present
+      expect(workshop.reload.comments.count).to eq 1
+      comment = workshop.comments.first
       expect(comment.body).to include("[AGE_RANGE_DATA]")
       expect(comment.body).to include("Could not auto-apply")
       expect(comment.body).to include("age_range: 'potato'")
@@ -336,6 +336,15 @@ RSpec.describe "data:convert_age_ranges" do
       run_task
       comment = workshop.reload.comments.first
       expect(comment.body).to include("age_range_spanish:")
+    end
+
+    it "creates a comment when junk English but valid Spanish, and nils junk" do
+      workshop = create(:workshop, age_range: "\r\n", age_range_spanish: "18 y más")
+      run_task
+      workshop.reload
+      expect(workshop.comments.count).to eq 1
+      expect(workshop.comments.first.body).to include("Auto-applied")
+      expect(workshop.age_range).to be_nil
     end
 
     it "does not create a comment when already tagged" do
