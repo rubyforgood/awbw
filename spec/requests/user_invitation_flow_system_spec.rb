@@ -7,8 +7,6 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
   let!(:unconfirmed_user) do
     create(:user,
            email: "newuser@example.com",
-           first_name: "New",
-           last_name: "User",
            confirmed_at: nil,
            confirmation_token: "old_token_123",
            confirmation_sent_at: 1.day.ago)

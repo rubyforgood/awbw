@@ -67,7 +67,7 @@ RSpec.describe "People can view a submitted workshop log" do
       it "displays all workshop logs with correct information" do
         expect(page).to have_content(@workshop_log1.date.strftime("%b %d, %Y"))
         expect(page).to have_content(@workshop1.title)
-        expect(page).to have_content("#{@user.first_name} #{@user.last_name}")
+        expect(page).to have_content("#{@user.person.first_name} #{@user.person.last_name}")
         expect(page).to have_content("5")
         expect(page).to have_content("3")
         expect(page).to have_content("10")
@@ -78,7 +78,7 @@ RSpec.describe "People can view a submitted workshop log" do
 
         expect(page).to have_content(@workshop_log2.date.strftime("%b %d, %Y"))
         expect(page).to have_content(@workshop2.title)
-        expect(page).to have_content("#{@user.first_name} #{@user.last_name}")
+        expect(page).to have_content("#{@user.person.first_name} #{@user.person.last_name}")
       end
 
       it "filters workshop logs by month submitted" do
@@ -89,7 +89,7 @@ RSpec.describe "People can view a submitted workshop log" do
         sleep 0.5
         expect(page).to have_content(@workshop_log2.date.strftime("%b %d, %Y"))
         expect(page).to have_content(@workshop2.title)
-        expect(page).to have_content("#{@user.first_name} #{@user.last_name}")
+        expect(page).to have_content("#{@user.person.first_name} #{@user.person.last_name}")
         expect(page).not_to have_content(@workshop_log1.date.strftime("%b %d, %Y"))
         expect(page).not_to have_content(@workshop1.title)
       end

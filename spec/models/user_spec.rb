@@ -32,17 +32,9 @@ RSpec.describe User do
   end
 
   describe "strip_whitespace" do
-    it "strips leading and trailing whitespace from names and email" do
-      user = create(:user, first_name: "  Jane  ", last_name: "  Doe  ", email: "  jane@test.org  ")
-      expect(user.first_name).to eq("Jane")
-      expect(user.last_name).to eq("Doe")
+    it "strips leading and trailing whitespace from email" do
+      user = create(:user, email: "  jane@test.org  ")
       expect(user.email).to eq("jane@test.org")
-    end
-
-    it "handles nil name values" do
-      user = create(:user, first_name: nil, last_name: nil, email: "nil-names@test.org")
-      expect(user.first_name).to be_nil
-      expect(user.last_name).to be_nil
     end
   end
 
@@ -113,26 +105,16 @@ RSpec.describe User do
   end
 
   describe "#full_name" do
-    # These tests remain relevant
-    let(:user) { build(:user) }
-    context "when first_name is present" do
-      it "returns the full name" do
-        user.first_name = "John"
-        user.last_name = "Doe"
-        expect(user.full_name).to eq("John Doe")
+    context "when user has a person" do
+      it "returns the person's full name" do
+        person = create(:person, first_name: "John", last_name: "Doe")
+        expect(person.user.full_name).to eq("John Doe")
       end
     end
 
-    context "when first_name is nil" do
+    context "when user has no person" do
       it "returns the email" do
-        user.first_name = nil
-        expect(user.full_name).to eq(user.email)
-      end
-    end
-
-    context "when first_name is empty" do
-      it "returns the email" do
-        user.first_name = ""
+        user = build(:user)
         expect(user.full_name).to eq(user.email)
       end
     end
@@ -182,13 +164,13 @@ RSpec.describe User do
     it "allows saving when person_id remains set" do
       person = create(:person)
       user = person.user
-      user.first_name = "Updated"
+      user.email = "updated@test.org"
       expect(user).to be_valid
     end
 
     it "allows user without person_id to remain without one" do
       user = create(:user)
-      user.first_name = "Updated"
+      user.email = "updated@test.org"
       expect(user).to be_valid
     end
   end
@@ -199,29 +181,6 @@ RSpec.describe User do
       user = person.user
       person.first_name = nil # Person requires first_name
       expect(user).not_to be_valid
-    end
-  end
-
-  describe "#full_name" do
-    context "when user has a person" do
-      it "returns the person's full name" do
-        person = create(:person, first_name: "Jane", last_name: "Doe")
-        expect(person.user.full_name).to eq("Jane Doe")
-      end
-    end
-
-    context "when user has no person but has first_name" do
-      it "returns user's own full name" do
-        user = create(:user, first_name: "Bob", last_name: "Smith")
-        expect(user.full_name).to eq("Bob Smith")
-      end
-    end
-
-    context "when user has no person and no first_name" do
-      it "returns the email" do
-        user = create(:user, first_name: nil)
-        expect(user.full_name).to eq(user.email)
-      end
     end
   end
 
@@ -290,23 +249,23 @@ RSpec.describe User do
   end
 
   describe '.search_by_params' do
-    let!(:admin_user) { create(:user, first_name: 'Alice', last_name: 'Admin', email: 'alice@example.com', super_user: true) }
-    let!(:regular_user) { create(:user, first_name: 'Bob', last_name: 'Regular', email: 'bob@example.com', super_user: false) }
-    let!(:inactive_user) { create(:user, first_name: 'Carol', last_name: 'Inactive', email: 'carol@example.com', inactive: true) }
-    let!(:locked_user) { create(:user, first_name: 'Dave', last_name: 'Locked', email: 'dave@example.com', locked_at: Time.current) }
+    let!(:admin_user) { create(:user, email: 'alice@example.com', super_user: true) }
+    let!(:regular_user) { create(:user, email: 'bob@example.com', super_user: false) }
+    let!(:inactive_user) { create(:user, email: 'carol@example.com', inactive: true) }
+    let!(:locked_user) { create(:user, email: 'dave@example.com', locked_at: Time.current) }
 
     it 'returns all when no params' do
       results = User.search_by_params({})
       expect(results).to include(admin_user, regular_user, inactive_user, locked_user)
     end
 
-    it 'filters by search term matching name' do
-      results = User.search_by_params(search: 'Alice')
+    it 'filters by search term matching email' do
+      results = User.search_by_params(search: 'alice@example')
       expect(results).to include(admin_user)
       expect(results).not_to include(regular_user)
     end
 
-    it 'filters by search term matching email' do
+    it 'filters by search term matching another email' do
       results = User.search_by_params(search: 'bob@example')
       expect(results).to include(regular_user)
       expect(results).not_to include(admin_user)
@@ -331,7 +290,7 @@ RSpec.describe User do
     end
 
     it 'chains search and super_user filters' do
-      results = User.search_by_params(search: 'Alice', super_user: 'true')
+      results = User.search_by_params(search: 'alice', super_user: 'true')
       expect(results).to include(admin_user)
       expect(results).not_to include(regular_user, inactive_user)
     end
