@@ -98,7 +98,9 @@ RSpec.describe "data:convert_age_ranges" do
       "6+" => [ "13-17", "18+", "6-12" ],
       "13+" => [ "13-17", "18+" ],
       "5 year old on up" => [ "13-17", "18+", "3-5", "6-12" ],
-      "5up" => [ "13-17", "18+", "3-5", "6-12" ]
+      "5up" => [ "13-17", "18+", "3-5", "6-12" ],
+      "4-Above" => [ "13-17", "18+", "3-5", "6-12" ],
+      "6-however old" => [ "13-17", "18+", "6-12" ]
     }.each do |input, expected|
       it "maps '#{input}' to #{expected.join(', ')}" do
         workshop = create(:workshop, age_range: input)
@@ -230,6 +232,21 @@ RSpec.describe "data:convert_age_ranges" do
       workshop = create(:workshop, age_range: "", age_range_spanish: "")
       run_task
       expect(age_range_category_names(workshop)).to eq []
+    end
+
+    it "nils out whitespace-only values without creating a comment" do
+      workshop = create(:workshop, age_range: "\r\n")
+      run_task
+      expect(age_range_category_names(workshop)).to eq []
+      expect(workshop.reload.age_range).to be_nil
+      expect(workshop.reload.comments.count).to eq 0
+    end
+
+    it "nils out junk values without creating a comment" do
+      workshop = create(:workshop, age_range: "n/a")
+      run_task
+      expect(workshop.reload.age_range).to be_nil
+      expect(workshop.reload.comments.count).to eq 0
     end
   end
 

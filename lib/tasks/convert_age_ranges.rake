@@ -33,7 +33,7 @@ namespace :data do
     # Map a normalized age_range string to one or more Category records.
     classify = lambda do |raw|
       text = normalize.call(raw)
-      return [] if text.nil? || %w[0 x n/a].include?(text)
+      return [] if text.nil? || %w[0 x n/a].include?(text) || text.match?(/\A[\s\r\n]*\z/)
 
       # Extract numeric bounds if present (e.g. "5-12", "6 and up", "10+")
       low = nil
@@ -45,6 +45,9 @@ namespace :data do
       elsif text =~ /(\d+)\s*(?:to|a)\s+(\d+)/
         low = $1.to_i
         high = $2.to_i
+      elsif text =~ /(\d+)\s*[-–—]\s*(?:above|however)/
+        low = $1.to_i
+        high = 99
       elsif text =~ /(\d+)\s*(\+|and\s*(up|above|older)|&\s*up|years? old on up)/
         low = $1.to_i
         high = 99
@@ -135,6 +138,12 @@ namespace :data do
       category_names.include?(text)
     end
 
+    # Values that should be silently nilled out (no comment needed).
+    junk_value = lambda do |raw|
+      text = normalize.call(raw)
+      text.nil? || %w[0 x n/a].include?(text) || text.match?(/\A[\s\r\n]*\z/)
+    end
+
     comment_tag = "[AGE_RANGE_DATA]"
 
     total = 0
@@ -161,6 +170,18 @@ namespace :data do
       source_label = source_parts.join(", ")
 
       if matched_categories.empty?
+        # Silently nil out junk values (whitespace, n/a, x, 0) without commenting
+        en_junk = workshop.age_range.present? && junk_value.call(workshop.age_range)
+        es_junk = workshop.age_range_spanish.present? && junk_value.call(workshop.age_range_spanish)
+        if (en_junk || workshop.age_range.blank?) && (es_junk || workshop.age_range_spanish.blank?)
+          junk_updates = {}
+          junk_updates[:age_range] = nil if en_junk
+          junk_updates[:age_range_spanish] = nil if es_junk
+          workshop.update_columns(junk_updates) if junk_updates.any?
+          skipped += 1
+          next
+        end
+
         unmatched << { id: workshop.id, age_range: raw_en, age_range_spanish: raw_es }
         skipped += 1
 
