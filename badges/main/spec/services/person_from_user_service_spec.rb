@@ -8,8 +8,6 @@ RSpec.describe PersonFromUserService do
   let(:user) do
     create(
       :user,
-      first_name: "Jane",
-      last_name: "Doe",
       email: "jane@example.com",
       email_type: "work",
       best_time_to_call: "Evenings",
@@ -39,8 +37,8 @@ RSpec.describe PersonFromUserService do
 
     it "hydrates person attributes from the user" do
       expect(person).to have_attributes(
-                               first_name: "Jane",
-                               last_name: "Doe",
+                               first_name: user.first_name,
+                               last_name: user.last_name,
                                email: "jane@example.com",
                                email_type: "work",
                                best_time_to_call: "Evenings",

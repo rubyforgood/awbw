@@ -66,8 +66,8 @@ RSpec.describe "POST /people", type: :request do
       post people_path, params: {
         skip_duplicate_check: "1",
         person: {
-          first_name: user.first_name,
-          last_name: user.last_name,
+          first_name: "Jane",
+          last_name: "Doe",
           email: user.email,
           created_by_id: admin.id,
           updated_by_id: admin.id,
