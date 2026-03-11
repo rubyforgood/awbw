@@ -77,6 +77,10 @@ AWBW Portal (Rails 8.1)
 | `Person` | Organization affiliates with contacts, addresses, sectors |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Report` | STI base class for MonthlyReport and WorkshopLog |
+| `Form` | Configurable forms with sections, conditional visibility, nested form fields |
+| `FormField` | Individual fields on a form with visibility, input type, and ordering |
+| `FormSubmission` | A person's submission of a form (replaces PersonForm) |
+| `FormAnswer` | A single answer within a form submission (replaces PersonFormFormField) |
 
 ### STI Models
 
@@ -152,6 +156,7 @@ end
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
+- `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `NotificationServices::CreateNotification` — Notification creation
 - `NotificationServices::PersistDeliveredEmail` — Email delivery tracking
@@ -212,7 +217,7 @@ end
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 
-### Stimulus Controllers (32)
+### Stimulus Controllers (34)
 
 Key controllers:
 - `asset_picker` — Asset selection UI
@@ -225,6 +230,8 @@ Key controllers:
 - `optimistic_bookmark` — Instant bookmark UI feedback
 - `remote_select` — AJAX-powered select dropdown
 - `searchable_select` — Tom Select autocomplete
+- `chip_select` — Dynamically styles `<select>` elements as colored chips
+- `form_fields_sortable` — SortableJS drag-and-drop reordering for form fields with section-aware header moves
 - `sortable` — Drag-drop sorting (SortableJS)
 - `tabs` — Tab panel navigation
 - `rhino_source` — Rich text editor integration

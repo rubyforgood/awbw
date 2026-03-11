@@ -117,27 +117,26 @@ module Events
 
       person = current_user&.person
       if person
-        if @form.hide_answered_person_questions?
-          known_identifiers = person_known_identifiers(person)
-          if known_identifiers.any?
-            known_ids = @form.form_fields
-                             .where(visibility: :logged_out_only, field_identifier: known_identifiers)
-                             .ids
-            scope = scope.where.not(id: known_ids) if known_ids.any?
-          end
+        # Always hide logged_out_only fields for logged-in users with known data
+        known_identifiers = person_known_identifiers(person)
+        if known_identifiers.any?
+          known_ids = @form.form_fields
+                           .where(visibility: :logged_out_only, field_identifier: known_identifiers)
+                           .ids
+          scope = scope.where.not(id: known_ids) if known_ids.any?
+        end
 
-          # Hide logged_out_only headers when all their non-header fields are hidden
-          logged_out_sections = @form.form_fields.where(visibility: :logged_out_only)
-                                    .where.not(answer_type: :group_header)
-                                    .pluck(:section).uniq.compact
-          logged_out_sections.each do |sect|
-            section_field_ids = @form.form_fields.where(section: sect, visibility: :logged_out_only)
-                                    .where.not(answer_type: :group_header).ids
-            if section_field_ids.any? && known_identifiers.any? && (section_field_ids - scope.where(id: section_field_ids).ids).any?
-              remaining = scope.where(id: section_field_ids).ids
-              if remaining.empty?
-                scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :logged_out_only)
-              end
+        # Hide logged_out_only headers when all their non-header fields are hidden
+        logged_out_sections = @form.form_fields.where(visibility: :logged_out_only)
+                                  .where.not(answer_type: :group_header)
+                                  .pluck(:section).uniq.compact
+        logged_out_sections.each do |sect|
+          section_field_ids = @form.form_fields.where(section: sect, visibility: :logged_out_only)
+                                  .where.not(answer_type: :group_header).ids
+          if section_field_ids.any? && known_identifiers.any? && (section_field_ids - scope.where(id: section_field_ids).ids).any?
+            remaining = scope.where(id: section_field_ids).ids
+            if remaining.empty?
+              scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :logged_out_only)
             end
           end
         end

@@ -6,7 +6,7 @@ import { Controller } from "@hotwired/stimulus"
  * Usage:
  *   <select data-controller="chip-select"
  *           data-chip-select-styles-value='{"active":"bg-green-100 text-green-700","inactive":"bg-gray-100 text-gray-600"}'
- *           data-action="change->chip-select#update">
+ *           data-action="chip-select#update">
  */
 export default class extends Controller {
   static values = { styles: Object }
