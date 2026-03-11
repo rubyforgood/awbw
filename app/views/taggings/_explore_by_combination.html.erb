@@ -79,7 +79,7 @@
                         focus:ring-lime-500" />
 
               <span class="text-gray-900">
-                    <%= "#{category.category_type&.name}: " if category.category_type %>
+                    <%= "#{category.category_type&.name&.titleize}: " if category.category_type %>
                 <%= category.name %>
                   </span>
             </label>

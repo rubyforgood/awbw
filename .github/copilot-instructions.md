@@ -99,6 +99,14 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - **No parentheses around conditions:** `if foo` not `if (foo)`
 - **No semicolons** to separate statements
 
+## Casing
+
+- **Use sentence case** for UI labels, headings, and display text — not title case
+- "Age range" not "Age Range", "Art type" not "Art Type"
+- Use `.underscore.humanize` to convert PascalCase model/type names to sentence case (e.g., `"AgeRange".underscore.humanize` → `"Age range"`)
+- Avoid `.titleize` for user-facing labels — it produces title case
+- **Exception:** when a category type name prefixes a category name (e.g., "Age Range: 3-5"), use `.titleize` for the prefix
+
 ## HTML/ERB Formatting
 
 ### Tag Attributes
