@@ -311,7 +311,23 @@
             <% @categories_grouped.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                 <!-- Header -->
-                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.titleize %></h3>
+                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.underscore.humanize %></h3>
+
+                <% if type.name == "AgeRange" && @age_range_comments.present? %>
+                  <div class="flex flex-wrap gap-2 mb-2">
+                    <% @age_range_comments.each do |comment| %>
+                      <a href="#comments-section"
+                         class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 hover:bg-amber-100 transition">
+                        <%= comment.body %>
+                      </a>
+                    <% end %>
+                  </div>
+                  <a href="#comments-section"
+                     class="block text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 mb-3 hover:bg-amber-100 transition">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Apply the correct tags to satisfy the comments, then delete the comments below once resolved.
+                  </a>
+                <% end %>
 
                 <!-- Checkbox List -->
                 <div class="flex flex-wrap gap-3">

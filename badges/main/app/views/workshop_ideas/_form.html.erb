@@ -287,7 +287,7 @@
             <% @categories_grouped&.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                 <!-- Header -->
-                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.titleize %></h3>
+                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.underscore.humanize %></h3>
 
                 <!-- Checkbox List -->
                 <div class="flex flex-wrap gap-3">
