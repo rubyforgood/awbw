@@ -171,8 +171,8 @@ namespace :data do
 
       if matched_categories.empty?
         # Silently nil out junk values (whitespace, n/a, x, 0) without commenting
-        en_junk = workshop.age_range.present? && junk_value.call(workshop.age_range)
-        es_junk = workshop.age_range_spanish.present? && junk_value.call(workshop.age_range_spanish)
+        en_junk = !workshop.age_range.nil? && junk_value.call(workshop.age_range)
+        es_junk = !workshop.age_range_spanish.nil? && junk_value.call(workshop.age_range_spanish)
         if (en_junk || workshop.age_range.blank?) && (es_junk || workshop.age_range_spanish.blank?)
           junk_updates = {}
           junk_updates[:age_range] = nil if en_junk
@@ -217,11 +217,11 @@ namespace :data do
 
       # --- Nil out columns that exactly match a category name or are junk ---
       updates = {}
-      if workshop.age_range.present? && (exact_match.call(workshop.age_range) || junk_value.call(workshop.age_range))
+      if !workshop.age_range.nil? && (exact_match.call(workshop.age_range) || junk_value.call(workshop.age_range))
         updates[:age_range] = nil
         nilled_en += 1
       end
-      if workshop.age_range_spanish.present? && (exact_match.call(workshop.age_range_spanish) || junk_value.call(workshop.age_range_spanish))
+      if !workshop.age_range_spanish.nil? && (exact_match.call(workshop.age_range_spanish) || junk_value.call(workshop.age_range_spanish))
         updates[:age_range_spanish] = nil
         nilled_es += 1
       end
