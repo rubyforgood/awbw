@@ -313,6 +313,17 @@
                 <!-- Header -->
                 <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.titleize %></h3>
 
+                <% if type.name == "AgeRange" && @age_range_comments.present? %>
+                  <div class="flex flex-wrap gap-2 mb-3">
+                    <% @age_range_comments.each do |comment| %>
+                      <a href="#comments-section"
+                         class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 hover:bg-amber-100 transition">
+                        <%= comment.body %>
+                      </a>
+                    <% end %>
+                  </div>
+                <% end %>
+
                 <!-- Checkbox List -->
                 <div class="flex flex-wrap gap-3">
                   <% cats.each do |category| %>
@@ -335,16 +346,6 @@
                     </label>
                   <% end %>
                 </div>
-
-                <% if type.name == "AgeRange" && @age_range_comments.present? %>
-                  <div class="mt-3 space-y-2">
-                    <% @age_range_comments.each do |comment| %>
-                      <div class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-                        <%= comment.body.gsub("[AGE_RANGE_DATA] ", "") %>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
               </div>
             <% end %>
           </div>

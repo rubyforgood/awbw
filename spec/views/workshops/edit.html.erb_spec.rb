@@ -50,8 +50,13 @@ RSpec.describe "workshops/edit", type: :view do
       render
     end
 
-    it "displays the age range data comment" do
+    it "displays the age range data comment with tag" do
+      expect(rendered).to include("[AGE_RANGE_DATA]")
       expect(rendered).to include("Auto-applied age range categories: 6-12")
+    end
+
+    it "links the comment to the comments section" do
+      expect(rendered).to have_link(href: "#comments-section")
     end
   end
 
