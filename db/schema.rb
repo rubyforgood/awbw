@@ -1228,7 +1228,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_113404) do
     t.datetime "updated_at", precision: nil, null: false
     t.integer "variation_id"
     t.integer "windows_type_id"
-    t.integer "workshop_id", null: false
+    t.integer "workshop_id"
     t.bigint "workshop_variation_idea_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"

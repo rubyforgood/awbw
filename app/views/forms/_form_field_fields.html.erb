@@ -31,8 +31,8 @@
       <%= f.select :visibility, visibility_options,
             {},
             class: "text-xs rounded-full border px-2 py-0.5 cursor-pointer",
-            data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
-      <%= f.text_field :name, class: "flex-1 text-lg font-semibold text-gray-800 rounded border-gray-300 shadow-sm px-2 py-1" %>
+            data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "chip-select#update" } %>
+      <%= f.text_field :name, required: true, class: "flex-1 text-lg font-semibold text-gray-800 rounded border-gray-300 shadow-sm px-2 py-1" %>
       <div class="ml-auto">
         <%= link_to_remove_association "Remove", f,
               class: "text-sm text-gray-400 hover:text-red-600 underline" %>
@@ -43,8 +43,8 @@
       <%= f.select :visibility, visibility_options,
             {},
             class: "text-xs rounded-full border px-2 py-0.5 shrink-0 cursor-pointer",
-            data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "change->chip-select#update" } %>
-      <%= f.text_field :name, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+            data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "chip-select#update" } %>
+      <%= f.text_field :name, required: true, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
       <%
         type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_checkbox no_user_input group_header]
         type_labels = {
